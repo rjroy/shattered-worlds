@@ -1,0 +1,188 @@
+<!DOCTYPE html><html lang="en"><head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Shattered Worlds — Vision</title>
+  <meta name="date" content="2026-06-02">
+  <meta name="status" content="current">
+  <meta name="tags" content="vision, deckbuilding, roguelite, worlds, destiny">
+  <meta name="related" content=".lore/work/research/deckbuilding-game-design.html">
+  <style>
+    :root {
+      --bg: #0f1117;
+      --panel: #1a1d27;
+      --panel-2: #222633;
+      --ink: #e8eaf0;
+      --muted: #9aa3b2;
+      --accent: #8ab4ff;
+      --gold: #ffd479;
+      --good: #6cd08a;
+      --refuse: #ff8a8a;
+      --border: #2a2f3d;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; background: radial-gradient(1200px 600px at 50% -10%, #1a2238 0%, var(--bg) 55%);
+      color: var(--ink);
+      font: 16px/1.65 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      padding: 2.5rem 1rem 6rem;
+    }
+    .wrap { max-width: 880px; margin: 0 auto; }
+
+    /* Identity hero */
+    .hero { text-align: center; margin-bottom: 2.5rem; }
+    .kicker { letter-spacing: .28em; text-transform: uppercase; font-size: .72rem; color: var(--gold); margin-bottom: .6rem; }
+    h1 { font-size: 2.6rem; margin: 0 0 .5rem; line-height: 1.05;
+      background: linear-gradient(180deg, #fff, #b8c4e0); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+    .one-liner { font-size: 1.15rem; color: var(--ink); max-width: 640px; margin: .5rem auto 0; }
+    .draft-badge { display: inline-block; margin-top: 1rem; background: rgba(138,180,255,.12);
+      border: 1px solid rgba(138,180,255,.35); color: var(--accent); border-radius: 999px;
+      padding: .2rem .8rem; font-size: .75rem; font-weight: 600; }
+
+    h2 { font-size: 1.45rem; margin: 2.8rem 0 1rem; display: flex; align-items: center; gap: .6rem; }
+    h2 .mark { font-size: 1rem; }
+    p { margin: .6rem 0; }
+
+    /* Identity card */
+    .identity { background: linear-gradient(180deg, var(--panel-2), var(--panel));
+      border: 1px solid var(--border); border-radius: 16px; padding: 1.6rem 1.8rem; }
+    .identity p:first-child { margin-top: 0; }
+    .identity .core { font-size: 1.05rem; }
+    .term { color: var(--gold); font-weight: 600; }
+    .loop { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: 1rem; align-items: center; }
+    .loop .step { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: .5rem .85rem; font-size: .85rem; }
+    .loop .arrow { color: var(--muted); }
+
+    /* Principles */
+    .principle { background: var(--panel); border: 1px solid var(--border); border-left: 3px solid var(--good);
+      border-radius: 12px; padding: 1.1rem 1.3rem; margin: .9rem 0; }
+    .principle h3 { margin: 0 0 .35rem; font-size: 1.08rem; color: var(--ink); }
+    .principle .rule { color: var(--good); font-weight: 600; font-size: .82rem; text-transform: uppercase; letter-spacing: .04em; }
+    .principle p { margin: .35rem 0 0; color: var(--muted); }
+    .principle p strong { color: var(--ink); }
+
+    /* Anti-goals */
+    .refuse-grid { display: grid; gap: .7rem; }
+    .refuse { background: rgba(255,138,138,.06); border: 1px solid rgba(255,138,138,.28); border-left: 3px solid var(--refuse);
+      border-radius: 12px; padding: .9rem 1.2rem; }
+    .refuse h3 { margin: 0 0 .25rem; font-size: 1rem; color: var(--refuse); }
+    .refuse p { margin: 0; color: var(--muted); font-size: .94rem; }
+
+    /* Tensions */
+    .tension { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 1.1rem 1.3rem; margin: .9rem 0; }
+    .tension .vs { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; font-weight: 600; margin-bottom: .4rem; }
+    .tension .a { color: var(--accent); } .tension .b { color: var(--gold); } .tension .mid { color: var(--muted); font-weight: 400; }
+    .tension .wins { margin-top: .5rem; padding-top: .5rem; border-top: 1px solid var(--border); }
+    .tension .wins b { color: var(--good); }
+
+    footer { margin-top: 3.5rem; color: var(--muted); font-size: .85rem; border-top: 1px solid var(--border); padding-top: 1rem; }
+    a { color: var(--accent); }
+  </style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="hero">
+    <div class="kicker">Project North Star</div>
+    <h1>Shattered Worlds</h1>
+    <p class="one-liner">A roguelite deckbuilder where you survive a gauntlet of broken worlds, each remaking how you build, and forge a <span class="term">Destiny</span> that outlives the run.</p>
+    <div class="draft-badge">APPROVED · 2026-06-02</div>
+  </div>
+
+  <section class="identity">
+    <p class="core">Where <em>Slay the Spire</em> changes the game by changing your <strong>character</strong>, Shattered Worlds changes it by changing your <strong>world</strong>. Each world has its own deck style and its own challenges. A run is the act of surviving multiple worlds in sequence, and as you cross them you extend and adjust your <span class="term">Destiny</span> — the thread that carries through the shattering.</p>
+    <p>Runs are disposable; what you earn is not. Between runs you spend your winnings to unlock new options and deepen certain synergies, so the <em>possibility space</em> grows even though every run still starts you at the bottom of the climb.</p>
+    <p>This is a portfolio game, and that word is load-bearing: it must be typed, tested, and CI-backed <strong>and</strong> genuinely fun with real retention. Not one or the other. If it isn't both, why try.</p>
+    <div class="loop">
+      <span class="step">Enter a world</span><span class="arrow">→</span>
+      <span class="step">Build to its deck style</span><span class="arrow">→</span>
+      <span class="step">Survive its challenges</span><span class="arrow">→</span>
+      <span class="step">Cross to the next world</span><span class="arrow">→</span>
+      <span class="step">Run ends</span><span class="arrow">→</span>
+      <span class="step">Spend earnings → wider Destiny</span><span class="arrow">↺</span>
+    </div>
+  </section>
+
+  <h2><span class="mark">✦</span> What it always is</h2>
+  <p style="color:var(--muted);margin-top:0">Behavioral guidelines, not aspirations. Each is a test a decision can pass or fail.</p>
+
+  <div class="principle">
+    <span class="rule">Principle 1</span>
+    <h3>The deck-building is the game</h3>
+    <p>Every card offered must <strong>change a decision</strong>, not merely add power. If a reward is an obvious auto-pick or an obvious skip, it has failed. The acquire / thin / re-shape tension stays the most interesting thing on screen.</p>
+  </div>
+
+  <div class="principle">
+    <span class="rule">Principle 2</span>
+    <h3>Worlds are the identity, not the wallpaper</h3>
+    <p>A new world ships <strong>only when it forces a different way to build</strong> — a distinct deck style and a distinct challenge logic. A world that plays like an existing one with new art is not a world; it's a reskin, and it doesn't ship.</p>
+  </div>
+
+  <div class="principle">
+    <span class="rule">Principle 3</span>
+    <h3>Destiny grows you, but the summit still demands skill</h3>
+    <p>Between-run spending may <strong>unlock new choices and grant modest persistent power</strong> — easing the early climb is fine and rewarding. What it may never do is let a patient player <strong>buy past the real challenge</strong>. Destiny softens the foothills; the summit stays earned by skill, not by hours ground.</p>
+  </div>
+
+  <div class="principle">
+    <span class="rule">Principle 4</span>
+    <h3>Randomness is owned, never imposed</h3>
+    <p>The player chooses <em>into</em> the chaos. Random offers and world order create variety; the player's picks at every fork own the outcome. A bad draw must trace back to a choice the player made, never to a result the game dealt them blind.</p>
+  </div>
+
+  <div class="principle">
+    <span class="rule">Principle 5</span>
+    <h3>Synergies are legible</h3>
+    <p>Every archetype must be <strong>nameable and its payoff visible</strong>. Players should grasp <em>why</em> cards combo within a world, so a winning build feels intended, not stumbled into. If you can't explain a synergy in a sentence, it isn't ready.</p>
+  </div>
+
+  <div class="principle">
+    <span class="rule">Principle 6</span>
+    <h3>Balance answers to data, not to feelings</h3>
+    <p>Single-player frees us from competitive fairness, so we tune for <strong>fun over symmetry</strong> — but changes are justified by playtest and pick/win data, not by intuition or the loudest feedback. We instrument early and expect multiple balance passes.</p>
+  </div>
+
+  <div class="principle">
+    <span class="rule">Principle 7</span>
+    <h3>Craft and fun are one gate, not two</h3>
+    <p>A feature is not done if it's fun but untyped/untested, and not done if it's clean but boring. <strong>Both gates or it doesn't merge.</strong> Fun is validated by playtest before we invest deep engineering in a system; engineering is non-negotiable before a system is called finished.</p>
+  </div>
+
+  <h2><span class="mark">✕</span> What it must never become</h2>
+  <div class="refuse-grid">
+    <div class="refuse"><h3>Grind past the ceiling</h3><p>Progression that lets a patient player buy their way past the hardest content. Modest power that eases the early climb is welcome; meta-progression that makes skill irrelevant at the summit is not.</p></div>
+    <div class="refuse"><h3>Reskinned worlds</h3><p>Content that pads the world count without changing how you build or what threatens you. Variety in art is not variety in play.</p></div>
+    <div class="refuse"><h3>A PvP balance obligation</h3><p>Competitive multiplayer would chain us to symmetric, tournament-grade balance and kill the freedom to tune for fun. This is a single-player roguelite by choice.</p></div>
+    <div class="refuse"><h3>Card bloat</h3><p>More cards as a substitute for better decisions. Choosing one of three sharp options beats sorting twenty mediocre ones.</p></div>
+    <div class="refuse"><h3>Power-creep content waves</h3><p>Expansions that break the run economy to feel exciting. New content earns its place by adding decisions, not by inflating numbers.</p></div>
+    <div class="refuse"><h3>Fun-but-broken, or clean-but-boring</h3><p>Shipping either half alone. A delightful prototype with no tests is not progress; a pristine engine no one enjoys is not a game.</p></div>
+  </div>
+
+  <h2><span class="mark">⚖</span> When values collide</h2>
+  <p style="color:var(--muted);margin-top:0">The decisions that will actually feel hard. Here's which way we lean by default.</p>
+
+  <div class="tension">
+    <div class="vs"><span class="a">Meta-progression</span><span class="mid">vs.</span><span class="b">Run integrity</span></div>
+    <p style="color:var(--muted);margin:0">Unlocks make returning rewarding, but every unlock risks diluting the tension that makes a single run gripping.</p>
+    <p class="wins"><b>Run integrity wins at the top.</b> Destiny may add options and modest power, and may soften the early climb — but when an unlock would let a player buy past the hardest content, cut it. Ease the foothills, never the summit.</p>
+  </div>
+
+  <div class="tension">
+    <div class="vs"><span class="a">Engineering craft</span><span class="mid">vs.</span><span class="b">Getting it fun fast</span></div>
+    <p style="color:var(--muted);margin:0">Portfolio-grade rigor is slow; finding the fun wants rapid, throwaway iteration.</p>
+    <p class="wins"><b>Sequence resolves it.</b> Fun is proven first with cheap prototypes; rigor is mandatory before any system is declared done. Neither half is skipped — they happen in order.</p>
+  </div>
+
+  <div class="tension">
+    <div class="vs"><span class="a">World variety</span><span class="mid">vs.</span><span class="b">One coherent game</span></div>
+    <p style="color:var(--muted);margin:0">Each world must play differently, yet the whole must feel like one game rather than a bundle of minigames.</p>
+    <p class="wins"><b>Diverge in worlds, unify in Destiny.</b> Worlds are free to feel alien in deck style and challenges; the Destiny layer is the constant that makes a run feel like one journey.</p>
+  </div>
+
+  <footer>
+    Drafted 2026-06-02 from a vision conversation, building on <a href="../work/research/deckbuilding-game-design.html">deckbuilding-game-design research</a>. Status <strong>current</strong> (approved) — this is the document to open when a decision feels wrong. It defines spirit, not requirements; mechanics for Destiny, worlds, and the economy belong in a spec.
+  </footer>
+
+</div>
+
+
+<script type="application/json" id="lore-annotations">{"comments":[],"todos":[],"starred":true}</script></body></html>

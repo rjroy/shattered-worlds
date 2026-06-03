@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Game engine choice for AI-assisted development</title>
+  <meta name="date" content="2026-06-02">
+  <meta name="status" content="active">
+  <meta name="tags" content="game-engine, ai-assisted-development, typescript, rust, bevy, three-js, godot, phaser, deckbuilder, tooling">
+  <meta name="related" content=".lore/reference/vision.html, .lore/work/research/deckbuilding-game-design.html">
+  <style>
+    :root {
+      --bg: #0f1117; --panel: #1a1d27; --panel-2: #222633;
+      --ink: #e8eaf0; --muted: #9aa3b2; --accent: #8ab4ff; --gold: #ffd479;
+      --good: #6cd08a; --warn: #ffc14d; --bad: #ff8a8a; --border: #2a2f3d;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; background: radial-gradient(1200px 600px at 50% -10%, #1a2238 0%, var(--bg) 55%);
+      color: var(--ink); font: 16px/1.65 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      padding: 2.5rem 1rem 6rem;
+    }
+    .wrap { max-width: 920px; margin: 0 auto; }
+    .hero { text-align: center; margin-bottom: 2.2rem; }
+    .kicker { letter-spacing: .28em; text-transform: uppercase; font-size: .72rem; color: var(--gold); margin-bottom: .6rem; }
+    h1 { font-size: 2.2rem; margin: 0 0 .6rem; line-height: 1.1;
+      background: linear-gradient(180deg,#fff,#b8c4e0); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+    .badges { display: flex; gap: .5rem; justify-content: center; flex-wrap: wrap; margin-top: .8rem; }
+    .badge { display: inline-flex; align-items: center; gap: .4rem; border-radius: 999px; padding: .25rem .8rem; font-size: .75rem; font-weight: 600; border: 1px solid; }
+    .badge.fresh { background: rgba(108,208,138,.12); border-color: rgba(108,208,138,.4); color: var(--good); }
+    .badge.scope { background: rgba(138,180,255,.12); border-color: rgba(138,180,255,.35); color: var(--accent); }
+    .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--good); box-shadow: 0 0 8px var(--good); }
+
+    h2 { font-size: 1.4rem; margin: 2.6rem 0 1rem; display: flex; align-items: center; gap: .6rem; }
+    h2 .mark { font-size: 1rem; }
+    h3 { font-size: 1.08rem; }
+    p { margin: .6rem 0; }
+    a { color: var(--accent); }
+
+    /* Verdict box */
+    .verdict { background: linear-gradient(180deg, var(--panel-2), var(--panel)); border: 1px solid var(--border);
+      border-left: 4px solid var(--good); border-radius: 16px; padding: 1.5rem 1.7rem; }
+    .verdict .lead { font-size: 1.12rem; }
+    .verdict .pick { color: var(--good); font-weight: 700; }
+    .verdict .reject { color: var(--bad); font-weight: 600; }
+    .verdict ul { margin: .8rem 0 0; padding-left: 1.1rem; }
+    .verdict li { margin: .35rem 0; color: var(--muted); }
+    .verdict li b { color: var(--ink); }
+
+    /* Reframe callout */
+    .reframe { background: rgba(255,193,77,.06); border: 1px solid rgba(255,193,77,.3); border-left: 3px solid var(--warn);
+      border-radius: 12px; padding: 1.1rem 1.3rem; margin: 1rem 0; }
+    .reframe h3 { margin: 0 0 .3rem; color: var(--warn); }
+    .reframe p { margin: .35rem 0 0; color: var(--muted); }
+    .reframe p strong { color: var(--ink); }
+
+    /* Comparison table */
+    .tablewrap { overflow-x: auto; margin: 1rem 0; }
+    table { border-collapse: collapse; width: 100%; font-size: .9rem; }
+    th, td { text-align: left; padding: .6rem .7rem; border-bottom: 1px solid var(--border); }
+    th { color: var(--muted); font-weight: 600; font-size: .78rem; text-transform: uppercase; letter-spacing: .04em; }
+    td.eng { font-weight: 600; color: var(--ink); white-space: nowrap; }
+    .pill { display: inline-block; border-radius: 6px; padding: .12rem .5rem; font-size: .78rem; font-weight: 600; }
+    .p-good { background: rgba(108,208,138,.14); color: var(--good); }
+    .p-warn { background: rgba(255,193,77,.14); color: var(--warn); }
+    .p-bad { background: rgba(255,138,138,.14); color: var(--bad); }
+    tr.win td { background: rgba(108,208,138,.05); }
+
+    /* Candidate cards */
+    .cand { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 1.1rem 1.3rem; margin: .9rem 0; }
+    .cand .head { display: flex; align-items: baseline; gap: .6rem; flex-wrap: wrap; }
+    .cand .name { font-size: 1.12rem; font-weight: 700; }
+    .cand .tag { font-size: .75rem; color: var(--muted); }
+    .cand .stamp { margin-left: auto; font-size: .75rem; font-weight: 700; padding: .15rem .6rem; border-radius: 999px; }
+    .stamp.use { background: rgba(108,208,138,.14); color: var(--good); }
+    .stamp.maybe { background: rgba(255,193,77,.14); color: var(--warn); }
+    .stamp.no { background: rgba(255,138,138,.14); color: var(--bad); }
+    .cand .grid { display: grid; grid-template-columns: 1fr 1fr; gap: .6rem 1.4rem; margin-top: .7rem; }
+    @media (max-width: 620px){ .cand .grid { grid-template-columns: 1fr; } }
+    .cand .pro b, .cand .con b { font-size: .78rem; text-transform: uppercase; letter-spacing: .03em; }
+    .cand .pro b { color: var(--good); } .cand .con b { color: var(--bad); }
+    .cand .pro p, .cand .con p { margin: .2rem 0 0; color: var(--muted); font-size: .92rem; }
+
+    /* Sources */
+    details { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: .7rem 1rem; margin: .6rem 0; }
+    details summary { cursor: pointer; font-weight: 600; color: var(--accent); }
+    details p { color: var(--muted); font-size: .9rem; }
+    details a { word-break: break-all; }
+
+    .keyfact { color: var(--gold); font-weight: 600; }
+    footer { margin-top: 3.5rem; color: var(--muted); font-size: .85rem; border-top: 1px solid var(--border); padding-top: 1rem; }
+  </style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="hero">
+    <div class="kicker">Research · Tooling Decision</div>
+    <h1>What engine should Shattered Worlds use?</h1>
+    <div class="badges">
+      <span class="badge fresh"><span class="dot"></span>Fresh · gathered 2026-06-02</span>
+      <span class="badge scope">Scope: 2D roguelite deckbuilder, AI-assisted, free, typed + tested + CI</span>
+    </div>
+  </div>
+
+  <!-- ============ KEY FINDINGS ============ -->
+  <section class="verdict">
+    <p class="lead" style="margin-top:0">
+      <span class="pick">If this isn't a web app, the default is Godot + C#</span> — the genre-proven engine (Slay the Spire 1 &amp; 2 both ship on it), with C# for the typed, AI-friendly language layer.
+      The only live alternative is a <span class="pick" style="color:var(--accent)">TypeScript web stack</span> if instant browser reach matters more than native polish.
+      <span class="reject">three.js and Bevy stay out.</span>
+    </p>
+    <p style="margin:.4rem 0 0;color:var(--muted);font-size:.92rem"><em>Correction (2026-06-02, after follow-up):</em> an earlier draft tagged Godot "off axis." That was wrong — it assumed a GitHub Pages web deploy. Drop the web requirement and Godot is the front-runner, not a footnote. Details corrected throughout below.</p>
+    <ul>
+      <li><b>Godot is the genre default, and its test/CI story is real.</b> Purpose-built 2D UI; stable 4.x API (no Bevy-style churn). <span class="keyfact">GdUnit4</span> gives headless CLI test runs, JUnit XML, and an official GitHub Action for both GDScript and C# — a genuine typed-tested-CI pipeline, which is exactly what the vision demands.</li>
+      <li><b>Within Godot, use C#, not GDScript.</b> GDScript is thin in LLM training data; C# is a top-tier corpus <em>and</em> a real static-type guardrail — the discipline you correctly wanted from Rust, minus the churn. Either way the AI needs Godot-API grounding (docs in context), but that's a tooling problem, not a language one.</li>
+      <li><b>three.js is the wrong shape.</b> It's a 3D WebGL library; a deckbuilder is text-heavy 2D UI. You'd render text as canvas textures, building a 2D UI toolkit on top of a 3D engine.</li>
+      <li><b>Bevy/Rust gets the AI loop half-right, then breaks it.</b> Rust's compiler <em>is</em> a real guardrail (validated below), but Bevy is pre-1.0 and breaks its API ~quarterly, so training data is fragmented and the AI writes code that won't compile. The language helps; the framework's churn cancels it.</li>
+      <li><b>Whatever you pick, keep the rules core engine-independent.</b> Cards, effects, RNG, run/Destiny state — pure logic. A dependency-free, heavily-tested core (C# class library, or TS module) with the engine as a thin renderer makes the choice reversible and serves the vision's data-driven balance and "craft + fun are one gate" principles.</li>
+    </ul>
+  </section>
+
+  <!-- ============ THE REFRAME ============ -->
+  <h2><span class="mark">↻</span> The question, reframed</h2>
+  <p>
+    You framed this as three.js (JS, biggest training corpus) versus Bevy (Rust, strict compiler that disciplines the AI). Both halves of that reasoning are sound in isolation. But the framing assumes you're choosing a <em>3D-capable game engine</em>, and Shattered Worlds isn't that kind of game.
+  </p>
+  <div class="reframe">
+    <h3>A card game is UI + a state machine, not a render-heavy 3D world</h3>
+    <p>
+      Look at the genre's landmarks. <strong>Balatro</strong> — the best-selling deckbuilder after Slay the Spire — is ~30,000 lines of Lua on the LÖVE framework, shipped by one person. <strong>Slay the Spire 2</strong> runs on <strong>Godot</strong>. Neither needed a 3D engine; both needed clean state logic and responsive 2D UI. Your engine decision should optimize for <strong>typed game logic, testability, and text-heavy interactive UI</strong> — not polygon throughput.
+    </p>
+  </div>
+  <p>
+    Once the axis is right, the contenders change. The real question is: <em>which stack gives the AI the tightest correctness feedback loop, the most training data, and the least churn — while producing typed, tested, CI-backed code I can deploy to GitHub Pages?</em>
+  </p>
+
+  <!-- ============ SCORECARD ============ -->
+  <h2><span class="mark">▦</span> Scorecard against your actual constraints</h2>
+  <div class="tablewrap">
+  <table>
+    <thead>
+      <tr>
+        <th>Option</th>
+        <th>Training data</th>
+        <th>Type guardrail<br><span style="font-weight:400;text-transform:none">(AI correctness)</span></th>
+        <th>API stability<br><span style="font-weight:400;text-transform:none">(churn = AI errors)</span></th>
+        <th>2D card-UI fit</th>
+        <th>Test + CI</th>
+        <th>Fits your skills<br>+ GH Pages</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr class="win">
+        <td class="eng">Godot 4 + C#<br><span class="tag" style="font-weight:400;color:var(--muted)">genre-proven 2D engine</span></td>
+        <td><span class="pill p-good">C# huge</span></td>
+        <td><span class="pill p-good">Strong (C#)</span></td>
+        <td><span class="pill p-good">Stable (4.x)</span></td>
+        <td><span class="pill p-good">Built for it</span></td>
+        <td><span class="pill p-good">GdUnit4 + Action</span></td>
+        <td><span class="pill p-good">Native + Steam</span></td>
+      </tr>
+      <tr class="win">
+        <td class="eng">TypeScript web<br><span class="tag" style="font-weight:400;color:var(--muted)">DOM/Svelte/React or PixiJS</span></td>
+        <td><span class="pill p-good">Huge</span></td>
+        <td><span class="pill p-warn">Good (strict)</span></td>
+        <td><span class="pill p-good">Stable</span></td>
+        <td><span class="pill p-good">Native</span></td>
+        <td><span class="pill p-good">Easy</span></td>
+        <td><span class="pill p-good">Browser reach</span></td>
+      </tr>
+      <tr>
+        <td class="eng">Phaser 3<br><span class="tag" style="font-weight:400;color:var(--muted)">TS canvas framework</span></td>
+        <td><span class="pill p-good">Huge</span></td>
+        <td><span class="pill p-warn">Good (strict)</span></td>
+        <td><span class="pill p-good">Stable</span></td>
+        <td><span class="pill p-warn">Off-grain (canvas)</span></td>
+        <td><span class="pill p-warn">Core only</span></td>
+        <td><span class="pill p-good">Browser + known</span></td>
+      </tr>
+      <tr>
+        <td class="eng">Bevy (Rust)</td>
+        <td><span class="pill p-bad">Small + fragmented</span></td>
+        <td><span class="pill p-good">Excellent</span></td>
+        <td><span class="pill p-bad">Breaks ~q'ly</span></td>
+        <td><span class="pill p-warn">Immature</span></td>
+        <td><span class="pill p-good">Strong</span></td>
+        <td><span class="pill p-warn">Wasm, heavy</span></td>
+      </tr>
+      <tr>
+        <td class="eng">three.js</td>
+        <td><span class="pill p-good">Huge</span></td>
+        <td><span class="pill p-warn">TS-typed</span></td>
+        <td><span class="pill p-good">Stable</span></td>
+        <td><span class="pill p-bad">Wrong tool (3D)</span></td>
+        <td><span class="pill p-warn">Logic only</span></td>
+        <td><span class="pill p-good">Yes</span></td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+  <p style="color:var(--muted);font-size:.9rem">
+    The two columns that decide an AI-assisted project are <strong>training data</strong> and <strong>API stability</strong> — they determine how often the AI writes code that's plausible but wrong. <strong>Godot 4 + C# and the TS web stack both clear every column;</strong> they differ only on distribution (native/Steam vs browser). The type guardrail (where Rust shines) is the tiebreaker against Bevy, and both C# and strict-mode TS recover most of it without the pre-1.0 churn. Godot's one asterisk is <em>engine-specific</em> API knowledge the AI must be grounded in — true in any engine, mitigated by docs-in-context and the maturing Godot AI tooling.
+  </p>
+
+  <!-- ============ CANDIDATES ============ -->
+  <h2><span class="mark">◆</span> Option by option</h2>
+
+  <div class="cand">
+    <div class="head">
+      <span class="name">three.js</span><span class="tag">JavaScript/TS · 3D WebGL renderer</span>
+      <span class="stamp no">Don't use here</span>
+    </div>
+    <div class="grid">
+      <div class="pro"><b>For it</b><p>Massive training corpus, stable API, deploys anywhere. Genuinely the right call — if you were building something 3D.</p></div>
+      <div class="con"><b>Against it</b><p>It solves a problem you don't have. Cards are text-heavy; in three.js text means rendering to a canvas and uploading it as a texture, or layering DOM on top and fighting the resulting performance and layout issues. You'd build a 2D UI toolkit by hand on top of a 3D engine.</p></div>
+    </div>
+  </div>
+
+  <div class="cand">
+    <div class="head">
+      <span class="name">Bevy</span><span class="tag">Rust · ECS game engine</span>
+      <span class="stamp no">Not yet — and not for this</span>
+    </div>
+    <div class="grid">
+      <div class="pro"><b>For it</b><p>Your core intuition is real: Rust's type system, exhaustive matches, and explicit error handling give the AI a compiler that says "this is wrong, fix it" on every generation. That tight loop produces unusually correct one-shot code (see sources). ECS is a clean fit for card/effect systems, and the test story is strong.</p></div>
+      <div class="con"><b>Against it</b><p>Bevy is <span class="keyfact">still pre-1.0 (0.18 as of Jan 2026)</span> and ships breaking changes roughly every quarter — the community itself calls the "break every 3 months" churn a problem. For an AI workflow that's the worst trait possible: the model's training data is spread across many incompatible versions, so it confidently writes 0.13-era APIs into your 0.18 project. The compiler catches it, but you burn iterations on migration noise instead of game design. UI is improving (bevy_ui, Feathers) but is described as "where Godot was in 2022." Reviewers call it a real option for a <em>specific</em> kind of indie, not a default.</p></div>
+    </div>
+  </div>
+
+  <div class="cand">
+    <div class="head">
+      <span class="name">Godot 4 + C#</span><span class="tag">C# (or GDScript) · genre-proven 2D/3D engine · MIT</span>
+      <span class="stamp use">Top pick (native)</span>
+    </div>
+    <div class="grid">
+      <div class="pro"><b>For it</b><p>Purpose-built for exactly this genre — <strong>Slay the Spire 1 and 2 both ship on it</strong>. Excellent 2D Control-node UI, free and open (MIT). Stable 4.x API means the AI's knowledge stays valid (unlike Bevy). C# is a top-tier training corpus with a real static-type guardrail, and the test/CI story is solid: <span class="keyfact">GdUnit4</span> runs headless via CLI, emits JUnit XML, and has an official GitHub Action for both C# and GDScript. You also get a real engine — scenes, animation, audio, input, particles, Steam export — instead of hand-assembling it.</p></div>
+      <div class="con"><b>Against it</b><p>The AI needs <strong>Godot-specific API/node knowledge</strong> grounded in context; general models are weaker on engine specifics than on plain language code (true of any engine, but real). Prefer <strong>C# over GDScript</strong>: <span class="keyfact">GDScript is thin in LLM training data</span> — the godot-dodo fine-tuning project exists because general models hallucinate GDScript features. C# also means the engine/scene layer is Godot-flavored, not vanilla .NET, so keep the pure rules logic in a plain C# class library the AI can reason about without engine context.</p></div>
+    </div>
+  </div>
+
+  <div class="cand">
+    <div class="head">
+      <span class="name">TypeScript web stack</span><span class="tag">pure-TS core + DOM/Svelte/React or PixiJS</span>
+      <span class="stamp use">Co-pick (if browser reach)</span>
+    </div>
+    <div class="grid">
+      <div class="pro"><b>For it</b><p>Largest training corpus of any option, so the AI's first draft is most often idiomatic and current. Card UI is literally DOM — text, layout, and CSS/spring animations are free, not a fight. Strict-mode TS plus a typed test suite gives you a real (if softer than Rust) correctness gate. Pure-logic core is trivially unit-tested and CI-friendly. Ships straight to GitHub Pages. Matches the Svelte/React/TS you already know.</p></div>
+      <div class="con"><b>Against it</b><p>TS's guardrail is weaker than Rust's — no borrow checker, and <code>any</code>/non-null escape hatches let the AI paper over mistakes if you let it. Mitigation: <code>strict: true</code>, lint rules banning <code>any</code> and non-null assertions, and tests as the real gate. (The typescript-quality and typescript-setup skills already encode this discipline.)</p></div>
+    </div>
+  </div>
+
+  <div class="cand">
+    <div class="head">
+      <span class="name">Phaser 3</span><span class="tag">TypeScript · canvas/WebGL 2D game framework</span>
+      <span class="stamp maybe">Prototyping shortcut</span>
+    </div>
+    <div class="grid">
+      <div class="pro"><b>For it</b><p>Free, TS-typed, batteries-included (scenes, input, tweening, audio, physics), and <strong>you've already shipped with it</strong> — which is the point. For the vision's "prove the fun cheap before investing in rigor" phase, familiarity is velocity: it's the fastest path <em>for you</em> to a playable feel-test of the card loop. And because the rules core is meant to be engine-independent, a Phaser prototype isn't throwaway — you port only the pure core to whatever ships.</p></div>
+      <div class="con"><b>Against it</b><p>It's optimized for <strong>real-time sprite/action games</strong> — many moving objects, particles, physics — which a turn-based deckbuilder barely uses. The genre's real surface is text-heavy UI (rich card text, tooltips, hover states, scrollable deck/relic/map views), and on canvas you hand-build all of it in pixel coordinates with near-zero accessibility — the same off-grain friction as three.js, milder but present. Within the web track, DOM/Svelte (+ Pixi for flashy effects) gives you that UI layer for free; Phaser makes you pay for a sprite engine you don't need and rebuild the layout the DOM hands you. Fine for the prototype; working against the grain for the polished, shipped UI.</p></div>
+    </div>
+  </div>
+
+  <!-- ============ AI LENS ============ -->
+  <h2><span class="mark">✲</span> The AI-development lens, specifically</h2>
+  <p>
+    You're right that strictness helps AI — the evidence is strong. One developer ported <span class="keyfact">100,000 lines of TypeScript to Rust with Claude Code in ~4 weeks with no prior Rust</span>, landing within 0.003% divergence across 2.4M test seeds, precisely because the compiler closed the loop on every step. That's the case <em>for</em> Rust the language.
+  </p>
+  <p>
+    But two forces matter more for AI throughput than raw type strength, and they both favor TypeScript here:
+  </p>
+  <ul>
+    <li><strong>Training-data density</strong> decides how often the first draft is right. JS/TS sit at the top; GDScript and Bevy-flavored Rust sit far lower, so the AI guesses and hallucinates more.</li>
+    <li><strong>API stability</strong> decides whether "right yesterday" is still "right today." A stable library means the model's knowledge stays valid; a pre-1.0 engine that rewrites its API quarterly means the model is perpetually a version or two behind, generating code that no longer compiles.</li>
+  </ul>
+  <p>
+    Rust's guardrail is a multiplier on correctness, but it's multiplying a smaller, staler base. The winning options multiply a strong guardrail by a large, fresh, <em>stable</em> base: <strong>C# in Godot 4</strong> (huge corpus, real static types, stable 4.x API) and <strong>strict TypeScript</strong> (largest corpus, softer types stiffened by tests). Both beat Bevy because Bevy's excellent gate sits on a churning base, and both beat GDScript because GDScript's stable engine sits on a thin corpus. The remaining gap for Godot is engine-specific API knowledge, which you close with docs-in-context rather than by changing language.
+  </p>
+
+  <!-- ============ ARCHITECTURE NOTE ============ -->
+  <h2><span class="mark">⚙</span> The move that de-risks the whole decision</h2>
+  <p>
+    Whatever renderer you pick, <strong>split the game in two</strong>:
+  </p>
+  <ul>
+    <li><b>A pure rules core</b> — cards, effects, RNG, run/Destiny state, win/loss resolution — as a dependency-free module with <em>no engine imports</em>: a plain C# class library if you go Godot, a plain TS module if you go web. Deterministic, seedable, exhaustively unit-tested. This is 70% of a deckbuilder and the part the vision cares most about (legible synergies, data-driven balance, instrumentation).</li>
+    <li><b>A thin rendering/UI layer</b> that observes core state and draws it. Swappable. Godot Control nodes, or DOM/Svelte to start with PixiJS later for canvas-grade card effects.</li>
+  </ul>
+  <p>
+    This makes the engine choice <em>reversible</em> and cheap, and it's the single biggest lever for AI reliability: a dependency-free core is pure functions the AI reasons about <em>without</em> needing engine-specific API knowledge — which is precisely Godot's one weak spot. It's also what lets you simulate thousands of runs headlessly for the balance data Principle 6 demands. Decide the renderer in a follow-up design; build this core first, in whichever of C# or TS you commit to, and it will outlast any engine you bolt onto it.
+  </p>
+
+  <!-- ============ SOURCES ============ -->
+  <h2><span class="mark">⌕</span> Sources</h2>
+  <p style="color:var(--muted);font-size:.9rem;margin-top:0">Gathered 2026-06-02. Click to expand the relevant finding.</p>
+
+  <details>
+    <summary>Bevy is pre-1.0 with quarterly breaking changes; UI maturing but "where Godot was in 2022"</summary>
+    <p>As of Jan 2026 Bevy is at 0.18; 1.0 is unscheduled. Ecosystem (UI/input/audio/physics) has matured enough to assemble a real game; bevy_ui + Feathers widget set are landing. Still positioned as an option for a specific kind of indie, not a default.</p>
+    <p><a href="https://www.strayspark.studio/blog/bevy-rust-game-engine-2026-indie-guide">strayspark.studio — Bevy in 2026: Is Rust ready for indie?</a><br>
+    <a href="https://bevy.org/news/bevy-0-17/">bevy.org — Bevy 0.17 release notes</a><br>
+    <a href="https://github.com/bevyengine/bevy/discussions/9789">GitHub — Discussing (eventual) Bevy 1.0 stabilization & the "break every 3 months" churn</a></p>
+  </details>
+
+  <details>
+    <summary>Rust is unusually strong for AI code generation — the compiler closes the loop</summary>
+    <p>Strict types, borrow checker, and explicit errors act as guardrails; the compiler immediately tells the agent what's wrong. Cited port of 100k LOC TS→Rust via Claude Code in ~4 weeks, 0.003% divergence over 2.4M seeds. This is the case for Rust the <em>language</em> (distinct from Bevy the framework).</p>
+    <p><a href="https://medium.com/@chalyi/rust-is-winning-the-ai-code-generation-race-60c65074236c">Medium — Rust Is Winning the AI Code Generation Race</a><br>
+    <a href="https://reltech.substack.com/p/why-learning-rust-still-matters-in">reltech — Why Learning Rust Still Matters in the Age of LLM Agents</a><br>
+    <a href="https://www.shuttle.dev/blog/2025/09/09/ai-coding-tools-rust">Shuttle — Best AI Coding Tools for Rust</a></p>
+  </details>
+
+  <details>
+    <summary>GDScript is underrepresented in LLM training data; models hallucinate its features</summary>
+    <p>LLMs code well in mainstream languages but degrade on less common ones due to underrepresentation, producing syntax errors and non-existent features. The godot-dodo project fine-tunes models specifically because general models are unreliable at GDScript. C# is the mitigation.</p>
+    <p><a href="https://github.com/minosvasilias/godot-dodo">GitHub — godot-dodo: fine-tuning LLMs for GDScript</a><br>
+    <a href="https://ziva.sh/blogs/best-ai-tools-for-godot-2026">Ziva — Best AI Tools for Godot in 2026</a><br>
+    <a href="https://forum.godotengine.org/t/is-there-a-large-ai-code-model-specifically-for-godot/104032">Godot Forum — general models often get Godot-specific questions wrong (any language)</a></p>
+  </details>
+
+  <details>
+    <summary>Godot has a real typed-tested-CI pipeline (C# and GDScript): GdUnit4 + headless runner + GitHub Action</summary>
+    <p>GdUnit4 is an embedded Godot 4 test framework supporting GDScript and C# (via gdUnit4Net / VSTest), with a CLI for headless CI runs, JUnit XML output, and HTML reports. An official GitHub Action automates it in CI with configurable Godot/GdUnit versions. C# tooling runs/debugs in Rider, VS, and VS Code. This corrects an earlier draft that called Godot's test/CI story "awkward."</p>
+    <p><a href="https://github.com/godot-gdunit-labs/gdUnit4">GitHub — GdUnit4 (GDScript + C#)</a><br>
+    <a href="https://github.com/MikeSchulze/gdUnit4-action">GitHub — official GdUnit4 GitHub Action for CI</a></p>
+  </details>
+
+  <details>
+    <summary>Genre landmarks: Balatro = Lua/LÖVE solo; Slay the Spire 2 = Godot</summary>
+    <p>Balatro is ~30k lines of Lua on the LÖVE framework by a solo dev. Slay the Spire 2 (best-performing deckbuilder ever, per analysts) runs on Godot. Confirms the genre is carried by 2D UI + state logic, not a 3D engine.</p>
+    <p><a href="https://en.wikipedia.org/wiki/Balatro">Wikipedia — Balatro (Lua/LÖVE)</a><br>
+    <a href="https://gamefromscratch.com/balatro-made-with-love-love2d-that-is/">GameFromScratch — Balatro made with LÖVE2D</a><br>
+    <a href="https://www.pcgamer.com/games/roguelike/analysts-say-slay-the-spire-2-is-the-best-performing-deckbuilder-of-all-time-and-the-competition-isnt-close/">PC Gamer — Slay the Spire 2 performance (Godot)</a></p>
+  </details>
+
+  <details>
+    <summary>three.js for 2D UI: text needs canvas-texture or DOM-overlay workarounds, with perf costs</summary>
+    <p>Text in three.js is typically a canvas drawn then uploaded as a texture; mixing DOM/SVG 2D UI with three.js can cause performance problems, pushing people toward Pixi/Konva/Two.js. Confirms three.js is off-axis for a text-heavy card UI.</p>
+    <p><a href="https://discourse.threejs.org/t/which-solution-is-better-to-draw-2d-parts-that-plays-well-with-three-js/18908">three.js forum — drawing 2D parts alongside three.js</a><br>
+    <a href="https://www.tutorialspoint.com/threejs/threejs_creating_text.htm">Tutorialspoint — three.js text via canvas texture</a></p>
+  </details>
+
+  <details>
+    <summary>TS 2D framework landscape: Phaser (full framework) vs PixiJS (renderer) vs Excalibur (TS-first)</summary>
+    <p>Phaser is a complete game framework (scenes, input, tweening) suited to card games; PixiJS is a lighter, faster pure renderer (~450KB vs 1.2MB, ~2x render speed) where you build UI yourself; Excalibur.js is a TS-first OOP option. For a DOM-heavy card UI, a web-native (Svelte/React) layer over a pure-TS core is also a first-class path.</p>
+    <p><a href="https://generalistprogrammer.com/comparisons/phaser-vs-pixijs">Generalist Programmer — Phaser vs PixiJS (2025)</a><br>
+    <a href="https://github.com/Shirajuki/js-game-rendering-benchmark">GitHub — JS rendering benchmark (three/pixi/phaser/DOM/…)</a></p>
+  </details>
+
+  <footer>
+    Research gathered 2026-06-02 for the engine decision behind <a href="../../reference/vision.html">Shattered Worlds</a> (roguelite deckbuilder; typed, tested, CI-backed). Status <strong>active</strong>. Revised the same day after a follow-up clarified the game need not be a web app — which promotes Godot from "off axis" to front-runner. Bottom line: the three.js-vs-Bevy framing optimized the wrong axis; the real choice is <strong>Godot 4 + C#</strong> (native, genre-proven, Steam) versus a <strong>TypeScript web stack</strong> (browser reach), and with web optional, Godot+C# is the default. Either way, build a dependency-free, tested rules core first and keep the renderer swappable. Next step: a <em>design</em> artifact committing to engine + language and laying out the core/render split.
+  </footer>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,192 @@
+<!DOCTYPE html><html lang="en"><head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>What makes a deck-building game good?</title>
+  <meta name="date" content="2026-06-02">
+  <meta name="status" content="approved">
+  <meta name="tags" content="deckbuilding, game-design, roguelike, balance, synergy, player-agency">
+  <style>
+    :root {
+      --bg: #14161c;
+      --panel: #1c1f28;
+      --panel-2: #232733;
+      --ink: #e6e8ee;
+      --muted: #9aa3b2;
+      --accent: #7cc4ff;
+      --accent-2: #ffd479;
+      --good: #6cd08a;
+      --border: #2c3140;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; background: var(--bg); color: var(--ink);
+      font: 16px/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      padding: 2rem 1rem 5rem;
+    }
+    .wrap { max-width: 860px; margin: 0 auto; }
+    header.title { display: flex; align-items: baseline; flex-wrap: wrap; gap: .75rem; margin-bottom: .25rem; }
+    h1 { font-size: 1.9rem; margin: 0; line-height: 1.2; }
+    .badge {
+      display: inline-flex; align-items: center; gap: .4rem;
+      background: rgba(108,208,138,.12); color: var(--good);
+      border: 1px solid rgba(108,208,138,.35); border-radius: 999px;
+      padding: .2rem .7rem; font-size: .8rem; font-weight: 600; white-space: nowrap;
+    }
+    .dot { width: .5rem; height: .5rem; border-radius: 50%; background: var(--good); box-shadow: 0 0 0 0 rgba(108,208,138,.6); animation: pulse 2.4s infinite; }
+    @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(108,208,138,.5);} 70% { box-shadow: 0 0 0 8px rgba(108,208,138,0);} 100% { box-shadow: 0 0 0 0 rgba(108,208,138,0);} }
+    .sub { color: var(--muted); margin: .25rem 0 2rem; font-size: .95rem; }
+    h2 { font-size: 1.3rem; margin: 2.4rem 0 .8rem; padding-bottom: .35rem; border-bottom: 1px solid var(--border); }
+    h3 { font-size: 1.05rem; margin: 1.4rem 0 .4rem; color: var(--accent); }
+    p { margin: .5rem 0; }
+    a { color: var(--accent); }
+    .key {
+      background: linear-gradient(180deg, var(--panel-2), var(--panel));
+      border: 1px solid var(--border); border-radius: 14px; padding: 1.2rem 1.4rem; margin: 0 0 1rem;
+    }
+    .key h2 { margin-top: 0; border: 0; padding: 0; color: var(--accent-2); }
+    .principles { list-style: none; padding: 0; margin: .5rem 0 0; display: grid; gap: .65rem; }
+    .principles li { display: grid; grid-template-columns: 2rem 1fr; gap: .6rem; align-items: start; }
+    .num { color: var(--accent-2); font-weight: 700; font-variant-numeric: tabular-nums; }
+    .principles strong { color: var(--ink); }
+    .card {
+      background: var(--panel); border: 1px solid var(--border); border-radius: 12px;
+      padding: 1rem 1.2rem; margin: .9rem 0;
+    }
+    .card .lead { color: var(--accent-2); font-weight: 600; }
+    blockquote {
+      margin: .7rem 0; padding: .4rem 0 .4rem 1rem; border-left: 3px solid var(--accent);
+      color: var(--muted); font-style: italic;
+    }
+    .tag { display: inline-block; background: var(--panel-2); border: 1px solid var(--border); color: var(--muted);
+      border-radius: 6px; padding: .05rem .5rem; font-size: .75rem; margin-right: .3rem; }
+    table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: .92rem; }
+    th, td { text-align: left; padding: .55rem .6rem; border-bottom: 1px solid var(--border); vertical-align: top; }
+    th { color: var(--accent); font-weight: 600; }
+    details { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: .5rem .9rem; margin: .5rem 0; }
+    details summary { cursor: pointer; font-weight: 600; color: var(--ink); }
+    details[open] summary { margin-bottom: .5rem; }
+    details .src-url { font-size: .8rem; word-break: break-all; }
+    .pitfall { border-left: 3px solid #ff8a8a; }
+    .pitfall .lead { color: #ff9d9d; }
+    .applies { background: rgba(124,196,255,.08); border: 1px solid rgba(124,196,255,.3); border-radius: 12px; padding: 1rem 1.2rem; margin-top: 1rem; }
+    .applies h3 { color: var(--accent); margin-top: 0; }
+    footer { margin-top: 3rem; color: var(--muted); font-size: .85rem; border-top: 1px solid var(--border); padding-top: 1rem; }
+  </style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="title">
+    <h1>What makes a deck-building game good?</h1>
+    <span class="badge"><span class="dot"></span>Fresh · 2026-06-02</span>
+  </header>
+  <p class="sub">Research synthesis for <strong>shattered-worlds</strong>. Sources span the genre origin (Dominion, 2008), the modern roguelike benchmark (Slay the Spire), and general video-game deckbuilder design talks. Card balance and live-ops advice goes stale; the core design principles below are durable.</p>
+
+  <div class="key">
+    <h2>Key Findings</h2>
+    <p style="color:var(--muted);margin-top:0">A good deckbuilder is a generator of <em>interesting decisions under managed randomness</em>. The deck is the player's evolving expression of strategy, and the game is good when shaping that deck is consistently the most interesting thing to think about.</p>
+    <ol class="principles">
+      <li><span class="num">1</span><span><strong>The deck-building IS the game.</strong> If cards are too powerful, players ignore building; too weak, they get frustrated. The acquire/remove decision must stay the central tension, not a side activity.</span></li>
+      <li><span class="num">2</span><span><strong>Agency over randomness, not absence of it.</strong> Randomness creates variety; agency makes it feel earned. Let players own the randomization (you choose which cards are offered into your deck) rather than hiding it.</span></li>
+      <li><span class="num">3</span><span><strong>Opportunity cost on every choice.</strong> Adding a card has a downside (it dilutes your draw). Trashing/thinning is a real strategy. Dead weight in the deck (Dominion's victory cards) is a feature that forces timing decisions.</span></li>
+      <li><span class="num">4</span><span><strong>Synergy via set-ups and pay-offs.</strong> Cards should combo. Group them into legible <em>archetypes</em> ("fire build") so players grasp <em>why</em> things work together, not just that they do.</span></li>
+      <li><span class="num">5</span><span><strong>Simple parts, deep combinations.</strong> Slay the Spire's elements are unimpressive alone; the depth is emergent. Ramp complexity fast enough to stay interesting, slow enough not to overwhelm.</span></li>
+      <li><span class="num">6</span><span><strong>Single-player balance optimizes for fun, not fairness.</strong> No competitive mirror means decks need not be equal. Balance with <em>data</em> (pick rate, win rate), not player feedback or designer intuition.</span></li>
+      <li><span class="num">7</span><span><strong>Constrain the choice set.</strong> Choosing 1-of-3 cards is sharper than sorting 20. Visual/textual clarity and tooltips are first-rank UI problems, not polish.</span></li>
+    </ol>
+  </div>
+
+  <h2>1. The deck-building must be the interesting part</h2>
+  <p>The recurring failure mode designers warn about: the deck mechanic becomes decoration. If individual cards are overpowered, players stop caring how the deck is composed; if they're too weak, building feels pointless and frustrating. The mechanic has to sit in a band where <em>every acquisition is a real trade-off</em>. Too simple and there's no room for creativity; too complex and it tips into frustration.</p>
+  <p>Donald X. Vaccarino's framing for <strong>Dominion</strong> (the game that created the genre) is the cleanest version: you are building a deck <em>while playing with everything in it</em>. Resources stay in the deck as income rather than being spent away, so the deck itself is both your strategy and your scoreboard. That single design premise is what generates the "so many interesting decision angles."</p>
+
+  <h2>2. Player agency over managed randomness</h2>
+  <p>The genre's signature tension is randomness. The insight from <em>Hand of Fate</em>'s designers: don't hide the randomization, hand it to the player. "The deck is replacing the dungeon master" gives "a sense of agency and ownership of that randomization." Players tolerate, even enjoy, a bad draw when they chose the cards that could produce it.</p>
+  <blockquote>Deckbuilding lets designers randomize the experience while giving players a sense of agency and ownership of that randomization.</blockquote>
+  <p>Roguelike structure (Slay the Spire) leans into this: random card offers and map paths force playstyle variety run-to-run, but the player's choices at each fork are what determine the deck.</p>
+
+  <h2>3. Opportunity cost, thinning, and useful dead weight</h2>
+  <p>A strong deckbuilder makes <em>adding</em> a card a genuine decision because it dilutes the chance of drawing your best cards. This is why <strong>deck thinning</strong> is a core strategy, not an afterthought:</p>
+  <blockquote>The "thin deck" strategy: focus on a few key cards, remove as many middling cards as possible, so the average hand has a much higher chance of including exactly what you want with none of the anti-synergistic fluff in between.</blockquote>
+  <p>Dominion's most-cited design decision is its <strong>"useless" victory-point cards</strong>: they're worthless during play and actively clog your engine, yet you must buy them to win. That tension (build efficiency vs. start scoring) creates a natural narrative arc to every game, and a self-balancing catch-up: a player who's ahead on points has a more clogged, slower deck. <strong>Trashing</strong> mechanics that excise starter chaff (and occasionally upgrade high-value cards) are the release valve.</p>
+  <table>
+    <tbody><tr><th>Lever</th><th>What it does</th><th>Why it makes the game good</th></tr>
+    <tr><td>Acquire</td><td>Add a card to the deck</td><td>Power up — but dilute draw consistency</td></tr>
+    <tr><td>Trash / thin</td><td>Remove a card permanently</td><td>Raises odds of drawing your key cards</td></tr>
+    <tr><td>Dead weight (VP / curses)</td><td>Cards that must enter the deck</td><td>Forces timing decisions, enables catch-up</td></tr>
+  </tbody></table>
+
+  <h2>4. Synergy, set-ups, pay-offs, and archetypes</h2>
+  <p>Depth comes from cards interacting. The useful vocabulary: <strong>set-up</strong> cards enable chain reactions, <strong>pay-off</strong> cards reward you for having the right set-ups. Bundle these into <strong>archetypes</strong>, a cohesive group of cards conveying one legible way to play (a "fire build," a "powers build").</p>
+  <p>Archetypes matter because they make the system <em>intelligible</em>. Players need to grasp <em>why</em> cards work together so a winning strategy feels intentional rather than accidental. A single archetype can carry multiple axes (Tavrox's "Wrath + Sorrow" example), giving variety within a coherent theme.</p>
+  <div class="card pitfall">
+    <p class="lead">Pitfall: players won't combo unless you make them</p>
+    <p><em>SteamWorld Quest</em> found players just dumped cards immediately instead of holding for synergies. The fix was "Heroic Chains" — a bonus for playing three cards from the same hero per turn — which turned deck composition into moment-to-moment gameplay. <strong>Lesson: reward synergy mechanically, don't assume players will pursue it.</strong></p>
+  </div>
+
+  <h2>5. Simple elements, emergent depth, controlled ramp</h2>
+  <p>Slay the Spire's parts (attack, block, a few powers) are unremarkable in isolation. The game is good because the <em>combinations</em> create "a playground of different abilities," a "miniature exercise in maximizing deck synergies." The design deliberately stripped out uncertainty, chance, athletics, and motor skills, distilling to pure deck decisions, and drew from TCGs and board games rather than other video games.</p>
+  <p>Pacing of new complexity is its own skill:</p>
+  <blockquote>Complexity needs to ramp up fast enough to keep the player constantly interested... but not so quickly that it becomes overwhelming.</blockquote>
+  <p>Each character has a unique card pool plus shared cards, every character can win in the right hands, and a "radically different" new character is how the genre adds depth without bloating any single playthrough.</p>
+
+  <h2>6. Balance with data, especially in single-player</h2>
+  <p>Combinatorial explosion makes intuition useless: <em>Book of Demons</em> has ~3 quadrillion builds from 40 archetypes per class. Mega Crit's answer for Slay the Spire was to instrument everything and track:</p>
+  <ul>
+    <li><strong>Pick rate</strong> — how often a card is chosen when offered (and what it's chosen <em>over</em>)</li>
+    <li><strong>Win rate</strong> — how often a card appears in winning decks</li>
+    <li>Plus damage taken per enemy and 90+ tracked metrics; one hour of Early Access yielded more data than the entire prototype phase.</li>
+  </ul>
+  <p>Concrete wins: the <em>Dual Wield</em> card was nerfed to copy only Skills after data exposed an infinite-loop exploit; the <em>Awakened One</em> boss was retuned (less strength gain, more base damage) after data showed power-decks struggling, then re-measured to validate. Critically, single-player frees you from competitive fairness:</p>
+  <blockquote>Because the game is single-player, decks do not need to be equal — the team can make changes for entertainment value rather than pure balance.</blockquote>
+  <p>And resist buff-begging: "rely on data" rather than player perception. Start data collection early; expect multiple balance passes because power creep is inevitable when content ships in waves.</p>
+
+  <h2>7. Decision economy and UI are design, not polish</h2>
+  <p>More choices is not more depth. "Asking the player to choose five cards from their deck leads to much more interesting decision-making than asking them to choose 20." Constrain the offer set (the 1-of-3 reward screen) to keep each decision sharp.</p>
+  <p>Card legibility is a real design constraint: a card named "Heroic Strike" with a sword reads instantly. Text-heavy cards need tooltips treated as "a first-rank UI problem." <em>Cultist Simulator</em>'s designer regretted shipping without snap-to-grid; <em>card-handling friction directly costs player satisfaction</em>.</p>
+
+  <div class="applies">
+    <h3>So, what makes one good — distilled</h3>
+    <p>A deck-building game is good when <strong>shaping the deck is reliably the most interesting decision on screen</strong>: when adding a card costs something, removing one is a strategy, synergies are legible and rewarded, randomness is owned by the player rather than imposed on them, complexity unfolds at a digestible pace, and (in single-player) balance chases fun, validated by data rather than intuition or the loudest feedback.</p>
+  </div>
+
+  <h2>Sources</h2>
+  <details>
+    <summary>Designing for deck-building in video games — Game Developer</summary>
+    <p>Agency vs. randomness (Hand of Fate), constraining choice (5 vs 20), card familiarity/legibility, synergy incentives (SteamWorld Quest Heroic Chains), data-driven balance, power creep, tooltips/UI as first-rank problems, combinatorial scale (Book of Demons).</p>
+    <p class="src-url"><a href="https://www.gamedeveloper.com/design/designing-for-deck-building-in-video-games">gamedeveloper.com/design/designing-for-deck-building-in-video-games</a></p>
+  </details>
+  <details>
+    <summary>How Slay the Spire's devs use data to balance their roguelike deck-builder — Game Developer</summary>
+    <p>Pick rate vs. win rate metrics, Dual Wield and Awakened One examples, single-player "fun over fairness" philosophy, scale of data collection, 90+ metrics.</p>
+    <p class="src-url"><a href="https://www.gamedeveloper.com/design/how-i-slay-the-spire-i-s-devs-use-data-to-balance-their-roguelike-deck-builder">gamedeveloper.com/.../how-slay-the-spire-devs-use-data-to-balance</a></p>
+  </details>
+  <details>
+    <summary>Slay the Spire reviews (2026 retrospective, Rogueliker) — what makes it work</summary>
+    <p>Simple-elements/emergent-depth thesis, removal of chance/motor-skill uncertainty, TCG inspiration, per-character pools, every character winnable, depth via new characters.</p>
+    <p class="src-url"><a href="https://rogueliker.com/slay-the-spire-review/">rogueliker.com/slay-the-spire-review</a> · <a href="https://www.vdgms.com/reviews/slay-the-spire-review-is-it-still-the-best-roguelike-deckbuilder-in-2026">vdgms.com review (2026)</a></p>
+  </details>
+  <details>
+    <summary>Archetypes in deckbuilding games — Tavrox Games</summary>
+    <p>Definition of archetype, set-up vs. pay-off cards, legibility/"why it works," multi-axis archetypes, flavor as comprehension aid.</p>
+    <p class="src-url"><a href="https://tavroxgames.com/archetypes-in-deckbuilding-games/">tavroxgames.com/archetypes-in-deckbuilding-games</a></p>
+  </details>
+  <details>
+    <summary>Dominion design — Cardboard Edison (Vaccarino interview), Naylor Games, strategy guides</summary>
+    <p>Genre origin, "build the deck while playing with all of it," opportunity cost, trashing, the deliberately useless victory-point cards and their narrative-arc / catch-up effect.</p>
+    <p class="src-url"><a href="https://cardboardedison.com/blog/meaningful-decisions-donald-x-vaccarino-dominion">cardboardedison.com — Vaccarino interview</a> · <a href="https://naylorgames.com/blogs/blog/great-design-decisions-dominions-useless-victory-point-cards">naylorgames.com — useless VP cards</a> · <a href="https://www.meeplemountain.com/articles/dominion-strategy-guide/">meeplemountain.com — strategy guide</a></p>
+  </details>
+  <details>
+    <summary>General deckbuilding design + thinning/synergy</summary>
+    <p>Card balance bands, gradual complexity, playtesting/early-access, thin-deck strategy, set-up/pay-off synergy, encouraging experimentation.</p>
+    <p class="src-url"><a href="https://mainleaf.com/how-to-design-a-deck-building-game/">mainleaf.com</a> · <a href="https://rawstone.net/2024/04/04/crafting-dynamic-experiences-the-art-of-board-game-deck-building/">rawstone.net</a> · <a href="https://tabletopgamesblog.com/2023/05/23/deck-building-a-modern-card-mechanism-topic-discussion/">tabletopgamesblog.com</a></p>
+  </details>
+
+  <footer>
+    Gathered 2026-06-02 via web search + source fetch. Durable principles should hold; specific card-balance numbers and live-ops practices drift. Re-verify before citing any single card's stats.
+  </footer>
+
+</div>
+
+
+<script type="application/json" id="lore-annotations">{"comments":[],"todos":[],"starred":true}</script></body></html>
