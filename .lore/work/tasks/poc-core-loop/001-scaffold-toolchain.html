@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Scaffold project &amp; toolchain</title>
+  <meta name="date" content="2026-06-02">
+  <meta name="status" content="pending">
+  <meta name="tags" content="task, scaffold, bun, vite, typescript, eslint, boundary">
+  <meta name="modules" content="core, game, sim, ci">
+  <meta name="source" content=".lore/work/plans/poc-core-loop.html">
+  <meta name="sequence" content="1">
+  <style>
+    :root { --bg:#0f1117; --panel:#1a1d27; --panel-2:#222633; --ink:#e8eaf0; --muted:#9aa3b2;
+      --accent:#8ab4ff; --gold:#ffd479; --good:#6cd08a; --warn:#ffc14d; --bad:#ff8a8a; --border:#2a2f3d; }
+    * { box-sizing:border-box; }
+    body { margin:0; background:radial-gradient(1200px 600px at 50% -10%, #1a2238 0%, var(--bg) 55%);
+      color:var(--ink); font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; padding:0 1rem 5rem; }
+    .wrap { max-width:880px; margin:0 auto; }
+    .top { display:flex; align-items:center; gap:.7rem; flex-wrap:wrap; margin:1.6rem 0 1rem; }
+    .seq { font:1rem ui-monospace,Menlo,monospace; font-weight:700; color:var(--bg); background:var(--gold);
+      border-radius:8px; padding:.25rem .7rem; }
+    .seq small { font-weight:600; opacity:.7; }
+    .chip { display:inline-flex; align-items:center; gap:.35rem; border-radius:999px; padding:.2rem .75rem;
+      font-size:.74rem; font-weight:700; border:1px solid; text-transform:uppercase; letter-spacing:.04em; }
+    .chip.pending { background:rgba(255,193,77,.12); border-color:rgba(255,193,77,.4); color:var(--warn); }
+    .src { margin-left:auto; font-size:.8rem; } .src a { color:var(--accent); }
+    h1 { font-size:1.7rem; margin:.3rem 0 1.2rem; line-height:1.15; }
+    h2 { font-size:.82rem; text-transform:uppercase; letter-spacing:.1em; color:var(--muted); margin:1.8rem 0 .5rem; }
+    p { margin:.5rem 0; } code { background:var(--panel-2); border:1px solid var(--border); border-radius:5px; padding:.06rem .35rem; font-size:.86em; }
+    ul { padding-left:1.2rem; } li { margin:.35rem 0; } li b { color:var(--ink); }
+    .panel { background:var(--panel); border:1px solid var(--border); border-radius:12px; padding:1rem 1.3rem; }
+    .file { font:.84rem ui-monospace,Menlo,monospace; color:var(--gold); }
+    .reqs { display:flex; gap:.3rem; flex-wrap:wrap; margin:.2rem 0 0; }
+    .reqtag { font:.68rem ui-monospace,Menlo,monospace; background:rgba(138,180,255,.14); color:var(--accent); border-radius:999px; padding:.12rem .55rem; }
+    .validation { background:linear-gradient(180deg,rgba(108,208,138,.08),rgba(108,208,138,.02));
+      border:1px solid rgba(108,208,138,.4); border-left:4px solid var(--good); border-radius:14px; padding:1rem 1.3rem; margin:.6rem 0; }
+    .validation h2 { color:var(--good); margin-top:.2rem; }
+    .check { display:flex; gap:.55rem; margin:.5rem 0; align-items:baseline; }
+    .check .box { color:var(--good); font-weight:700; } .check .body { color:var(--muted); } .check .body b { color:var(--ink); }
+    .muted { color:var(--muted); }
+  </style>
+</head>
+<body><div class="wrap">
+
+  <div class="top">
+    <span class="seq"><small>STEP</small> 1<small> / 9</small></span>
+    <span class="chip pending">● pending</span>
+    <span class="src">Plan: <a href="../../plans/poc-core-loop.html">poc-core-loop</a></span>
+  </div>
+
+  <h1>Scaffold project &amp; toolchain</h1>
+  <div class="reqs"><span class="reqtag">REQ-POC-15</span><span class="reqtag">REQ-POC-1</span></div>
+
+  <h2>What</h2>
+  <div class="panel">
+    <p>Stand up the Bun + Vite + strict-TypeScript project with the lint-enforced core/render boundary wired <strong>before</strong> any game code exists. Create:</p>
+    <ul>
+      <li><span class="file">package.json</span> — dep <code>phaser</code> (current 3.x, pinned). Dev deps: <code>vite</code>, <code>typescript</code>, <code>eslint</code>, <code>@eslint/js</code>, <code>typescript-eslint</code>, <code>@types/bun</code>. Scripts: <code>dev</code>, <code>build</code>, <code>preview</code>, <code>test</code> (bun test), <code>typecheck</code> (tsc --noEmit), <code>lint</code>, <code>sim</code>.</li>
+      <li><span class="file">tsconfig.json</span> — <code>strict</code>, <code>noUncheckedIndexedAccess</code>, <code>exactOptionalPropertyTypes</code>, bundler resolution, <code>types:["bun"]</code>, ES2022 + DOM lib.</li>
+      <li><span class="file">vite.config.ts</span> — <code>base:'/shattered-worlds/'</code>, build to <code>dist/</code>.</li>
+      <li><span class="file">index.html</span> — module script entry <code>/src/game/main.ts</code>.</li>
+      <li><span class="file">eslint.config.js</span> — flat config; override on <code>src/core/**/*.ts</code> with <code>no-restricted-imports</code> (<code>phaser</code>, <code>**/game/**</code>) and <code>no-restricted-globals</code> (<code>window</code>, <code>document</code>, <code>navigator</code>).</li>
+      <li><span class="file">src/core/</span>, <span class="file">src/game/</span>, <span class="file">src/sim/</span> — stub <code>index.ts</code> in each as lint/typecheck targets.</li>
+    </ul>
+    <p>Run <code>bun install</code> and <strong>commit <code>bun.lock</code></strong>. Pin exact versions; verify Phaser's current 3.x at install rather than from memory. Existing <span class="file">.gitignore</span> already covers <code>node_modules</code>/<code>dist</code>/<code>*.tsbuildinfo</code> — no change.</p>
+  </div>
+
+  <div class="validation">
+    <h2>✓ Validation</h2>
+    <div class="check"><span class="box">▸</span><span class="body"><code>bun install</code> from the committed lockfile reconstructs the graph with no error.</span></div>
+    <div class="check"><span class="box">▸</span><span class="body"><code>bun run typecheck</code> and <code>bun run lint</code> both pass on the stubs.</span></div>
+    <div class="check"><span class="box">▸</span><span class="body"><b>Boundary probe:</b> temporarily adding <code>import 'phaser'</code> to a file under <code>src/core/</code> makes <code>bun run lint</code> <b>fail</b>; removing it makes lint pass. Proves the boundary is live before real code lands.</span></div>
+  </div>
+
+  <h2>Why</h2>
+  <p class="muted"><b>REQ-POC-15</b> fixes the toolchain to Bun + Vite + strict TS with a committed lockfile (reproducible builds). <b>REQ-POC-1</b> requires the core/render boundary to be lint-enforced, not convention. Wiring both first means the architecture cannot be violated silently as code lands. See <a href="../../plans/poc-core-loop.html#step-1">plan Step 1</a>.</p>
+
+  <h2>Files</h2>
+  <p class="muted"><span class="file">package.json</span>, <span class="file">tsconfig.json</span>, <span class="file">vite.config.ts</span>, <span class="file">index.html</span>, <span class="file">eslint.config.js</span>, <span class="file">src/{core,game,sim}/index.ts</span>, <span class="file">bun.lock</span></p>
+
+</div></body></html>

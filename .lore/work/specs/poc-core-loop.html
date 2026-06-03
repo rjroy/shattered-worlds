@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>POC spec: ultra-basic core loop</title>
+  <meta name="date" content="2026-06-02">
+  <meta name="status" content="approved">
+  <meta name="tags" content="poc, core-loop, deck, draw, play, discard, shuffle, determinism, seam, validation">
+  <meta name="modules" content="core, game">
+  <meta name="related" content=".lore/work/design/core-render-architecture.html, .lore/reference/vision.html">
+  <meta name="req-prefix" content="POC">
+  <style>
+    :root {
+      --bg: #0f1117; --panel: #1a1d27; --panel-2: #222633;
+      --ink: #e8eaf0; --muted: #9aa3b2; --accent: #8ab4ff; --gold: #ffd479;
+      --good: #6cd08a; --warn: #ffc14d; --bad: #ff8a8a; --border: #2a2f3d;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; background: radial-gradient(1200px 600px at 50% -10%, #1a2238 0%, var(--bg) 55%);
+      color: var(--ink); font: 16px/1.65 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      padding: 0 1rem 6rem;
+    }
+    .wrap { max-width: 920px; margin: 0 auto; }
+
+    .sticky { position: sticky; top: 0; z-index: 10; background: rgba(15,17,23,.92); backdrop-filter: blur(6px);
+      border-bottom: 1px solid var(--border); padding: .7rem 0; margin-bottom: 1.5rem; }
+    .sticky .row { max-width: 920px; margin: 0 auto; display: flex; align-items: center; gap: .6rem; flex-wrap: wrap; }
+    .sticky .t { font-weight: 700; }
+    .chip { display: inline-flex; align-items: center; gap: .35rem; border-radius: 999px; padding: .18rem .7rem; font-size: .72rem; font-weight: 600; border: 1px solid; }
+    .chip.status { background: rgba(138,180,255,.12); border-color: rgba(138,180,255,.35); color: var(--accent); }
+    .chip.prefix { background: rgba(255,212,121,.1); border-color: rgba(255,212,121,.35); color: var(--gold); }
+    .chip.count { background: rgba(108,208,138,.1); border-color: rgba(108,208,138,.3); color: var(--good); }
+
+    .hero { text-align: center; margin: 1.4rem 0 2rem; }
+    .kicker { letter-spacing: .28em; text-transform: uppercase; font-size: .72rem; color: var(--gold); margin-bottom: .5rem; }
+    h1 { font-size: 2rem; margin: 0 0 .5rem; line-height: 1.1;
+      background: linear-gradient(180deg,#fff,#b8c4e0); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+    .sub { color: var(--muted); max-width: 620px; margin: 0 auto; }
+
+    h2 { font-size: 1.35rem; margin: 2.6rem 0 1rem; display: flex; align-items: center; gap: .6rem; }
+    h2 .mark { color: var(--gold); font-size: 1rem; }
+    h3 { font-size: 1.05rem; }
+    p { margin: .6rem 0; }
+    a { color: var(--accent); }
+    code { background: var(--panel-2); border: 1px solid var(--border); border-radius: 5px; padding: .08rem .35rem; font-size: .86em; }
+    .muted { color: var(--muted); }
+
+    .callout { background: rgba(255,193,77,.06); border: 1px solid rgba(255,193,77,.3); border-left: 3px solid var(--warn);
+      border-radius: 12px; padding: 1rem 1.3rem; margin: 1rem 0; }
+    .callout h3 { margin: 0 0 .4rem; color: var(--warn); }
+    .callout ul { margin: .3rem 0 0; padding-left: 1.1rem; } .callout li { margin: .25rem 0; color: var(--muted); }
+    .callout li b { color: var(--ink); }
+
+    .panel { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 1rem 1.3rem; margin: 1rem 0; }
+
+    /* requirement cards */
+    .req { background: var(--panel); border: 1px solid var(--border); border-left: 3px solid var(--accent); border-radius: 12px;
+      padding: 1rem 1.2rem; margin: .8rem 0; scroll-margin-top: 64px; }
+    .req .head { display: flex; align-items: baseline; gap: .6rem; flex-wrap: wrap; }
+    .req .id { font: .8rem ui-monospace, Menlo, monospace; color: var(--gold); font-weight: 700; }
+    .req .id a { color: inherit; text-decoration: none; }
+    .req .name { font-weight: 700; }
+    .req .badge { margin-left: auto; font-size: .68rem; font-weight: 700; padding: .12rem .55rem; border-radius: 999px;
+      background: rgba(138,180,255,.14); color: var(--accent); text-transform: uppercase; letter-spacing: .04em; }
+    .req .badge.must { background: rgba(255,138,138,.14); color: var(--bad); }
+    .req .badge.should { background: rgba(255,193,77,.14); color: var(--warn); }
+    .req p { margin: .5rem 0 0; color: var(--muted); }
+    .req p b, .req p strong { color: var(--ink); }
+    .group { font-size: .78rem; text-transform: uppercase; letter-spacing: .1em; color: var(--muted); margin: 2rem 0 .4rem; }
+
+    pre { background: #0c0e14; border: 1px solid var(--border); border-radius: 10px; padding: 1rem 1.1rem; overflow-x: auto;
+      font: .84rem/1.55 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; color: #d6dbe8; }
+    pre .c { color: var(--muted); } pre .k { color: var(--accent); } pre .t { color: var(--gold); } pre .s { color: var(--good); }
+
+    /* validation */
+    .validation { background: linear-gradient(180deg, rgba(108,208,138,.08), rgba(108,208,138,.02));
+      border: 1px solid rgba(108,208,138,.4); border-left: 4px solid var(--good); border-radius: 16px; padding: 1.3rem 1.5rem; }
+    .validation h2 { margin-top: 0; color: var(--good); }
+    .check { display: flex; gap: .6rem; margin: .6rem 0; align-items: baseline; }
+    .check .box { color: var(--good); font-weight: 700; }
+    .check .body { color: var(--muted); } .check .body b { color: var(--ink); }
+    .check .ref { font: .72rem ui-monospace, Menlo, monospace; color: var(--gold); }
+
+    .loop { display: flex; flex-wrap: wrap; gap: .4rem; align-items: center; margin: 1rem 0; }
+    .loop .step { background: var(--panel-2); border: 1px solid var(--border); border-radius: 8px; padding: .35rem .7rem; font-size: .82rem; }
+    .loop .arrow { color: var(--muted); }
+
+    footer { margin-top: 3.5rem; color: var(--muted); font-size: .85rem; border-top: 1px solid var(--border); padding-top: 1rem; }
+  </style>
+</head>
+<body>
+
+  <div class="sticky"><div class="row">
+    <span class="t">POC · Ultra-basic core loop</span>
+    <span class="chip status">● approved</span>
+    <span class="chip prefix">REQ-POC-N</span>
+    <span class="chip count">18 requirements</span>
+    <span class="muted" style="margin-left:auto;font-size:.8rem">Shattered Worlds</span>
+  </div></div>
+
+<div class="wrap">
+
+  <div class="hero">
+    <div class="kicker">Spec · Proof of Concept</div>
+    <h1>The smallest loop that exercises the seam</h1>
+    <p class="sub">A deck of ten, draw five, play to sum, end the turn to record and redraw. No win, no loss. Its only real job is to prove the approved core/render architecture works end to end.</p>
+  </div>
+
+  <h2><span class="mark">◇</span> Purpose &amp; the loop</h2>
+  <p>This POC is deliberately not a game. It is the thinnest vertical slice that drives the seam from the <a href="../design/core-render-architecture.html">approved core/render architecture</a>: a pure synchronous core that returns <code>{ state, events }</code>, seeded RNG and shuffle, and a Phaser renderer that observes state and plays events. If this slice is typed, tested, deterministic, and visibly playable, the architecture is proven and the real game can build on it.</p>
+
+  <div class="loop">
+    <span class="step">New game (shuffle 10, draw 5)</span><span class="arrow">→</span>
+    <span class="step">Play cards in order, summing</span><span class="arrow">→</span>
+    <span class="step">End Turn</span><span class="arrow">→</span>
+    <span class="step">Discard hand · record total · draw 5</span><span class="arrow">↺</span>
+  </div>
+
+  <div class="callout">
+    <h3>Resolved decisions &amp; assumptions (veto any of these)</h3>
+    <ul>
+      <li><b>End Turn discards the whole hand.</b> Both played and unplayed cards go to discard, then a fresh 5 is drawn. (Confirmed with user.)</li>
+      <li><b>Playing a card is a one-way commit within a turn.</b> No un-play, no reorder once played. Order played = order selected. <span class="muted">(Assumed — simplest action set.)</span></li>
+      <li><b>"Record total" keeps an ordered history</b> of per-turn totals on the state; the running total resets to 0 each new turn. <span class="muted">(Assumed.)</span></li>
+      <li><b>No FX/juice is required.</b> The renderer may be visually plain. This POC proves the seam, not the feel. <span class="muted">(Escalation/<code>intensity</code> is explicitly out of scope.)</span></li>
+    </ul>
+    <p style="margin:.6rem 0 0;color:var(--muted);font-size:.9rem">The two <em>assumed</em> items above are not yet confirmed by the user. Raise them for sign-off before implementation begins; do not let an assumption silently become a bug.</p>
+  </div>
+
+  <!-- ============ ARCHITECTURE ============ -->
+  <div class="group">A · Architecture &amp; the seam</div>
+
+  <div class="req" id="REQ-POC-1">
+    <div class="head"><span class="id"><a href="#REQ-POC-1">REQ-POC-1</a></span><span class="name">All game logic lives in the pure core</span><span class="badge must">Must</span></div>
+    <p>Every rule of this loop is implemented under <code>src/core/</code> with <strong>zero Phaser imports and no DOM/canvas access</strong>. The renderer under <code>src/game/</code> may import the core; the core may never import the renderer or Phaser. The boundary is enforced by a lint rule, not convention.</p>
+  </div>
+
+  <div class="req" id="REQ-POC-2">
+    <div class="head"><span class="id"><a href="#REQ-POC-2">REQ-POC-2</a></span><span class="name">The core is a synchronous dispatch function</span><span class="badge must">Must</span></div>
+    <p>The core exposes <code>dispatch(action) → { state, events }</code> that returns immediately and never awaits animation or I/O. Given the same prior state and action it always returns the same next state and the same ordered event list. State is treated as immutable (each dispatch yields a new snapshot; the prior is not mutated).</p>
+  </div>
+
+  <div class="req" id="REQ-POC-3">
+    <div class="head"><span class="id"><a href="#REQ-POC-3">REQ-POC-3</a></span><span class="name">All randomness is seeded and lives in the core</span><span class="badge must">Must</span></div>
+    <p><code>createGame(seed)</code> constructs a game whose every random decision (initial shuffle, reshuffle) flows through a seeded PRNG carried in the state. <strong>Same seed + same action sequence ⇒ byte-identical state and events.</strong> The renderer introduces no randomness that can affect state.</p>
+  </div>
+
+  <!-- ============ DATA ============ -->
+  <div class="group">B · Cards &amp; state</div>
+
+  <div class="req" id="REQ-POC-4">
+    <div class="head"><span class="id"><a href="#REQ-POC-4">REQ-POC-4</a></span><span class="name">The deck is exactly ten cards in a fixed composition</span><span class="badge must">Must</span></div>
+    <p>A new game's library is <strong>five value-1 cards, three value-2 cards, two value-3 cards</strong> (ten cards, value sum 13). Every card carries a <strong>unique stable id</strong> so otherwise-identical cards (the five 1s) can be tracked individually through hand, played, and discard, and used as render keys.</p>
+  </div>
+
+  <div class="req" id="REQ-POC-5">
+    <div class="head"><span class="id"><a href="#REQ-POC-5">REQ-POC-5</a></span><span class="name">State models the four zones, the running total, and history</span><span class="badge must">Must</span></div>
+    <p><code>GameState</code> represents: the <strong>draw pile</strong> (ordered), the <strong>hand</strong>, the <strong>played-this-turn</strong> pile (ordered by play order), the <strong>discard pile</strong>, the <strong>current running total</strong> for the turn, the <strong>ordered history of completed turn totals</strong>, and the <strong>PRNG cursor</strong> (whatever opaque state the chosen PRNG requires, not assumed to be a single integer). The ten cards are conserved: at every point the four zones together contain all ten, no duplicates, none lost.</p>
+  </div>
+
+  <!-- ============ LOOP ============ -->
+  <div class="group">C · The turn loop</div>
+
+  <div class="req" id="REQ-POC-6">
+    <div class="head"><span class="id"><a href="#REQ-POC-6">REQ-POC-6</a></span><span class="name">New game shuffles and deals the opening hand</span><span class="badge must">Must</span></div>
+    <p><code>createGame(seed)</code> builds the ten-card library, shuffles it with the seeded PRNG, draws an opening hand of <strong>5</strong>, sets the running total to 0, and leaves the turn-total history empty. Draw pile then holds 5, discard 0. <span class="muted">(The design's optional <code>config</code> parameter is intentionally omitted for this POC; the exact PRNG algorithm and seed type remain deferred to implementation, per the approved design.)</span></p>
+  </div>
+
+  <div class="req" id="REQ-POC-7">
+    <div class="head"><span class="id"><a href="#REQ-POC-7">REQ-POC-7</a></span><span class="name">Drawing reshuffles the discard when the draw pile runs dry</span><span class="badge must">Must</span></div>
+    <p>A draw of 5 pulls from the top of the draw pile. If the draw pile empties before 5 are drawn, the <strong>discard pile is shuffled (seeded) to form a new draw pile</strong> and drawing continues until 5 are in hand. With ten cards total this always succeeds. Reshuffle emits a <code>DeckShuffled</code> event.</p>
+  </div>
+
+  <div class="req" id="REQ-POC-8">
+    <div class="head"><span class="id"><a href="#REQ-POC-8">REQ-POC-8</a></span><span class="name">PlayCard moves a card to the played pile and adds its value</span><span class="badge must">Must</span></div>
+    <p>A <code>PlayCard(cardId)</code> action moves that card from hand to the played-this-turn pile, appended in play order, and <strong>adds its value to the running total</strong>. Only cards currently in hand are legal targets. Playing is one-way within the turn (no un-play). Emits a <code>CardPlayed</code> event carrying the card id, its value, and the new running total.</p>
+    <p><strong>Illegal actions throw.</strong> Dispatching <code>PlayCard</code> with an id that is not currently in hand (unknown, already played, or already discarded) throws a typed error carrying the offending action and the current state. The core never silently no-ops and never returns an error <em>event</em> for legal-vs-illegal; <code>dispatch</code>'s <code>{ state, events }</code> return is for valid actions only. (This is the single error contract for every action in this POC.)</p>
+  </div>
+
+  <div class="req" id="REQ-POC-9">
+    <div class="head"><span class="id"><a href="#REQ-POC-9">REQ-POC-9</a></span><span class="name">EndTurn discards the hand, records the total, and redraws</span><span class="badge must">Must</span></div>
+    <p>An <code>EndTurn</code> action, in this <strong>strict order</strong>: <strong>(1)</strong> appends the current running total to the turn-total history; <strong>(2)</strong> moves every card in both the hand and the played pile to the discard pile; <strong>(3)</strong> resets the running total to 0; <strong>(4)</strong> draws a fresh 5 (reshuffling per REQ-POC-7 as needed). Steps (1)–(3) must complete before step (4) begins, so <strong>the draw step always sees the full discard pool</strong>. With ten cards and a draw of five, step (4) empties the draw pile and therefore triggers exactly one seeded reshuffle per End Turn; this is expected, not an edge case.</p>
+    <p>If both hand and played piles are empty (an End Turn with nothing to discard), the action still records the running total (which is 0) and draws normally. Emits an ordered event sequence <code>TurnEnded{total}</code>, <code>CardsDiscarded{cardIds}</code>, optional <code>DeckShuffled</code>, <code>CardsDrawn{cardIds}</code>; each card-moving event <strong>carries the specific card ids</strong> it moved, so the renderer can animate per card (REQ-POC-11).</p>
+  </div>
+
+  <div class="req" id="REQ-POC-10">
+    <div class="head"><span class="id"><a href="#REQ-POC-10">REQ-POC-10</a></span><span class="name">There is no win, loss, or end condition</span><span class="badge must">Must</span></div>
+    <p>The loop runs indefinitely. There is no score target, no enemy, no failure state. The only notion of a "turn" is the record-total step in REQ-POC-9. EndTurn is always legal even with an empty played pile (records a total of 0).</p>
+  </div>
+
+  <!-- ============ EVENTS & RENDER ============ -->
+  <div class="group">D · Events &amp; renderer</div>
+
+  <div class="req" id="REQ-POC-11">
+    <div class="head"><span class="id"><a href="#REQ-POC-11">REQ-POC-11</a></span><span class="name">Every dispatch returns an animation-sufficient event log</span><span class="badge should">Should</span></div>
+    <p>The <code>events</code> returned alongside each new state are an ordered, semantic list (card played, cards discarded, deck shuffled, cards drawn, turn ended with total). Card-moving events <strong>carry the specific card ids</strong> involved, and <code>TurnEnded</code> carries the recorded total, so the renderer can drive per-card animation from the log alone, without diffing two states. The renderer remains free to ignore the log and snap to <code>state</code>; note that the renderer's <em>display</em> obligations in REQ-POC-12 are satisfied from <code>state</code>, so this requirement is "Should" (it enriches animation) while REQ-POC-12 stays "Must".</p>
+  </div>
+
+  <div class="req" id="REQ-POC-12">
+    <div class="head"><span class="id"><a href="#REQ-POC-12">REQ-POC-12</a></span><span class="name">A Phaser renderer makes the loop playable</span><span class="badge must">Must</span></div>
+    <p>A Phaser scene observes core state and displays: the <strong>hand</strong> (clickable to play), the <strong>played pile with the running total</strong>, the <strong>draw and discard pile counts</strong>, the <strong>turn-total history</strong>, and an <strong>End Turn button</strong>. Clicking a hand card dispatches <code>PlayCard</code>; the button dispatches <code>EndTurn</code>. The renderer owns the clock: it reflects the resulting state (animation of events is allowed but not required for the POC). Visual polish is explicitly not required.</p>
+  </div>
+
+  <!-- ============ QUALITY ============ -->
+  <div class="group">E · Testing, CI, and the second driver</div>
+
+  <div class="req" id="REQ-POC-13">
+    <div class="head"><span class="id"><a href="#REQ-POC-13">REQ-POC-13</a></span><span class="name">The core is unit-tested headlessly and gated in CI</span><span class="badge must">Must</span></div>
+    <p>Core tests run with <strong>no Phaser, no DOM, no canvas</strong> and cover: deck composition (REQ-POC-4), deterministic shuffle from seed (REQ-POC-3), draw and reshuffle (REQ-POC-7), play summation (REQ-POC-8), the full end-turn cycle (REQ-POC-9), the ten-card conservation invariant (REQ-POC-5), and replay equivalence (same seed + actions ⇒ identical state &amp; events). CI runs the import-boundary lint and the core test suite on every change.</p>
+  </div>
+
+  <div class="req" id="REQ-POC-14">
+    <div class="head"><span class="id"><a href="#REQ-POC-14">REQ-POC-14</a></span><span class="name">A headless sim runner drives the core without the renderer</span><span class="badge should">Should</span></div>
+    <p>A small headless runner uses only the core to dispatch a long sequence of random-legal actions at full speed (no Phaser). <strong>Action policy:</strong> at each step, if the hand is non-empty, choose uniformly among playing each individual hand card or ending the turn; if the hand is empty, end the turn. Because a fresh hand of 5 is dealt after every End Turn, the runner never dispatches an illegal action, so it must complete without throwing while the ten-card conservation invariant holds throughout. This proves the "one core, two drivers" property the architecture depends on for future balance data.</p>
+  </div>
+
+  <!-- ============ BUILD & SERVE ============ -->
+  <div class="group">F · Build, serving &amp; deploy</div>
+
+  <p class="muted" style="margin-top:.4rem">Phaser is a browser app, so "serving" means bundling to a static web app (HTML + JS + assets) that runs client-side. There is no server-side runtime for the game; hosting is static file hosting.</p>
+
+  <div class="req" id="REQ-POC-15">
+    <div class="head"><span class="id"><a href="#REQ-POC-15">REQ-POC-15</a></span><span class="name">Toolchain is Bun + Vite + strict TypeScript</span><span class="badge must">Must</span></div>
+    <p>The project uses <strong>Bun</strong> as runtime and package manager, <strong>Vite</strong> to bundle Phaser + TypeScript, and the core test suite runs under <code>bun test</code>. TypeScript runs in <code>strict</code> mode. Per reproducible-build rules, dependency versions are pinned and the <strong>lockfile is committed</strong>, so <code>bun install</code> reconstructs the exact dependency graph.</p>
+  </div>
+
+  <div class="req" id="REQ-POC-16">
+    <div class="head"><span class="id"><a href="#REQ-POC-16">REQ-POC-16</a></span><span class="name">A local dev server runs the playable game</span><span class="badge must">Must</span></div>
+    <p><code>bun run dev</code> starts the Vite dev server and serves the Phaser game in the browser with hot reload. This is the command behind the "visibly playable" validation of REQ-POC-12.</p>
+  </div>
+
+  <div class="req" id="REQ-POC-17">
+    <div class="head"><span class="id"><a href="#REQ-POC-17">REQ-POC-17</a></span><span class="name">A static build emits a self-contained bundle</span><span class="badge must">Must</span></div>
+    <p><code>bun run build</code> produces a self-contained static <code>dist/</code> (HTML, JS, assets) that runs from any static host with no server-side code. Because the target is a GitHub Pages <em>project</em> site served from a subpath, Vite's <code>base</code> is set to that repository subpath so asset URLs resolve correctly (the classic Pages 404-on-assets trap is avoided by configuration, not by hand-editing output).</p>
+  </div>
+
+  <div class="req" id="REQ-POC-18">
+    <div class="head"><span class="id"><a href="#REQ-POC-18">REQ-POC-18</a></span><span class="name">CI builds, tests, and deploys to GitHub Pages</span><span class="badge must">Must</span></div>
+    <p>A CI workflow on push to the default branch runs, in order: the import-boundary lint and core test suite (REQ-POC-13) and the static build (REQ-POC-17) as <strong>gates</strong>, and only on success <strong>deploys <code>dist/</code> to GitHub Pages</strong>. A failing lint, test, or build blocks deploy. The deployed URL serves the same playable loop as local dev. This makes REQ-POC-13's CI gate and the deploy one pipeline.</p>
+  </div>
+
+  <!-- ============ VALIDATION ============ -->
+  <section class="validation">
+    <h2><span class="mark">✓</span> AI Validation</h2>
+    <p class="muted" style="margin-top:0">How the AI confirms this POC is done. Each check is runnable or observable, not a matter of opinion.</p>
+
+    <div class="check"><span class="box">▸</span><span class="body"><b>Tests &amp; lint pass headlessly.</b> The core test suite and the import-boundary lint run green with no Phaser/DOM in scope. <span class="ref">REQ-POC-1, 13</span></span></div>
+    <div class="check"><span class="box">▸</span><span class="body"><b>No engine in the core.</b> A search of <code>src/core/</code> for <code>phaser</code> / canvas / DOM imports returns nothing. <span class="ref">REQ-POC-1</span></span></div>
+    <div class="check"><span class="box">▸</span><span class="body"><b>Deck composition is exact.</b> A fresh game's ten cards are five 1s, three 2s, two 3s (value sum 13), each with a unique id. <span class="ref">REQ-POC-4</span></span></div>
+    <div class="check"><span class="box">▸</span><span class="body"><b>Determinism holds.</b> Tests use at least two distinct seeds: with one seed, building two games and applying the same action sequence yields deep-equal final state and deep-equal event logs; the second, different seed produces a different initial shuffle order. <span class="ref">REQ-POC-3, 13</span></span></div>
+    <div class="check"><span class="box">▸</span><span class="body"><b>Dispatch is synchronous.</b> <code>dispatch</code>'s return type is <code>{ state, events }</code>, not a <code>Promise</code>/thenable; a test asserts the result is not awaitable. <span class="ref">REQ-POC-2</span></span></div>
+    <div class="check"><span class="body"><span class="box">▸</span> <b>Cards are conserved.</b> Across an automated run of many turns, the four zones always total exactly ten distinct cards, never more, fewer, or duplicated. <span class="ref">REQ-POC-5, 14</span></span></div>
+    <div class="check"><span class="box">▸</span><span class="body"><b>Summation is correct.</b> After any sequence of plays, the running total equals the sum of the played cards' values; after EndTurn the history gains exactly one entry equal to that total and the running total is 0. <span class="ref">REQ-POC-8, 9</span></span></div>
+    <div class="check"><span class="box">▸</span><span class="body"><b>Reshuffle works.</b> Driving enough turns to empty the draw pile triggers a seeded reshuffle (observable via a <code>DeckShuffled</code> event) and drawing still reaches a hand of five. <span class="ref">REQ-POC-7</span></span></div>
+    <div class="check"><span class="box">▸</span><span class="body"><b>The sim runner survives a long run.</b> Dispatching ≥1000 random-legal actions through the core alone completes without error and preserves the conservation invariant throughout. <span class="ref">REQ-POC-14</span></span></div>
+    <div class="check"><span class="box">▸</span><span class="body"><b>It is visibly playable locally.</b> <code>bun run dev</code> serves the game; the browser shows a hand, a running total, pile counts, the turn-total history, and a working End Turn button; clicking cards and ending turns advances the loop. <span class="ref">REQ-POC-12, 16</span></span></div>
+    <div class="check"><span class="box">▸</span><span class="body"><b>The bundle builds reproducibly.</b> <code>bun install</code> from the committed lockfile then <code>bun run build</code> produces a static <code>dist/</code> with no errors. <span class="ref">REQ-POC-15, 17</span></span></div>
+    <div class="check"><span class="box">▸</span><span class="body"><b>Assets resolve on the Pages subpath.</b> Serving the built <code>dist/</code> under the project subpath (locally via <code>vite preview</code> or on Pages) loads the game with no 404s on JS/assets. <span class="ref">REQ-POC-17</span></span></div>
+    <div class="check"><span class="box">▸</span><span class="body"><b>CI deploys only on green.</b> The workflow runs lint + core tests + build as gates and deploys <code>dist/</code> to GitHub Pages on success; a deliberately failing test blocks the deploy. The live URL serves the playable loop. <span class="ref">REQ-POC-18</span></span></div>
+  </section>
+
+  <!-- ============ NON-GOALS ============ -->
+  <h2><span class="mark">✕</span> Out of scope</h2>
+  <div class="panel">
+    <p style="margin-top:0">Explicitly <strong>not</strong> in this POC, to keep the slice thin: card acquisition or removal, enemies or combat, Destiny / worlds / between-run economy, scoring beyond raw summation, any win or loss condition, save/load, content authoring pipeline, FX / juice / the <code>intensity</code> escalation signal, and animation polish. These belong to later specs. The structural seam they will all sit on is what this POC validates.</p>
+  </div>
+
+  <footer>
+    Drafted 2026-06-02 for <a href="../../reference/vision.html">Shattered Worlds</a>. Implements the thinnest slice of the <a href="../design/core-render-architecture.html">approved core/render architecture</a>. Status <strong>approved</strong>, prefix <code>REQ-POC</code>. Reviewed and the three judgment calls (throw on illegal action, one-way play commit, ordered turn-total history) confirmed. Next: a plan. Mechanics intentionally trivial; the point is the architecture underneath them.
+  </footer>
+
+</div>
+</body>
+</html>

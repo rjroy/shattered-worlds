@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The seam contract &amp; card data</title>
+  <meta name="date" content="2026-06-02">
+  <meta name="status" content="pending">
+  <meta name="tags" content="task, types, contract, cards, immutability, error-contract">
+  <meta name="modules" content="core">
+  <meta name="source" content=".lore/work/plans/poc-core-loop.html">
+  <meta name="sequence" content="2">
+  <style>
+    :root { --bg:#0f1117; --panel:#1a1d27; --panel-2:#222633; --ink:#e8eaf0; --muted:#9aa3b2;
+      --accent:#8ab4ff; --gold:#ffd479; --good:#6cd08a; --warn:#ffc14d; --bad:#ff8a8a; --border:#2a2f3d; }
+    * { box-sizing:border-box; }
+    body { margin:0; background:radial-gradient(1200px 600px at 50% -10%, #1a2238 0%, var(--bg) 55%);
+      color:var(--ink); font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; padding:0 1rem 5rem; }
+    .wrap { max-width:880px; margin:0 auto; }
+    .top { display:flex; align-items:center; gap:.7rem; flex-wrap:wrap; margin:1.6rem 0 1rem; }
+    .seq { font:1rem ui-monospace,Menlo,monospace; font-weight:700; color:var(--bg); background:var(--gold); border-radius:8px; padding:.25rem .7rem; }
+    .seq small { font-weight:600; opacity:.7; }
+    .chip { display:inline-flex; align-items:center; gap:.35rem; border-radius:999px; padding:.2rem .75rem; font-size:.74rem; font-weight:700; border:1px solid; text-transform:uppercase; letter-spacing:.04em; }
+    .chip.pending { background:rgba(255,193,77,.12); border-color:rgba(255,193,77,.4); color:var(--warn); }
+    .src { margin-left:auto; font-size:.8rem; } .src a { color:var(--accent); }
+    h1 { font-size:1.7rem; margin:.3rem 0 1.2rem; line-height:1.15; }
+    h2 { font-size:.82rem; text-transform:uppercase; letter-spacing:.1em; color:var(--muted); margin:1.8rem 0 .5rem; }
+    p { margin:.5rem 0; } code { background:var(--panel-2); border:1px solid var(--border); border-radius:5px; padding:.06rem .35rem; font-size:.86em; }
+    ul { padding-left:1.2rem; } li { margin:.35rem 0; } li b { color:var(--ink); }
+    .panel { background:var(--panel); border:1px solid var(--border); border-radius:12px; padding:1rem 1.3rem; }
+    .file { font:.84rem ui-monospace,Menlo,monospace; color:var(--gold); }
+    .reqs { display:flex; gap:.3rem; flex-wrap:wrap; margin:.2rem 0 0; }
+    .reqtag { font:.68rem ui-monospace,Menlo,monospace; background:rgba(138,180,255,.14); color:var(--accent); border-radius:999px; padding:.12rem .55rem; }
+    pre { background:#0c0e14; border:1px solid var(--border); border-radius:10px; padding:.9rem 1rem; overflow-x:auto;
+      font:.8rem/1.5 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; color:#d6dbe8; margin:.6rem 0; }
+    pre .c{color:var(--muted);} pre .k{color:var(--accent);} pre .t{color:var(--gold);} pre .s{color:var(--good);}
+    .validation { background:linear-gradient(180deg,rgba(108,208,138,.08),rgba(108,208,138,.02));
+      border:1px solid rgba(108,208,138,.4); border-left:4px solid var(--good); border-radius:14px; padding:1rem 1.3rem; margin:.6rem 0; }
+    .validation h2 { color:var(--good); margin-top:.2rem; }
+    .check { display:flex; gap:.55rem; margin:.5rem 0; align-items:baseline; }
+    .check .box { color:var(--good); font-weight:700; } .check .body { color:var(--muted); } .check .body b { color:var(--ink); }
+    .muted { color:var(--muted); }
+  </style>
+</head>
+<body><div class="wrap">
+
+  <div class="top">
+    <span class="seq"><small>STEP</small> 2<small> / 9</small></span>
+    <span class="chip pending">● pending</span>
+    <span class="src">Plan: <a href="../../plans/poc-core-loop.html">poc-core-loop</a></span>
+  </div>
+
+  <h1>The seam contract &amp; card data</h1>
+  <div class="reqs"><span class="reqtag">REQ-POC-2</span><span class="reqtag">REQ-POC-4</span><span class="reqtag">REQ-POC-5</span><span class="reqtag">REQ-POC-8</span></div>
+
+  <h2>What</h2>
+  <div class="panel">
+    <p>Define the immutable types the whole architecture rests on — no behaviour yet, just the shapes everything else is checked against.</p>
+    <ul>
+      <li><span class="file">src/core/types.ts</span> — concrete schemas:</li>
+    </ul>
+    <pre><span class="k">type</span> <span class="t">CardId</span> = <span class="t">string</span>            <span class="c">// "card-01" … "card-10"</span>
+<span class="k">interface</span> <span class="t">Card</span> { id: <span class="t">CardId</span>; value: 1 | 2 | 3 }
+
+<span class="k">type</span> <span class="t">Action</span> =
+  | { type: <span class="s">'PlayCard'</span>; cardId: <span class="t">CardId</span> }
+  | { type: <span class="s">'EndTurn'</span> }
+
+<span class="k">type</span> <span class="t">GameEvent</span> =
+  | { type: <span class="s">'CardPlayed'</span>; cardId: <span class="t">CardId</span>; value: <span class="t">number</span>; runningTotal: <span class="t">number</span> }
+  | { type: <span class="s">'TurnEnded'</span>; total: <span class="t">number</span> }
+  | { type: <span class="s">'CardsDiscarded'</span>; cardIds: <span class="t">CardId</span>[] }
+  | { type: <span class="s">'DeckShuffled'</span> }
+  | { type: <span class="s">'CardsDrawn'</span>; cardIds: <span class="t">CardId</span>[] }
+
+<span class="k">interface</span> <span class="t">RngState</span> { a:<span class="t">number</span>; b:<span class="t">number</span>; c:<span class="t">number</span>; d:<span class="t">number</span> }
+
+<span class="k">interface</span> <span class="t">GameState</span> {
+  drawPile: <span class="k">readonly</span> <span class="t">Card</span>[]   <span class="c">// top = index 0</span>
+  hand: <span class="k">readonly</span> <span class="t">Card</span>[]
+  played: <span class="k">readonly</span> <span class="t">Card</span>[]     <span class="c">// in play order</span>
+  discard: <span class="k">readonly</span> <span class="t">Card</span>[]
+  runningTotal: <span class="t">number</span>
+  history: <span class="k">readonly</span> <span class="t">number</span>[]
+  rng: <span class="t">RngState</span>
+}</pre>
+    <ul>
+      <li><span class="file">src/core/errors.ts</span> — <code>class IllegalActionError extends Error</code> carrying <code>readonly action: Action</code> and <code>readonly state: GameState</code> (the single error contract).</li>
+      <li><span class="file">src/core/cards.ts</span> — <code>buildLibrary(): Card[]</code>: exactly five value-1, three value-2, two value-3 cards, ids <code>card-01…card-10</code> in a fixed deterministic order (value sum 13).</li>
+      <li><span class="file">src/core/contract.ts</span> — type re-exports + the <code>GameCore</code> interface (pure declaration, no bodies). <code>reduce</code>/<code>createGame</code> implementations arrive in Step 4.</li>
+    </ul>
+    <p><b>RngState is defined here, not in rng.ts</b>, so <code>GameState</code> typechecks now; Step 3's <code>rng.ts</code> imports it. All array fields are <code>readonly</code>. Follow <code>typescript-quality</code>: discriminated unions over enums, no <code>any</code>, no non-null assertions.</p>
+  </div>
+
+  <div class="validation">
+    <h2>✓ Validation</h2>
+    <div class="check"><span class="box">▸</span><span class="body"><code>bun run typecheck</code> passes; <code>bun run lint</code> clean. (Self-contained — no Step 3 dependency.)</span></div>
+    <div class="check"><span class="box">▸</span><span class="body">A unit test asserts <code>buildLibrary()</code> returns <b>ten</b> cards, composition <b>5/3/2</b>, value sum <b>13</b>, and ten <b>unique</b> ids.</span></div>
+  </div>
+
+  <h2>Why</h2>
+  <p class="muted"><b>REQ-POC-2</b> (immutable state snapshots), <b>REQ-POC-4</b> (exact ten-card composition, unique stable ids), <b>REQ-POC-5</b> (four zones + running total + history + PRNG cursor modelled in state), and the <b>REQ-POC-8</b> error contract all begin as type definitions here. Locking the shapes first lets every later step typecheck against a fixed contract. See <a href="../../plans/poc-core-loop.html#step-2">plan Step 2</a>.</p>
+
+  <h2>Files</h2>
+  <p class="muted"><span class="file">src/core/types.ts</span>, <span class="file">src/core/errors.ts</span>, <span class="file">src/core/cards.ts</span>, <span class="file">src/core/contract.ts</span>, <span class="file">src/core/cards.test.ts</span></p>
+
+</div></body></html>

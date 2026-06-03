@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Core / render architecture for Shattered Worlds</title>
+  <meta name="date" content="2026-06-02">
+  <meta name="status" content="approved">
+  <meta name="tags" content="architecture, typescript, phaser, rules-core, determinism, rng, seam, testability, headless-sim">
+  <meta name="modules" content="core, game">
+  <meta name="related" content=".lore/reference/vision.html, .lore/work/research/game-engine-for-ai-development.html, .lore/work/research/deckbuilding-game-design.html">
+  <style>
+    :root {
+      --bg: #0f1117; --panel: #1a1d27; --panel-2: #222633;
+      --ink: #e8eaf0; --muted: #9aa3b2; --accent: #8ab4ff; --gold: #ffd479;
+      --good: #6cd08a; --warn: #ffc14d; --bad: #ff8a8a; --border: #2a2f3d;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; background: radial-gradient(1200px 600px at 50% -10%, #1a2238 0%, var(--bg) 55%);
+      color: var(--ink); font: 16px/1.65 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      padding: 2.5rem 1rem 6rem;
+    }
+    .wrap { max-width: 920px; margin: 0 auto; }
+    .hero { text-align: center; margin-bottom: 2.2rem; }
+    .kicker { letter-spacing: .28em; text-transform: uppercase; font-size: .72rem; color: var(--gold); margin-bottom: .6rem; }
+    h1 { font-size: 2.1rem; margin: 0 0 .6rem; line-height: 1.1;
+      background: linear-gradient(180deg,#fff,#b8c4e0); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+    .badges { display: flex; gap: .5rem; justify-content: center; flex-wrap: wrap; margin-top: .8rem; }
+    .badge { display: inline-flex; align-items: center; gap: .4rem; border-radius: 999px; padding: .25rem .8rem; font-size: .75rem; font-weight: 600; border: 1px solid; }
+    .badge.draft { background: rgba(138,180,255,.12); border-color: rgba(138,180,255,.35); color: var(--accent); }
+    .badge.scope { background: rgba(255,193,77,.12); border-color: rgba(255,193,77,.35); color: var(--warn); }
+
+    h2 { font-size: 1.4rem; margin: 2.6rem 0 1rem; display: flex; align-items: center; gap: .6rem; }
+    h2 .mark { font-size: 1rem; color: var(--gold); }
+    h3 { font-size: 1.05rem; margin: 1.2rem 0 .3rem; }
+    p { margin: .6rem 0; }
+    a { color: var(--accent); }
+    code { background: var(--panel-2); border: 1px solid var(--border); border-radius: 5px; padding: .08rem .35rem; font-size: .86em; }
+    .muted { color: var(--muted); }
+
+    .decision { background: linear-gradient(180deg, var(--panel-2), var(--panel)); border: 1px solid var(--border);
+      border-left: 4px solid var(--good); border-radius: 16px; padding: 1.5rem 1.7rem; }
+    .decision .lead { font-size: 1.1rem; margin-top: 0; }
+    .decision .pick { color: var(--good); font-weight: 700; }
+    .decision ul { margin: .8rem 0 0; padding-left: 1.1rem; }
+    .decision li { margin: .4rem 0; color: var(--muted); }
+    .decision li b { color: var(--ink); }
+
+    .callout { background: rgba(255,193,77,.06); border: 1px solid rgba(255,193,77,.3); border-left: 3px solid var(--warn);
+      border-radius: 12px; padding: 1rem 1.3rem; margin: 1rem 0; }
+    .callout h3 { margin: 0 0 .3rem; color: var(--warn); }
+    .callout p { margin: .35rem 0 0; color: var(--muted); }
+    .callout p strong { color: var(--ink); }
+
+    .panel { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 1.1rem 1.3rem; margin: 1rem 0; }
+
+    .tablewrap { overflow-x: auto; margin: 1rem 0; }
+    table { border-collapse: collapse; width: 100%; font-size: .9rem; }
+    th, td { text-align: left; padding: .6rem .7rem; border-bottom: 1px solid var(--border); vertical-align: top; }
+    th { color: var(--muted); font-weight: 600; font-size: .78rem; text-transform: uppercase; letter-spacing: .04em; }
+    td.opt { font-weight: 600; color: var(--ink); white-space: nowrap; }
+    .pill { display: inline-block; border-radius: 6px; padding: .12rem .5rem; font-size: .78rem; font-weight: 600; }
+    .p-good { background: rgba(108,208,138,.14); color: var(--good); }
+    .p-warn { background: rgba(255,193,77,.14); color: var(--warn); }
+    .p-bad { background: rgba(255,138,138,.14); color: var(--bad); }
+    tr.win td { background: rgba(108,208,138,.05); }
+
+    pre { background: #0c0e14; border: 1px solid var(--border); border-radius: 10px; padding: 1rem 1.1rem; overflow-x: auto;
+      font: .85rem/1.55 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; color: #d6dbe8; }
+    pre .c { color: var(--muted); } pre .k { color: var(--accent); } pre .t { color: var(--gold); } pre .s { color: var(--good); }
+
+    .diagram { background: var(--panel); border: 1px solid var(--border); border-radius: 14px; padding: 1.2rem; margin: 1.2rem 0; }
+    .diagram svg { width: 100%; height: auto; display: block; }
+    .leg { display: flex; gap: 1.2rem; flex-wrap: wrap; margin-top: .8rem; font-size: .8rem; color: var(--muted); }
+    .leg span b { color: var(--ink); }
+
+    .two { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    @media (max-width: 680px){ .two { grid-template-columns: 1fr; } }
+    .col h3 { margin-top: .2rem; }
+    .col.core { border-left: 3px solid var(--accent); }
+    .col.rend { border-left: 3px solid var(--gold); }
+    .col ul { margin: .4rem 0 0; padding-left: 1.1rem; }
+    .col li { margin: .25rem 0; color: var(--muted); font-size: .92rem; }
+    .col li b { color: var(--ink); }
+
+    .open li { margin: .5rem 0; }
+    .open b { color: var(--gold); }
+
+    footer { margin-top: 3.5rem; color: var(--muted); font-size: .85rem; border-top: 1px solid var(--border); padding-top: 1rem; }
+  </style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="hero">
+    <div class="kicker">Design · Core Architecture</div>
+    <h1>The core / render split</h1>
+    <div class="badges">
+      <span class="badge draft">Approved · 2026-06-02</span>
+      <span class="badge scope">Scope: engine commitment + the seam only. POC feature set is a separate spec.</span>
+    </div>
+  </div>
+
+  <!-- ============ DECISION ============ -->
+  <section class="decision">
+    <p class="lead"><span class="pick">TypeScript + Phaser, with a pure-TypeScript rules core behind a thin Phaser renderer.</span> The core is a synchronous, deterministic, seedable state machine with zero Phaser imports. The renderer is the sole owner of the clock: it turns player input into core actions, and turns the core's results into animation.</p>
+    <ul>
+      <li><b>The core is a synchronous function, not a live actor.</b> <code>dispatch(action)</code> returns <code>{ state, events }</code> immediately. It never waits on animation, never sleeps, never touches the screen. This is what makes it exhaustively unit-testable and runnable at full speed for balance sims.</li>
+      <li><b>The renderer owns time.</b> It plays the returned <code>events</code> as an animation timeline at human pace, then settles onto the authoritative <code>state</code>. Simulation speed and animation speed are decoupled by design.</li>
+      <li><b>All randomness lives in the core, seeded.</b> Same seed + same actions yields the same run, byte for byte. The renderer's only randomness is cosmetic (particle jitter) and never feeds back into state.</li>
+      <li><b>The boundary is lint-enforced, not just a convention.</b> An import rule forbids <code>core/</code> from importing Phaser or anything in <code>game/</code>. The architecture fails the build the moment it's violated.</li>
+      <li><b>Escalation is a derived signal, not hand-scripted.</b> The core exposes an <code>intensity</code> value computed from run state; the renderer reads it to dial the juice from mundane to insane. The curve is design; the seam for it is decided here.</li>
+    </ul>
+  </section>
+
+  <p class="muted" style="margin-top:1.2rem">This document commits the architecture the prior engine research pointed at, and resolves the one decision that research deferred: <em>how</em> the pure core and the renderer talk to each other. It does not define cards, effects, Destiny mechanics, or the POC scope. Those are spec work.</p>
+
+  <!-- ============ THE SPLIT ============ -->
+  <h2><span class="mark">▦</span> What lives on which side</h2>
+  <p>The split follows one rule: <strong>if it decides what is true in the game, it's core; if it decides how that truth looks or feels, it's renderer.</strong> Roughly 70% of a deckbuilder, and the 70% the vision cares most about, is core.</p>
+
+  <div class="two">
+    <div class="panel col core">
+      <h3 style="color:var(--accent)">Pure core <span class="muted" style="font-weight:400;font-size:.8rem">· <code>src/core/</code> · no Phaser</span></h3>
+      <ul>
+        <li><b>Domain model</b> — cards, effects, enemies, relics, world definitions, run &amp; Destiny state. Plain immutable data.</li>
+        <li><b>Rules / resolution</b> — applying an action to a state to produce the next state; win/loss; world transitions.</li>
+        <li><b>Seedable RNG</b> — the single source of all game randomness.</li>
+        <li><b>Derived signals</b> — <code>intensity</code>/threat and other read-models computed purely from state.</li>
+        <li><b>Public contract</b> — the <code>dispatch</code> / read / event surface the renderer (and the sim runner) consume.</li>
+      </ul>
+    </div>
+    <div class="panel col rend">
+      <h3 style="color:var(--gold)">Phaser renderer <span class="muted" style="font-weight:400;font-size:.8rem">· <code>src/game/</code> · imports core</span></h3>
+      <ul>
+        <li><b>Scenes &amp; presentation</b> — sprites, layout, fonts, the visible board.</li>
+        <li><b>Juice</b> — tweens, particle emitters, screen shake, audio, the escalation FX.</li>
+        <li><b>Input</b> — pointer/keyboard, translated into core <code>action</code>s.</li>
+        <li><b>The clock</b> — timeline playback of core events; pacing; interruption/skip.</li>
+        <li><b>Cosmetic randomness</b> — jitter and flourish that never touches state.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="diagram" role="img" aria-label="Architecture diagram: a pure core on the left, a lint-enforced boundary in the middle, and two drivers on the right (Phaser renderer and headless sim runner) both calling dispatch into the core and receiving state plus events back.">
+    <svg viewBox="0 0 860 360" xmlns="http://www.w3.org/2000/svg" font-family="ui-monospace, Menlo, Consolas, monospace">
+      <defs>
+        <marker id="arr" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto">
+          <path d="M0,0 L7,3 L0,6 Z" fill="#9aa3b2"/>
+        </marker>
+        <marker id="arrG" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto">
+          <path d="M0,0 L7,3 L0,6 Z" fill="#6cd08a"/>
+        </marker>
+      </defs>
+
+      <!-- CORE box -->
+      <rect x="20" y="60" width="290" height="240" rx="12" fill="#161a24" stroke="#3a4f7a" stroke-width="1.5"/>
+      <text x="40" y="92" fill="#8ab4ff" font-size="15" font-weight="700">PURE CORE</text>
+      <text x="40" y="112" fill="#9aa3b2" font-size="11">src/core/ — zero Phaser imports</text>
+      <text x="40" y="146" fill="#e8eaf0" font-size="12.5">• immutable GameState</text>
+      <text x="40" y="170" fill="#e8eaf0" font-size="12.5">• dispatch(action) → {state, events}</text>
+      <text x="40" y="194" fill="#e8eaf0" font-size="12.5">• seeded RNG (all randomness)</text>
+      <text x="40" y="218" fill="#e8eaf0" font-size="12.5">• rules · resolution · transitions</text>
+      <text x="40" y="242" fill="#e8eaf0" font-size="12.5">• derived: intensity / threat</text>
+      <text x="40" y="278" fill="#6cd08a" font-size="11.5">synchronous · deterministic · pure</text>
+
+      <!-- boundary line -->
+      <line x1="360" y1="30" x2="360" y2="330" stroke="#ffc14d" stroke-width="1.5" stroke-dasharray="5 5"/>
+      <text x="360" y="22" fill="#ffc14d" font-size="11" text-anchor="middle">lint-enforced boundary</text>
+
+      <!-- RENDERER box -->
+      <rect x="560" y="40" width="280" height="130" rx="12" fill="#161a24" stroke="#7a6a3a" stroke-width="1.5"/>
+      <text x="580" y="70" fill="#ffd479" font-size="15" font-weight="700">PHASER RENDERER</text>
+      <text x="580" y="90" fill="#9aa3b2" font-size="11">src/game/ — owns the clock</text>
+      <text x="580" y="116" fill="#e8eaf0" font-size="12.5">input → action</text>
+      <text x="580" y="138" fill="#e8eaf0" font-size="12.5">events → timeline (tween/particle)</text>
+      <text x="580" y="160" fill="#e8eaf0" font-size="12.5">reads intensity → scales juice</text>
+
+      <!-- SIM box -->
+      <rect x="560" y="200" width="280" height="120" rx="12" fill="#161a24" stroke="#3a5f4a" stroke-width="1.5"/>
+      <text x="580" y="230" fill="#6cd08a" font-size="15" font-weight="700">HEADLESS SIM RUNNER</text>
+      <text x="580" y="250" fill="#9aa3b2" font-size="11">tests + balance data (Principle 6)</text>
+      <text x="580" y="276" fill="#e8eaf0" font-size="12.5">policy → action, full speed</text>
+      <text x="580" y="298" fill="#e8eaf0" font-size="12.5">ignores events, records metrics</text>
+
+      <!-- arrows renderer <-> core -->
+      <line x1="560" y1="95" x2="312" y2="150" stroke="#9aa3b2" stroke-width="1.5" marker-end="url(#arr)"/>
+      <text x="372" y="112" fill="#9aa3b2" font-size="11">dispatch(action)</text>
+      <line x1="312" y1="185" x2="560" y2="130" stroke="#6cd08a" stroke-width="1.5" marker-end="url(#arrG)"/>
+      <text x="372" y="205" fill="#6cd08a" font-size="11">{ state, events }</text>
+
+      <!-- arrows sim <-> core -->
+      <line x1="560" y1="245" x2="312" y2="205" stroke="#9aa3b2" stroke-width="1.5" marker-end="url(#arr)"/>
+      <line x1="312" y1="235" x2="560" y2="280" stroke="#6cd08a" stroke-width="1.5" marker-end="url(#arrG)"/>
+    </svg>
+    <div class="leg">
+      <span><b style="color:#9aa3b2">→ grey</b> intent flowing into the core (actions)</span>
+      <span><b style="color:#6cd08a">→ green</b> results flowing out (state + event log)</span>
+      <span><b style="color:#ffc14d">┊ dashed</b> the one-way import boundary</span>
+    </div>
+  </div>
+
+  <!-- ============ THE SEAM ============ -->
+  <h2><span class="mark">⚙</span> The seam contract</h2>
+  <p>The entire interface between the two halves is small enough to state on one screen. The renderer never reaches inside the core; it sends actions and consumes results.</p>
+
+  <pre><span class="c">// src/core/contract.ts — the whole seam</span>
+
+<span class="k">type</span> <span class="t">GameState</span> = <span class="c">/* deep-immutable snapshot: board, deck, run, destiny, rng cursor */</span>
+<span class="k">type</span> <span class="t">Action</span>    = <span class="c">/* a player or system intent: PlayCard, EndTurn, ChooseReward… */</span>
+<span class="k">type</span> <span class="t">GameEvent</span> = <span class="c">/* a semantic thing that happened: CardPlayed, DamageDealt, CardDestroyed… */</span>
+
+<span class="k">interface</span> <span class="t">GameCore</span> {
+  <span class="k">readonly</span> state: <span class="t">GameState</span>
+  dispatch(action: <span class="t">Action</span>): { state: <span class="t">GameState</span>; events: <span class="t">GameEvent</span>[] }
+  <span class="c">// pure: same (state, action) always yields the same (state, events).</span>
+  <span class="c">// the seed lives inside state, so RNG advances deterministically.</span>
+}
+
+<span class="k">function</span> <span class="s">createGame</span>(seed: <span class="t">number</span>, config: <span class="t">GameConfig</span>): <span class="t">GameCore</span></pre>
+
+  <p>Two things make this contract do all the work:</p>
+  <p><strong>Actions are intents, events are history.</strong> An <code>Action</code> is what someone <em>wants</em> (play this card). The returned <code>GameEvent[]</code> is the ordered list of what <em>actually happened</em> as a result (card left hand, 6 damage dealt, enemy died, relic triggered). The renderer reads that list as an animation script. It already knows the order, the targets, and the magnitudes, so the juice has everything it needs without re-deriving it from a before/after diff.</p>
+  <p><strong>The core hands back the final state too.</strong> The renderer animates the events, but it doesn't have to be correct about the end result, the core already is. If the player skips the animation, the renderer just snaps to <code>state</code>. The authoritative truth and the animation script ship together from a single call.</p>
+
+  <!-- ============ WHY THIS SHAPE ============ -->
+  <h2><span class="mark">◆</span> Why this shape, and not the obvious alternatives</h2>
+  <p>The split itself was settled in research. The open question was the communication style across the seam. Three were on the table.</p>
+
+  <div class="tablewrap">
+  <table>
+    <thead>
+      <tr>
+        <th>Seam style</th>
+        <th>How the renderer learns what happened</th>
+        <th>Determinism / headless</th>
+        <th>Fit for maximalist juice</th>
+        <th>Verdict</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="opt">A · State snapshots only</td>
+        <td>Diffs previous vs current state and infers the animation.</td>
+        <td><span class="pill p-good">Clean</span></td>
+        <td><span class="pill p-bad">Weak — must reverse-engineer cause from effect</span></td>
+        <td><span class="pill p-warn">Rejected</span></td>
+      </tr>
+      <tr class="win">
+        <td class="opt">B · Snapshot + event log <span class="muted" style="font-weight:400">(chosen)</span></td>
+        <td>Reads an explicit ordered list of semantic events, plus the final state.</td>
+        <td><span class="pill p-good">Clean — events ignorable</span></td>
+        <td><span class="pill p-good">Strong — the log is the animation script</span></td>
+        <td><span class="pill p-good">Chosen</span></td>
+      </tr>
+      <tr>
+        <td class="opt">C · Renderer callbacks into core</td>
+        <td>Core invokes renderer hooks mid-resolution, awaiting animation.</td>
+        <td><span class="pill p-bad">Broken — core now knows about time</span></td>
+        <td><span class="pill p-warn">Tempting but couples the clock</span></td>
+        <td><span class="pill p-bad">Rejected</span></td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+
+  <p><strong>A is too thin for this game.</strong> A diff tells you the enemy lost 6 HP; it doesn't tell you whether that was one hit or three, which relic fired, or in what order. For a restrained UI that might be fine. For mundane-to-insane escalation, where the <em>sequence and source</em> of effects is exactly what the juice dramatizes, the renderer would be reconstructing a story the core already knew and threw away.</p>
+  <p><strong>C is the trap.</strong> Letting the core call back into the renderer (so it can pause for an animation before the next effect) feels natural and quietly destroys everything valuable about the core. The moment the core awaits the renderer, it is no longer synchronous, no longer pure, no longer runnable at full speed for balance data, and no longer trivially testable. The clock leaks into the rules. Principle 6's data-driven balance depends on simulating thousands of runs headlessly, which is impossible if a single resolution blocks on a tween.</p>
+
+  <div class="callout">
+    <h3>The decision that pays for itself: one core, two drivers</h3>
+    <p>Because the core is synchronous and ignores the event log unless you want it, the <strong>exact same core</strong> powers both the played game and the balance simulator. The Phaser renderer plays events at human pace; the headless runner discards them and dispatches as fast as the CPU allows, recording pick and win rates. The vision asks for instrumented, data-justified balance (Principle 6) and a prototype that proves fun before deep engineering (Principle 7). A synchronous core is the single architectural choice that serves both, from one codebase, with no rendering in the loop.</p>
+  </div>
+
+  <!-- ============ DETERMINISM ============ -->
+  <h2><span class="mark">⚄</span> Determinism, RNG, and replay</h2>
+  <p>All randomness flows through a seedable PRNG whose cursor lives inside <code>GameState</code>. This is not just hygiene; it's a vision requirement. Principle 4 says randomness must be <em>owned</em>: a bad outcome must trace to a choice, never to a blind deal. A seeded core makes that auditable, because a run is fully reconstructable from <code>(seed, action log)</code>. That same property gives near-free replays, deterministic bug reports (attach the seed and actions), and golden-master tests that pin a whole run's outcome.</p>
+  <p>The renderer is allowed cosmetic randomness (where a spark flies, how a card wobbles) precisely because it provably cannot affect the game: it never calls <code>dispatch</code> with anything derived from it. The boundary keeps the two kinds of randomness from ever mixing.</p>
+
+  <!-- ============ INTENSITY ============ -->
+  <h2><span class="mark">✲</span> The escalation seam</h2>
+  <p>The "mundane to insane" feel is captured architecturally without designing the curve here. The core exposes an <code>intensity</code> read-model, a pure function of run state (threat, stakes, how deep into a world the player is). The renderer reads it and scales the juice: more particles, harder shake, louder mix as it climbs.</p>
+  <p>This keeps escalation <strong>data-driven</strong> rather than hand-scripted per moment, which is the same discipline Principle 6 wants for balance, and it means the renderer never invents drama the rules don't justify. What <code>intensity</code> is computed from, and how the FX map onto it, is design work for later. The only commitment now: it is a derived core signal the renderer consumes, not a renderer-side guess.</p>
+
+  <!-- ============ ENFORCEMENT ============ -->
+  <h2><span class="mark">⊘</span> Enforcing the boundary</h2>
+  <p>A boundary that lives only in discipline erodes. This one is mechanical:</p>
+  <div class="panel">
+    <ul style="margin:0;padding-left:1.1rem">
+      <li class="muted" style="margin:.3rem 0"><b style="color:var(--ink)">Directory split.</b> <code>src/core/</code> (pure) and <code>src/game/</code> (Phaser). The core has no dependency on the engine in its <code>package.json</code>/import graph.</li>
+      <li class="muted" style="margin:.3rem 0"><b style="color:var(--ink)">Lint rule.</b> An import-boundary rule (e.g. <code>eslint-plugin-boundaries</code> or <code>no-restricted-imports</code>) fails the build if anything under <code>core/</code> imports <code>phaser</code> or <code>game/</code>. One-way only.</li>
+      <li class="muted" style="margin:.3rem 0"><b style="color:var(--ink)">Test shape proves it.</b> The core's tests run with no Phaser, no DOM, no canvas. If a core test ever needs the engine to run, the boundary has already been breached and the test suite says so.</li>
+      <li class="muted" style="margin:.3rem 0"><b style="color:var(--ink)">CI gate.</b> Lint + core unit tests run headless in CI on every change, satisfying the typed-tested-CI half of the portfolio bar.</li>
+    </ul>
+  </div>
+  <p class="muted">This is also the reversibility insurance the engine research called for: with zero Phaser in the core, swapping or supplementing the renderer later (a Pixi FX layer, a different shell) is a presentation change, never a rewrite of the game.</p>
+
+  <!-- ============ SCOPE ============ -->
+  <h2><span class="mark">▣</span> Scope boundary of this design</h2>
+  <div class="two">
+    <div class="panel">
+      <h3 style="color:var(--good)">Decided here</h3>
+      <ul style="margin:.3rem 0 0;padding-left:1.1rem">
+        <li class="muted">TypeScript + Phaser commitment.</li>
+        <li class="muted">Pure synchronous core / thin renderer split.</li>
+        <li class="muted">Seam = <code>dispatch(action) → {state, events}</code>.</li>
+        <li class="muted">RNG in core, seeded, replayable.</li>
+        <li class="muted">Renderer owns the clock; one core drives both game and sim.</li>
+        <li class="muted"><code>intensity</code> as a derived core signal.</li>
+        <li class="muted">Lint-enforced, CI-gated boundary.</li>
+      </ul>
+    </div>
+    <div class="panel">
+      <h3 style="color:var(--warn)">Deferred to spec / later design</h3>
+      <ul style="margin:.3rem 0 0;padding-left:1.1rem">
+        <li class="muted">Concrete <code>Card</code> / <code>Effect</code> / <code>GameState</code> schemas.</li>
+        <li class="muted">Destiny, worlds, and run-economy mechanics.</li>
+        <li class="muted">The POC feature set and its success criteria.</li>
+        <li class="muted">What <code>intensity</code> is computed from, and the FX mapping.</li>
+        <li class="muted">Save format, content authoring pipeline, asset plan.</li>
+        <li class="muted">Exact PRNG algorithm and serialization format.</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ============ OPEN QUESTIONS ============ -->
+  <h2><span class="mark">?</span> Open questions for the POC spec to resolve</h2>
+  <ul class="open">
+    <li><b>Event granularity.</b> How fine do <code>GameEvent</code>s go? Too coarse starves the juice; too fine couples the renderer to rules internals. The POC is where we find the right grain against real animation needs.</li>
+    <li><b>State delivery: full snapshot vs structural sharing.</b> Returning a fresh immutable state per dispatch is simplest and most testable. If profiling later shows churn, structural sharing (Immer-style) is a drop-in, but we do <em>not</em> pre-optimize.</li>
+    <li><b>Single repo vs two packages.</b> Start as one repo with two directories and a lint boundary. Promote <code>core/</code> to its own package only if a second consumer makes it worth the overhead.</li>
+    <li><b>How the sim runner chooses actions.</b> Random-legal is enough to exercise determinism and surface crashes for the POC; smarter policies for balance tuning come when there's balance to tune.</li>
+  </ul>
+
+  <footer>
+    Drafted 2026-06-02 for <a href="../../reference/vision.html">Shattered Worlds</a>, committing the architecture from the <a href="../research/game-engine-for-ai-development.html">engine research</a> and resolving its deferred seam question. Status <strong>approved</strong>. Scope is the core/render split only. <strong>Next step:</strong> a POC spec that picks a thin vertical slice (a minimal playable card loop) to exercise this seam end to end, with the concrete schemas and success criteria this design intentionally leaves open.
+  </footer>
+
+</div>
+</body>
+</html>

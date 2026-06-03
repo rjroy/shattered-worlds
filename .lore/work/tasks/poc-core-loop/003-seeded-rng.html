@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Seeded PRNG &amp; deterministic shuffle</title>
+  <meta name="date" content="2026-06-02">
+  <meta name="status" content="pending">
+  <meta name="tags" content="task, rng, prng, sfc32, determinism, fisher-yates">
+  <meta name="modules" content="core">
+  <meta name="source" content=".lore/work/plans/poc-core-loop.html">
+  <meta name="sequence" content="3">
+  <style>
+    :root { --bg:#0f1117; --panel:#1a1d27; --panel-2:#222633; --ink:#e8eaf0; --muted:#9aa3b2;
+      --accent:#8ab4ff; --gold:#ffd479; --good:#6cd08a; --warn:#ffc14d; --bad:#ff8a8a; --border:#2a2f3d; }
+    * { box-sizing:border-box; }
+    body { margin:0; background:radial-gradient(1200px 600px at 50% -10%, #1a2238 0%, var(--bg) 55%);
+      color:var(--ink); font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; padding:0 1rem 5rem; }
+    .wrap { max-width:880px; margin:0 auto; }
+    .top { display:flex; align-items:center; gap:.7rem; flex-wrap:wrap; margin:1.6rem 0 1rem; }
+    .seq { font:1rem ui-monospace,Menlo,monospace; font-weight:700; color:var(--bg); background:var(--gold); border-radius:8px; padding:.25rem .7rem; }
+    .seq small { font-weight:600; opacity:.7; }
+    .chip { display:inline-flex; align-items:center; gap:.35rem; border-radius:999px; padding:.2rem .75rem; font-size:.74rem; font-weight:700; border:1px solid; text-transform:uppercase; letter-spacing:.04em; }
+    .chip.pending { background:rgba(255,193,77,.12); border-color:rgba(255,193,77,.4); color:var(--warn); }
+    .src { margin-left:auto; font-size:.8rem; } .src a { color:var(--accent); }
+    h1 { font-size:1.7rem; margin:.3rem 0 1.2rem; line-height:1.15; }
+    h2 { font-size:.82rem; text-transform:uppercase; letter-spacing:.1em; color:var(--muted); margin:1.8rem 0 .5rem; }
+    p { margin:.5rem 0; } code { background:var(--panel-2); border:1px solid var(--border); border-radius:5px; padding:.06rem .35rem; font-size:.86em; }
+    ul { padding-left:1.2rem; } li { margin:.35rem 0; } li b { color:var(--ink); }
+    .panel { background:var(--panel); border:1px solid var(--border); border-radius:12px; padding:1rem 1.3rem; }
+    .file { font:.84rem ui-monospace,Menlo,monospace; color:var(--gold); }
+    .reqs { display:flex; gap:.3rem; flex-wrap:wrap; margin:.2rem 0 0; }
+    .reqtag { font:.68rem ui-monospace,Menlo,monospace; background:rgba(138,180,255,.14); color:var(--accent); border-radius:999px; padding:.12rem .55rem; }
+    .validation { background:linear-gradient(180deg,rgba(108,208,138,.08),rgba(108,208,138,.02));
+      border:1px solid rgba(108,208,138,.4); border-left:4px solid var(--good); border-radius:14px; padding:1rem 1.3rem; margin:.6rem 0; }
+    .validation h2 { color:var(--good); margin-top:.2rem; }
+    .check { display:flex; gap:.55rem; margin:.5rem 0; align-items:baseline; }
+    .check .box { color:var(--good); font-weight:700; } .check .body { color:var(--muted); } .check .body b { color:var(--ink); }
+    .muted { color:var(--muted); }
+  </style>
+</head>
+<body><div class="wrap">
+
+  <div class="top">
+    <span class="seq"><small>STEP</small> 3<small> / 9</small></span>
+    <span class="chip pending">● pending</span>
+    <span class="src">Plan: <a href="../../plans/poc-core-loop.html">poc-core-loop</a></span>
+  </div>
+
+  <h1>Seeded PRNG &amp; deterministic shuffle</h1>
+  <div class="reqs"><span class="reqtag">REQ-POC-3</span></div>
+
+  <h2>What</h2>
+  <div class="panel">
+    <p>The single source of all game randomness — purely functional and serializable — so same seed + same actions reproduce byte-identical runs.</p>
+    <ul>
+      <li><span class="file">src/core/rng.ts</span> (imports <code>RngState</code> from <span class="file">types.ts</span>):
+        <ul>
+          <li><code>createRng(seed: number): RngState</code> — expand the numeric seed through splitmix32 four times to fill <code>{a,b,c,d}</code>.</li>
+          <li><code>nextFloat(rng): [value, next]</code> — one sfc32 step; <code>value</code> in <code>[0,1)</code>. Pure: never mutates the input.</li>
+          <li><code>shuffle&lt;T&gt;(items: readonly T[], rng): [shuffled, next]</code> — Fisher-Yates threading rng state through each swap.</li>
+        </ul>
+      </li>
+    </ul>
+    <p>Returning <code>[value, nextState]</code> rather than mutating keeps the RNG inside the immutability story and makes it testable without injection or module mocking.</p>
+  </div>
+
+  <div class="validation">
+    <h2>✓ Validation (bun test, no DOM)</h2>
+    <div class="check"><span class="box">▸</span><span class="body"><b>Determinism:</b> two <code>createRng(sameSeed)</code> states produce identical <code>nextFloat</code> sequences over N draws.</span></div>
+    <div class="check"><span class="box">▸</span><span class="body"><b>Shuffle determinism:</b> same seed + same input array ⇒ identical permutation; a different seed ⇒ a different permutation.</span></div>
+    <div class="check"><span class="box">▸</span><span class="body"><b>Purity:</b> calling <code>nextFloat(state)</code> twice on the same input returns the same value, input unchanged.</span></div>
+  </div>
+
+  <h2>Why</h2>
+  <p class="muted"><b>REQ-POC-3</b> requires all randomness seeded and inside the core, with same seed + same actions yielding byte-identical state and events. A purely functional PRNG whose cursor lives in state is the mechanism the determinism and replay guarantees of later steps depend on. See <a href="../../plans/poc-core-loop.html#step-3">plan Step 3</a>.</p>
+
+  <h2>Files</h2>
+  <p class="muted"><span class="file">src/core/rng.ts</span>, <span class="file">src/core/rng.test.ts</span></p>
+
+</div></body></html>
