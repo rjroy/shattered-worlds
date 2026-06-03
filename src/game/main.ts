@@ -6,6 +6,10 @@ const game = new Phaser.Game({
   width: 900,
   height: 600,
   backgroundColor: '#1a2035',
+  scale: {
+    mode: Phaser.Scale.FIT,
+    autoCenter: Phaser.Scale.CENTER_BOTH,
+  },
   scene: [TableScene],
 })
 
