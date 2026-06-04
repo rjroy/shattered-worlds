@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Visual identity rollout: world-theme seam, backdrop, Walker presence</title>
+  <meta name="date" content="2026-06-04">
+  <meta name="status" content="open">
+  <meta name="tags" content="visual-identity, phaser, tween, concurrent-agents, game-state, pure-functions, art-gen, vite, assets, walker, backdrop, intrusion, typescript, depth-sorting, input-blocking">
+  <meta name="modules" content="game, core">
+  <meta name="related" content=".lore/work/plans/visual-identity.html, .lore/work/specs/visual-identity.html, .lore/work/notes/visual-identity.html">
+  <style>
+    :root{--bg:#0f1117;--panel:#1a1d27;--panel-2:#222633;--ink:#e8eaf0;--muted:#9aa3b2;--accent:#8ab4ff;--gold:#ffd479;--good:#6cd08a;--warn:#ffc14d;--bad:#ff8a8a;--violet:#b98aff;--border:#2a2f3d;}
+    *{box-sizing:border-box;}
+    body{margin:0;background:radial-gradient(1200px 600px at 50% -10%,#1a2238 0%,var(--bg) 55%);color:var(--ink);font:15px/1.72 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;padding:2rem 1rem 6rem;}
+    .wrap{max-width:820px;margin:0 auto;}
+    h1{font-size:1.6rem;margin:.2rem 0 .3rem;line-height:1.2;}
+    h2{font-size:.8rem;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin:2.2rem 0 .7rem;border-bottom:1px solid var(--border);padding-bottom:.25rem;}
+    p{margin:.5rem 0;color:var(--muted);}
+    p b, li b{color:var(--ink);}
+    ul{margin:.4rem 0;padding-left:1.2rem;}
+    li{margin:.3rem 0;color:var(--muted);}
+    code{background:var(--panel-2);border:1px solid var(--border);border-radius:4px;padding:.05rem .32rem;font-size:.84em;}
+    .meta{font-size:.78rem;color:var(--muted);margin-bottom:2rem;}
+    .meta span{margin-right:1.2rem;}
+
+    .callout{border-radius:10px;padding:.8rem 1.1rem;margin:1rem 0;border-left:3px solid;}
+    .callout.surprise{background:rgba(255,193,77,.06);border-color:var(--warn);}
+    .callout.dead-end{background:rgba(255,138,138,.06);border-color:var(--bad);}
+    .callout.open{background:rgba(138,180,255,.06);border-color:var(--accent);}
+    .callout .label{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:.3rem;}
+    .callout.surprise .label{color:var(--warn);}
+    .callout.dead-end .label{color:var(--bad);}
+    .callout.open .label{color:var(--accent);}
+
+    .timeline{border-left:2px solid var(--border);padding-left:1.2rem;margin:.8rem 0;}
+    .timeline .event{position:relative;margin:.7rem 0;}
+    .timeline .event::before{content:'';position:absolute;left:-1.48rem;top:.45rem;width:8px;height:8px;border-radius:50%;background:var(--border);}
+    .timeline .event.ok::before{background:var(--good);}
+    .timeline .event.note::before{background:var(--warn);}
+    .timeline .event.fail::before{background:var(--bad);}
+
+    footer{margin-top:3rem;color:var(--muted);font-size:.82rem;border-top:1px solid var(--border);padding-top:.8rem;}
+  </style>
+</head>
+<body>
+<div class="wrap">
+
+  <h1>Visual identity rollout: world-theme seam, backdrop, Walker presence</h1>
+  <div class="meta">
+    <span>2026-06-04</span>
+    <span>branch: visual-direction</span>
+    <span>PR: <a href="https://github.com/rjroy/shattered-worlds/pull/2" style="color:var(--accent)">#2</a></span>
+    <span>149 tests → 149 tests</span>
+  </div>
+
+  <h2>What the plan said</h2>
+  <p>Ten steps, gated. S1 (art-gen), S2 (worldId), S3 (VisualTheme), S4 (mappers) could land in parallel with no deps. S5 (preload) unlocked once S1 and S3 landed. S6/S7/S8 chained through S5. S9 (Walker) needed S8 to exist first. S10 validated everything. The plan flagged that TableScene.ts was approaching 800 lines and that new modules should extract code rather than pile into it.</p>
+
+  <h2>What actually happened</h2>
+
+  <div class="timeline">
+
+    <div class="event ok">The parallel wave (S1–S4) ran as four concurrent sub-agents and all completed cleanly. The plan's dependency graph held exactly.</div>
+
+    <div class="event note"><b>S2 found a 4th GameState literal</b> the plan didn't mention. <code>cards.test.ts:makeEmptyState</code> built a full literal alongside the two the plan named (<code>world.ts</code> and <code>describe.test.ts</code>). The implementation agent found it during a grep pass and updated it without issue. The plan should have recommended the grep-first step more explicitly rather than naming specific files.</div>
+
+    <div class="event ok">S5 required adding <code>/// &lt;reference types="vite/client" /&gt;</code> to <code>assetManifest.ts</code> because the project had no <code>vite-env.d.ts</code>. Minor gap in the plan, handled inline.</div>
+
+    <div class="event note"><b>S6, S7, and S8 all edited <code>TableScene.ts</code> concurrently.</b> The plan had them running in parallel because they each touched different methods (S6: layoutRow/applyHighlight, S7: create/drawAll pile section, S8: create/drawAll backdrop section). This was a calculated risk — the agents used Edit with specific string matches on different parts of the file. It worked: all three sets of changes landed without collision. Had any two agents targeted the same method body, the last write would have won and the earlier changes would have been lost silently.</div>
+
+    <div class="event ok">S9 ran after S8 completed. It rewrote <code>backdrop.ts</code> to add the Walker sprite, and updated <code>TableScene.drawAll()</code> to pass <code>state</code> alongside <code>intensity</code>. The S9 agent moved the <code>const state = this.game_.state</code> declaration to the top of <code>drawAll()</code> to make the existing <code>state</code> variable available at the backdrop update call site — a small but correct structural change.</div>
+
+    <div class="event note"><b><code>walkerPresentation</code> had no test after S9.</b> The spec's REQ-VIS-15 names three tested pure functions; <code>walkerPresentation</code> in <code>walker.ts</code> is a fourth pure function that was not in that list. S10 caught the gap and 11 tests were added. The initial test file had an incorrect TypeScript cast (<code>as GameState['hand']</code>) that didn't compile — fixed with <code>as unknown as GameState['hand']</code>.</div>
+
+    <div class="event ok">Test count went from 138 (pre-session baseline) to 149 at close. All automated gates passed: tsc, eslint, bun build with four content-hashed assets in dist/.</div>
+
+  </div>
+
+  <h2>Surprises</h2>
+
+  <div class="callout surprise">
+    <div class="label">Surprise</div>
+    <p><b>The concurrent TableScene.ts edits worked.</b> Three parallel agents, each writing different sections of the same 693-line file via exact-string Edit calls — and all three sets of changes were present in the final file with no manual merge. This was the highest-risk coordination point in the session. It worked because the agents were given edit targets in different methods. The precondition for this going wrong is two agents targeting the same method with overlapping match strings; when that happens, the last writer silently wins.</p>
+  </div>
+
+  <div class="callout surprise">
+    <div class="label">Surprise</div>
+    <p><b>The intrusion overlay has no alpha channel.</b> The plan said the overlay should have a "transparent center" so the board area stays readable. The art-gen output produced a webp (VP8 lossy, no alpha) where the center is compositionally bright/clear and the edges are the fluorescent green intrusion. This achieves the visual intent through image content rather than pixel transparency. The spec task language was "compose the overlay (edge/radial weighting, or a masked-clear board zone)" — both are valid, and the image-content approach was generated rather than specified. It works, but any future generator targeting "transparent center with alpha" will get a different kind of file. Worth noting for the next world's asset brief.</p>
+  </div>
+
+  <div class="callout surprise">
+    <div class="label">Surprise</div>
+    <p><b><code>preload()</code> cannot read <code>state.worldId</code>.</b> The plan intended <code>preload()</code> to call <code>selectTheme(state.worldId)</code> to load the right assets dynamically. But Phaser calls <code>preload()</code> before <code>create()</code>, so <code>this.game_</code> doesn't exist yet. The implementation hardcodes <code>selectTheme('zombie-big-box')</code> in <code>preload()</code> and reads from state in <code>create()</code>. This is architecturally unavoidable for the single-world demo but becomes a real constraint if multiple worlds ever need different asset sets — the worldId would need to be passed as Phaser scene init data so it's available in <code>preload()</code>.</p>
+  </div>
+
+  <div class="callout surprise">
+    <div class="label">Surprise</div>
+    <p><b>Phaser 3.90 types <code>updateTo</code> correctly — no cast needed.</b> The plan noted "if TypeScript cannot resolve updateTo on the Phaser.Tweens.Tween type, cast as any." In practice, Phaser 3.90's bundled types fully declare <code>updateTo(key: string, value: number, startToCurrent?: boolean): this</code>. No cast was needed.</p>
+  </div>
+
+  <h2>Dead ends</h2>
+
+  <div class="callout dead-end">
+    <div class="label">Dead end</div>
+    <p><b>The intrusion tween was initially built wrong.</b> The original constructor created a tween targeting <code>alpha: 0 → 0</code> (start and end identical) with a 1500ms duration. This tween completes after 1.5 seconds and Phaser recycles the Tween object back into its pool. The <code>update()</code> method then called <code>updateTo</code> on the stale reference every <code>drawAll()</code>. In Phaser 3.90's tween pool, a recycled Tween can be assigned to a new target object; calling <code>updateTo('alpha', ...)</code> on it would change that other object's alpha tween target. The pattern was changed post-commit to <code>killTweensOf + scene.tweens.add</code>, which avoids holding a stale reference entirely. This change was triggered by a user report of clicking issues, but the exact causal connection was not established before commit.</p>
+  </div>
+
+  <h2>Open: clicking issue (unresolved)</h2>
+
+  <div class="callout open">
+    <div class="label">Open</div>
+    <p>After the implementation was committed and the dev server running, the user reported trouble clicking on things. The investigation in-session was extensive but inconclusive: non-interactive Phaser objects (backdrop images, pile container images) cannot block input in the Phaser 3 input model; depth sorting is enabled and depth-0 objects receive input before depth-−10 objects; card containers are the last objects added to the display list (highest index within depth 0) so they are checked first. No static-analysis cause was found. The tween recycling issue was patched as a precautionary measure. Browser console errors and hand-cursor-on-hover behavior were not confirmed because browser navigation was blocked during the session. The issue is flagged in PR #2 and remains open.</p>
+  </div>
+
+  <h2>What drifted from the plan</h2>
+  <ul>
+    <li><b>preload() hardcodes worldId</b> — architecturally unavoidable; plan assumed dynamic read from state.</li>
+    <li><b>walkerPresentation called with <code>hasWalker: true</code> always</b> in <code>backdrop.ts</code> rather than derived from <code>theme.walker !== undefined</code>. Functionally harmless: the sprite-undefined guard fires first. The <code>hidden</code> branch of <code>walkerPresentation</code> is dead code in the current wiring.</li>
+    <li><b>GrainSpec and intrusionHue defined but not rendered</b> — intentional deferral of REQ-VIS-14 (Should), noted in the plan as out of scope.</li>
+    <li><b>Walker tween uses stop-and-recreate</b>, not <code>updateTo</code> — both approaches were listed as valid in the plan; the intrusion tween issue pushed toward the same pattern for consistency.</li>
+  </ul>
+
+  <footer>
+    Retro for <a href="../plans/visual-identity.html">visual-identity plan</a> and <a href="../notes/visual-identity.html">session notes</a>. PR: <a href="https://github.com/rjroy/shattered-worlds/pull/2">#2</a>.
+  </footer>
+
+</div>
+</body>
+</html>
