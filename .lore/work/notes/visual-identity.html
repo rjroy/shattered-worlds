@@ -1,0 +1,166 @@
+<!DOCTYPE html><html lang="en"><head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Notes: visual identity &amp; world-theme seam</title>
+  <meta name="date" content="2026-06-04">
+  <meta name="status" content="complete">
+  <meta name="type" content="notes">
+  <meta name="source" content=".lore/work/plans/visual-identity.html">
+  <style>
+    :root{--bg:#0f1117;--panel:#1a1d27;--panel-2:#222633;--ink:#e8eaf0;--muted:#9aa3b2;--accent:#8ab4ff;--gold:#ffd479;--good:#6cd08a;--warn:#ffc14d;--bad:#ff8a8a;--violet:#b98aff;--border:#2a2f3d;--intrude:#ff4fa3;}
+    *{box-sizing:border-box;}
+    body{margin:0;background:radial-gradient(1200px 600px at 50% -10%,#1a2238 0%,var(--bg) 55%);color:var(--ink);font:15px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;padding:1.5rem 1rem 5rem;}
+    .wrap{max-width:900px;margin:0 auto;}
+    .banner{background:linear-gradient(135deg,rgba(138,180,255,.12),rgba(185,138,255,.08));border:1px solid rgba(138,180,255,.3);border-radius:14px;padding:1rem 1.4rem;margin-bottom:1.5rem;display:flex;align-items:center;gap:1rem;flex-wrap:wrap;}
+    .banner .title{font-weight:700;font-size:1.1rem;}
+    .chip{display:inline-flex;align-items:center;border-radius:999px;padding:.18rem .75rem;font-size:.72rem;font-weight:700;border:1px solid;text-transform:uppercase;letter-spacing:.04em;}
+    .chip.in-progress{background:rgba(255,193,77,.1);border-color:rgba(255,193,77,.4);color:var(--warn);}
+    .chip.done{background:rgba(108,208,138,.1);border-color:rgba(108,208,138,.35);color:var(--good);}
+    .chip.pending{background:rgba(138,180,255,.1);border-color:rgba(138,180,255,.3);color:var(--accent);}
+    .chip.failed{background:rgba(255,138,138,.1);border-color:rgba(255,138,138,.35);color:var(--bad);}
+    .chip.skipped{background:rgba(154,163,178,.1);border-color:rgba(154,163,178,.3);color:var(--muted);}
+    .progress-bar{height:6px;background:var(--border);border-radius:3px;overflow:hidden;flex:1;min-width:120px;}
+    .progress-bar .fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--violet));border-radius:3px;transition:width .4s;}
+    h2{font-size:1.1rem;margin:1.6rem 0 .8rem;color:var(--gold);}
+    .phases{display:flex;flex-direction:column;gap:.4rem;}
+    .phase{background:var(--panel);border:1px solid var(--border);border-radius:10px;overflow:hidden;}
+    .phase summary{list-style:none;cursor:pointer;padding:.65rem 1rem;display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;}
+    .phase summary::-webkit-details-marker{display:none;}
+    .phase .sid{font:700 .78rem ui-monospace,Menlo,monospace;color:var(--violet);}
+    .phase .ptitle{font-weight:600;flex:1;}
+    .phase .log{padding:.5rem 1rem .8rem;color:var(--muted);font-size:.88rem;border-top:1px solid var(--border);}
+    .phase .log p{margin:.3rem 0;}
+    .phase .log .entry{border-left:2px solid var(--border);padding-left:.6rem;margin:.4rem 0;}
+    .phase .log .entry.ok{border-color:var(--good);}
+    .phase .log .entry.err{border-color:var(--bad);}
+    .phase .log .entry.note{border-color:var(--warn);}
+    .phase .log code{background:var(--panel-2);border:1px solid var(--border);border-radius:4px;padding:.05rem .3rem;font-size:.82em;}
+    a{color:var(--accent);}
+    footer{margin-top:2rem;color:var(--muted);font-size:.82rem;border-top:1px solid var(--border);padding-top:.8rem;}
+  </style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="banner">
+    <div>
+      <div class="title">Notes · Visual identity &amp; world-theme seam</div>
+      <div style="font-size:.82rem;color:var(--muted);margin-top:.2rem">Source: <a href="../plans/visual-identity.html">visual-identity plan</a> · Started 2026-06-04</div>
+    </div>
+    <span class="chip done" id="banner-status">● complete</span>
+    <div style="display:flex;align-items:center;gap:.5rem;flex:1;justify-content:flex-end;min-width:160px;">
+      <span style="font-size:.78rem;color:var(--muted);" id="progress-label">10 / 10</span>
+      <div class="progress-bar"><div class="fill" id="progress-fill" style="width:100%"></div></div>
+    </div>
+  </div>
+
+  <h2>Phase tracker</h2>
+  <div class="phases">
+
+    <details class="phase">
+      <summary><span class="sid">S1</span><span class="ptitle">Generate theme assets</span><span class="chip done" id="s1-chip">done</span></summary>
+      <div class="log" id="s1-log">
+        <p class="entry ok">Copied <code>cardback.webp</code> from .lore/assets/.</p>
+        <p class="entry ok">Generated via flux-2-pro: <code>bigbox-reality.webp</code> (1232×816), <code>intrusion-overlay.webp</code> (1232×816). Both exceed 900×600 gate.</p>
+        <p class="entry ok"><code>walker.png</code> (678×1024): generated then background-removed via bria/remove-background. TrueColorAlpha, 4-channel, alpha min=0 confirmed.</p>
+      </div>
+    </details>
+
+    <details class="phase">
+      <summary><span class="sid">S2</span><span class="ptitle">Add worldId to core GameState</span><span class="chip done" id="s2-chip">done</span></summary>
+      <div class="log" id="s2-log">
+        <p class="entry ok">Added <code>worldId: string</code> to <code>GameState</code> interface in <code>types.ts</code>.</p>
+        <p class="entry ok">Set <code>worldId: 'zombie-big-box'</code> in <code>createWorld</code> skeleton and in <code>describe.test.ts:makeState</code>.</p>
+        <p class="entry note">Extra site found: <code>cards.test.ts:makeEmptyState</code> also had a full literal — updated automatically by agent.</p>
+        <p class="entry ok">bun test 132/132 pass. tsc clean. No presentation in core.</p>
+      </div>
+    </details>
+
+    <details class="phase">
+      <summary><span class="sid">S3</span><span class="ptitle">VisualTheme registry (pure)</span><span class="chip done" id="s3-chip">done</span></summary>
+      <div class="log" id="s3-log">
+        <p class="entry ok">Created <code>src/game/theme.ts</code> — VisualTheme interface, FrameStyle, GrainSpec, ZOMBIE_BIG_BOX_THEME, selectTheme. No Phaser import.</p>
+        <p class="entry ok">Created <code>src/game/theme.test.ts</code> — 4 headless tests: worldId lookup, unknown fallback, backdrop key types, frameStyle numeric types.</p>
+        <p class="entry ok">bun test 4/4 + 132/132 total pass.</p>
+      </div>
+    </details>
+
+    <details class="phase">
+      <summary><span class="sid">S4</span><span class="ptitle">Pure visual mappers</span><span class="chip done" id="s4-chip">done</span></summary>
+      <div class="log" id="s4-log">
+        <p class="entry ok">Created <code>src/game/visualMappers.ts</code> — <code>intrusionForIntensity</code> (ramp curve) and <code>walkerProximityForAct</code> (3 tiers). No Phaser import.</p>
+        <p class="entry ok">Created <code>src/game/visualMappers.test.ts</code> — 6 tests: clamping, 100-pair monotonicity property test, tier ordering, out-of-range clamping.</p>
+        <p class="entry ok">bun test 6/6 + 138/138 total pass.</p>
+      </div>
+    </details>
+
+    <details class="phase">
+      <summary><span class="sid">S5</span><span class="ptitle">Asset manifest &amp; Phaser preload</span><span class="chip done" id="s5-chip">done</span></summary>
+      <div class="log" id="s5-log">
+        <p class="entry ok">Created <code>assetManifest.ts</code> — 4 keys → Vite-imported URLs. Added <code>/// &lt;reference types="vite/client" /&gt;</code> since no vite-env.d.ts existed.</p>
+        <p class="entry ok">Added <code>TableScene.preload()</code> — loads theme keys + cardback via assetManifest.</p>
+        <p class="entry ok">bun build: all 4 assets hashed and emitted to dist/assets/. tsc clean. 138/138 tests pass.</p>
+      </div>
+    </details>
+
+    <details class="phase">
+      <summary><span class="sid">S6</span><span class="ptitle">Theme card fronts</span><span class="chip done" id="s6-chip">done</span></summary>
+      <div class="log" id="s6-log">
+        <p class="entry ok">Replaced COLORS object with TEXT (text-only constants). VisualTheme threaded into createCardObject(scene, card, x, y, theme). applyCardHighlight now takes FrameStyle.</p>
+        <p class="entry ok">TableScene: theme_ field initialized from state.worldId, passed to createCardObject and applyCardHighlight. No hardcoded hex backgrounds remain.</p>
+        <p class="entry ok">tsc clean. 138/138 tests pass.</p>
+      </div>
+    </details>
+
+    <details class="phase">
+      <summary><span class="sid">S7</span><span class="ptitle">Constant back &amp; pile stacks</span><span class="chip done" id="s7-chip">done</span></summary>
+      <div class="log" id="s7-log">
+        <p class="entry ok">New piles.ts: PileLayer class. Player pile at (80,540), world pile at (820,540). Up to 4 stacked cardback images with offset, count label below. Never tinted.</p>
+        <p class="entry ok">TableScene: pileLayer field, created in create() before bringToTop, updated in drawAll() after updateHUD. Not in cardObjects map.</p>
+        <p class="entry ok">138/138 tests pass.</p>
+      </div>
+    </details>
+
+    <details class="phase">
+      <summary><span class="sid">S8</span><span class="ptitle">Backdrop &amp; intensity-driven intrusion</span><span class="chip done" id="s8-chip">done</span></summary>
+      <div class="log" id="s8-log">
+        <p class="entry ok">New backdrop.ts: BackdropLayer. realityImg at depth -10, intrusionImg at depth -9. Long-lived tween, retargeted via updateTo() (no cast needed — fully typed in Phaser 3.90).</p>
+        <p class="entry ok">TableScene: backdropLayer created before bringToTop, update() called at start of drawAll(). intrusionForIntensity imported in backdrop.ts only.</p>
+        <p class="entry ok">tsc clean. 138/138 tests pass. Core boundary intact.</p>
+        <p class="entry note">All 3 agents (S6, S7, S8) edited TableScene.ts concurrently — all changes landed without conflict.</p>
+      </div>
+    </details>
+
+    <details class="phase">
+      <summary><span class="sid">S9</span><span class="ptitle">Walker presence</span><span class="chip done" id="s9-chip">done</span></summary>
+      <div class="log" id="s9-log">
+        <p class="entry ok">New walker.ts (pure): walkerPresentation(state, hasWalker) → proximity | foreground | hidden. No Phaser.</p>
+        <p class="entry ok">backdrop.ts rewritten: Walker sprite at depth -8 (optional, from theme.walker.textureKey). Tween on act change and foreground entry. Foreground suppresses act-proximity retween while active.</p>
+        <p class="entry ok">TableScene.ts: state moved to top of drawAll, backdropLayer.update(state, intensity) call updated.</p>
+        <p class="entry ok">tsc clean. 138/138 tests pass. walker.ts has no Phaser import.</p>
+      </div>
+    </details>
+
+    <details class="phase">
+      <summary><span class="sid">S10</span><span class="ptitle">Final validation vs REQ-VIS</span><span class="chip done" id="s10-chip">done</span></summary>
+      <div class="log" id="s10-log">
+        <p class="entry ok">bun test 149/149 pass (14 files). tsc clean. eslint clean. bun build: all 4 assets hashed in dist/assets/.</p>
+        <p class="entry ok">REQ-VIS-1..17: ALL PASS. Boundary intact, theme total, back constant, fronts legible (WCAG AA confirmed mathematically), intrusion monotonic, no feedback loop, Walker act-driven + foreground-on-draw, assets bundle.</p>
+        <p class="entry note">REQ-VIS-18 (browser): requires manual verification at http://localhost:5173/shattered-worlds/ — automated browser check was blocked.</p>
+        <p class="entry ok">Fresh-context review: no logic bugs found. All spec checks confirmed correct.</p>
+        <p class="entry note">walkerPresentation() had no test (gap vs REQ-VIS-15 intent). Added walker.test.ts with 11 tests covering hidden/foreground/proximity paths and act clamping.</p>
+        <p class="entry note">S10 divergence log: (1) preload() hardcodes worldId — architecturally unavoidable before create(). (2) walkerPresentation always called with hasWalker=true in backdrop.ts — functionally harmless, sprite-undefined guard fires first. (3) GrainSpec/intrusionHue not wired — intentional deferral of REQ-VIS-14 (Should). (4) Walker tween: stop-and-recreate (not updateTo) — spec permits both approaches.</p>
+      </div>
+    </details>
+
+  </div>
+
+  <h2>Session log</h2>
+  <div id="session-log" style="font-size:.88rem;color:var(--muted);">
+    <div class="entry note">2026-06-04 — Session started. All 10 task files found (pending). Lore-researcher dispatched. S1/S2/S3/S4 can run in parallel (no deps).</div>
+    <div class="entry ok">2026-06-04 — All 10 phases complete. 149/149 tests pass. tsc + eslint + build clean. REQ-VIS-1..17 verified. REQ-VIS-18 requires manual browser check. 11 new tests added for walkerPresentation (gap closure).</div>
+  </div>
+
+  <footer>Notes for <a href="../plans/visual-identity.html">visual-identity plan</a>. Updated as phases complete.</footer>
+</div>
+</body></html>

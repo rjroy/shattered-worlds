@@ -19,6 +19,7 @@ function makeEmptyState(nextId = 0): GameState {
     hp: 20,
     skipDrawNext: false,
     status: 'playing',
+    worldId: 'zombie-big-box',
     rng: createRng(0),
     nextId,
   }
