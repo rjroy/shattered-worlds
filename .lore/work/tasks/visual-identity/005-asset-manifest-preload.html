@@ -1,0 +1,78 @@
+<!DOCTYPE html><html lang="en"><head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Asset manifest &amp; Phaser preload</title>
+  <meta name="date" content="2026-06-04">
+  <meta name="status" content="pending">
+  <meta name="tags" content="task, visual, assets, preload, vite, pages-base, phaser">
+  <meta name="source" content=".lore/work/plans/visual-identity.html">
+  <meta name="sequence" content="5">
+  <meta name="modules" content="game">
+  <style>
+    :root{--bg:#0f1117;--panel:#1a1d27;--panel-2:#222633;--ink:#e8eaf0;--muted:#9aa3b2;--accent:#8ab4ff;--gold:#ffd479;--good:#6cd08a;--warn:#ffc14d;--bad:#ff8a8a;--violet:#b98aff;--border:#2a2f3d;}
+    *{box-sizing:border-box;}
+    body{margin:0;background:radial-gradient(1200px 600px at 50% -10%,#1a2238 0%,var(--bg) 55%);color:var(--ink);font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;padding:2rem 1rem 5rem;}
+    .wrap{max-width:860px;margin:0 auto;}
+    .top{display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;margin-bottom:.6rem;}
+    .seq{font:700 .8rem ui-monospace,Menlo,monospace;color:var(--gold);background:rgba(255,212,121,.1);border:1px solid rgba(255,212,121,.35);border-radius:999px;padding:.2rem .7rem;}
+    .chip{display:inline-flex;align-items:center;gap:.35rem;border-radius:999px;padding:.18rem .7rem;font-size:.72rem;font-weight:700;border:1px solid;text-transform:uppercase;letter-spacing:.04em;}
+    .chip.pending{background:rgba(138,180,255,.12);border-color:rgba(138,180,255,.35);color:var(--accent);}
+    .chip.phaser{background:rgba(255,212,121,.12);border-color:rgba(255,212,121,.4);color:var(--gold);}
+    .src{margin-left:auto;font-size:.8rem;color:var(--muted);}
+    h1{font-size:1.6rem;margin:.3rem 0 .2rem;line-height:1.15;}
+    .reqs{display:flex;gap:.3rem;flex-wrap:wrap;margin:.4rem 0 1.2rem;}
+    .reqtag{font:.66rem ui-monospace,Menlo,monospace;background:rgba(185,138,255,.14);color:var(--violet);border-radius:999px;padding:.12rem .55rem;}
+    h2{font-size:.82rem;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin:1.8rem 0 .5rem;border-bottom:1px solid var(--border);padding-bottom:.3rem;}
+    p{margin:.5rem 0;}a{color:var(--accent);}
+    code{background:var(--panel-2);border:1px solid var(--border);border-radius:5px;padding:.05rem .35rem;font-size:.86em;}
+    ul{margin:.4rem 0;padding-left:1.1rem;}li{margin:.3rem 0;}li b{color:var(--ink);}
+    .muted{color:var(--muted);}
+    .file{font:.82rem ui-monospace,Menlo,monospace;color:var(--gold);}
+    .new{font-size:.62rem;color:var(--good);border:1px solid rgba(108,208,138,.4);border-radius:4px;padding:0 .3rem;}
+    .rw{font-size:.62rem;color:var(--warn);border:1px solid rgba(255,193,77,.4);border-radius:4px;padding:0 .3rem;}
+    .val{background:linear-gradient(180deg,rgba(108,208,138,.08),rgba(108,208,138,.02));border:1px solid rgba(108,208,138,.4);border-left:4px solid var(--good);border-radius:12px;padding:.8rem 1.1rem;margin:.5rem 0;}
+    .val li{color:var(--muted);}.val li b{color:var(--ink);}
+    .deps{font-size:.8rem;color:var(--muted);margin-top:1.4rem;}
+    footer{margin-top:2.2rem;color:var(--muted);font-size:.8rem;border-top:1px solid var(--border);padding-top:.8rem;}
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <span class="seq">Step 5 / 10</span>
+    <span class="chip pending">● pending</span>
+    <span class="chip phaser">phaser glue</span>
+    <span class="src"><a href="../../plans/visual-identity.html">visual-identity plan</a></span>
+  </div>
+  <h1>Asset manifest &amp; Phaser preload</h1>
+  <div class="reqs"><span class="reqtag">REQ-VIS-17</span></div>
+
+  <h2>What</h2>
+  <p>The one place that crosses from string keys to real URLs, so textures are loaded before <code>create()</code> draws anything.</p>
+  <ul>
+    <li><code>src/game/assetManifest.ts</code>: map each asset key → a <b>Vite-imported URL</b> (<code>import realityUrl from './assets/themes/zombie-big-box/bigbox-reality.webp'</code>, etc.), exported as a <code>Record&lt;string, string&gt;</code>. Vite rewrites these with the <code>/shattered-worlds/</code> base automatically, so nothing 404s on deploy.</li>
+    <li>Add <code>TableScene.preload()</code>: for the active theme's keys (<code>selectTheme(state.worldId)</code> → <code>backdrop.realityKey</code>, <code>backdrop.intrusionKey</code>, <code>walker.textureKey</code>) plus the shared <code>cardback</code>, call <code>this.load.image(key, manifest[key])</code>.</li>
+    <li><b><code>assetManifest.ts</code> is Phaser/Vite-only and must never be imported by any test</b> — its <code>.webp</code> imports do not resolve under <code>bun test</code>. Asset resolution is verified from build output, not by importing the manifest.</li>
+  </ul>
+
+  <h2>Validation</h2>
+  <div class="val"><ul>
+    <li><b><code>bun run dev</code> loads with no missing-texture warnings</b> in the console.</li>
+    <li><b><code>bun run build</code> then <code>bun run preview</code></b> (serves <code>dist/</code> with the <code>/shattered-worlds/</code> base): every theme asset and the card back resolves — <b>no 404</b> on the real subpath, which <code>dev</code> alone does not exercise.</li>
+    <li>No test file imports <code>assetManifest.ts</code> (grep the test suite).</li>
+    <li><code>bun test</code> still green (the headless pure tests did not start importing the manifest).</li>
+  </ul></div>
+
+  <h2>Why</h2>
+  <p>Assets must bundle and resolve on the Pages subpath with the pipeline unchanged (REQ-VIS-17), and the deployment-path lesson says hardcoded <code>/</code> paths 404 on a subpath — Vite imports avoid that. Isolating the manifest keeps the pure tests (S3/S4) headless. See plan Step 5.</p>
+
+  <h2>Files</h2>
+  <ul>
+    <li><span class="file">src/game/assetManifest.ts</span> <span class="new">new</span></li>
+    <li><span class="file">src/game/TableScene.ts</span> <span class="rw">edit</span> (add <code>preload()</code>)</li>
+  </ul>
+
+  <div class="deps">Depends on: S1 (assets exist), S3 (theme keys). Unlocks: S6, S7, S8 (all need loaded textures).</div>
+  <footer>Task 5 of 10 · <a href="../../plans/visual-identity.html">visual-identity plan</a> · spec <a href="../../specs/visual-identity.html">visual-identity</a></footer>
+</div>
+</body></html>
