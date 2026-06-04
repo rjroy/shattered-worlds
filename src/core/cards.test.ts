@@ -1,51 +1,197 @@
 import { describe, expect, it } from 'bun:test'
-import { buildLibrary } from './cards'
+import type { CardTemplateId, GameState } from './types'
+import { mintCard, CATALOG } from './cards'
+import { createRng } from './rng'
 
-describe('buildLibrary', () => {
-  it('returns exactly 10 cards', () => {
-    const library = buildLibrary()
-    expect(library).toHaveLength(10)
-  })
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
 
-  it('contains exactly 5 value-1 cards, 3 value-2 cards, and 2 value-3 cards', () => {
-    const library = buildLibrary()
-    const byValue = { 1: 0, 2: 0, 3: 0 }
-    for (const card of library) {
-      byValue[card.value] += 1
+function makeEmptyState(nextId = 0): GameState {
+  return {
+    playerDraw: [],
+    hand: [],
+    playerDiscard: [],
+    worldDraw: [],
+    acts: [],
+    actIndex: 0,
+    progress: {},
+    hp: 20,
+    skipDrawNext: false,
+    status: 'playing',
+    rng: createRng(0),
+    nextId,
+  }
+}
+
+const ALL_TEMPLATE_IDS: readonly CardTemplateId[] = [
+  'Sprint',
+  'Explore',
+  'Barricade',
+  'Med Kit',
+  'Panic',
+  'Adrenaline',
+  'Listen',
+  'Baseball Bat',
+  'Regroup',
+  'Summon Door',
+  'Strange Sounds',
+  'Rubble',
+  'Screams',
+  'Zombie',
+  'Find Baseball Bat',
+  'The Walker',
+  'Door',
+]
+
+// ---------------------------------------------------------------------------
+// 1. Catalog completeness
+// ---------------------------------------------------------------------------
+
+describe('catalog completeness', () => {
+  it('all 17 CardTemplateIds mint a card without throwing', () => {
+    for (const id of ALL_TEMPLATE_IDS) {
+      expect(() => mintCard(makeEmptyState(), id)).not.toThrow()
     }
-    expect(byValue[1]).toBe(5)
-    expect(byValue[2]).toBe(3)
-    expect(byValue[3]).toBe(2)
   })
 
-  it('has a total value sum of 17', () => {
-    const library = buildLibrary()
-    const total = library.reduce((sum, card) => sum + card.value, 0)
-    expect(total).toBe(17)
+  it('catalog has exactly 17 entries', () => {
+    expect(Object.keys(CATALOG)).toHaveLength(17)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// 2. Starter deck
+// ---------------------------------------------------------------------------
+
+describe('starter deck', () => {
+  const STARTER_SPEC: ReadonlyArray<[CardTemplateId, number]> = [
+    ['Sprint', 2],
+    ['Explore', 3],
+    ['Barricade', 2],
+    ['Med Kit', 1],
+    ['Panic', 1],
+    ['Adrenaline', 1],
+  ]
+
+  it('mints the correct 10 cards with matching names and kinds', () => {
+    let state = makeEmptyState()
+    const cards: ReturnType<typeof mintCard>[0][] = []
+
+    for (const [templateId] of STARTER_SPEC) {
+      const [card, next] = mintCard(state, templateId)
+      cards.push(card)
+      state = next
+    }
+
+    // Build expected name multiset
+    const expectedNames: string[] = []
+    for (const [templateId, count] of STARTER_SPEC) {
+      for (let i = 0; i < count; i++) expectedNames.push(templateId)
+    }
+
+    // Re-mint all 10
+    state = makeEmptyState()
+    const allCards: ReturnType<typeof mintCard>[0][] = []
+    for (const [templateId, count] of STARTER_SPEC) {
+      for (let i = 0; i < count; i++) {
+        const [card, next] = mintCard(state, templateId)
+        allCards.push(card)
+        state = next
+      }
+    }
+
+    expect(allCards).toHaveLength(10)
+    const names = allCards.map((c) => c.name)
+    expect(names.sort()).toEqual(expectedNames.sort())
+    expect(allCards.every((c) => c.kind === 'player')).toBe(true)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// 3. World card properties
+// ---------------------------------------------------------------------------
+
+describe('world card properties', () => {
+  it('Door is discardable:false', () => {
+    const [card] = mintCard(makeEmptyState(), 'Door')
+    if (card.kind !== 'world') throw new Error('expected world card')
+    expect(card.discardable).toBe(false)
   })
 
-  it('has all unique ids', () => {
-    const library = buildLibrary()
-    const ids = library.map((card) => card.id)
-    const unique = new Set(ids)
-    expect(unique.size).toBe(library.length)
-  })
-
-  it('has ids exactly card-01 through card-10', () => {
-    const library = buildLibrary()
-    const expected = [
-      'card-01',
-      'card-02',
-      'card-03',
-      'card-04',
-      'card-05',
-      'card-06',
-      'card-07',
-      'card-08',
-      'card-09',
-      'card-10',
+  it('all other world cards are discardable:true', () => {
+    const worldTemplateIds: CardTemplateId[] = [
+      'Strange Sounds',
+      'Rubble',
+      'Screams',
+      'Zombie',
+      'Find Baseball Bat',
+      'The Walker',
     ]
-    const ids = library.map((card) => card.id)
-    expect(ids).toEqual(expected)
+    for (const id of worldTemplateIds) {
+      const [card] = mintCard(makeEmptyState(), id)
+      if (card.kind !== 'world') throw new Error(`expected world card for ${id}`)
+      expect(card.discardable).toBe(true)
+    }
+  })
+
+  it('The Walker has cost 10', () => {
+    const [card] = mintCard(makeEmptyState(), 'The Walker')
+    if (card.kind !== 'world') throw new Error('expected world card')
+    expect(card.cost).toBe(10)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// 4. Deterministic id sequencing
+// ---------------------------------------------------------------------------
+
+describe('id sequencing', () => {
+  it('minting 3 cards in sequence gives ids "0","1","2" and advances nextId to 3', () => {
+    let state = makeEmptyState(0)
+
+    const [c0, s1] = mintCard(state, 'Sprint')
+    state = s1
+    const [c1, s2] = mintCard(state, 'Explore')
+    state = s2
+    const [c2, s3] = mintCard(state, 'Zombie')
+    state = s3
+
+    expect(c0.id).toBe('0')
+    expect(c1.id).toBe('1')
+    expect(c2.id).toBe('2')
+    expect(state.nextId).toBe(3)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// 5. Unique ids across starter deck
+// ---------------------------------------------------------------------------
+
+describe('unique ids', () => {
+  it('minting all 10 starter cards yields 10 unique ids', () => {
+    const starterSpec: ReadonlyArray<CardTemplateId> = [
+      'Sprint',
+      'Sprint',
+      'Explore',
+      'Explore',
+      'Explore',
+      'Barricade',
+      'Barricade',
+      'Med Kit',
+      'Panic',
+      'Adrenaline',
+    ]
+
+    let state = makeEmptyState()
+    const ids: string[] = []
+    for (const templateId of starterSpec) {
+      const [card, next] = mintCard(state, templateId)
+      ids.push(card.id)
+      state = next
+    }
+
+    expect(ids).toHaveLength(10)
+    expect(new Set(ids).size).toBe(10)
   })
 })

@@ -1,23 +1,87 @@
-export type CardId = string // "card-01" … "card-10"
+export type CardId = string
 
-export interface Card {
+export type CardTemplateId =
+  | 'Sprint'
+  | 'Explore'
+  | 'Barricade'
+  | 'Med Kit'
+  | 'Panic'
+  | 'Adrenaline'
+  | 'Listen'
+  | 'Baseball Bat'
+  | 'Regroup'
+  | 'Summon Door'
+  | 'Strange Sounds'
+  | 'Rubble'
+  | 'Screams'
+  | 'Zombie'
+  | 'Find Baseball Bat'
+  | 'The Walker'
+  | 'Door'
+
+export type Keyword = 'Hidden' | 'Creature' | 'Slow'
+
+export type Dest = 'playerDiscard' | 'playerDrawTop' | 'worldDrawTop'
+
+export type Effect =
+  | { kind: 'DealProgress'; base: number; bonus?: { tag: Keyword; amount: number } }
+  | { kind: 'Draw'; player?: number; world?: number }
+  | { kind: 'Heal'; amount: number }
+  | { kind: 'ReturnWorldCards'; min: number; max: number }
+  | { kind: 'DestroyCardInHand'; min: 0; max: 1 }
+  | { kind: 'DiscardThenDraw'; player: number }
+  | { kind: 'AddCard'; template: CardTemplateId; dest: Dest }
+  | { kind: 'AddWorldCardToTop'; template: CardTemplateId }
+  | { kind: 'Modal'; branches: readonly Effect[] }
+  | { kind: 'Sequence'; steps: readonly Effect[] }
+
+export type Penalty =
+  | { kind: 'Damage'; amount: number }
+  | { kind: 'SkipDrawNextTurn' }
+  | { kind: 'GainCard'; template: CardTemplateId }
+  | { kind: 'AddWorldCardToTop'; template: CardTemplateId }
+  | { kind: 'None' }
+
+export type Reward =
+  | { kind: 'GainCard'; template: CardTemplateId }
+  | { kind: 'AddPlayerCardToTop'; template: CardTemplateId }
+  | { kind: 'AddWorldCardToTop'; template: CardTemplateId }
+  | { kind: 'SurviveWorld' }
+  | { kind: 'None' }
+
+export interface PlayerCard {
+  kind: 'player'
   id: CardId
-  value: 1 | 2 | 3
+  name: string
+  effect: Effect
 }
 
+export interface WorldCard {
+  kind: 'world'
+  id: CardId
+  name: string
+  cost: number
+  keywords: readonly Keyword[]
+  discardable: boolean
+  penalty: Penalty
+  reward: Reward
+}
+
+export type Card = PlayerCard | WorldCard
+
 export type Action =
-  | { type: 'PlayCard'; cardId: CardId }
+  | {
+      type: 'PlayCard'
+      cardId: CardId
+      targetId?: CardId
+      choice?: number
+      returnIds?: readonly CardId[]
+      destroyId?: CardId
+      discardId?: CardId
+    }
+  | { type: 'DiscardHazard'; cardId: CardId }
   | { type: 'EndTurn' }
 
-export type GameEvent =
-  | { type: 'CardPlayed'; cardId: CardId; value: number; runningTotal: number }
-  | { type: 'TurnEnded'; total: number }
-  | { type: 'CardsDiscarded'; cardIds: CardId[] }
-  | { type: 'DeckShuffled' }
-  | { type: 'CardsDrawn'; cardIds: CardId[] }
-
-// RngState is defined here (not in rng.ts) so GameState typechecks now.
-// Step 3's rng.ts will import it.
 export interface RngState {
   a: number
   b: number
@@ -26,11 +90,51 @@ export interface RngState {
 }
 
 export interface GameState {
-  drawPile: readonly Card[] // top = index 0
+  playerDraw: readonly Card[]
   hand: readonly Card[]
-  played: readonly Card[] // in play order
-  discard: readonly Card[]
-  runningTotal: number
-  history: readonly number[]
+  playerDiscard: readonly Card[]
+  worldDraw: readonly WorldCard[]
+  acts: readonly (readonly WorldCard[])[]
+  actIndex: number
+  progress: Readonly<Record<CardId, number>>
+  hp: number
+  skipDrawNext: boolean
+  status: 'playing' | 'won' | 'lost'
   rng: RngState
+  nextId: number
 }
+
+export type TargetSpec =
+  | { kind: 'none' }
+  | { kind: 'hazard'; tag?: Keyword }
+  | { kind: 'modal'; branches: readonly TargetSpec[] }
+  | { kind: 'returnWorld'; min: number; max: number }
+  | { kind: 'destroyHand'; min: 0; max: 1 }
+  | { kind: 'discardPlayer' }
+  | { kind: 'compound'; steps: readonly TargetSpec[] }
+
+export interface AvailableActions {
+  playable: readonly { cardId: CardId; spec: TargetSpec }[]
+  discardable: readonly CardId[]
+  canEndTurn: boolean
+  legalTargets(cardId: CardId, step: number): readonly CardId[]
+}
+
+export type GameEvent =
+  | { type: 'CardPlayed'; cardId: CardId }
+  | { type: 'ProgressDealt'; hazardId: CardId; amount: number; hazardTurnTotal: number }
+  | { type: 'HazardResolved'; hazardId: CardId }
+  | { type: 'HazardDiscarded'; cardId: CardId }
+  | { type: 'DamageDealt'; amount: number }
+  | { type: 'DrawSkipped' }
+  | { type: 'CardGained'; id: CardId; dest: Dest }
+  | { type: 'CardDestroyed'; id: CardId }
+  | { type: 'WorldCardsReturned'; ids: readonly CardId[] }
+  | { type: 'HpChanged'; hp: number }
+  | { type: 'CardsDiscarded'; cardIds: readonly CardId[] }
+  | { type: 'DeckShuffled' }
+  | { type: 'ActAdvanced'; act: number }
+  | { type: 'CardsDrawn'; ids: readonly CardId[] }
+  | { type: 'TurnEnded' }
+  | { type: 'WorldWon' }
+  | { type: 'WorldLost' }

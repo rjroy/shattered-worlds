@@ -9,6 +9,15 @@ export default tseslint.config(
     ignores: ['dist/**', 'node_modules/**'],
   },
   {
+    // Allow _-prefixed parameters as intentionally unused (standard TS convention)
+    rules: {
+      '@typescript-eslint/no-unused-vars': [
+        'error',
+        { argsIgnorePattern: '^_', varsIgnorePattern: '^_' },
+      ],
+    },
+  },
+  {
     // Core boundary: no Phaser or game-layer imports, no browser globals
     files: ['src/core/**/*.ts'],
     rules: {

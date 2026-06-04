@@ -1,286 +1,477 @@
+/**
+ * Unit tests for reduce.ts.
+ *
+ * All tests operate on pure GameState — no Phaser, no browser globals.
+ * Crafted minimal states are used wherever a full createWorld game would
+ * introduce too many variables.
+ */
+
 import { describe, expect, it } from 'bun:test'
+import { createWorld } from './world'
+import { mintCard } from './cards'
 import { reduce } from './reduce'
-import { createGame } from './game'
 import { IllegalActionError } from './errors'
-import type { GameState, CardId } from './types'
+import type { GameState, PlayerCard, WorldCard } from './types'
 
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 
-/** Collect the ids of every card across all four zones. */
-function allCardIds(state: GameState): CardId[] {
-  return [
-    ...state.drawPile.map((c) => c.id),
-    ...state.hand.map((c) => c.id),
-    ...state.played.map((c) => c.id),
-    ...state.discard.map((c) => c.id),
-  ]
-}
-
-/** Assert the conservation invariant: 10 unique card ids across all zones. */
-function assertConservation(state: GameState): void {
-  const ids = allCardIds(state)
-  expect(ids.length).toBe(10)
-  expect(new Set(ids).size).toBe(10)
+/**
+ * Build a minimal GameState seeded from createWorld(42) but with the hand,
+ * piles, and progress replaced by what the test needs.
+ */
+function makeState(overrides: Partial<GameState>): GameState {
+  const base = createWorld(42)
+  return {
+    ...base,
+    playerDraw: [],
+    playerDiscard: [],
+    worldDraw: [],
+    acts: [],
+    progress: {},
+    status: 'playing',
+    ...overrides,
+  }
 }
 
 // ---------------------------------------------------------------------------
-// PlayCard
+// 1. PlayCard basic: Explore on a 1-cost hazard auto-resolves
 // ---------------------------------------------------------------------------
 
-describe('reduce – PlayCard', () => {
-  it('moves the card from hand to played and increments runningTotal', () => {
-    const game = createGame(1)
-    const cardToPlay = game.state.hand[0]
-    expect(cardToPlay).toBeDefined()
-    if (cardToPlay === undefined) return
+describe('PlayCard basic', () => {
+  it('playing Explore on Rubble (cost 1) emits CardPlayed + ProgressDealt + HazardResolved', () => {
+    // seed 42 starting hand: Rubble(id=12) + Screams(id=15) + Sprint(id=1) + Panic(id=8) + MedKit(id=7) + Explore(id=2)
+    const state = createWorld(42)
+    const rubble = state.hand.find((c): c is WorldCard => c.kind === 'world' && c.name === 'Rubble')
+    const explore = state.hand.find((c): c is PlayerCard => c.kind === 'player' && c.name === 'Explore')
+    if (!rubble || !explore) throw new Error('Expected Rubble and Explore in seed 42 hand')
 
-    const { state, events } = reduce(game.state, {
-      type: 'PlayCard',
-      cardId: cardToPlay.id,
-    })
+    const result = reduce(state, { type: 'PlayCard', cardId: explore.id, targetId: rubble.id })
 
-    expect(state.hand.find((c) => c.id === cardToPlay.id)).toBeUndefined()
-    expect(state.played.map((c) => c.id)).toContain(cardToPlay.id)
-    expect(state.runningTotal).toBe(cardToPlay.value)
+    const types = result.events.map((e) => e.type)
+    expect(types).toContain('CardPlayed')
+    expect(types).toContain('ProgressDealt')
+    expect(types).toContain('HazardResolved')
 
-    expect(events).toHaveLength(1)
-    const ev = events[0]
-    expect(ev?.type).toBe('CardPlayed')
-    if (ev?.type === 'CardPlayed') {
-      expect(ev.cardId).toBe(cardToPlay.id)
-      expect(ev.value).toBe(cardToPlay.value)
-      expect(ev.runningTotal).toBe(cardToPlay.value)
-    }
-  })
-
-  it('runningTotal accumulates across multiple plays', () => {
-    const game = createGame(2)
-    const [c1, c2] = game.state.hand
-
-    expect(c1).toBeDefined()
-    expect(c2).toBeDefined()
-    if (c1 === undefined || c2 === undefined) return
-
-    const { state: s1 } = reduce(game.state, { type: 'PlayCard', cardId: c1.id })
-    const { state: s2 } = reduce(s1, { type: 'PlayCard', cardId: c2.id })
-
-    expect(s2.runningTotal).toBe(c1.value + c2.value)
-  })
-
-  it('throws IllegalActionError for a card not in hand', () => {
-    const game = createGame(3)
-    expect(() =>
-      reduce(game.state, { type: 'PlayCard', cardId: 'card-99' }),
-    ).toThrow(IllegalActionError)
-  })
-
-  it('throws IllegalActionError for an already-played card', () => {
-    const game = createGame(4)
-    const card = game.state.hand[0]
-    expect(card).toBeDefined()
-    if (card === undefined) return
-
-    const { state: afterPlay } = reduce(game.state, {
-      type: 'PlayCard',
-      cardId: card.id,
-    })
-
-    expect(() =>
-      reduce(afterPlay, { type: 'PlayCard', cardId: card.id }),
-    ).toThrow(IllegalActionError)
-  })
-
-  it('IllegalActionError carries the offending action and state', () => {
-    const game = createGame(5)
-    const action = { type: 'PlayCard' as const, cardId: 'card-99' }
-    let caught: unknown
-
-    try {
-      reduce(game.state, action)
-    } catch (e) {
-      caught = e
-    }
-
-    expect(caught).toBeInstanceOf(IllegalActionError)
-    const err = caught as IllegalActionError
-    expect(err.action).toBe(action)
-    expect(err.state).toBe(game.state)
+    // Rubble removed from hand
+    expect(result.state.hand.some((c) => c.id === rubble.id)).toBe(false)
+    // Explore removed from hand (played)
+    expect(result.state.hand.some((c) => c.id === explore.id)).toBe(false)
+    // Status still playing
+    expect(result.state.status).toBe('playing')
   })
 })
 
 // ---------------------------------------------------------------------------
-// EndTurn
+// 2. No carry-over: progress resets to {} after EndTurn
 // ---------------------------------------------------------------------------
 
-describe('reduce – EndTurn', () => {
-  it('appends runningTotal to history and resets it to 0', () => {
-    const game = createGame(6)
-    const card = game.state.hand[0]
-    expect(card).toBeDefined()
-    if (card === undefined) return
+describe('progress reset on EndTurn', () => {
+  it('partial progress on a 2-cost hazard is wiped on EndTurn', () => {
+    // Screams costs 1 and would resolve with 1 Explore, but Strange Sounds costs 2.
+    // We build a crafted state with a Strange Sounds (cost 2) and a single Explore.
+    const base = createWorld(42)
+    const [strangeSounds, s1] = mintCard(base, 'Strange Sounds')
+    const [explore, s2] = mintCard(s1, 'Explore')
 
-    const { state: afterPlay } = reduce(game.state, {
-      type: 'PlayCard',
-      cardId: card.id,
-    })
-    const expectedTotal = afterPlay.runningTotal
-
-    const { state: afterEnd } = reduce(afterPlay, { type: 'EndTurn' })
-
-    expect(afterEnd.history).toHaveLength(1)
-    expect(afterEnd.history[0]).toBe(expectedTotal)
-    expect(afterEnd.runningTotal).toBe(0)
-  })
-
-  it('refills hand to 5 after EndTurn', () => {
-    const game = createGame(7)
-    const { state } = reduce(game.state, { type: 'EndTurn' })
-    expect(state.hand.length).toBe(5)
-  })
-
-  it('clears played zone after EndTurn', () => {
-    const game = createGame(8)
-    const card = game.state.hand[0]
-    expect(card).toBeDefined()
-    if (card === undefined) return
-
-    const { state: afterPlay } = reduce(game.state, {
-      type: 'PlayCard',
-      cardId: card.id,
-    })
-    const { state: afterEnd } = reduce(afterPlay, { type: 'EndTurn' })
-
-    expect(afterEnd.played).toHaveLength(0)
-  })
-
-  it('records total=0 when hand and played are both empty', () => {
-    const game = createGame(9)
-    // End without playing anything
-    const { state, events } = reduce(game.state, { type: 'EndTurn' })
-
-    expect(state.history[0]).toBe(0)
-    expect(state.hand.length).toBe(5)
-
-    const turnEnded = events.find((e) => e.type === 'TurnEnded')
-    expect(turnEnded?.type).toBe('TurnEnded')
-    if (turnEnded?.type === 'TurnEnded') {
-      expect(turnEnded.total).toBe(0)
-    }
-  })
-
-  it('moves hand cards first then played cards into discard', () => {
-    const game = createGame(10)
-    const card = game.state.hand[1]
-    expect(card).toBeDefined()
-    if (card === undefined) return
-
-    const handIdsBefore = game.state.hand.map((c) => c.id)
-    const { state: afterPlay } = reduce(game.state, {
-      type: 'PlayCard',
-      cardId: card.id,
-    })
-    const handIdsAfterPlay = afterPlay.hand.map((c) => c.id)
-    const playedIds = afterPlay.played.map((c) => c.id)
-
-    const { state: afterEnd } = reduce(afterPlay, { type: 'EndTurn' })
-
-    // All cards that were in hand before EndTurn should be in discard
-    for (const id of [...handIdsAfterPlay, ...playedIds]) {
-      expect(afterEnd.discard.map((c) => c.id)).toContain(id)
-    }
-    // None of the previous hand cards should remain in hand (it's a fresh draw)
-    for (const id of handIdsBefore) {
-      // They might be redrawn if deck reshuffles, so only check played is cleared
-      void id
-    }
-    expect(afterEnd.played).toHaveLength(0)
-  })
-
-  it('produces events in order: TurnEnded, CardsDiscarded, CardsDrawn', () => {
-    const game = createGame(11)
-    const { events } = reduce(game.state, { type: 'EndTurn' })
-
-    const types = events.map((e) => e.type)
-
-    expect(types[0]).toBe('TurnEnded')
-    expect(types[1]).toBe('CardsDiscarded')
-    // Last event must be CardsDrawn
-    expect(types[types.length - 1]).toBe('CardsDrawn')
-
-    // If DeckShuffled is present it must come before CardsDrawn
-    const shuffleIdx = types.indexOf('DeckShuffled')
-    const drawnIdx = types.indexOf('CardsDrawn')
-    if (shuffleIdx !== -1) {
-      expect(shuffleIdx).toBeLessThan(drawnIdx)
-    }
-  })
-
-  it('emits CardsDiscarded with correct cardIds (hand first, then played)', () => {
-    const game = createGame(12)
-    const card = game.state.hand[2]
-    expect(card).toBeDefined()
-    if (card === undefined) return
-
-    const handIdsBefore = game.state.hand.map((c) => c.id)
-    const { state: afterPlay } = reduce(game.state, {
-      type: 'PlayCard',
-      cardId: card.id,
+    const state = makeState({
+      ...s2,
+      hand: [strangeSounds as WorldCard, explore as PlayerCard],
     })
 
-    const expectedDiscardOrder = [
-      ...afterPlay.hand.map((c) => c.id),
-      ...afterPlay.played.map((c) => c.id),
-    ]
+    // Play Explore on Strange Sounds → 1 progress (not enough to resolve)
+    const r1 = reduce(state, {
+      type: 'PlayCard',
+      cardId: explore.id,
+      targetId: strangeSounds.id,
+    })
+    expect(r1.state.progress[strangeSounds.id]).toBe(1)
 
-    const { events } = reduce(afterPlay, { type: 'EndTurn' })
-    const discardedEv = events.find((e) => e.type === 'CardsDiscarded')
-    expect(discardedEv?.type).toBe('CardsDiscarded')
-    if (discardedEv?.type === 'CardsDiscarded') {
-      expect(discardedEv.cardIds).toEqual(expectedDiscardOrder)
-    }
-
-    void handIdsBefore
+    // EndTurn should wipe progress
+    const r2 = reduce(r1.state, { type: 'EndTurn' })
+    expect(r2.state.progress).toEqual({})
   })
 })
 
 // ---------------------------------------------------------------------------
-// Conservation invariant
+// 3. Hold vs discard: world cards stay in hand, player cards go to playerDiscard
 // ---------------------------------------------------------------------------
 
-describe('conservation invariant', () => {
-  it('holds after every action in a multi-turn sequence', () => {
-    const game = createGame(42)
-    assertConservation(game.state)
+describe('EndTurn hold vs discard', () => {
+  it('world cards remain in hand; player cards move to playerDiscard', () => {
+    // Use a large playerDraw so refillHand does not recycle the discarded card
+    // back into hand immediately.
+    const base = createWorld(42)
+    const [screams, s1] = mintCard(base, 'Screams')
+    const [explore, s2] = mintCard(s1, 'Explore')
 
-    // Turn 1: play two cards, end turn
-    const [c1, c2] = game.state.hand
-    expect(c1).toBeDefined()
-    expect(c2).toBeDefined()
-    if (c1 === undefined || c2 === undefined) return
+    // Seed enough player draws so the discard is not re-drawn this turn
+    const [e2, s3] = mintCard(s2, 'Explore')
+    const [e3, s4] = mintCard(s3, 'Explore')
+    const [e4, s5] = mintCard(s4, 'Explore')
+    const [e5, s6] = mintCard(s5, 'Explore')
+    const [e6, finalState] = mintCard(s6, 'Explore')
 
-    const { state: s1 } = reduce(game.state, { type: 'PlayCard', cardId: c1.id })
-    assertConservation(s1)
+    const state = makeState({
+      ...finalState,
+      hand: [screams as WorldCard, explore as PlayerCard],
+      playerDraw: [e2 as PlayerCard, e3 as PlayerCard, e4 as PlayerCard, e5 as PlayerCard, e6 as PlayerCard],
+      playerDiscard: [],
+    })
 
-    const { state: s2 } = reduce(s1, { type: 'PlayCard', cardId: c2.id })
-    assertConservation(s2)
+    const result = reduce(state, { type: 'EndTurn' })
 
-    const { state: s3 } = reduce(s2, { type: 'EndTurn' })
-    assertConservation(s3)
+    // Screams (world) should still be in hand
+    expect(result.state.hand.some((c) => c.id === screams.id)).toBe(true)
+    // Explore (player) should be in playerDiscard (it was discarded, not re-drawn)
+    expect(result.state.playerDiscard.some((c) => c.id === explore.id)).toBe(true)
+    // Explore should NOT be in hand (unless refillHand pulled it from discard,
+    // which won't happen here because playerDraw has 5 cards to fill from)
+    const handIds = result.state.hand.map((c) => c.id)
+    expect(handIds).not.toContain(explore.id)
+  })
 
-    // Turn 2: end without playing
-    const { state: s4 } = reduce(s3, { type: 'EndTurn' })
-    assertConservation(s4)
+  it('CardsDiscarded event lists the discarded player card ids', () => {
+    const base = createWorld(42)
+    const [screams, s1] = mintCard(base, 'Screams')
+    const [explore, s2] = mintCard(s1, 'Explore')
+    const [e2, s3] = mintCard(s2, 'Explore')
+    const [e3, s4] = mintCard(s3, 'Explore')
+    const [e4, s5] = mintCard(s4, 'Explore')
+    const [e5, finalState] = mintCard(s5, 'Explore')
 
-    // Turn 3: play all 5
-    let state = s4
-    for (const card of [...state.hand]) {
-      const result = reduce(state, { type: 'PlayCard', cardId: card.id })
-      state = result.state
-      assertConservation(state)
+    const state = makeState({
+      ...finalState,
+      hand: [screams as WorldCard, explore as PlayerCard],
+      playerDraw: [e2 as PlayerCard, e3 as PlayerCard, e4 as PlayerCard, e5 as PlayerCard],
+    })
+
+    const result = reduce(state, { type: 'EndTurn' })
+    const discardedEvent = result.events.find((e) => e.type === 'CardsDiscarded')
+    expect(discardedEvent).toBeDefined()
+    if (discardedEvent?.type === 'CardsDiscarded') {
+      expect(discardedEvent.cardIds).toContain(explore.id)
+      expect(discardedEvent.cardIds).not.toContain(screams.id)
     }
-    const { state: s5 } = reduce(state, { type: 'EndTurn' })
-    assertConservation(s5)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// 4. DiscardHazard legal: discarding Zombie applies Damage(1) penalty
+// ---------------------------------------------------------------------------
+
+describe('DiscardHazard legal', () => {
+  it('discarding Zombie (Damage 1) decrements HP', () => {
+    const base = createWorld(42)
+    const [zombie, s1] = mintCard(base, 'Zombie')
+
+    const state = makeState({
+      ...s1,
+      hp: 10,
+      hand: [zombie as WorldCard],
+    })
+
+    const result = reduce(state, { type: 'DiscardHazard', cardId: zombie.id })
+
+    expect(result.state.hp).toBe(9)
+
+    const types = result.events.map((e) => e.type)
+    expect(types).toContain('HazardDiscarded')
+    expect(types).toContain('DamageDealt')
+    expect(types).toContain('HpChanged')
+
+    // HazardDiscarded should come before DamageDealt
+    const hdIdx = types.indexOf('HazardDiscarded')
+    const dmgIdx = types.indexOf('DamageDealt')
+    expect(hdIdx).toBeLessThan(dmgIdx)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// 5. DiscardHazard on Door throws IllegalActionError
+// ---------------------------------------------------------------------------
+
+describe('DiscardHazard on Door', () => {
+  it('attempting to discard the Door throws IllegalActionError', () => {
+    const base = createWorld(42)
+    const [door, s1] = mintCard(base, 'Door')
+
+    const state = makeState({
+      ...s1,
+      hand: [door as WorldCard],
+    })
+
+    expect(() => {
+      reduce(state, { type: 'DiscardHazard', cardId: door.id })
+    }).toThrow(IllegalActionError)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// 6. Post-terminal: any action throws after status=lost or status=won
+// ---------------------------------------------------------------------------
+
+describe('post-terminal throws', () => {
+  it('any action after WorldLost throws IllegalActionError', () => {
+    const base = createWorld(42)
+    const [zombie, s1] = mintCard(base, 'Zombie')
+
+    const lostState = makeState({
+      ...s1,
+      hp: 0,
+      hand: [zombie as WorldCard],
+      status: 'lost',
+    })
+
+    expect(() => reduce(lostState, { type: 'EndTurn' })).toThrow(IllegalActionError)
+    expect(() =>
+      reduce(lostState, { type: 'DiscardHazard', cardId: zombie.id }),
+    ).toThrow(IllegalActionError)
+  })
+
+  it('any action after WorldWon throws IllegalActionError', () => {
+    const base = createWorld(42)
+    const [explore, s1] = mintCard(base, 'Explore')
+
+    const wonState = makeState({
+      ...s1,
+      hand: [explore as PlayerCard],
+      status: 'won',
+    })
+
+    expect(() => reduce(wonState, { type: 'EndTurn' })).toThrow(IllegalActionError)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// 7. PlayCard with no legal play throws
+// ---------------------------------------------------------------------------
+
+describe('PlayCard with no legal play', () => {
+  it('playing Explore when no world card is in hand throws IllegalActionError', () => {
+    const base = createWorld(42)
+    const [explore, s1] = mintCard(base, 'Explore')
+
+    const state = makeState({
+      ...s1,
+      // No world cards in hand — Explore requires a world card target
+      hand: [explore as PlayerCard],
+    })
+
+    expect(() => {
+      reduce(state, { type: 'PlayCard', cardId: explore.id, targetId: 'nonexistent' })
+    }).toThrow(IllegalActionError)
+  })
+
+  it('playing a card not in hand throws IllegalActionError', () => {
+    const state = createWorld(42)
+    expect(() => {
+      reduce(state, { type: 'PlayCard', cardId: 'ghost-card-id' })
+    }).toThrow(IllegalActionError)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// 8. Modal choice: Sprint
+// ---------------------------------------------------------------------------
+
+describe('Sprint modal', () => {
+  it('Sprint choice=0 draws player and world cards', () => {
+    // seed 42 hand contains Sprint (id=1); worldDraw has 4 remaining world cards
+    const state = createWorld(42)
+    const sprint = state.hand.find((c) => c.kind === 'player' && c.name === 'Sprint')
+    if (!sprint) throw new Error('Sprint not found in seed 42 hand')
+
+    const result = reduce(state, { type: 'PlayCard', cardId: sprint.id, choice: 0 })
+
+    const types = result.events.map((e) => e.type)
+    expect(types).toContain('CardPlayed')
+    expect(types).toContain('CardsDrawn')
+  })
+
+  it('Sprint choice=1 (Slow hazard) deals 2 progress on a Zombie and resolves it', () => {
+    // Craft a state with Sprint + Zombie (Slow keyword, cost=1)
+    const base = createWorld(42)
+    const [zombie, s1] = mintCard(base, 'Zombie')
+    const [sprint, s2] = mintCard(s1, 'Sprint')
+
+    const state = makeState({
+      ...s2,
+      hand: [zombie as WorldCard, sprint as PlayerCard],
+    })
+
+    // Sprint branch 1: DealProgress base=1 bonus={Slow,+1} → 1+1=2 on Zombie (cost=1) → resolves
+    const result = reduce(state, {
+      type: 'PlayCard',
+      cardId: sprint.id,
+      choice: 1,
+      targetId: zombie.id,
+    })
+
+    const types = result.events.map((e) => e.type)
+    expect(types).toContain('CardPlayed')
+    expect(types).toContain('ProgressDealt')
+    expect(types).toContain('HazardResolved')
+
+    expect(result.state.hand.some((c) => c.id === zombie.id)).toBe(false)
+  })
+
+  it('Sprint choice=1 throws when no Slow hazard is in hand', () => {
+    // Strange Sounds has no keywords, so Sprint branch 1 can't target it
+    const base = createWorld(42)
+    const [strangeSounds, s1] = mintCard(base, 'Strange Sounds')
+    const [sprint, s2] = mintCard(s1, 'Sprint')
+
+    const state = makeState({
+      ...s2,
+      hand: [strangeSounds as WorldCard, sprint as PlayerCard],
+    })
+
+    expect(() => {
+      reduce(state, { type: 'PlayCard', cardId: sprint.id, choice: 1, targetId: strangeSounds.id })
+    }).toThrow(IllegalActionError)
+  })
+
+  it('Sprint throws when choice is out of range', () => {
+    const state = createWorld(42)
+    const sprint = state.hand.find((c) => c.kind === 'player' && c.name === 'Sprint')
+    if (!sprint) throw new Error('Sprint not found in seed 42 hand')
+
+    expect(() => {
+      reduce(state, { type: 'PlayCard', cardId: sprint.id, choice: 5 })
+    }).toThrow(IllegalActionError)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// 9. Compound: Barricade (DealProgress + ReturnWorldCards)
+// ---------------------------------------------------------------------------
+
+describe('Barricade compound', () => {
+  it('Barricade deals 1 progress on Rubble (resolves) with empty returnIds', () => {
+    const base = createWorld(42)
+    const [rubble, s1] = mintCard(base, 'Rubble')
+    const [barricade, s2] = mintCard(s1, 'Barricade')
+
+    const state = makeState({
+      ...s2,
+      hand: [rubble as WorldCard, barricade as PlayerCard],
+    })
+
+    const result = reduce(state, {
+      type: 'PlayCard',
+      cardId: barricade.id,
+      targetId: rubble.id,
+      returnIds: [],
+    })
+
+    const types = result.events.map((e) => e.type)
+    expect(types).toContain('CardPlayed')
+    expect(types).toContain('ProgressDealt')
+    expect(types).toContain('HazardResolved')
+  })
+})
+
+// ---------------------------------------------------------------------------
+// 10. discardPlayer: Adrenaline
+// ---------------------------------------------------------------------------
+
+describe('Adrenaline discardPlayer', () => {
+  it('Adrenaline discards a player card and draws 2', () => {
+    const base = createWorld(42)
+    const [adrenaline, s1] = mintCard(base, 'Adrenaline')
+    const [explore, s2] = mintCard(s1, 'Explore')
+    const [rubble, s3] = mintCard(s2, 'Rubble')
+    // Provide player cards to draw
+    const [e1, s4] = mintCard(s3, 'Explore')
+    const [e2, s5] = mintCard(s4, 'Explore')
+
+    const state = makeState({
+      ...s5,
+      hand: [rubble as WorldCard, adrenaline as PlayerCard, explore as PlayerCard],
+      playerDraw: [e1 as PlayerCard, e2 as PlayerCard],
+    })
+
+    const result = reduce(state, {
+      type: 'PlayCard',
+      cardId: adrenaline.id,
+      discardId: explore.id,
+    })
+
+    const types = result.events.map((e) => e.type)
+    expect(types).toContain('CardPlayed')
+    expect(types).toContain('CardsDrawn')
+
+    // explore moved to playerDiscard
+    expect(result.state.playerDiscard.some((c) => c.id === explore.id)).toBe(true)
+    // adrenaline played, not in hand
+    expect(result.state.hand.some((c) => c.id === adrenaline.id)).toBe(false)
+  })
+
+  it('Adrenaline throws when discardId is not a legal target', () => {
+    const base = createWorld(42)
+    const [adrenaline, s1] = mintCard(base, 'Adrenaline')
+    const [rubble, s2] = mintCard(s1, 'Rubble')
+    const [explore, s3] = mintCard(s2, 'Explore')
+
+    const state = makeState({
+      ...s3,
+      hand: [rubble as WorldCard, adrenaline as PlayerCard, explore as PlayerCard],
+    })
+
+    expect(() => {
+      reduce(state, {
+        type: 'PlayCard',
+        cardId: adrenaline.id,
+        discardId: rubble.id, // world card — not a legal discard target
+      })
+    }).toThrow(IllegalActionError)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// 11. destroyHand: Regroup
+// ---------------------------------------------------------------------------
+
+describe('Regroup destroyHand', () => {
+  it('Regroup with no destroyId plays without destroying anything', () => {
+    const base = createWorld(42)
+    const [regroup, s1] = mintCard(base, 'Regroup')
+    const [rubble, s2] = mintCard(s1, 'Rubble')
+
+    const state = makeState({
+      ...s2,
+      hand: [rubble as WorldCard, regroup as PlayerCard],
+    })
+
+    const result = reduce(state, { type: 'PlayCard', cardId: regroup.id })
+
+    const types = result.events.map((e) => e.type)
+    expect(types).toContain('CardPlayed')
+    expect(types).not.toContain('CardDestroyed')
+  })
+
+  it('Regroup with destroyId removes the card from hand permanently', () => {
+    const base = createWorld(42)
+    const [regroup, s1] = mintCard(base, 'Regroup')
+    const [rubble, s2] = mintCard(s1, 'Rubble')
+
+    const state = makeState({
+      ...s2,
+      hand: [rubble as WorldCard, regroup as PlayerCard],
+    })
+
+    const result = reduce(state, {
+      type: 'PlayCard',
+      cardId: regroup.id,
+      destroyId: rubble.id,
+    })
+
+    const types = result.events.map((e) => e.type)
+    expect(types).toContain('CardDestroyed')
+    expect(result.state.hand.some((c) => c.id === rubble.id)).toBe(false)
+    // Destroyed — not in discard either
+    expect(result.state.playerDiscard.some((c) => c.id === rubble.id)).toBe(false)
   })
 })

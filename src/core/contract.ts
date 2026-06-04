@@ -1,9 +1,23 @@
-export type { CardId, Card, Action, GameEvent, RngState, GameState } from './types'
+export type {
+  CardId,
+  Card,
+  PlayerCard,
+  WorldCard,
+  Action,
+  GameEvent,
+  RngState,
+  GameState,
+  TargetSpec,
+  AvailableActions,
+  Effect,
+  Penalty,
+  Reward,
+  Keyword,
+  CardTemplateId,
+  Dest,
+} from './types'
 export { IllegalActionError } from './errors'
-
-import type { Action, GameEvent, GameState } from './types'
-
-export interface GameCore {
-  readonly state: GameState
-  dispatch(action: Action): { state: GameState; events: GameEvent[] }
-}
+export { intensity } from './intensity'
+export type { GameCore } from './game'
+export { createGame } from './game'
+export { availableActions } from './available'
