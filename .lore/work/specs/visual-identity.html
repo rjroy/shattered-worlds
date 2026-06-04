@@ -1,0 +1,293 @@
+<!DOCTYPE html><html lang="en"><head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Spec: visual identity &amp; the world-theme seam</title>
+  <meta name="date" content="2026-06-04">
+  <meta name="status" content="draft">
+  <meta name="tags" content="spec, visual, renderer, theme, intrusion, the-walker, backdrop, intensity">
+  <meta name="modules" content="game, core">
+  <meta name="related" content=".lore/reference/visual-direction.html, .lore/reference/vision.html, .lore/work/specs/world-deck-slice.html, .lore/work/design/core-render-architecture.html">
+  <meta name="req-prefix" content="REQ-VIS">
+  <style>
+    :root {
+      --bg: #0f1117; --panel: #1a1d27; --panel-2: #222633;
+      --ink: #e8eaf0; --muted: #9aa3b2; --accent: #8ab4ff; --gold: #ffd479;
+      --good: #6cd08a; --warn: #ffc14d; --bad: #ff8a8a; --border: #2a2f3d;
+      --violet: #b98aff; --intrude: #ff4fa3;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: radial-gradient(1200px 600px at 50% -10%, #1a2238 0%, var(--bg) 55%);
+      color: var(--ink); font: 16px/1.65 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; padding: 0 1rem 6rem; }
+    .wrap { max-width: 940px; margin: 0 auto; }
+
+    .sticky { position: sticky; top: 0; z-index: 10; background: rgba(15,17,23,.92); backdrop-filter: blur(6px);
+      border-bottom: 1px solid var(--border); padding: .7rem 0; margin-bottom: 1.5rem; }
+    .sticky .row { max-width: 940px; margin: 0 auto; display: flex; align-items: center; gap: .6rem; flex-wrap: wrap; }
+    .sticky .t { font-weight: 700; }
+    .chip { display: inline-flex; align-items: center; gap: .35rem; border-radius: 999px; padding: .18rem .7rem; font-size: .72rem; font-weight: 600; border: 1px solid; }
+    .chip.status { background: rgba(138,180,255,.12); border-color: rgba(138,180,255,.35); color: var(--accent); }
+    .chip.prefix { background: rgba(185,138,255,.14); border-color: rgba(185,138,255,.4); color: var(--violet); }
+    .chip.count { background: rgba(108,208,138,.1); border-color: rgba(108,208,138,.3); color: var(--good); }
+
+    .hero { text-align: center; margin: 1.4rem 0 2rem; }
+    .kicker { letter-spacing: .28em; text-transform: uppercase; font-size: .72rem; color: var(--gold); margin-bottom: .5rem; }
+    h1 { font-size: 2rem; margin: 0 0 .5rem; line-height: 1.1;
+      background: linear-gradient(180deg,#fff,#c9b8e6); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+    .sub { color: var(--muted); max-width: 680px; margin: 0 auto; }
+
+    h2 { font-size: 1.35rem; margin: 2.6rem 0 1rem; display: flex; align-items: center; gap: .6rem; }
+    h2 .mark { color: var(--gold); font-size: 1rem; }
+    h3 { font-size: 1.05rem; }
+    p { margin: .6rem 0; }
+    a { color: var(--accent); }
+    code { background: var(--panel-2); border: 1px solid var(--border); border-radius: 5px; padding: .08rem .35rem; font-size: .86em; }
+    .muted { color: var(--muted); }
+
+    .callout { background: rgba(255,193,77,.06); border: 1px solid rgba(255,193,77,.3); border-left: 3px solid var(--warn);
+      border-radius: 12px; padding: 1rem 1.3rem; margin: 1rem 0; }
+    .callout h3 { margin: 0 0 .4rem; color: var(--warn); }
+    .callout ul { margin: .3rem 0 0; padding-left: 1.1rem; } .callout li { margin: .3rem 0; color: var(--muted); }
+    .callout li b { color: var(--ink); }
+
+    .panel { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 1rem 1.3rem; margin: 1rem 0; }
+
+    .ramp { height: 30px; border-radius: 8px; margin: .7rem 0 .3rem;
+      background: linear-gradient(90deg, #7d8a93 0%, #6f6f86 30%, var(--violet) 62%, var(--intrude) 84%, #ff8a3c 100%); }
+    .ramp-lab { display: flex; justify-content: space-between; font-size: .72rem; color: var(--muted); }
+
+    .req { background: var(--panel); border: 1px solid var(--border); border-left: 3px solid var(--accent); border-radius: 12px;
+      padding: 1rem 1.2rem; margin: .8rem 0; scroll-margin-top: 64px; }
+    .req .head { display: flex; align-items: baseline; gap: .6rem; flex-wrap: wrap; }
+    .req .id { font: .8rem ui-monospace, Menlo, monospace; color: var(--violet); font-weight: 700; }
+    .req .id a { color: inherit; text-decoration: none; }
+    .req .name { font-weight: 700; }
+    .req .badge { margin-left: auto; font-size: .68rem; font-weight: 700; padding: .12rem .55rem; border-radius: 999px;
+      background: rgba(138,180,255,.14); color: var(--accent); text-transform: uppercase; letter-spacing: .04em; }
+    .req .badge.must { background: rgba(255,138,138,.14); color: var(--bad); }
+    .req .badge.should { background: rgba(255,193,77,.14); color: var(--warn); }
+    .req p { margin: .5rem 0 0; color: var(--muted); }
+    .req p b, .req p strong { color: var(--ink); }
+    .req ul { margin: .4rem 0 0; padding-left: 1.1rem; color: var(--muted); } .req li { margin: .2rem 0; } .req li b { color: var(--ink); }
+    .group { font-size: .78rem; text-transform: uppercase; letter-spacing: .1em; color: var(--muted); margin: 2.2rem 0 .4rem; }
+
+    pre { background: #0c0e14; border: 1px solid var(--border); border-radius: 10px; padding: 1rem 1.1rem; overflow-x: auto;
+      font: .84rem/1.55 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; color: #d6dbe8; }
+    pre .c { color: var(--muted); } pre .k { color: var(--accent); } pre .t { color: var(--gold); } pre .s { color: var(--good); }
+
+    .validation { background: linear-gradient(180deg, rgba(108,208,138,.08), rgba(108,208,138,.02));
+      border: 1px solid rgba(108,208,138,.4); border-left: 4px solid var(--good); border-radius: 16px; padding: 1.3rem 1.5rem; }
+    .validation h2 { margin-top: 0; color: var(--good); }
+    .check { display: flex; gap: .6rem; margin: .6rem 0; align-items: baseline; }
+    .check .box { color: var(--good); font-weight: 700; }
+    .check .body { color: var(--muted); } .check .body b { color: var(--ink); }
+    .check .ref { font: .72rem ui-monospace, Menlo, monospace; color: var(--violet); }
+
+    .loop { display: flex; flex-wrap: wrap; gap: .4rem; align-items: center; margin: 1rem 0; }
+    .loop .step { background: var(--panel-2); border: 1px solid var(--border); border-radius: 8px; padding: .35rem .7rem; font-size: .82rem; }
+    .loop .arrow { color: var(--muted); }
+
+    footer { margin-top: 3.5rem; color: var(--muted); font-size: .85rem; border-top: 1px solid var(--border); padding-top: 1rem; }
+  </style>
+</head>
+<body>
+
+  <div class="sticky"><div class="row">
+    <span class="t">Spec · Visual identity &amp; world-theme seam</span>
+    <span class="chip status">● draft</span>
+    <span class="chip prefix">REQ-VIS-N</span>
+    <span class="chip count">18 requirements</span>
+    <span class="muted" style="margin-left:auto;font-size:.8rem">Shattered Worlds</span>
+  </div></div>
+
+<div class="wrap">
+
+  <div class="hero">
+    <div class="kicker">Spec · The Look, Made Real</div>
+    <h1>Mundane reality, broken open</h1>
+    <p class="sub">Turn the <a href="../../reference/visual-direction.html">visual direction</a> into renderer requirements: a per-world <b>VisualTheme</b> seam, card fronts that vary by world over a constant card back, a backdrop that slides toward <b>intrusion</b> as the core's <code>intensity</code> climbs, and <b>The Walker</b> rendered as a distant figure who steps to the foreground the turn you draw him. All presentation, layered on the proven core/render seam.</p>
+  </div>
+
+  <h2><span class="mark">◇</span> Purpose &amp; altitude</h2>
+  <p>The <a href="world-deck-slice.html">world-deck slice</a> made the game <em>playable</em>; this spec makes it <em>look like itself</em>. It builds the visual identity the direction sheet established, layered entirely on the existing Phaser renderer (<code>src/game/</code>) and the pure core it already consumes. Per the agreed altitude, it ships as a <strong>system plus seams</strong>: a per-world theming abstraction with <strong>exactly one concrete theme</strong> (Zombie Big-Box, the only world that exists), structured so additional worlds slot in without renderer surgery. It validates against the current slice.</p>
+
+  <div class="loop">
+    <span class="step">Reality (mundane backdrop)</span><span class="arrow">→</span>
+    <span class="step">intensity climbs → intrusion bleeds in</span><span class="arrow">→</span>
+    <span class="step">Walker drifts nearer each act</span><span class="arrow">→</span>
+    <span class="step">Draw The Walker → he's in your face</span><span class="arrow">→</span>
+    <span class="step">the Door</span>
+  </div>
+
+  <p style="margin-top:1.2rem">The master gradient every reality maps onto, restated here because it is the load-bearing element:</p>
+  <div class="ramp"></div>
+  <div class="ramp-lab"><span>REALITY · mundane · desaturated</span><span>INTRUSION · impossible · magenta → ember</span></div>
+  <p class="muted" style="font-size:.82rem;margin-top:.4rem">This illustrates the <em>master gradient shape</em>, not the shipped theme's colors. Per the <a href="../../reference/visual-direction.html">visual direction</a>, the Zombie Big-Box theme's intrusion hue is <strong style="color:#5fdc6a">fluorescent green</strong> (≈ <code>#9bff6a → #39ff88</code>), the toxic glow down the retail aisles. Each world claims its own intrusion hue over the same desaturated base.</p>
+
+  <div class="callout">
+    <h3>Resolved decisions &amp; assumptions (veto any of these)</h3>
+    <ul>
+      <li><b>One small core change, pure data only:</b> a <code>worldId</code> string on game setup/state so the renderer knows which world is active. No colors, art, or presentation ever enter <code>src/core/</code>. <span class="muted">(Assumed — the seam needs an identity to key on.)</span></li>
+      <li><b>Backdrop intrusion tracks <code>intensity</code>.</b> The existing pure <code>intensity(state) → [0,1]</code> read-model drives how far the backdrop slides along the reality→intrusion ramp. Flavor only: it never feeds back into a dispatched action. <span class="muted">(Confirmed.)</span></li>
+      <li><b>Walker proximity tracks <code>actIndex</code>,</b> not intensity: far in Act 1, looming in Act 3. Two distinct signals on purpose. <span class="muted">(Confirmed.)</span></li>
+      <li><b>The Walker is identified by his stable template identity</b> (<code>name === 'The Walker'</code> in the existing catalog). "Drawn" means that world card is in <code>state.hand</code>. This is <em>presentation of</em> REQ-WDS-19/20, adding no rule. <span class="muted">(From the world-deck slice.)</span></li>
+      <li><b>Card fronts vary by palette + frame treatment, not bespoke per-card art.</b> The card back is constant canon (<code>cardback.webp</code>) across all worlds. <span class="muted">(Confirmed.)</span></li>
+      <li><b>Source art for the Zombie Big-Box theme</b> derives from the big-box panel of <code>art-style.webp</code> plus the existing card back. Producing final game-ready assets is real work but the <em>art-authoring pipeline</em> is out of scope; this spec requires the rendering system and that referenced assets resolve. <span class="muted">(Assumed.)</span></li>
+      <li><b>Layout is inherited,</b> not redesigned. The themed backdrop sits <em>behind</em> the existing world/hand rows and HUD from <code>TableScene</code>; this spec does not move the board. <span class="muted">(Assumed.)</span></li>
+    </ul>
+  </div>
+
+  <!-- ===================== A · SCOPE & SEAM ===================== -->
+  <div class="group">A · Scope &amp; the boundary</div>
+
+  <div class="req" id="REQ-VIS-1">
+    <div class="head"><span class="id"><a href="#REQ-VIS-1">REQ-VIS-1</a></span><span class="name">Visual identity is renderer-only; it adds no game rules</span><span class="badge must">Must</span></div>
+    <p>Every artifact in this spec — themes, backdrops, the Walker presence, intrusion, escalation juice — lives under <code>src/game/</code>. It changes how the game <strong>looks</strong>, never what is <strong>true</strong>. No win/loss, card, effect, draw, or economy behavior is added or altered. The <a href="../design/core-render-architecture.html">lint-enforced import boundary</a> continues to forbid <code>src/core/</code> from importing Phaser or <code>src/game/</code>, and the build fails if violated.</p>
+  </div>
+
+  <div class="req" id="REQ-VIS-2">
+    <div class="head"><span class="id"><a href="#REQ-VIS-2">REQ-VIS-2</a></span><span class="name">Presentation reads from core; it never feeds back</span><span class="badge must">Must</span></div>
+    <p>The renderer derives all visuals from the core's existing surface: the immutable <code>state</code>, the pure <code>intensity(state)</code> read-model, and the <code>events</code> list from each dispatch. <strong>Nothing visual influences a dispatched <code>Action</code></strong>: cosmetic randomness, theme choice, intrusion level, and the Walker's position never flow back into the core (the architecture's one-way rule). If the player skips animation, snapping to the authoritative <code>state</code> must yield an identical board.</p>
+  </div>
+
+  <!-- ===================== B · WORLD IDENTITY ===================== -->
+  <div class="group">B · World identity &amp; the VisualTheme seam</div>
+
+  <div class="req" id="REQ-VIS-3">
+    <div class="head"><span class="id"><a href="#REQ-VIS-3">REQ-VIS-3</a></span><span class="name">The core exposes a stable world identity as pure data</span><span class="badge must">Must</span></div>
+    <p>Game setup carries a <strong><code>worldId</code></strong> (a plain string, e.g. <code>'zombie-big-box'</code>) readable from <code>GameState</code>. It is the single permitted core addition, and it is <strong>data, not presentation</strong>: it names the world, it carries no colors, art, or layout. <code>createGame</code> sets it for the shipped world. This is what lets a renderer-side registry pick a theme without the core knowing themes exist.</p>
+  </div>
+
+  <div class="req" id="REQ-VIS-4">
+    <div class="head"><span class="id"><a href="#REQ-VIS-4">REQ-VIS-4</a></span><span class="name">A renderer-side VisualTheme descriptor, selected by worldId</span><span class="badge must">Must</span></div>
+    <p>In <code>src/game/</code>, a <strong><code>VisualTheme</code></strong> descriptor captures a world's look, and a registry maps <code>worldId → VisualTheme</code>. The active theme is selected purely from <code>state.worldId</code>; an unknown id falls back to the <code>zombie-big-box</code> theme — the only shipped theme is the default — rather than crashing. The descriptor includes at least:</p>
+    <pre><span class="k">interface</span> <span class="t">VisualTheme</span> {
+  worldId: <span class="t">string</span>
+  intrusionHue: <span class="t">string</span>        <span class="c">// the world's signature intrusion color</span>
+  realityPalette: <span class="t">string</span>[]    <span class="c">// the desaturated mundane base</span>
+  frameStyle: <span class="t">FrameStyle</span>     <span class="c">// card-front frame / chrome treatment</span>
+  grain: <span class="t">GrainSpec</span>           <span class="c">// distress / texture parameters</span>
+  backdrop: <span class="t">BackdropRefs</span>      <span class="c">// reality + intrusion backdrop art layers</span>
+  walker?: <span class="t">WalkerArt</span>          <span class="c">// present iff this world has a Walker</span>
+}</pre>
+    <p>The concrete shape of the sub-types (<code>FrameStyle</code>, <code>GrainSpec</code>, <code>BackdropRefs</code>, <code>WalkerArt</code>) is a renderer implementation detail under <code>src/game/</code>; what this spec fixes is that they exist, are presentation-only, and are driven from the theme. The descriptor's <code>backdrop</code> and <code>walker</code> refs are also the <strong>authoritative source of asset paths</strong> (REQ-VIS-17). <strong>Exactly one theme ships</strong> (<code>zombie-big-box</code>); the seam is proven by one concrete theme cleanly driving the renderer, not by shipping many.</p>
+  </div>
+
+  <div class="req" id="REQ-VIS-5">
+    <div class="head"><span class="id"><a href="#REQ-VIS-5">REQ-VIS-5</a></span><span class="name">The card back is constant canon, theme-independent</span><span class="badge must">Must</span></div>
+    <p>Every card back renders from <code>cardback.webp</code> regardless of world or theme. The back is the game's constant — the occult-cartography doorway — and is <strong>never</strong> recolored or re-themed per world. Only fronts vary (REQ-VIS-6).</p>
+  </div>
+
+  <!-- ===================== C · CARD FRONTS ===================== -->
+  <div class="group">C · Card fronts vary by world</div>
+
+  <div class="req" id="REQ-VIS-6">
+    <div class="head"><span class="id"><a href="#REQ-VIS-6">REQ-VIS-6</a></span><span class="name">Card fronts are themed from the active VisualTheme</span><span class="badge must">Must</span></div>
+    <p>Card fronts draw their palette, intrusion hue, frame, and grain from the active theme, so a world's deck <strong>looks like the world you are standing in</strong> — the visual half of the vision's "worlds are identity, not wallpaper." The <strong>card layout and the self-describing face content are unchanged</strong>: theming retints and reframes; it does not move or rewrite the existing data-driven faces. Fronts vary by world; the back does not.</p>
+  </div>
+
+  <div class="req" id="REQ-VIS-7">
+    <div class="head"><span class="id"><a href="#REQ-VIS-7">REQ-VIS-7</a></span><span class="name">Theming preserves card legibility and the player/world distinction</span><span class="badge must">Must</span></div>
+    <p>Within a theme, <strong>player cards and world cards (Hazards) remain visually distinct</strong> (the slice's two-row, two-treatment separation survives). The theme <strong>tints, it never obscures</strong>: a Hazard's cost, keywords, penalty, and reward, and a player card's effect text, stay clearly readable against the themed front (vision Principle 5, legibility). Contrast is a pass/fail property, not a matter of taste: text-to-background contrast must meet <strong>WCAG 2.1 AA</strong> — at least <strong>4.5:1</strong> for body/effect text and <strong>3:1</strong> for large labels — measured against the busiest themed front. This is a floor for readability, independent of the distressed aesthetic; if a specific element cannot meet it without breaking the look, that is a finding to raise, not to silently ship under.</p>
+  </div>
+
+  <!-- ===================== D · BACKDROP & INTRUSION ===================== -->
+  <div class="group">D · Backdrop &amp; the reality→intrusion ramp</div>
+
+  <div class="req" id="REQ-VIS-8">
+    <div class="head"><span class="id"><a href="#REQ-VIS-8">REQ-VIS-8</a></span><span class="name">A themed backdrop sits behind the board</span><span class="badge must">Must</span></div>
+    <p>A backdrop layer renders <strong>behind</strong> the existing world/hand rows and HUD, expressing the active world's mundane reality base (the big-box store for the shipped theme). It is drawn from the theme's <code>backdrop</code> refs and never intercepts pointer input meant for cards or buttons.</p>
+  </div>
+
+  <div class="req" id="REQ-VIS-9">
+    <div class="head"><span class="id"><a href="#REQ-VIS-9">REQ-VIS-9</a></span><span class="name">Backdrop intrusion is a pure mapping of intensity onto the ramp</span><span class="badge must">Must</span></div>
+    <p>The backdrop's <strong>intrusion level</strong> is computed by a pure function of the core's <code>intensity(state) ∈ [0,1]</code>, mapped onto the theme's reality→intrusion ramp: at low intensity the screen is desaturated and mundane; as intensity climbs (deeper act, lower HP, more held Hazards) it <strong>slides toward saturated intrusion</strong> in the world's signature hue. The transition is <strong>tweened</strong> across dispatches, not snapped. The tween is <strong>fire-and-forget</strong>: a new dispatch that changes the target intrusion level retargets the in-flight tween toward the new value rather than queueing or blocking, so the backdrop can never fall behind the authoritative state. This is renderer-only flavor (REQ-VIS-2): it dramatizes the state, it never alters it.</p>
+  </div>
+
+  <div class="req" id="REQ-VIS-10">
+    <div class="head"><span class="id"><a href="#REQ-VIS-10">REQ-VIS-10</a></span><span class="name">Composition keeps the apocalypse localized</span><span class="badge should">Should</span></div>
+    <p>Per the direction's load-bearing rule — <em>apocalypse is localized, chaos has a radius</em> — the backdrop preserves a <strong>visible boundary</strong> between the mundane and the intrusion even at high intensity; the board sits in the surviving-normal zone. The frame is <strong>never fully consumed</strong> edge-to-edge by catastrophe, because the contrast between normal and broken is the signature (a stated anti-goal in the visual direction).</p>
+  </div>
+
+  <!-- ===================== E · THE WALKER ===================== -->
+  <div class="group">E · The Walker presence</div>
+
+  <div class="req" id="REQ-VIS-11">
+    <div class="head"><span class="id"><a href="#REQ-VIS-11">REQ-VIS-11</a></span><span class="name">The Walker is always present as a distant figure, nearer each act</span><span class="badge must">Must</span></div>
+    <p>For any world whose theme declares a <code>walker</code> (the shipped one does), a figure renders in the backdrop throughout play. His <strong>proximity is a pure function of <code>state.actIndex</code></strong>: a tiny distant silhouette in Act 1 (<code>actIndex 0</code>), nearer in Act 2, looming at the edge in Act 3. He is the ambient dread of the run made literal, present long before he is ever in your hand. When <code>actIndex</code> advances (the <code>ActAdvanced</code> event), the figure <strong>tweens to the new act's proximity</strong> rather than snapping, so crossing into a deeper act reads as him closing in; this transition is suppressed while he is foregrounded (REQ-VIS-12), since the card in hand outranks the ambient position.</p>
+  </div>
+
+  <div class="req" id="REQ-VIS-12">
+    <div class="head"><span class="id"><a href="#REQ-VIS-12">REQ-VIS-12</a></span><span class="name">Drawing The Walker collapses the distance to the foreground</span><span class="badge must">Must</span></div>
+    <p>The moment the Walker world card (stable identity <code>name === 'The Walker'</code>) enters the hand, the distant figure <strong>resolves to a full foreground presentation</strong> tied to that card — he is right in front of you. While the card is <strong>held</strong> in hand he stays foregrounded; once he leaves the hand (resolved or discarded per REQ-WDS-19/20), the presence returns to the act-appropriate backdrop state. <strong>Both exits share the same visual return</strong> by intent: the difference between resolving him (grants Summon Door) and discarding him (forces a Door) is carried entirely by the card mechanics, not by a distinct Walker animation. This is pure presentation of the existing mechanic; it introduces no new action, target, or rule.</p>
+  </div>
+
+  <div class="req" id="REQ-VIS-13">
+    <div class="head"><span class="id"><a href="#REQ-VIS-13">REQ-VIS-13</a></span><span class="name">The Walker presence derives only from core state and events</span><span class="badge must">Must</span></div>
+    <p>Proximity reads <code>state.actIndex</code>; foregrounding reads hand membership and the dispatch <code>events</code> (e.g. <code>CardsDrawn</code> carrying the Walker's id, <code>HazardResolved</code>/<code>HazardDiscarded</code> removing it). The presence is <strong>never driven by a renderer-side timer or guess</strong> that could drift out of sync with the deck. The figure on screen and the card in the deck are always the same truth.</p>
+  </div>
+
+  <!-- ===================== F · ESCALATION ===================== -->
+  <div class="group">F · Escalation juice</div>
+
+  <div class="req" id="REQ-VIS-14">
+    <div class="head"><span class="id"><a href="#REQ-VIS-14">REQ-VIS-14</a></span><span class="name">Additional juice scales from the same intensity signal</span><span class="badge should">Should</span></div>
+    <p>Beyond the backdrop, secondary flourish (grain density, particle activity, subtle shake on intrusion spikes) <strong>may</strong> scale from the same <code>intensity</code> read-model, realizing the architecture's escalation seam — mundane to insane. Escalation must be <strong>derived from the signal, not hand-scripted</strong> per moment, and like all visuals it never feeds back into state. Intensity of juice is a Should; correctness and legibility (REQ-VIS-7) outrank it.</p>
+  </div>
+
+  <!-- ===================== G · QUALITY ===================== -->
+  <div class="group">G · Testing, boundary &amp; build</div>
+
+  <div class="req" id="REQ-VIS-15">
+    <div class="head"><span class="id"><a href="#REQ-VIS-15">REQ-VIS-15</a></span><span class="name">The pure visual mappers are unit-tested headlessly</span><span class="badge must">Must</span></div>
+    <p>The decision logic is extracted into <strong>pure functions</strong> and tested with no Phaser/DOM/canvas: <code>worldId → VisualTheme</code> selection (including the unknown-id fallback), <code>intensity → ramp position</code> (clamped to the ramp ends, and <strong>monotonic non-decreasing</strong> — verified as a property, <code>a ≤ b ⇒ ramp(a) ≤ ramp(b)</code>, over a few dozen random pairs, not a hand-picked sample of two or three), and <code>actIndex → Walker proximity</code> (the three act tiers). Phaser-touching glue stays a thin shell around these mappers, so the testable logic needs no engine to run (the project's dependency-injection testing discipline).</p>
+  </div>
+
+  <div class="req" id="REQ-VIS-16">
+    <div class="head"><span class="id"><a href="#REQ-VIS-16">REQ-VIS-16</a></span><span class="name">The core stays free of presentation</span><span class="badge must">Must</span></div>
+    <p>The import-boundary lint passes. A grep of <code>src/core/</code> finds <strong>no</strong> color, hue, theme, or Phaser reference, and the only addition there is the plain <code>worldId</code> string (REQ-VIS-3). All <code>VisualTheme</code> data and art references live under <code>src/game/</code>.</p>
+  </div>
+
+  <div class="req" id="REQ-VIS-17">
+    <div class="head"><span class="id"><a href="#REQ-VIS-17">REQ-VIS-17</a></span><span class="name">Assets bundle and the build/deploy pipeline is unchanged</span><span class="badge must">Must</span></div>
+    <p>Theme art (the card back, backdrop layers, Walker art) bundles through the existing Bun + Vite toolchain; <code>bun run build</code> emits a self-contained <code>dist/</code> on the correct Pages subpath <code>base</code> with <strong>no 404s</strong> on any asset, and CI gates lint + tests + build before deploy. No new pipeline, and the lockfile stays committed and reproducible. The <code>VisualTheme</code> descriptor is the <strong>authoritative source of asset paths</strong> (REQ-VIS-4): the 404 check tests exactly the paths the shipped theme references. The app has <strong>no asset directory today</strong>, so this spec establishes one under the renderer (e.g. <code>src/game/assets/&lt;worldId&gt;/…</code>, with the canonical card back at a shared path); the precise layout is an implementation decision, but it must be a committed convention future worlds follow, not an ad-hoc scatter.</p>
+  </div>
+
+  <div class="req" id="REQ-VIS-18">
+    <div class="head"><span class="id"><a href="#REQ-VIS-18">REQ-VIS-18</a></span><span class="name">The identity is visibly correct in the browser</span><span class="badge must">Must</span></div>
+    <p><code>bun run dev</code> serves the slice showing: themed card fronts over the constant card back; a backdrop that visibly <strong>slides toward intrusion</strong> as intensity rises (observable by advancing acts and taking damage); the Walker a <strong>distant figure in Act 1</strong> who comes <strong>nearer by Act 3</strong>; and the Walker <strong>foregrounded</strong> whenever his card is in hand. The play loop from the world-deck slice still works unchanged underneath.</p>
+  </div>
+
+  <!-- ===================== VALIDATION ===================== -->
+  <section class="validation">
+    <h2><span class="mark">✓</span> AI Validation</h2>
+    <p class="muted" style="margin-top:0">How the AI confirms this spec is done. Each check is runnable or observable, not a matter of opinion.</p>
+
+    <div class="check"><span class="box">▸</span><span class="body"><b>The boundary holds.</b> Import-boundary lint passes; a grep of <code>src/core/</code> finds no Phaser/color/hue/theme reference; the sole core change is a plain <code>worldId: string</code> readable on <code>GameState</code>. <span class="ref">REQ-VIS-1, 3, 16</span></span></div>
+    <div class="check"><span class="box">▸</span><span class="body"><b>Theme selection is pure and total.</b> A unit test resolves <code>worldId 'zombie-big-box'</code> to its <code>VisualTheme</code>, and an unknown id resolves to the <code>zombie-big-box</code> theme (the default), with no Phaser/DOM in scope. <span class="ref">REQ-VIS-4, 15</span></span></div>
+    <div class="check"><span class="box">▸</span><span class="body"><b>The card back is constant.</b> Across worlds/themes the back renders from <code>cardback.webp</code> and is never recolored; only fronts pull theme palette/frame. <span class="ref">REQ-VIS-5, 6</span></span></div>
+    <div class="check"><span class="box">▸</span><span class="body"><b>Fronts theme without breaking faces.</b> Themed fronts still show the self-describing content unchanged in layout, and player vs world cards stay distinct. <span class="ref">REQ-VIS-6, 7</span></span></div>
+    <div class="check"><span class="box">▸</span><span class="body"><b>Legibility passes a measured bar.</b> On the themed Zombie Big-Box fronts, cost, keywords, penalty, reward, and effect text meet <b>WCAG 2.1 AA</b> contrast (≥ 4.5:1 body, ≥ 3:1 large) against the busiest themed front, checked with a contrast tool — not eyeballed. <span class="ref">REQ-VIS-7</span></span></div>
+    <div class="check"><span class="box">▸</span><span class="body"><b>Intrusion tracks intensity, purely.</b> The <code>intensity → ramp</code> mapper is clamped and monotonic non-decreasing — a property test over random <code>a ≤ b</code> pairs asserts <code>ramp(a) ≤ ramp(b)</code> — in a headless test; in the browser the backdrop is mundane at a fresh Act 1 / full HP and visibly more intruded after advancing acts and losing HP. <span class="ref">REQ-VIS-9, 15</span></span></div>
+    <div class="check"><span class="box">▸</span><span class="body"><b>No feedback loop.</b> The core's existing replay-equivalence tests (<code>src/core/golden.test.ts</code>) stay green — they run headless and cannot import the renderer, so the visual layer provably cannot alter state. A code-level audit confirms every renderer <code>dispatch</code> call site builds its <code>Action</code> only from <code>state</code> and the player's selection, never from a theme, intensity, tween, or the Walker's position; and skipping animation snaps to the authoritative <code>state</code>. <span class="ref">REQ-VIS-1, 2</span></span></div>
+    <div class="check"><span class="box">▸</span><span class="body"><b>The apocalypse stays localized.</b> At maximum intensity the backdrop still shows a mundane/intrusion boundary and the board sits in the normal zone; the frame is not consumed edge-to-edge. <span class="ref">REQ-VIS-10</span></span></div>
+    <div class="check"><span class="box">▸</span><span class="body"><b>Walker proximity is act-driven.</b> The <code>actIndex → proximity</code> mapper returns the three tiers in a headless test; in the browser he is a distant silhouette in Act 1 and looms by Act 3, and tweens (not snaps) on <code>ActAdvanced</code>. To reach Act 3 for the manual check, drive the existing random-legal sim or force <code>actIndex</code> from the dev console rather than grinding turns by hand. <span class="ref">REQ-VIS-11, 13, 15</span></span></div>
+    <div class="check"><span class="box">▸</span><span class="body"><b>Drawing the Walker foregrounds him.</b> Forcing the Walker world card into hand brings the figure to a foreground presentation; holding keeps him there; resolving/discarding returns him to the act backdrop — all driven by state/events, no renderer timer. <span class="ref">REQ-VIS-12, 13</span></span></div>
+    <div class="check"><span class="box">▸</span><span class="body"><b>Assets resolve and the build is green.</b> <code>bun install</code> from the lockfile, then <code>bun run build</code>, emits a static <code>dist/</code> on the Pages subpath with no asset 404s; CI gates lint + tests + build. <span class="ref">REQ-VIS-17</span></span></div>
+    <div class="check"><span class="box">▸</span><span class="body"><b>It is visibly the game.</b> <code>bun run dev</code> shows themed fronts, the constant back, the intensity-driven intrusion slide, and the distant-then-foreground Walker, with the world-deck loop playable underneath to a win/loss. <span class="ref">REQ-VIS-18</span></span></div>
+  </section>
+
+  <!-- ===================== NON-GOALS ===================== -->
+  <h2><span class="mark">✕</span> Out of scope</h2>
+  <div class="panel">
+    <p style="margin-top:0">Explicitly <strong>not</strong> in this spec: additional worlds or themes beyond the single Zombie Big-Box <code>VisualTheme</code> (the seam is proven by one); an art-authoring or asset-import <strong>pipeline</strong>, and the production of final art beyond what the theme references; <strong>per-card bespoke art</strong> (fronts vary by palette and frame, not by hand-drawn card illustration); audio and music; full animation polish beyond the specified backdrop tween, Walker foregrounding, and intensity-scaled juice; any change to game rules, the card catalog, or the turn loop (this spec is presentation only); and tuning the <code>intensity</code> curve itself, which belongs to the core. Generalizing the <code>VisualTheme</code> shape for worlds with radically different board structures is later design.</p>
+  </div>
+
+  <footer>
+    Drafted 2026-06-04 for <a href="../../reference/vision.html">Shattered Worlds</a>, realizing the <a href="../../reference/visual-direction.html">visual direction</a> on the <a href="../design/core-render-architecture.html">approved core/render seam</a> and atop the <a href="world-deck-slice.html">world-deck slice</a>. Status <strong>draft</strong>, prefix <code>REQ-VIS</code>. Next: a fresh-eyes spec review, then a plan covering the <code>worldId</code> seam, the <code>VisualTheme</code> registry, the backdrop/intrusion mapping, and the Walker presence together.
+  </footer>
+
+</div>
+
+
+<script type="application/json" id="lore-annotations">{"comments":[],"todos":[],"starred":false}</script>
+</body></html>
