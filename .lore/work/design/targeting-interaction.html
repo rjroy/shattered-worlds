@@ -1,0 +1,314 @@
+<!DOCTYPE html><html lang="en"><head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Targeting &amp; card-selection interaction</title>
+  <meta name="date" content="2026-06-03">
+  <meta name="status" content="approved">
+  <meta name="tags" content="design, renderer, targeting, selection, ux, interaction, phaser, seam, highlight, discard-zone">
+  <meta name="modules" content="game, core">
+  <meta name="related" content=".lore/work/specs/world-deck-slice.html, .lore/work/design/core-render-architecture.html, .lore/work/notes/world-deck-acquisition.html">
+  <style>
+    :root {
+      --bg: #0f1117; --panel: #1a1d27; --panel-2: #222633;
+      --ink: #e8eaf0; --muted: #9aa3b2; --accent: #8ab4ff; --gold: #ffd479;
+      --good: #6cd08a; --warn: #ffc14d; --bad: #ff8a8a; --border: #2a2f3d;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: radial-gradient(1200px 600px at 50% -10%, #1a2238 0%, var(--bg) 55%);
+      color: var(--ink); font: 16px/1.65 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; padding: 2.2rem 1rem 6rem; }
+    .wrap { max-width: 940px; margin: 0 auto; }
+    .kicker { letter-spacing: .28em; text-transform: uppercase; font-size: .72rem; color: var(--gold); margin-bottom: .5rem; text-align: center; }
+    h1 { font-size: 2rem; margin: 0 0 .5rem; text-align: center; line-height: 1.1;
+      background: linear-gradient(180deg,#fff,#b8c4e0); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+    .sub { color: var(--muted); text-align: center; max-width: 660px; margin: 0 auto 1.5rem; }
+    .badge { display: inline-block; background: rgba(255,212,121,.1); border: 1px solid rgba(255,212,121,.35); color: var(--gold);
+      border-radius: 999px; padding: .2rem .8rem; font-size: .75rem; font-weight: 600; }
+    .center { text-align: center; }
+
+    h2 { font-size: 1.35rem; margin: 2.6rem 0 1rem; display: flex; align-items: center; gap: .6rem; }
+    h2 .mark { color: var(--gold); font-size: 1rem; }
+    h3 { font-size: 1.05rem; margin: 1.3rem 0 .3rem; }
+    p { margin: .6rem 0; }
+    a { color: var(--accent); }
+    code { background: var(--panel-2); border: 1px solid var(--border); border-radius: 5px; padding: .08rem .35rem; font-size: .86em; }
+    .muted { color: var(--muted); }
+    ul li { margin: .3rem 0; color: var(--muted); } ul li b { color: var(--ink); }
+
+    .decision { background: linear-gradient(180deg, var(--panel-2), var(--panel)); border: 1px solid var(--border);
+      border-left: 4px solid var(--good); border-radius: 16px; padding: 1.4rem 1.6rem; margin: 1.2rem 0; }
+    .decision .lead { font-size: 1.06rem; margin-top: 0; color: var(--ink); }
+    .decision ol { margin: .7rem 0 0; padding-left: 1.2rem; } .decision li { margin: .5rem 0; color: var(--muted); }
+    .decision li b { color: var(--good); }
+
+    .panel { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 1rem 1.3rem; margin: 1rem 0; }
+    .callout { background: rgba(138,180,255,.06); border: 1px solid rgba(138,180,255,.3); border-left: 3px solid var(--accent);
+      border-radius: 12px; padding: 1rem 1.3rem; margin: 1rem 0; }
+    .callout h3 { margin: 0 0 .3rem; color: var(--accent); } .callout p { color: var(--muted); margin: .35rem 0 0; }
+
+    table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: .88rem; }
+    th, td { text-align: left; padding: .5rem .6rem; border-bottom: 1px solid var(--border); vertical-align: top; }
+    th { color: var(--accent); font-weight: 600; font-size: .8rem; }
+    td code { font-size: .82em; }
+    .pill { display: inline-block; border-radius: 6px; padding: .1rem .5rem; font-size: .76rem; font-weight: 700; }
+    .p-good { background: rgba(108,208,138,.14); color: var(--good); } .p-warn { background: rgba(255,193,77,.14); color: var(--warn); }
+    .p-bad { background: rgba(255,138,138,.14); color: var(--bad); } .p-mut { background: var(--panel-2); color: var(--muted); }
+    .kw { color: var(--gold); font-weight: 700; }
+
+    pre { background: #0c0e14; border: 1px solid var(--border); border-radius: 10px; padding: 1rem 1.1rem; overflow-x: auto;
+      font: .83rem/1.55 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; color: #d6dbe8; }
+    pre .c { color: var(--muted); } pre .k { color: var(--accent); } pre .t { color: var(--gold); } pre .s { color: var(--good); }
+
+    /* tabs */
+    .tabs { display: flex; gap: .4rem; margin: 1rem 0 0; flex-wrap: wrap; }
+    .tab-btn { background: var(--panel); border: 1px solid var(--border); color: var(--muted); border-radius: 8px 8px 0 0;
+      padding: .5rem .9rem; cursor: pointer; font: inherit; font-size: .85rem; }
+    .tab-btn.active { background: var(--panel-2); color: var(--ink); border-bottom-color: var(--panel-2); }
+    .tab-body { background: var(--panel-2); border: 1px solid var(--border); border-radius: 0 10px 10px 10px; padding: 1rem 1.2rem; }
+    .tab-pane { display: none; } .tab-pane.active { display: block; }
+
+    .diagram { background: var(--panel); border: 1px solid var(--border); border-radius: 14px; padding: 1.1rem; margin: 1.2rem 0; }
+    .diagram svg { width: 100%; height: auto; display: block; }
+    .leg { display: flex; gap: 1.2rem; flex-wrap: wrap; margin-top: .7rem; font-size: .8rem; color: var(--muted); }
+
+    footer { margin-top: 3.2rem; color: var(--muted); font-size: .85rem; border-top: 1px solid var(--border); padding-top: 1rem; }
+  </style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="kicker">Design · Renderer Interaction</div>
+  <h1>Targeting &amp; card selection</h1>
+  <p class="sub">How a click becomes a fully-formed core action: selecting cards, knowing what is targetable, committing, and undoing. One interaction grammar for every card in the slice.</p>
+  <div class="center"><span class="badge">Draft · 2026-06-03</span></div>
+
+  <!-- ============ DECISION ============ -->
+  <div class="decision">
+    <p class="lead">Three decisions carry this design:</p>
+    <ol>
+      <li><b>Selection is renderer-only state.</b> The half-built act of "I picked Explore, now I'm choosing a target" lives entirely in <code>src/game/</code>. The core never sees a partial selection; it only ever receives a complete <code>Action</code> (<code>PlayCard{cardId, targetId, choice, returnIds…}</code> or <code>DiscardHazard{cardId}</code>). The seam stays pure and synchronous.</li>
+      <li><b>Legality and interaction shape come from one pure core selector, not the renderer.</b> The core exposes <code>availableActions(state)</code>: which cards are playable, what each one needs (a <code>TargetSpec</code>), and which Hazards are discardable. The renderer <em>projects</em> that truth into highlights, so the UI can never offer something <code>dispatch</code> would reject, and the rules of targeting live in exactly one place. The headless sim (REQ-WDS-29) builds its legal-action policy from the same selector.</li>
+      <li><b>One grammar: select → resolve requirements by highlight → commit, with Cancel always present.</b> Every card follows the same shape. What differs per card is only its <code>TargetSpec</code>, which the renderer reads and drives generically. Adding a card later adds no new interaction code if its spec is a known shape.</li>
+    </ol>
+  </div>
+
+  <!-- ============ CONSTRAINT ============ -->
+  <h2><span class="mark">⚙</span> The constraint that shapes everything</h2>
+  <p>The <a href="core-render-architecture.html">approved architecture</a> forbids the core from knowing about time, input, or the screen, and warns specifically against two code paths doing the same thing differently. Targeting sits right on that fault line: it is input (renderer) that must obey rules (core). The resolution is that the renderer holds the <em>transient</em> selection state and the core holds the <em>rules</em> of what is selectable. The renderer asks the core "what is legal from here?" and renders the answer; when the player commits, the renderer hands back a whole action. Nothing about a mid-selection ever enters <code>GameState</code>.</p>
+
+  <!-- ============ WHERE TRUTH LIVES ============ -->
+  <h2><span class="mark">◆</span> Where does "what can I target" come from?</h2>
+  <p>This is the load-bearing decision. The highlights must agree with what <code>dispatch</code> will accept. Two ways to achieve that:</p>
+
+  <div class="tabs" role="tablist">
+    <button class="tab-btn active" data-tab="b">B · Pure core selector (chosen)</button>
+    <button class="tab-btn" data-tab="a">A · Renderer derives legality</button>
+  </div>
+  <div class="tab-body">
+    <div class="tab-pane active" id="tab-b">
+      <p><b>The core exports a pure read-model</b> describing the legal moves from a state. The renderer highlights from it and never re-implements targeting rules.</p>
+      <pre><span class="c">// src/core/ — pure, synchronous, no Phaser</span>
+
+<span class="k">type</span> <span class="t">TargetSpec</span> =
+  | { kind: <span class="s">'none'</span> }                                  <span class="c">// Med Kit, Summon Door, Sprint(draw)</span>
+  | { kind: <span class="s">'hazard'</span> }                                <span class="c">// Explore, Listen, Baseball Bat</span>
+  | { kind: <span class="s">'hazard'</span>, tag: <span class="s">'Slow'</span> }                   <span class="c">// Sprint(hit) — gated branch</span>
+  | { kind: <span class="s">'modal'</span>, branches: <span class="t">Branch</span>[] }           <span class="c">// Sprint</span>
+  | { kind: <span class="s">'returnWorld'</span>, min: <span class="t">number</span>, max: <span class="t">number</span> } <span class="c">// Barricade 0..2, Panic 1..1</span>
+  | { kind: <span class="s">'destroyHand'</span>, min: <span class="t">0</span>, max: <span class="t">1</span> }         <span class="c">// Regroup</span>
+  | { kind: <span class="s">'discardPlayer'</span> }                         <span class="c">// Adrenaline's discard step</span>
+  | { kind: <span class="s">'compound'</span>, steps: <span class="t">TargetSpec</span>[] }       <span class="c">// Barricade = hazard, then returnWorld</span>
+
+<span class="k">interface</span> <span class="t">AvailableActions</span> {
+  playable:    { cardId: <span class="t">CardId</span>; spec: <span class="t">TargetSpec</span> }[]
+  discardable: <span class="t">CardId</span>[]        <span class="c">// world cards with discardable=true</span>
+  legalTargets(cardId: <span class="t">CardId</span>, step: <span class="t">number</span>): <span class="t">CardId</span>[]
+  canEndTurn:  <span class="t">boolean</span>
+}
+
+<span class="k">function</span> <span class="s">availableActions</span>(state: <span class="t">GameState</span>): <span class="t">AvailableActions</span></pre>
+      <p class="muted">Cost: a small new pure surface in the core and its tests. Benefit: the renderer and the sim share one definition of "legal," the highlights are provably correct, and a new card is data, not renderer code.</p>
+    </div>
+    <div class="tab-pane" id="tab-a">
+      <p><b>The renderer reads <code>GameState</code> plus card definitions and works out legality itself</b> (this card is a <code>DealProgress</code>, so any world card in hand is a target; this one needs a Slow tag; the Door isn't discardable…).</p>
+      <p>It works, and it avoids touching the core. But it copies the targeting rules into <code>src/game/</code>, where they will drift from the core's <code>dispatch</code> validation. The architecture explicitly calls that class of duplication a bug source, and the sim runner would then need a <em>third</em> copy to choose legal actions. Rejected.</p>
+    </div>
+  </div>
+
+  <div class="callout">
+    <h3>Why this is worth a core change</h3>
+    <p>REQ-WDS-8 already says <code>dispatch</code> throws on an illegal target, and REQ-WDS-29 needs the sim to only ever choose legal actions. Both are the same question — "what is legal from here?" — and so is highlighting. Answering it once, purely, in the core, serves the renderer, the validator, and the sim from a single source. This is the same discipline as the architecture's derived <code>intensity</code> signal.</p>
+  </div>
+
+  <!-- ============ GRAMMAR ============ -->
+  <h2><span class="mark">▦</span> The interaction grammar</h2>
+  <p>Every interaction is the same four beats. The card's <code>TargetSpec</code> decides which middle beats appear.</p>
+
+  <div class="diagram" role="img" aria-label="State machine: from Idle, clicking a playable card or a discardable hazard enters Selected. Selected resolves the card's TargetSpec through optional Mode, Target, and Multi-select steps, reaching Commit. Cancel or Escape from any non-idle state returns to Idle. Commit dispatches an action and returns to Idle.">
+    <svg viewBox="0 0 880 340" xmlns="http://www.w3.org/2000/svg" font-family="ui-monospace, Menlo, Consolas, monospace">
+      <defs>
+        <marker id="a" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#9aa3b2"></path></marker>
+        <marker id="ag" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#6cd08a"></path></marker>
+        <marker id="ar" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#ff8a8a"></path></marker>
+      </defs>
+
+      <rect x="20" y="140" width="120" height="56" rx="10" fill="#161a24" stroke="#3a4f7a" stroke-width="1.5"></rect>
+      <text x="80" y="166" fill="#8ab4ff" font-size="13" font-weight="700" text-anchor="middle">IDLE</text>
+      <text x="80" y="183" fill="#9aa3b2" font-size="9.5" text-anchor="middle">affordances shown</text>
+
+      <rect x="210" y="140" width="130" height="56" rx="10" fill="#161a24" stroke="#7a6a3a" stroke-width="1.5"></rect>
+      <text x="275" y="166" fill="#ffd479" font-size="13" font-weight="700" text-anchor="middle">SELECTED</text>
+      <text x="275" y="183" fill="#9aa3b2" font-size="9.5" text-anchor="middle">Cancel appears</text>
+
+      <rect x="410" y="40" width="140" height="48" rx="10" fill="#161a24" stroke="#3a5f4a" stroke-width="1.2"></rect>
+      <text x="480" y="62" fill="#6cd08a" font-size="11.5" font-weight="700" text-anchor="middle">MODE?</text>
+      <text x="480" y="78" fill="#9aa3b2" font-size="9" text-anchor="middle">modal chooser</text>
+
+      <rect x="410" y="142" width="140" height="48" rx="10" fill="#161a24" stroke="#3a5f4a" stroke-width="1.2"></rect>
+      <text x="480" y="164" fill="#6cd08a" font-size="11.5" font-weight="700" text-anchor="middle">TARGET?</text>
+      <text x="480" y="180" fill="#9aa3b2" font-size="9" text-anchor="middle">legal targets glow</text>
+
+      <rect x="410" y="244" width="140" height="48" rx="10" fill="#161a24" stroke="#3a5f4a" stroke-width="1.2"></rect>
+      <text x="480" y="266" fill="#6cd08a" font-size="11.5" font-weight="700" text-anchor="middle">MULTI?</text>
+      <text x="480" y="282" fill="#9aa3b2" font-size="9" text-anchor="middle">toggle + Confirm</text>
+
+      <rect x="620" y="142" width="130" height="56" rx="10" fill="#13251a" stroke="#6cd08a" stroke-width="1.6"></rect>
+      <text x="685" y="166" fill="#6cd08a" font-size="13" font-weight="700" text-anchor="middle">COMMIT</text>
+      <text x="685" y="183" fill="#9aa3b2" font-size="9.5" text-anchor="middle">dispatch(action)</text>
+
+      <rect x="800" y="142" width="60" height="56" rx="10" fill="#161a24" stroke="#3a4f7a" stroke-width="1.2"></rect>
+      <text x="830" y="173" fill="#8ab4ff" font-size="10.5" font-weight="700" text-anchor="middle">↻ IDLE</text>
+
+      <!-- idle -> selected -->
+      <line x1="140" y1="168" x2="208" y2="168" stroke="#9aa3b2" stroke-width="1.5" marker-end="url(#a)"></line>
+      <text x="174" y="160" fill="#9aa3b2" font-size="8.5" text-anchor="middle">click card</text>
+      <!-- selected -> mode/target/multi -->
+      <line x1="340" y1="158" x2="408" y2="74" stroke="#6cd08a" stroke-width="1.3" marker-end="url(#ag)"></line>
+      <line x1="340" y1="168" x2="408" y2="166" stroke="#6cd08a" stroke-width="1.3" marker-end="url(#ag)"></line>
+      <line x1="340" y1="178" x2="408" y2="262" stroke="#6cd08a" stroke-width="1.3" marker-end="url(#ag)"></line>
+      <text x="372" y="120" fill="#9aa3b2" font-size="8.5" text-anchor="middle">per TargetSpec</text>
+      <!-- mode/target/multi -> commit -->
+      <line x1="550" y1="70" x2="650" y2="150" stroke="#6cd08a" stroke-width="1.3" marker-end="url(#ag)"></line>
+      <line x1="550" y1="166" x2="618" y2="168" stroke="#6cd08a" stroke-width="1.3" marker-end="url(#ag)"></line>
+      <line x1="550" y1="264" x2="650" y2="190" stroke="#6cd08a" stroke-width="1.3" marker-end="url(#ag)"></line>
+      <!-- none path selected->commit -->
+      <path d="M275,140 C275,110 600,110 660,140" fill="none" stroke="#6cd08a" stroke-width="1.1" stroke-dasharray="4 3" marker-end="url(#ag)"></path>
+      <text x="470" y="108" fill="#6cd08a" font-size="8.5" text-anchor="middle">spec=none → Play confirm</text>
+      <!-- commit -> idle -->
+      <line x1="750" y1="170" x2="798" y2="170" stroke="#6cd08a" stroke-width="1.4" marker-end="url(#ag)"></line>
+      <!-- cancel loop -->
+      <path d="M275,196 C275,250 150,250 110,198" fill="none" stroke="#ff8a8a" stroke-width="1.3" marker-end="url(#ar)"></path>
+      <text x="195" y="262" fill="#ff8a8a" font-size="9" text-anchor="middle">Cancel · Esc · click empty</text>
+    </svg>
+    <div class="leg">
+      <span style="color:#9aa3b2">→ enter selection</span>
+      <span style="color:#6cd08a">→ resolve &amp; commit</span>
+      <span style="color:#ff8a8a">→ abort (no dispatch)</span>
+    </div>
+  </div>
+
+  <!-- ============ PLAYER VS WORLD ============ -->
+  <h2><span class="mark">◇</span> Selecting a player card vs a world card</h2>
+  <div class="panel">
+    <h3 style="color:var(--accent);margin-top:.2rem">Click a player card</h3>
+    <p class="muted">It lifts and glows; the <b>Cancel</b> button appears. The renderer reads its <code>TargetSpec</code> and runs the matching flow: legal Hazards glow for a <code>hazard</code> spec, a small two-button chooser appears for a <code>modal</code>, hand cards glow for <code>destroyHand</code>, and so on. Committing means clicking a glowing target (or picking a mode, or pressing Confirm). The action is dispatched whole. An <b>unplayable</b> player card (no legal target exists, e.g. Explore with no Hazard in hand) is rendered dim and is not selectable at all, because <code>availableActions</code> omits it.</p>
+  </div>
+  <div class="panel">
+    <h3 style="color:var(--gold);margin-top:.2rem">Click a world card (a Hazard)</h3>
+    <p class="muted">A world card plays two roles depending on state. While <b>nothing is selected</b>, clicking it means "I want to deal with this": it becomes selected, Cancel appears, and the <b>world-discard zone highlights</b> as the single commit target. Clicking that zone discards the Hazard and applies its penalty. While a <b>player card is already selected</b>, the same world card is instead a <em>target</em>: if it is legal it glows, and clicking it commits the player card against it. Resolution is never a click on the Hazard itself; you resolve a Hazard by pouring enough Progress into it from the player side. The <b>Door</b> (discardable = false) shows no discard affordance and offers no discard flow; it can only be a Progress target or be held.</p>
+  </div>
+
+  <!-- ============ PER CARD ============ -->
+  <h2><span class="mark">▤</span> Every card's flow</h2>
+  <table>
+    <tbody>
+      <tr><th>Card</th><th>TargetSpec</th><th>Flow after select</th><th>Commit</th></tr>
+      <tr><td><b>Explore</b>, <b>Listen</b></td><td><code>hazard</code></td><td>Hazards glow; a Progress preview shows on each (incl. <span class="kw">+vs Hidden</span>)</td><td>click a Hazard</td></tr>
+      <tr><td><b>Baseball Bat</b></td><td><code>hazard</code></td><td>Hazards glow; preview shows <span class="kw">+3 vs Creature</span> on zombies</td><td>click a Hazard</td></tr>
+      <tr><td><b>Sprint</b></td><td><code>modal</code></td><td>chooser: <span class="pill p-mut">Draw</span> / <span class="pill p-mut">Hit Slow</span>; the second disabled if no Slow Hazard</td><td>Draw commits at once; Hit → click a Slow Hazard</td></tr>
+      <tr><td><b>Barricade</b></td><td><code>compound</code> [hazard, returnWorld 0..2]</td><td>step 1: pick a Hazard for +1; step 2: toggle up to 2 world cards to return (counter <span class="pill p-mut">0/2</span>)</td><td>Confirm (0 valid)</td></tr>
+      <tr><td><b>Panic</b></td><td><code>returnWorld</code> 1..1</td><td>world cards glow</td><td>click exactly 1 (auto-commits)</td></tr>
+      <tr><td><b>Adrenaline</b></td><td><code>discardPlayer</code></td><td>other player cards glow as the discard pick</td><td>click 1, then it draws 2</td></tr>
+      <tr><td><b>Regroup</b></td><td><code>destroyHand</code> 0..1</td><td>all other hand cards glow (player <em>and</em> world)</td><td>click 1 to destroy, or <span class="pill p-mut">Skip</span></td></tr>
+      <tr><td><b>Med Kit</b>, <b>Summon Door</b></td><td><code>none</code></td><td>no targets; a single <span class="pill p-good">Play</span> button appears</td><td>click Play</td></tr>
+      <tr><td><b>Hazard</b> (discardable)</td><td>— (it is the actor for discard)</td><td>world-discard zone glows</td><td>click the discard zone</td></tr>
+      <tr><td><b>Door</b></td><td>— (target-only / hold-only)</td><td>no self-action; info only</td><td>n/a</td></tr>
+    </tbody>
+  </table>
+  <p class="muted"><b>Compound ordering matters.</b> Barricade deals its Progress in step 1 <em>before</em> the return step. If that Progress resolves the targeted Hazard, it leaves the board and is simply not among the cards offered for return in step 2. The renderer drives the two steps; the single committed <code>PlayCard</code> carries both the <code>targetId</code> and the <code>returnIds</code>, and the core applies them in the spec's defined order.</p>
+
+  <!-- ============ VISUAL LANGUAGE ============ -->
+  <h2><span class="mark">✦</span> Visual language</h2>
+  <table>
+    <tbody>
+      <tr><th>State</th><th>Treatment</th><th>Meaning</th></tr>
+      <tr><td><span class="pill p-good">Playable</span></td><td>full color, subtle idle shimmer on player cards that have a legal play</td><td>you can select this now</td></tr>
+      <tr><td><span class="pill p-mut">Unplayable</span></td><td>desaturated, ~50% opacity, not clickable</td><td>no legal play exists this turn</td></tr>
+      <tr><td><span class="pill p-warn">Selected</span></td><td>lifts, gold outline glow, slight scale-up</td><td>this is the actor; Cancel is live</td></tr>
+      <tr><td><span class="pill p-good">Legal target</span></td><td>pulsing accent ring + a Progress/effect preview badge</td><td>click to commit against this</td></tr>
+      <tr><td><span class="pill p-mut">Non-target</span></td><td>dimmed while a selection is active</td><td>not a legal target for the held card</td></tr>
+      <tr><td><span class="pill p-bad">Discard zone (armed)</span></td><td>red-bordered drop region, label "Discard — apply penalty"</td><td>commit a Hazard discard here</td></tr>
+      <tr><td><span class="pill p-bad">Locked</span></td><td>greyed lock glyph on the Door</td><td>cannot be discarded</td></tr>
+    </tbody>
+  </table>
+
+  <!-- ============ UX ADDITIONS ============ -->
+  <h2><span class="mark">▧</span> The UX changes this requires</h2>
+  <ul>
+    <li><b>Discard becomes a zone, not a count.</b> The POC's text pile-counts are replaced by real interactive regions. The <b>world-discard zone</b> is the commit target when a Hazard is selected for discard. The <b>player-discard pile</b> becomes a first-class region too: it is the visual destination for end-of-turn discards and Adrenaline's discard, and the source that visibly reshuffles into the draw pile. (Asymmetry worth stating: world cards can be discarded by player choice, so their zone is an active commit target; player cards have no free discard action, so their pile is a destination and animation anchor, not a general drop target.)</li>
+    <li><b>A Cancel button appears whenever a selection is active</b> and disappears in IDLE. Escape and a click on empty table also cancel. Re-clicking the selected card cancels (toggle). Cancel never dispatches anything, so the core state is untouched.</li>
+    <li><b>A Confirm button appears for variable-count steps</b> (Barricade return 0..2, Regroup destroy 0..1) because zero is valid and the player needs a way to say "done." Exact-count steps (Panic's single return, a single Hazard target) auto-commit on the click and show no Confirm.</li>
+    <li><b>A live counter</b> (<code>0/2</code>) shows during multi-select so the player tracks how many they have toggled.</li>
+    <li><b>Target previews</b> render the resulting Progress on each legal Hazard before commit, including keyword bonuses and whether the deal would resolve it. This is what makes "what can I do" legible without trial and error.</li>
+    <li><b>End Turn is disabled while a selection is active.</b> You must commit or cancel first. This prevents ending a turn with a half-built action and prevents a stray End-Turn click during targeting.</li>
+  </ul>
+
+  <!-- ============ SAFETY & TOUCH ============ -->
+  <h2><span class="mark">⛉</span> Accidental-action prevention &amp; touch parity</h2>
+  <div class="panel">
+    <p><b>No destructive single click.</b> The two actions that hurt — discarding a Hazard (eats a penalty) and Regroup destroy (permanent) — are never one tap. Both require select, then a deliberate second action on a separate target (the discard zone, or a glowing card), with Cancel available throughout. Resolving and dealing Progress are non-destructive, so they stay fast.</p>
+    <p><b>Touch and mouse are the same grammar.</b> Tap = click; there is no reliance on hover. Affordances (playable shimmer, discardable marker, the Door's lock) are always rendered, not hover-revealed, so a touch player sees the same legibility. Target previews show as persistent badges on the cards, not hover tooltips; a tap-and-hold on a card may surface its full text for detail. Hit areas are sized for a fingertip, and the Cancel/Confirm controls anchor to a fixed spot so they do not jump under the thumb.</p>
+  </div>
+
+  <!-- ============ EDGE CASES ============ -->
+  <h2><span class="mark">?</span> Edge cases the grammar already answers</h2>
+  <ul>
+    <li><b>No legal target for a card</b> → the card is unplayable and unselectable (dim). The player never reaches a dead-end selection, because <code>availableActions</code> filtered it out.</li>
+    <li><b>Mid-turn draw changes legality</b> (Sprint's draw mode, Panic) → after the committed action animates, the renderer re-reads <code>availableActions(state)</code> and re-paints affordances. Highlights are always a function of current state, never cached across a dispatch.</li>
+    <li><b>The Door is held for turns</b> → it simply never offers a discard or a self-action; it sits in hand as a clog and a target until paid. Legal and expected.</li>
+    <li><b>A commit would be illegal due to a race</b> → it can't, because the renderer only ever offers targets the core selector returned for the current state, and dispatch is synchronous between repaints. If a dispatch ever did throw, that is a bug surfaced loudly, not swallowed.</li>
+  </ul>
+
+  <!-- ============ DECISION RESTATE ============ -->
+  <h2><span class="mark">✓</span> Decision</h2>
+  <div class="decision">
+    <p class="lead">Build targeting as a renderer-side selection state machine driven by a pure core <code>availableActions(state)</code> selector that returns each playable card's <code>TargetSpec</code> and the discardable Hazards. The renderer runs one grammar — <em>select → resolve the spec by highlighting → commit, Cancel always available</em> — and hands the core a single complete action. Discard piles become interactive zones; the world-discard zone is the commit target for a Hazard discard; destructive actions are always two-step; the interaction is identical on touch and mouse.</p>
+    <p class="muted" style="margin:.7rem 0 0">This adds a small pure surface to the core (the selector and <code>TargetSpec</code>), which is worth reflecting in the implementation plan: it is the shared source of legality for the renderer highlights, the <code>dispatch</code> validation, and the sim's action policy. It does not change any rule already in <a href="../specs/world-deck-slice.html">world-deck-slice</a>; it formalizes how the renderer reads them.</p>
+  </div>
+
+  <h2><span class="mark">⋯</span> Deferred (not this slice)</h2>
+  <ul>
+    <li>Drag-to-target as an <em>alternative</em> to click-target. The click grammar is primary and sufficient; drag can layer on later without changing the core seam.</li>
+    <li>Keyboard-only play (number keys to select, arrows to target). The grammar supports it; binding it is polish.</li>
+    <li>Juice on highlight/commit (the <code>intensity</code>-scaled FX). Owned by the renderer, designed later.</li>
+    <li>Undo of a <em>committed</em> action. Out of scope; Cancel covers pre-commit only. A committed action is final for this slice.</li>
+  </ul>
+
+  <footer>
+    Drafted 2026-06-03 for <a href="../../reference/vision.html">Shattered Worlds</a>. Designs the renderer targeting interaction for <a href="../specs/world-deck-slice.html">world-deck-slice</a> on the <a href="core-render-architecture.html">core/render seam</a>. Status <strong>draft</strong>. The one implementation consequence worth carrying into the plan: a pure <code>availableActions</code> selector in the core, shared by renderer, validator, and sim.
+  </footer>
+
+  <script>
+    document.querySelectorAll('.tab-btn').forEach(function (b) {
+      b.addEventListener('click', function () {
+        document.querySelectorAll('.tab-btn').forEach(function (x) { x.classList.remove('active'); });
+        document.querySelectorAll('.tab-pane').forEach(function (x) { x.classList.remove('active'); });
+        b.classList.add('active');
+        document.getElementById('tab-' + b.dataset.tab).classList.add('active');
+      });
+    });
+  </script>
+
+</div>
+
+
+</body></html>

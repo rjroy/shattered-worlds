@@ -1,0 +1,264 @@
+<!DOCTYPE html><html lang="en"><head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The world deck as acquisition engine</title>
+  <meta name="date" content="2026-06-03">
+  <meta name="status" content="approved">
+  <meta name="tags" content="brainstorm, world-deck, acquisition, hazard, reward, penalty, acts, worked-example, rules">
+  <meta name="related" content=".lore/work/notes/deck-mechanics-answers.html, .lore/work/notes/thoughts.html, .lore/reference/vision.html, .lore/work/research/deckbuilding-game-design.html">
+  <style>
+    :root {
+      --bg: #0f1117; --panel: #1a1d27; --panel-2: #222633;
+      --ink: #e8eaf0; --muted: #9aa3b2; --accent: #8ab4ff; --gold: #ffd479;
+      --good: #6cd08a; --warn: #ffc14d; --bad: #ff8a8a; --border: #2a2f3d;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: radial-gradient(1200px 600px at 50% -10%, #1a2238 0%, var(--bg) 55%);
+      color: var(--ink); font: 16px/1.65 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      padding: 0 1rem 6rem; }
+    .wrap { max-width: 940px; margin: 0 auto; }
+
+    .banner { background: var(--panel); border: 1px solid var(--border); border-left: 4px solid var(--gold);
+      border-radius: 12px; padding: 1rem 1.4rem; margin: 1.5rem 0 1rem; display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; }
+    .banner .title { font-weight: 700; font-size: 1.05rem; }
+    .chip { display: inline-flex; align-items: center; gap: .35rem; border-radius: 999px; padding: .18rem .7rem;
+      font-size: .72rem; font-weight: 700; border: 1px solid; text-transform: uppercase; letter-spacing: .04em; }
+    .chip.draft { background: rgba(255,212,121,.1); border-color: rgba(255,212,121,.3); color: var(--gold); }
+
+    h1 { font-size: 1.7rem; margin: 1.5rem 0 .4rem; }
+    h2 { font-size: 1.15rem; margin: 2.2rem 0 .8rem; display: flex; align-items: center; gap: .5rem; }
+    h2 .mark { color: var(--gold); }
+    h3 { font-size: 1rem; margin: 1.2rem 0 .3rem; color: var(--ink); }
+    p { margin: .5rem 0; color: var(--muted); }
+    p b, p strong { color: var(--ink); }
+    a { color: var(--accent); }
+    .lead { color: var(--ink); font-size: 1.02rem; }
+
+    .grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: .65rem; margin: .8rem 0; }
+    .grid.two { grid-template-columns: 1fr 1fr; }
+    @media (max-width: 760px) { .grid, .grid.two { grid-template-columns: 1fr 1fr; } }
+    @media (max-width: 520px) { .grid, .grid.two { grid-template-columns: 1fr; } }
+
+    .card { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: .75rem .9rem; position: relative; }
+    .card-name { font-weight: 700; font-size: .95rem; margin-bottom: .25rem; color: var(--ink); display: flex; justify-content: space-between; gap: .4rem; align-items: baseline; }
+    .hz { font: .7rem ui-monospace, Menlo, monospace; color: var(--bad); font-weight: 700; white-space: nowrap; }
+    .card-line { color: var(--muted); font-size: .82rem; margin: .12rem 0; }
+    .card-line .k { color: var(--gold); font-weight: 700; }
+    .card-line .pen { color: var(--bad); font-weight: 600; }
+    .card-line .rew { color: var(--good); font-weight: 600; }
+    .qty { font: .68rem ui-monospace, Menlo, monospace; color: var(--accent); }
+    .kw { color: var(--gold); font-weight: 700; }
+
+    .answer { background: linear-gradient(180deg, rgba(108,208,138,.08), rgba(108,208,138,.02));
+      border: 1px solid rgba(108,208,138,.4); border-left: 4px solid var(--good); border-radius: 12px;
+      padding: .9rem 1.2rem; margin: 1rem 0; }
+    .answer .rec { color: var(--good); font-weight: 700; font-size: .74rem; text-transform: uppercase; letter-spacing: .06em; }
+    .answer p { margin: .35rem 0; }
+    .answer p:first-of-type { color: var(--ink); }
+
+    .note { background: var(--panel-2); border: 1px solid var(--border); border-left: 3px solid var(--warn);
+      border-radius: 8px; padding: .75rem 1rem; margin: 1rem 0; color: var(--muted); font-size: .92rem; }
+    .note b { color: var(--ink); }
+
+    .rule { background: var(--panel); border: 1px solid var(--border); border-left: 3px solid var(--good);
+      border-radius: 10px; padding: .7rem 1.1rem; margin: .7rem 0; }
+    .rule h3 { color: var(--good); margin: 0 0 .2rem; }
+    .rule p { margin: .25rem 0 0; }
+
+    .act { font-size: .78rem; text-transform: uppercase; letter-spacing: .1em; color: var(--gold); margin: 1.4rem 0 .2rem; font-weight: 700; }
+    .ref { font-size: .8rem; color: var(--gold); font-weight: 600; }
+    code { background: var(--panel-2); border: 1px solid var(--border); border-radius: 5px; padding: .06rem .35rem; font-size: .86em; }
+    ul { color: var(--muted); }
+    ul b { color: var(--ink); }
+    table { width: 100%; border-collapse: collapse; margin: .6rem 0; font-size: .86rem; }
+    th, td { text-align: left; padding: .4rem .55rem; border-bottom: 1px solid var(--border); }
+    th { color: var(--accent); font-weight: 600; }
+    td .n { font: .8rem ui-monospace, Menlo, monospace; color: var(--gold); }
+
+    footer { margin-top: 3rem; color: var(--muted); font-size: .85rem; border-top: 1px solid var(--border); padding-top: 1rem; }
+  </style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="banner">
+    <span class="title">The World Deck as Acquisition Engine</span>
+    <span class="chip draft">● draft</span>
+  </div>
+
+  <h1>The world deck holds the cards you gain</h1>
+  <p class="lead">The twist that ties the design together. The world deck is not only the threat. It is also where the player <b>acquires cards</b>, and it is the run's <b>pacing</b>. One mechanism carries threat, economy, and structure at once. Builds on the single-currency model in <a href="deck-mechanics-answers.html">Progress vs Hazard</a>. Rules in this pass are resolved unless flagged.</p>
+
+  <div class="answer">
+    <span class="rec">The core idea</span>
+    <p>Every world card is dual-natured: a <b>Hazard</b> to answer and, often, a <b>reward</b> card to claim. Each turn you draw a mixed hand from both decks. For every world card in hand you make a <b>three-way decision</b>:</p>
+    <p><b>1. Resolve</b> — pay its full Hazard cost in Progress <i>this turn</i>, claim its reward (often a card added to your deck), it leaves your hand.<br>
+       <b>2. Discard</b> — take its penalty now, it leaves your hand. Legal at any time.<br>
+       <b>3. Hold</b> — defer it. It stays in hand and <b>eats into next turn's player draws</b>.</p>
+    <p>That single decision is the whole game compressed: acquire (resolve), refuse (discard), or stall under load (hold). It is <span class="ref">Principle 1 — the deck-building IS the game</span> happening every turn, woven into the threat rather than bolted on as a reward screen.</p>
+  </div>
+
+  <h2><span class="mark">▦</span> Why this is the strongest idea on the table</h2>
+  <ul>
+    <li><b>Acquisition is in the loop, not a side screen.</b> The acquire / refuse tension the vision calls the most interesting thing on screen now happens under pressure, every turn.</li>
+    <li><b>Worlds become identity for free</b> (<span class="ref">Principle 2</span>). A world defines both its threats and the cards it offers. The baseball bat (anti-Creature) exists because zombies do. A different world offers a different toolkit, so it forces a different build with no reskinning.</li>
+    <li><b>The synergy teaches itself</b> (<span class="ref">Principle 5</span>). Zombies arrive carrying <span class="kw">Creature</span>, the store hides a <span class="kw">Physical</span> answer that reads for Creatures, and <span class="kw">Hidden</span> on that answer means your <span class="kw">Explore</span> cards help you find it. Set-up and pay-off are introduced in order, on the board.</li>
+    <li><b>Dead weight is now literal and live.</b> Held Hazards starve your draw. That is Dominion's useful-dead-weight tension (<span class="ref">research finding 3</span>) made dynamic: holding for value costs you answers, so timing is everything.</li>
+    <li><b>Owned randomness</b> (<span class="ref">Principle 4</span>). Acts give structured randomness: variety within an act, a fixed arc across them. Which cards you actually gain is your choice of what to resolve.</li>
+  </ul>
+
+  <h2><span class="mark">▦</span> What this supersedes from the earlier notes</h2>
+  <ul>
+    <li>The <b>overflow board</b> loss pressure becomes <b>hand-clog</b>: hold too many Hazards, draw too few answers, generate too little Progress, spiral. The HP track stays (the zombie penalty deals damage, <code>Med Kit</code> heals).</li>
+    <li>The <b>curse-injection</b> idea for dead weight is dropped. The world cards themselves are the live dead weight, and <code>Panic</code> is a normal player tool, not a curse.</li>
+  </ul>
+
+  <h2><span class="mark">▦</span> Worked example — the starter deck (10)</h2>
+  <p>Ten mundane cards, the baseline every run begins from.</p>
+  <div class="grid two">
+    <div class="card">
+      <div class="card-name"><span>Sprint</span><span class="qty">×2</span></div>
+      <div class="card-line">Draw 2 player cards and draw 1 world card. <b>Or</b> +1 Progress to a <span class="k">Slow</span> Hazard.</div>
+    </div>
+    <div class="card">
+      <div class="card-name"><span>Explore</span><span class="qty">×3</span></div>
+      <div class="card-line">+1 Progress. <span class="k">Explore 1</span> (+1 Progress vs Hidden).</div>
+    </div>
+    <div class="card">
+      <div class="card-name"><span>Barricade</span><span class="qty">×2</span></div>
+      <div class="card-line">+1 Progress. Return up to 2 world cards to the world deck (0 is valid).</div>
+    </div>
+    <div class="card">
+      <div class="card-name"><span>Med Kit</span><span class="qty">×1</span></div>
+      <div class="card-line">+2 HP.</div>
+    </div>
+    <div class="card">
+      <div class="card-name"><span>Panic</span><span class="qty">×1</span></div>
+      <div class="card-line">Return 1 world card to the world deck. Draw 1 world card.</div>
+    </div>
+    <div class="card">
+      <div class="card-name"><span>Adrenaline</span><span class="qty">×1</span></div>
+      <div class="card-line">Discard 1 player card. Draw 2 cards.</div>
+    </div>
+  </div>
+  <div class="note">
+    <b>Two return-vs-discard tools, distinct on purpose.</b> <code>Barricade</code> returns cards (defer with no penalty, defensive) while still making Progress; <code>Panic</code> churns (return one, draw one). Returned cards <b>shuffle into the top 3 of the world deck</b>, so they come back soon. Neither claims a reward, so returning a card you wanted is its own opportunity cost. Discarding, by contrast, always eats the penalty.
+  </div>
+
+  <h2><span class="mark">▦</span> Worked example — the world: Zombie Invasion at the Big-Box Store</h2>
+  <p>Built in <b>acts</b>. Randomness lives inside an act; the arc across acts is fixed. Default draw is <b>6 = 4 player + 2 world</b>.</p>
+
+  <div class="act">Act 1 · "What's going on?"</div>
+  <div class="grid">
+    <div class="card">
+      <div class="card-name"><span>Strange Sounds</span><span class="hz">2 hz</span></div>
+      <div class="card-line"><span class="qty">×2</span> <span class="pen">penalty:</span> none</div>
+      <div class="card-line"><span class="rew">reward:</span> Listen — +1 Progress. <span class="k">Explore 2</span> (+2 Progress vs Hidden).</div>
+    </div>
+    <div class="card">
+      <div class="card-name"><span>Rubble</span><span class="hz">1 hz</span></div>
+      <div class="card-line"><span class="qty">×2</span> <span class="pen">penalty:</span> cannot draw cards next turn</div>
+      <div class="card-line"><span class="rew">reward:</span> none</div>
+    </div>
+    <div class="card">
+      <div class="card-name"><span>Screams</span><span class="hz">1 hz</span></div>
+      <div class="card-line"><span class="qty">×2</span> <span class="pen">penalty:</span> gain a Panic card</div>
+      <div class="card-line"><span class="rew">reward:</span> Regroup — destroy up to 1 card in hand.</div>
+    </div>
+  </div>
+
+  <div class="act">Act 2 · "What is that?"</div>
+  <div class="grid">
+    <div class="card">
+      <div class="card-name"><span>Rubble</span><span class="hz">1 hz</span></div>
+      <div class="card-line"><span class="qty">×2</span> <span class="pen">penalty:</span> cannot draw cards next turn</div>
+      <div class="card-line"><span class="rew">reward:</span> none</div>
+    </div>
+    <div class="card">
+      <div class="card-name"><span>Zombie</span><span class="hz">1 hz</span></div>
+      <div class="card-line"><span class="qty">×3</span> <span class="k">Slow · Creature</span></div>
+      <div class="card-line"><span class="pen">penalty:</span> 1 damage &nbsp; <span class="rew">reward:</span> none</div>
+    </div>
+    <div class="card">
+      <div class="card-name"><span>Find Baseball Bat</span><span class="hz">2 hz</span></div>
+      <div class="card-line"><span class="qty">×1</span> <span class="k">Hidden</span> &nbsp; <span class="pen">penalty:</span> none</div>
+      <div class="card-line"><span class="rew">reward:</span> add Baseball Bat — 2 Progress. <span class="k">Physical 3</span> (+3 Progress vs Creatures).</div>
+    </div>
+  </div>
+
+  <div class="act">Act 3 · "Gotta get out of here!"</div>
+  <div class="grid">
+    <div class="card">
+      <div class="card-name"><span>Find Baseball Bat</span><span class="hz">2 hz</span></div>
+      <div class="card-line"><span class="qty">×1</span> <span class="k">Hidden</span> &nbsp; <span class="pen">penalty:</span> none</div>
+      <div class="card-line"><span class="rew">reward:</span> add Baseball Bat — 2 Progress. <span class="k">Physical 3</span> (+3 vs Creatures).</div>
+    </div>
+    <div class="card">
+      <div class="card-name"><span>Zombie</span><span class="hz">1 hz</span></div>
+      <div class="card-line"><span class="qty">×4</span> <span class="k">Slow · Creature</span></div>
+      <div class="card-line"><span class="pen">penalty:</span> 1 damage &nbsp; <span class="rew">reward:</span> none</div>
+    </div>
+    <div class="card">
+      <div class="card-name"><span>The Walker</span><span class="hz">10 hz</span></div>
+      <div class="card-line"><span class="qty">×1</span> <span class="pen">penalty:</span> add Door to the top of the world deck</div>
+      <div class="card-line"><span class="rew">reward:</span> add Summon Door to the top of the player deck</div>
+    </div>
+  </div>
+  <div class="note">
+    <b>The Walker is meant to be unwinnable the first time.</b> At 10 hz with no Progress carry-over, the starter deck cannot clear it in one turn. That is the design. You discard it, its penalty forces a Door, you pay 2 to survive. <code>Summon Door</code> (player) — add Door to top of the world deck. <code>Door</code> (world) — <b>2 hz</b>, penalty: cannot be discarded, reward: <b>survive the world</b>. You survive either way; the only difference is <i>who summons the Door</i>. You come back later with gear and a real engine to burst the 10 in a single turn. The Walker is the wall that sells meta-progression.
+  </div>
+
+  <h2><span class="mark">▦</span> Resolved rules (this pass)</h2>
+
+  <div class="rule">
+    <h3>No Progress carry-over</h3>
+    <p>Progress is spent the turn it is made; any left over is lost at end of turn. A Hazard resolves only if you pay its <b>full cost in a single turn</b>. This is deliberate: it makes big Hazards demand a big single-turn burst, which is exactly what the <code>x5 Progress</code>-style multipliers exist to deliver (<span class="ref">see Progress vs Hazard</span>).</p>
+  </div>
+
+  <div class="rule">
+    <h3>Thinning lives on Regroup</h3>
+    <p>Resolving <code>Screams</code> grants <b>Regroup — destroy up to 1 card in hand</b>. Destroy is permanent removal, and because it targets the hand it can excise a clogging Hazard <i>or</i> a junk player card. That is the release valve the deck needs (<span class="ref">research finding 3 — thinning is a core strategy</span>).</p>
+  </div>
+
+  <div class="rule">
+    <h3>Draw rules</h3>
+    <p>Refill the hand toward <b>6</b> each turn, and always draw <b>at least 1 new world card</b>. Held world cards eat your player draws first:</p>
+    <table>
+      <tbody>
+      <tr><th>Held world cards</th><th>New player draw</th><th>New world draw</th><th>Hand</th></tr>
+      <tr><td><span class="n">0</span></td><td><span class="n">4</span></td><td><span class="n">2</span></td><td><span class="n">6</span></td></tr>
+      <tr><td><span class="n">1</span></td><td><span class="n">4</span></td><td><span class="n">1</span></td><td><span class="n">6</span></td></tr>
+      <tr><td><span class="n">2</span></td><td><span class="n">3</span></td><td><span class="n">1</span></td><td><span class="n">6</span></td></tr>
+      </tbody>
+    </table>
+    <p>World pressure never stops (minimum 1), so clogging starves your answers without sparing you the threat. Discard, resolve, Regroup, and return are how you dig out. Discard is always available, so the spiral is always escapable by choice, never a soft-lock.</p>
+  </div>
+
+  <div class="rule">
+    <h3>Returns and destinations</h3>
+    <p>Returned cards (<code>Barricade</code>, <code>Panic</code>) shuffle into the <b>top 3 of the world deck</b> — defer, not banish. Gained cards go to the <b>player discard pile</b> unless a card says otherwise (<code>Summon Door</code> says top of player deck).</p>
+  </div>
+
+  <div class="rule">
+    <h3>Keyword tags settled</h3>
+    <p><span class="kw">Hidden</span>, <span class="kw">Creature</span>, <span class="kw">Slow</span>, <span class="kw">Physical N</span>, <span class="kw">Explore N</span> are all just tags a card reads for a Progress bonus, the single-currency way — no separate sub-currencies. <code>Find Baseball Bat</code> is now <span class="kw">Hidden</span> (you search the store for it), so <code>Explore</code> and the Listen reward help you afford it. That makes a clean chain: <b>Listen → find the bat → bat beats Creatures → zombies are Creatures.</b></p>
+  </div>
+
+  <div class="note">
+    <b>One assumption left to confirm.</b> The draw-to-6 math assumes <b>unplayed player cards discard at end of turn</b> and only <i>world</i> cards persist in hand. That seems intended, but it has not been said out loud. Sign it off before it silently becomes a bug.
+  </div>
+
+  <h2><span class="mark">▦</span> The Zombie decision, as a flavor of why this works</h2>
+  <p>A held <code>Zombie</code> is harmless (its 1 damage only fires on <i>discard</i>) but it clogs a draw slot. So each zombie is a live choice: spend 1 Progress to clear it cleanly, eat 1 damage to clear it free, or hold and choke your hand. A single <code>Baseball Bat</code> (<span class="kw">Physical 3</span> vs Creatures) turns that math on its head, clearing zombies cheaply once you own it. That is set-up and pay-off, taught by the world, paid in one currency.</p>
+
+  <h2><span class="mark">▦</span> What this confirms</h2>
+  <p>Single currency was the right call and this leans on it: <code>Physical 3</code>, <code>Explore 2</code>, and a future <code>x5 Progress</code> all read against one number. No-carry-over plus the 10-hz Walker is what makes single-turn bursts matter, which is what makes the engine-building power fantasy matter. The acquisition-through-threat model is the part most worth protecting. With the rules above settled, this is close to spec-ready for a single-world vertical slice.</p>
+
+  <footer>
+    Draft, revised 2026-06-03. Captures the world-deck-as-acquisition twist, the Zombie Big-Box worked example, and the resolved rules (no carry-over, Regroup thinning, draw math, returns, keyword tags). Builds on <a href="deck-mechanics-answers.html">Progress vs Hazard</a>, grounded in <a href="../../reference/vision.html">vision</a> and <a href="../research/deckbuilding-game-design.html">research</a>. Next: confirm the end-of-turn player-card assumption, then a single-world spec and a cheap playable slice to prove the fun (<span class="ref">Principle 7</span>).
+  </footer>
+
+</div>
+
+
+</body></html>

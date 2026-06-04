@@ -1,0 +1,389 @@
+<!DOCTYPE html><html lang="en"><head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Spec: world-deck vertical slice (Zombie Big-Box)</title>
+  <meta name="date" content="2026-06-03">
+  <meta name="status" content="approved">
+  <meta name="tags" content="spec, world-deck, acquisition, progress, hazard, acts, zombie, vertical-slice, single-currency">
+  <meta name="modules" content="core, game, sim">
+  <meta name="related" content=".lore/work/notes/world-deck-acquisition.html, .lore/work/notes/deck-mechanics-answers.html, .lore/work/design/core-render-architecture.html, .lore/work/design/targeting-interaction.html, .lore/work/specs/poc-core-loop.html, .lore/reference/vision.html">
+  <meta name="req-prefix" content="REQ-WDS">
+  <style>
+    :root {
+      --bg: #0f1117; --panel: #1a1d27; --panel-2: #222633;
+      --ink: #e8eaf0; --muted: #9aa3b2; --accent: #8ab4ff; --gold: #ffd479;
+      --good: #6cd08a; --warn: #ffc14d; --bad: #ff8a8a; --border: #2a2f3d;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: radial-gradient(1200px 600px at 50% -10%, #1a2238 0%, var(--bg) 55%);
+      color: var(--ink); font: 16px/1.65 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; padding: 0 1rem 6rem; }
+    .wrap { max-width: 940px; margin: 0 auto; }
+
+    .sticky { position: sticky; top: 0; z-index: 10; background: rgba(15,17,23,.92); backdrop-filter: blur(6px);
+      border-bottom: 1px solid var(--border); padding: .7rem 0; margin-bottom: 1.5rem; }
+    .sticky .row { max-width: 940px; margin: 0 auto; display: flex; align-items: center; gap: .6rem; flex-wrap: wrap; }
+    .sticky .t { font-weight: 700; }
+    .chip { display: inline-flex; align-items: center; gap: .35rem; border-radius: 999px; padding: .18rem .7rem; font-size: .72rem; font-weight: 600; border: 1px solid; }
+    .chip.status { background: rgba(255,212,121,.1); border-color: rgba(255,212,121,.35); color: var(--gold); }
+    .chip.prefix { background: rgba(138,180,255,.12); border-color: rgba(138,180,255,.35); color: var(--accent); }
+    .chip.count { background: rgba(108,208,138,.1); border-color: rgba(108,208,138,.3); color: var(--good); }
+
+    .hero { text-align: center; margin: 1.4rem 0 2rem; }
+    .kicker { letter-spacing: .28em; text-transform: uppercase; font-size: .72rem; color: var(--gold); margin-bottom: .5rem; }
+    h1 { font-size: 2rem; margin: 0 0 .5rem; line-height: 1.1;
+      background: linear-gradient(180deg,#fff,#b8c4e0); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+    .sub { color: var(--muted); max-width: 660px; margin: 0 auto; }
+
+    h2 { font-size: 1.35rem; margin: 2.6rem 0 1rem; display: flex; align-items: center; gap: .6rem; }
+    h2 .mark { color: var(--gold); font-size: 1rem; }
+    h3 { font-size: 1.05rem; }
+    p { margin: .6rem 0; }
+    a { color: var(--accent); }
+    code { background: var(--panel-2); border: 1px solid var(--border); border-radius: 5px; padding: .08rem .35rem; font-size: .86em; }
+    .muted { color: var(--muted); }
+
+    .callout { background: rgba(255,193,77,.06); border: 1px solid rgba(255,193,77,.3); border-left: 3px solid var(--warn);
+      border-radius: 12px; padding: 1rem 1.3rem; margin: 1rem 0; }
+    .callout h3 { margin: 0 0 .4rem; color: var(--warn); }
+    .callout ul { margin: .3rem 0 0; padding-left: 1.1rem; } .callout li { margin: .3rem 0; color: var(--muted); }
+    .callout li b { color: var(--ink); }
+
+    .panel { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 1rem 1.3rem; margin: 1rem 0; }
+
+    .req { background: var(--panel); border: 1px solid var(--border); border-left: 3px solid var(--accent); border-radius: 12px;
+      padding: 1rem 1.2rem; margin: .8rem 0; scroll-margin-top: 64px; }
+    .req .head { display: flex; align-items: baseline; gap: .6rem; flex-wrap: wrap; }
+    .req .id { font: .8rem ui-monospace, Menlo, monospace; color: var(--gold); font-weight: 700; }
+    .req .id a { color: inherit; text-decoration: none; }
+    .req .name { font-weight: 700; }
+    .req .badge { margin-left: auto; font-size: .68rem; font-weight: 700; padding: .12rem .55rem; border-radius: 999px;
+      background: rgba(138,180,255,.14); color: var(--accent); text-transform: uppercase; letter-spacing: .04em; }
+    .req .badge.must { background: rgba(255,138,138,.14); color: var(--bad); }
+    .req .badge.should { background: rgba(255,193,77,.14); color: var(--warn); }
+    .req p { margin: .5rem 0 0; color: var(--muted); }
+    .req p b, .req p strong { color: var(--ink); }
+    .req ul { margin: .4rem 0 0; padding-left: 1.1rem; color: var(--muted); } .req li { margin: .2rem 0; } .req li b { color: var(--ink); }
+    .group { font-size: .78rem; text-transform: uppercase; letter-spacing: .1em; color: var(--muted); margin: 2.2rem 0 .4rem; }
+
+    pre { background: #0c0e14; border: 1px solid var(--border); border-radius: 10px; padding: 1rem 1.1rem; overflow-x: auto;
+      font: .84rem/1.55 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; color: #d6dbe8; }
+    pre .c { color: var(--muted); } pre .k { color: var(--accent); } pre .t { color: var(--gold); } pre .s { color: var(--good); }
+
+    table { width: 100%; border-collapse: collapse; margin: .6rem 0; font-size: .88rem; }
+    th, td { text-align: left; padding: .45rem .6rem; border-bottom: 1px solid var(--border); vertical-align: top; }
+    th { color: var(--accent); font-weight: 600; font-size: .8rem; }
+    td .n { font: .82rem ui-monospace, Menlo, monospace; color: var(--gold); }
+    .kw { color: var(--gold); font-weight: 700; }
+    .pen { color: var(--bad); font-weight: 600; } .rew { color: var(--good); font-weight: 600; }
+
+    .validation { background: linear-gradient(180deg, rgba(108,208,138,.08), rgba(108,208,138,.02));
+      border: 1px solid rgba(108,208,138,.4); border-left: 4px solid var(--good); border-radius: 16px; padding: 1.3rem 1.5rem; }
+    .validation h2 { margin-top: 0; color: var(--good); }
+    .check { display: flex; gap: .6rem; margin: .6rem 0; align-items: baseline; }
+    .check .box { color: var(--good); font-weight: 700; }
+    .check .body { color: var(--muted); } .check .body b { color: var(--ink); }
+    .check .ref { font: .72rem ui-monospace, Menlo, monospace; color: var(--gold); }
+
+    .loop { display: flex; flex-wrap: wrap; gap: .4rem; align-items: center; margin: 1rem 0; }
+    .loop .step { background: var(--panel-2); border: 1px solid var(--border); border-radius: 8px; padding: .35rem .7rem; font-size: .82rem; }
+    .loop .arrow { color: var(--muted); }
+
+    footer { margin-top: 3.5rem; color: var(--muted); font-size: .85rem; border-top: 1px solid var(--border); padding-top: 1rem; }
+  </style>
+</head>
+<body>
+
+  <div class="sticky"><div class="row">
+    <span class="t">Spec · World-deck vertical slice</span>
+    <span class="chip status">● draft</span>
+    <span class="chip prefix">REQ-WDS-N</span>
+    <span class="chip count">30 requirements</span>
+    <span class="muted" style="margin-left:auto;font-size:.8rem">Shattered Worlds</span>
+  </div></div>
+
+<div class="wrap">
+
+  <div class="hero">
+    <div class="kicker">Spec · First Real Gameplay</div>
+    <h1>The world deck is the game</h1>
+    <p class="sub">One playable world, single-currency <b>Progress vs Hazard</b>, where the world deck is both the threat and where you acquire cards. Concrete content: <b>Zombie Invasion at the Big-Box Store</b>. Built on the proven core/render seam from the POC.</p>
+  </div>
+
+  <h2><span class="mark">◇</span> Purpose &amp; the loop</h2>
+  <p>The <a href="poc-core-loop.html">POC</a> proved the architecture with a trivial draw/sum loop. This slice replaces that loop with the <strong>real game</strong>: the mechanics resolved across <a href="../notes/deck-mechanics-answers.html">Progress vs Hazard</a> and <a href="../notes/world-deck-acquisition.html">the world deck as acquisition engine</a>. It is the first build that is meant to be <em>fun</em>, and the cheap playable artifact the vision asks for before deep engineering (<a href="../../reference/vision.html">Principle 7</a>). It stays one world, one hardcoded run; Destiny, between-run economy, and multiple worlds are explicitly out of scope.</p>
+
+  <div class="loop">
+    <span class="step">New world (shuffle Act 1, deal opening hand)</span><span class="arrow">→</span>
+    <span class="step">Play player cards → deal Progress at Hazards</span><span class="arrow">→</span>
+    <span class="step">Hazards resolve (reward) / discard (penalty) / hold</span><span class="arrow">→</span>
+    <span class="step">End Turn (discard player hand, world cards stay, redraw)</span><span class="arrow">↺</span>
+    <span class="step">Win: resolve a Door · Lose: HP 0</span>
+  </div>
+
+  <div class="callout">
+    <h3>Resolved decisions &amp; assumptions (veto any of these)</h3>
+    <ul>
+      <li><b>Starting HP = 20.</b> A tuning dial, expected to move with playtest data (Principle 6), not a fixed truth. <span class="muted">(Assumed.)</span></li>
+      <li><b>Act advancement</b> happens when the current act's world draw pile is exhausted: the next act's cards become the new world draw pile. <b>Unresolved world cards in hand persist across the boundary.</b> <span class="muted">(Assumed.)</span></li>
+      <li><b>A Hazard auto-resolves</b> the instant its Progress-paid-this-turn reaches its cost. There is no separate "resolve" action; resolution is the emergent result of dealing enough Progress. <span class="muted">(Assumed.)</span></li>
+      <li><b>Within a turn, multiple cards stack Progress on one Hazard;</b> across turns that partial payment resets to 0 (the no-carry-over rule). This is what makes the 10-cost Walker demand a single burst turn. <span class="muted">(Confirmed in notes.)</span></li>
+      <li><b>Answer cards target one Hazard in hand;</b> a keyword bonus (e.g. Physical vs Creature) checks that target. <span class="muted">(Assumed from card text.)</span></li>
+      <li><b>End of turn:</b> unplayed player cards discard; world cards cannot be discarded by EndTurn and persist in hand. <span class="muted">(Confirmed with user.)</span></li>
+      <li><b>"Survive the world" is a win screen.</b> No reward draft, no Destiny, no next world in this slice. The Walker may be undefeatable on this deck; surviving via the forced Door is success, not a bug. <span class="muted">(Confirmed in notes.)</span></li>
+      <li><b>One hardcoded world and a fixed/seeded setup;</b> no world-select UI. Multipliers like <code>x5 Progress</code> are out of scope here. <span class="muted">(Assumed.)</span></li>
+    </ul>
+  </div>
+
+  <!-- ===================== A · ARCHITECTURE ===================== -->
+  <div class="group">A · Architecture continuity</div>
+
+  <div class="req" id="REQ-WDS-1">
+    <div class="head"><span class="id"><a href="#REQ-WDS-1">REQ-WDS-1</a></span><span class="name">All new rules live in the pure, synchronous, seeded core</span><span class="badge must">Must</span></div>
+    <p>Every mechanic in this spec is implemented under <code>src/core/</code> with <strong>zero Phaser/DOM/canvas</strong>, extending the existing <code>dispatch(action) → { state, events }</code> seam from the <a href="../design/core-render-architecture.html">approved architecture</a>. Dispatch stays synchronous and pure: same prior state + action ⇒ identical next state and events. All randomness (act shuffles, return-to-top-3 placement) flows through the seeded PRNG already in <code>GameState</code>. The lint import-boundary rule continues to fail the build if the core imports Phaser or <code>src/game/</code>.</p>
+  </div>
+
+  <div class="req" id="REQ-WDS-2">
+    <div class="head"><span class="id"><a href="#REQ-WDS-2">REQ-WDS-2</a></span><span class="name">State is immutable; card instances are uniquely identified and accounted for</span><span class="badge must">Must</span></div>
+    <p>Each dispatch yields a new snapshot; the prior is never mutated. Every card instance (player or world) carries a <strong>unique stable id</strong>. At all times a given id exists in <strong>exactly one place</strong> — a zone, or removed from the game — and every removal or creation is explained by an emitted event. Unlike the POC's fixed ten-card total, this slice <em>creates</em> cards (rewards) and <em>removes</em> them (resolve, discard, destroy); the invariant is no duplication and no silent loss, not a constant count.</p>
+  </div>
+
+  <!-- ===================== B · DOMAIN MODEL ===================== -->
+  <div class="group">B · Domain model</div>
+
+  <div class="req" id="REQ-WDS-3">
+    <div class="head"><span class="id"><a href="#REQ-WDS-3">REQ-WDS-3</a></span><span class="name">Player cards are effect-bearing, not bare values</span><span class="badge must">Must</span></div>
+    <p>A player card carries an id, a name, and an <strong>effect</strong> drawn from a small vocabulary sufficient to express the starter deck and reward cards (REQ-WDS-23/24): <code>DealProgress</code> (with optional keyword bonus and a target Hazard), <code>Draw</code> (player and/or world), <code>Heal</code>, <code>ReturnWorldCards</code>, <code>DestroyCardInHand</code>, <code>DiscardThenDraw</code>, <code>AddCard</code> (a player card to discard or top of player draw pile), <code>AddWorldCardToTop</code> (a world card to the top of the world draw pile — this is Summon Door's effect), and a <code>Modal</code> wrapper (choose one of N sub-effects). The vocabulary is a closed enum for this slice, not a general scripting engine.</p>
+  </div>
+
+  <div class="req" id="REQ-WDS-4">
+    <div class="head"><span class="id"><a href="#REQ-WDS-4">REQ-WDS-4</a></span><span class="name">World cards (Hazards) model cost, keywords, penalty, and reward</span><span class="badge must">Must</span></div>
+    <p>A world card carries an id, a name, an integer <strong>Hazard cost</strong>, a set of <strong>keyword tags</strong>, a <strong>discardable</strong> flag, a <strong>penalty</strong> (applied on discard), and an optional <strong>reward</strong> (granted on resolve). Penalty and reward are each drawn from a closed vocabulary: penalties include <code>Damage(n)</code>, <code>SkipDrawNextTurn</code>, <code>GainCard(card)</code>, <code>AddWorldCardToTop(card)</code>, and <code>None</code>; rewards include <code>GainCard(card)</code>, <code>AddPlayerCardToTop(card)</code>, <code>SurviveWorld</code>, and <code>None</code>. A card with <strong>discardable = false</strong> (the Door) cannot be targeted by <code>DiscardHazard</code> at all; this is a guard on the action, separate from the penalty vocabulary.</p>
+  </div>
+
+  <div class="req" id="REQ-WDS-5">
+    <div class="head"><span class="id"><a href="#REQ-WDS-5">REQ-WDS-5</a></span><span class="name">Keyword tags drive conditional Progress bonuses (single currency)</span><span class="badge must">Must</span></div>
+    <p>Keywords are plain tags on cards: <span class="kw">Hidden</span>, <span class="kw">Creature</span>, <span class="kw">Slow</span> on Hazards; <span class="kw">Explore N</span> and <span class="kw">Physical N</span> on player effects. A bonus keyword means "deal N <strong>extra Progress</strong> when the targeted Hazard has the matching tag." There are <strong>no separate sub-currencies</strong>: every bonus resolves to the one Progress number, which is what keeps multipliers and totals legible.</p>
+  </div>
+
+  <div class="req" id="REQ-WDS-6">
+    <div class="head"><span class="id"><a href="#REQ-WDS-6">REQ-WDS-6</a></span><span class="name">GameState models zones, HP, per-turn Hazard progress, and acts</span><span class="badge must">Must</span></div>
+    <p><code>GameState</code> represents: the <strong>player draw pile / hand / discard</strong>; the <strong>world draw pile</strong> (the current act, ordered) and the <strong>remaining acts</strong> queue; the <strong>hand</strong> holds both player and world cards (world cards held there are the clog); per-Hazard <strong>Progress-paid-this-turn</strong>; the player's <strong>HP</strong>; a <strong>skip-draw flag</strong> for the next turn; a <strong>status</strong> (<code>playing</code> / <code>won</code> / <code>lost</code>); and the seeded <strong>PRNG cursor</strong>. Resolved, discarded, and destroyed cards leave the game (they are not retained in a zone).</p>
+  </div>
+
+  <!-- ===================== C · TURN LOOP ===================== -->
+  <div class="group">C · The turn loop</div>
+
+  <div class="req" id="REQ-WDS-7">
+    <div class="head"><span class="id"><a href="#REQ-WDS-7">REQ-WDS-7</a></span><span class="name">Draw refills toward six, always taking at least one world card</span><span class="badge must">Must</span></div>
+    <p>Each turn the hand is refilled toward a size of <strong>6</strong>. New world draws = <code>max(1, 2 − heldWorld)</code>, capped by world cards remaining and by room in the hand; new player draws then fill the remainder up to 6. The familiar cases:</p>
+    <table>
+      <tbody>
+        <tr><th>World cards held</th><th>New player drawn</th><th>New world drawn</th><th>Hand size</th></tr>
+        <tr><td><span class="n">0</span></td><td><span class="n">4</span></td><td><span class="n">2</span></td><td><span class="n">6</span></td></tr>
+        <tr><td><span class="n">1</span></td><td><span class="n">4</span></td><td><span class="n">1</span></td><td><span class="n">6</span></td></tr>
+        <tr><td><span class="n">2</span></td><td><span class="n">3</span></td><td><span class="n">1</span></td><td><span class="n">6</span></td></tr>
+      </tbody>
+    </table>
+    <p><strong>Player draws may legitimately reach 0</strong> when enough world cards are held (e.g. holding 5 → 0 player + 1 world; the hand can choke, which is the intended spiral). When the hand is already at 6 from held world cards, no cards are drawn at all (the minimum-one-world rule applies only when there is room). If the player draw pile empties mid-draw, the player discard is reshuffled (seeded) into a new draw pile (emits <code>DeckShuffled</code>), as in the POC. The <strong>skip-draw penalty</strong> (Rubble) suppresses <em>player</em> draws for one turn; the minimum world draw still applies.</p>
+  </div>
+
+  <div class="req" id="REQ-WDS-8">
+    <div class="head"><span class="id"><a href="#REQ-WDS-8">REQ-WDS-8</a></span><span class="name">Playing a player card applies its effect; answer cards deal Progress at a target Hazard</span><span class="badge must">Must</span></div>
+    <p><code>PlayCard{ cardId, targetId?, choice? }</code> moves the card from hand and applies its effect. For a <code>DealProgress</code> effect, <code>targetId</code> names a Hazard currently in hand; the dealt Progress is <code>base + (bonus if the target carries the matching keyword)</code> and is added to that Hazard's Progress-paid-this-turn. Effects requiring a selection carry it in the action: <code>Modal</code> uses <code>choice</code> (e.g. Sprint's draw-vs-deal), <code>ReturnWorldCards</code> and <code>DestroyCardInHand</code> carry the target id(s). A <code>DealProgress</code> card <strong>requires at least one Hazard in hand as a target and is unplayable when none exists</strong> (dispatching it then throws); it never deals Progress "to the void." Only legal targets/choices are accepted; an illegal action (unknown card, wrong-type or absent target, out-of-range modal choice, targeting a player card where a world card is required) <strong>throws a typed error</strong> carrying the action and state (the POC error contract, unchanged).</p>
+  </div>
+
+  <div class="req" id="REQ-WDS-9">
+    <div class="head"><span class="id"><a href="#REQ-WDS-9">REQ-WDS-9</a></span><span class="name">A Hazard resolves the instant its turn-Progress meets its cost</span><span class="badge must">Must</span></div>
+    <p>Immediately after any effect raises a Hazard's Progress-paid-this-turn to <strong>≥ its cost</strong>, that Hazard <strong>resolves</strong>: its reward is granted (REQ-WDS-14), it leaves the hand, and a <code>HazardResolved</code> event is emitted. Excess Progress beyond the cost is wasted (not redistributed). Resolution is automatic and within the same dispatch as the effect that triggered it.</p>
+  </div>
+
+  <div class="req" id="REQ-WDS-10">
+    <div class="head"><span class="id"><a href="#REQ-WDS-10">REQ-WDS-10</a></span><span class="name">Progress never carries between turns</span><span class="badge must">Must</span></div>
+    <p>Progress is not a stored pool; it exists only as per-Hazard payment accrued during the current turn. At <code>EndTurn</code> every Hazard's Progress-paid-this-turn resets to <strong>0</strong>. A Hazard partially paid and then held must be paid again from scratch next turn. This is intentional and load-bearing (it is why big Hazards require a burst).</p>
+  </div>
+
+  <div class="req" id="REQ-WDS-11">
+    <div class="head"><span class="id"><a href="#REQ-WDS-11">REQ-WDS-11</a></span><span class="name">Discarding a Hazard applies its penalty and is always legal</span><span class="badge must">Must</span></div>
+    <p><code>DiscardHazard{ cardId }</code> applies that Hazard's penalty (deal damage, set the skip-draw flag, gain a card, or add a world card to the top of the world deck), removes it from hand, and emits <code>HazardDiscarded</code> plus a penalty event. It is legal at any time during the player's turn, on any world card in hand <strong>except those whose penalty is <code>cannot-be-discarded</code></strong> (the Door); attempting to discard such a card throws.</p>
+  </div>
+
+  <div class="req" id="REQ-WDS-12">
+    <div class="head"><span class="id"><a href="#REQ-WDS-12">REQ-WDS-12</a></span><span class="name">Held world cards persist; unplayed player cards do not</span><span class="badge must">Must</span></div>
+    <p>Doing nothing with a world card ("hold") leaves it in hand into the next turn, where it reduces the player draw per REQ-WDS-7. By contrast, <strong>player cards do not persist</strong>: any unplayed player card is discarded at end of turn. Holding is the only way a card stays in hand across the turn boundary, and only world cards can do it.</p>
+  </div>
+
+  <div class="req" id="REQ-WDS-13">
+    <div class="head"><span class="id"><a href="#REQ-WDS-13">REQ-WDS-13</a></span><span class="name">EndTurn discards the player hand, resets Progress, and redraws</span><span class="badge must">Must</span></div>
+    <p><code>EndTurn</code>, in strict order: <strong>(1)</strong> move every <em>player</em> card remaining in hand to the player discard (world cards stay); <strong>(2)</strong> reset every Hazard's Progress-paid-this-turn to 0; <strong>(3)</strong> consume the skip-draw flag if set; <strong>(4)</strong> draw per REQ-WDS-7. Steps (1)–(3) complete before (4). Emits an ordered sequence (<code>TurnEnded</code>, <code>CardsDiscarded</code>, optional <code>DeckShuffled</code>/<code>ActAdvanced</code>, <code>CardsDrawn</code>) with the specific card ids moved.</p>
+  </div>
+
+  <!-- ===================== D · ECONOMY ===================== -->
+  <div class="group">D · Acquisition economy</div>
+
+  <div class="req" id="REQ-WDS-14">
+    <div class="head"><span class="id"><a href="#REQ-WDS-14">REQ-WDS-14</a></span><span class="name">Rewards land in the player discard by default</span><span class="badge must">Must</span></div>
+    <p>A <code>GainCard</code> reward (or penalty) adds a new card instance, with a fresh unique id, to the <strong>player discard pile</strong> by default, so it shuffles into play later. A reward may override the destination: <code>AddPlayerCardToTop</code> places it on top of the player draw pile (Summon Door), and <code>AddWorldCardToTop</code> places a world card on top of the world draw pile (the Walker's penalty Door). Every gain emits a <code>CardGained</code> event naming the new id and destination.</p>
+  </div>
+
+  <div class="req" id="REQ-WDS-15">
+    <div class="head"><span class="id"><a href="#REQ-WDS-15">REQ-WDS-15</a></span><span class="name">Returned world cards shuffle into the top three of the world deck</span><span class="badge must">Must</span></div>
+    <p><code>ReturnWorldCards</code> (Barricade up to 2, Panic exactly 1) removes the named world cards from hand and inserts them into the <strong>top three positions</strong> of the current world draw pile, ordered by the seeded PRNG. The named ids must be <strong>world cards in hand</strong>; naming a player card or a card not in hand throws (REQ-WDS-8). Returning grants no reward and triggers no penalty; the card simply re-enters the deck and may be drawn again soon. Returning 0 is valid for Barricade; <strong>Panic requires exactly 1 world card in hand and is unplayable otherwise</strong>. A returned card cannot itself be a card with discardable = false (the Door is never returnable, as no effect names it). Emits <code>WorldCardsReturned</code>.</p>
+  </div>
+
+  <div class="req" id="REQ-WDS-16">
+    <div class="head"><span class="id"><a href="#REQ-WDS-16">REQ-WDS-16</a></span><span class="name">Regroup permanently destroys a card in hand (thinning)</span><span class="badge must">Must</span></div>
+    <p>The Regroup card's <code>DestroyCardInHand</code> effect removes up to one chosen card in hand <strong>from the game permanently</strong> (not to any discard). It may target a clogging world card or a junk player card. Destroying 0 is valid. Emits <code>CardDestroyed</code>. This is the slice's deck-thinning lever (research: thinning is a core strategy).</p>
+  </div>
+
+  <div class="req" id="REQ-WDS-17">
+    <div class="head"><span class="id"><a href="#REQ-WDS-17">REQ-WDS-17</a></span><span class="name">Penalties resolve against HP, draw, and the decks as specified</span><span class="badge must">Must</span></div>
+    <p>On discard, a Hazard's penalty applies exactly: <code>Damage(n)</code> subtracts n from HP (and may trigger loss, REQ-WDS-21); <code>SkipDrawNextTurn</code> sets the skip-draw flag (a boolean: suppresses player draws on the next turn only; if already set, a further <code>SkipDrawNextTurn</code> is a no-op — it does not stack or count multiple turns); <code>GainCard</code> adds a card per REQ-WDS-14; <code>AddWorldCardToTop</code> places a world card on top of the world draw pile; <code>None</code> does nothing. Each emits a specific penalty event.</p>
+  </div>
+
+  <!-- ===================== E · ACTS & WORLD ===================== -->
+  <div class="group">E · Acts &amp; the world</div>
+
+  <div class="req" id="REQ-WDS-18">
+    <div class="head"><span class="id"><a href="#REQ-WDS-18">REQ-WDS-18</a></span><span class="name">The world is ordered acts; advancement empties one act into the next</span><span class="badge must">Must</span></div>
+    <p>A world is a fixed ordered list of <strong>acts</strong>, each a set of world cards. <code>createWorld(seed)</code> shuffles Act 1 into the world draw pile and queues the later acts in order. When the world draw pile is exhausted and a draw is required, the <strong>next act is shuffled to become the new world draw pile</strong> and an <code>ActAdvanced</code> event is emitted; drawing continues. This applies to <strong>any</strong> world draw, whether at EndTurn or triggered mid-turn by a card effect (Sprint's draw mode, Panic): a Hazard drawn mid-turn enters the hand immediately and is targetable that same turn. <strong>Held/unresolved world cards in hand are unaffected</strong> by the boundary. If no act remains and the world pile is empty, no further world card is drawn (the minimum-one rule yields nothing rather than crashing), so play continues toward a terminal state.</p>
+  </div>
+
+  <div class="req" id="REQ-WDS-19">
+    <div class="head"><span class="id"><a href="#REQ-WDS-19">REQ-WDS-19</a></span><span class="name">The world content is exactly the Zombie Big-Box deck</span><span class="badge must">Must</span></div>
+    <p>The shipped world is three acts with this exact composition (Hazard cost in monospace):</p>
+    <table>
+      <tbody>
+        <tr><th>Act</th><th>Card ×qty</th><th>Cost</th><th>Keywords</th><th>Penalty</th><th>Reward</th></tr>
+        <tr><td rowspan="3">1 · What's going on?</td><td>Strange Sounds ×2</td><td><span class="n">2</span></td><td>—</td><td class="pen">none</td><td class="rew">gain Listen</td></tr>
+        <tr><td>Rubble ×2</td><td><span class="n">1</span></td><td>—</td><td class="pen">skip draw next turn</td><td class="rew">none</td></tr>
+        <tr><td>Screams ×2</td><td><span class="n">1</span></td><td>—</td><td class="pen">gain Panic</td><td class="rew">gain Regroup</td></tr>
+        <tr><td rowspan="3">2 · What is that?</td><td>Rubble ×2</td><td><span class="n">1</span></td><td>—</td><td class="pen">skip draw next turn</td><td class="rew">none</td></tr>
+        <tr><td>Zombie ×3</td><td><span class="n">1</span></td><td><span class="kw">Slow · Creature</span></td><td class="pen">1 damage</td><td class="rew">none</td></tr>
+        <tr><td>Find Baseball Bat ×1</td><td><span class="n">2</span></td><td><span class="kw">Hidden</span></td><td class="pen">none</td><td class="rew">gain Baseball Bat</td></tr>
+        <tr><td rowspan="3">3 · Gotta get out!</td><td>Find Baseball Bat ×1</td><td><span class="n">2</span></td><td><span class="kw">Hidden</span></td><td class="pen">none</td><td class="rew">gain Baseball Bat</td></tr>
+        <tr><td>Zombie ×4</td><td><span class="n">1</span></td><td><span class="kw">Slow · Creature</span></td><td class="pen">1 damage</td><td class="rew">none</td></tr>
+        <tr><td>The Walker ×1</td><td><span class="n">10</span></td><td>—</td><td class="pen">add Door to top of world deck</td><td class="rew">add Summon Door to top of player deck</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="req" id="REQ-WDS-20">
+    <div class="head"><span class="id"><a href="#REQ-WDS-20">REQ-WDS-20</a></span><span class="name">The Walker chain produces a Door, and resolving a Door wins the world</span><span class="badge must">Must</span></div>
+    <p><strong>Summon Door</strong> (player card, granted by resolving The Walker): its effect adds a <strong>Door</strong> to the top of the world draw pile. <strong>Door</strong> (world card): cost <span class="n">2</span>, penalty <code>cannot-be-discarded</code>, reward <code>SurviveWorld</code>. Both paths reach a Door: resolving The Walker grants Summon Door (player-timed), discarding it forces a Door directly (REQ-WDS-17). The Door has discardable = false, so it cannot be discarded; <strong>it may be held across turns and acts</strong>, and the only way it leaves the hand is by resolving it (paying its 2 Progress). Holding it indefinitely is legal but never wins; the world is won only when the Door is resolved.</p>
+  </div>
+
+  <!-- ===================== F · WIN / LOSS ===================== -->
+  <div class="group">F · Win &amp; loss</div>
+
+  <div class="req" id="REQ-WDS-21">
+    <div class="head"><span class="id"><a href="#REQ-WDS-21">REQ-WDS-21</a></span><span class="name">Win by resolving a Door; lose when HP reaches zero</span><span class="badge must">Must</span></div>
+    <p>Granting a <code>SurviveWorld</code> reward sets status to <strong>won</strong> and emits <code>WorldWon</code>. HP reaching <strong>0 or below</strong> at any point sets status to <strong>lost</strong> and emits <code>WorldLost</code>. Once status is not <code>playing</code>, further gameplay actions are rejected (throw). There is no score target and no turn limit.</p>
+  </div>
+
+  <div class="req" id="REQ-WDS-22">
+    <div class="head"><span class="id"><a href="#REQ-WDS-22">REQ-WDS-22</a></span><span class="name">The Walker need not be defeatable on the starter deck</span><span class="badge should">Should</span></div>
+    <p>Because Progress does not carry over, resolving the 10-cost Walker on the starter deck in a single turn is expected to be impossible, and that is intended (it is the wall that motivates future meta-progression). Surviving the world via the forced Door without ever resolving The Walker is a <strong>legitimate win</strong>, not a softlock or bug. The slice must reach a win this way.</p>
+  </div>
+
+  <!-- ===================== G · CARDS ===================== -->
+  <div class="group">G · The card catalog</div>
+
+  <div class="req" id="REQ-WDS-23">
+    <div class="head"><span class="id"><a href="#REQ-WDS-23">REQ-WDS-23</a></span><span class="name">The starter deck is exactly ten cards with these effects</span><span class="badge must">Must</span></div>
+    <ul>
+      <li><b>Sprint ×2</b> — <code>Modal</code> with two branches: <em>(a)</em> draw 2 player cards and 1 world card; or <em>(b)</em> deal +1 Progress to a <span class="kw">Slow</span> Hazard. Branch (b) <strong>requires a Slow Hazard target</strong> and is unavailable when none is in hand; branch (a) is always available, so Sprint is never a dead card.</li>
+      <li><b>Explore ×3</b> — deal +1 Progress to a target Hazard; <span class="kw">Explore 1</span> (+1 more vs <span class="kw">Hidden</span>).</li>
+      <li><b>Barricade ×2</b> — deal +1 Progress to a target Hazard, then return up to 2 world cards to the world deck (0 valid). Requires a Hazard target like any <code>DealProgress</code> card (REQ-WDS-8).</li>
+      <li><b>Med Kit ×1</b> — heal +2 HP.</li>
+      <li><b>Panic ×1</b> — return 1 world card to the world deck, then draw 1 world card. Requires exactly 1 world card in hand (REQ-WDS-15).</li>
+      <li><b>Adrenaline ×1</b> — discard 1 player card, then draw <strong>2 player cards</strong> (it never draws world cards). Unplayable if no player card is in hand to discard.</li>
+    </ul>
+  </div>
+
+  <div class="req" id="REQ-WDS-24">
+    <div class="head"><span class="id"><a href="#REQ-WDS-24">REQ-WDS-24</a></span><span class="name">Reward and gained cards have these effects</span><span class="badge must">Must</span></div>
+    <ul>
+      <li><b>Listen</b> — deal +1 Progress to a target Hazard; <span class="kw">Explore 2</span> (+2 more vs <span class="kw">Hidden</span>).</li>
+      <li><b>Baseball Bat</b> — deal +2 Progress to a target Hazard; <span class="kw">Physical 3</span> (+3 more vs <span class="kw">Creature</span>).</li>
+      <li><b>Regroup</b> — destroy up to 1 card in hand (permanent).</li>
+      <li><b>Summon Door</b> — add a Door to the top of the world draw pile.</li>
+      <li><b>Panic / Adrenaline</b> — the same cards as in the starter deck, gained as copies.</li>
+    </ul>
+  </div>
+
+  <!-- ===================== H · EVENTS & RENDER ===================== -->
+  <div class="group">H · Events &amp; renderer</div>
+
+  <div class="req" id="REQ-WDS-25">
+    <div class="head"><span class="id"><a href="#REQ-WDS-25">REQ-WDS-25</a></span><span class="name">The event log is animation-sufficient and carries ids and amounts</span><span class="badge should">Should</span></div>
+    <p>Each dispatch returns an ordered semantic event list covering at least: <code>CardPlayed</code>, <code>ProgressDealt{ hazardId, amount, hazardTurnTotal }</code>, <code>HazardResolved{ id }</code>, <code>HazardDiscarded{ id }</code>, penalty events (<code>DamageDealt</code>, <code>DrawSkipped</code>), <code>CardGained{ id, dest }</code>, <code>CardDestroyed{ id }</code>, <code>WorldCardsReturned{ ids }</code>, <code>HpChanged{ hp }</code>, <code>CardsDiscarded</code>, <code>DeckShuffled</code>, <code>ActAdvanced{ act }</code>, <code>CardsDrawn{ ids }</code>, <code>TurnEnded</code>, <code>WorldWon</code>, <code>WorldLost</code>. Card-moving events carry the specific ids so the renderer animates from the log without diffing states.</p>
+  </div>
+
+  <div class="req" id="REQ-WDS-26">
+    <div class="head"><span class="id"><a href="#REQ-WDS-26">REQ-WDS-26</a></span><span class="name">The core exposes a derived intensity signal</span><span class="badge should">Should</span></div>
+    <p>Per the architecture's escalation seam, the core exposes a pure <code>intensity</code> read-model computed from run state (e.g. current act, HP fraction, count of held Hazards). The renderer may read it to scale juice. The exact curve is not fixed here; only that the signal is derived in the core, not guessed in the renderer.</p>
+  </div>
+
+  <div class="req" id="REQ-WDS-27">
+    <div class="head"><span class="id"><a href="#REQ-WDS-27">REQ-WDS-27</a></span><span class="name">A Phaser renderer makes the world playable</span><span class="badge must">Must</span></div>
+    <p>A Phaser scene observes core state and displays: the <strong>hand with player and world cards visually distinct</strong>; each Hazard's <strong>cost and current turn-Progress</strong>, keywords, penalty, and reward; the player's <strong>HP</strong>; the <strong>current act</strong> and world/player pile counts; and an <strong>End Turn</strong> button. The player can play a card (choosing a target Hazard or modal option where required), discard a Hazard, and end the turn, each dispatching the matching action. The renderer reflects the resulting state and shows a <strong>win and a loss screen</strong>. Visual polish is not required; clear, correct interaction is. The <strong>targeting and selection interaction</strong> (how a card is selected, how legal targets are highlighted, discard zones, the cancel/confirm flow) is designed in <a href="../design/targeting-interaction.html">targeting-interaction</a>.</p>
+    <p>That design adds one shared core surface to honor here: a <strong>pure <code>availableActions(state)</code> selector</strong> in <code>src/core/</code> that returns which cards are playable, each card's target requirements, and which Hazards are discardable. It is the single source of legality for three consumers — the renderer's highlights, this slice's <code>dispatch</code> validation (REQ-WDS-8), and the sim's legal-action policy (REQ-WDS-29) — so targeting rules are never duplicated across them.</p>
+  </div>
+
+  <!-- ===================== I · QUALITY ===================== -->
+  <div class="group">I · Testing, sim &amp; CI</div>
+
+  <div class="req" id="REQ-WDS-28">
+    <div class="head"><span class="id"><a href="#REQ-WDS-28">REQ-WDS-28</a></span><span class="name">The core is unit-tested headlessly and gated in CI</span><span class="badge must">Must</span></div>
+    <p>Core tests run with no Phaser/DOM/canvas and cover: world composition (REQ-WDS-19), deterministic act shuffle and return-to-top-3 from seed, the draw table (REQ-WDS-7) including held-world reduction and skip-draw, Progress dealing with keyword bonuses (REQ-WDS-5/8), auto-resolution at cost and no-carry-over reset (REQ-WDS-9/10), each penalty and reward (REQ-WDS-14/17), Regroup/return/discard, act advancement (REQ-WDS-18), the Walker→Door win path (REQ-WDS-20/22), the loss path at 0 HP, the id-accounting invariant (REQ-WDS-2), and replay equivalence (same seed + actions ⇒ identical state &amp; events). CI runs the import-boundary lint and the suite on every change.</p>
+  </div>
+
+  <div class="req" id="REQ-WDS-29">
+    <div class="head"><span class="id"><a href="#REQ-WDS-29">REQ-WDS-29</a></span><span class="name">The headless sim runner drives the new loop to a terminal state</span><span class="badge should">Should</span></div>
+    <p>The sim runner uses only the core and a <strong>random-legal policy</strong> over the new action set (play a legal card with a legal target/choice, discard a discardable Hazard, or end the turn). It runs many full worlds at full speed, each reaching <code>won</code> or <code>lost</code> without throwing and preserving the id-accounting invariant throughout, and records simple metrics (turns taken, end HP, win/loss, cards acquired). This proves the one-core-two-drivers property and yields the first balance data.</p>
+  </div>
+
+  <div class="req" id="REQ-WDS-30">
+    <div class="head"><span class="id"><a href="#REQ-WDS-30">REQ-WDS-30</a></span><span class="name">Build, serve, and deploy reuse the POC pipeline unchanged</span><span class="badge must">Must</span></div>
+    <p>The slice runs under the existing Bun + Vite + strict-TypeScript toolchain: <code>bun run dev</code> serves it locally, <code>bun run build</code> emits the self-contained <code>dist/</code> with the correct Pages subpath <code>base</code>, and CI gates lint + core tests + build before deploying to GitHub Pages. No new pipeline; the lockfile stays committed and reproducible.</p>
+  </div>
+
+  <!-- ===================== VALIDATION ===================== -->
+  <section class="validation">
+    <h2><span class="mark">✓</span> AI Validation</h2>
+    <p class="muted" style="margin-top:0">How the AI confirms this slice is done. Each check is runnable or observable, not a matter of opinion.</p>
+
+    <div class="check"><span class="box">▸</span><span class="body"><b>Tests &amp; lint pass headlessly.</b> The extended core suite and the import-boundary lint run green with no Phaser/DOM in scope. A grep of <code>src/core/</code> finds no Phaser/canvas/DOM import. <span class="ref">REQ-WDS-1, 28</span></span></div>
+    <div class="check"><span class="box">▸</span><span class="body"><b>World composition is exact.</b> A fresh world's three acts match REQ-WDS-19 card-for-card, including costs, keywords, penalties, and rewards. <span class="ref">REQ-WDS-19</span></span></div>
+    <div class="check"><span class="box">▸</span><span class="body"><b>Determinism holds.</b> Two worlds from the same seed, given the same action sequence, yield deep-equal final state and event logs; a different seed yields a different Act 1 order. <span class="ref">REQ-WDS-1, 28</span></span></div>
+    <div class="check"><span class="box">▸</span><span class="body"><b>Draw math is exact.</b> Holding 0/1/2 world cards draws 4+2 / 4+1 / 3+1; a pending skip-draw suppresses player draws but still yields the minimum one world card. <span class="ref">REQ-WDS-7</span></span></div>
+    <div class="check"><span class="box">▸</span><span class="body"><b>Keyword bonuses and resolution work.</b> Baseball Bat at a Zombie deals 2+3=5 and resolves the 1-cost Hazard; Explore at a non-Hidden Hazard deals only 1; a Hazard resolves the instant turn-Progress ≥ cost, excess wasted. <span class="ref">REQ-WDS-5, 8, 9</span></span></div>
+    <div class="check"><span class="box">▸</span><span class="body"><b>No carry-over.</b> Partially paying a Hazard, ending the turn, and inspecting it shows its turn-Progress reset to 0. <span class="ref">REQ-WDS-10, 13</span></span></div>
+    <div class="check"><span class="box">▸</span><span class="body"><b>Hold persists world cards, discards player cards.</b> After EndTurn, held world cards remain in hand and unplayed player cards are in the player discard. <span class="ref">REQ-WDS-12, 13</span></span></div>
+    <div class="check"><span class="box">▸</span><span class="body"><b>Economy moves cards correctly.</b> Resolving Find Baseball Bat adds a Baseball Bat to the player discard; Barricade/Panic returns land in the top 3 of the world deck; Regroup removes a hand card from the game entirely. <span class="ref">REQ-WDS-14, 15, 16</span></span></div>
+    <div class="check"><span class="box">▸</span><span class="body"><b>Penalties resolve.</b> Discarding a Zombie costs 1 HP; discarding Rubble sets skip-draw; discarding Screams adds a Panic; the Door cannot be discarded (throws). <span class="ref">REQ-WDS-11, 17</span></span></div>
+    <div class="check"><span class="box">▸</span><span class="body"><b>Acts advance.</b> Emptying Act 1's world pile advances to Act 2 (emits <code>ActAdvanced</code>) while any held world cards remain in hand. <span class="ref">REQ-WDS-18</span></span></div>
+    <div class="check"><span class="body"><span class="box">▸</span> <b>The world is winnable and losable.</b> A golden test with a fixed seed and recorded action log reaches <code>won</code> by forcing and paying a Door without ever resolving The Walker, and reproduces byte-identically on re-run; a second fixed seed + log reaches <code>lost</code> by taking lethal damage. Post-terminal actions throw. The sim runner (REQ-WDS-29) independently produces at least one <code>won</code> outcome across its worlds. <span class="ref">REQ-WDS-20, 21, 22, 29</span></span></div>
+    <div class="check"><span class="box">▸</span><span class="body"><b>The error contract holds.</b> Playing a <code>DealProgress</code> card with no Hazard in hand throws; a Modal choice out of range throws; Panic with no world card in hand throws; <code>DiscardHazard</code> on the Door throws; returning a player-card id throws; any gameplay action after <code>won</code>/<code>lost</code> throws. <span class="ref">REQ-WDS-8, 11, 15, 21</span></span></div>
+    <div class="check"><span class="box">▸</span><span class="body"><b>All acts can exhaust without crashing.</b> Driving past Act 3's last world card leaves the world pile empty and the minimum-one-world draw yields nothing; the loop continues to a terminal state rather than throwing or looping forever. <span class="ref">REQ-WDS-18</span></span></div>
+    <div class="check"><span class="box">▸</span><span class="body"><b>Intensity is a pure core signal.</b> An <code>intensity</code> function in <code>src/core/</code> returns a number for any valid <code>GameState</code> with no Phaser/DOM in scope. <span class="ref">REQ-WDS-26</span></span></div>
+    <div class="check"><span class="box">▸</span><span class="body"><b>Card accounting holds.</b> Across an automated run, no id appears in two places, and every removal/creation has an explaining event. <span class="ref">REQ-WDS-2, 29</span></span></div>
+    <div class="check"><span class="box">▸</span><span class="body"><b>The sim survives full worlds.</b> Running many random-legal worlds completes without throwing, each ending won or lost, with metrics recorded. <span class="ref">REQ-WDS-29</span></span></div>
+    <div class="check"><span class="box">▸</span><span class="body"><b>It is visibly playable.</b> <code>bun run dev</code> serves the game; the browser shows the mixed hand with Hazards (cost, keywords, penalty, reward), HP, the act, pile counts, and End Turn; playing cards at Hazards, discarding, and ending turns advances the loop to a win or loss screen. <span class="ref">REQ-WDS-27</span></span></div>
+    <div class="check"><span class="box">▸</span><span class="body"><b>Build &amp; deploy are green.</b> <code>bun install</code> from the lockfile, then <code>bun run build</code>, emits a static <code>dist/</code> on the Pages subpath with no 404s; CI gates lint + tests + build before deploy. <span class="ref">REQ-WDS-30</span></span></div>
+  </section>
+
+  <!-- ===================== NON-GOALS ===================== -->
+  <h2><span class="mark">✕</span> Out of scope</h2>
+  <div class="panel">
+    <p style="margin-top:0">Explicitly <strong>not</strong> in this slice: Destiny and any between-run/meta progression, additional worlds or a world-select screen, reward drafting beyond the per-Hazard rewards already defined, Progress multipliers (the <code>x5</code>-style payoffs), the escalation FX curve and audio, save/load, a content-authoring pipeline, and animation polish. The card-effect vocabulary is intentionally a closed enum sized to this content, not a general scripting engine; generalizing it is later design. The slice's job is to prove this loop is <em>fun</em> and that the core/render seam carries a real game.</p>
+  </div>
+
+  <footer>
+    Drafted 2026-06-03 for <a href="../../reference/vision.html">Shattered Worlds</a>. Realizes <a href="../notes/world-deck-acquisition.html">the world-deck acquisition model</a> on the <a href="../design/core-render-architecture.html">approved core/render seam</a>, succeeding the <a href="poc-core-loop.html">POC</a>. The renderer interaction is designed in <a href="../design/targeting-interaction.html">targeting-interaction</a>. Status <strong>draft</strong>, prefix <code>REQ-WDS</code>. Next: a plan covering this spec and the targeting design together.
+  </footer>
+
+</div>
+
+
+</body></html>
