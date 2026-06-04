@@ -1,0 +1,100 @@
+<!DOCTYPE html><html lang="en"><head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The reducer, dispatch &amp; golden replays</title>
+  <meta name="date" content="2026-06-03">
+  <meta name="status" content="approved">
+  <meta name="tags" content="task, world-deck, core, reducer, dispatch, end-turn, golden-replay, determinism, error-contract">
+  <meta name="source" content=".lore/work/plans/world-deck-slice.html">
+  <meta name="sequence" content="6">
+  <meta name="modules" content="core">
+  <style>
+    :root{--bg:#0f1117;--panel:#1a1d27;--panel-2:#222633;--ink:#e8eaf0;--muted:#9aa3b2;--accent:#8ab4ff;--gold:#ffd479;--good:#6cd08a;--warn:#ffc14d;--bad:#ff8a8a;--border:#2a2f3d;}
+    *{box-sizing:border-box;}
+    body{margin:0;background:radial-gradient(1200px 600px at 50% -10%,#1a2238 0%,var(--bg) 55%);color:var(--ink);font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;padding:2rem 1rem 5rem;}
+    .wrap{max-width:860px;margin:0 auto;}
+    .top{display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;margin-bottom:.6rem;}
+    .seq{font:700 .8rem ui-monospace,Menlo,monospace;color:var(--gold);background:rgba(255,212,121,.1);border:1px solid rgba(255,212,121,.35);border-radius:999px;padding:.2rem .7rem;}
+    .chip{display:inline-flex;align-items:center;gap:.35rem;border-radius:999px;padding:.18rem .7rem;font-size:.72rem;font-weight:700;border:1px solid;text-transform:uppercase;letter-spacing:.04em;}
+    .chip.pending{background:rgba(138,180,255,.12);border-color:rgba(138,180,255,.35);color:var(--accent);}
+    .chip.core{background:rgba(108,208,138,.08);border-color:rgba(108,208,138,.3);color:var(--good);}
+    .chip.review{background:rgba(255,193,77,.1);border-color:rgba(255,193,77,.35);color:var(--warn);}
+    .src{margin-left:auto;font-size:.8rem;color:var(--muted);}
+    h1{font-size:1.6rem;margin:.3rem 0 .2rem;line-height:1.15;}
+    .reqs{display:flex;gap:.3rem;flex-wrap:wrap;margin:.4rem 0 1.2rem;}
+    .reqtag{font:.66rem ui-monospace,Menlo,monospace;background:rgba(138,180,255,.14);color:var(--accent);border-radius:999px;padding:.12rem .55rem;}
+    h2{font-size:.82rem;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin:1.8rem 0 .5rem;border-bottom:1px solid var(--border);padding-bottom:.3rem;}
+    p{margin:.5rem 0;}a{color:var(--accent);}
+    code{background:var(--panel-2);border:1px solid var(--border);border-radius:5px;padding:.05rem .35rem;font-size:.86em;}
+    ul{margin:.4rem 0;padding-left:1.1rem;}li{margin:.3rem 0;}li b{color:var(--ink);}
+    .muted{color:var(--muted);}
+    .file{font:.82rem ui-monospace,Menlo,monospace;color:var(--gold);}
+    .new{font-size:.62rem;color:var(--good);border:1px solid rgba(108,208,138,.4);border-radius:4px;padding:0 .3rem;}
+    .rw{font-size:.62rem;color:var(--warn);border:1px solid rgba(255,193,77,.4);border-radius:4px;padding:0 .3rem;}
+    .val{background:linear-gradient(180deg,rgba(108,208,138,.08),rgba(108,208,138,.02));border:1px solid rgba(108,208,138,.4);border-left:4px solid var(--good);border-radius:12px;padding:.8rem 1.1rem;margin:.5rem 0;}
+    .val li{color:var(--muted);}.val li b{color:var(--ink);}
+    .review{background:rgba(255,193,77,.06);border:1px solid rgba(255,193,77,.3);border-left:4px solid var(--warn);border-radius:12px;padding:.6rem 1rem;margin:.6rem 0;}
+    .review b{color:var(--warn);}
+    .deps{font-size:.8rem;color:var(--muted);margin-top:1.4rem;}
+    footer{margin-top:2.2rem;color:var(--muted);font-size:.8rem;border-top:1px solid var(--border);padding-top:.8rem;}
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <span class="seq">Step 6 / 11</span>
+    <span class="chip pending">● pending</span>
+    <span class="chip core">pure core</span>
+    <span class="chip review">fresh-eyes review gate</span>
+    <span class="src"><a href="../../plans/world-deck-slice.html">world-deck-slice plan</a></span>
+  </div>
+  <h1>The reducer, dispatch &amp; golden replays</h1>
+  <div class="reqs">
+    <span class="reqtag">REQ-WDS-1</span><span class="reqtag">2</span><span class="reqtag">8</span><span class="reqtag">9</span><span class="reqtag">10</span><span class="reqtag">11</span><span class="reqtag">12</span><span class="reqtag">13</span><span class="reqtag">20</span><span class="reqtag">21</span><span class="reqtag">22</span><span class="reqtag">28</span>
+  </div>
+
+  <h2>What</h2>
+  <p>Wire the action handlers into the pure <code>reduce(state, action) → { state, events }</code>, enforce legality through <code>availableActions</code> (no second copy of the rules), and prove the loop deterministic with golden win/loss replays.</p>
+  <ul>
+    <li><b>Guard:</b> if <code>status !== 'playing'</code>, any action throws <code>IllegalActionError</code>.</li>
+    <li><b>PlayCard</b> — validate the card is currently playable and the target/choice/returnIds/destroyId/discardId is legal <em>using <code>availableActions</code></em>; else throw. Remove the card from hand, emit <code>CardPlayed</code>, run <code>applyEffect</code> (auto-resolve happens inside <code>dealProgress</code>), then check win/loss.</li>
+    <li><b>DiscardHazard</b> — must name a discardable world card in hand (the Door throws); apply its penalty, remove from hand, emit <code>HazardDiscarded</code> + penalty event; check loss.</li>
+    <li><b>EndTurn</b> — strict order: (1) move every <em>player</em> card in hand to player-discard (world cards stay), emit <code>CardsDiscarded</code>; (2) reset <code>progress</code> to <code>{}</code>; (3) consume <code>skipDrawNext</code>; (4) <code>refillHand</code>. Emit <code>TurnEnded</code>, <code>CardsDiscarded</code>, optional <code>DeckShuffled</code>/<code>ActAdvanced</code>, <code>CardsDrawn</code> in order.</li>
+    <li><code>createGame(seed): GameCore</code> built on <code>createWorld</code>; the façade holds the snapshot, exposes <code>dispatch</code> and read access to <code>availableActions</code>/<code>intensity</code>.</li>
+    <li>Re-export the new surface through <code>contract.ts</code> and <code>index.ts</code>.</li>
+  </ul>
+  <p class="muted">Id-accounting helper: assert every id is in exactly one place (a zone or removed) and every removal/creation has an explaining event. Golden seeds are searched once (e.g. run the sim until a win and a loss are found), then frozen as constants with their recorded action logs.</p>
+
+  <h2>Validation</h2>
+  <div class="val">
+    <ul>
+      <li><b>No carry-over:</b> partially pay a Hazard, end the turn, its turn-Progress is 0.</li>
+      <li><b>Hold vs discard:</b> after EndTurn, held world cards remain in hand and unplayed player cards are in player-discard.</li>
+      <li><b>Error contract:</b> DealProgress with no Hazard throws; out-of-range Modal choice throws; Panic with no world card throws; <code>DiscardHazard</code> on the Door throws; returning a player-card id throws; any action after <code>won</code>/<code>lost</code> throws.</li>
+      <li><b>Golden win:</b> a fixed seed + recorded log reaches <code>won</code> by forcing and paying a Door (discard Walker → Door penalty → pay 2) without ever resolving The Walker, byte-identical on re-run.</li>
+      <li><b>Golden loss:</b> a second fixed seed + log reaches <code>lost</code> by lethal damage.</li>
+      <li><b>Replay equivalence:</b> same seed + actions ⇒ deep-equal final state and event log; a different seed ⇒ different Act 1 order. Id-accounting holds across the sequence.</li>
+      <li><b>Tests run headless</b> with no Phaser/DOM/canvas in scope.</li>
+    </ul>
+  </div>
+  <div class="review">
+    <b>⚠ Review gate (highest blast radius):</b> a fresh-context sub-agent reviews the core before Tasks 7–9 begin — no hidden mutation, no rules duplicated outside <code>availableActions</code>, no determinism hole.
+  </div>
+
+  <h2>Why</h2>
+  <p class="muted">REQ-WDS-8/9 (play + auto-resolve), 10 (no carry-over), 11 (discard always legal except the Door), 12/13 (hold persists world / discard player; EndTurn order), 20/21 (win on Door, lose at 0 HP, post-terminal throws), 22 (the forced-Door win, Walker need not be beatable), 1/2/28 (pure core, id-accounting, determinism, headless tests). This is the seam the whole game rests on. See plan Step 6.</p>
+
+  <h2>Files</h2>
+  <ul>
+    <li><span class="file">src/core/reduce.ts</span> <span class="rw">rewrite</span></li>
+    <li><span class="file">src/core/game.ts</span> <span class="rw">rewrite</span></li>
+    <li><span class="file">src/core/contract.ts</span> <span class="rw">rewrite</span> · <span class="file">src/core/index.ts</span> <span class="rw">update exports</span></li>
+    <li>core tests: replace POC <code>reduce/cards/game</code> tests; add <code>golden.test.ts</code></li>
+  </ul>
+
+  <div class="deps">Depends on: Tasks 1–5. Freezing this core unlocks Tasks 8 (sim) and 9 (renderer) to run in parallel.</div>
+  <footer>Task 6 of 11 · <a href="../../plans/world-deck-slice.html">world-deck-slice plan</a> · spec <a href="../../specs/world-deck-slice.html">world-deck-slice</a></footer>
+</div>
+
+
+</body></html>

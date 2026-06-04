@@ -1,0 +1,98 @@
+<!DOCTYPE html><html lang="en"><head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Final validation against the spec</title>
+  <meta name="date" content="2026-06-03">
+  <meta name="status" content="approved">
+  <meta name="tags" content="task, world-deck, validation, review, sign-off, coverage">
+  <meta name="source" content=".lore/work/plans/world-deck-slice.html">
+  <meta name="sequence" content="11">
+  <meta name="modules" content="core, game, sim, ci">
+  <style>
+    :root{--bg:#0f1117;--panel:#1a1d27;--panel-2:#222633;--ink:#e8eaf0;--muted:#9aa3b2;--accent:#8ab4ff;--gold:#ffd479;--good:#6cd08a;--warn:#ffc14d;--bad:#ff8a8a;--border:#2a2f3d;}
+    *{box-sizing:border-box;}
+    body{margin:0;background:radial-gradient(1200px 600px at 50% -10%,#1a2238 0%,var(--bg) 55%);color:var(--ink);font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;padding:2rem 1rem 5rem;}
+    .wrap{max-width:860px;margin:0 auto;}
+    .top{display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;margin-bottom:.6rem;}
+    .seq{font:700 .8rem ui-monospace,Menlo,monospace;color:var(--gold);background:rgba(255,212,121,.1);border:1px solid rgba(255,212,121,.35);border-radius:999px;padding:.2rem .7rem;}
+    .chip{display:inline-flex;align-items:center;gap:.35rem;border-radius:999px;padding:.18rem .7rem;font-size:.72rem;font-weight:700;border:1px solid;text-transform:uppercase;letter-spacing:.04em;}
+    .chip.pending{background:rgba(138,180,255,.12);border-color:rgba(138,180,255,.35);color:var(--accent);}
+    .chip.gate{background:rgba(255,193,77,.1);border-color:rgba(255,193,77,.35);color:var(--warn);}
+    .src{margin-left:auto;font-size:.8rem;color:var(--muted);}
+    h1{font-size:1.6rem;margin:.3rem 0 .2rem;line-height:1.15;}
+    .reqs{display:flex;gap:.3rem;flex-wrap:wrap;margin:.4rem 0 1.2rem;}
+    .reqtag{font:.66rem ui-monospace,Menlo,monospace;background:rgba(138,180,255,.14);color:var(--accent);border-radius:999px;padding:.12rem .55rem;}
+    h2{font-size:.82rem;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin:1.8rem 0 .5rem;border-bottom:1px solid var(--border);padding-bottom:.3rem;}
+    p{margin:.5rem 0;}a{color:var(--accent);}
+    code{background:var(--panel-2);border:1px solid var(--border);border-radius:5px;padding:.05rem .35rem;font-size:.86em;}
+    ul{margin:.4rem 0;padding-left:1.1rem;}li{margin:.3rem 0;}li b{color:var(--ink);}
+    .muted{color:var(--muted);}
+    table{border-collapse:collapse;width:100%;font-size:.82rem;margin:.5rem 0;}
+    th,td{text-align:left;padding:.4rem .6rem;border-bottom:1px solid var(--border);vertical-align:top;}
+    th{color:var(--muted);font-size:.72rem;text-transform:uppercase;letter-spacing:.04em;}
+    td .ref{font:.7rem ui-monospace,Menlo,monospace;color:var(--gold);}
+    .val{background:linear-gradient(180deg,rgba(108,208,138,.08),rgba(108,208,138,.02));border:1px solid rgba(108,208,138,.4);border-left:4px solid var(--good);border-radius:12px;padding:.8rem 1.1rem;margin:.5rem 0;}
+    .val li{color:var(--muted);}.val li b{color:var(--ink);}
+    .deps{font-size:.8rem;color:var(--muted);margin-top:1.4rem;}
+    footer{margin-top:2.2rem;color:var(--muted);font-size:.8rem;border-top:1px solid var(--border);padding-top:.8rem;}
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <span class="seq">Step 11 / 11</span>
+    <span class="chip pending">● pending</span>
+    <span class="chip gate">final sign-off gate</span>
+    <span class="src"><a href="../../plans/world-deck-slice.html">world-deck-slice plan</a></span>
+  </div>
+  <h1>Final validation against the spec</h1>
+  <div class="reqs"><span class="reqtag">all REQ-WDS-1..30</span></div>
+
+  <h2>What</h2>
+  <p>Walk the spec's 17 "AI Validation" checks end to end, confirm each is satisfied by the work (not merely asserted), and audit with a fresh-context sub-agent. Use the coverage map below as the worklist.</p>
+  <table>
+    <tbody><tr><th>Spec validation check</th><th>Satisfied by</th><th>Req</th></tr>
+    <tr><td>Tests &amp; lint pass headlessly; no Phaser/DOM in core</td><td>Tasks 1, 6</td><td class="ref">1, 28</td></tr>
+    <tr><td>World composition is exact</td><td>Task 2</td><td class="ref">19</td></tr>
+    <tr><td>Determinism holds (state + event log); different seed differs</td><td>Tasks 2, 6</td><td class="ref">1, 28</td></tr>
+    <tr><td>Draw math exact (0/1/2 held; skip-draw keeps min world)</td><td>Task 3</td><td class="ref">7</td></tr>
+    <tr><td>Keyword bonuses &amp; auto-resolution work</td><td>Task 4</td><td class="ref">5, 8, 9</td></tr>
+    <tr><td>No carry-over after EndTurn</td><td>Task 6</td><td class="ref">10, 13</td></tr>
+    <tr><td>Hold persists world cards, discards player cards</td><td>Task 6</td><td class="ref">12, 13</td></tr>
+    <tr><td>Economy moves cards correctly (gain/return/destroy)</td><td>Task 4</td><td class="ref">14, 15, 16</td></tr>
+    <tr><td>Penalties resolve; the Door can't be discarded</td><td>Tasks 4, 6</td><td class="ref">11, 17</td></tr>
+    <tr><td>Acts advance while held world cards remain</td><td>Task 3</td><td class="ref">18</td></tr>
+    <tr><td>World is winnable (forced Door) and losable; post-terminal throws</td><td>Tasks 6, 8</td><td class="ref">20, 21, 22, 29</td></tr>
+    <tr><td>Error contract holds (all throw cases)</td><td>Tasks 5, 6</td><td class="ref">8, 11, 15, 21</td></tr>
+    <tr><td>All acts can exhaust without crashing</td><td>Task 3</td><td class="ref">18</td></tr>
+    <tr><td>Intensity is a pure core signal</td><td>Task 7</td><td class="ref">26</td></tr>
+    <tr><td>Card accounting holds across a run</td><td>Tasks 6, 8</td><td class="ref">2, 29</td></tr>
+    <tr><td>Sim survives full worlds with metrics</td><td>Task 8</td><td class="ref">29</td></tr>
+    <tr><td>Visibly playable via <code>bun run dev</code></td><td>Task 9</td><td class="ref">27</td></tr>
+    <tr><td>Build &amp; deploy green on the Pages subpath</td><td>Task 10</td><td class="ref">30</td></tr>
+  </tbody></table>
+
+  <h2>Validation</h2>
+  <div class="val">
+    <ul>
+      <li>Every row above is confirmed <b>runnable/observable</b>, not assumed.</li>
+      <li>A direct grep of <code>src/core/</code> for <code>phaser</code>/canvas/DOM imports returns nothing, alongside the mechanical lint boundary.</li>
+      <li><b>Fresh-context review</b> of the full change finds no boundary leak, no rules duplicated outside <code>availableActions</code>, no determinism hole.</li>
+      <li>On sign-off, the spec moves to <code>implemented</code> and the plan to <code>executed</code>.</li>
+    </ul>
+  </div>
+
+  <h2>Why</h2>
+  <p class="muted">The spec's "AI Validation" section is the definition of done; this task verifies each check against the work and applies the user's review rule (fresh-context audit for changes touching &gt;2 files). See plan Step 11.</p>
+
+  <h2>Files</h2>
+  <ul>
+    <li>No new code — verification, grep, fresh-eyes review, and status updates to the <a href="../../specs/world-deck-slice.html">spec</a> and <a href="../../plans/world-deck-slice.html">plan</a>.</li>
+  </ul>
+
+  <div class="deps">Depends on: Tasks 1–10.</div>
+  <footer>Task 11 of 11 · <a href="../../plans/world-deck-slice.html">world-deck-slice plan</a> · spec <a href="../../specs/world-deck-slice.html">world-deck-slice</a></footer>
+</div>
+
+
+</body></html>

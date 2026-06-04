@@ -1,0 +1,97 @@
+<!DOCTYPE html><html lang="en"><head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>availableActions — the one legality source</title>
+  <meta name="date" content="2026-06-03">
+  <meta name="status" content="approved">
+  <meta name="tags" content="task, world-deck, core, available-actions, target-spec, legality, selector">
+  <meta name="source" content=".lore/work/plans/world-deck-slice.html">
+  <meta name="sequence" content="5">
+  <meta name="modules" content="core">
+  <style>
+    :root{--bg:#0f1117;--panel:#1a1d27;--panel-2:#222633;--ink:#e8eaf0;--muted:#9aa3b2;--accent:#8ab4ff;--gold:#ffd479;--good:#6cd08a;--warn:#ffc14d;--bad:#ff8a8a;--border:#2a2f3d;}
+    *{box-sizing:border-box;}
+    body{margin:0;background:radial-gradient(1200px 600px at 50% -10%,#1a2238 0%,var(--bg) 55%);color:var(--ink);font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;padding:2rem 1rem 5rem;}
+    .wrap{max-width:860px;margin:0 auto;}
+    .top{display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;margin-bottom:.6rem;}
+    .seq{font:700 .8rem ui-monospace,Menlo,monospace;color:var(--gold);background:rgba(255,212,121,.1);border:1px solid rgba(255,212,121,.35);border-radius:999px;padding:.2rem .7rem;}
+    .chip{display:inline-flex;align-items:center;gap:.35rem;border-radius:999px;padding:.18rem .7rem;font-size:.72rem;font-weight:700;border:1px solid;text-transform:uppercase;letter-spacing:.04em;}
+    .chip.pending{background:rgba(138,180,255,.12);border-color:rgba(138,180,255,.35);color:var(--accent);}
+    .chip.core{background:rgba(108,208,138,.08);border-color:rgba(108,208,138,.3);color:var(--good);}
+    .src{margin-left:auto;font-size:.8rem;color:var(--muted);}
+    h1{font-size:1.6rem;margin:.3rem 0 .2rem;line-height:1.15;}
+    .reqs{display:flex;gap:.3rem;flex-wrap:wrap;margin:.4rem 0 1.2rem;}
+    .reqtag{font:.66rem ui-monospace,Menlo,monospace;background:rgba(138,180,255,.14);color:var(--accent);border-radius:999px;padding:.12rem .55rem;}
+    h2{font-size:.82rem;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin:1.8rem 0 .5rem;border-bottom:1px solid var(--border);padding-bottom:.3rem;}
+    p{margin:.5rem 0;}a{color:var(--accent);}
+    code{background:var(--panel-2);border:1px solid var(--border);border-radius:5px;padding:.05rem .35rem;font-size:.86em;}
+    ul{margin:.4rem 0;padding-left:1.1rem;}li{margin:.3rem 0;}li b{color:var(--ink);}
+    .muted{color:var(--muted);}
+    .file{font:.82rem ui-monospace,Menlo,monospace;color:var(--gold);}
+    .new{font-size:.62rem;color:var(--good);border:1px solid rgba(108,208,138,.4);border-radius:4px;padding:0 .3rem;}
+    .val{background:linear-gradient(180deg,rgba(108,208,138,.08),rgba(108,208,138,.02));border:1px solid rgba(108,208,138,.4);border-left:4px solid var(--good);border-radius:12px;padding:.8rem 1.1rem;margin:.5rem 0;}
+    .val li{color:var(--muted);}.val li b{color:var(--ink);}
+    .kw{color:var(--gold);font-weight:700;}
+    .deps{font-size:.8rem;color:var(--muted);margin-top:1.4rem;}
+    footer{margin-top:2.2rem;color:var(--muted);font-size:.8rem;border-top:1px solid var(--border);padding-top:.8rem;}
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <span class="seq">Step 5 / 11</span>
+    <span class="chip pending">● pending</span>
+    <span class="chip core">pure core</span>
+    <span class="src"><a href="../../plans/world-deck-slice.html">world-deck-slice plan</a></span>
+  </div>
+  <h1>availableActions — the one legality source</h1>
+  <div class="reqs"><span class="reqtag">REQ-WDS-8</span><span class="reqtag">27</span><span class="reqtag">29</span></div>
+
+  <h2>What</h2>
+  <p>A pure selector that answers "what is legal from here?" once, so the renderer's highlights, the reducer's validation, and the sim's policy can never disagree. <code>availableActions(state): AvailableActions</code>:</p>
+  <ul>
+    <li><b>playable</b> — for each player card in hand, derive its <code>TargetSpec</code> from its effect and omit cards with no legal play:
+      <ul>
+        <li>a <code>DealProgress</code>/hazard-targeting card is omitted with no Hazard in hand;</li>
+        <li>Panic (<code>returnWorld 1..1</code>) is omitted unless ≥1 world card is in hand;</li>
+        <li>Adrenaline (<code>discardPlayer</code>) is omitted with no other player card to discard;</li>
+        <li>Sprint stays playable (its draw branch is always available) but its hit-<span class="kw">Slow</span> branch is marked unavailable when no Slow Hazard exists;</li>
+        <li>Med Kit / Summon Door are <code>none</code> and always playable.</li>
+      </ul>
+    </li>
+    <li><b>discardable</b> — world cards in hand with <code>discardable === true</code> (excludes the Door).</li>
+    <li><b>legalTargets(cardId, step)</b> — the concrete ids legal for a card's spec at a compound step:
+      <ul>
+        <li>Barricade: Hazards at step 0, remaining world cards at step 1;</li>
+        <li>Adrenaline: the player cards in hand <em>other than Adrenaline itself</em> (never world cards).</li>
+      </ul>
+    </li>
+    <li><b>canEndTurn</b> — true while <code>status==='playing'</code>.</li>
+  </ul>
+  <p class="muted">The selector returns specs/ids only; it never mutates and never applies effects. It is the single definition of targeting rules.</p>
+
+  <h2>Validation</h2>
+  <div class="val">
+    <ul>
+      <li>A <code>DealProgress</code> card with no Hazard in hand is <b>absent</b> from <code>playable</code>; with a Hazard it appears with a <code>hazard</code> spec.</li>
+      <li>Panic appears only with ≥1 world card in hand; Sprint's hit branch is flagged unavailable with no Slow Hazard but the card remains playable.</li>
+      <li>The Door is never in <code>discardable</code>; other Hazards are.</li>
+      <li><code>legalTargets</code> for Barricade returns Hazards at step 0 and remaining world cards at step 1.</li>
+      <li><code>legalTargets</code> for Adrenaline returns the other player cards in hand — not Adrenaline itself, not any world card.</li>
+    </ul>
+  </div>
+
+  <h2>Why</h2>
+  <p class="muted">The targeting design's load-bearing decision: one pure selector serves the renderer highlights, the <code>dispatch</code> validation (REQ-WDS-8), and the sim's legal-action policy (REQ-WDS-29), so targeting rules are never duplicated (REQ-WDS-27's shared surface). See plan Step 5 and <a href="../../design/targeting-interaction.html">targeting-interaction</a>.</p>
+
+  <h2>Files</h2>
+  <ul>
+    <li><span class="file">src/core/available.ts</span> <span class="new">new</span></li>
+  </ul>
+
+  <div class="deps">Depends on: Tasks 1–4 (types, catalog, draw, effects). Consumed by Tasks 6, 8, 9.</div>
+  <footer>Task 5 of 11 · <a href="../../plans/world-deck-slice.html">world-deck-slice plan</a> · spec <a href="../../specs/world-deck-slice.html">world-deck-slice</a></footer>
+</div>
+
+
+</body></html>
