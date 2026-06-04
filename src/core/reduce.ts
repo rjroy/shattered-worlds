@@ -35,9 +35,13 @@ function handlePlayCard(
     throw new IllegalActionError(action, state, `Card ${cardId} not found in hand`)
   }
 
-  // Remove the card from hand (it has been played)
+  // Remove the card from hand and send it to playerDiscard so it recycles
   const handAfterPlay = state.hand.filter((c) => c.id !== cardId)
-  const stateAfterPlay: GameState = { ...state, hand: handAfterPlay }
+  const stateAfterPlay: GameState = {
+    ...state,
+    hand: handAfterPlay,
+    playerDiscard: [card, ...state.playerDiscard],
+  }
 
   const events: GameEvent[] = [{ type: 'CardPlayed', cardId }]
 
@@ -119,11 +123,8 @@ function handleEndTurn(state: GameState): ReduceResult {
   const refillResult = refillHand(stateAfterDiscard)
   events.push(...refillResult.events)
 
-  // Livelock guard: if no cards can ever enter the hand again (all draw piles
-  // and acts exhausted, player discard also empty) and no legal action other
-  // than EndTurn is available, progress is permanently impossible — transition
-  // to lost rather than looping forever. This covers both the "Door alone" case
-  // and cases like "Door + Adrenaline with no discard targets".
+  // Livelock guard A: all draw piles and acts exhausted (player cards also
+  // gone, e.g. all destroyed by Regroup) — nothing can ever enter the hand.
   const afterRefill = refillResult.state
 
   if (afterRefill.status === 'playing') {
@@ -137,6 +138,37 @@ function handleEndTurn(state: GameState): ReduceResult {
       const avail = availableActions(afterRefill)
       const noProgressPossible = avail.playable.length === 0 && avail.discardable.length === 0
       if (noProgressPossible) {
+        const lostState: GameState = { ...afterRefill, status: 'lost' }
+        events.push({ type: 'WorldLost' })
+        return { state: lostState, events }
+      }
+    }
+  }
+
+  // Livelock guard B: world deck exhausted and no player card in any zone can
+  // introduce world cards (AddWorldCardToTop). With proper deck recycling, the
+  // player pile never empties on its own — but if there are no world cards
+  // anywhere and no way to create them, the game loops forever (no hazards to
+  // deal progress to, discard for damage, or win against).
+  //
+  // The Walker in hand is a world card and keeps the check false; Summon Door
+  // anywhere in the player zones is the only escape hatch.
+  if (afterRefill.status === 'playing') {
+    const noWorldAnywhere =
+      afterRefill.worldDraw.length === 0 &&
+      afterRefill.acts.length === 0 &&
+      !afterRefill.hand.some((c) => c.kind === 'world')
+
+    if (noWorldAnywhere) {
+      const allPlayerCards = [
+        ...afterRefill.playerDraw,
+        ...afterRefill.playerDiscard,
+        ...afterRefill.hand,
+      ]
+      const canIntroduceWorld = allPlayerCards.some(
+        (c) => c.kind === 'player' && c.effect.kind === 'AddWorldCardToTop',
+      )
+      if (!canIntroduceWorld) {
         const lostState: GameState = { ...afterRefill, status: 'lost' }
         events.push({ type: 'WorldLost' })
         return { state: lostState, events }
