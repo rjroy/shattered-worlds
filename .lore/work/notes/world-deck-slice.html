@@ -1,0 +1,186 @@
+<!DOCTYPE html><html lang="en"><head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Implementation notes: world-deck-slice</title>
+  <meta name="date" content="2026-06-04">
+  <meta name="status" content="in-progress">
+  <meta name="tags" content="notes, world-deck, implementation, progress">
+  <meta name="source" content=".lore/work/plans/world-deck-slice.html">
+  <style>
+    :root{--bg:#0f1117;--panel:#1a1d27;--panel-2:#222633;--ink:#e8eaf0;--muted:#9aa3b2;--accent:#8ab4ff;--gold:#ffd479;--good:#6cd08a;--warn:#ffc14d;--bad:#ff8a8a;--border:#2a2f3d;}
+    *{box-sizing:border-box;}
+    body{margin:0;background:radial-gradient(1200px 600px at 50% -10%,#1a2238 0%,var(--bg) 55%);color:var(--ink);font:15px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;padding:1.5rem 1rem 5rem;}
+    .wrap{max-width:900px;margin:0 auto;}
+    .banner{background:linear-gradient(135deg,rgba(138,180,255,.12),rgba(255,212,121,.08));border:1px solid rgba(138,180,255,.3);border-radius:14px;padding:1.2rem 1.5rem;margin-bottom:1.8rem;}
+    .banner h1{font-size:1.5rem;margin:0 0 .3rem;background:linear-gradient(180deg,#fff,#b8c4e0);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;}
+    .banner .sub{color:var(--muted);font-size:.88rem;}
+    .banner .meta{display:flex;gap:1rem;flex-wrap:wrap;margin-top:.7rem;font-size:.8rem;color:var(--muted);}
+    .banner .meta b{color:var(--ink);}
+    .chip{display:inline-flex;align-items:center;border-radius:999px;padding:.15rem .65rem;font-size:.7rem;font-weight:700;border:1px solid;text-transform:uppercase;letter-spacing:.04em;}
+    .chip.inprog{background:rgba(255,193,77,.1);border-color:rgba(255,193,77,.4);color:var(--warn);}
+    .chip.done{background:rgba(108,208,138,.1);border-color:rgba(108,208,138,.35);color:var(--good);}
+    .chip.pend{background:rgba(138,180,255,.1);border-color:rgba(138,180,255,.3);color:var(--accent);}
+    .chip.fail{background:rgba(255,138,138,.1);border-color:rgba(255,138,138,.35);color:var(--bad);}
+    h2{font-size:1.05rem;margin:2rem 0 .8rem;color:var(--accent);}
+    .phases{display:flex;flex-direction:column;gap:.5rem;}
+    .phase{background:var(--panel);border:1px solid var(--border);border-radius:10px;overflow:hidden;}
+    .phase summary{list-style:none;cursor:pointer;padding:.75rem 1rem;display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;}
+    .phase summary::-webkit-details-marker{display:none;}
+    .phase .n{font:.75rem ui-monospace,Menlo,monospace;color:var(--gold);font-weight:700;}
+    .phase .title{font-weight:600;font-size:.9rem;}
+    .phase .body{padding:.6rem 1rem 1rem;border-top:1px solid var(--border);font-size:.86rem;}
+    .phase .body p{margin:.4rem 0;color:var(--muted);}
+    .phase .body p b{color:var(--ink);}
+    .phase .body code{background:var(--panel-2);border:1px solid var(--border);border-radius:4px;padding:.05rem .3rem;font-size:.82em;}
+    h3{font-size:.78rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:.9rem 0 .3rem;}
+    .log{background:#0c0e14;border:1px solid var(--border);border-radius:8px;padding:.7rem .9rem;font:.78rem/1.5 ui-monospace,Menlo,monospace;color:#d6dbe8;white-space:pre-wrap;}
+    footer{margin-top:2.5rem;color:var(--muted);font-size:.8rem;border-top:1px solid var(--border);padding-top:.8rem;}
+  </style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="banner">
+    <h1>Implementation notes: world-deck-slice</h1>
+    <p class="sub">Running log for the 11-phase vertical slice. Updated after each phase gate passes.</p>
+    <div class="meta">
+      <span><b>Started:</b> 2026-06-04</span>
+      <span><b>Plan:</b> <a href="../plans/world-deck-slice.html" style="color:var(--accent)">.lore/work/plans/world-deck-slice.html</a></span>
+      <span><b>Status:</b> <span class="chip done">✓ complete</span></span>
+      <span><b>Progress:</b> 11/11 phases done</span>
+    </div>
+  </div>
+
+  <h2>Phase checklist</h2>
+  <div class="phases">
+
+    <details class="phase">
+      <summary><span class="n">01</span><span class="title">Domain types &amp; vocabularies</span><span class="chip done" style="margin-left:auto">✓ done</span></summary>
+      <div class="body">
+        <p><b>Files:</b> src/core/types.ts (rewrite)</p>
+        <p><b>Gate:</b> typecheck + lint pass. ✓</p>
+        <h3>Log</h3>
+        <div class="log">2026-06-04: types.ts rewritten with full world-deck domain model. 6 tests pass.</div>
+      </div>
+    </details>
+
+    <details class="phase">
+      <summary><span class="n">02</span><span class="title">Card catalog &amp; Zombie world</span><span class="chip done" style="margin-left:auto">✓ done</span></summary>
+      <div class="body">
+        <p><b>Files:</b> src/core/cards.ts (rewrite), src/core/world.ts (new)</p>
+        <p><b>Gate:</b> typecheck + lint + 26 tests pass. ✓</p>
+      </div>
+    </details>
+
+    <details class="phase">
+      <summary><span class="n">03</span><span class="title">Draw, refill-toward-6 &amp; act advancement</span><span class="chip done" style="margin-left:auto">✓ done</span></summary>
+      <div class="body">
+        <p><b>Files:</b> src/core/draw.ts (rewrite), src/core/world.ts (opening deal)</p>
+        <p><b>Gate:</b> 41 tests pass. ✓</p>
+      </div>
+    </details>
+
+    <details class="phase">
+      <summary><span class="n">04</span><span class="title">Effects, penalties &amp; rewards</span><span class="chip done" style="margin-left:auto">✓ done</span></summary>
+      <div class="body">
+        <p><b>Files:</b> src/core/effects.ts (new)</p>
+        <p><b>Gate:</b> 60 tests pass. ✓</p>
+      </div>
+    </details>
+
+    <details class="phase">
+      <summary><span class="n">05</span><span class="title">availableActions selector</span><span class="chip done" style="margin-left:auto">✓ done</span></summary>
+      <div class="body">
+        <p><b>Files:</b> src/core/available.ts (new)</p>
+        <p><b>Gate:</b> 77 tests pass. ✓</p>
+      </div>
+    </details>
+
+    <details class="phase">
+      <summary><span class="n">06</span><span class="title">Reducer, dispatch &amp; golden replays</span><span class="chip done" style="margin-left:auto">✓ done</span></summary>
+      <div class="body">
+        <p><b>Files:</b> src/core/reduce.ts, game.ts, contract.ts, index.ts (rewrites)</p>
+        <p><b>Gate:</b> 103 tests pass. Fresh-context review: no mutation, no determinism holes. ✓</p>
+        <h3>Log</h3>
+        <div class="log">Review finding: handlePlayCard had spec-kind switch duplicating available.ts knowledge.
+Fix: extracted checkPlayAction() into available.ts — reducer now calls it, no spec.kind switch in reduce.ts.</div>
+      </div>
+    </details>
+
+    <details class="phase">
+      <summary><span class="n">07</span><span class="title">Intensity signal</span><span class="chip done" style="margin-left:auto">✓ done</span></summary>
+      <div class="body">
+        <p><b>Files:</b> src/core/intensity.ts (new)</p>
+        <p><b>Gate:</b> 110 tests pass. ✓</p>
+      </div>
+    </details>
+
+    <details class="phase">
+      <summary><span class="n">08</span><span class="title">Headless sim</span><span class="chip done" style="margin-left:auto">✓ done</span></summary>
+      <div class="body">
+        <p><b>Files:</b> src/sim/policy.ts, src/sim/run.ts (rewrites)</p>
+        <p><b>Gate:</b> 114 tests pass, sim exits 0, 10 wins/100 worlds (forced-Door reachable). ✓</p>
+        <h3>Log</h3>
+        <div class="log">DIVERGENCE (approved): reduce.ts handleEndTurn now has a livelock guard.
+When all draw piles + acts are empty AND availableActions returns nothing playable/discardable,
+forces status='lost' + WorldLost event rather than looping forever.
+Scenario: Door in hand, no progress cards, all piles exhausted.
+REQ-WDS-21 only specifies HP=0 as loss; spec is silent on deadlock.
+Fix is pragmatic and necessary for sim to terminate.</div>
+      </div>
+    </details>
+
+    <details class="phase">
+      <summary><span class="n">09</span><span class="title">Phaser renderer &amp; targeting grammar</span><span class="chip done" style="margin-left:auto">✓ done</span></summary>
+      <div class="body">
+        <p><b>Files:</b> src/game/selection.ts (new), src/game/render.ts, src/game/TableScene.ts (rewrites)</p>
+        <p><b>Gate:</b> typecheck + lint pass, 114 tests pass, browser screenshot confirms game renders. ✓</p>
+        <h3>Log</h3>
+        <div class="log">Screenshot confirmed: dark red world cards (Rubble/Screams with cost, penalty, DISCARD label),
+dark blue player cards (Sprint/Panic/Med Kit/Explore), HP 20/20, Act 1, pile counts, End Turn button.
+All cards playable in opening hand — no dimmed cards visible (correct; opening hand has valid targets).
+Also: eslint.config.js updated to allow _-prefixed unused params (standard TS convention).</div>
+      </div>
+    </details>
+
+    <details class="phase">
+      <summary><span class="n">10</span><span class="title">Build, serve &amp; deploy</span><span class="chip done" style="margin-left:auto">✓ done</span></summary>
+      <div class="body">
+        <p><b>Files:</b> no changes</p>
+        <p><b>Gate:</b> frozen-lockfile install clean, build emits dist/ with /shattered-worlds/ subpath, CI workflow unchanged. ✓</p>
+      </div>
+    </details>
+
+    <details class="phase">
+      <summary><span class="n">11</span><span class="title">Final validation against spec</span><span class="chip done" style="margin-left:auto">✓ done</span></summary>
+      <div class="body">
+        <p><b>Files:</b> review only</p>
+        <p><b>Gate:</b> 18/18 validation checks pass (all REQ-WDS-1..30 confirmed by fresh-context review). ✓</p>
+      </div>
+    </details>
+
+  </div>
+
+  <h2>Key decisions &amp; divergences</h2>
+  <div class="log">From plan Gaps section:
+- Sequence wrapper added to Effect enum (Barricade + Panic)
+- nextId counter in GameState for deterministic card ids
+- Renderer scope = full interaction grammar, no polish
+- Opening hand uses same draw routine as per-turn refill
+
+Lore-researcher findings (load-bearing constraints):
+- Draw formula: worldDraw = max(1, 2-held), playerDraw fills to 6
+  When hand already at 6: draw nothing at all (override minimum-1 rule)
+- Progress never carries over (REQ-WDS-10, load-bearing)
+- Auto-resolve fires immediately inside same dispatch, not after all effects
+- EndTurn strict order: (1) discard player hand, (2) reset progress,
+  (3) consume skipDraw, (4) draw
+- SkipDrawNextTurn does not stack (idempotent flag)
+- Barricade: if step-1 Progress resolves the Hazard, it's gone from step-2 return list
+- Panic requires >=1 world card in hand; Barricade allows 0 returns
+- ReturnWorldCards: seeded shuffle into TOP 3 positions (not whole deck)
+- The Walker is intentionally undefeatable; win via forced Door discard path</div>
+
+  <footer>Notes for <a href="../plans/world-deck-slice.html">world-deck-slice plan</a> · Started 2026-06-04</footer>
+</div>
+</body></html>
