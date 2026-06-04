@@ -1,0 +1,86 @@
+<!DOCTYPE html><html lang="en"><head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Backdrop &amp; intensity-driven intrusion</title>
+  <meta name="date" content="2026-06-04">
+  <meta name="status" content="complete">
+  <meta name="tags" content="task, visual, backdrop, intrusion, intensity, tween, phaser">
+  <meta name="source" content=".lore/work/plans/visual-identity.html">
+  <meta name="sequence" content="8">
+  <meta name="modules" content="game">
+  <style>
+    :root{--bg:#0f1117;--panel:#1a1d27;--panel-2:#222633;--ink:#e8eaf0;--muted:#9aa3b2;--accent:#8ab4ff;--gold:#ffd479;--good:#6cd08a;--warn:#ffc14d;--bad:#ff8a8a;--violet:#b98aff;--border:#2a2f3d;}
+    *{box-sizing:border-box;}
+    body{margin:0;background:radial-gradient(1200px 600px at 50% -10%,#1a2238 0%,var(--bg) 55%);color:var(--ink);font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;padding:2rem 1rem 5rem;}
+    .wrap{max-width:860px;margin:0 auto;}
+    .top{display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;margin-bottom:.6rem;}
+    .seq{font:700 .8rem ui-monospace,Menlo,monospace;color:var(--gold);background:rgba(255,212,121,.1);border:1px solid rgba(255,212,121,.35);border-radius:999px;padding:.2rem .7rem;}
+    .chip{display:inline-flex;align-items:center;gap:.35rem;border-radius:999px;padding:.18rem .7rem;font-size:.72rem;font-weight:700;border:1px solid;text-transform:uppercase;letter-spacing:.04em;}
+    .chip.pending{background:rgba(138,180,255,.12);border-color:rgba(138,180,255,.35);color:var(--accent);}
+    .chip.phaser{background:rgba(255,212,121,.12);border-color:rgba(255,212,121,.4);color:var(--gold);}
+    .src{margin-left:auto;font-size:.8rem;color:var(--muted);}
+    h1{font-size:1.6rem;margin:.3rem 0 .2rem;line-height:1.15;}
+    .reqs{display:flex;gap:.3rem;flex-wrap:wrap;margin:.4rem 0 1.2rem;}
+    .reqtag{font:.66rem ui-monospace,Menlo,monospace;background:rgba(185,138,255,.14);color:var(--violet);border-radius:999px;padding:.12rem .55rem;}
+    h2{font-size:.82rem;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin:1.8rem 0 .5rem;border-bottom:1px solid var(--border);padding-bottom:.3rem;}
+    p{margin:.5rem 0;}a{color:var(--accent);}
+    code{background:var(--panel-2);border:1px solid var(--border);border-radius:5px;padding:.05rem .35rem;font-size:.86em;}
+    ul{margin:.4rem 0;padding-left:1.1rem;}li{margin:.3rem 0;}li b{color:var(--ink);}
+    .muted{color:var(--muted);}
+    .file{font:.82rem ui-monospace,Menlo,monospace;color:var(--gold);}
+    .new{font-size:.62rem;color:var(--good);border:1px solid rgba(108,208,138,.4);border-radius:4px;padding:0 .3rem;}
+    .rw{font-size:.62rem;color:var(--warn);border:1px solid rgba(255,193,77,.4);border-radius:4px;padding:0 .3rem;}
+    .val{background:linear-gradient(180deg,rgba(108,208,138,.08),rgba(108,208,138,.02));border:1px solid rgba(108,208,138,.4);border-left:4px solid var(--good);border-radius:12px;padding:.8rem 1.1rem;margin:.5rem 0;}
+    .val li{color:var(--muted);}.val li b{color:var(--ink);}
+    .warnbox{background:rgba(255,193,77,.06);border:1px solid rgba(255,193,77,.3);border-left:3px solid var(--warn);border-radius:10px;padding:.6rem .9rem;margin:.5rem 0;font-size:.9rem;color:var(--muted);}
+    .warnbox b{color:var(--ink);}.warnbox code{font-size:.82em;}
+    .deps{font-size:.8rem;color:var(--muted);margin-top:1.4rem;}
+    footer{margin-top:2.2rem;color:var(--muted);font-size:.8rem;border-top:1px solid var(--border);padding-top:.8rem;}
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <span class="seq">Step 8 / 10</span>
+    <span class="chip pending">● pending</span>
+    <span class="chip phaser">phaser glue</span>
+    <span class="src"><a href="../../plans/visual-identity.html">visual-identity plan</a></span>
+  </div>
+  <h1>Backdrop &amp; intensity-driven intrusion</h1>
+  <div class="reqs"><span class="reqtag">REQ-VIS-8</span><span class="reqtag">9</span><span class="reqtag">10</span></div>
+
+  <h2>What</h2>
+  <p>The reality base that slides toward intrusion as the run escalates.</p>
+  <ul>
+    <li>New <code>src/game/backdrop.ts</code> — a persistent <code>BackdropLayer</code>: the reality image at the lowest depth (<code>setDepth(-10)</code>, behind cards/HUD/overlays), plus the intrusion overlay above it. Neither is <code>setInteractive</code>, so pointer hits still reach cards and buttons.</li>
+    <li>Read intensity through the public seam — <b><code>this.game_.intensity()</code></b> — <b>never <code>import</code> the core <code>intensity</code> module directly</b> (that breaches the renderer's read-via-<code>GameCore</code> discipline).</li>
+    <li>Each <code>drawAll</code>: compute <b>target alpha = <code>intrusionForIntensity(this.game_.intensity())</code></b> and retarget the overlay's tween.</li>
+    <li>Compose the overlay (edge/radial weighting, or a masked-clear board zone) so a <b>mundane boundary stays visible</b> even at max intensity — the apocalypse stays localized.</li>
+  </ul>
+  <div class="warnbox">
+    <b>Init:</b> create the layer in <code>create()</code> with the same rule as S7 — after <code>createGame(42)</code> (line 83), before the win/loss <code>bringToTop</code>, never in the <code>cardObjects</code> destroy loop.<br>
+    <b>Tween (riskiest detail):</b> retarget <b>fire-and-forget</b> on a single long-lived tween — Phaser 3.90 <code>tween.updateTo('alpha', target, true)</code> (or stop-and-restart). <b>Do not</b> call <code>this.tweens.add(...)</code> per repaint; that queues a second tween and lets the backdrop lag the authoritative state, which REQ-VIS-2/9 forbid.
+  </div>
+
+  <h2>Validation</h2>
+  <div class="val"><ul>
+    <li><b>Mundane at a fresh Act 1 / full HP;</b> visibly more intruded (green) after advancing acts and losing HP.</li>
+    <li><b>The transition tweens, it does not snap;</b> rapid dispatches retarget the same tween rather than stacking.</li>
+    <li><b>A mundane/intrusion boundary stays visible</b> at maximum intensity (board area not consumed edge-to-edge).</li>
+    <li><b>Pointer input still works:</b> clicks on cards, End Turn, Cancel/Confirm all register with the backdrop present.</li>
+    <li>The mapper (S4) is the only source of the alpha — no intensity math inlined in <code>backdrop.ts</code>.</li>
+  </ul></div>
+
+  <h2>Why</h2>
+  <p>The backdrop expresses the world's reality (REQ-VIS-8); intrusion tracking the pure <code>intensity</code> read-model is the core of the look (REQ-VIS-9); the localized-apocalypse boundary is the signature contrast the visual direction names (REQ-VIS-10). See plan Step 8.</p>
+
+  <h2>Files</h2>
+  <ul>
+    <li><span class="file">src/game/backdrop.ts</span> <span class="new">new</span></li>
+    <li><span class="file">src/game/TableScene.ts</span> <span class="rw">edit</span> (create layer, drive in <code>drawAll</code>)</li>
+  </ul>
+
+  <div class="deps">Depends on: S3 (backdrop keys), S4 (intrusion mapper), S5 (textures). Unlocks: S9 (Walker lives in this layer).</div>
+  <footer>Task 8 of 10 · <a href="../../plans/visual-identity.html">visual-identity plan</a> · spec <a href="../../specs/visual-identity.html">visual-identity</a></footer>
+</div>
+</body></html>

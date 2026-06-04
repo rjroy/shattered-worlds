@@ -1,0 +1,80 @@
+<!DOCTYPE html><html lang="en"><head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Constant back &amp; face-down pile stacks</title>
+  <meta name="date" content="2026-06-04">
+  <meta name="status" content="complete">
+  <meta name="tags" content="task, visual, cardback, piles, draw-pile, phaser, persistent-layer">
+  <meta name="source" content=".lore/work/plans/visual-identity.html">
+  <meta name="sequence" content="7">
+  <meta name="modules" content="game">
+  <style>
+    :root{--bg:#0f1117;--panel:#1a1d27;--panel-2:#222633;--ink:#e8eaf0;--muted:#9aa3b2;--accent:#8ab4ff;--gold:#ffd479;--good:#6cd08a;--warn:#ffc14d;--bad:#ff8a8a;--violet:#b98aff;--border:#2a2f3d;}
+    *{box-sizing:border-box;}
+    body{margin:0;background:radial-gradient(1200px 600px at 50% -10%,#1a2238 0%,var(--bg) 55%);color:var(--ink);font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;padding:2rem 1rem 5rem;}
+    .wrap{max-width:860px;margin:0 auto;}
+    .top{display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;margin-bottom:.6rem;}
+    .seq{font:700 .8rem ui-monospace,Menlo,monospace;color:var(--gold);background:rgba(255,212,121,.1);border:1px solid rgba(255,212,121,.35);border-radius:999px;padding:.2rem .7rem;}
+    .chip{display:inline-flex;align-items:center;gap:.35rem;border-radius:999px;padding:.18rem .7rem;font-size:.72rem;font-weight:700;border:1px solid;text-transform:uppercase;letter-spacing:.04em;}
+    .chip.pending{background:rgba(138,180,255,.12);border-color:rgba(138,180,255,.35);color:var(--accent);}
+    .chip.phaser{background:rgba(255,212,121,.12);border-color:rgba(255,212,121,.4);color:var(--gold);}
+    .src{margin-left:auto;font-size:.8rem;color:var(--muted);}
+    h1{font-size:1.6rem;margin:.3rem 0 .2rem;line-height:1.15;}
+    .reqs{display:flex;gap:.3rem;flex-wrap:wrap;margin:.4rem 0 1.2rem;}
+    .reqtag{font:.66rem ui-monospace,Menlo,monospace;background:rgba(185,138,255,.14);color:var(--violet);border-radius:999px;padding:.12rem .55rem;}
+    h2{font-size:.82rem;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin:1.8rem 0 .5rem;border-bottom:1px solid var(--border);padding-bottom:.3rem;}
+    p{margin:.5rem 0;}a{color:var(--accent);}
+    code{background:var(--panel-2);border:1px solid var(--border);border-radius:5px;padding:.05rem .35rem;font-size:.86em;}
+    ul{margin:.4rem 0;padding-left:1.1rem;}li{margin:.3rem 0;}li b{color:var(--ink);}
+    .muted{color:var(--muted);}
+    .file{font:.82rem ui-monospace,Menlo,monospace;color:var(--gold);}
+    .new{font-size:.62rem;color:var(--good);border:1px solid rgba(108,208,138,.4);border-radius:4px;padding:0 .3rem;}
+    .rw{font-size:.62rem;color:var(--warn);border:1px solid rgba(255,193,77,.4);border-radius:4px;padding:0 .3rem;}
+    .val{background:linear-gradient(180deg,rgba(108,208,138,.08),rgba(108,208,138,.02));border:1px solid rgba(108,208,138,.4);border-left:4px solid var(--good);border-radius:12px;padding:.8rem 1.1rem;margin:.5rem 0;}
+    .val li{color:var(--muted);}.val li b{color:var(--ink);}
+    .warnbox{background:rgba(255,193,77,.06);border:1px solid rgba(255,193,77,.3);border-left:3px solid var(--warn);border-radius:10px;padding:.6rem .9rem;margin:.5rem 0;font-size:.9rem;color:var(--muted);}
+    .warnbox b{color:var(--ink);}
+    .deps{font-size:.8rem;color:var(--muted);margin-top:1.4rem;}
+    footer{margin-top:2.2rem;color:var(--muted);font-size:.8rem;border-top:1px solid var(--border);padding-top:.8rem;}
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <span class="seq">Step 7 / 10</span>
+    <span class="chip pending">● pending</span>
+    <span class="chip phaser">phaser glue</span>
+    <span class="src"><a href="../../plans/visual-identity.html">visual-identity plan</a></span>
+  </div>
+  <h1>Constant back &amp; face-down pile stacks</h1>
+  <div class="reqs"><span class="reqtag">REQ-VIS-5</span></div>
+
+  <h2>What</h2>
+  <p>Give the canon card back a home and keep it theme-independent. Today the draw piles are only text counts; this adds the visible back.</p>
+  <ul>
+    <li>New <code>src/game/piles.ts</code>: render the <b>player draw pile</b> and <b>world draw pile</b> as small stacks of face-down <code>cardback.webp</code> beside their existing HUD counts.</li>
+    <li>The back image is <b>always <code>cardback</code></b> — never tinted by the theme. Stack height / visibility tracks <code>state.playerDraw.length</code> and <code>state.worldDraw.length</code> (empty pile → no stack).</li>
+  </ul>
+  <div class="warnbox"><b>Persistent-layer init (shared with S8/S9):</b> create the pile containers in <code>TableScene.create()</code> <em>after</em> <code>this.game_ = createGame(42)</code> (currently line 83, so <code>this.game_.state</code> is available) and <em>before</em> the <code>children.bringToTop(winScreen/lossScreen)</code> calls. They must <b>never be added to the <code>cardObjects</code> map</b> that <code>drawAll</code> destroys (lines 127–131); only refresh their contents in <code>drawAll</code>.</div>
+
+  <h2>Validation</h2>
+  <div class="val"><ul>
+    <li><b>Both piles show face-down backs from <code>cardback.webp</code></b>, never recolored by the theme.</li>
+    <li>Stacks visibly <b>shrink/grow with pile sizes</b> as cards are drawn and reshuffled; an empty pile shows no stack.</li>
+    <li>The pile containers survive the per-dispatch <code>drawAll</code> card-destroy cycle (they are not recreated each repaint, no flicker).</li>
+    <li>Card fronts (S6) stay themed; the back is the only constant.</li>
+  </ul></div>
+
+  <h2>Why</h2>
+  <p>REQ-VIS-5 makes the back constant canon the player sees; with no current render site, the draw-pile stacks are its home (decision confirmed with user). See plan Step 7.</p>
+
+  <h2>Files</h2>
+  <ul>
+    <li><span class="file">src/game/piles.ts</span> <span class="new">new</span></li>
+    <li><span class="file">src/game/TableScene.ts</span> <span class="rw">edit</span> (create in <code>create</code>, refresh in <code>drawAll</code>)</li>
+  </ul>
+
+  <div class="deps">Depends on: S5 (cardback texture loaded). Independent of S6/S8/S9 (shares only the init rule).</div>
+  <footer>Task 7 of 10 · <a href="../../plans/visual-identity.html">visual-identity plan</a> · spec <a href="../../specs/visual-identity.html">visual-identity</a></footer>
+</div>
+</body></html>

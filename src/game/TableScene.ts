@@ -9,6 +9,9 @@
  *  - Show win / loss screens when the game ends
  */
 import Phaser from 'phaser'
+import { assetManifest } from './assetManifest'
+import { selectTheme } from './theme'
+import type { VisualTheme } from './theme'
 import { createGame, availableActions } from '../core/index'
 import type { GameCore, Card, Action, TargetSpec } from '../core/index'
 import {
@@ -36,6 +39,8 @@ import {
 } from './render'
 import type { HUDRefs } from './render'
 import { describeEffect, previewPlay } from './describe'
+import { PileLayer } from './piles'
+import { BackdropLayer } from './backdrop'
 
 // ---------------------------------------------------------------------------
 // Layout constants
@@ -56,6 +61,7 @@ const CARD_SPACING = 156
 
 export class TableScene extends Phaser.Scene {
   private game_!: GameCore
+  private theme_!: VisualTheme
   private sel: SelectionState = IDLE
 
   /** All live card containers, keyed by card id. */
@@ -72,6 +78,12 @@ export class TableScene extends Phaser.Scene {
   // Modal chooser UI (created/destroyed per card play)
   private modalContainer: Phaser.GameObjects.Container | null = null
 
+  // Pile layer — persistent containers for player draw and world draw stacks
+  private pileLayer!: PileLayer
+
+  // Backdrop: reality image + intensity-driven intrusion overlay
+  private backdropLayer!: BackdropLayer
+
   // Selection status text
   private selectionHint!: Phaser.GameObjects.Text
 
@@ -79,8 +91,25 @@ export class TableScene extends Phaser.Scene {
     super({ key: 'TableScene' })
   }
 
+  preload(): void {
+    const theme = selectTheme('zombie-big-box')
+    const keysToLoad = [
+      'cardback',
+      theme.backdrop.realityKey,
+      theme.backdrop.intrusionKey,
+      ...(theme.walker ? [theme.walker.textureKey] : []),
+    ]
+    for (const key of keysToLoad) {
+      const url = assetManifest[key]
+      if (url !== undefined) {
+        this.load.image(key, url)
+      }
+    }
+  }
+
   create(): void {
     this.game_ = createGame(42) // fixed seed for the demo
+    this.theme_ = selectTheme(this.game_.state.worldId)
 
     this.hudRefs = createHUD(this)
     this.endTurnBtn = createEndTurnButton(this, 820, 560)
@@ -105,6 +134,9 @@ export class TableScene extends Phaser.Scene {
     })
     this.selectionHint.setOrigin(0.5, 1)
 
+    this.pileLayer = new PileLayer(this)
+    this.backdropLayer = new BackdropLayer(this, selectTheme(this.game_.state.worldId))
+
     // Bring overlays to the top of the display list so they cover everything
     this.children.bringToTop(this.winScreen)
     this.children.bringToTop(this.lossScreen)
@@ -124,13 +156,16 @@ export class TableScene extends Phaser.Scene {
    * affects highlights.
    */
   private drawAll(): void {
+    const state = this.game_.state
+
+    // Update backdrop intensity before rebuilding cards
+    this.backdropLayer.update(state, this.game_.intensity())
+
     // Destroy existing card containers
     for (const container of this.cardObjects.values()) {
       container.destroy()
     }
     this.cardObjects.clear()
-
-    const state = this.game_.state
     const available = availableActions(state)
 
     // Determine sets for highlight computation
@@ -163,6 +198,9 @@ export class TableScene extends Phaser.Scene {
 
     // HUD
     updateHUD(this.hudRefs, state)
+
+    // Pile stacks (player draw + world draw)
+    this.pileLayer.update(this, state.playerDraw.length, state.worldDraw.length)
 
     // End Turn button
     const selectionActive = this.sel.phase !== 'idle'
@@ -207,7 +245,7 @@ export class TableScene extends Phaser.Scene {
 
     cards.forEach((card, i) => {
       const x = startX + i * CARD_SPACING
-      const container = createCardObject(this, card, x, rowY)
+      const container = createCardObject(this, card, x, rowY, this.theme_)
       this.cardObjects.set(card.id, container)
 
       // Make card interactive
@@ -241,37 +279,39 @@ export class TableScene extends Phaser.Scene {
     const id = card.id
     const sel = this.sel
 
+    const fs = this.theme_.frameStyle
+
     // Selected card (all non-idle variants have cardId)
     if ('cardId' in sel && sel.cardId === id) {
-      applyCardHighlight(container, 'selected')
+      applyCardHighlight(container, 'selected', fs)
       dimCard(container, false)
       return
     }
 
     // Legal target during a targeting phase
     if (legalTargetIds.has(id)) {
-      applyCardHighlight(container, 'target')
+      applyCardHighlight(container, 'target', fs)
       dimCard(container, false)
       return
     }
 
     // Discardable world card (not during a selection)
     if (discardableIds.has(id) && sel.phase === 'idle') {
-      applyCardHighlight(container, 'discard')
+      applyCardHighlight(container, 'discard', fs)
       dimCard(container, false)
       return
     }
 
     // Playable player card (in idle state)
     if (card.kind === 'player' && playableIds.has(id) && sel.phase === 'idle') {
-      applyCardHighlight(container, 'none')
+      applyCardHighlight(container, 'none', fs)
       dimCard(container, false)
       return
     }
 
     // During awaiting-return, mark already-selected return targets
     if (sel.phase === 'awaiting-return' && sel.selected.includes(id)) {
-      applyCardHighlight(container, 'selected')
+      applyCardHighlight(container, 'selected', fs)
       dimCard(container, false)
       return
     }
@@ -279,13 +319,13 @@ export class TableScene extends Phaser.Scene {
     // Everything else is dimmed when a selection is active, or when unplayable
     const selActive = sel.phase !== 'idle'
     if (selActive) {
-      applyCardHighlight(container, 'none')
+      applyCardHighlight(container, 'none', fs)
       dimCard(container, true)
     } else if (card.kind === 'player' && !playableIds.has(id)) {
-      applyCardHighlight(container, 'none')
+      applyCardHighlight(container, 'none', fs)
       dimCard(container, true)
     } else {
-      applyCardHighlight(container, 'none')
+      applyCardHighlight(container, 'none', fs)
       dimCard(container, false)
     }
   }

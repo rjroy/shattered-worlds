@@ -1,0 +1,85 @@
+<!DOCTYPE html><html lang="en"><head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pure visual mappers (headless-tested)</title>
+  <meta name="date" content="2026-06-04">
+  <meta name="status" content="complete">
+  <meta name="tags" content="task, visual, mappers, intensity, walker, pure, headless-test, property-test">
+  <meta name="source" content=".lore/work/plans/visual-identity.html">
+  <meta name="sequence" content="4">
+  <meta name="modules" content="game">
+  <style>
+    :root{--bg:#0f1117;--panel:#1a1d27;--panel-2:#222633;--ink:#e8eaf0;--muted:#9aa3b2;--accent:#8ab4ff;--gold:#ffd479;--good:#6cd08a;--warn:#ffc14d;--bad:#ff8a8a;--violet:#b98aff;--border:#2a2f3d;}
+    *{box-sizing:border-box;}
+    body{margin:0;background:radial-gradient(1200px 600px at 50% -10%,#1a2238 0%,var(--bg) 55%);color:var(--ink);font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;padding:2rem 1rem 5rem;}
+    .wrap{max-width:860px;margin:0 auto;}
+    .top{display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;margin-bottom:.6rem;}
+    .seq{font:700 .8rem ui-monospace,Menlo,monospace;color:var(--gold);background:rgba(255,212,121,.1);border:1px solid rgba(255,212,121,.35);border-radius:999px;padding:.2rem .7rem;}
+    .chip{display:inline-flex;align-items:center;gap:.35rem;border-radius:999px;padding:.18rem .7rem;font-size:.72rem;font-weight:700;border:1px solid;text-transform:uppercase;letter-spacing:.04em;}
+    .chip.pending{background:rgba(138,180,255,.12);border-color:rgba(138,180,255,.35);color:var(--accent);}
+    .chip.pure{background:rgba(108,208,138,.1);border-color:rgba(108,208,138,.35);color:var(--good);}
+    .src{margin-left:auto;font-size:.8rem;color:var(--muted);}
+    h1{font-size:1.6rem;margin:.3rem 0 .2rem;line-height:1.15;}
+    .reqs{display:flex;gap:.3rem;flex-wrap:wrap;margin:.4rem 0 1.2rem;}
+    .reqtag{font:.66rem ui-monospace,Menlo,monospace;background:rgba(185,138,255,.14);color:var(--violet);border-radius:999px;padding:.12rem .55rem;}
+    h2{font-size:.82rem;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin:1.8rem 0 .5rem;border-bottom:1px solid var(--border);padding-bottom:.3rem;}
+    p{margin:.5rem 0;}a{color:var(--accent);}
+    code{background:var(--panel-2);border:1px solid var(--border);border-radius:5px;padding:.05rem .35rem;font-size:.86em;}
+    ul{margin:.4rem 0;padding-left:1.1rem;}li{margin:.3rem 0;}li b{color:var(--ink);}
+    .muted{color:var(--muted);}
+    .file{font:.82rem ui-monospace,Menlo,monospace;color:var(--gold);}
+    .new{font-size:.62rem;color:var(--good);border:1px solid rgba(108,208,138,.4);border-radius:4px;padding:0 .3rem;}
+    .val{background:linear-gradient(180deg,rgba(108,208,138,.08),rgba(108,208,138,.02));border:1px solid rgba(108,208,138,.4);border-left:4px solid var(--good);border-radius:12px;padding:.8rem 1.1rem;margin:.5rem 0;}
+    .val li{color:var(--muted);}.val li b{color:var(--ink);}
+    pre{background:#0c0e14;border:1px solid var(--border);border-radius:10px;padding:.8rem 1rem;overflow-x:auto;font:.78rem/1.5 ui-monospace,Menlo,monospace;color:#d6dbe8;}
+    pre .c{color:var(--muted);}pre .k{color:var(--accent);}pre .t{color:var(--gold);}pre .s{color:var(--good);}
+    .deps{font-size:.8rem;color:var(--muted);margin-top:1.4rem;}
+    footer{margin-top:2.2rem;color:var(--muted);font-size:.8rem;border-top:1px solid var(--border);padding-top:.8rem;}
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <span class="seq">Step 4 / 10</span>
+    <span class="chip pending">● pending</span>
+    <span class="chip pure">pure · headless</span>
+    <span class="src"><a href="../../plans/visual-identity.html">visual-identity plan</a></span>
+  </div>
+  <h1>Pure visual mappers</h1>
+  <div class="reqs"><span class="reqtag">REQ-VIS-9</span><span class="reqtag">11</span><span class="reqtag">15</span></div>
+
+  <h2>What</h2>
+  <p>The decision logic the spec insists be pure and tested: intensity→intrusion, and act→Walker proximity. No Phaser, both return plain values.</p>
+  <pre><span class="k">export function</span> <span class="s">intrusionForIntensity</span>(i: <span class="t">number</span>): <span class="t">number</span>
+  <span class="c">// clamp to [0,1]; monotonic non-decreasing; returns overlay alpha / ramp position</span>
+
+<span class="k">export interface</span> <span class="t">WalkerProximity</span> { scale: <span class="t">number</span>; x: <span class="t">number</span>; y: <span class="t">number</span>; alpha: <span class="t">number</span> }
+<span class="k">export function</span> <span class="s">walkerProximityForAct</span>(actIndex: <span class="t">number</span>): <span class="t">WalkerProximity</span>
+  <span class="c">// three tiers: far (act 0) -> mid (act 1) -> looming (act 2)</span></pre>
+  <ul>
+    <li><code>intrusionForIntensity</code>: clamps input to <code>[0,1]</code>; non-decreasing; maps to the overlay alpha the backdrop will use. An eased curve is fine as long as it stays monotonic.</li>
+    <li><code>walkerProximityForAct</code>: three tiers as plain numbers — increasing <code>scale</code> and a position that reads as closer with each act. Clamp out-of-range <code>actIndex</code> to the nearest tier.</li>
+    <li><b>No Phaser import</b> — both are pure functions over numbers.</li>
+  </ul>
+
+  <h2>Validation</h2>
+  <div class="val"><ul>
+    <li><b><code>visualMappers.test.ts</code> green under <code>bun test</code>, no Phaser/DOM.</b></li>
+    <li><b>Property test:</b> for many random pairs <code>a ≤ b</code> in <code>[0,1]</code>, assert <code>intrusionForIntensity(a) ≤ intrusionForIntensity(b)</code>. Not a hand-picked sample of two or three.</li>
+    <li><b>Clamping:</b> inputs below 0 and above 1 return the same values as 0 and 1 respectively.</li>
+    <li><b>Three tiers:</b> <code>walkerProximityForAct(0/1/2)</code> return distinct values whose <code>scale</code> strictly increases (nearer each act); out-of-range indices clamp.</li>
+  </ul></div>
+
+  <h2>Why</h2>
+  <p>REQ-VIS-15 mandates these mappers be pure and headlessly tested; REQ-VIS-9 makes intrusion a pure function of intensity; REQ-VIS-11 makes Walker proximity a pure function of act. Keeping them Phaser-free is what lets the backdrop (S8) and Walker (S9) glue stay thin shells around tested logic. See plan Step 4.</p>
+
+  <h2>Files</h2>
+  <ul>
+    <li><span class="file">src/game/visualMappers.ts</span> <span class="new">new</span></li>
+    <li><span class="file">src/game/visualMappers.test.ts</span> <span class="new">new</span></li>
+  </ul>
+
+  <div class="deps">Depends on: nothing (pure). Unlocks: S8 (intrusion alpha), S9 (Walker proximity).</div>
+  <footer>Task 4 of 10 · <a href="../../plans/visual-identity.html">visual-identity plan</a> · spec <a href="../../specs/visual-identity.html">visual-identity</a></footer>
+</div>
+</body></html>

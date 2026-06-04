@@ -1,0 +1,75 @@
+<!DOCTYPE html><html lang="en"><head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Final validation against the spec</title>
+  <meta name="date" content="2026-06-04">
+  <meta name="status" content="complete">
+  <meta name="tags" content="task, visual, validation, review, ci, golden-test, boundary">
+  <meta name="source" content=".lore/work/plans/visual-identity.html">
+  <meta name="sequence" content="10">
+  <meta name="modules" content="game, core">
+  <style>
+    :root{--bg:#0f1117;--panel:#1a1d27;--panel-2:#222633;--ink:#e8eaf0;--muted:#9aa3b2;--accent:#8ab4ff;--gold:#ffd479;--good:#6cd08a;--warn:#ffc14d;--bad:#ff8a8a;--violet:#b98aff;--border:#2a2f3d;}
+    *{box-sizing:border-box;}
+    body{margin:0;background:radial-gradient(1200px 600px at 50% -10%,#1a2238 0%,var(--bg) 55%);color:var(--ink);font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;padding:2rem 1rem 5rem;}
+    .wrap{max-width:860px;margin:0 auto;}
+    .top{display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;margin-bottom:.6rem;}
+    .seq{font:700 .8rem ui-monospace,Menlo,monospace;color:var(--gold);background:rgba(255,212,121,.1);border:1px solid rgba(255,212,121,.35);border-radius:999px;padding:.2rem .7rem;}
+    .chip{display:inline-flex;align-items:center;gap:.35rem;border-radius:999px;padding:.18rem .7rem;font-size:.72rem;font-weight:700;border:1px solid;text-transform:uppercase;letter-spacing:.04em;}
+    .chip.pending{background:rgba(138,180,255,.12);border-color:rgba(138,180,255,.35);color:var(--accent);}
+    .chip.review{background:rgba(255,193,77,.12);border-color:rgba(255,193,77,.4);color:var(--warn);}
+    .src{margin-left:auto;font-size:.8rem;color:var(--muted);}
+    h1{font-size:1.6rem;margin:.3rem 0 .2rem;line-height:1.15;}
+    .reqs{display:flex;gap:.3rem;flex-wrap:wrap;margin:.4rem 0 1.2rem;}
+    .reqtag{font:.66rem ui-monospace,Menlo,monospace;background:rgba(185,138,255,.14);color:var(--violet);border-radius:999px;padding:.12rem .55rem;}
+    h2{font-size:.82rem;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin:1.8rem 0 .5rem;border-bottom:1px solid var(--border);padding-bottom:.3rem;}
+    p{margin:.5rem 0;}a{color:var(--accent);}
+    code{background:var(--panel-2);border:1px solid var(--border);border-radius:5px;padding:.05rem .35rem;font-size:.86em;}
+    ul{margin:.4rem 0;padding-left:1.1rem;}li{margin:.3rem 0;}li b{color:var(--ink);}
+    .muted{color:var(--muted);}
+    .val{background:linear-gradient(180deg,rgba(108,208,138,.08),rgba(108,208,138,.02));border:1px solid rgba(108,208,138,.4);border-left:4px solid var(--good);border-radius:12px;padding:.8rem 1.1rem;margin:.5rem 0;}
+    .val li{color:var(--muted);}.val li b{color:var(--ink);}
+    .deps{font-size:.8rem;color:var(--muted);margin-top:1.4rem;}
+    footer{margin-top:2.2rem;color:var(--muted);font-size:.8rem;border-top:1px solid var(--border);padding-top:.8rem;}
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <span class="seq">Step 10 / 10</span>
+    <span class="chip pending">● pending</span>
+    <span class="chip review">validation</span>
+    <span class="src"><a href="../../plans/visual-identity.html">visual-identity plan</a></span>
+  </div>
+  <h1>Final validation against the spec</h1>
+  <div class="reqs"><span class="reqtag">REQ-VIS-1 … 18</span></div>
+
+  <h2>What</h2>
+  <p>Walk the whole spec end to end. Nothing is "done" until this gate passes. No new feature code — this is verification and review.</p>
+  <ul>
+    <li>Run the full <code>bun test</code> suite (core + the new pure tests for theme and mappers), the import-boundary <code>lint</code>, <code>typecheck</code>, and <code>bun run build</code>.</li>
+    <li><b>No-feedback proof:</b> re-run the core replay/golden tests (<code>src/core/golden.test.ts</code>) — green, because they cannot import the renderer. Then audit every renderer <code>dispatch</code> call site: each <code>Action</code> is built only from <code>state</code> + the player's selection, never from a theme, intensity, tween, or the Walker's position.</li>
+    <li><b>Manual browser pass</b> (<code>bun run dev</code>, and <code>bun run preview</code> for the Pages base): themed fronts, constant face-down back on the piles, intrusion sliding toward green as intensity climbs, the Walker distant in Act 1 and foregrounded when drawn — forcing acts/Walker via the sim or dev console.</li>
+    <li><b>Fresh-context review</b> of the full diff (a sub-agent) before merge, per the testing-review rule.</li>
+  </ul>
+
+  <h2>Validation</h2>
+  <div class="val"><ul>
+    <li><b>Every check in the spec's AI Validation section passes</b> — open <a href="../../specs/visual-identity.html">visual-identity.html → AI Validation</a> and tick each:</li>
+    <li>Boundary holds (core grep clean, only <code>worldId</code> added); theme selection total; back constant; fronts legible to WCAG AA; intrusion monotonic + intensity-tracking; no feedback loop; apocalypse localized; Walker act-driven and foreground-on-draw; assets resolve on the Pages base; build green.</li>
+    <li>The world-deck slice loop still plays to a win and a loss with the visual layer present.</li>
+    <li>Mark the plan <code>executed</code> and the spec <code>implemented</code> once green.</li>
+  </ul></div>
+
+  <h2>Why</h2>
+  <p>Spec validation catches requirement compliance, but runtime testing is the only thing that catches "never actually wired together." This step is the gate that proves the visual layer is correct, the boundary intact, and the game still the game — across all of REQ-VIS-1..18. See plan Step 10.</p>
+
+  <h2>Files</h2>
+  <ul>
+    <li><span class="muted">No production code. Optionally capture results in</span> <span class="file">.lore/work/notes/</span> <span class="muted">and run <code>/retro</code> after.</span></li>
+  </ul>
+
+  <div class="deps">Depends on: S1–S9 (all). Terminal step.</div>
+  <footer>Task 10 of 10 · <a href="../../plans/visual-identity.html">visual-identity plan</a> · spec <a href="../../specs/visual-identity.html">visual-identity</a></footer>
+</div>
+</body></html>

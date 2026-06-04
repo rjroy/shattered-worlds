@@ -100,6 +100,7 @@ export interface GameState {
   hp: number
   skipDrawNext: boolean
   status: 'playing' | 'won' | 'lost'
+  worldId: string
   rng: RngState
   nextId: number
 }

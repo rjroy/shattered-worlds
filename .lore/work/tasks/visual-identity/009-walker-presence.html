@@ -1,0 +1,81 @@
+<!DOCTYPE html><html lang="en"><head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Walker presence</title>
+  <meta name="date" content="2026-06-04">
+  <meta name="status" content="complete">
+  <meta name="tags" content="task, visual, the-walker, presence, foreground, actindex, phaser">
+  <meta name="source" content=".lore/work/plans/visual-identity.html">
+  <meta name="sequence" content="9">
+  <meta name="modules" content="game">
+  <style>
+    :root{--bg:#0f1117;--panel:#1a1d27;--panel-2:#222633;--ink:#e8eaf0;--muted:#9aa3b2;--accent:#8ab4ff;--gold:#ffd479;--good:#6cd08a;--warn:#ffc14d;--bad:#ff8a8a;--violet:#b98aff;--border:#2a2f3d;}
+    *{box-sizing:border-box;}
+    body{margin:0;background:radial-gradient(1200px 600px at 50% -10%,#1a2238 0%,var(--bg) 55%);color:var(--ink);font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;padding:2rem 1rem 5rem;}
+    .wrap{max-width:860px;margin:0 auto;}
+    .top{display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;margin-bottom:.6rem;}
+    .seq{font:700 .8rem ui-monospace,Menlo,monospace;color:var(--gold);background:rgba(255,212,121,.1);border:1px solid rgba(255,212,121,.35);border-radius:999px;padding:.2rem .7rem;}
+    .chip{display:inline-flex;align-items:center;gap:.35rem;border-radius:999px;padding:.18rem .7rem;font-size:.72rem;font-weight:700;border:1px solid;text-transform:uppercase;letter-spacing:.04em;}
+    .chip.pending{background:rgba(138,180,255,.12);border-color:rgba(138,180,255,.35);color:var(--accent);}
+    .chip.phaser{background:rgba(255,212,121,.12);border-color:rgba(255,212,121,.4);color:var(--gold);}
+    .src{margin-left:auto;font-size:.8rem;color:var(--muted);}
+    h1{font-size:1.6rem;margin:.3rem 0 .2rem;line-height:1.15;}
+    .reqs{display:flex;gap:.3rem;flex-wrap:wrap;margin:.4rem 0 1.2rem;}
+    .reqtag{font:.66rem ui-monospace,Menlo,monospace;background:rgba(185,138,255,.14);color:var(--violet);border-radius:999px;padding:.12rem .55rem;}
+    h2{font-size:.82rem;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin:1.8rem 0 .5rem;border-bottom:1px solid var(--border);padding-bottom:.3rem;}
+    p{margin:.5rem 0;}a{color:var(--accent);}
+    code{background:var(--panel-2);border:1px solid var(--border);border-radius:5px;padding:.05rem .35rem;font-size:.86em;}
+    ul{margin:.4rem 0;padding-left:1.1rem;}li{margin:.3rem 0;}li b{color:var(--ink);}
+    .muted{color:var(--muted);}
+    .file{font:.82rem ui-monospace,Menlo,monospace;color:var(--gold);}
+    .new{font-size:.62rem;color:var(--good);border:1px solid rgba(108,208,138,.4);border-radius:4px;padding:0 .3rem;}
+    .rw{font-size:.62rem;color:var(--warn);border:1px solid rgba(255,193,77,.4);border-radius:4px;padding:0 .3rem;}
+    .val{background:linear-gradient(180deg,rgba(108,208,138,.08),rgba(108,208,138,.02));border:1px solid rgba(108,208,138,.4);border-left:4px solid var(--good);border-radius:12px;padding:.8rem 1.1rem;margin:.5rem 0;}
+    .val li{color:var(--muted);}.val li b{color:var(--ink);}
+    .deps{font-size:.8rem;color:var(--muted);margin-top:1.4rem;}
+    footer{margin-top:2.2rem;color:var(--muted);font-size:.8rem;border-top:1px solid var(--border);padding-top:.8rem;}
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <span class="seq">Step 9 / 10</span>
+    <span class="chip pending">● pending</span>
+    <span class="chip phaser">phaser glue</span>
+    <span class="src"><a href="../../plans/visual-identity.html">visual-identity plan</a></span>
+  </div>
+  <h1>The Walker presence</h1>
+  <div class="reqs"><span class="reqtag">REQ-VIS-11</span><span class="reqtag">12</span><span class="reqtag">13</span></div>
+
+  <h2>What</h2>
+  <p>The distant figure who nears by act and steps to the foreground when drawn — pure presentation of the existing Walker card, no new rule.</p>
+  <ul>
+    <li>New <code>src/game/walker.ts</code> — a <b>pure</b> proximity/foreground calculator (e.g. given <code>actIndex</code> and an <code>isInHand</code> flag, return the target transform). <code>backdrop.ts</code> <b>owns the sprite</b> and applies the transform.</li>
+    <li>Show the Walker sprite (from the <code>walker</code> texture) only when the active theme declares a <code>walker</code>. Position/scale from <code>walkerProximityForAct(state.actIndex)</code> (S4): distant silhouette in Act 1, looming by Act 3.</li>
+    <li><b>Tween on act change:</b> compare the layer's last-seen <code>actIndex</code> each <code>drawAll</code>; when it advances, tween to the new tier (so crossing an act reads as him closing in). Suppress this tween while he is foregrounded.</li>
+    <li><b>Foreground on draw:</b> when <code>state.hand.some(c =&gt; c.name === 'The Walker')</code>, switch to a large foreground presentation tied to that card. <b>Hold</b> keeps him there; once he leaves the hand, return to the act-tier position.</li>
+    <li><b>Resolve and discard share the same return</b> — the mechanical difference (grants Summon Door vs forces a Door) is carried by the card, not by a distinct Walker animation.</li>
+    <li>All of it reads <code>state</code> (hand membership, <code>actIndex</code>) in <code>drawAll</code>. The <code>state.hand</code> membership check is sufficient for enter/exit; <b>no event parsing, no renderer-side timer</b> that could desync from the deck.</li>
+  </ul>
+
+  <h2>Validation</h2>
+  <div class="val"><ul>
+    <li><b>Distant silhouette in Act 1, looming by Act 3</b>, tweening (not snapping) on the <code>ActAdvanced</code> boundary.</li>
+    <li><b>Foregrounds when the Walker card is forced into hand</b> (use the dev console or sim to draw it) and <b>returns to the backdrop</b> after it leaves — identically whether resolved or discarded.</li>
+    <li><b>Everything is state-derived:</b> stepping the same state through <code>drawAll</code> twice yields the same Walker position; there is no timer driving it.</li>
+    <li><code>walker.ts</code> is pure (no Phaser import) and could carry a small headless unit test for the in-hand-vs-act transform if useful.</li>
+  </ul></div>
+
+  <h2>Why</h2>
+  <p>The Walker is the ambient dread made literal and the visual face of the existing REQ-WDS-19/20 card: always present (REQ-VIS-11), foreground on draw (REQ-VIS-12), and strictly state-derived so the figure and the deck never disagree (REQ-VIS-13). See plan Step 9.</p>
+
+  <h2>Files</h2>
+  <ul>
+    <li><span class="file">src/game/walker.ts</span> <span class="new">new</span> (pure calculator)</li>
+    <li><span class="file">src/game/backdrop.ts</span> <span class="rw">edit</span> (owns the sprite, drives it in <code>drawAll</code>)</li>
+  </ul>
+
+  <div class="deps">Depends on: S4 (proximity mapper), S5 (walker texture), S8 (backdrop layer). Last visible step before validation.</div>
+  <footer>Task 9 of 10 · <a href="../../plans/visual-identity.html">visual-identity plan</a> · spec <a href="../../specs/visual-identity.html">visual-identity</a></footer>
+</div>
+</body></html>

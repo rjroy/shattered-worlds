@@ -7,6 +7,7 @@
  */
 import Phaser from 'phaser'
 import type { Card, GameState, WorldCard } from '../core/index'
+import type { FrameStyle, VisualTheme } from './theme'
 import { describeEffect, describePenalty, describeReward } from './describe'
 
 // ---------------------------------------------------------------------------
@@ -19,20 +20,16 @@ import { describeEffect, describePenalty, describeReward } from './describe'
 const CARD_W = 150
 const CARD_H = 196
 
-const COLORS = {
-  playerBg: 0x1a2a4a,
-  worldBg: 0x3a1a1a,
-  border: 0x445566,
-  selectedBorder: 0xffee44,
-  targetBorder: 0x44ee44,
-  discardBorder: 0xff8800,
-  dimAlpha: 0.35,
+// Text colors are theme-independent — all pass WCAG AA against the frame
+// backgrounds used by every current theme.
+const TEXT = {
   textLight: '#e8eaf0',
   textMuted: '#9aa3b2',
   textCost: '#ffcc44',
   textKeyword: '#88ccff',
   textPenalty: '#ff8888',
   textReward: '#88ee88',
+  dimAlpha: 0.35,
 }
 
 // ---------------------------------------------------------------------------
@@ -45,6 +42,7 @@ export function createCardObject(
   card: Card,
   x: number,
   y: number,
+  theme: VisualTheme,
 ): Phaser.GameObjects.Container {
   const container = scene.add.container(x, y)
 
@@ -53,16 +51,16 @@ export function createCardObject(
     0,
     CARD_W,
     CARD_H,
-    card.kind === 'player' ? COLORS.playerBg : COLORS.worldBg,
+    card.kind === 'player' ? theme.frameStyle.playerBg : theme.frameStyle.worldBg,
   )
-  bg.setStrokeStyle(2, COLORS.border)
+  bg.setStrokeStyle(2, theme.frameStyle.borderColor)
   container.add(bg)
 
   if (card.kind === 'player') {
     // Card name at top
     const nameText = scene.add.text(0, -CARD_H / 2 + 8, card.name, {
       fontSize: '13px',
-      color: COLORS.textLight,
+      color: TEXT.textLight,
       fontStyle: 'bold',
       wordWrap: { width: CARD_W - 12 },
       align: 'center',
@@ -76,7 +74,7 @@ export function createCardObject(
     const effectText = scene.add.text(0, -CARD_H / 2 + 38, effectLines, {
       fontSize: '11px',
       lineSpacing: 2,
-      color: COLORS.textLight,
+      color: TEXT.textLight,
       wordWrap: { width: CARD_W - 16 },
       align: 'center',
     })
@@ -89,7 +87,7 @@ export function createCardObject(
     // Name at top
     const nameText = scene.add.text(0, -CARD_H / 2 + 8, worldCard.name, {
       fontSize: '13px',
-      color: COLORS.textLight,
+      color: TEXT.textLight,
       fontStyle: 'bold',
       wordWrap: { width: CARD_W - 12 },
       align: 'center',
@@ -100,14 +98,14 @@ export function createCardObject(
     // Cost label + value (cost is the Progress needed to clear the Hazard)
     const costText = scene.add.text(0, -CARD_H / 2 + 40, String(worldCard.cost), {
       fontSize: '30px',
-      color: COLORS.textCost,
+      color: TEXT.textCost,
       fontStyle: 'bold',
     })
     costText.setOrigin(0.5, 0)
     container.add(costText)
     const costLabel = scene.add.text(0, -CARD_H / 2 + 74, 'to clear', {
       fontSize: '8px',
-      color: COLORS.textMuted,
+      color: TEXT.textMuted,
     })
     costLabel.setOrigin(0.5, 0)
     container.add(costLabel)
@@ -116,7 +114,7 @@ export function createCardObject(
     if (worldCard.keywords.length > 0) {
       const kwText = scene.add.text(0, -CARD_H / 2 + 88, worldCard.keywords.join(' · '), {
         fontSize: '9px',
-        color: COLORS.textKeyword,
+        color: TEXT.textKeyword,
       })
       kwText.setOrigin(0.5, 0)
       container.add(kwText)
@@ -127,7 +125,7 @@ export function createCardObject(
     if (penalty !== '') {
       const penText = scene.add.text(0, CARD_H / 2 - 52, penalty, {
         fontSize: '9px',
-        color: COLORS.textPenalty,
+        color: TEXT.textPenalty,
         wordWrap: { width: CARD_W - 16 },
         align: 'center',
       })
@@ -139,7 +137,7 @@ export function createCardObject(
     if (reward !== '') {
       const rewText = scene.add.text(0, CARD_H / 2 - 26, reward, {
         fontSize: '9px',
-        color: COLORS.textReward,
+        color: TEXT.textReward,
         wordWrap: { width: CARD_W - 16 },
         align: 'center',
       })
@@ -178,8 +176,8 @@ export interface HUDRefs {
 
 /** Create HUD text objects at the top of the screen. */
 export function createHUD(scene: Phaser.Scene): HUDRefs {
-  const style = { fontSize: '14px', color: COLORS.textLight }
-  const mutedStyle = { fontSize: '12px', color: COLORS.textMuted }
+  const style = { fontSize: '14px', color: TEXT.textLight }
+  const mutedStyle = { fontSize: '12px', color: TEXT.textMuted }
 
   const hpText = scene.add.text(12, 10, 'HP: —', { ...style, color: '#ff8888' })
   const actText = scene.add.text(120, 10, 'Act 1', style)
@@ -307,28 +305,29 @@ export function createConfirmButton(scene: Phaser.Scene): Phaser.GameObjects.Tex
 export function applyCardHighlight(
   container: Phaser.GameObjects.Container,
   kind: 'selected' | 'target' | 'discard' | 'none',
+  frameStyle: FrameStyle,
 ): void {
   // The background rectangle is always the first child
   const bg = container.list[0] as Phaser.GameObjects.Rectangle | undefined
   if (bg === undefined) return
   switch (kind) {
     case 'selected':
-      bg.setStrokeStyle(3, COLORS.selectedBorder)
+      bg.setStrokeStyle(3, frameStyle.selectedBorder)
       break
     case 'target':
-      bg.setStrokeStyle(3, COLORS.targetBorder)
+      bg.setStrokeStyle(3, frameStyle.targetBorder)
       break
     case 'discard':
-      bg.setStrokeStyle(3, COLORS.discardBorder)
+      bg.setStrokeStyle(3, frameStyle.discardBorder)
       break
     case 'none':
-      bg.setStrokeStyle(2, COLORS.border)
+      bg.setStrokeStyle(2, frameStyle.borderColor)
       break
   }
 }
 
 /** Dim a card that is not currently playable. */
 export function dimCard(container: Phaser.GameObjects.Container, dim: boolean): void {
-  container.setAlpha(dim ? COLORS.dimAlpha : 1.0)
+  container.setAlpha(dim ? TEXT.dimAlpha : 1.0)
 }
 

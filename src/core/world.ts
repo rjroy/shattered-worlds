@@ -136,6 +136,7 @@ export function createWorld(seed: number): GameState {
     hp: 20,
     skipDrawNext: false,
     status: 'playing',
+    worldId: 'zombie-big-box',
     rng,
     nextId: 0,
   }
