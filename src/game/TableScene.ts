@@ -146,6 +146,8 @@ export class TableScene extends Phaser.Scene {
       const step =
         this.sel.phase === 'awaiting-return' && 'targetId' in this.sel && this.sel.targetId !== undefined
           ? 1
+          : this.sel.phase === 'awaiting-hazard' && this.sel.modalChoice !== undefined
+          ? this.sel.modalChoice
           : 0
       const targets = available.legalTargets(this.sel.cardId, step)
       legalTargetIds = new Set(targets)
@@ -320,7 +322,10 @@ export class TableScene extends Phaser.Scene {
       this.sel.phase === 'awaiting-discard' ||
       this.sel.phase === 'awaiting-destroy'
     ) {
-      const step = 0
+      const step =
+        this.sel.phase === 'awaiting-hazard' && this.sel.modalChoice !== undefined
+          ? this.sel.modalChoice
+          : 0
       const legalTargets = available.legalTargets(this.sel.cardId, step)
       if (!legalTargets.includes(cardId)) return
 
@@ -395,8 +400,19 @@ export class TableScene extends Phaser.Scene {
         return
       }
       case 'compound': {
-        // Compound starts with the first step (hazard targeting for Barricade)
-        this.sel = { phase: 'awaiting-hazard', cardId }
+        const firstStep = spec.steps[0]
+        if (firstStep !== undefined && firstStep.kind === 'returnWorld') {
+          this.sel = {
+            phase: 'awaiting-return',
+            cardId,
+            selected: [],
+            min: firstStep.min,
+            max: firstStep.max,
+          }
+        } else {
+          // Default: first step is hazard targeting (Barricade)
+          this.sel = { phase: 'awaiting-hazard', cardId }
+        }
         this.drawAll()
         return
       }
@@ -475,7 +491,7 @@ export class TableScene extends Phaser.Scene {
 
     spec.branches.forEach((branchSpec, idx) => {
       const label = branchLabel(branchSpec, idx, available, cardId)
-      const isLegal = branchIsLegal(branchSpec, available, cardId)
+      const isLegal = branchIsLegal(branchSpec, idx, available, cardId)
 
       const btnY = -30 + idx * 60
       const btn = this.add.text(0, btnY, label, {
@@ -612,15 +628,13 @@ function branchLabel(
 
 function branchIsLegal(
   spec: TargetSpec,
+  idx: number,
   available: import('../core/index').AvailableActions,
   cardId: string,
 ): boolean {
   if (spec.kind === 'hazard') {
-    const tag = (spec as Extract<TargetSpec, { kind: 'hazard' }>).tag
-    const targets = available.legalTargets(cardId, 1) // branch index 1 for Slow branch
-    if (tag !== undefined && targets.length === 0) return false
-    // For branch 0 (any hazard) always legal if there are world cards
-    return true
+    const targets = available.legalTargets(cardId, idx)
+    return targets.length > 0
   }
   return true
 }
