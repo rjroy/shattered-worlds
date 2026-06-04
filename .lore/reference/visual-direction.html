@@ -165,10 +165,10 @@
 
   <h2><span class="mark">◑</span> The reality → intrusion ramp</h2>
   <div class="gradient-card">
-    <p style="margin-top:0;color:var(--muted)">The single load-bearing element. The direction sheet ships it as an explicit palette strip, which means it is meant to be a <strong style="color:var(--ink)">controllable axis</strong>, not just a mood. Treat this ramp as the master gradient every reality maps onto.</p>
+    <p style="margin-top:0;color:var(--muted)">The single load-bearing element. Treat this ramp as the <strong style="color:var(--ink)">master gradient every reality maps onto</strong> — the shared color logic that makes distinct worlds feel like one game.</p>
     <div class="ramp"></div>
     <div class="ramp-labels"><span class="l">REALITY · mundane · desaturated slate</span><span class="r">INTRUSION · impossible · magenta → ember</span></div>
-    <p style="margin-bottom:0;color:var(--muted)">Whether this becomes a literal <em>game-state</em> value the renderer tweens (rising intrusion = the screen sliding rightward along this ramp) is a requirements question — parked below for the spec.</p>
+    <p style="margin-bottom:0;color:var(--muted)">It is <strong style="color:var(--ink)">flavor, baked per scene</strong> — intrusion's level is authored into each reality's art, not a runtime value the renderer tweens. The ramp guides the palette; it is not a dial.</p>
   </div>
 
   <h2><span class="mark">◆</span> Per-reality palettes</h2>
@@ -205,24 +205,27 @@
     <div class="refuse"><h3>AI-mush rendering</h3><p>Smeared, detail-less, "no clear focal point" texture. Linework must be deliberate; the eye must land on the Door.</p></div>
   </div>
 
-  <h2><span class="mark">?</span> Open questions for the spec</h2>
-  <p style="color:var(--muted);margin-top:0">North-star scope ends here. These are requirements decisions the look implies but does not settle — carry them into a visual spec before any rendering design.</p>
+  <h2><span class="mark">✓</span> Settled direction</h2>
+  <p style="color:var(--muted);margin-top:0">The three questions the look raised, now decided. These become the visual spec's opening agenda.</p>
 
-  <div class="open">
-    <h3>Is reality→intrusion a visible game state?</h3>
-    <p>The ramp is shipped as a controllable axis. Does rising intrusion drive a real renderer value (screen palette tweening rightward), or is it flavor baked per-scene? <span class="feeds">Feeds: spec requirement + Phaser rendering design.</span></p>
+  <div class="principle">
+    <span class="rule">Decided</span>
+    <h3>Reality → intrusion is flavor, not a live state</h3>
+    <p>The ramp is <strong>shared palette logic baked per scene</strong>, not a runtime value the renderer tweens. Intrusion's level is authored into each reality's art, never driven by a game variable. Keeps rendering simple and keeps the ramp as guidance rather than a system to build.</p>
   </div>
-  <div class="open">
-    <h3>Do card fronts vary by reality-shard?</h3>
-    <p>The back is canon and constant. Are fronts shard-themed (each world's palette and intrusion hue) or a single unified treatment? Ties directly to vision's "worlds are identity, not wallpaper." <span class="feeds">Feeds: spec requirement.</span></p>
+  <div class="principle">
+    <span class="rule">Decided</span>
+    <h3>Card fronts vary by reality-shard</h3>
+    <p>The back is constant canon; <strong>fronts are shard-themed</strong>, each carrying its world's palette and intrusion hue. This is the visual half of <em>"worlds are identity, not wallpaper"</em> — the deck in your hand looks like the world you're standing in.</p>
   </div>
-  <div class="open">
-    <h3>Is the Walker a persistent actor or box art?</h3>
-    <p>Turnarounds suggest an animatable figure. Is he on-screen during play (a presence that triggers the Door), or framing art for menus and key art only? <span class="feeds">Feeds: spec requirement + scope of character rigging.</span></p>
+  <div class="principle">
+    <span class="rule">Decided</span>
+    <h3>The Walker is always present — distant until drawn</h3>
+    <p>He's a <strong>persistent figure in the background</strong>, a person in the distance who drifts from scene to scene through the run. He is also in the deck: <strong>the moment you draw him, the distance collapses</strong> and he's right in front of you. Ambient dread made literal, and a card — which makes "the Walker" a deck mechanic the spec must define, not just art.</p>
   </div>
 
   <footer>
-    Captured 2026-06-04 from one production asset (<a href="../assets/cardback.webp">cardback</a>) and one direction sheet (<a href="../assets/art-style.webp">The Walker</a>), promoted out of <code>work/notes</code> into reference. Companion to <a href="vision.html">the project vision</a>: vision defines what the game <em>is</em>, this defines what it <em>looks like</em>. Status <strong>current</strong> — open when a visual decision feels wrong. It defines look, not requirements; the three open questions belong in a spec.
+    Captured 2026-06-04 from one production asset (<a href="../assets/cardback.webp">cardback</a>) and one direction sheet (<a href="../assets/art-style.webp">The Walker</a>), promoted out of <code>work/notes</code> into reference. Companion to <a href="vision.html">the project vision</a>: vision defines what the game <em>is</em>, this defines what it <em>looks like</em>. Status <strong>current</strong> — open when a visual decision feels wrong. It defines look, not requirements; the settled decisions above seed the visual spec — including the Walker, now a deck mechanic and not only a figure.
   </footer>
 
 </div>
