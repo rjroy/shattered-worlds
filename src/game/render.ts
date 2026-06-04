@@ -7,13 +7,17 @@
  */
 import Phaser from 'phaser'
 import type { Card, GameState, WorldCard } from '../core/index'
+import { describeEffect, describePenalty, describeReward } from './describe'
 
 // ---------------------------------------------------------------------------
 // Card dimensions and palette
 // ---------------------------------------------------------------------------
 
-const CARD_W = 120
-const CARD_H = 160
+// Cards are sized to carry their full rules text on the face: the player face
+// shows the whole describeEffect block (Modal/Sequence included), the Hazard
+// face shows full penalty/reward sentences. Six fit the 900px table.
+const CARD_W = 150
+const CARD_H = 196
 
 const COLORS = {
   playerBg: 0x1a2a4a,
@@ -56,89 +60,97 @@ export function createCardObject(
 
   if (card.kind === 'player') {
     // Card name at top
-    const nameText = scene.add.text(0, -CARD_H / 2 + 10, card.name, {
-      fontSize: '11px',
+    const nameText = scene.add.text(0, -CARD_H / 2 + 8, card.name, {
+      fontSize: '13px',
       color: COLORS.textLight,
       fontStyle: 'bold',
-      wordWrap: { width: CARD_W - 8 },
+      wordWrap: { width: CARD_W - 12 },
       align: 'center',
     })
     nameText.setOrigin(0.5, 0)
     container.add(nameText)
 
-    // Effect summary at bottom
-    const effectSummary = summariseEffect(card.effect)
-    const effectText = scene.add.text(0, CARD_H / 2 - 30, effectSummary, {
-      fontSize: '9px',
-      color: COLORS.textMuted,
-      wordWrap: { width: CARD_W - 8 },
+    // Full effect description — the whole face is self-explanatory. Modal and
+    // Sequence cards render every branch / step, so nothing reads as "Choose…".
+    const effectLines = describeEffect(card.effect).join('\n')
+    const effectText = scene.add.text(0, -CARD_H / 2 + 38, effectLines, {
+      fontSize: '11px',
+      lineSpacing: 2,
+      color: COLORS.textLight,
+      wordWrap: { width: CARD_W - 16 },
       align: 'center',
     })
-    effectText.setOrigin(0.5, 1)
+    effectText.setOrigin(0.5, 0)
     container.add(effectText)
-
-    // Type label
-    const typeText = scene.add.text(0, 0, 'PLAYER', {
-      fontSize: '8px',
-      color: '#667799',
-      fontStyle: 'bold',
-    })
-    typeText.setOrigin(0.5, 0.5)
-    container.add(typeText)
   } else {
     // World / Hazard card
     const worldCard = card as WorldCard
 
     // Name at top
-    const nameText = scene.add.text(0, -CARD_H / 2 + 10, worldCard.name, {
-      fontSize: '11px',
+    const nameText = scene.add.text(0, -CARD_H / 2 + 8, worldCard.name, {
+      fontSize: '13px',
       color: COLORS.textLight,
       fontStyle: 'bold',
-      wordWrap: { width: CARD_W - 8 },
+      wordWrap: { width: CARD_W - 12 },
       align: 'center',
     })
     nameText.setOrigin(0.5, 0)
     container.add(nameText)
 
-    // Cost in large font center
-    const costText = scene.add.text(0, -10, String(worldCard.cost), {
-      fontSize: '32px',
+    // Cost label + value (cost is the Progress needed to clear the Hazard)
+    const costText = scene.add.text(0, -CARD_H / 2 + 40, String(worldCard.cost), {
+      fontSize: '30px',
       color: COLORS.textCost,
       fontStyle: 'bold',
     })
-    costText.setOrigin(0.5, 0.5)
+    costText.setOrigin(0.5, 0)
     container.add(costText)
+    const costLabel = scene.add.text(0, -CARD_H / 2 + 74, 'to clear', {
+      fontSize: '8px',
+      color: COLORS.textMuted,
+    })
+    costLabel.setOrigin(0.5, 0)
+    container.add(costLabel)
 
-    // Keywords below cost
+    // Keywords
     if (worldCard.keywords.length > 0) {
-      const kwText = scene.add.text(0, 24, worldCard.keywords.join(' · '), {
-        fontSize: '8px',
+      const kwText = scene.add.text(0, -CARD_H / 2 + 88, worldCard.keywords.join(' · '), {
+        fontSize: '9px',
         color: COLORS.textKeyword,
       })
       kwText.setOrigin(0.5, 0)
       container.add(kwText)
     }
 
-    // Penalty at bottom-left
-    const penText = scene.add.text(-CARD_W / 2 + 4, CARD_H / 2 - 14, penaltyLabel(worldCard.penalty), {
-      fontSize: '8px',
-      color: COLORS.textPenalty,
-    })
-    penText.setOrigin(0, 1)
-    container.add(penText)
+    // Penalty (on discard) then reward (on clear), as full sentences
+    const penalty = describePenalty(worldCard.penalty)
+    if (penalty !== '') {
+      const penText = scene.add.text(0, CARD_H / 2 - 52, penalty, {
+        fontSize: '9px',
+        color: COLORS.textPenalty,
+        wordWrap: { width: CARD_W - 16 },
+        align: 'center',
+      })
+      penText.setOrigin(0.5, 1)
+      container.add(penText)
+    }
 
-    // Reward at bottom-right
-    const rewText = scene.add.text(CARD_W / 2 - 4, CARD_H / 2 - 14, rewardLabel(worldCard.reward), {
-      fontSize: '8px',
-      color: COLORS.textReward,
-    })
-    rewText.setOrigin(1, 1)
-    container.add(rewText)
+    const reward = describeReward(worldCard.reward)
+    if (reward !== '') {
+      const rewText = scene.add.text(0, CARD_H / 2 - 26, reward, {
+        fontSize: '9px',
+        color: COLORS.textReward,
+        wordWrap: { width: CARD_W - 16 },
+        align: 'center',
+      })
+      rewText.setOrigin(0.5, 1)
+      container.add(rewText)
+    }
 
     // Discard indicator
     if (worldCard.discardable) {
-      const discText = scene.add.text(0, CARD_H / 2 - 28, 'DISCARD', {
-        fontSize: '7px',
+      const discText = scene.add.text(0, CARD_H / 2 - 10, 'click to discard', {
+        fontSize: '8px',
         color: '#ffaa44',
         fontStyle: 'bold',
       })
@@ -320,68 +332,3 @@ export function dimCard(container: Phaser.GameObjects.Container, dim: boolean): 
   container.setAlpha(dim ? COLORS.dimAlpha : 1.0)
 }
 
-// ---------------------------------------------------------------------------
-// Internal label helpers
-// ---------------------------------------------------------------------------
-
-function summariseEffect(effect: import('../core/index').Effect): string {
-  switch (effect.kind) {
-    case 'DealProgress': {
-      const bonus = effect.bonus ? ` (+${effect.bonus.amount} vs ${effect.bonus.tag})` : ''
-      return `Progress ${effect.base}${bonus}`
-    }
-    case 'Draw':
-      return [
-        effect.player !== undefined ? `Draw ${effect.player}` : '',
-        effect.world !== undefined ? `World +${effect.world}` : '',
-      ]
-        .filter(Boolean)
-        .join(' / ')
-    case 'Heal':
-      return `Heal ${effect.amount}`
-    case 'ReturnWorldCards':
-      return `Return ${effect.min}–${effect.max} world`
-    case 'DestroyCardInHand':
-      return 'Destroy 0–1 hand'
-    case 'DiscardThenDraw':
-      return `Discard ${effect.player}, draw`
-    case 'AddCard':
-      return `Add ${effect.template}`
-    case 'AddWorldCardToTop':
-      return `World top: ${effect.template}`
-    case 'Modal':
-      return 'Choose…'
-    case 'Sequence':
-      return 'Multi-step'
-  }
-}
-
-function penaltyLabel(penalty: import('../core/index').Penalty): string {
-  switch (penalty.kind) {
-    case 'Damage':
-      return `-${penalty.amount}hp`
-    case 'SkipDrawNextTurn':
-      return 'Skip draw'
-    case 'GainCard':
-      return `+${penalty.template}`
-    case 'AddWorldCardToTop':
-      return `+W:${penalty.template}`
-    case 'None':
-      return ''
-  }
-}
-
-function rewardLabel(reward: import('../core/index').Reward): string {
-  switch (reward.kind) {
-    case 'GainCard':
-      return `+${reward.template}`
-    case 'AddPlayerCardToTop':
-      return `+P:${reward.template}`
-    case 'AddWorldCardToTop':
-      return `+W:${reward.template}`
-    case 'SurviveWorld':
-      return 'Survive'
-    case 'None':
-      return ''
-  }
-}

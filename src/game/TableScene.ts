@@ -35,17 +35,18 @@ import {
   dimCard,
 } from './render'
 import type { HUDRefs } from './render'
+import { describeEffect, previewPlay } from './describe'
 
 // ---------------------------------------------------------------------------
 // Layout constants
 // ---------------------------------------------------------------------------
 
 /** Vertical centre of the world cards (hazard) row. */
-const WORLD_ROW_Y = 200
+const WORLD_ROW_Y = 180
 /** Vertical centre of the player hand row. */
-const HAND_ROW_Y = 430
-/** Horizontal start for the first card, with centering handled dynamically. */
-const CARD_SPACING = 140
+const HAND_ROW_Y = 420
+/** Horizontal spacing between card centres (cards are 150px wide). */
+const CARD_SPACING = 156
 // ROW_LEFT reserved for future fixed-layout mode
 // const ROW_LEFT = 80
 
@@ -210,20 +211,19 @@ export class TableScene extends Phaser.Scene {
       this.cardObjects.set(card.id, container)
 
       // Make card interactive
-      container.setSize(120, 160)
+      container.setSize(150, 196)
       container.setInteractive({ useHandCursor: true })
 
       const id = card.id
 
-      // Main card click
-      container.on('pointerdown', () => {
-        if (card.kind === 'player') {
-          this.onCardClick(id)
-        } else {
-          // World cards: clicking them acts as target selection or card click
-          this.onCardClick(id)
-        }
-      })
+      // Main card click — player and world cards both route through onCardClick,
+      // which decides play / target / discard from availableActions.
+      container.on('pointerdown', () => this.onCardClick(id))
+
+      // Hovering a legal Hazard target during targeting shows the live preview
+      // (Progress dealt, and whether it clears the Hazard).
+      container.on('pointerover', () => this.showTargetPreview(id))
+      container.on('pointerout', () => this.updateHint())
 
       // Apply visual state
       this.applyHighlight(container, card, playableIds, discardableIds, legalTargetIds)
@@ -489,8 +489,14 @@ export class TableScene extends Phaser.Scene {
     title.setOrigin(0.5, 0.5)
     container.add(title)
 
+    // Label each branch from the card's actual Modal effect, so the chooser
+    // can never drift from what the card does.
+    const card = this.game_.state.hand.find((c) => c.id === cardId)
+    const effectBranches =
+      card?.kind === 'player' && card.effect.kind === 'Modal' ? card.effect.branches : []
+
     spec.branches.forEach((branchSpec, idx) => {
-      const label = branchLabel(branchSpec, idx, available, cardId)
+      const label = branchLabel(effectBranches[idx], idx)
       const isLegal = branchIsLegal(branchSpec, idx, available, cardId)
 
       const btnY = -30 + idx * 60
@@ -571,6 +577,28 @@ export class TableScene extends Phaser.Scene {
     return entry !== undefined ? entry.spec : null
   }
 
+  /**
+   * While targeting a Hazard, replace the hint with the live preview for the
+   * Hazard under the pointer: how much Progress the play deals and whether it
+   * clears the Hazard. No-ops unless this card is a legal target right now.
+   */
+  private showTargetPreview(targetId: string): void {
+    const sel = this.sel
+    if (sel.phase !== 'awaiting-hazard') return
+
+    const state = this.game_.state
+    const branchIndex = sel.modalChoice
+    const legal = availableActions(state).legalTargets(sel.cardId, branchIndex ?? 0)
+    if (!legal.includes(targetId)) return
+
+    const card = state.hand.find((c) => c.id === sel.cardId)
+    const target = state.hand.find((c) => c.id === targetId)
+    if (card?.kind !== 'player' || target?.kind !== 'world') return
+
+    const preview = previewPlay(card, target, state, branchIndex)
+    if (preview !== null) this.selectionHint.setText(preview)
+  }
+
   private updateHint(): void {
     const sel = this.sel
     switch (sel.phase) {
@@ -605,25 +633,10 @@ export class TableScene extends Phaser.Scene {
 // Modal label helpers (module-level, not class methods)
 // ---------------------------------------------------------------------------
 
-function branchLabel(
-  spec: TargetSpec,
-  idx: number,
-  _available: import('../core/index').AvailableActions,
-  _cardId: string,
-): string {
-  // Sprint-specific labels
-  if (idx === 0) return 'Draw cards (+ world draw)'
-  if (idx === 1) return 'Hit Slow (+bonus vs Slow)'
-
-  // Fallback generic labels
-  switch (spec.kind) {
-    case 'hazard':
-      return `Option ${idx + 1}: Target Hazard`
-    case 'none':
-      return `Option ${idx + 1}: No target`
-    default:
-      return `Option ${idx + 1}`
-  }
+function branchLabel(effectBranch: import('../core/index').Effect | undefined, idx: number): string {
+  // Derive the label from the branch's actual effect (Sprint, etc.); no
+  // hardcoded, index-keyed strings that could lie if the catalog changes.
+  return effectBranch !== undefined ? describeEffect(effectBranch).join(', ') : `Option ${idx + 1}`
 }
 
 function branchIsLegal(
