@@ -131,6 +131,8 @@ export class TableScene extends Phaser.Scene {
     this.selectionHint = this.add.text(450, 568, '', {
       fontSize: '12px',
       color: '#9aa3b2',
+      backgroundColor: 'rgba(0,0,0,0.75)',
+      padding: { x: 6, y: 2 },
     })
     this.selectionHint.setOrigin(0.5, 1)
 

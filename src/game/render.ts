@@ -176,8 +176,8 @@ export interface HUDRefs {
 
 /** Create HUD text objects at the top of the screen. */
 export function createHUD(scene: Phaser.Scene): HUDRefs {
-  const style = { fontSize: '14px', color: TEXT.textLight }
-  const mutedStyle = { fontSize: '12px', color: TEXT.textMuted }
+  const style = { fontSize: '14px', color: TEXT.textLight, backgroundColor: 'rgba(0,0,0,0.5)', padding: { x: 4, y: 2 } }
+  const mutedStyle = { fontSize: '12px', color: TEXT.textMuted, backgroundColor: 'rgba(0,0,0,0.5)', padding: { x: 4, y: 2 }  }
 
   const hpText = scene.add.text(12, 10, 'HP: —', { ...style, color: '#ff8888' })
   const actText = scene.add.text(120, 10, 'Act 1', style)
@@ -266,6 +266,8 @@ export function createEndTurnButton(
     fontSize: '16px',
     color: '#88aaff',
     fontStyle: 'bold',
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    padding: { x: 6, y: 4 },
   })
   btn.setOrigin(0.5, 0.5)
   btn.setInteractive({ useHandCursor: true })
@@ -277,6 +279,8 @@ export function createCancelButton(scene: Phaser.Scene): Phaser.GameObjects.Text
   const btn = scene.add.text(820, 560, '[ Cancel ]', {
     fontSize: '13px',
     color: '#ff8888',
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    padding: { x: 6, y: 4 },
   })
   btn.setOrigin(1, 1)
   btn.setInteractive({ useHandCursor: true })
@@ -290,6 +294,8 @@ export function createConfirmButton(scene: Phaser.Scene): Phaser.GameObjects.Tex
     fontSize: '13px',
     color: '#88ee88',
     fontStyle: 'bold',
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    padding: { x: 6, y: 4 },
   })
   btn.setOrigin(1, 1)
   btn.setInteractive({ useHandCursor: true })

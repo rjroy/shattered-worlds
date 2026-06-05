@@ -5,7 +5,7 @@ import { intrusionForIntensity } from './visualMappers'
 import { walkerPresentation } from './walker'
 import type { WalkerPresentation } from './walker'
 
-const WALKER_START = { x: 450, y: 300 }
+const WALKER_START = { x: 450, y: 330 }
 const WALKER_END = { x: 180, y: 480 }
 
 export class BackdropLayer {

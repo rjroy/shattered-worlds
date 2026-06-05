@@ -19,8 +19,8 @@ export class PileLayer {
   private worldPile: Phaser.GameObjects.Container
 
   constructor(scene: Phaser.Scene) {
-    this.playerPile = scene.add.container(80, 540)
-    this.worldPile = scene.add.container(820, 540)
+    this.playerPile = scene.add.container(80, 500)
+    this.worldPile = scene.add.container(820, 500)
   }
 
   update(scene: Phaser.Scene, playerCount: number, worldCount: number): void {
@@ -46,6 +46,8 @@ export class PileLayer {
     // Show count text below the stack
     const label = scene.add.text(0, 4, String(count), {
       fontSize: '10px',
+      backgroundColor: 'rgba(0,0,0,0.5)',
+      padding: { x: 4, y: 2 },
       color: '#9aa3b2',
     })
     label.setOrigin(0.5, 0)
