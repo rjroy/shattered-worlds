@@ -46,14 +46,17 @@ export function createCardObject(
 ): Phaser.GameObjects.Container {
   const container = scene.add.container(x, y)
 
-  const bg = scene.add.rectangle(
-    0,
-    0,
-    CARD_W,
-    CARD_H,
-    card.kind === 'player' ? theme.frameStyle.playerBg : theme.frameStyle.worldBg,
-  )
-  bg.setStrokeStyle(2, theme.frameStyle.borderColor)
+  // Card frame image: world cards use the theme-specific front if available
+  const cardfrontKey =
+    card.kind === 'world' ? (theme.worldCardfrontKey ?? 'cardfront') : 'cardfront'
+  const cardImg = scene.add.image(0, 0, cardfrontKey)
+  cardImg.setDisplaySize(CARD_W, CARD_H)
+  container.add(cardImg)
+
+  // Transparent overlay rectangle used only for selection highlight strokes.
+  // list[1] — applyCardHighlight depends on this position.
+  const bg = scene.add.rectangle(0, 0, CARD_W, CARD_H, 0x000000, 0)
+  bg.setStrokeStyle(0)
   container.add(bg)
 
   if (card.kind === 'player') {
@@ -176,8 +179,8 @@ export interface HUDRefs {
 
 /** Create HUD text objects at the top of the screen. */
 export function createHUD(scene: Phaser.Scene): HUDRefs {
-  const style = { fontSize: '14px', color: TEXT.textLight }
-  const mutedStyle = { fontSize: '12px', color: TEXT.textMuted }
+  const style = { fontSize: '14px', color: TEXT.textLight, backgroundColor: 'rgba(0,0,0,0.5)', padding: { x: 4, y: 2 } }
+  const mutedStyle = { fontSize: '12px', color: TEXT.textMuted, backgroundColor: 'rgba(0,0,0,0.5)', padding: { x: 4, y: 2 }  }
 
   const hpText = scene.add.text(12, 10, 'HP: —', { ...style, color: '#ff8888' })
   const actText = scene.add.text(120, 10, 'Act 1', style)
@@ -266,6 +269,8 @@ export function createEndTurnButton(
     fontSize: '16px',
     color: '#88aaff',
     fontStyle: 'bold',
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    padding: { x: 6, y: 4 },
   })
   btn.setOrigin(0.5, 0.5)
   btn.setInteractive({ useHandCursor: true })
@@ -277,6 +282,8 @@ export function createCancelButton(scene: Phaser.Scene): Phaser.GameObjects.Text
   const btn = scene.add.text(820, 560, '[ Cancel ]', {
     fontSize: '13px',
     color: '#ff8888',
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    padding: { x: 6, y: 4 },
   })
   btn.setOrigin(1, 1)
   btn.setInteractive({ useHandCursor: true })
@@ -290,6 +297,8 @@ export function createConfirmButton(scene: Phaser.Scene): Phaser.GameObjects.Tex
     fontSize: '13px',
     color: '#88ee88',
     fontStyle: 'bold',
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    padding: { x: 6, y: 4 },
   })
   btn.setOrigin(1, 1)
   btn.setInteractive({ useHandCursor: true })
@@ -307,8 +316,8 @@ export function applyCardHighlight(
   kind: 'selected' | 'target' | 'discard' | 'none',
   frameStyle: FrameStyle,
 ): void {
-  // The background rectangle is always the first child
-  const bg = container.list[0] as Phaser.GameObjects.Rectangle | undefined
+  // The highlight rectangle is list[1] (list[0] is the cardfront image)
+  const bg = container.list[1] as Phaser.GameObjects.Rectangle | undefined
   if (bg === undefined) return
   switch (kind) {
     case 'selected':
@@ -321,7 +330,7 @@ export function applyCardHighlight(
       bg.setStrokeStyle(3, frameStyle.discardBorder)
       break
     case 'none':
-      bg.setStrokeStyle(2, frameStyle.borderColor)
+      bg.setStrokeStyle(0)
       break
   }
 }

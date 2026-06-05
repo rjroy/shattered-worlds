@@ -30,9 +30,9 @@ describe('walkerProximityForAct', () => {
     const far = walkerProximityForAct(0)
     const mid = walkerProximityForAct(1)
     const looming = walkerProximityForAct(2)
-    // Each tier is closer (larger scale) than the previous
-    expect(far.scale).toBeLessThan(mid.scale)
-    expect(mid.scale).toBeLessThan(looming.scale)
+    // Each tier is closer (larger size) than the previous
+    expect(far.size).toBeLessThan(mid.size)
+    expect(mid.size).toBeLessThan(looming.size)
     // Each tier is more visible (higher alpha)
     expect(far.alpha).toBeLessThan(mid.alpha)
     expect(mid.alpha).toBeLessThan(looming.alpha)
@@ -47,11 +47,9 @@ describe('walkerProximityForAct', () => {
   it('all values are in valid ranges', () => {
     for (let i = 0; i <= 2; i++) {
       const p = walkerProximityForAct(i)
-      expect(p.scale).toBeGreaterThan(0)
+      expect(p.size).toBeGreaterThan(0)
       expect(p.alpha).toBeGreaterThan(0)
       expect(p.alpha).toBeLessThanOrEqual(1)
-      expect(p.x).toBeGreaterThanOrEqual(0)
-      expect(p.y).toBeGreaterThanOrEqual(0)
     }
   })
 })

@@ -24,4 +24,8 @@ describe('selectTheme', () => {
     expect(typeof ZOMBIE_BIG_BOX_THEME.frameStyle.worldBg).toBe('number')
     expect(typeof ZOMBIE_BIG_BOX_THEME.frameStyle.borderColor).toBe('number')
   })
+
+  it('zombie-big-box has a world cardfront texture key', () => {
+    expect(ZOMBIE_BIG_BOX_THEME.worldCardfrontKey).toBe('zombie-cardfront')
+  })
 })

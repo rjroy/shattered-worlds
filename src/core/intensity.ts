@@ -15,5 +15,5 @@ export function intensity(state: GameState): number {
   const worldsInHand = state.hand.filter(c => c.kind === 'world').length
   const heldHazardFraction = Math.min(1, worldsInHand / 3)
 
-  return 0.4 * actFraction + 0.4 * hpFraction + 0.2 * heldHazardFraction
+  return 0.6 * actFraction + 0.3 * hpFraction + 0.1 * heldHazardFraction
 }

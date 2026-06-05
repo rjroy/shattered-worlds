@@ -1,7 +1,5 @@
 export interface WalkerProximity {
-  scale: number       // sprite scale multiplier
-  x: number          // x position (0-900 canvas)
-  y: number          // y position (0-600 canvas)
+  size: number       // sprite size absolute based on 600 height
   alpha: number      // 0-1 opacity
 }
 
@@ -13,10 +11,10 @@ export interface WalkerProximity {
 export function intrusionForIntensity(intensity: number): number {
   const clamped = Math.max(0, Math.min(1, intensity))
   // Ramp: stays near-zero at low intensity, rises steeply after 0.4
-  // At 0.0 → 0.0, at 0.4 → 0.1, at 0.7 → 0.4, at 1.0 → 0.85
+  // At 0.0 → 0.0, at 0.4 → 0.25, at 0.7 → 0.4, at 1.0 → 0.85
   return clamped < 0.4
-    ? clamped * 0.25
-    : 0.1 + (clamped - 0.4) * 1.25
+    ? clamped * 0.625
+    : 0.25 + (clamped - 0.4)
 }
 
 /**
@@ -27,11 +25,11 @@ export function intrusionForIntensity(intensity: number): number {
 export function walkerProximityForAct(actIndex: number): WalkerProximity {
   const tiers: WalkerProximity[] = [
     // far — distant, small, barely visible
-    { scale: 0.18, x: 820, y: 480, alpha: 0.35 },
+    { size:  75, alpha: 0.35 },
     // mid — closer, more visible
-    { scale: 0.32, x: 800, y: 440, alpha: 0.60 },
+    { size: 175, alpha: 0.60 },
     // looming — large, dominant
-    { scale: 0.55, x: 750, y: 380, alpha: 0.85 },
+    { size: 300, alpha: 0.85 }
   ]
   const idx = Math.max(0, Math.min(2, actIndex))
   return tiers[idx]!

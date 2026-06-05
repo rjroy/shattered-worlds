@@ -32,17 +32,17 @@ describe('walkerPresentation', () => {
   describe('Walker in hand (hasWalker = true)', () => {
     it('returns foreground when The Walker is the only card in hand', () => {
       const state = makeState([{ name: 'The Walker' }], 0)
-      expect(walkerPresentation(state as GameState, true)).toEqual({ kind: 'foreground' })
+      expect(walkerPresentation(state as GameState, true)).toEqual({ kind: 'foreground', proximity: { size: 400, alpha: 1.0 } })
     })
 
     it('returns foreground when The Walker is among other cards', () => {
       const state = makeState([{ name: 'Sprint' }, { name: 'The Walker' }, { name: 'Zombie' }], 1)
-      expect(walkerPresentation(state as GameState, true)).toEqual({ kind: 'foreground' })
+      expect(walkerPresentation(state as GameState, true)).toEqual({ kind: 'foreground', proximity: { size: 400, alpha: 1.0 } })
     })
 
     it('returns foreground even at act 2 (Walker in hand overrides act tier)', () => {
       const state = makeState([{ name: 'The Walker' }], 2)
-      expect(walkerPresentation(state as GameState, true)).toEqual({ kind: 'foreground' })
+      expect(walkerPresentation(state as GameState, true)).toEqual({ kind: 'foreground', proximity: { size: 400, alpha: 1.0 } })
     })
   })
 
@@ -65,7 +65,7 @@ describe('walkerPresentation', () => {
       expect(result).toEqual({ kind: 'proximity', proximity: walkerProximityForAct(0) })
       // far: small, barely visible
       if (result.kind === 'proximity') {
-        expect(result.proximity.scale).toBe(0.18)
+        expect(result.proximity.size).toBe(75)
         expect(result.proximity.alpha).toBe(0.35)
       }
     })
@@ -75,7 +75,7 @@ describe('walkerPresentation', () => {
       const result = walkerPresentation(state as GameState, true)
       expect(result).toEqual({ kind: 'proximity', proximity: walkerProximityForAct(1) })
       if (result.kind === 'proximity') {
-        expect(result.proximity.scale).toBe(0.32)
+        expect(result.proximity.size).toBe(175)
         expect(result.proximity.alpha).toBe(0.60)
       }
     })
@@ -85,7 +85,7 @@ describe('walkerPresentation', () => {
       const result = walkerPresentation(state as GameState, true)
       expect(result).toEqual({ kind: 'proximity', proximity: walkerProximityForAct(2) })
       if (result.kind === 'proximity') {
-        expect(result.proximity.scale).toBe(0.55)
+        expect(result.proximity.size).toBe(300)
         expect(result.proximity.alpha).toBe(0.85)
       }
     })
