@@ -252,6 +252,7 @@ export function updateHUD(refs: HUDRefs, state: GameState): void {
 /** Create a full-screen win overlay (hidden by default). */
 export function createWinScreen(scene: Phaser.Scene): Phaser.GameObjects.Container {
   const container = scene.add.container(450, 300)
+  container.setDepth(1000)
   container.setVisible(false)
 
   const bg = scene.add.rectangle(0, 0, 900, 600, 0x000000, 0.8)
@@ -278,6 +279,7 @@ export function createWinScreen(scene: Phaser.Scene): Phaser.GameObjects.Contain
 /** Create a full-screen loss overlay (hidden by default). */
 export function createLossScreen(scene: Phaser.Scene): Phaser.GameObjects.Container {
   const container = scene.add.container(450, 300)
+  container.setDepth(1000)
   container.setVisible(false)
 
   const bg = scene.add.rectangle(0, 0, 900, 600, 0x000000, 0.8)

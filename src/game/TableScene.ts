@@ -178,10 +178,6 @@ export class TableScene extends Phaser.Scene {
     this.pileLayer = new PileLayer(this)
     this.backdropLayer = new BackdropLayer(this, selectTheme(this.game_.state.worldId))
 
-    // Bring overlays to the top of the display list so they cover everything
-    this.children.bringToTop(this.winScreen)
-    this.children.bringToTop(this.lossScreen)
-
     this.drawAll()
   }
 
