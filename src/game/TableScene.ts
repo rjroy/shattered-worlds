@@ -90,7 +90,7 @@ export class TableScene extends Phaser.Scene {
   private selectionHint!: Phaser.GameObjects.Text
 
   private worldId_ = 'zombie-big-box'
-  private seed_ = 42
+  private seed_ = 0
   private loadError_ = false
 
   constructor() {
@@ -99,7 +99,7 @@ export class TableScene extends Phaser.Scene {
 
   init(data: { worldId?: string; seed?: number }): void {
     this.worldId_ = data.worldId ?? 'zombie-big-box'
-    this.seed_ = data.seed ?? 42
+    this.seed_ = data.seed ?? Math.floor(Math.random() * 2 ** 32)
     this.loadError_ = false
   }
 

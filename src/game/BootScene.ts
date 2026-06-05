@@ -6,6 +6,7 @@ export class BootScene extends Phaser.Scene {
   }
 
   create(): void {
-    this.scene.start('Table', { worldId: 'zombie-big-box', seed: 42 })
+    const seed = Math.floor(Math.random() * 2 ** 32)
+    this.scene.start('Table', { worldId: 'zombie-big-box', seed })
   }
 }
