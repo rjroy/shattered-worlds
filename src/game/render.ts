@@ -8,7 +8,7 @@
 import Phaser from 'phaser'
 import type { Card, GameState, WorldCard } from '../core/index'
 import type { FrameStyle, VisualTheme } from './theme'
-import { describeEffect, describePenalty, describeReward } from './describe'
+import { describeEffect } from './describe'
 
 // ---------------------------------------------------------------------------
 // Pure helpers
@@ -151,9 +151,11 @@ export function createCardObject(
     }
 
     // Penalty (on discard) then reward (on clear), as full sentences
-    const penalty = describePenalty(worldCard.penalty)
-    if (penalty !== '') {
-      const penText = scene.add.text(0, CARD_H / 2 - 52, penalty, {
+    const penaltyText = describeEffect(worldCard.penalty)
+      .map((l) => `If discarded: ${l}`)
+      .join('\n')
+    if (penaltyText !== '') {
+      const penText = scene.add.text(0, CARD_H / 2 - 52, penaltyText, {
         fontSize: '9px',
         color: TEXT.textPenalty,
         wordWrap: { width: CARD_W - 16 },
@@ -163,9 +165,11 @@ export function createCardObject(
       container.add(penText)
     }
 
-    const reward = describeReward(worldCard.reward)
-    if (reward !== '') {
-      const rewText = scene.add.text(0, CARD_H / 2 - 26, reward, {
+    const rewardText = describeEffect(worldCard.reward)
+      .map((l) => `Clear it: ${l}`)
+      .join('\n')
+    if (rewardText !== '') {
+      const rewText = scene.add.text(0, CARD_H / 2 - 26, rewardText, {
         fontSize: '9px',
         color: TEXT.textReward,
         wordWrap: { width: CARD_W - 16 },

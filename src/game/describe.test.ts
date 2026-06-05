@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'bun:test'
 import { createRng } from '../core/rng'
 import type { CardEffect, GameState, PlayerCard, WorldCard } from '../core/index'
-import { describeEffect, describePenalty, describeReward, previewPlay } from './describe'
+import { describeEffect, previewPlay } from './describe'
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -73,7 +73,7 @@ describe('describeEffect', () => {
       'Gain a Listen card',
     ])
     expect(describeEffect({ kind: 'AddWorldCardToTop', template: 'Door' })).toEqual([
-      'Put a Door on top of the world deck',
+      '+Door to world deck',
     ])
   })
 
@@ -120,29 +120,16 @@ describe('describeEffect', () => {
 // Penalties and rewards
 // ---------------------------------------------------------------------------
 
-describe('describePenalty', () => {
-  it('covers every penalty kind', () => {
-    expect(describePenalty({ kind: 'Damage', amount: 1 })).toBe('If discarded: -1 HP')
-    expect(describePenalty({ kind: 'SkipDrawNextTurn' })).toBe('If discarded: skip next draw')
-    expect(describePenalty({ kind: 'GainCard', template: 'Panic' })).toBe('If discarded: gain Panic')
-    expect(describePenalty({ kind: 'AddWorldCardToTop', template: 'Door' })).toBe(
-      'If discarded: +Door to world deck',
-    )
-    expect(describePenalty({ kind: 'None' })).toBe('')
-  })
-})
-
-describe('describeReward', () => {
-  it('covers every reward kind', () => {
-    expect(describeReward({ kind: 'GainCard', template: 'Listen' })).toBe('Clear it: gain Listen')
-    expect(describeReward({ kind: 'AddPlayerCardToTop', template: 'Summon Door' })).toBe(
-      'Clear it: +Summon Door to your deck',
-    )
-    expect(describeReward({ kind: 'AddWorldCardToTop', template: 'Door' })).toBe(
-      'Clear it: +Door to world deck',
-    )
-    expect(describeReward({ kind: 'SurviveWorld' })).toBe('Clear it: you survive the world')
-    expect(describeReward({ kind: 'None' })).toBe('')
+describe('describeEffect (hazard effect kinds)', () => {
+  it('covers every hazard effect kind', () => {
+    expect(describeEffect({ kind: 'Damage', amount: 1 })).toEqual(['-1 HP'])
+    expect(describeEffect({ kind: 'SkipDrawNextTurn' })).toEqual(['skip next draw'])
+    expect(describeEffect({ kind: 'GainCard', template: 'Panic' })).toEqual(['gain Panic'])
+    expect(describeEffect({ kind: 'AddPlayerCardToTop', template: 'Summon Door' })).toEqual([
+      '+Summon Door to your deck',
+    ])
+    expect(describeEffect({ kind: 'SurviveWorld' })).toEqual(['you survive the world'])
+    expect(describeEffect({ kind: 'None' })).toEqual([])
   })
 })
 
