@@ -1,8 +1,8 @@
 import type {
   Action,
   AvailableActions,
+  CardEffect,
   CardId,
-  Effect,
   GameState,
   PlayerCard,
   TargetSpec,
@@ -27,7 +27,7 @@ function playerCardsInHand(state: GameState): PlayerCard[] {
  * Modal branch specs so that each branch always reports its intended spec
  * regardless of current hand state.
  */
-function structuralSpec(effect: Effect): TargetSpec {
+function structuralSpec(effect: CardEffect): TargetSpec {
   switch (effect.kind) {
     case 'DealProgress': {
       const tag = effect.bonus?.tag
@@ -48,6 +48,8 @@ function structuralSpec(effect: Effect): TargetSpec {
       return { kind: 'modal', branches: effect.branches.map(structuralSpec) }
     case 'Sequence':
       return { kind: 'compound', steps: effect.steps.map(structuralSpec) }
+    default:
+      return { kind: 'none' }
   }
 }
 
@@ -60,7 +62,7 @@ function structuralSpec(effect: Effect): TargetSpec {
  * target lists for DiscardThenDraw legality checks.
  */
 function playableSpec(
-  effect: Effect,
+  effect: CardEffect,
   state: GameState,
   selfId: CardId,
 ): TargetSpec | null {
@@ -115,6 +117,9 @@ function playableSpec(
       if (firstSpec === null) return null
       return { kind: 'compound', steps: effect.steps.map(structuralSpec) }
     }
+
+    default:
+      return null
   }
 }
 
@@ -187,6 +192,8 @@ function computeLegalTargets(
     case 'AddCard':
     case 'Draw':
     case 'ReturnWorldCards':
+      return []
+    default:
       return []
   }
 }

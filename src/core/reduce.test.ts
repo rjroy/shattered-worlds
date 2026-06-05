@@ -159,7 +159,7 @@ describe('EndTurn hold vs discard', () => {
 })
 
 // ---------------------------------------------------------------------------
-// 4. DiscardHazard legal: discarding Zombie applies Damage(1) penalty
+// 4. DiscardHazard legal: discarding Zombie applies Damage(1) onDiscarded
 // ---------------------------------------------------------------------------
 
 describe('DiscardHazard legal', () => {
@@ -474,5 +474,87 @@ describe('Regroup destroyHand', () => {
     expect(result.state.hand.some((c) => c.id === rubble.id)).toBe(false)
     // Destroyed — not in discard either
     expect(result.state.playerDiscard.some((c) => c.id === rubble.id)).toBe(false)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// 12. onEndOfTurn: world cards fire their effect at the end of each turn
+// ---------------------------------------------------------------------------
+
+describe('EndTurn onEndOfTurn', () => {
+  function makeEndTurnState(worldCard: WorldCard, hp: number): GameState {
+    const base = createWorld(catalog, worldData, 42)
+    const [e1, s1] = mintCard(catalog, base, 'Explore')
+    const [e2, s2] = mintCard(catalog, s1, 'Explore')
+    const [e3, s3] = mintCard(catalog, s2, 'Explore')
+    const [e4, s4] = mintCard(catalog, s3, 'Explore')
+    const [e5, s5] = mintCard(catalog, s4, 'Explore')
+    return makeState({
+      ...s5,
+      hp,
+      hand: [worldCard],
+      playerDraw: [e1 as PlayerCard, e2 as PlayerCard, e3 as PlayerCard, e4 as PlayerCard, e5 as PlayerCard],
+    })
+  }
+
+  it('Zombie in hand deals 1 damage at end of turn', () => {
+    const base = createWorld(catalog, worldData, 42)
+    const [zombie, _s1] = mintCard(catalog, base, 'Zombie')
+    const state = makeEndTurnState(zombie as WorldCard, 10)
+
+    const result = reduce(catalog, state, { type: 'EndTurn' })
+
+    expect(result.state.hp).toBe(9)
+    expect(result.events.map((e) => e.type)).toContain('DamageDealt')
+  })
+
+  it('onEndOfTurn fires after TurnEnded and before CardsDiscarded', () => {
+    const base = createWorld(catalog, worldData, 42)
+    const [zombie, s1] = mintCard(catalog, base, 'Zombie')
+    const [explore, s2] = mintCard(catalog, s1, 'Explore')
+    const [e2, s3] = mintCard(catalog, s2, 'Explore')
+    const [e3, s4] = mintCard(catalog, s3, 'Explore')
+    const [e4, s5] = mintCard(catalog, s4, 'Explore')
+    const [e5, finalState] = mintCard(catalog, s5, 'Explore')
+
+    const state = makeState({
+      ...finalState,
+      hp: 10,
+      hand: [zombie as WorldCard, explore as PlayerCard],
+      playerDraw: [e2 as PlayerCard, e3 as PlayerCard, e4 as PlayerCard, e5 as PlayerCard],
+    })
+
+    const result = reduce(catalog, state, { type: 'EndTurn' })
+    const types = result.events.map((e) => e.type)
+
+    const turnEndedIdx = types.indexOf('TurnEnded')
+    const damageIdx = types.indexOf('DamageDealt')
+    const discardIdx = types.indexOf('CardsDiscarded')
+
+    expect(turnEndedIdx).toBeLessThan(damageIdx)
+    expect(damageIdx).toBeLessThan(discardIdx)
+  })
+
+  it('onEndOfTurn can kill the player and short-circuits to status=lost', () => {
+    const base = createWorld(catalog, worldData, 42)
+    const [zombie, _s1] = mintCard(catalog, base, 'Zombie')
+    const state = makeEndTurnState(zombie as WorldCard, 1)
+
+    const result = reduce(catalog, state, { type: 'EndTurn' })
+
+    expect(result.state.hp).toBe(0)
+    expect(result.state.status).toBe('lost')
+    expect(result.events.map((e) => e.type)).toContain('WorldLost')
+  })
+
+  it('world cards with onEndOfTurn=None deal no damage', () => {
+    const base = createWorld(catalog, worldData, 42)
+    const [rubble, _s1] = mintCard(catalog, base, 'Rubble')
+    const state = makeEndTurnState(rubble as WorldCard, 10)
+
+    const result = reduce(catalog, state, { type: 'EndTurn' })
+
+    expect(result.state.hp).toBe(10)
+    expect(result.events.map((e) => e.type)).not.toContain('DamageDealt')
   })
 })

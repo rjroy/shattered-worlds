@@ -8,7 +8,7 @@
 import Phaser from 'phaser'
 import type { Card, GameState, WorldCard } from '../core/index'
 import type { FrameStyle, VisualTheme } from './theme'
-import { describeEffect, describePenalty, describeReward } from './describe'
+import { describeEffect } from './describe'
 
 // ---------------------------------------------------------------------------
 // Pure helpers
@@ -43,7 +43,7 @@ export function selectCardFrontKey(
 
 // Cards are sized to carry their full rules text on the face: the player face
 // shows the whole describeEffect block (Modal/Sequence included), the Hazard
-// face shows full penalty/reward sentences. Six fit the 900px table.
+// face shows full onDiscarded/onCleared sentences. Six fit the 900px table.
 const CARD_W = 150
 const CARD_H = 196
 
@@ -56,6 +56,7 @@ const TEXT = {
   textKeyword: '#88ccff',
   textPenalty: '#ff8888',
   textReward: '#88ee88',
+  textHeld: '#ffaa66',
   dimAlpha: 0.35,
 }
 
@@ -150,10 +151,24 @@ export function createCardObject(
       container.add(kwText)
     }
 
-    // Penalty (on discard) then reward (on clear), as full sentences
-    const penalty = describePenalty(worldCard.penalty)
-    if (penalty !== '') {
-      const penText = scene.add.text(0, CARD_H / 2 - 52, penalty, {
+    // onEndOfTurn (fires each turn while held), onDiscarded, onCleared — as full sentences
+    if (worldCard.onEndOfTurn.kind !== 'None') {
+      const heldLines = describeEffect(worldCard.onEndOfTurn).map((l) => `Each turn: ${l}`).join('\n')
+      const heldText = scene.add.text(0, CARD_H / 2 - 78, heldLines, {
+        fontSize: '9px',
+        color: TEXT.textHeld,
+        wordWrap: { width: CARD_W - 16 },
+        align: 'center',
+      })
+      heldText.setOrigin(0.5, 1)
+      container.add(heldText)
+    }
+
+    if (worldCard.onDiscarded.kind !== 'None') {
+      const penaltyText = describeEffect(worldCard.onDiscarded)
+        .map((l) => `If discarded: ${l}`)
+        .join('\n')
+      const penText = scene.add.text(0, CARD_H / 2 - 52, penaltyText, {
         fontSize: '9px',
         color: TEXT.textPenalty,
         wordWrap: { width: CARD_W - 16 },
@@ -163,16 +178,20 @@ export function createCardObject(
       container.add(penText)
     }
 
-    const reward = describeReward(worldCard.reward)
-    if (reward !== '') {
-      const rewText = scene.add.text(0, CARD_H / 2 - 26, reward, {
-        fontSize: '9px',
-        color: TEXT.textReward,
-        wordWrap: { width: CARD_W - 16 },
-        align: 'center',
-      })
-      rewText.setOrigin(0.5, 1)
-      container.add(rewText)
+    if (worldCard.onCleared.kind !== 'None') {
+      const rewardText = describeEffect(worldCard.onCleared)
+        .map((l) => `Clear it: ${l}`)
+        .join('\n')
+      if (rewardText !== '') {
+        const rewText = scene.add.text(0, CARD_H / 2 - 26, rewardText, {
+          fontSize: '9px',
+          color: TEXT.textReward,
+          wordWrap: { width: CARD_W - 16 },
+          align: 'center',
+        })
+        rewText.setOrigin(0.5, 1)
+        container.add(rewText)
+      }
     }
 
     // Discard indicator

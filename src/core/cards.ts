@@ -1,11 +1,9 @@
 import type {
+  CardEffect,
   CardTemplateId,
-  Effect,
   GameState,
   Keyword,
-  Penalty,
   PlayerCard,
-  Reward,
   WorldCard,
 } from './types'
 import type { CardCatalog } from './catalog'
@@ -18,7 +16,7 @@ import { UnknownTemplateError } from './errors'
 export interface PlayerCardTemplate {
   kind: 'player'
   name: string
-  effect: Effect
+  effect: CardEffect
 }
 
 export interface WorldCardTemplate {
@@ -27,8 +25,9 @@ export interface WorldCardTemplate {
   cost: number
   keywords: readonly Keyword[]
   discardable: boolean
-  penalty: Penalty
-  reward: Reward
+  onDiscarded: CardEffect
+  onCleared: CardEffect
+  onEndOfTurn: CardEffect
 }
 
 export type CardTemplate = PlayerCardTemplate | WorldCardTemplate
@@ -71,8 +70,9 @@ export function mintCard(
     cost: template.cost,
     keywords: template.keywords,
     discardable: template.discardable,
-    penalty: template.penalty,
-    reward: template.reward,
+    onDiscarded: template.onDiscarded,
+    onCleared: template.onCleared,
+    onEndOfTurn: template.onEndOfTurn,
   }
   return [card, next]
 }

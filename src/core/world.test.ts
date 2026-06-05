@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'bun:test'
 import { createWorld } from './world'
-import { grantReward } from './effects'
+import { applyEffect } from './effects'
 import { catalog, worldData } from './testFixture'
 
 // ---------------------------------------------------------------------------
@@ -192,18 +192,18 @@ describe('starter provenance', () => {
 })
 
 // ---------------------------------------------------------------------------
-// 8. Reward provenance
+// 8. onCleared provenance
 // ---------------------------------------------------------------------------
 
-describe('reward provenance', () => {
-  it('a GainCard reward mints a player card stamped with the active worldId', () => {
+describe('onCleared provenance', () => {
+  it('a GainCard onCleared mints a player card stamped with the active worldId', () => {
     // Start from a createWorld state so nextId and rng are valid, then override
-    // worldId to 'zombie-big-box' before granting the reward.
+    // worldId to 'zombie-big-box' before firing the onCleared effect.
     const base = createWorld(catalog, worldData, 1)
     const state = { ...base, worldId: 'zombie-big-box' }
 
-    // Strange Sounds reward: { kind: 'GainCard', template: 'Listen' }
-    const { state: after } = grantReward(catalog, state, { kind: 'GainCard', template: 'Listen' })
+    // Strange Sounds onCleared: { kind: 'GainCard', template: 'Listen' }
+    const { state: after } = applyEffect(catalog, state, { kind: 'GainCard', template: 'Listen' })
 
     // The newly minted Listen card lands in playerDiscard
     expect(after.playerDiscard).toHaveLength(1)

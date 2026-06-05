@@ -7,7 +7,7 @@
  * (no Phaser, no DOM), so it stays on the pure side of the renderer boundary
  * and is unit-tested headless.
  */
-import type { Effect, GameState, PlayerCard, Penalty, Reward, WorldCard } from '../core/index'
+import type { CardEffect, GameState, PlayerCard, WorldCard } from '../core/index'
 
 // ---------------------------------------------------------------------------
 // Effects
@@ -19,7 +19,7 @@ import type { Effect, GameState, PlayerCard, Penalty, Reward, WorldCard } from '
  * (one line per step, later steps prefixed "then …"), so nothing collapses to
  * an opaque "Choose…" / "Multi-step".
  */
-export function describeEffect(effect: Effect): string[] {
+export function describeEffect(effect: CardEffect): string[] {
   switch (effect.kind) {
     case 'DealProgress': {
       const bonus = effect.bonus ? ` (+${effect.bonus.amount} vs ${effect.bonus.tag})` : ''
@@ -42,13 +42,25 @@ export function describeEffect(effect: Effect): string[] {
     case 'AddCard':
       return [`Gain a ${effect.template} card`]
     case 'AddWorldCardToTop':
-      return [`Put a ${effect.template} on top of the world deck`]
+      return [`+${effect.template} to world deck`]
     case 'Modal':
       return ['Choose one:', ...effect.branches.map((b) => `• ${describeEffect(b).join(', ')}`)]
     case 'Sequence':
       return effect.steps.flatMap((step, i) =>
         describeEffect(step).map((line, j) => (i > 0 && j === 0 ? `then ${lowerFirst(line)}` : line)),
       )
+    case 'Damage':
+      return [`-${effect.amount} HP`]
+    case 'SkipDrawNextTurn':
+      return ['skip next draw']
+    case 'GainCard':
+      return [`gain ${effect.template}`]
+    case 'AddPlayerCardToTop':
+      return [`+${effect.template} to your deck`]
+    case 'SurviveWorld':
+      return ['you survive the world']
+    case 'None':
+      return []
   }
 }
 
@@ -60,42 +72,6 @@ function describeReturn(min: number, max: number): string {
 
 function lowerFirst(s: string): string {
   return s.length > 0 ? s[0]!.toLowerCase() + s.slice(1) : s
-}
-
-// ---------------------------------------------------------------------------
-// Hazard penalties and rewards
-// ---------------------------------------------------------------------------
-
-/** Full sentence for a Hazard's discard penalty, or '' when there is none. */
-export function describePenalty(penalty: Penalty): string {
-  switch (penalty.kind) {
-    case 'Damage':
-      return `If discarded: -${penalty.amount} HP`
-    case 'SkipDrawNextTurn':
-      return 'If discarded: skip next draw'
-    case 'GainCard':
-      return `If discarded: gain ${penalty.template}`
-    case 'AddWorldCardToTop':
-      return `If discarded: +${penalty.template} to world deck`
-    case 'None':
-      return ''
-  }
-}
-
-/** Full sentence for a Hazard's clear reward, or '' when there is none. */
-export function describeReward(reward: Reward): string {
-  switch (reward.kind) {
-    case 'GainCard':
-      return `Clear it: gain ${reward.template}`
-    case 'AddPlayerCardToTop':
-      return `Clear it: +${reward.template} to your deck`
-    case 'AddWorldCardToTop':
-      return `Clear it: +${reward.template} to world deck`
-    case 'SurviveWorld':
-      return 'Clear it: you survive the world'
-    case 'None':
-      return ''
-  }
 }
 
 // ---------------------------------------------------------------------------
@@ -135,9 +111,9 @@ export function previewPlay(
 
 /** The Progress payload of an effect, looking through Modal/Sequence. */
 function dealProgressOf(
-  effect: Effect,
+  effect: CardEffect,
   branchIndex?: number,
-): Extract<Effect, { kind: 'DealProgress' }> | null {
+): Extract<CardEffect, { kind: 'DealProgress' }> | null {
   switch (effect.kind) {
     case 'DealProgress':
       return effect
