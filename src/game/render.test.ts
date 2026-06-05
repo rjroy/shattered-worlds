@@ -40,10 +40,8 @@ const activeThemeWithFront: VisualTheme = {
   worldCardfrontKey: 'zombie-cardfront',
 }
 
-const activeThemeNoFront: VisualTheme = {
-  ...selectTheme('zombie-big-box'),
-  worldCardfrontKey: undefined,
-}
+const { worldCardfrontKey: _wck, ...themeBase } = selectTheme('zombie-big-box')
+const activeThemeNoFront: VisualTheme = themeBase
 
 // ---------------------------------------------------------------------------
 // selectCardFrontKey
