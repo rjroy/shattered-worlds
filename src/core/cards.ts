@@ -27,6 +27,7 @@ export interface WorldCardTemplate {
   discardable: boolean
   onDiscarded: CardEffect
   onCleared: CardEffect
+  onEndOfTurn: CardEffect
 }
 
 export type CardTemplate = PlayerCardTemplate | WorldCardTemplate
@@ -71,6 +72,7 @@ export function mintCard(
     discardable: template.discardable,
     onDiscarded: template.onDiscarded,
     onCleared: template.onCleared,
+    onEndOfTurn: template.onEndOfTurn,
   }
   return [card, next]
 }

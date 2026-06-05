@@ -103,20 +103,32 @@ function handleDiscardHazard(
 // EndTurn handler
 // ---------------------------------------------------------------------------
 
-function handleEndTurn(state: GameState): ReduceResult {
+function handleEndTurn(catalog: CardCatalog, state: GameState): ReduceResult {
+  const events: GameEvent[] = [{ type: 'TurnEnded' }]
+
+  // Fire onEndOfTurn for each world card in hand
+  let current = state
+  for (const card of state.hand.filter((c): c is WorldCard => c.kind === 'world')) {
+    const r = applyEffect(catalog, current, card.onEndOfTurn)
+    current = r.state
+    events.push(...r.events)
+    if (current.status !== 'playing') {
+      return { state: current, events }
+    }
+  }
+
   // Discard all player cards from hand; world cards stay
-  const playerCardsInHand = state.hand.filter((c) => c.kind === 'player')
-  const worldCardsInHand = state.hand.filter((c) => c.kind === 'world')
+  const playerCardsInHand = current.hand.filter((c) => c.kind === 'player')
+  const worldCardsInHand = current.hand.filter((c) => c.kind === 'world')
   const discardedIds = playerCardsInHand.map((c) => c.id)
 
   const stateAfterDiscard: GameState = {
-    ...state,
+    ...current,
     hand: worldCardsInHand,
-    playerDiscard: [...playerCardsInHand, ...state.playerDiscard],
+    playerDiscard: [...playerCardsInHand, ...current.playerDiscard],
     progress: {},
   }
 
-  const events: GameEvent[] = [{ type: 'TurnEnded' }]
   if (discardedIds.length > 0) {
     events.push({ type: 'CardsDiscarded', cardIds: discardedIds })
   }
@@ -206,6 +218,6 @@ export function reduce(catalog: CardCatalog, state: GameState, action: Action): 
     case 'DiscardHazard':
       return handleDiscardHazard(catalog, state, action)
     case 'EndTurn':
-      return handleEndTurn(state)
+      return handleEndTurn(catalog, state)
   }
 }

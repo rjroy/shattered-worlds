@@ -45,6 +45,7 @@ export interface WorldCard {
   discardable: boolean
   onDiscarded: CardEffect
   onCleared: CardEffect
+  onEndOfTurn: CardEffect
 }
 
 export type Card = PlayerCard | WorldCard

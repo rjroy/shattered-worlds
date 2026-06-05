@@ -56,6 +56,7 @@ const TEXT = {
   textKeyword: '#88ccff',
   textPenalty: '#ff8888',
   textReward: '#88ee88',
+  textHeld: '#ffaa66',
   dimAlpha: 0.35,
 }
 
@@ -150,11 +151,23 @@ export function createCardObject(
       container.add(kwText)
     }
 
-    // onDiscarded then onCleared, as full sentences
-    const penaltyText = describeEffect(worldCard.onDiscarded)
-      .map((l) => `If discarded: ${l}`)
-      .join('\n')
-    if (penaltyText !== '') {
+    // onEndOfTurn (fires each turn while held), onDiscarded, onCleared — as full sentences
+    if (worldCard.onEndOfTurn.kind !== 'None') {
+      const heldLines = describeEffect(worldCard.onEndOfTurn).map((l) => `Each turn: ${l}`).join('\n')
+      const heldText = scene.add.text(0, CARD_H / 2 - 78, heldLines, {
+        fontSize: '9px',
+        color: TEXT.textHeld,
+        wordWrap: { width: CARD_W - 16 },
+        align: 'center',
+      })
+      heldText.setOrigin(0.5, 1)
+      container.add(heldText)
+    }
+
+    if (worldCard.onDiscarded.kind !== 'None') {
+      const penaltyText = describeEffect(worldCard.onDiscarded)
+        .map((l) => `If discarded: ${l}`)
+        .join('\n')
       const penText = scene.add.text(0, CARD_H / 2 - 52, penaltyText, {
         fontSize: '9px',
         color: TEXT.textPenalty,
@@ -165,18 +178,20 @@ export function createCardObject(
       container.add(penText)
     }
 
-    const rewardText = describeEffect(worldCard.onCleared)
-      .map((l) => `Clear it: ${l}`)
-      .join('\n')
-    if (rewardText !== '') {
-      const rewText = scene.add.text(0, CARD_H / 2 - 26, rewardText, {
-        fontSize: '9px',
-        color: TEXT.textReward,
-        wordWrap: { width: CARD_W - 16 },
-        align: 'center',
-      })
-      rewText.setOrigin(0.5, 1)
-      container.add(rewText)
+    if (worldCard.onCleared.kind !== 'None') {
+      const rewardText = describeEffect(worldCard.onCleared)
+        .map((l) => `Clear it: ${l}`)
+        .join('\n')
+      if (rewardText !== '') {
+        const rewText = scene.add.text(0, CARD_H / 2 - 26, rewardText, {
+          fontSize: '9px',
+          color: TEXT.textReward,
+          wordWrap: { width: CARD_W - 16 },
+          align: 'center',
+        })
+        rewText.setOrigin(0.5, 1)
+        container.add(rewText)
+      }
     }
 
     // Discard indicator

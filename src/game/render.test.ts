@@ -33,6 +33,7 @@ const worldCard: WorldCard = {
   discardable: false,
   onDiscarded: { kind: 'None' },
   onCleared: { kind: 'None' },
+  onEndOfTurn: { kind: 'None' },
 }
 
 const activeThemeWithFront: VisualTheme = {
