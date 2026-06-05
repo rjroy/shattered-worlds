@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'bun:test'
 import { createWorld } from './world'
-import { grantReward } from './effects'
+import { applyEffect } from './effects'
 import { catalog, worldData } from './testFixture'
 
 // ---------------------------------------------------------------------------
@@ -203,7 +203,7 @@ describe('reward provenance', () => {
     const state = { ...base, worldId: 'zombie-big-box' }
 
     // Strange Sounds reward: { kind: 'GainCard', template: 'Listen' }
-    const { state: after } = grantReward(catalog, state, { kind: 'GainCard', template: 'Listen' })
+    const { state: after } = applyEffect(catalog, state, { kind: 'GainCard', template: 'Listen' })
 
     // The newly minted Listen card lands in playerDiscard
     expect(after.playerDiscard).toHaveLength(1)

@@ -1,12 +1,10 @@
 import { describe, expect, it } from 'bun:test'
 import {
   applyEffect,
-  applyPenalty,
   damage,
   dealProgress,
   destroyInHand,
   gainCard,
-  grantReward,
   returnToTopThree,
 } from './effects'
 import { mintCard } from './cards'
@@ -290,29 +288,29 @@ describe('damage', () => {
 // 7. SkipDrawNextTurn idempotent
 // ---------------------------------------------------------------------------
 
-describe('applyPenalty SkipDrawNextTurn', () => {
+describe('applyEffect SkipDrawNextTurn', () => {
   it('sets skipDrawNext to true', () => {
     const state = makeState({ skipDrawNext: false })
-    const { state: after } = applyPenalty(catalog, state, { kind: 'SkipDrawNextTurn' })
+    const { state: after } = applyEffect(catalog, state, { kind: 'SkipDrawNextTurn' })
     expect(after.skipDrawNext).toBe(true)
   })
 
   it('is idempotent — calling twice still yields skipDrawNext true', () => {
     const state = makeState({ skipDrawNext: false })
-    const { state: once } = applyPenalty(catalog, state, { kind: 'SkipDrawNextTurn' })
-    const { state: twice } = applyPenalty(catalog, once, { kind: 'SkipDrawNextTurn' })
+    const { state: once } = applyEffect(catalog, state, { kind: 'SkipDrawNextTurn' })
+    const { state: twice } = applyEffect(catalog, once, { kind: 'SkipDrawNextTurn' })
     expect(twice.skipDrawNext).toBe(true)
   })
 })
 
 // ---------------------------------------------------------------------------
-// 8. grantReward SurviveWorld
+// 8. SurviveWorld
 // ---------------------------------------------------------------------------
 
-describe('grantReward SurviveWorld', () => {
+describe('applyEffect SurviveWorld', () => {
   it('sets status to won and emits WorldWon', () => {
     const state = makeState()
-    const { state: after, events } = grantReward(catalog, state, { kind: 'SurviveWorld' })
+    const { state: after, events } = applyEffect(catalog, state, { kind: 'SurviveWorld' })
 
     expect(after.status).toBe('won')
     expect(events.some((e) => e.type === 'WorldWon')).toBe(true)

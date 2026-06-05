@@ -65,7 +65,7 @@ export function dealProgress(
       hand: current.hand.filter((c) => c.id !== hazardId),
     }
 
-    const rewardResult = grantReward(catalog, current, hazard.reward)
+    const rewardResult = applyEffect(catalog, current, hazard.reward)
     current = rewardResult.state
     events.push(...rewardResult.events)
     events.push({ type: 'HazardResolved', hazardId })
@@ -233,73 +233,27 @@ export function heal(state: GameState, n: number): EffectResult {
 }
 
 // ---------------------------------------------------------------------------
-// grantReward
-// ---------------------------------------------------------------------------
-
-/**
- * Apply a card reward from a resolved hazard.
- */
-export function grantReward(catalog: CardCatalog, state: GameState, reward: CardEffect): EffectResult {
-  switch (reward.kind) {
-    case 'GainCard':
-      return gainCard(catalog, state, reward.template, 'playerDiscard')
-    case 'AddPlayerCardToTop':
-      return gainCard(catalog, state, reward.template, 'playerDrawTop')
-    case 'AddWorldCardToTop':
-      return gainCard(catalog, state, reward.template, 'worldDrawTop')
-    case 'SurviveWorld': {
-      const current: GameState = { ...state, status: 'won' }
-      const events: GameEvent[] = [{ type: 'WorldWon' }]
-      return { state: current, events }
-    }
-    case 'None':
-      return { state, events: [] }
-    default:
-      return { state, events: [] }
-  }
-}
-
-// ---------------------------------------------------------------------------
-// applyPenalty
-// ---------------------------------------------------------------------------
-
-/**
- * Apply a hazard penalty when it is not resolved before end of turn.
- */
-export function applyPenalty(catalog: CardCatalog, state: GameState, penalty: CardEffect): EffectResult {
-  switch (penalty.kind) {
-    case 'Damage':
-      return damage(state, penalty.amount)
-    case 'SkipDrawNextTurn': {
-      // Idempotent — setting to true when already true is a no-op.
-      const current: GameState = { ...state, skipDrawNext: true }
-      return { state: current, events: [] }
-    }
-    case 'GainCard':
-      return gainCard(catalog, state, penalty.template, 'playerDiscard')
-    case 'AddWorldCardToTop':
-      return gainCard(catalog, state, penalty.template, 'worldDrawTop')
-    case 'None':
-      return { state, events: [] }
-    default:
-      return { state, events: [] }
-  }
-}
-
-// ---------------------------------------------------------------------------
 // applyEffect
 // ---------------------------------------------------------------------------
 
 /**
- * Dispatch a player card's effect. `action` must be a PlayCard action —
- * callers guarantee this. No validation occurs here.
+ * Apply any CardEffect. Pass `action` for player-card effects that require
+ * targeting information (DealProgress, ReturnWorldCards, etc.); omit it for
+ * penalty and reward effects that run without player input.
  */
-export function applyEffect(catalog: CardCatalog, state: GameState, effect: CardEffect, action: Action): EffectResult {
-  if (action.type !== 'PlayCard') return { state, events: [] }
+export function applyEffect(
+  catalog: CardCatalog,
+  state: GameState,
+  effect: CardEffect,
+  action?: Action,
+): EffectResult {
+  // Narrow to PlayCard once; cases that need targeting fields (DealProgress,
+  // ReturnWorldCards, etc.) use this. Penalty/reward cases ignore it.
+  const play = action?.type === 'PlayCard' ? action : undefined
 
   switch (effect.kind) {
     case 'DealProgress':
-      return dealProgress(catalog, state, action.targetId!, effect.base, effect.bonus)
+      return dealProgress(catalog, state, play?.targetId ?? '', effect.base, effect.bonus)
 
     case 'Draw': {
       const playerCount = effect.player ?? 0
@@ -325,26 +279,24 @@ export function applyEffect(catalog: CardCatalog, state: GameState, effect: Card
       return heal(state, effect.amount)
 
     case 'ReturnWorldCards':
-      return returnToTopThree(state, action.returnIds ?? [])
+      return returnToTopThree(state, play?.returnIds ?? [])
 
     case 'DestroyCardInHand':
-      return destroyInHand(state, action.destroyId)
+      return destroyInHand(state, play?.destroyId)
 
     case 'DiscardThenDraw': {
-      if (action.discardId === undefined) return { state, events: [] }
+      if (play?.discardId === undefined) return { state, events: [] }
 
-      // Move discardId from hand to playerDiscard
-      const discardedCard = state.hand.find((c) => c.id === action.discardId)
+      const discardedCard = state.hand.find((c) => c.id === play.discardId)
       if (discardedCard === undefined) return { state, events: [] }
 
       const afterDiscard: GameState = {
         ...state,
-        hand: state.hand.filter((c) => c.id !== action.discardId),
+        hand: state.hand.filter((c) => c.id !== play.discardId),
         playerDiscard: [discardedCard, ...state.playerDiscard],
       }
 
-      const drawResult = drawPlayer(afterDiscard, effect.player)
-      return drawResult
+      return drawPlayer(afterDiscard, effect.player)
     }
 
     case 'AddCard':
@@ -354,7 +306,7 @@ export function applyEffect(catalog: CardCatalog, state: GameState, effect: Card
       return gainCard(catalog, state, effect.template, 'worldDrawTop')
 
     case 'Modal': {
-      const choice = action.choice ?? 0
+      const choice = play?.choice ?? 0
       const branch = effect.branches[choice]
       if (branch === undefined) return { state, events: [] }
       return applyEffect(catalog, state, branch, action)
@@ -373,7 +325,28 @@ export function applyEffect(catalog: CardCatalog, state: GameState, effect: Card
       return { state: current, events }
     }
 
-    default:
+    case 'Damage':
+      return damage(state, effect.amount)
+
+    case 'SkipDrawNextTurn': {
+      // Idempotent — setting to true when already true is a no-op.
+      const current: GameState = { ...state, skipDrawNext: true }
+      return { state: current, events: [] }
+    }
+
+    case 'GainCard':
+      return gainCard(catalog, state, effect.template, 'playerDiscard')
+
+    case 'AddPlayerCardToTop':
+      return gainCard(catalog, state, effect.template, 'playerDrawTop')
+
+    case 'SurviveWorld': {
+      const current: GameState = { ...state, status: 'won' }
+      const events: GameEvent[] = [{ type: 'WorldWon' }]
+      return { state: current, events }
+    }
+
+    case 'None':
       return { state, events: [] }
   }
 }

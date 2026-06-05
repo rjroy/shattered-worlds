@@ -1,7 +1,7 @@
 import type { Action, GameEvent, GameState, WorldCard } from './types'
 import type { CardCatalog } from './catalog'
 import { availableActions, checkPlayAction } from './available'
-import { applyEffect, applyPenalty } from './effects'
+import { applyEffect } from './effects'
 import { refillHand } from './draw'
 import { IllegalActionError } from './errors'
 
@@ -90,7 +90,7 @@ function handleDiscardHazard(
   const stateAfterRemove: GameState = { ...state, hand: handAfterDiscard }
 
   // Apply penalty
-  const penaltyResult = applyPenalty(catalog, stateAfterRemove, (card as WorldCard).penalty)
+  const penaltyResult = applyEffect(catalog, stateAfterRemove, (card as WorldCard).penalty)
 
   const events: GameEvent[] = [
     { type: 'HazardDiscarded', cardId },
