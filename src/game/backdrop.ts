@@ -29,22 +29,22 @@ export class BackdropLayer {
     this.realityImg.setDisplaySize(900, 600)
     this.realityImg.setDepth(-10)
 
-    // Intrusion overlay at depth -9 (above reality, behind cards/HUD)
-    this.intrusionImg = scene.add.image(0, 0, theme.backdrop.intrusionKey)
-    this.intrusionImg.setOrigin(0, 0)
-    this.intrusionImg.setDisplaySize(900, 600)
-    this.intrusionImg.setDepth(-9)
-    this.intrusionImg.setAlpha(0)
-
-      // Walker sprite (depth -8, just above intrusion)
+    // Walker sprite (depth -9, just above reality)
     if (theme.walker !== undefined) {
       const sprite = scene.add.image(WALKER_START.x, WALKER_START.y, theme.walker.textureKey)
       sprite.setOrigin(0.5, 1)
       sprite.setScale(75.0 / sprite.height)  // base size is 75 height at 1.0 scale
       sprite.setAlpha(0.35)
-      sprite.setDepth(-8)
+      sprite.setDepth(-9)
       this.walkerSprite = sprite
     }
+
+    // Intrusion overlay at depth -8 (above reality and walker, behind cards/HUD)
+    this.intrusionImg = scene.add.image(0, 0, theme.backdrop.intrusionKey)
+    this.intrusionImg.setOrigin(0, 0)
+    this.intrusionImg.setDisplaySize(900, 600)
+    this.intrusionImg.setDepth(-8)
+    this.intrusionImg.setAlpha(0)
   }
 
   updateIntrusion(intensity: number): void {
