@@ -95,9 +95,11 @@ export class TableScene extends Phaser.Scene {
     const theme = selectTheme('zombie-big-box')
     const keysToLoad = [
       'cardback',
+      'cardfront',
       theme.backdrop.realityKey,
       theme.backdrop.intrusionKey,
       ...(theme.walker ? [theme.walker.textureKey] : []),
+      ...(theme.worldCardfrontKey ? [theme.worldCardfrontKey] : []),
     ]
     for (const key of keysToLoad) {
       const url = assetManifest[key]

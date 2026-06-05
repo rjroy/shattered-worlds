@@ -25,6 +25,7 @@ export interface VisualTheme {
   walker?: {
     textureKey: string            // 'zombie-walker'
   }
+  worldCardfrontKey?: string      // theme-specific frame for world/hazard cards; falls back to 'cardfront'
 }
 
 export const ZOMBIE_BIG_BOX_THEME: VisualTheme = {
@@ -47,6 +48,7 @@ export const ZOMBIE_BIG_BOX_THEME: VisualTheme = {
   walker: {
     textureKey: 'zombie-walker',
   },
+  worldCardfrontKey: 'zombie-cardfront',
 }
 
 const THEMES: Record<string, VisualTheme> = {

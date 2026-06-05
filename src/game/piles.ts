@@ -10,8 +10,8 @@
  */
 import Phaser from 'phaser'
 
-const PILE_CARD_W = 40
-const PILE_CARD_H = 52
+const PILE_CARD_W = 50
+const PILE_CARD_H = 64
 const PILE_OFFSET = 2 // px offset per stacked card
 
 export class PileLayer {

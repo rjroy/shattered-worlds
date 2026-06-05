@@ -46,14 +46,17 @@ export function createCardObject(
 ): Phaser.GameObjects.Container {
   const container = scene.add.container(x, y)
 
-  const bg = scene.add.rectangle(
-    0,
-    0,
-    CARD_W,
-    CARD_H,
-    card.kind === 'player' ? theme.frameStyle.playerBg : theme.frameStyle.worldBg,
-  )
-  bg.setStrokeStyle(2, theme.frameStyle.borderColor)
+  // Card frame image: world cards use the theme-specific front if available
+  const cardfrontKey =
+    card.kind === 'world' ? (theme.worldCardfrontKey ?? 'cardfront') : 'cardfront'
+  const cardImg = scene.add.image(0, 0, cardfrontKey)
+  cardImg.setDisplaySize(CARD_W, CARD_H)
+  container.add(cardImg)
+
+  // Transparent overlay rectangle used only for selection highlight strokes.
+  // list[1] — applyCardHighlight depends on this position.
+  const bg = scene.add.rectangle(0, 0, CARD_W, CARD_H, 0x000000, 0)
+  bg.setStrokeStyle(0)
   container.add(bg)
 
   if (card.kind === 'player') {
@@ -313,8 +316,8 @@ export function applyCardHighlight(
   kind: 'selected' | 'target' | 'discard' | 'none',
   frameStyle: FrameStyle,
 ): void {
-  // The background rectangle is always the first child
-  const bg = container.list[0] as Phaser.GameObjects.Rectangle | undefined
+  // The highlight rectangle is list[1] (list[0] is the cardfront image)
+  const bg = container.list[1] as Phaser.GameObjects.Rectangle | undefined
   if (bg === undefined) return
   switch (kind) {
     case 'selected':
@@ -327,7 +330,7 @@ export function applyCardHighlight(
       bg.setStrokeStyle(3, frameStyle.discardBorder)
       break
     case 'none':
-      bg.setStrokeStyle(2, frameStyle.borderColor)
+      bg.setStrokeStyle(0)
       break
   }
 }
