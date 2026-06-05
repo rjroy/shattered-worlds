@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Card data externalization &amp; world-scoped templates</title>
+  <meta name="date" content="2026-06-04">
+  <meta name="status" content="draft">
+  <meta name="tags" content="cards, data, json, assets, world-scoping, provenance, visual-theming">
+  <meta name="modules" content="src/core/cards, src/core/types, src/core/world, src/core/effects, src/game/visual-theme, src/game/scenes">
+  <meta name="related" content=".lore/work/specs/world-deck-slice.html, .lore/work/specs/visual-identity.html">
+  <meta name="req-prefix" content="CARD-DATA">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    body {
+      font-family: system-ui, sans-serif;
+      font-size: 15px;
+      line-height: 1.6;
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 80px 24px 60px;
+      color: #1a1a1a;
+      background: #fafafa;
+    }
+    #sticky-header {
+      position: sticky;
+      top: 0;
+      background: #1e1e2e;
+      color: #cdd6f4;
+      padding: 10px 20px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      z-index: 100;
+      font-size: 13px;
+      border-bottom: 2px solid #89b4fa;
+    }
+    #sticky-header .prefix { font-weight: 700; color: #89b4fa; font-size: 15px; }
+    #sticky-header .status-badge {
+      background: #f9e2af;
+      color: #1e1e2e;
+      border-radius: 4px;
+      padding: 2px 8px;
+      font-weight: 600;
+      font-size: 12px;
+      text-transform: uppercase;
+    }
+    h1 { font-size: 1.7rem; margin: 0 0 4px; }
+    h2 { font-size: 1.1rem; text-transform: uppercase; letter-spacing: 0.06em; color: #555; border-bottom: 1px solid #ddd; padding-bottom: 4px; margin: 32px 0 12px; }
+    .meta { color: #666; font-size: 13px; margin-bottom: 24px; }
+    .req-block {
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      margin-bottom: 14px;
+      background: #fff;
+      overflow: hidden;
+    }
+    .req-header {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 12px 16px;
+      cursor: pointer;
+      user-select: none;
+    }
+    .req-header:hover { background: #f8fafc; }
+    .req-id {
+      font-family: monospace;
+      font-size: 12px;
+      font-weight: 700;
+      color: #fff;
+      background: #475569;
+      border-radius: 4px;
+      padding: 2px 7px;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .req-must .req-id    { background: #dc2626; }
+    .req-should .req-id  { background: #d97706; }
+    .req-must-not .req-id { background: #7c3aed; }
+    .req-label { font-size: 14px; flex: 1; }
+    .badge {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 7px;
+      border-radius: 10px;
+      flex-shrink: 0;
+      text-transform: uppercase;
+    }
+    .badge-draft { background: #e2e8f0; color: #475569; }
+    .req-detail {
+      padding: 0 16px 14px 16px;
+      border-top: 1px solid #f1f5f9;
+      color: #374151;
+      font-size: 13.5px;
+    }
+    .req-detail p  { margin: 8px 0 0; }
+    .req-detail ul { margin: 6px 0 0; padding-left: 20px; }
+    .req-detail pre {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      padding: 10px 14px;
+      font-size: 12px;
+      overflow-x: auto;
+      margin: 8px 0 0;
+    }
+    .hidden { display: none; }
+    .section-label {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #94a3b8;
+      margin: 20px 0 6px;
+    }
+    .validation-box {
+      background: #f0fdf4;
+      border: 1px solid #86efac;
+      border-radius: 8px;
+      padding: 16px 20px;
+      margin-top: 8px;
+    }
+    .validation-box h3 { margin: 0 0 10px; font-size: 1rem; color: #166534; }
+    .validation-box ol { margin: 0; padding-left: 20px; }
+    .validation-box li { margin-bottom: 6px; font-size: 13.5px; }
+    .constraint-box {
+      background: #fef3c7;
+      border: 1px solid #fcd34d;
+      border-radius: 8px;
+      padding: 14px 18px;
+      margin-bottom: 20px;
+      font-size: 13.5px;
+    }
+    .constraint-box strong { display: block; margin-bottom: 4px; font-size: 14px; }
+    code { background: #f1f5f9; border-radius: 3px; padding: 1px 5px; font-size: 12.5px; font-family: monospace; }
+    a { color: #2563eb; }
+  </style>
+</head>
+<body>
+
+<div id="sticky-header">
+  <span class="prefix">CARD-DATA</span>
+  <span>Card data externalization &amp; world-scoped templates</span>
+  <span class="status-badge">draft</span>
+</div>
+
+<h1>Card data externalization &amp; world-scoped templates</h1>
+<p class="meta">
+  Date: 2026-06-04 &nbsp;|&nbsp; Status: draft &nbsp;|&nbsp;
+  Related: <a href="world-deck-slice.html">world-deck-slice</a>,
+  <a href="visual-identity.html">visual-identity</a>
+</p>
+
+<h2>Problem Statement</h2>
+<p>The current card catalog is hardcoded as TypeScript objects in <code>src/core/cards.ts</code>. This has three concrete problems:</p>
+<ol>
+  <li><strong>Wrong abstraction layer.</strong> Card templates are content, not code. At hundreds of cards the TypeScript union of names and the exhaustiveness check become maintenance liabilities rather than safety nets.</li>
+  <li><strong>Single-world assumption.</strong> The catalog is a flat global list with no concept of which world a card belongs to. Zombie, Find Baseball Bat, and The Walker are Zombie Big-Box content, but the code treats them identically to starter cards.</li>
+  <li><strong>No card provenance.</strong> Cards gained as world rewards carry no record of where they came from. The renderer has no signal to apply world-appropriate card front art to a card that travels into future runs.</li>
+</ol>
+
+<div class="constraint-box">
+  <strong>Locked decisions that constrain this spec</strong>
+  <ul style="margin:4px 0 0; padding-left:18px;">
+    <li><code>worldId: string</code> on <code>GameState</code> is the active world and changes as the player traverses worlds. No art, colors, or presentation enters <code>src/core/</code>.</li>
+    <li>The <code>VisualTheme</code> registry in <code>src/game/</code> already maps <code>worldId → VisualTheme</code>. Unknown <code>worldId</code> falls back to <code>'zombie-big-box'</code>, not a crash.</li>
+    <li>Card back (<code>cardback.webp</code>) is constant canon — never re-themed.</li>
+    <li>The <code>preload()</code> phase runs before <code>create()</code>. Multiple-world loading requires <code>worldId</code> passed as Phaser scene init data.</li>
+    <li>After this spec, <code>mintCard</code> takes an explicit <code>catalog</code> parameter: <code>mintCard(catalog, state, templateId)</code>. It remains the only permitted id source — no ad-hoc card construction.</li>
+  </ul>
+</div>
+
+<h2>Requirements</h2>
+
+<!-- ─── DATA EXTERNALIZATION ─── -->
+<div class="section-label">Data Externalization</div>
+
+<div class="req-block req-must" id="CARD-DATA-1">
+  <div class="req-header" onclick="toggle('CARD-DATA-1-detail')">
+    <span class="req-id">REQ-CARD-DATA-1</span>
+    <span class="req-label">Card template data MUST be stored in JSON asset files, not in TypeScript source files.</span>
+    <span class="badge badge-draft">draft</span>
+  </div>
+  <div class="req-detail hidden" id="CARD-DATA-1-detail">
+    <p>No card name, cost, keyword list, effect, penalty, reward, or act composition array may be defined inline in <code>.ts</code> files. This includes the act specs currently hardcoded in <code>src/core/world.ts</code>. TypeScript files may reference template IDs and define schema types, but all data values live only in JSON.</p>
+  </div>
+</div>
+
+<div class="req-block req-must" id="CARD-DATA-2">
+  <div class="req-header" onclick="toggle('CARD-DATA-2-detail')">
+    <span class="req-id">REQ-CARD-DATA-2</span>
+    <span class="req-label">All JSON required for the current run MUST be loaded via Phaser's asset loader before any card minting occurs.</span>
+    <span class="badge badge-draft">draft</span>
+  </div>
+  <div class="req-detail hidden" id="CARD-DATA-2-detail">
+    <p>"All JSON required for the current run" means <code>starter.json</code> and the active world's JSON (e.g., <code>zombie-big-box.json</code>). Loading happens in the preload phase. The game MUST NOT attempt to mint cards before both files have been loaded and parsed.</p>
+    <p>Attempting to mint from an unassembled or partial catalog is a runtime error (see REQ-CARD-DATA-14).</p>
+  </div>
+</div>
+
+<div class="req-block req-must" id="CARD-DATA-3">
+  <div class="req-header" onclick="toggle('CARD-DATA-3-detail')">
+    <span class="req-id">REQ-CARD-DATA-3</span>
+    <span class="req-label">A failed JSON load MUST surface an error before any game state is created. The game MUST NOT proceed with a missing or partial catalog.</span>
+    <span class="badge badge-draft">draft</span>
+  </div>
+  <div class="req-detail hidden" id="CARD-DATA-3-detail">
+    <p>If <code>starter.json</code> or the world's JSON fails to load (missing file, network error, parse error), the game must not silently fall back to an empty catalog or partially constructed state. The minimum required behavior is an error message visible to the developer before the run begins. Graceful user-facing error UI is not required at this stage.</p>
+  </div>
+</div>
+
+<!-- ─── WORLD SCOPING ─── -->
+<div class="section-label">World Scoping</div>
+
+<div class="req-block req-must" id="CARD-DATA-4">
+  <div class="req-header" onclick="toggle('CARD-DATA-4-detail')">
+    <span class="req-id">REQ-CARD-DATA-4</span>
+    <span class="req-label">Card templates MUST be scoped per world. Each world's JSON defines the templates introduced by that world.</span>
+    <span class="badge badge-draft">draft</span>
+  </div>
+  <div class="req-detail hidden" id="CARD-DATA-4-detail">
+    <p>Zombie, Find Baseball Bat, The Walker, Listen, Baseball Bat, Regroup, and Summon Door are Zombie Big-Box content. They belong in a Zombie Big-Box JSON file, not in a global flat catalog. A card template does not exist in a world it was not defined in.</p>
+    <p>World JSON files are named by world ID (e.g., <code>assets/worlds/zombie-big-box.json</code>). The file name matches the <code>worldId</code> field inside the file.</p>
+  </div>
+</div>
+
+<div class="req-block req-must" id="CARD-DATA-5">
+  <div class="req-header" onclick="toggle('CARD-DATA-5-detail')">
+    <span class="req-id">REQ-CARD-DATA-5</span>
+    <span class="req-label">Starter deck card templates MUST live in a dedicated JSON asset named <code>starter.json</code>, not scoped to any world.</span>
+    <span class="badge badge-draft">draft</span>
+  </div>
+  <div class="req-detail hidden" id="CARD-DATA-5-detail">
+    <p>Sprint, Explore, Barricade, Med Kit, Panic, and Adrenaline are world-agnostic starter cards. They ship in <code>assets/worlds/starter.json</code>, which is always loaded regardless of the active world. The file uses <code>"worldId": "starter"</code> — matching the <code>sourceWorldId</code> value stamped on starter deck cards (see REQ-CARD-DATA-9).</p>
+  </div>
+</div>
+
+<div class="req-block req-must" id="CARD-DATA-6">
+  <div class="req-header" onclick="toggle('CARD-DATA-6-detail')">
+    <span class="req-id">REQ-CARD-DATA-6</span>
+    <span class="req-label">A world's JSON MUST include its deck composition as data alongside its card templates.</span>
+    <span class="badge badge-draft">draft</span>
+  </div>
+  <div class="req-detail hidden" id="CARD-DATA-6-detail">
+    <p>Deck composition specifies which templates appear in each act and in what quantities. This replaces the hardcoded act specs in <code>src/core/world.ts</code>. The composition is in a separate top-level key from card templates within the same file.</p>
+    <p>Minimal world JSON structure:</p>
+    <pre>{
+  "worldId": "zombie-big-box",
+  "cardTemplates": {
+    "Zombie": {
+      "kind": "world",
+      "name": "Zombie",
+      "cost": 1,
+      "keywords": ["Slow", "Creature"],
+      "discardable": true,
+      "penalty": { "kind": "Damage", "amount": 1 },
+      "reward": { "kind": "None" }
+    }
+  },
+  "deckComposition": {
+    "acts": [
+      { "cards": [{ "templateId": "Strange Sounds", "count": 2 }, { "templateId": "Zombie", "count": 3 }] },
+      { "cards": [{ "templateId": "Find Baseball Bat", "count": 1 }, { "templateId": "Screams", "count": 2 }] },
+      { "cards": [{ "templateId": "The Walker", "count": 1 }] }
+    ]
+  }
+}</pre>
+    <p>The <code>starter.json</code> file contains only <code>worldId</code> and <code>cardTemplates</code> — no <code>deckComposition</code>.</p>
+  </div>
+</div>
+
+<!-- ─── CATALOG ASSEMBLY ─── -->
+<div class="section-label">Catalog Assembly</div>
+
+<div class="req-block req-must" id="CARD-DATA-7">
+  <div class="req-header" onclick="toggle('CARD-DATA-7-detail')">
+    <span class="req-id">REQ-CARD-DATA-7</span>
+    <span class="req-label">The game layer MUST assemble a merged <code>CardCatalog</code> from loaded JSON before creating world state.</span>
+    <span class="badge badge-draft">draft</span>
+  </div>
+  <div class="req-detail hidden" id="CARD-DATA-7-detail">
+    <p>After JSON is loaded in preload, the Phaser scene (game layer) merges starter card templates and world card templates into a single <code>CardCatalog</code> object (<code>Record&lt;string, CardTemplate&gt;</code>). This merged catalog is the object passed to all core functions that require minting.</p>
+    <p>Template ID collisions between starter and world JSON are a data error and must be caught at assembly time, not silently overwritten.</p>
+  </div>
+</div>
+
+<div class="req-block req-must" id="CARD-DATA-8">
+  <div class="req-header" onclick="toggle('CARD-DATA-8-detail')">
+    <span class="req-id">REQ-CARD-DATA-8</span>
+    <span class="req-label">The <code>catalog</code> MUST be passed as an explicit parameter to <code>mintCard</code>, <code>createWorld</code>, and <code>dispatch</code>.</span>
+    <span class="badge badge-draft">draft</span>
+  </div>
+  <div class="req-detail hidden" id="CARD-DATA-8-detail">
+    <p>The module-level <code>CATALOG</code> constant in <code>src/core/cards.ts</code> is removed. Functions that mint cards receive the catalog explicitly — no global, no module-level state. The intended signatures:</p>
+    <pre>mintCard(catalog: CardCatalog, state: GameState, templateId: string): [PlayerCard | WorldCard, GameState]
+createWorld(catalog: CardCatalog, seed: number): GameState
+dispatch(catalog: CardCatalog, state: GameState, action: Action): { state: GameState; events: GameEvent[] }</pre>
+    <p>Effects inside <code>src/core/effects.ts</code> that currently call <code>mintCard</code> via the global will receive the catalog threaded through from <code>dispatch</code>.</p>
+  </div>
+</div>
+
+<!-- ─── CARD PROVENANCE ─── -->
+<div class="section-label">Card Provenance</div>
+
+<div class="req-block req-must" id="CARD-DATA-9">
+  <div class="req-header" onclick="toggle('CARD-DATA-9-detail')">
+    <span class="req-id">REQ-CARD-DATA-9</span>
+    <span class="req-label">Each <code>PlayerCard</code> instance MUST carry a <code>sourceWorldId: string</code> field set at mint time.</span>
+    <span class="badge badge-draft">draft</span>
+  </div>
+  <div class="req-detail hidden" id="CARD-DATA-9-detail">
+    <p>New field on the <code>PlayerCard</code> type in <code>src/core/types.ts</code>. Set once at mint time, never mutated. <code>mintCard</code> derives it from <code>state.worldId</code> at the moment of minting.</p>
+  </div>
+</div>
+
+<div class="req-block req-must" id="CARD-DATA-10">
+  <div class="req-header" onclick="toggle('CARD-DATA-10-detail')">
+    <span class="req-id">REQ-CARD-DATA-10</span>
+    <span class="req-label">The initial <code>GameState</code> MUST have <code>worldId = 'starter'</code> before a world is entered.</span>
+    <span class="badge badge-draft">draft</span>
+  </div>
+  <div class="req-detail hidden" id="CARD-DATA-10-detail">
+    <p>Starter deck cards are minted before a world is active. Setting the initial <code>worldId</code> to <code>'starter'</code> means <code>mintCard</code> stamps them with <code>sourceWorldId: 'starter'</code> naturally — no special-casing needed in the minting logic. When <code>createWorld</code> begins a run, it sets <code>worldId</code> to the active world's ID.</p>
+  </div>
+</div>
+
+<div class="req-block req-must" id="CARD-DATA-11">
+  <div class="req-header" onclick="toggle('CARD-DATA-11-detail')">
+    <span class="req-id">REQ-CARD-DATA-11</span>
+    <span class="req-label"><code>PlayerCards</code> minted as world rewards MUST have <code>sourceWorldId</code> equal to <code>state.worldId</code> at the moment of minting.</span>
+    <span class="badge badge-draft">draft</span>
+  </div>
+  <div class="req-detail hidden" id="CARD-DATA-11-detail">
+    <p>When a reward effect mints a player card (e.g., Listen from Strange Sounds, Baseball Bat from Find Baseball Bat), <code>mintCard</code> reads <code>state.worldId</code> and stamps it. The card retains this ID for the duration of the run and across future runs.</p>
+  </div>
+</div>
+
+<div class="req-block req-must-not" id="CARD-DATA-12">
+  <div class="req-header" onclick="toggle('CARD-DATA-12-detail')">
+    <span class="req-id">REQ-CARD-DATA-12</span>
+    <span class="req-label"><code>WorldCard</code> instances MUST NOT carry a <code>sourceWorldId</code> field.</span>
+    <span class="badge badge-draft">draft</span>
+  </div>
+  <div class="req-detail hidden" id="CARD-DATA-12-detail">
+    <p>World cards — including world cards minted by penalty effects at runtime (e.g., the Door added by The Walker's discard penalty) — are always of the current world, resolved within a run, and never travel between worlds. They are rendered using <code>state.worldId</code> directly. <code>sourceWorldId</code> on a <code>WorldCard</code> is misleading and must not be added.</p>
+  </div>
+</div>
+
+<!-- ─── RENDERING ─── -->
+<div class="section-label">Rendering</div>
+
+<div class="req-block req-must" id="CARD-DATA-13">
+  <div class="req-header" onclick="toggle('CARD-DATA-13-detail')">
+    <span class="req-id">REQ-CARD-DATA-13</span>
+    <span class="req-label">The card front renderer MUST use <code>card.sourceWorldId</code> to select visual theme for player cards.</span>
+    <span class="badge badge-draft">draft</span>
+  </div>
+  <div class="req-detail hidden" id="CARD-DATA-13-detail">
+    <p>Wherever a player card's front is rendered — hand, discard pile, reward selection — the renderer looks up <code>VisualTheme</code> by <code>card.sourceWorldId</code>, not by <code>state.worldId</code>. A card gained in Zombie Big-Box displays Zombie Big-Box card front art regardless of which world is currently active.</p>
+  </div>
+</div>
+
+<div class="req-block req-must" id="CARD-DATA-14">
+  <div class="req-header" onclick="toggle('CARD-DATA-14-detail')">
+    <span class="req-id">REQ-CARD-DATA-14</span>
+    <span class="req-label">An unrecognized <code>sourceWorldId</code> MUST fall back to <code>'zombie-big-box'</code> theme without crashing.</span>
+    <span class="badge badge-draft">draft</span>
+  </div>
+  <div class="req-detail hidden" id="CARD-DATA-14-detail">
+    <p>This is a rendering-time lookup, not a mint-time error. Consistent with the existing <code>VisualTheme</code> registry fallback from the <a href="visual-identity.html">visual-identity spec</a>. The fallback is silent; no console warning is required at this stage.</p>
+  </div>
+</div>
+
+<div class="req-block req-must-not" id="CARD-DATA-15">
+  <div class="req-header" onclick="toggle('CARD-DATA-15-detail')">
+    <span class="req-id">REQ-CARD-DATA-15</span>
+    <span class="req-label">The card back visual MUST NOT vary by <code>sourceWorldId</code> or any other per-card signal.</span>
+    <span class="badge badge-draft">draft</span>
+  </div>
+  <div class="req-detail hidden" id="CARD-DATA-15-detail">
+    <p><code>cardback.webp</code> is canon and constant across all worlds. This is load-bearing for game integrity — players must not be able to identify face-down cards by back art. Inherited from the visual-identity spec.</p>
+  </div>
+</div>
+
+<!-- ─── TYPE MIGRATION ─── -->
+<div class="section-label">Type Migration</div>
+
+<div class="req-block req-must" id="CARD-DATA-16">
+  <div class="req-header" onclick="toggle('CARD-DATA-16-detail')">
+    <span class="req-id">REQ-CARD-DATA-16</span>
+    <span class="req-label">Minting a card with a template ID absent from the catalog MUST throw a typed error.</span>
+    <span class="badge badge-draft">draft</span>
+  </div>
+  <div class="req-detail hidden" id="CARD-DATA-16-detail">
+    <p>Runtime validation replaces the compile-time exhaustiveness check lost by moving to JSON. <code>mintCard</code> throws a typed error with the invalid ID and current state if the template ID is not found — consistent with the existing error contract from the core loop spec (illegal actions throw, no silent no-ops).</p>
+  </div>
+</div>
+
+<div class="req-block req-must" id="CARD-DATA-17">
+  <div class="req-header" onclick="toggle('CARD-DATA-17-detail')">
+    <span class="req-id">REQ-CARD-DATA-17</span>
+    <span class="req-label"><code>CardTemplateId</code> MUST become <code>string</code>. The TypeScript union of all template names is removed.</span>
+    <span class="badge badge-draft">draft</span>
+  </div>
+  <div class="req-detail hidden" id="CARD-DATA-17-detail">
+    <p>The current union type <code>'Sprint' | 'Explore' | 'Zombie' | ...</code> cannot survive JSON-driven catalogs where templates are defined at runtime. Safety is provided by runtime validation at mint time (REQ-CARD-DATA-16) rather than the type system.</p>
+    <p>The type alias is retained as <code>type CardTemplateId = string</code> for documentation value. All internal references to the old union are updated.</p>
+  </div>
+</div>
+
+<h2>Out of Scope</h2>
+<ul>
+  <li>A content-authoring pipeline or card editor. JSON files are edited by hand.</li>
+  <li>Card art assets per world (covered by visual-identity; this spec only wires the <code>sourceWorldId</code> signal to the existing theme registry).</li>
+  <li>Meta-progression persistence across sessions. When run persistence is added, <code>sourceWorldId</code> must be included in the serialized <code>PlayerCard</code> — it is not ephemeral.</li>
+  <li>On-demand world JSON loading at world-selection time. All JSON required for the current run is loaded upfront in preload.</li>
+  <li>JSON schema validation at load time (desirable but deferred).</li>
+  <li>Adding a second world. This spec migrates existing Zombie Big-Box content; it does not ship new world content.</li>
+</ul>
+
+<h2>AI Validation</h2>
+
+<div class="validation-box">
+  <h3>How to verify this spec is implemented</h3>
+  <ol>
+    <li><strong>No card data in TypeScript:</strong> <code>grep -rn "cost:" src/core/</code> returns zero results. Also confirm <code>src/core/world.ts</code> contains no hardcoded act spec arrays.</li>
+    <li><strong>JSON assets exist:</strong> <code>assets/worlds/starter.json</code> and <code>assets/worlds/zombie-big-box.json</code> exist and contain valid template and (for the world file) deck composition data.</li>
+    <li><strong>World scoping:</strong> Zombie, Find Baseball Bat, The Walker, Listen, Baseball Bat, Regroup, Summon Door appear only in the Zombie Big-Box JSON — not in <code>starter.json</code> and not in any <code>.ts</code> file.</li>
+    <li><strong>Starter card provenance (unit):</strong> Mint a Sprint card with a state whose <code>worldId = 'starter'</code>. Assert <code>card.sourceWorldId === 'starter'</code>.</li>
+    <li><strong>Starter card provenance (integration):</strong> Call <code>createWorld</code>. Assert all cards in the initial <code>playerDraw</code> and opening hand have <code>sourceWorldId === 'starter'</code>.</li>
+    <li><strong>Reward card provenance:</strong> Simulate a Strange Sounds reward during a Zombie Big-Box run. Assert the minted Listen card has <code>sourceWorldId === 'zombie-big-box'</code>.</li>
+    <li><strong>Invalid template ID throws:</strong> Call <code>mintCard</code> with a template ID not in the catalog. Assert a typed error is thrown — not a silent undefined or null.</li>
+    <li><strong>Load failure surfaced:</strong> Remove or corrupt <code>starter.json</code>. Confirm the game surfaces an error before world state is created, not a silent empty catalog.</li>
+    <li><strong>Renderer uses sourceWorldId:</strong> With a Zombie Big-Box world active, render a hand containing a card with <code>sourceWorldId === 'starter'</code>. Confirm it renders with the starter/fallback card front, not the Zombie Big-Box card front.</li>
+    <li><strong>All existing tests pass:</strong> <code>bun test</code> green. Migrating data format must not break the game loop.</li>
+  </ol>
+</div>
+
+<script>
+  function toggle(id) {
+    const el = document.getElementById(id);
+    if (el) el.classList.toggle('hidden');
+  }
+</script>
+
+</body>
+</html>

@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>P2a — Author JSON + pure assembleCatalog (data duplicated)</title>
+  <meta name="date" content="2026-06-04">
+  <meta name="status" content="pending">
+  <meta name="tags" content="task, json, catalog, assembly, fidelity-guard">
+  <meta name="source" content=".lore/work/plans/card-data-externalization.html">
+  <meta name="sequence" content="2">
+  <meta name="modules" content="src/game/assets/worlds, src/core/catalog, src/game/worldData">
+  <style>
+    *,*::before,*::after{box-sizing:border-box}
+    body{font-family:system-ui,sans-serif;font-size:15px;line-height:1.6;max-width:880px;margin:0 auto;padding:76px 24px 60px;color:#1a1a1a;background:#fafafa}
+    #sticky-header{position:sticky;top:0;background:#1e1e2e;color:#cdd6f4;padding:10px 20px;display:flex;align-items:center;gap:14px;z-index:100;font-size:13px;border-bottom:2px solid #89b4fa}
+    #sticky-header .seq{font-family:monospace;font-weight:700;color:#89b4fa;font-size:15px}
+    #sticky-header .ttl{flex:1}
+    .chip{border-radius:4px;padding:2px 9px;font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:.04em}
+    .chip.pending{background:#e2e8f0;color:#475569}
+    h1{font-size:1.5rem;margin:0 0 2px}
+    .seqline{font-size:13px;color:#64748b;margin-bottom:4px}
+    .seqline b{color:#475569}
+    .dep{font-size:12.5px;color:#7c3aed;background:#f5f3ff;border:1px solid #ddd6fe;border-radius:6px;padding:6px 12px;margin:10px 0 18px;display:inline-block}
+    h2{font-size:.78rem;text-transform:uppercase;letter-spacing:.07em;color:#64748b;border-bottom:1px solid #e2e8f0;padding-bottom:4px;margin:26px 0 10px}
+    code{background:#f1f5f9;border-radius:3px;padding:1px 5px;font-size:12.5px;font-family:ui-monospace,monospace}
+    .file{font-family:ui-monospace,monospace;font-size:12px;background:#f1f5f9;border-radius:3px;padding:1px 5px}
+    ul{margin:6px 0 0;padding-left:20px}
+    li{margin-bottom:6px;font-size:13.5px}
+    pre{background:#1e1e2e;color:#cdd6f4;border-radius:6px;padding:12px 14px;font-size:12px;overflow-x:auto}
+    pre code{background:transparent;color:inherit;padding:0}
+    .validation{background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:14px 18px;margin-top:6px}
+    .validation h2{color:#166534;border-bottom-color:#bbf7d0;margin-top:0}
+    .validation li{margin-bottom:7px}
+    .star{background:#fffbeb;border:1px solid #fcd34d;border-radius:6px;padding:8px 12px;font-size:12.5px;margin-top:8px}
+    .req{font-family:monospace;font-size:11px;background:#475569;color:#fff;border-radius:3px;padding:1px 5px;white-space:nowrap}
+    a{color:#2563eb}
+  </style>
+</head>
+<body>
+<div id="sticky-header">
+  <span class="seq">02 / 06</span>
+  <span class="ttl">Author JSON + pure assembleCatalog</span>
+  <span class="chip pending">pending</span>
+</div>
+
+<h1>P2a — Author JSON + pure <code>assembleCatalog</code> (data duplicated)</h1>
+<p class="seqline">Sequence <b>2 of 6</b> &nbsp;·&nbsp; Plan: <a href="../../plans/card-data-externalization.html">card-data-externalization</a></p>
+<span class="dep">Depends on: 001. Data is deliberately duplicated (TS <code>CATALOG</code> still live) so assembly is proven against it before the cutover.</span>
+
+<h2>What</h2>
+<p>Move card data into JSON and build the pure assembly path while <code>CATALOG</code> still exists. Nothing in the running game switches over yet.</p>
+<ul>
+  <li><span class="file">src/game/assets/worlds/starter.json</span> — <code>{ "worldId": "starter", "cardTemplates": {...}, "starterDeck": [...] }</code> for Sprint, Explore, Barricade, Med Kit, Panic, Adrenaline. <b>No <code>deckComposition</code></b>; the <code>starterDeck</code> key holds the <code>STARTER_SPEC</code> multiset (Sprint×2, Explore×3, Barricade×2, Med Kit, Panic, Adrenaline) as <code>[{templateId,count}]</code>.</li>
+  <li><span class="file">src/game/assets/worlds/zombie-big-box.json</span> — <code>{ "worldId": "zombie-big-box", "cardTemplates": {...}, "deckComposition": { "acts": [...] } }</code>. <code>cardTemplates</code> covers the 7 world cards <em>and</em> the reward-minted player cards (Listen, Baseball Bat, Regroup, Summon Door). <code>deckComposition.acts</code> reproduces <code>ACT_1/2/3_SPEC</code> exactly.</li>
+  <li><span class="file">src/core/catalog.ts</span> — pure, no Phaser / no JSON imports / no I/O:
+    <pre><code>export type CardCatalog = Record&lt;string, CardTemplate&gt;
+export type CardCount = { templateId: string; count: number }
+export interface DeckComposition { acts: { cards: CardCount[] }[] }
+export interface WorldData { worldId: string; starterDeck: CardCount[]; deckComposition: DeckComposition }
+export interface RawCardSource {
+  worldId: string
+  cardTemplates: Record&lt;string, CardTemplate&gt;
+  starterDeck?: CardCount[]
+  deckComposition?: DeckComposition
+}
+export function assembleCatalog(sources: RawCardSource[]): CardCatalog</code></pre>
+    Collisions across sources throw <code>CatalogError</code>. <b>No per-field schema validation</b> — deferred per spec Out-of-Scope.</li>
+  <li><span class="file">src/game/worldData.ts</span> — import the two JSON modules and export <code>STARTER_SOURCE</code> / <code>ZOMBIE_SOURCE</code> typed via explicit <code>as RawCardSource</code> cast. Serves the non-Phaser drivers (sim + tests); the Phaser scene does not use this.</li>
+  <li><span class="file">tsconfig.json</span> — add <code>"resolveJsonModule": true</code>.</li>
+</ul>
+<div class="star"><b>Authoring caution:</b> omit optional keys entirely (a <code>DealProgress</code> with no bonus leaves the key out — never <code>"bonus": null</code>). Copy effect/penalty/reward objects verbatim from <code>cards.ts</code> so they deserialize into the exact union shapes. The fidelity guard below is the safety net.</div>
+
+<div class="validation">
+  <h2>Validation</h2>
+  <ul>
+    <li><b>Merge completeness:</b> <code>Object.keys(assembleCatalog([STARTER_SOURCE, ZOMBIE_SOURCE]))</code> equals the full set of 17 template ids.</li>
+    <li><b>Collision throws:</b> assembling two sources that share a <code>templateId</code> throws <code>CatalogError</code> (assert <code>instanceof</code>), never silently overwrites.</li>
+    <li><b>Fidelity guard (the gate):</b> <code>assembleCatalog([STARTER_SOURCE, ZOMBIE_SOURCE])</code> deep-equals the still-present <code>CATALOG</code> from <code>cards.ts</code> (<code>expect(...).toEqual(CATALOG)</code>). Proves JSON == TS before the cutover. This guard is deleted in task 003.</li>
+    <li><b>World scoping (grep):</b> Zombie, Find Baseball Bat, The Walker, Listen, Baseball Bat, Regroup, Summon Door appear in <code>zombie-big-box.json</code> only — not in <code>starter.json</code>.</li>
+    <li><b>Starter file shape:</b> <code>starter.json</code> has a <code>starterDeck</code> key and no <code>deckComposition</code> key; its <code>worldId</code> is <code>"starter"</code>.</li>
+    <li><b>Suite:</b> <code>bun test</code> green; both JSON files parse and type-check under <code>resolveJsonModule</code>.</li>
+  </ul>
+</div>
+
+<h2>Why</h2>
+<ul>
+  <li><span class="req">REQ-CARD-DATA-1</span> (begins) card data moves out of TypeScript.</li>
+  <li><span class="req">REQ-CARD-DATA-4</span> world cards scoped to <code>zombie-big-box.json</code>.</li>
+  <li><span class="req">REQ-CARD-DATA-5</span> starter templates in <code>starter.json</code>, world-agnostic.</li>
+  <li><span class="req">REQ-CARD-DATA-6</span> deck composition stored as data alongside templates.</li>
+  <li><span class="req">REQ-CARD-DATA-7</span> <code>assembleCatalog</code> merges + throws on collision.</li>
+</ul>
+
+<h2>Files</h2>
+<ul>
+  <li><span class="file">src/game/assets/worlds/starter.json</span>, <span class="file">src/game/assets/worlds/zombie-big-box.json</span> (new)</li>
+  <li><span class="file">src/core/catalog.ts</span>, <span class="file">src/game/worldData.ts</span> (new)</li>
+  <li><span class="file">tsconfig.json</span></li>
+  <li><span class="file">src/core/catalog.test.ts</span> (new — merge, collision, fidelity guard)</li>
+</ul>
+</body>
+</html>

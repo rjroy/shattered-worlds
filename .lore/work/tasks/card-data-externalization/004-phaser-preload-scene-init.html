@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>P3 — Phaser preload + scene-init wiring</title>
+  <meta name="date" content="2026-06-04">
+  <meta name="status" content="pending">
+  <meta name="tags" content="task, phaser, preload, scene-init, boot-scene, load-error">
+  <meta name="source" content=".lore/work/plans/card-data-externalization.html">
+  <meta name="sequence" content="4">
+  <meta name="modules" content="src/game/TableScene, src/game/BootScene, src/game/main, src/game/assetManifest">
+  <style>
+    *,*::before,*::after{box-sizing:border-box}
+    body{font-family:system-ui,sans-serif;font-size:15px;line-height:1.6;max-width:880px;margin:0 auto;padding:76px 24px 60px;color:#1a1a1a;background:#fafafa}
+    #sticky-header{position:sticky;top:0;background:#1e1e2e;color:#cdd6f4;padding:10px 20px;display:flex;align-items:center;gap:14px;z-index:100;font-size:13px;border-bottom:2px solid #89b4fa}
+    #sticky-header .seq{font-family:monospace;font-weight:700;color:#89b4fa;font-size:15px}
+    #sticky-header .ttl{flex:1}
+    .chip{border-radius:4px;padding:2px 9px;font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:.04em}
+    .chip.pending{background:#e2e8f0;color:#475569}
+    h1{font-size:1.5rem;margin:0 0 2px}
+    .seqline{font-size:13px;color:#64748b;margin-bottom:4px}
+    .seqline b{color:#475569}
+    .dep{font-size:12.5px;color:#7c3aed;background:#f5f3ff;border:1px solid #ddd6fe;border-radius:6px;padding:6px 12px;margin:10px 0 18px;display:inline-block}
+    h2{font-size:.78rem;text-transform:uppercase;letter-spacing:.07em;color:#64748b;border-bottom:1px solid #e2e8f0;padding-bottom:4px;margin:26px 0 10px}
+    code{background:#f1f5f9;border-radius:3px;padding:1px 5px;font-size:12.5px;font-family:ui-monospace,monospace}
+    .file{font-family:ui-monospace,monospace;font-size:12px;background:#f1f5f9;border-radius:3px;padding:1px 5px}
+    ul{margin:6px 0 0;padding-left:20px}
+    li{margin-bottom:6px;font-size:13.5px}
+    .validation{background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:14px 18px;margin-top:6px}
+    .validation h2{color:#166534;border-bottom-color:#bbf7d0;margin-top:0}
+    .validation li{margin-bottom:7px}
+    .manual{background:#fff7ed;border-color:#fdba74}
+    .manual h2{color:#9a3412;border-bottom-color:#fed7aa}
+    .req{font-family:monospace;font-size:11px;background:#475569;color:#fff;border-radius:3px;padding:1px 5px;white-space:nowrap}
+    a{color:#2563eb}
+  </style>
+</head>
+<body>
+<div id="sticky-header">
+  <span class="seq">04 / 06</span>
+  <span class="ttl">Phaser preload + scene-init wiring</span>
+  <span class="chip pending">pending</span>
+</div>
+
+<h1>P3 — Phaser preload + scene-init wiring (load JSON, surface failures)</h1>
+<p class="seqline">Sequence <b>4 of 6</b> &nbsp;·&nbsp; Plan: <a href="../../plans/card-data-externalization.html">card-data-externalization</a></p>
+<span class="dep">Depends on: 003. Parallelizable with task 005. Trickiest wiring point — only the scene/boot/main files change; edits stay in distinct methods.</span>
+
+<h2>What</h2>
+<p>Wire the Phaser scene to load both JSON files in <code>preload()</code> and assemble the catalog in <code>create()</code> before any game state exists. <code>worldId</code> arrives as scene init data (it cannot be read from state in <code>preload()</code>).</p>
+<ul>
+  <li><b>Boot scene for init data:</b> the current <code>scene: [TableScene]</code> auto-starts with no data path. Fix:
+    <ul>
+      <li><span class="file">src/game/TableScene.ts</span> — <code>super({ key: 'Table' })</code> in the constructor.</li>
+      <li><span class="file">src/game/BootScene.ts</span> (new, ~10 lines) — <code>super({ key: 'Boot' })</code>; <code>create()</code> calls <code>this.scene.start('Table', { worldId: 'zombie-big-box', seed: 42 })</code>.</li>
+      <li><span class="file">src/game/main.ts</span> — <code>scene: [BootScene, TableScene]</code>.</li>
+    </ul>
+  </li>
+  <li><span class="file">src/game/assetManifest.ts</span> — add two <code>?url</code> JSON imports/entries (<code>'world-starter'</code>, <code>'world-zombie-big-box'</code>).</li>
+  <li><span class="file">src/game/TableScene.ts</span>:
+    <ul>
+      <li><code>init(data)</code> — store <code>this.worldId_</code> / <code>this.seed_</code> (defaults <code>'zombie-big-box'</code> / <code>42</code>).</li>
+      <li><code>preload()</code> — <code>selectTheme(this.worldId_)</code> for art keys; <code>this.load.json('world-starter', ...)</code> + <code>this.load.json('world-' + this.worldId_, ...)</code>; register <code>this.load.on('loaderror', ...)</code> to set a failure flag.</li>
+      <li><code>create()</code> — if the failure flag is set or <code>this.cache.json.get(...)</code> is <code>undefined</code> for either key, <code>console.error</code> and throw <code>CatalogError</code> before building state. Otherwise read both JSON, <code>assembleCatalog([starter, world])</code>, build the <code>WorldData</code> run-setup (<code>worldId</code>+<code>deckComposition</code> from world JSON, <code>starterDeck</code> from <code>starter.json</code>), then <code>createGame(catalog, world, this.seed_)</code>; keep <code>selectTheme(state.worldId)</code> for the active theme.</li>
+    </ul>
+  </li>
+  <li>Optional: extract a pure helper that maps a parsed world JSON → <code>WorldData</code> so the scene method stays a thin adapter and the mapping is unit-testable.</li>
+</ul>
+
+<div class="validation">
+  <h2>Validation — automated</h2>
+  <ul>
+    <li><b>Suite:</b> <code>bun test</code> green (headless parts; assembly already covered by 002/003).</li>
+    <li><b>If the helper is extracted:</b> a unit test maps a parsed world JSON to <code>WorldData</code> with correct <code>worldId</code>, <code>starterDeck</code>, and <code>deckComposition</code>.</li>
+  </ul>
+</div>
+
+<div class="validation manual">
+  <h2>Validation — manual (runtime, browser)</h2>
+  <ul>
+    <li><b>Boot + run:</b> the app boots through <code>Boot → Table</code> and a full Zombie Big-Box run plays with cards minting correctly (REQ-CARD-DATA-2).</li>
+    <li><b>Load failure surfaced:</b> temporarily rename/corrupt <code>starter.json</code> → a <code>console.error</code> appears and a <code>CatalogError</code> is thrown <em>before</em> world state is created (no silent empty board). Restore the file afterward.</li>
+  </ul>
+</div>
+
+<h2>Why</h2>
+<ul>
+  <li><span class="req">REQ-CARD-DATA-2</span> all run JSON loaded via Phaser's loader in preload, before any mint.</li>
+  <li><span class="req">REQ-CARD-DATA-3</span> a failed load surfaces an error before game state is created.</li>
+</ul>
+
+<h2>Files</h2>
+<ul>
+  <li><span class="file">src/game/TableScene.ts</span>, <span class="file">src/game/BootScene.ts</span> (new), <span class="file">src/game/main.ts</span>, <span class="file">src/game/assetManifest.ts</span></li>
+</ul>
+</body>
+</html>

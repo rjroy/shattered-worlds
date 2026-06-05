@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>P1 — Provenance &amp; error scaffolding</title>
+  <meta name="date" content="2026-06-04">
+  <meta name="status" content="pending">
+  <meta name="tags" content="task, cards, provenance, errors, types">
+  <meta name="source" content=".lore/work/plans/card-data-externalization.html">
+  <meta name="sequence" content="1">
+  <meta name="modules" content="src/core/types, src/core/errors, src/core/cards, src/core/world">
+  <style>
+    *,*::before,*::after{box-sizing:border-box}
+    body{font-family:system-ui,sans-serif;font-size:15px;line-height:1.6;max-width:880px;margin:0 auto;padding:76px 24px 60px;color:#1a1a1a;background:#fafafa}
+    #sticky-header{position:sticky;top:0;background:#1e1e2e;color:#cdd6f4;padding:10px 20px;display:flex;align-items:center;gap:14px;z-index:100;font-size:13px;border-bottom:2px solid #89b4fa}
+    #sticky-header .seq{font-family:monospace;font-weight:700;color:#89b4fa;font-size:15px}
+    #sticky-header .ttl{flex:1}
+    .chip{border-radius:4px;padding:2px 9px;font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:.04em}
+    .chip.pending{background:#e2e8f0;color:#475569}
+    .chip.inprogress{background:#fde68a;color:#92400e}
+    .chip.complete{background:#86efac;color:#166534}
+    .chip.skipped{background:#cbd5e1;color:#334155}
+    h1{font-size:1.5rem;margin:0 0 2px}
+    .seqline{font-size:13px;color:#64748b;margin-bottom:4px}
+    .seqline b{color:#475569}
+    .dep{font-size:12.5px;color:#7c3aed;background:#f5f3ff;border:1px solid #ddd6fe;border-radius:6px;padding:6px 12px;margin:10px 0 18px;display:inline-block}
+    h2{font-size:.78rem;text-transform:uppercase;letter-spacing:.07em;color:#64748b;border-bottom:1px solid #e2e8f0;padding-bottom:4px;margin:26px 0 10px}
+    code{background:#f1f5f9;border-radius:3px;padding:1px 5px;font-size:12.5px;font-family:ui-monospace,monospace}
+    .file{font-family:ui-monospace,monospace;font-size:12px;background:#f1f5f9;border-radius:3px;padding:1px 5px}
+    ul{margin:6px 0 0;padding-left:20px}
+    li{margin-bottom:6px;font-size:13.5px}
+    pre{background:#1e1e2e;color:#cdd6f4;border-radius:6px;padding:12px 14px;font-size:12px;overflow-x:auto}
+    pre code{background:transparent;color:inherit;padding:0}
+    .validation{background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:14px 18px;margin-top:6px}
+    .validation h2{color:#166534;border-bottom-color:#bbf7d0;margin-top:0}
+    .validation li{margin-bottom:7px}
+    .req{font-family:monospace;font-size:11px;background:#475569;color:#fff;border-radius:3px;padding:1px 5px;white-space:nowrap}
+    a{color:#2563eb}
+  </style>
+</head>
+<body>
+<div id="sticky-header">
+  <span class="seq">01 / 06</span>
+  <span class="ttl">Provenance &amp; error scaffolding</span>
+  <span class="chip pending">pending</span>
+</div>
+
+<h1>P1 — Provenance &amp; error scaffolding</h1>
+<p class="seqline">Sequence <b>1 of 6</b> &nbsp;·&nbsp; Plan: <a href="../../plans/card-data-externalization.html">card-data-externalization</a> &nbsp;·&nbsp; Spec: <a href="../../specs/card-data-externalization.html">card-data-externalization</a></p>
+<span class="dep">Dependencies: none — start here. Behavior-preserving except the new provenance field and the explicit "unknown template" throw.</span>
+
+<h2>What</h2>
+<p>Add the data-model and error pieces that have no dependency on externalization. The module-level <code>CATALOG</code> global stays in place this task.</p>
+<ul>
+  <li><span class="file">src/core/types.ts</span> — add <code>sourceWorldId: string</code> to the <code>PlayerCard</code> interface. Change <code>CardTemplateId</code> from the 17-name union to <code>type CardTemplateId = string</code> (keep the alias for documentation). Leave <code>WorldCard</code> untouched — it gets no <code>sourceWorldId</code>.</li>
+  <li><span class="file">src/core/errors.ts</span> — add <code>UnknownTemplateError</code> (carries the bad <code>templateId</code> and the <code>GameState</code>, mirroring <code>IllegalActionError</code>) and <code>CatalogError</code> (collision / load / shape failures; consumed by later tasks).</li>
+  <li><span class="file">src/core/cards.ts</span> — <code>mintCard</code> still <code>mintCard(state, templateId)</code> this task. Stamp <code>sourceWorldId: state.worldId</code> when minting a player card. Replace the silent <code>CATALOG[templateId]</code> undefined-deref with <code>if (template === undefined) throw new UnknownTemplateError(...)</code>.</li>
+  <li><span class="file">src/core/world.ts</span> — <code>createWorld</code>: build the skeleton with <code>worldId: 'starter'</code>, mint the starter deck (now stamped <code>'starter'</code>), then set <code>worldId</code> to <code>'zombie-big-box'</code> (still hardcoded this task) <em>before</em> minting acts.</li>
+  <li><span class="file">src/core/cards.test.ts</span>, <span class="file">src/core/effects.test.ts</span> — fix any <code>PlayerCard</code> literals / mint helpers for the new field (most build via <code>mintCard</code> and need no change).</li>
+</ul>
+
+<div class="validation">
+  <h2>Validation</h2>
+  <ul>
+    <li><b>Starter provenance (unit):</b> <code>mintCard(state, 'Sprint')</code> where <code>state.worldId === 'starter'</code> returns a card with <code>card.sourceWorldId === 'starter'</code>.</li>
+    <li><b>Starter provenance (integration):</b> <code>createWorld(seed)</code> → every player card in <code>playerDraw</code> and the opening hand has <code>sourceWorldId === 'starter'</code>.</li>
+    <li><b>Reward provenance:</b> drive a Strange Sounds reward (via <code>applyEffect</code>/<code>dispatch</code>) from a state with <code>worldId === 'zombie-big-box'</code> → the minted Listen card has <code>sourceWorldId === 'zombie-big-box'</code>.</li>
+    <li><b>Invalid id throws:</b> <code>mintCard(state, 'Nope')</code> throws an <code>UnknownTemplateError</code> (assert <code>instanceof</code>) whose payload includes the bad id — not a silent <code>undefined</code>/<code>null</code>.</li>
+    <li><b>WorldCard has no provenance:</b> the <code>WorldCard</code> type does not declare <code>sourceWorldId</code>; <code>grep -n "sourceWorldId" src/core/types.ts</code> shows it on <code>PlayerCard</code> only.</li>
+    <li><b>Suite:</b> <code>bun test</code> green; the four new tests pass.</li>
+  </ul>
+</div>
+
+<h2>Why</h2>
+<ul>
+  <li><span class="req">REQ-CARD-DATA-9</span> <code>sourceWorldId</code> on <code>PlayerCard</code>, stamped at mint.</li>
+  <li><span class="req">REQ-CARD-DATA-10</span> initial <code>worldId='starter'</code> in the <code>createWorld</code> skeleton.</li>
+  <li><span class="req">REQ-CARD-DATA-11</span> reward mints read <code>state.worldId</code>.</li>
+  <li><span class="req">REQ-CARD-DATA-12</span> <code>WorldCard</code> carries no provenance field.</li>
+  <li><span class="req">REQ-CARD-DATA-16</span> unknown template id throws a typed error.</li>
+  <li><span class="req">REQ-CARD-DATA-17</span> <code>CardTemplateId = string</code>; union removed.</li>
+  <li><span class="req">REQ-CARD-DATA-3</span> (partial) <code>CatalogError</code> type defined here for later use.</li>
+</ul>
+
+<h2>Files</h2>
+<ul>
+  <li><span class="file">src/core/types.ts</span>, <span class="file">src/core/errors.ts</span>, <span class="file">src/core/cards.ts</span>, <span class="file">src/core/world.ts</span></li>
+  <li><span class="file">src/core/cards.test.ts</span>, <span class="file">src/core/effects.test.ts</span> (+ new provenance/error assertions)</li>
+</ul>
+</body>
+</html>
