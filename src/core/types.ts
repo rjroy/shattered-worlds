@@ -1,23 +1,10 @@
 export type CardId = string
 
-export type CardTemplateId =
-  | 'Sprint'
-  | 'Explore'
-  | 'Barricade'
-  | 'Med Kit'
-  | 'Panic'
-  | 'Adrenaline'
-  | 'Listen'
-  | 'Baseball Bat'
-  | 'Regroup'
-  | 'Summon Door'
-  | 'Strange Sounds'
-  | 'Rubble'
-  | 'Screams'
-  | 'Zombie'
-  | 'Find Baseball Bat'
-  | 'The Walker'
-  | 'Door'
+// Known template names (for documentation only — the type is open for JSON-loaded catalogs):
+// 'Sprint' | 'Explore' | 'Barricade' | 'Med Kit' | 'Panic' | 'Adrenaline' | 'Listen' |
+// 'Baseball Bat' | 'Regroup' | 'Summon Door' | 'Strange Sounds' | 'Rubble' | 'Screams' |
+// 'Zombie' | 'Find Baseball Bat' | 'The Walker' | 'Door'
+export type CardTemplateId = string
 
 export type Keyword = 'Hidden' | 'Creature' | 'Slow'
 
@@ -53,6 +40,7 @@ export interface PlayerCard {
   kind: 'player'
   id: CardId
   name: string
+  sourceWorldId: string
   effect: Effect
 }
 

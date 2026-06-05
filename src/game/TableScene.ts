@@ -12,8 +12,10 @@ import Phaser from 'phaser'
 import { assetManifest } from './assetManifest'
 import { selectTheme } from './theme'
 import type { VisualTheme } from './theme'
-import { createGame, availableActions } from '../core/index'
-import type { GameCore, Card, Action, TargetSpec } from '../core/index'
+import { createGame, availableActions, assembleCatalog } from '../core/index'
+import type { GameCore, Card, Action, TargetSpec, WorldData } from '../core/index'
+import { CatalogError } from '../core/errors'
+import type { RawCardSource } from '../core/catalog'
 import {
   IDLE,
   cancel,
@@ -87,12 +89,22 @@ export class TableScene extends Phaser.Scene {
   // Selection status text
   private selectionHint!: Phaser.GameObjects.Text
 
+  private worldId_ = 'zombie-big-box'
+  private seed_ = 42
+  private loadError_ = false
+
   constructor() {
-    super({ key: 'TableScene' })
+    super({ key: 'Table' })
+  }
+
+  init(data: { worldId?: string; seed?: number }): void {
+    this.worldId_ = data.worldId ?? 'zombie-big-box'
+    this.seed_ = data.seed ?? 42
+    this.loadError_ = false
   }
 
   preload(): void {
-    const theme = selectTheme('zombie-big-box')
+    const theme = selectTheme(this.worldId_)
     const keysToLoad = [
       'cardback',
       'cardfront',
@@ -107,10 +119,35 @@ export class TableScene extends Phaser.Scene {
         this.load.image(key, url)
       }
     }
+
+    const starterUrl = assetManifest['world-starter']
+    const worldUrl = assetManifest['world-' + this.worldId_]
+    if (starterUrl !== undefined) this.load.json('world-starter', starterUrl)
+    if (worldUrl !== undefined) this.load.json('world-' + this.worldId_, worldUrl)
+    this.load.once('loaderror', () => { this.loadError_ = true })
   }
 
   create(): void {
-    this.game_ = createGame(42) // fixed seed for the demo
+    if (this.loadError_) {
+      console.error('[TableScene] A JSON asset failed to load — cannot assemble catalog.')
+      throw new CatalogError('JSON asset failed to load')
+    }
+
+    const starterRaw = this.cache.json.get('world-starter') as RawCardSource | undefined
+    const worldRaw = this.cache.json.get('world-' + this.worldId_) as RawCardSource | undefined
+
+    if (starterRaw === undefined || worldRaw === undefined) {
+      console.error('[TableScene] JSON cache miss — cannot assemble catalog.')
+      throw new CatalogError('JSON not available in Phaser cache')
+    }
+
+    const catalog = assembleCatalog([starterRaw, worldRaw])
+    const worldData: WorldData = {
+      worldId: worldRaw.worldId,
+      starterDeck: starterRaw.starterDeck ?? [],
+      deckComposition: worldRaw.deckComposition ?? { acts: [] },
+    }
+    this.game_ = createGame(catalog, worldData, this.seed_)
     this.theme_ = selectTheme(this.game_.state.worldId)
 
     this.hudRefs = createHUD(this)
@@ -249,7 +286,7 @@ export class TableScene extends Phaser.Scene {
 
     cards.forEach((card, i) => {
       const x = startX + i * CARD_SPACING
-      const container = createCardObject(this, card, x, rowY, this.theme_)
+      const container = createCardObject(this, card, x, rowY, this.theme_, selectTheme)
       this.cardObjects.set(card.id, container)
 
       // Make card interactive

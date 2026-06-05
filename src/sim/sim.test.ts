@@ -2,7 +2,22 @@ import { describe, expect, test } from 'bun:test'
 import type { Card, GameState } from '../core/types'
 import { createWorld } from '../core/world'
 import { reduce } from '../core/reduce'
+import { assembleCatalog } from '../core/catalog'
+import type { WorldData } from '../core/catalog'
+import { STARTER_SOURCE, ZOMBIE_SOURCE } from '../game/worldData'
 import { pickAction } from './policy'
+
+// ---------------------------------------------------------------------------
+// Catalog + world descriptor — assembled once at module load
+// ---------------------------------------------------------------------------
+
+const catalog = assembleCatalog([STARTER_SOURCE, ZOMBIE_SOURCE])
+
+const worldData: WorldData = {
+  worldId: ZOMBIE_SOURCE.worldId,
+  starterDeck: STARTER_SOURCE.starterDeck!,
+  deckComposition: ZOMBIE_SOURCE.deckComposition!,
+}
 
 // ---------------------------------------------------------------------------
 // Shared helpers
@@ -30,13 +45,13 @@ function checkIdAccounting(state: GameState): void {
 }
 
 function runWorld(seed: number): { finalState: GameState; turns: number; actions: number } {
-  let state = createWorld(seed)
+  let state = createWorld(catalog, worldData, seed)
   let turns = 0
   let actions = 0
 
   while (state.status === 'playing' && actions < MAX_ACTIONS) {
     const action = pickAction(state)
-    const result = reduce(state, action)
+    const result = reduce(catalog, state, action)
     state = result.state
     if (action.type === 'EndTurn') turns++
     actions++
@@ -67,13 +82,13 @@ describe('policy', () => {
 
   test('ID accounting holds for 5 worlds', () => {
     for (let seed = 1; seed <= 5; seed++) {
-      let state = createWorld(seed)
+      let state = createWorld(catalog, worldData, seed)
       let actions = 0
 
       while (state.status === 'playing' && actions < MAX_ACTIONS) {
         expect(() => checkIdAccounting(state)).not.toThrow()
         const action = pickAction(state)
-        const result = reduce(state, action)
+        const result = reduce(catalog, state, action)
         state = result.state
         actions++
       }

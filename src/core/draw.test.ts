@@ -3,6 +3,7 @@ import { drawPlayer, drawWorld, refillHand } from './draw'
 import { createWorld } from './world'
 import type { GameState, WorldCard } from './types'
 import { mintCard } from './cards'
+import { catalog, worldData } from './testFixture'
 
 // ---------------------------------------------------------------------------
 // 1. Draw table: refillHand respects the 2-world-minimum rule
@@ -11,7 +12,7 @@ import { mintCard } from './cards'
 describe('refillHand draw table', () => {
   it('0 world cards held → draws 2 world + 4 player (total 6)', () => {
     // createWorld already fills hand; start from raw piles instead
-    const base = createWorld(1)
+    const base = createWorld(catalog, worldData, 1)
     // Move all hand cards back to their piles so hand is empty
     const playerCards = base.hand.filter((c) => c.kind === 'player')
     const worldCards = base.hand.filter((c) => c.kind === 'world') as WorldCard[]
@@ -30,7 +31,7 @@ describe('refillHand draw table', () => {
   })
 
   it('1 world card held → draws 1 world + 4 player (total 6)', () => {
-    const base = createWorld(1)
+    const base = createWorld(catalog, worldData, 1)
     const playerCards = base.hand.filter((c) => c.kind === 'player')
     const worldCards = base.hand.filter((c) => c.kind === 'world') as WorldCard[]
 
@@ -54,7 +55,7 @@ describe('refillHand draw table', () => {
   })
 
   it('2 world cards held → draws 1 world + 3 player (total 6)', () => {
-    const base = createWorld(1)
+    const base = createWorld(catalog, worldData, 1)
     const playerCards = base.hand.filter((c) => c.kind === 'player')
 
     // Keep both world cards in hand (they came from createWorld)
@@ -82,7 +83,7 @@ describe('refillHand draw table', () => {
 
 describe('refillHand with full hand', () => {
   it('returns no events and unchanged state when hand has 6 cards', () => {
-    const base = createWorld(1)
+    const base = createWorld(catalog, worldData, 1)
     // Move all world cards (from worldDraw + hand) into hand to get 6 world cards
     const handWorld = base.hand.filter((c) => c.kind === 'world') as WorldCard[]
     const drawnWorld = base.worldDraw.slice(0, 6 - handWorld.length)
@@ -112,7 +113,7 @@ describe('refillHand with full hand', () => {
 
 describe('refillHand skip-draw', () => {
   it('suppresses player draws, still draws world cards, emits DrawSkipped', () => {
-    const base = createWorld(1)
+    const base = createWorld(catalog, worldData, 1)
     const worldCards = base.hand.filter((c) => c.kind === 'world') as WorldCard[]
     const playerCards = base.hand.filter((c) => c.kind === 'player')
 
@@ -143,7 +144,7 @@ describe('refillHand skip-draw', () => {
 
 describe('drawWorld act advancement', () => {
   it('shuffles acts[0] into worldDraw and emits ActAdvanced when worldDraw is empty', () => {
-    const base = createWorld(1)
+    const base = createWorld(catalog, worldData, 1)
 
     // Construct a state with worldDraw empty but acts non-empty
     const act2 = base.acts[0]
@@ -181,7 +182,7 @@ describe('drawWorld act advancement', () => {
 
 describe('drawWorld exhaustion safety', () => {
   it('returns empty events and unchanged hand when both worldDraw and acts are empty', () => {
-    const base = createWorld(1)
+    const base = createWorld(catalog, worldData, 1)
     const state: GameState = {
       ...base,
       hand: [],
@@ -204,13 +205,13 @@ describe('drawWorld exhaustion safety', () => {
 describe('drawPlayer discard reshuffle', () => {
   it('reshuffles discard mid-draw, emits DeckShuffled, draws all 4 cards', () => {
     // Build a state using mintCard to get valid card objects
-    let state: GameState = createWorld(1)
+    let state: GameState = createWorld(catalog, worldData, 1)
 
     // Clear all piles and hand, set up 1 in draw + 3 in discard
-    const [c1, s1] = mintCard(state, 'Sprint')
-    const [c2, s2] = mintCard(s1, 'Sprint')
-    const [c3, s3] = mintCard(s2, 'Explore')
-    const [c4, s4] = mintCard(s3, 'Explore')
+    const [c1, s1] = mintCard(catalog, state, 'Sprint')
+    const [c2, s2] = mintCard(catalog, s1, 'Sprint')
+    const [c3, s3] = mintCard(catalog, s2, 'Explore')
+    const [c4, s4] = mintCard(catalog, s3, 'Explore')
     state = { ...s4, playerDraw: [c1], playerDiscard: [c2, c3, c4], hand: [] }
 
     const { state: after, events } = drawPlayer(state, 4)
@@ -230,17 +231,17 @@ describe('drawPlayer discard reshuffle', () => {
 
 describe('createWorld opening deal', () => {
   it('hand has exactly 6 cards', () => {
-    const state = createWorld(42)
+    const state = createWorld(catalog, worldData, 42)
     expect(state.hand).toHaveLength(6)
   })
 
   it('hand has exactly 2 world cards', () => {
-    const state = createWorld(42)
+    const state = createWorld(catalog, worldData, 42)
     expect(state.hand.filter((c) => c.kind === 'world')).toHaveLength(2)
   })
 
   it('hand has exactly 4 player cards', () => {
-    const state = createWorld(42)
+    const state = createWorld(catalog, worldData, 42)
     expect(state.hand.filter((c) => c.kind === 'player')).toHaveLength(4)
   })
 })
@@ -251,14 +252,14 @@ describe('createWorld opening deal', () => {
 
 describe('determinism', () => {
   it('same seed produces identical hand card names', () => {
-    const a = createWorld(1)
-    const b = createWorld(1)
+    const a = createWorld(catalog, worldData, 1)
+    const b = createWorld(catalog, worldData, 1)
     expect(a.hand.map((c) => c.name)).toEqual(b.hand.map((c) => c.name))
   })
 
   it('different seeds produce different hand card name orders', () => {
-    const a = createWorld(1)
-    const b = createWorld(2)
+    const a = createWorld(catalog, worldData, 1)
+    const b = createWorld(catalog, worldData, 2)
     // The probability of accidental equality is negligible given shuffled decks
     const aNamesStr = a.hand.map((c) => c.name).join(',')
     const bNamesStr = b.hand.map((c) => c.name).join(',')

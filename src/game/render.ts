@@ -11,6 +11,33 @@ import type { FrameStyle, VisualTheme } from './theme'
 import { describeEffect, describePenalty, describeReward } from './describe'
 
 // ---------------------------------------------------------------------------
+// Pure helpers
+// ---------------------------------------------------------------------------
+
+/**
+ * Select the texture key for a card's front face.
+ * World card: keyed by the active world's theme.
+ * Player card: keyed by the card's sourceWorldId (seam for future per-world
+ * player art). No theme currently defines a player-card front, so this always
+ * returns 'cardfront'. The resolveTheme call is the seam — wired but unused
+ * today so future per-world player art slots in without API changes.
+ */
+export function selectCardFrontKey(
+  card: Card,
+  activeTheme: VisualTheme,
+  resolveTheme: (worldId: string) => VisualTheme,
+): string {
+  if (card.kind === 'world') {
+    return activeTheme.worldCardfrontKey ?? 'cardfront'
+  }
+  // Player card: resolve theme by sourceWorldId. worldCardfrontKey is the
+  // world CARD front, not the player card front. Player cards use 'cardfront'
+  // (generic) until per-player-world art ships.
+  void resolveTheme(card.sourceWorldId) // seam: use result when per-player-world art is defined
+  return 'cardfront'
+}
+
+// ---------------------------------------------------------------------------
 // Card dimensions and palette
 // ---------------------------------------------------------------------------
 
@@ -43,12 +70,12 @@ export function createCardObject(
   x: number,
   y: number,
   theme: VisualTheme,
+  resolveTheme: (worldId: string) => VisualTheme,
 ): Phaser.GameObjects.Container {
   const container = scene.add.container(x, y)
 
   // Card frame image: world cards use the theme-specific front if available
-  const cardfrontKey =
-    card.kind === 'world' ? (theme.worldCardfrontKey ?? 'cardfront') : 'cardfront'
+  const cardfrontKey = selectCardFrontKey(card, theme, resolveTheme)
   const cardImg = scene.add.image(0, 0, cardfrontKey)
   cardImg.setDisplaySize(CARD_W, CARD_H)
   container.add(cardImg)

@@ -1,4 +1,5 @@
 import type { Action, GameEvent, GameState, WorldCard } from './types'
+import type { CardCatalog } from './catalog'
 import { availableActions, checkPlayAction } from './available'
 import { applyEffect, applyPenalty } from './effects'
 import { refillHand } from './draw'
@@ -15,6 +16,7 @@ type ReduceResult = { state: GameState; events: GameEvent[] }
 // ---------------------------------------------------------------------------
 
 function handlePlayCard(
+  catalog: CardCatalog,
   state: GameState,
   action: Extract<Action, { type: 'PlayCard' }>,
 ): ReduceResult {
@@ -46,7 +48,7 @@ function handlePlayCard(
   const events: GameEvent[] = [{ type: 'CardPlayed', cardId }]
 
   // Apply the card's effect
-  const effectResult = applyEffect(stateAfterPlay, card.effect, action)
+  const effectResult = applyEffect(catalog, stateAfterPlay, card.effect, action)
   events.push(...effectResult.events)
 
   return { state: effectResult.state, events }
@@ -57,6 +59,7 @@ function handlePlayCard(
 // ---------------------------------------------------------------------------
 
 function handleDiscardHazard(
+  catalog: CardCatalog,
   state: GameState,
   action: Extract<Action, { type: 'DiscardHazard' }>,
 ): ReduceResult {
@@ -87,7 +90,7 @@ function handleDiscardHazard(
   const stateAfterRemove: GameState = { ...state, hand: handAfterDiscard }
 
   // Apply penalty
-  const penaltyResult = applyPenalty(stateAfterRemove, (card as WorldCard).penalty)
+  const penaltyResult = applyPenalty(catalog, stateAfterRemove, (card as WorldCard).penalty)
 
   const events: GameEvent[] = [
     { type: 'HazardDiscarded', cardId },
@@ -189,7 +192,7 @@ function handleEndTurn(state: GameState): ReduceResult {
  *
  * Throws IllegalActionError for any illegal or malformed action.
  */
-export function reduce(state: GameState, action: Action): ReduceResult {
+export function reduce(catalog: CardCatalog, state: GameState, action: Action): ReduceResult {
   if (state.status !== 'playing') {
     throw new IllegalActionError(
       action,
@@ -200,9 +203,9 @@ export function reduce(state: GameState, action: Action): ReduceResult {
 
   switch (action.type) {
     case 'PlayCard':
-      return handlePlayCard(state, action)
+      return handlePlayCard(catalog, state, action)
     case 'DiscardHazard':
-      return handleDiscardHazard(state, action)
+      return handleDiscardHazard(catalog, state, action)
     case 'EndTurn':
       return handleEndTurn(state)
   }

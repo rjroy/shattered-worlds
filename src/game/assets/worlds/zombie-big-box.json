@@ -1,0 +1,113 @@
+{
+  "worldId": "zombie-big-box",
+  "cardTemplates": {
+    "Strange Sounds": {
+      "kind": "world",
+      "name": "Strange Sounds",
+      "cost": 2,
+      "keywords": [],
+      "discardable": true,
+      "penalty": { "kind": "None" },
+      "reward": { "kind": "GainCard", "template": "Listen" }
+    },
+    "Rubble": {
+      "kind": "world",
+      "name": "Rubble",
+      "cost": 1,
+      "keywords": [],
+      "discardable": true,
+      "penalty": { "kind": "SkipDrawNextTurn" },
+      "reward": { "kind": "None" }
+    },
+    "Screams": {
+      "kind": "world",
+      "name": "Screams",
+      "cost": 1,
+      "keywords": [],
+      "discardable": true,
+      "penalty": { "kind": "GainCard", "template": "Panic" },
+      "reward": { "kind": "GainCard", "template": "Regroup" }
+    },
+    "Zombie": {
+      "kind": "world",
+      "name": "Zombie",
+      "cost": 1,
+      "keywords": ["Slow", "Creature"],
+      "discardable": true,
+      "penalty": { "kind": "Damage", "amount": 1 },
+      "reward": { "kind": "None" }
+    },
+    "Find Baseball Bat": {
+      "kind": "world",
+      "name": "Find Baseball Bat",
+      "cost": 2,
+      "keywords": ["Hidden"],
+      "discardable": true,
+      "penalty": { "kind": "None" },
+      "reward": { "kind": "GainCard", "template": "Baseball Bat" }
+    },
+    "The Walker": {
+      "kind": "world",
+      "name": "The Walker",
+      "cost": 10,
+      "keywords": [],
+      "discardable": true,
+      "penalty": { "kind": "AddWorldCardToTop", "template": "Door" },
+      "reward": { "kind": "AddPlayerCardToTop", "template": "Summon Door" }
+    },
+    "Door": {
+      "kind": "world",
+      "name": "Door",
+      "cost": 2,
+      "keywords": [],
+      "discardable": false,
+      "penalty": { "kind": "None" },
+      "reward": { "kind": "SurviveWorld" }
+    },
+    "Listen": {
+      "kind": "player",
+      "name": "Listen",
+      "effect": { "kind": "DealProgress", "base": 1, "bonus": { "tag": "Hidden", "amount": 2 } }
+    },
+    "Baseball Bat": {
+      "kind": "player",
+      "name": "Baseball Bat",
+      "effect": { "kind": "DealProgress", "base": 2, "bonus": { "tag": "Creature", "amount": 3 } }
+    },
+    "Regroup": {
+      "kind": "player",
+      "name": "Regroup",
+      "effect": { "kind": "DestroyCardInHand", "min": 0, "max": 1 }
+    },
+    "Summon Door": {
+      "kind": "player",
+      "name": "Summon Door",
+      "effect": { "kind": "AddWorldCardToTop", "template": "Door" }
+    }
+  },
+  "deckComposition": {
+    "acts": [
+      {
+        "cards": [
+          { "templateId": "Strange Sounds", "count": 2 },
+          { "templateId": "Rubble", "count": 2 },
+          { "templateId": "Screams", "count": 2 }
+        ]
+      },
+      {
+        "cards": [
+          { "templateId": "Rubble", "count": 2 },
+          { "templateId": "Zombie", "count": 3 },
+          { "templateId": "Find Baseball Bat", "count": 1 }
+        ]
+      },
+      {
+        "cards": [
+          { "templateId": "Find Baseball Bat", "count": 1 },
+          { "templateId": "Zombie", "count": 4 },
+          { "templateId": "The Walker", "count": 1 }
+        ]
+      }
+    ]
+  }
+}

@@ -10,6 +10,7 @@ import type {
   Reward,
   WorldCard,
 } from './types'
+import type { CardCatalog } from './catalog'
 import { mintCard } from './cards'
 import { drawPlayer, drawWorld } from './draw'
 import { shuffle } from './rng'
@@ -30,6 +31,7 @@ type EffectResult = { state: GameState; events: GameEvent[] }
  * hazard's cost.
  */
 export function dealProgress(
+  catalog: CardCatalog,
   state: GameState,
   hazardId: CardId,
   base: number,
@@ -65,7 +67,7 @@ export function dealProgress(
       hand: current.hand.filter((c) => c.id !== hazardId),
     }
 
-    const rewardResult = grantReward(current, hazard.reward)
+    const rewardResult = grantReward(catalog, current, hazard.reward)
     current = rewardResult.state
     events.push(...rewardResult.events)
     events.push({ type: 'HazardResolved', hazardId })
@@ -83,11 +85,12 @@ export function dealProgress(
  * zone.
  */
 export function gainCard(
+  catalog: CardCatalog,
   state: GameState,
   template: CardTemplateId,
   dest: Dest,
 ): EffectResult {
-  const [card, nextState] = mintCard(state, template)
+  const [card, nextState] = mintCard(catalog, state, template)
 
   let current: GameState
   switch (dest) {
@@ -238,14 +241,14 @@ export function heal(state: GameState, n: number): EffectResult {
 /**
  * Apply a card reward from a resolved hazard.
  */
-export function grantReward(state: GameState, reward: Reward): EffectResult {
+export function grantReward(catalog: CardCatalog, state: GameState, reward: Reward): EffectResult {
   switch (reward.kind) {
     case 'GainCard':
-      return gainCard(state, reward.template, 'playerDiscard')
+      return gainCard(catalog, state, reward.template, 'playerDiscard')
     case 'AddPlayerCardToTop':
-      return gainCard(state, reward.template, 'playerDrawTop')
+      return gainCard(catalog, state, reward.template, 'playerDrawTop')
     case 'AddWorldCardToTop':
-      return gainCard(state, reward.template, 'worldDrawTop')
+      return gainCard(catalog, state, reward.template, 'worldDrawTop')
     case 'SurviveWorld': {
       const current: GameState = { ...state, status: 'won' }
       const events: GameEvent[] = [{ type: 'WorldWon' }]
@@ -263,7 +266,7 @@ export function grantReward(state: GameState, reward: Reward): EffectResult {
 /**
  * Apply a hazard penalty when it is not resolved before end of turn.
  */
-export function applyPenalty(state: GameState, penalty: Penalty): EffectResult {
+export function applyPenalty(catalog: CardCatalog, state: GameState, penalty: Penalty): EffectResult {
   switch (penalty.kind) {
     case 'Damage':
       return damage(state, penalty.amount)
@@ -273,9 +276,9 @@ export function applyPenalty(state: GameState, penalty: Penalty): EffectResult {
       return { state: current, events: [] }
     }
     case 'GainCard':
-      return gainCard(state, penalty.template, 'playerDiscard')
+      return gainCard(catalog, state, penalty.template, 'playerDiscard')
     case 'AddWorldCardToTop':
-      return gainCard(state, penalty.template, 'worldDrawTop')
+      return gainCard(catalog, state, penalty.template, 'worldDrawTop')
     case 'None':
       return { state, events: [] }
   }
@@ -289,12 +292,12 @@ export function applyPenalty(state: GameState, penalty: Penalty): EffectResult {
  * Dispatch a player card's effect. `action` must be a PlayCard action —
  * callers guarantee this. No validation occurs here.
  */
-export function applyEffect(state: GameState, effect: Effect, action: Action): EffectResult {
+export function applyEffect(catalog: CardCatalog, state: GameState, effect: Effect, action: Action): EffectResult {
   if (action.type !== 'PlayCard') return { state, events: [] }
 
   switch (effect.kind) {
     case 'DealProgress':
-      return dealProgress(state, action.targetId!, effect.base, effect.bonus)
+      return dealProgress(catalog, state, action.targetId!, effect.base, effect.bonus)
 
     case 'Draw': {
       const playerCount = effect.player ?? 0
@@ -343,16 +346,16 @@ export function applyEffect(state: GameState, effect: Effect, action: Action): E
     }
 
     case 'AddCard':
-      return gainCard(state, effect.template, effect.dest)
+      return gainCard(catalog, state, effect.template, effect.dest)
 
     case 'AddWorldCardToTop':
-      return gainCard(state, effect.template, 'worldDrawTop')
+      return gainCard(catalog, state, effect.template, 'worldDrawTop')
 
     case 'Modal': {
       const choice = action.choice ?? 0
       const branch = effect.branches[choice]
       if (branch === undefined) return { state, events: [] }
-      return applyEffect(state, branch, action)
+      return applyEffect(catalog, state, branch, action)
     }
 
     case 'Sequence': {
@@ -360,7 +363,7 @@ export function applyEffect(state: GameState, effect: Effect, action: Action): E
       const events: GameEvent[] = []
 
       for (const step of effect.steps) {
-        const r = applyEffect(current, step, action)
+        const r = applyEffect(catalog, current, step, action)
         current = r.state
         events.push(...r.events)
       }

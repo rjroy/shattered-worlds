@@ -3,6 +3,7 @@ import { availableActions } from './available'
 import { mintCard } from './cards'
 import { createWorld } from './world'
 import type { GameState, PlayerCard, WorldCard } from './types'
+import { catalog, worldData } from './testFixture'
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -13,7 +14,7 @@ import type { GameState, PlayerCard, WorldCard } from './types'
  * nextId and rng are valid, then overrides hand and status as needed.
  */
 function makeState(overrides: Partial<GameState> = {}): GameState {
-  const base = createWorld(1)
+  const base = createWorld(catalog, worldData, 1)
   return {
     ...base,
     hand: [],
@@ -32,9 +33,9 @@ function makeState(overrides: Partial<GameState> = {}): GameState {
 /** Mint a PlayerCard and advance state. */
 function mintPlayer(
   state: GameState,
-  name: Parameters<typeof mintCard>[1],
+  name: Parameters<typeof mintCard>[2],
 ): [PlayerCard, GameState] {
-  const [card, next] = mintCard(state, name)
+  const [card, next] = mintCard(catalog, state, name)
   if (card.kind !== 'player') throw new Error(`${name} is not a player card`)
   return [card as PlayerCard, next]
 }
@@ -42,9 +43,9 @@ function mintPlayer(
 /** Mint a WorldCard and advance state. */
 function mintWorld(
   state: GameState,
-  name: Parameters<typeof mintCard>[1],
+  name: Parameters<typeof mintCard>[2],
 ): [WorldCard, GameState] {
-  const [card, next] = mintCard(state, name)
+  const [card, next] = mintCard(catalog, state, name)
   if (card.kind !== 'world') throw new Error(`${name} is not a world card`)
   return [card as WorldCard, next]
 }
