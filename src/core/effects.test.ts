@@ -12,6 +12,7 @@ import {
 import { mintCard } from './cards'
 import { createWorld } from './world'
 import type { GameState, WorldCard } from './types'
+import { catalog, worldData } from './testFixture'
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -22,7 +23,7 @@ import type { GameState, WorldCard } from './types'
  * nextId and rng are valid, then overrides piles as needed.
  */
 function makeState(overrides: Partial<GameState> = {}): GameState {
-  const base = createWorld(1)
+  const base = createWorld(catalog, worldData, 1)
   return {
     ...base,
     hand: [],
@@ -39,8 +40,8 @@ function makeState(overrides: Partial<GameState> = {}): GameState {
 }
 
 /** Mint a single WorldCard and advance state. */
-function mintWorld(state: GameState, name: Parameters<typeof mintCard>[1]): [WorldCard, GameState] {
-  const [card, next] = mintCard(state, name)
+function mintWorld(state: GameState, name: Parameters<typeof mintCard>[2]): [WorldCard, GameState] {
+  const [card, next] = mintCard(catalog, state, name)
   if (card.kind !== 'world') throw new Error(`${name} is not a world card`)
   return [card as WorldCard, next]
 }
@@ -56,7 +57,7 @@ describe('dealProgress keyword math', () => {
     state = { ...s1, hand: [zombie] }
 
     // Baseball Bat: base 2, bonus { tag: 'Creature', amount: 3 }
-    const { state: after, events } = dealProgress(state, zombie.id, 2, {
+    const { state: after, events } = dealProgress(catalog, state, zombie.id, 2, {
       tag: 'Creature',
       amount: 3,
     })
@@ -86,7 +87,7 @@ describe('dealProgress no keyword bonus', () => {
     state = { ...s1, hand: [ss] }
 
     // Explore: base 1, bonus { tag: 'Hidden', amount: 1 } — Strange Sounds has no keywords
-    const { state: after, events } = dealProgress(state, ss.id, 1, {
+    const { state: after, events } = dealProgress(catalog, state, ss.id, 1, {
       tag: 'Hidden',
       amount: 1,
     })
@@ -120,7 +121,7 @@ describe('dealProgress auto-resolve at threshold', () => {
     state = { ...s1, hand: [ss], progress: { [ss.id]: 1 } }
 
     // Add 1 more → total = 2 = cost 2
-    const { state: after, events } = dealProgress(state, ss.id, 1)
+    const { state: after, events } = dealProgress(catalog, state, ss.id, 1)
 
     const progressEvent = events.find((e) => e.type === 'ProgressDealt')
     expect(progressEvent).toBeDefined()
@@ -204,7 +205,7 @@ describe('returnToTopThree', () => {
 describe('gainCard destinations', () => {
   it('places card at front of playerDiscard', () => {
     const state = makeState()
-    const { state: after, events } = gainCard(state, 'Sprint', 'playerDiscard')
+    const { state: after, events } = gainCard(catalog, state, 'Sprint', 'playerDiscard')
 
     expect(after.playerDiscard).toHaveLength(1)
     const event = events.find((e) => e.type === 'CardGained')
@@ -217,10 +218,10 @@ describe('gainCard destinations', () => {
 
   it('prepends card to playerDraw (playerDrawTop)', () => {
     let state = makeState()
-    const [existing] = mintCard(state, 'Explore')
+    const [existing] = mintCard(catalog, state, 'Explore')
     state = { ...state, playerDraw: [existing] }
 
-    const { state: after, events } = gainCard(state, 'Sprint', 'playerDrawTop')
+    const { state: after, events } = gainCard(catalog, state, 'Sprint', 'playerDrawTop')
 
     // New card is at index 0
     expect(after.playerDraw).toHaveLength(2)
@@ -234,10 +235,10 @@ describe('gainCard destinations', () => {
 
   it('prepends world card to worldDraw (worldDrawTop)', () => {
     let state = makeState()
-    const [existingWorld] = mintCard(state, 'Rubble')
+    const [existingWorld] = mintCard(catalog, state, 'Rubble')
     state = { ...state, worldDraw: [existingWorld as WorldCard] }
 
-    const { state: after, events } = gainCard(state, 'Door', 'worldDrawTop')
+    const { state: after, events } = gainCard(catalog, state, 'Door', 'worldDrawTop')
 
     expect(after.worldDraw).toHaveLength(2)
     const event = events.find((e) => e.type === 'CardGained')
@@ -271,6 +272,7 @@ describe('damage', () => {
 
     expect(after.hp).toBe(0)
     expect(after.status).toBe('lost')
+    expect(events.some((e) => e.type === 'WorldWon' === false)).toBe(true)
     expect(events.some((e) => e.type === 'WorldLost')).toBe(true)
   })
 
@@ -291,14 +293,14 @@ describe('damage', () => {
 describe('applyPenalty SkipDrawNextTurn', () => {
   it('sets skipDrawNext to true', () => {
     const state = makeState({ skipDrawNext: false })
-    const { state: after } = applyPenalty(state, { kind: 'SkipDrawNextTurn' })
+    const { state: after } = applyPenalty(catalog, state, { kind: 'SkipDrawNextTurn' })
     expect(after.skipDrawNext).toBe(true)
   })
 
   it('is idempotent — calling twice still yields skipDrawNext true', () => {
     const state = makeState({ skipDrawNext: false })
-    const { state: once } = applyPenalty(state, { kind: 'SkipDrawNextTurn' })
-    const { state: twice } = applyPenalty(once, { kind: 'SkipDrawNextTurn' })
+    const { state: once } = applyPenalty(catalog, state, { kind: 'SkipDrawNextTurn' })
+    const { state: twice } = applyPenalty(catalog, once, { kind: 'SkipDrawNextTurn' })
     expect(twice.skipDrawNext).toBe(true)
   })
 })
@@ -310,7 +312,7 @@ describe('applyPenalty SkipDrawNextTurn', () => {
 describe('grantReward SurviveWorld', () => {
   it('sets status to won and emits WorldWon', () => {
     const state = makeState()
-    const { state: after, events } = grantReward(state, { kind: 'SurviveWorld' })
+    const { state: after, events } = grantReward(catalog, state, { kind: 'SurviveWorld' })
 
     expect(after.status).toBe('won')
     expect(events.some((e) => e.type === 'WorldWon')).toBe(true)
@@ -326,8 +328,8 @@ describe('applyEffect Modal (Sprint)', () => {
     let state = makeState()
 
     // Populate draw piles so draws can succeed
-    const [p1, s1] = mintCard(state, 'Sprint')
-    const [p2, s2] = mintCard(s1, 'Explore')
+    const [p1, s1] = mintCard(catalog, state, 'Sprint')
+    const [p2, s2] = mintCard(catalog, s1, 'Explore')
     const [w1, s3] = mintWorld(s2, 'Rubble')
     state = { ...s3, playerDraw: [p1, p2], worldDraw: [w1] }
 
@@ -341,7 +343,7 @@ describe('applyEffect Modal (Sprint)', () => {
     }
 
     const action = { type: 'PlayCard' as const, cardId: 'sprint-id', choice: 0 }
-    const { state: after, events } = applyEffect(state, sprintEffect, action)
+    const { state: after, events } = applyEffect(catalog, state, sprintEffect, action)
 
     // 2 player + 1 world drawn
     expect(after.hand.filter((c) => c.kind === 'player')).toHaveLength(2)
@@ -368,7 +370,7 @@ describe('applyEffect Modal (Sprint)', () => {
       choice: 1,
       targetId: zombie.id,
     }
-    const { events } = applyEffect(state, sprintEffect, action)
+    const { events } = applyEffect(catalog, state, sprintEffect, action)
 
     // Zombie has Slow keyword → 1 + 1 = 2 progress, and cost is 1 → auto-resolves
     expect(events.some((e) => e.type === 'ProgressDealt')).toBe(true)
@@ -407,7 +409,7 @@ describe('applyEffect Sequence (Barricade)', () => {
     }
 
     // Should not throw — missing zombie is skipped gracefully
-    const { state: after, events } = applyEffect(state, barricadeEffect, action)
+    const { state: after, events } = applyEffect(catalog, state, barricadeEffect, action)
 
     // Step 0: Zombie resolved (cost 1, progress 1)
     expect(events.some((e) => e.type === 'HazardResolved')).toBe(true)
@@ -449,9 +451,9 @@ describe('applyEffect Sequence (Barricade)', () => {
     }
 
     // Should not throw
-    expect(() => applyEffect(state, barricadeEffect, action)).not.toThrow()
+    expect(() => applyEffect(catalog, state, barricadeEffect, action)).not.toThrow()
 
-    const { events } = applyEffect(state, barricadeEffect, action)
+    const { events } = applyEffect(catalog, state, barricadeEffect, action)
     expect(events.some((e) => e.type === 'HazardResolved')).toBe(true)
     // No WorldCardsReturned event since nothing was actually returned
     expect(events.some((e) => e.type === 'WorldCardsReturned')).toBe(false)
@@ -465,7 +467,7 @@ describe('applyEffect Sequence (Barricade)', () => {
 describe('destroyInHand', () => {
   it('removes the card from hand and emits CardDestroyed', () => {
     let state = makeState()
-    const [sprint, s1] = mintCard(state, 'Sprint')
+    const [sprint, s1] = mintCard(catalog, state, 'Sprint')
     state = { ...s1, hand: [sprint] }
 
     const { state: after, events } = destroyInHand(state, sprint.id)
@@ -476,7 +478,7 @@ describe('destroyInHand', () => {
 
   it('does nothing when id is undefined (Regroup with no target)', () => {
     let state = makeState()
-    const [sprint, s1] = mintCard(state, 'Sprint')
+    const [sprint, s1] = mintCard(catalog, state, 'Sprint')
     state = { ...s1, hand: [sprint] }
 
     const { state: after, events } = destroyInHand(state, undefined)

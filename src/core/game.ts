@@ -1,4 +1,5 @@
 import type { Action, AvailableActions, GameEvent, GameState } from './types'
+import type { CardCatalog, WorldData } from './catalog'
 import { createWorld } from './world'
 import { availableActions } from './available'
 import { reduce } from './reduce'
@@ -12,19 +13,18 @@ export interface GameCore {
 }
 
 /**
- * Create a new game instance seeded with `seed`. The returned object wraps
- * a mutable reference to the current state and exposes `dispatch` and
- * `availableActions` as the primary API for interacting with the game.
+ * Create a new game instance seeded with `seed`. The catalog and world
+ * descriptor are captured in the closure and threaded through all dispatches.
  */
-export function createGame(seed: number): GameCore {
-  let current = createWorld(seed)
+export function createGame(catalog: CardCatalog, world: WorldData, seed: number): GameCore {
+  let current = createWorld(catalog, world, seed)
 
   return {
     get state() {
       return current
     },
     dispatch(action: Action) {
-      const result = reduce(current, action)
+      const result = reduce(catalog, current, action)
       current = result.state
       return result
     },

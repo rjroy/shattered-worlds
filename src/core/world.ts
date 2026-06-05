@@ -1,99 +1,31 @@
 import type { GameState, WorldCard } from './types'
+import type { CardCatalog, CardCount, WorldData } from './catalog'
 import { createRng, shuffle } from './rng'
 import { mintCard } from './cards'
 import { refillHand } from './draw'
-
-// ---------------------------------------------------------------------------
-// Act compositions (REQ-WDS-19)
-// ---------------------------------------------------------------------------
-
-// Each act is a list of [templateId, count] pairs that fully specifies the
-// cards to mint. Acts 2 and 3 are queued without shuffling; shuffling happens
-// when an act activates in drawWorld (Phase 3).
-
-type ActSpec = ReadonlyArray<
-  | 'Strange Sounds'
-  | 'Rubble'
-  | 'Screams'
-  | 'Zombie'
-  | 'Find Baseball Bat'
-  | 'The Walker'
-  | 'Door'
->
-
-const ACT_1_SPEC: ActSpec = [
-  'Strange Sounds',
-  'Strange Sounds',
-  'Rubble',
-  'Rubble',
-  'Screams',
-  'Screams',
-]
-
-const ACT_2_SPEC: ActSpec = ['Rubble', 'Rubble', 'Zombie', 'Zombie', 'Zombie', 'Find Baseball Bat']
-
-const ACT_3_SPEC: ActSpec = [
-  'Find Baseball Bat',
-  'Zombie',
-  'Zombie',
-  'Zombie',
-  'Zombie',
-  'The Walker',
-]
-
-// ---------------------------------------------------------------------------
-// Starter deck composition
-// ---------------------------------------------------------------------------
-
-type StarterSpec = ReadonlyArray<
-  'Sprint' | 'Explore' | 'Barricade' | 'Med Kit' | 'Panic' | 'Adrenaline'
->
-
-const STARTER_SPEC: StarterSpec = [
-  'Sprint',
-  'Sprint',
-  'Explore',
-  'Explore',
-  'Explore',
-  'Barricade',
-  'Barricade',
-  'Med Kit',
-  'Panic',
-  'Adrenaline',
-]
 
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 
 /**
- * Mint every template id in `spec` in sequence, threading state through each
- * call so ids remain globally unique.
+ * Mint every entry in `spec` (each entry is a {templateId, count} pair),
+ * repeating each templateId `count` times. Threads state through each call
+ * so ids remain globally unique.
  */
 function mintAll(
+  catalog: CardCatalog,
   state: GameState,
-  spec: ReadonlyArray<
-    | 'Sprint'
-    | 'Explore'
-    | 'Barricade'
-    | 'Med Kit'
-    | 'Panic'
-    | 'Adrenaline'
-    | 'Strange Sounds'
-    | 'Rubble'
-    | 'Screams'
-    | 'Zombie'
-    | 'Find Baseball Bat'
-    | 'The Walker'
-    | 'Door'
-  >,
+  spec: readonly CardCount[],
 ): [cards: (GameState['playerDraw'][number])[], next: GameState] {
   const cards: (GameState['playerDraw'][number])[] = []
   let current = state
-  for (const templateId of spec) {
-    const [card, next] = mintCard(current, templateId)
-    cards.push(card)
-    current = next
+  for (const { templateId, count } of spec) {
+    for (let i = 0; i < count; i++) {
+      const [card, next] = mintCard(catalog, current, templateId)
+      cards.push(card)
+      current = next
+    }
   }
   return [cards, current]
 }
@@ -112,15 +44,15 @@ function asWorldCards(cards: (GameState['playerDraw'][number])[]): WorldCard[] {
 // ---------------------------------------------------------------------------
 
 /**
- * Build the initial GameState for the Zombie Big-Box world.
+ * Build the initial GameState from a WorldData descriptor and catalog.
  *
- * - Starter deck (10 cards) is shuffled into playerDraw.
- * - Act 1 (6 cards) is shuffled into worldDraw.
- * - Acts 2 and 3 are queued in `acts` unshuffled; they are shuffled when
- *   each act activates in drawWorld (Phase 3).
- * - Hand is left empty — refillHand is wired in Phase 3.
+ * - Starter deck (count-expanded from world.starterDeck) is shuffled into playerDraw.
+ * - Act 1 (from world.deckComposition.acts[0]) is shuffled into worldDraw.
+ * - Remaining acts are queued in `acts` unshuffled; they are shuffled when
+ *   each act activates in drawWorld.
+ * - Hand is left empty — refillHand deals the opening hand.
  */
-export function createWorld(seed: number): GameState {
+export function createWorld(catalog: CardCatalog, world: WorldData, seed: number): GameState {
   const rng = createRng(seed)
 
   // Bootstrap a skeleton state so mintCard has a valid GameState to thread.
@@ -136,41 +68,46 @@ export function createWorld(seed: number): GameState {
     hp: 20,
     skipDrawNext: false,
     status: 'playing',
-    worldId: 'zombie-big-box',
+    worldId: 'starter',
     rng,
     nextId: 0,
   }
 
-  // --- Starter deck ---
-  const [starterCards, afterStarter] = mintAll(state, STARTER_SPEC)
+  // --- Starter deck — minted while worldId is 'starter' so player cards carry
+  //     sourceWorldId: 'starter' as their provenance. ---
+  const [starterCards, afterStarter] = mintAll(catalog, state, world.starterDeck)
   state = afterStarter
   const [shuffledStarter, rngAfterStarter] = shuffle(starterCards, state.rng)
   state = { ...state, rng: rngAfterStarter, playerDraw: shuffledStarter }
 
-  // --- Act 1 — shuffled immediately into worldDraw ---
-  const [act1Cards, afterAct1] = mintAll(state, ACT_1_SPEC)
+  // Switch to the active world before minting act cards.
+  state = { ...state, worldId: world.worldId }
+
+  // --- Act 1 (deckComposition.acts[0]) — shuffled immediately into worldDraw ---
+  const acts = world.deckComposition.acts
+  const act1Spec = acts[0]?.cards ?? []
+  const [act1Cards, afterAct1] = mintAll(catalog, state, act1Spec)
   state = afterAct1
   const worldCards1 = asWorldCards(act1Cards)
   const [shuffledAct1, rngAfterAct1] = shuffle(worldCards1, state.rng)
   state = { ...state, rng: rngAfterAct1, worldDraw: shuffledAct1 }
 
-  // --- Act 2 — minted but not shuffled ---
-  const [act2Cards, afterAct2] = mintAll(state, ACT_2_SPEC)
-  state = afterAct2
-  const worldCards2 = asWorldCards(act2Cards)
-
-  // --- Act 3 — minted but not shuffled ---
-  const [act3Cards, afterAct3] = mintAll(state, ACT_3_SPEC)
-  state = afterAct3
-  const worldCards3 = asWorldCards(act3Cards)
+  // --- Remaining acts — minted but not shuffled ---
+  const queuedActs: WorldCard[][] = []
+  for (let i = 1; i < acts.length; i++) {
+    const actSpec = acts[i]?.cards ?? []
+    const [actCards, afterAct] = mintAll(catalog, state, actSpec)
+    state = afterAct
+    queuedActs.push(asWorldCards(actCards))
+  }
 
   const baseState: GameState = {
     ...state,
-    acts: [worldCards2, worldCards3],
+    acts: queuedActs,
     hand: [],
   }
 
-  // Deal the opening hand (REQ-WDS-7) — events are discarded at init time.
+  // Deal the opening hand — events are discarded at init time.
   const { state: dealt } = refillHand(baseState)
   return dealt
 }

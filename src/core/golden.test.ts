@@ -15,6 +15,7 @@ import { createWorld } from './world'
 import { mintCard } from './cards'
 import { reduce } from './reduce'
 import type { GameState, PlayerCard, WorldCard } from './types'
+import { catalog, worldData } from './testFixture'
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -25,7 +26,7 @@ import type { GameState, PlayerCard, WorldCard } from './types'
  * Clears all draw piles, acts, and progress unless the caller restores them.
  */
 function makeState(overrides: Partial<GameState>): GameState {
-  const base = createWorld(42)
+  const base = createWorld(catalog, worldData, 42)
   return {
     ...base,
     playerDraw: [],
@@ -53,10 +54,10 @@ function makeState(overrides: Partial<GameState>): GameState {
 
 describe('golden win: Door via two Explore plays', () => {
   // Mint the three cards we need from a fixed base state
-  const base = createWorld(42)
-  const [door, s1] = mintCard(base, 'Door')
-  const [explore1, s2] = mintCard(s1, 'Explore')
-  const [explore2, finalMinted] = mintCard(s2, 'Explore')
+  const base = createWorld(catalog, worldData, 42)
+  const [door, s1] = mintCard(catalog, base, 'Door')
+  const [explore1, s2] = mintCard(catalog, s1, 'Explore')
+  const [explore2, finalMinted] = mintCard(catalog, s2, 'Explore')
 
   const doorCard = door as WorldCard
   const ex1Card = explore1 as PlayerCard
@@ -64,10 +65,10 @@ describe('golden win: Door via two Explore plays', () => {
 
   // Verify expected IDs so the test is self-describing
   it('minted card ids are deterministic', () => {
-    const base2 = createWorld(42)
-    const [d, t1] = mintCard(base2, 'Door')
-    const [e1, t2] = mintCard(t1, 'Explore')
-    const [e2] = mintCard(t2, 'Explore')
+    const base2 = createWorld(catalog, worldData, 42)
+    const [d, t1] = mintCard(catalog, base2, 'Door')
+    const [e1, t2] = mintCard(catalog, t1, 'Explore')
+    const [e2] = mintCard(catalog, t2, 'Explore')
 
     expect(d.id).toBe(doorCard.id)
     expect(e1.id).toBe(ex1Card.id)
@@ -82,7 +83,7 @@ describe('golden win: Door via two Explore plays', () => {
     })
 
     // Turn 1, play 1: Explore on Door → 1 progress (cost 2, not resolved yet)
-    const r1 = reduce(state, {
+    const r1 = reduce(catalog, state, {
       type: 'PlayCard',
       cardId: ex1Card.id,
       targetId: doorCard.id,
@@ -97,7 +98,7 @@ describe('golden win: Door via two Explore plays', () => {
     expect(r1Types).not.toContain('HazardResolved')
 
     // Turn 1, play 2: Explore on Door → 2 total progress → auto-resolves → WorldWon
-    const r2 = reduce(r1.state, {
+    const r2 = reduce(catalog, r1.state, {
       type: 'PlayCard',
       cardId: ex2Card.id,
       targetId: doorCard.id,
@@ -122,11 +123,11 @@ describe('golden win: Door via two Explore plays', () => {
       hp: 10,
     })
 
-    const r1 = reduce(state, { type: 'PlayCard', cardId: ex1Card.id, targetId: doorCard.id })
-    const r2 = reduce(r1.state, { type: 'PlayCard', cardId: ex2Card.id, targetId: doorCard.id })
+    const r1 = reduce(catalog, state, { type: 'PlayCard', cardId: ex1Card.id, targetId: doorCard.id })
+    const r2 = reduce(catalog, r1.state, { type: 'PlayCard', cardId: ex2Card.id, targetId: doorCard.id })
 
     expect(r2.state.status).toBe('won')
-    expect(() => reduce(r2.state, { type: 'EndTurn' })).toThrow()
+    expect(() => reduce(catalog, r2.state, { type: 'EndTurn' })).toThrow()
   })
 })
 
@@ -140,8 +141,8 @@ describe('golden win: Door via two Explore plays', () => {
 // ---------------------------------------------------------------------------
 
 describe('golden loss: HP reaches 0 via Zombie discard', () => {
-  const base = createWorld(42)
-  const [zombie, minted] = mintCard(base, 'Zombie')
+  const base = createWorld(catalog, worldData, 42)
+  const [zombie, minted] = mintCard(catalog, base, 'Zombie')
   const zombieCard = zombie as WorldCard
 
   it('discarding Zombie at hp=1 transitions to status=lost', () => {
@@ -151,7 +152,7 @@ describe('golden loss: HP reaches 0 via Zombie discard', () => {
       hand: [zombieCard],
     })
 
-    const result = reduce(state, { type: 'DiscardHazard', cardId: zombieCard.id })
+    const result = reduce(catalog, state, { type: 'DiscardHazard', cardId: zombieCard.id })
 
     expect(result.state.hp).toBe(0)
     expect(result.state.status).toBe('lost')
@@ -175,9 +176,9 @@ describe('golden loss: HP reaches 0 via Zombie discard', () => {
       hand: [zombieCard],
     })
 
-    const result = reduce(state, { type: 'DiscardHazard', cardId: zombieCard.id })
+    const result = reduce(catalog, state, { type: 'DiscardHazard', cardId: zombieCard.id })
     expect(result.state.status).toBe('lost')
-    expect(() => reduce(result.state, { type: 'EndTurn' })).toThrow()
+    expect(() => reduce(catalog, result.state, { type: 'EndTurn' })).toThrow()
   })
 })
 
@@ -195,7 +196,7 @@ describe('replay equivalence', () => {
    * state. The sequence exercises PlayCard, DiscardHazard, and EndTurn.
    */
   function runReplay(): GameState {
-    const state0 = createWorld(42)
+    const state0 = createWorld(catalog, worldData, 42)
 
     // seed 42 starting hand:
     //   Rubble(id=12), Screams(id=15), Sprint(id=1), Panic(id=8), MedKit(id=7), Explore(id=2)
@@ -205,20 +206,20 @@ describe('replay equivalence', () => {
     const medKit = state0.hand.find((c) => c.kind === 'player' && c.name === 'Med Kit')!
 
     // Action 1: Play Explore on Rubble (1 progress → resolves, reward=None)
-    const r1 = reduce(state0, {
+    const r1 = reduce(catalog, state0, {
       type: 'PlayCard',
       cardId: explore.id,
       targetId: rubble.id,
     })
 
     // Action 2: Discard Screams (penalty: GainCard Panic)
-    const r2 = reduce(r1.state, { type: 'DiscardHazard', cardId: screams.id })
+    const r2 = reduce(catalog, r1.state, { type: 'DiscardHazard', cardId: screams.id })
 
     // Action 3: Play Med Kit (Heal 2)
-    const r3 = reduce(r2.state, { type: 'PlayCard', cardId: medKit.id })
+    const r3 = reduce(catalog, r2.state, { type: 'PlayCard', cardId: medKit.id })
 
     // Action 4: EndTurn
-    const r4 = reduce(r3.state, { type: 'EndTurn' })
+    const r4 = reduce(catalog, r3.state, { type: 'EndTurn' })
 
     return r4.state
   }

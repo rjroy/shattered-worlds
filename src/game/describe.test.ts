@@ -26,7 +26,7 @@ function makeState(progress: Record<string, number> = {}): GameState {
 }
 
 function player(effect: Effect): PlayerCard {
-  return { kind: 'player', id: 'p1', name: 'Test', effect }
+  return { kind: 'player', id: 'p1', name: 'Test', sourceWorldId: 'test', effect }
 }
 
 function hazard(over: Partial<WorldCard>): WorldCard {

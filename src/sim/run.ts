@@ -1,7 +1,24 @@
 import type { Card, GameState } from '../core/types'
 import { createWorld } from '../core/world'
 import { reduce } from '../core/reduce'
+import { assembleCatalog } from '../core/catalog'
+import type { WorldData } from '../core/catalog'
+import { STARTER_SOURCE, ZOMBIE_SOURCE } from '../game/worldData'
 import { pickAction } from './policy'
+
+// ---------------------------------------------------------------------------
+// Catalog + world descriptor — assembled once at startup
+// ---------------------------------------------------------------------------
+
+const catalog = assembleCatalog([STARTER_SOURCE, ZOMBIE_SOURCE])
+
+const worldData: WorldData = {
+  worldId: ZOMBIE_SOURCE.worldId,
+  // STARTER_SOURCE.starterDeck is guaranteed present — starter.json defines it.
+  // ZOMBIE_SOURCE.deckComposition is guaranteed present — zombie-big-box.json defines it.
+  starterDeck: STARTER_SOURCE.starterDeck!,
+  deckComposition: ZOMBIE_SOURCE.deckComposition!,
+}
 
 // ---------------------------------------------------------------------------
 // ID accounting — verifies no card id appears in more than one zone
@@ -41,14 +58,14 @@ let hadError = false
 
 for (let seed = 1; seed <= N; seed++) {
   try {
-    let state = createWorld(seed)
+    let state = createWorld(catalog, worldData, seed)
     let turns = 0
     let actions = 0
 
     while (state.status === 'playing' && actions < MAX_ACTIONS_PER_WORLD) {
       checkIdAccounting(state)
       const action = pickAction(state)
-      const result = reduce(state, action)
+      const result = reduce(catalog, state, action)
       state = result.state
       if (action.type === 'EndTurn') turns++
       actions++

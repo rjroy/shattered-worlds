@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'bun:test'
 import type { CardTemplateId, GameState } from './types'
-import { mintCard, CATALOG } from './cards'
+import { mintCard } from './cards'
+import { UnknownTemplateError } from './errors'
 import { createRng } from './rng'
+import { catalog } from './testFixture'
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -52,12 +54,12 @@ const ALL_TEMPLATE_IDS: readonly CardTemplateId[] = [
 describe('catalog completeness', () => {
   it('all 17 CardTemplateIds mint a card without throwing', () => {
     for (const id of ALL_TEMPLATE_IDS) {
-      expect(() => mintCard(makeEmptyState(), id)).not.toThrow()
+      expect(() => mintCard(catalog, makeEmptyState(), id)).not.toThrow()
     }
   })
 
   it('catalog has exactly 17 entries', () => {
-    expect(Object.keys(CATALOG)).toHaveLength(17)
+    expect(Object.keys(catalog)).toHaveLength(17)
   })
 })
 
@@ -80,7 +82,7 @@ describe('starter deck', () => {
     const cards: ReturnType<typeof mintCard>[0][] = []
 
     for (const [templateId] of STARTER_SPEC) {
-      const [card, next] = mintCard(state, templateId)
+      const [card, next] = mintCard(catalog, state, templateId)
       cards.push(card)
       state = next
     }
@@ -96,7 +98,7 @@ describe('starter deck', () => {
     const allCards: ReturnType<typeof mintCard>[0][] = []
     for (const [templateId, count] of STARTER_SPEC) {
       for (let i = 0; i < count; i++) {
-        const [card, next] = mintCard(state, templateId)
+        const [card, next] = mintCard(catalog, state, templateId)
         allCards.push(card)
         state = next
       }
@@ -115,7 +117,7 @@ describe('starter deck', () => {
 
 describe('world card properties', () => {
   it('Door is discardable:false', () => {
-    const [card] = mintCard(makeEmptyState(), 'Door')
+    const [card] = mintCard(catalog, makeEmptyState(), 'Door')
     if (card.kind !== 'world') throw new Error('expected world card')
     expect(card.discardable).toBe(false)
   })
@@ -130,14 +132,14 @@ describe('world card properties', () => {
       'The Walker',
     ]
     for (const id of worldTemplateIds) {
-      const [card] = mintCard(makeEmptyState(), id)
+      const [card] = mintCard(catalog, makeEmptyState(), id)
       if (card.kind !== 'world') throw new Error(`expected world card for ${id}`)
       expect(card.discardable).toBe(true)
     }
   })
 
   it('The Walker has cost 10', () => {
-    const [card] = mintCard(makeEmptyState(), 'The Walker')
+    const [card] = mintCard(catalog, makeEmptyState(), 'The Walker')
     if (card.kind !== 'world') throw new Error('expected world card')
     expect(card.cost).toBe(10)
   })
@@ -151,11 +153,11 @@ describe('id sequencing', () => {
   it('minting 3 cards in sequence gives ids "0","1","2" and advances nextId to 3', () => {
     let state = makeEmptyState(0)
 
-    const [c0, s1] = mintCard(state, 'Sprint')
+    const [c0, s1] = mintCard(catalog, state, 'Sprint')
     state = s1
-    const [c1, s2] = mintCard(state, 'Explore')
+    const [c1, s2] = mintCard(catalog, state, 'Explore')
     state = s2
-    const [c2, s3] = mintCard(state, 'Zombie')
+    const [c2, s3] = mintCard(catalog, state, 'Zombie')
     state = s3
 
     expect(c0.id).toBe('0')
@@ -187,12 +189,60 @@ describe('unique ids', () => {
     let state = makeEmptyState()
     const ids: string[] = []
     for (const templateId of starterSpec) {
-      const [card, next] = mintCard(state, templateId)
+      const [card, next] = mintCard(catalog, state, templateId)
       ids.push(card.id)
       state = next
     }
 
     expect(ids).toHaveLength(10)
     expect(new Set(ids).size).toBe(10)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// 6. Starter provenance
+// ---------------------------------------------------------------------------
+
+describe('starter provenance', () => {
+  it('mintCard stamps sourceWorldId from state.worldId', () => {
+    const state = makeEmptyState()
+    // makeEmptyState sets worldId: 'zombie-big-box'; override to 'starter'
+    const starterState: GameState = { ...state, worldId: 'starter' }
+    const [card] = mintCard(catalog, starterState, 'Sprint')
+    if (card.kind !== 'player') throw new Error('expected player card')
+    expect(card.sourceWorldId).toBe('starter')
+  })
+
+  it('mintCard stamps the active worldId, not a hardcoded value', () => {
+    const state = makeEmptyState()
+    const worldState: GameState = { ...state, worldId: 'zombie-big-box' }
+    const [card] = mintCard(catalog, worldState, 'Listen')
+    if (card.kind !== 'player') throw new Error('expected player card')
+    expect(card.sourceWorldId).toBe('zombie-big-box')
+  })
+})
+
+// ---------------------------------------------------------------------------
+// 7. Unknown template throws UnknownTemplateError
+// ---------------------------------------------------------------------------
+
+describe('unknown template', () => {
+  it('mintCard throws UnknownTemplateError for an unrecognised templateId', () => {
+    const state = makeEmptyState()
+    expect(() => mintCard(catalog, state, 'Nope')).toThrow(UnknownTemplateError)
+  })
+
+  it('UnknownTemplateError message includes the bad templateId', () => {
+    const state = makeEmptyState()
+    let caught: unknown
+    try {
+      mintCard(catalog, state, 'Nope')
+    } catch (e) {
+      caught = e
+    }
+    expect(caught).toBeInstanceOf(UnknownTemplateError)
+    if (caught instanceof UnknownTemplateError) {
+      expect(caught.message).toContain('Nope')
+    }
   })
 })

@@ -1,0 +1,61 @@
+{
+  "worldId": "starter",
+  "cardTemplates": {
+    "Sprint": {
+      "kind": "player",
+      "name": "Sprint",
+      "effect": {
+        "kind": "Modal",
+        "branches": [
+          { "kind": "Draw", "player": 2, "world": 1 },
+          { "kind": "DealProgress", "base": 1, "bonus": { "tag": "Slow", "amount": 1 } }
+        ]
+      }
+    },
+    "Explore": {
+      "kind": "player",
+      "name": "Explore",
+      "effect": { "kind": "DealProgress", "base": 1, "bonus": { "tag": "Hidden", "amount": 1 } }
+    },
+    "Barricade": {
+      "kind": "player",
+      "name": "Barricade",
+      "effect": {
+        "kind": "Sequence",
+        "steps": [
+          { "kind": "DealProgress", "base": 1 },
+          { "kind": "ReturnWorldCards", "min": 0, "max": 2 }
+        ]
+      }
+    },
+    "Med Kit": {
+      "kind": "player",
+      "name": "Med Kit",
+      "effect": { "kind": "Heal", "amount": 2 }
+    },
+    "Panic": {
+      "kind": "player",
+      "name": "Panic",
+      "effect": {
+        "kind": "Sequence",
+        "steps": [
+          { "kind": "ReturnWorldCards", "min": 1, "max": 1 },
+          { "kind": "Draw", "world": 1 }
+        ]
+      }
+    },
+    "Adrenaline": {
+      "kind": "player",
+      "name": "Adrenaline",
+      "effect": { "kind": "DiscardThenDraw", "player": 2 }
+    }
+  },
+  "starterDeck": [
+    { "templateId": "Sprint", "count": 2 },
+    { "templateId": "Explore", "count": 3 },
+    { "templateId": "Barricade", "count": 2 },
+    { "templateId": "Med Kit", "count": 1 },
+    { "templateId": "Panic", "count": 1 },
+    { "templateId": "Adrenaline", "count": 1 }
+  ]
+}
