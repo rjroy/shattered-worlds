@@ -499,7 +499,7 @@ describe('EndTurn onEndOfTurn', () => {
 
   it('Zombie in hand deals 1 damage at end of turn', () => {
     const base = createWorld(catalog, worldData, 42)
-    const [zombie, s1] = mintCard(catalog, base, 'Zombie')
+    const [zombie, _s1] = mintCard(catalog, base, 'Zombie')
     const state = makeEndTurnState(zombie as WorldCard, 10)
 
     const result = reduce(catalog, state, { type: 'EndTurn' })
@@ -537,7 +537,7 @@ describe('EndTurn onEndOfTurn', () => {
 
   it('onEndOfTurn can kill the player and short-circuits to status=lost', () => {
     const base = createWorld(catalog, worldData, 42)
-    const [zombie, s1] = mintCard(catalog, base, 'Zombie')
+    const [zombie, _s1] = mintCard(catalog, base, 'Zombie')
     const state = makeEndTurnState(zombie as WorldCard, 1)
 
     const result = reduce(catalog, state, { type: 'EndTurn' })
@@ -549,7 +549,7 @@ describe('EndTurn onEndOfTurn', () => {
 
   it('world cards with onEndOfTurn=None deal no damage', () => {
     const base = createWorld(catalog, worldData, 42)
-    const [rubble, s1] = mintCard(catalog, base, 'Rubble')
+    const [rubble, _s1] = mintCard(catalog, base, 'Rubble')
     const state = makeEndTurnState(rubble as WorldCard, 10)
 
     const result = reduce(catalog, state, { type: 'EndTurn' })
