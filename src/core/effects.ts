@@ -1,13 +1,11 @@
 import type {
   Action,
+  CardEffect,
   CardId,
   CardTemplateId,
   Dest,
-  Effect,
   GameEvent,
   GameState,
-  Penalty,
-  Reward,
   WorldCard,
 } from './types'
 import type { CardCatalog } from './catalog'
@@ -241,7 +239,7 @@ export function heal(state: GameState, n: number): EffectResult {
 /**
  * Apply a card reward from a resolved hazard.
  */
-export function grantReward(catalog: CardCatalog, state: GameState, reward: Reward): EffectResult {
+export function grantReward(catalog: CardCatalog, state: GameState, reward: CardEffect): EffectResult {
   switch (reward.kind) {
     case 'GainCard':
       return gainCard(catalog, state, reward.template, 'playerDiscard')
@@ -256,6 +254,8 @@ export function grantReward(catalog: CardCatalog, state: GameState, reward: Rewa
     }
     case 'None':
       return { state, events: [] }
+    default:
+      return { state, events: [] }
   }
 }
 
@@ -266,7 +266,7 @@ export function grantReward(catalog: CardCatalog, state: GameState, reward: Rewa
 /**
  * Apply a hazard penalty when it is not resolved before end of turn.
  */
-export function applyPenalty(catalog: CardCatalog, state: GameState, penalty: Penalty): EffectResult {
+export function applyPenalty(catalog: CardCatalog, state: GameState, penalty: CardEffect): EffectResult {
   switch (penalty.kind) {
     case 'Damage':
       return damage(state, penalty.amount)
@@ -281,6 +281,8 @@ export function applyPenalty(catalog: CardCatalog, state: GameState, penalty: Pe
       return gainCard(catalog, state, penalty.template, 'worldDrawTop')
     case 'None':
       return { state, events: [] }
+    default:
+      return { state, events: [] }
   }
 }
 
@@ -292,7 +294,7 @@ export function applyPenalty(catalog: CardCatalog, state: GameState, penalty: Pe
  * Dispatch a player card's effect. `action` must be a PlayCard action —
  * callers guarantee this. No validation occurs here.
  */
-export function applyEffect(catalog: CardCatalog, state: GameState, effect: Effect, action: Action): EffectResult {
+export function applyEffect(catalog: CardCatalog, state: GameState, effect: CardEffect, action: Action): EffectResult {
   if (action.type !== 'PlayCard') return { state, events: [] }
 
   switch (effect.kind) {
@@ -370,5 +372,8 @@ export function applyEffect(catalog: CardCatalog, state: GameState, effect: Effe
 
       return { state: current, events }
     }
+
+    default:
+      return { state, events: [] }
   }
 }

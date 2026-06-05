@@ -7,7 +7,7 @@
  * (no Phaser, no DOM), so it stays on the pure side of the renderer boundary
  * and is unit-tested headless.
  */
-import type { Effect, GameState, PlayerCard, Penalty, Reward, WorldCard } from '../core/index'
+import type { CardEffect, GameState, PlayerCard, WorldCard } from '../core/index'
 
 // ---------------------------------------------------------------------------
 // Effects
@@ -19,7 +19,7 @@ import type { Effect, GameState, PlayerCard, Penalty, Reward, WorldCard } from '
  * (one line per step, later steps prefixed "then …"), so nothing collapses to
  * an opaque "Choose…" / "Multi-step".
  */
-export function describeEffect(effect: Effect): string[] {
+export function describeEffect(effect: CardEffect): string[] {
   switch (effect.kind) {
     case 'DealProgress': {
       const bonus = effect.bonus ? ` (+${effect.bonus.amount} vs ${effect.bonus.tag})` : ''
@@ -49,6 +49,8 @@ export function describeEffect(effect: Effect): string[] {
       return effect.steps.flatMap((step, i) =>
         describeEffect(step).map((line, j) => (i > 0 && j === 0 ? `then ${lowerFirst(line)}` : line)),
       )
+    default:
+      return []
   }
 }
 
@@ -67,7 +69,7 @@ function lowerFirst(s: string): string {
 // ---------------------------------------------------------------------------
 
 /** Full sentence for a Hazard's discard penalty, or '' when there is none. */
-export function describePenalty(penalty: Penalty): string {
+export function describePenalty(penalty: CardEffect): string {
   switch (penalty.kind) {
     case 'Damage':
       return `If discarded: -${penalty.amount} HP`
@@ -79,11 +81,13 @@ export function describePenalty(penalty: Penalty): string {
       return `If discarded: +${penalty.template} to world deck`
     case 'None':
       return ''
+    default:
+      return ''
   }
 }
 
 /** Full sentence for a Hazard's clear reward, or '' when there is none. */
-export function describeReward(reward: Reward): string {
+export function describeReward(reward: CardEffect): string {
   switch (reward.kind) {
     case 'GainCard':
       return `Clear it: gain ${reward.template}`
@@ -94,6 +98,8 @@ export function describeReward(reward: Reward): string {
     case 'SurviveWorld':
       return 'Clear it: you survive the world'
     case 'None':
+      return ''
+    default:
       return ''
   }
 }
@@ -135,9 +141,9 @@ export function previewPlay(
 
 /** The Progress payload of an effect, looking through Modal/Sequence. */
 function dealProgressOf(
-  effect: Effect,
+  effect: CardEffect,
   branchIndex?: number,
-): Extract<Effect, { kind: 'DealProgress' }> | null {
+): Extract<CardEffect, { kind: 'DealProgress' }> | null {
   switch (effect.kind) {
     case 'DealProgress':
       return effect

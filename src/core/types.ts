@@ -10,7 +10,7 @@ export type Keyword = 'Hidden' | 'Creature' | 'Slow'
 
 export type Dest = 'playerDiscard' | 'playerDrawTop' | 'worldDrawTop'
 
-export type Effect =
+export type CardEffect =
   | { kind: 'DealProgress'; base: number; bonus?: { tag: Keyword; amount: number } }
   | { kind: 'Draw'; player?: number; world?: number }
   | { kind: 'Heal'; amount: number }
@@ -19,20 +19,12 @@ export type Effect =
   | { kind: 'DiscardThenDraw'; player: number }
   | { kind: 'AddCard'; template: CardTemplateId; dest: Dest }
   | { kind: 'AddWorldCardToTop'; template: CardTemplateId }
-  | { kind: 'Modal'; branches: readonly Effect[] }
-  | { kind: 'Sequence'; steps: readonly Effect[] }
-
-export type Penalty =
+  | { kind: 'Modal'; branches: readonly CardEffect[] }
+  | { kind: 'Sequence'; steps: readonly CardEffect[] }
   | { kind: 'Damage'; amount: number }
   | { kind: 'SkipDrawNextTurn' }
   | { kind: 'GainCard'; template: CardTemplateId }
-  | { kind: 'AddWorldCardToTop'; template: CardTemplateId }
-  | { kind: 'None' }
-
-export type Reward =
-  | { kind: 'GainCard'; template: CardTemplateId }
   | { kind: 'AddPlayerCardToTop'; template: CardTemplateId }
-  | { kind: 'AddWorldCardToTop'; template: CardTemplateId }
   | { kind: 'SurviveWorld' }
   | { kind: 'None' }
 
@@ -41,7 +33,7 @@ export interface PlayerCard {
   id: CardId
   name: string
   sourceWorldId: string
-  effect: Effect
+  effect: CardEffect
 }
 
 export interface WorldCard {
@@ -51,8 +43,8 @@ export interface WorldCard {
   cost: number
   keywords: readonly Keyword[]
   discardable: boolean
-  penalty: Penalty
-  reward: Reward
+  penalty: CardEffect
+  reward: CardEffect
 }
 
 export type Card = PlayerCard | WorldCard

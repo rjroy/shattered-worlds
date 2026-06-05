@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'bun:test'
 import { createRng } from '../core/rng'
-import type { Effect, GameState, PlayerCard, WorldCard } from '../core/index'
+import type { CardEffect, GameState, PlayerCard, WorldCard } from '../core/index'
 import { describeEffect, describePenalty, describeReward, previewPlay } from './describe'
 
 // ---------------------------------------------------------------------------
@@ -25,7 +25,7 @@ function makeState(progress: Record<string, number> = {}): GameState {
   }
 }
 
-function player(effect: Effect): PlayerCard {
+function player(effect: CardEffect): PlayerCard {
   return { kind: 'player', id: 'p1', name: 'Test', sourceWorldId: 'test', effect }
 }
 
@@ -87,7 +87,7 @@ describe('describeEffect', () => {
   })
 
   it('recurses into Modal — header plus a bullet per branch (Sprint)', () => {
-    const sprint: Effect = {
+    const sprint: CardEffect = {
       kind: 'Modal',
       branches: [
         { kind: 'Draw', player: 2, world: 1 },
@@ -102,7 +102,7 @@ describe('describeEffect', () => {
   })
 
   it('recurses into Sequence — one line per step, later steps prefixed "then" (Barricade)', () => {
-    const barricade: Effect = {
+    const barricade: CardEffect = {
       kind: 'Sequence',
       steps: [
         { kind: 'DealProgress', base: 1 },

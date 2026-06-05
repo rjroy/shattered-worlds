@@ -714,7 +714,7 @@ export class TableScene extends Phaser.Scene {
 // Modal label helpers (module-level, not class methods)
 // ---------------------------------------------------------------------------
 
-function branchLabel(effectBranch: import('../core/index').Effect | undefined, idx: number): string {
+function branchLabel(effectBranch: import('../core/index').CardEffect | undefined, idx: number): string {
   // Derive the label from the branch's actual effect (Sprint, etc.); no
   // hardcoded, index-keyed strings that could lie if the catalog changes.
   return effectBranch !== undefined ? describeEffect(effectBranch).join(', ') : `Option ${idx + 1}`
