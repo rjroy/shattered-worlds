@@ -3,16 +3,17 @@
  * all core test files. Import from here instead of duplicating setup.
  */
 import { assembleCatalog } from './catalog'
-import type { WorldData } from './catalog'
-import { STARTER_SOURCE, ZOMBIE_SOURCE } from '../game/worldData'
+import type { RawCardSource, WorldData } from './catalog'
+import starterJson from '../data/worlds/starter.json'
+import zombieJson from '../data/worlds/zombie-big-box.json'
+
+const STARTER_SOURCE = starterJson as unknown as RawCardSource
+const ZOMBIE_SOURCE = zombieJson as unknown as RawCardSource
 
 export const catalog = assembleCatalog([STARTER_SOURCE, ZOMBIE_SOURCE])
 
 export const worldData: WorldData = {
   worldId: ZOMBIE_SOURCE.worldId,
-  // STARTER_SOURCE.starterDeck is guaranteed to exist — the starter JSON
-  // defines the starter deck. ZOMBIE_SOURCE.deckComposition is guaranteed
-  // to exist — the zombie JSON defines the deck composition.
   starterDeck: STARTER_SOURCE.starterDeck!,
   deckComposition: ZOMBIE_SOURCE.deckComposition!,
 }

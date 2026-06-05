@@ -1,8 +1,12 @@
 import { describe, expect, it } from 'bun:test'
 import { assembleCatalog } from './catalog'
 import { CatalogError } from './errors'
-import { STARTER_SOURCE, ZOMBIE_SOURCE } from '../game/worldData'
 import type { RawCardSource } from './catalog'
+import starterJson from '../data/worlds/starter.json'
+import zombieJson from '../data/worlds/zombie-big-box.json'
+
+const STARTER_SOURCE = starterJson as unknown as RawCardSource
+const ZOMBIE_SOURCE = zombieJson as unknown as RawCardSource
 
 // ---------------------------------------------------------------------------
 // 1. Merge completeness
