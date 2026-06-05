@@ -25,8 +25,8 @@ export interface WorldCardTemplate {
   cost: number
   keywords: readonly Keyword[]
   discardable: boolean
-  penalty: CardEffect
-  reward: CardEffect
+  onDiscarded: CardEffect
+  onCleared: CardEffect
 }
 
 export type CardTemplate = PlayerCardTemplate | WorldCardTemplate
@@ -69,8 +69,8 @@ export function mintCard(
     cost: template.cost,
     keywords: template.keywords,
     discardable: template.discardable,
-    penalty: template.penalty,
-    reward: template.reward,
+    onDiscarded: template.onDiscarded,
+    onCleared: template.onCleared,
   }
   return [card, next]
 }

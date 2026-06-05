@@ -7,8 +7,8 @@
       "cost": 2,
       "keywords": [],
       "discardable": true,
-      "penalty": { "kind": "None" },
-      "reward": { "kind": "GainCard", "template": "Listen" }
+      "onDiscarded": { "kind": "None" },
+      "onCleared": { "kind": "GainCard", "template": "Listen" }
     },
     "Rubble": {
       "kind": "world",
@@ -16,8 +16,8 @@
       "cost": 1,
       "keywords": [],
       "discardable": true,
-      "penalty": { "kind": "SkipDrawNextTurn" },
-      "reward": { "kind": "None" }
+      "onDiscarded": { "kind": "SkipDrawNextTurn" },
+      "onCleared": { "kind": "None" }
     },
     "Screams": {
       "kind": "world",
@@ -25,8 +25,8 @@
       "cost": 1,
       "keywords": [],
       "discardable": true,
-      "penalty": { "kind": "GainCard", "template": "Panic" },
-      "reward": { "kind": "GainCard", "template": "Regroup" }
+      "onDiscarded": { "kind": "GainCard", "template": "Panic" },
+      "onCleared": { "kind": "GainCard", "template": "Regroup" }
     },
     "Zombie": {
       "kind": "world",
@@ -34,8 +34,8 @@
       "cost": 1,
       "keywords": ["Slow", "Creature"],
       "discardable": true,
-      "penalty": { "kind": "Damage", "amount": 1 },
-      "reward": { "kind": "None" }
+      "onDiscarded": { "kind": "Damage", "amount": 1 },
+      "onCleared": { "kind": "None" }
     },
     "Find Baseball Bat": {
       "kind": "world",
@@ -43,8 +43,8 @@
       "cost": 2,
       "keywords": ["Hidden"],
       "discardable": true,
-      "penalty": { "kind": "None" },
-      "reward": { "kind": "GainCard", "template": "Baseball Bat" }
+      "onDiscarded": { "kind": "None" },
+      "onCleared": { "kind": "GainCard", "template": "Baseball Bat" }
     },
     "The Walker": {
       "kind": "world",
@@ -52,8 +52,8 @@
       "cost": 10,
       "keywords": [],
       "discardable": true,
-      "penalty": { "kind": "AddWorldCardToTop", "template": "Door" },
-      "reward": { "kind": "AddPlayerCardToTop", "template": "Summon Door" }
+      "onDiscarded": { "kind": "AddWorldCardToTop", "template": "Door" },
+      "onCleared": { "kind": "AddPlayerCardToTop", "template": "Summon Door" }
     },
     "Door": {
       "kind": "world",
@@ -61,8 +61,8 @@
       "cost": 2,
       "keywords": [],
       "discardable": false,
-      "penalty": { "kind": "None" },
-      "reward": { "kind": "SurviveWorld" }
+      "onDiscarded": { "kind": "None" },
+      "onCleared": { "kind": "SurviveWorld" }
     },
     "Listen": {
       "kind": "player",

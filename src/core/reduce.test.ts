@@ -159,7 +159,7 @@ describe('EndTurn hold vs discard', () => {
 })
 
 // ---------------------------------------------------------------------------
-// 4. DiscardHazard legal: discarding Zombie applies Damage(1) penalty
+// 4. DiscardHazard legal: discarding Zombie applies Damage(1) onDiscarded
 // ---------------------------------------------------------------------------
 
 describe('DiscardHazard legal', () => {

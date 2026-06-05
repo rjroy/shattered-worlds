@@ -37,8 +37,8 @@ function hazard(over: Partial<WorldCard>): WorldCard {
     cost: 1,
     keywords: [],
     discardable: true,
-    penalty: { kind: 'None' },
-    reward: { kind: 'None' },
+    onDiscarded: { kind: 'None' },
+    onCleared: { kind: 'None' },
     ...over,
   }
 }
@@ -117,7 +117,7 @@ describe('describeEffect', () => {
 })
 
 // ---------------------------------------------------------------------------
-// Penalties and rewards
+// onDiscarded and onCleared effect kinds
 // ---------------------------------------------------------------------------
 
 describe('describeEffect (hazard effect kinds)', () => {

@@ -31,8 +31,8 @@ const worldCard: WorldCard = {
   cost: 3,
   keywords: [],
   discardable: false,
-  penalty: { kind: 'None' },
-  reward: { kind: 'None' },
+  onDiscarded: { kind: 'None' },
+  onCleared: { kind: 'None' },
 }
 
 const activeThemeWithFront: VisualTheme = {

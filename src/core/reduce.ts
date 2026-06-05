@@ -89,8 +89,7 @@ function handleDiscardHazard(
   const handAfterDiscard = state.hand.filter((c) => c.id !== cardId)
   const stateAfterRemove: GameState = { ...state, hand: handAfterDiscard }
 
-  // Apply penalty
-  const penaltyResult = applyEffect(catalog, stateAfterRemove, (card as WorldCard).penalty)
+  const penaltyResult = applyEffect(catalog, stateAfterRemove, (card as WorldCard).onDiscarded)
 
   const events: GameEvent[] = [
     { type: 'HazardDiscarded', cardId },

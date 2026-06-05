@@ -43,8 +43,8 @@ export interface WorldCard {
   cost: number
   keywords: readonly Keyword[]
   discardable: boolean
-  penalty: CardEffect
-  reward: CardEffect
+  onDiscarded: CardEffect
+  onCleared: CardEffect
 }
 
 export type Card = PlayerCard | WorldCard

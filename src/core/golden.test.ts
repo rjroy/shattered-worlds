@@ -2,7 +2,7 @@
  * Golden replay tests for the reduce/game pipeline.
  *
  * Three invariants under test:
- *   1. A crafted 2-turn win via the Door (SurviveWorld reward) reaches status='won'.
+ *   1. A crafted 2-turn win via the Door (SurviveWorld onCleared) reaches status='won'.
  *   2. A crafted 1-step loss via HP depletion (Zombie discard) reaches status='lost'.
  *   3. Replay equivalence: same seed + same actions → deepEqual final state.
  *
@@ -43,10 +43,10 @@ function makeState(overrides: Partial<GameState>): GameState {
 // Golden win: Door resolve → SurviveWorld
 //
 // Setup:
-//   Hand = [Door (cost 2, reward SurviveWorld), Explore1, Explore2]
+//   Hand = [Door (cost 2, onCleared SurviveWorld), Explore1, Explore2]
 //   Explore deals 1 progress per play (no Creature/Hidden bonus on Door).
 //   Two Explore plays against the Door accumulate 2 progress → auto-resolves
-//   → reward SurviveWorld → status='won'.
+//   → onCleared SurviveWorld → status='won'.
 //
 // Card IDs are deterministic because mintCard threads nextId through the
 // same createWorld(42) base, always producing the same id sequence.
@@ -135,7 +135,7 @@ describe('golden win: Door via two Explore plays', () => {
 // Golden loss: HP → 0 via Zombie discard
 //
 // Setup:
-//   Hand = [Zombie (Damage 1 penalty)]
+//   Hand = [Zombie (Damage 1 onDiscarded)]
 //   HP = 1
 //   DiscardHazard(Zombie) → Damage(1) → HP=0 → WorldLost → status='lost'
 // ---------------------------------------------------------------------------
@@ -205,14 +205,14 @@ describe('replay equivalence', () => {
     const explore = state0.hand.find((c) => c.kind === 'player' && c.name === 'Explore')!
     const medKit = state0.hand.find((c) => c.kind === 'player' && c.name === 'Med Kit')!
 
-    // Action 1: Play Explore on Rubble (1 progress → resolves, reward=None)
+    // Action 1: Play Explore on Rubble (1 progress → resolves, onCleared=None)
     const r1 = reduce(catalog, state0, {
       type: 'PlayCard',
       cardId: explore.id,
       targetId: rubble.id,
     })
 
-    // Action 2: Discard Screams (penalty: GainCard Panic)
+    // Action 2: Discard Screams (onDiscarded: GainCard Panic)
     const r2 = reduce(catalog, r1.state, { type: 'DiscardHazard', cardId: screams.id })
 
     // Action 3: Play Med Kit (Heal 2)
@@ -235,7 +235,7 @@ describe('replay equivalence', () => {
   it('replay state is consistent: hp, status, hand sizes match expected values', () => {
     const state = runReplay()
 
-    // Med Kit healed +2 but initial hp=20, Screams penalty=None (GainCard), so hp unchanged by damage
+    // Med Kit healed +2 but initial hp=20, Screams onDiscarded=GainCard (no damage), so hp unchanged
     expect(state.hp).toBe(22) // 20 + 2 from Med Kit
 
     expect(state.status).toBe('playing')

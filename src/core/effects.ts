@@ -25,7 +25,7 @@ type EffectResult = { state: GameState; events: GameEvent[] }
 
 /**
  * Apply progress toward a hazard in hand. Auto-resolves the hazard (removes it
- * from hand and grants its reward) if accumulated progress meets or exceeds the
+ * from hand and fires its onCleared effect) if accumulated progress meets or exceeds the
  * hazard's cost.
  */
 export function dealProgress(
@@ -65,7 +65,7 @@ export function dealProgress(
       hand: current.hand.filter((c) => c.id !== hazardId),
     }
 
-    const rewardResult = applyEffect(catalog, current, hazard.reward)
+    const rewardResult = applyEffect(catalog, current, hazard.onCleared)
     current = rewardResult.state
     events.push(...rewardResult.events)
     events.push({ type: 'HazardResolved', hazardId })
@@ -239,7 +239,7 @@ export function heal(state: GameState, n: number): EffectResult {
 /**
  * Apply any CardEffect. Pass `action` for player-card effects that require
  * targeting information (DealProgress, ReturnWorldCards, etc.); omit it for
- * penalty and reward effects that run without player input.
+ * onDiscarded and onCleared effects that run without player input.
  */
 export function applyEffect(
   catalog: CardCatalog,
@@ -248,7 +248,7 @@ export function applyEffect(
   action?: Action,
 ): EffectResult {
   // Narrow to PlayCard once; cases that need targeting fields (DealProgress,
-  // ReturnWorldCards, etc.) use this. Penalty/reward cases ignore it.
+  // ReturnWorldCards, etc.) use this. onDiscarded/onCleared cases ignore it.
   const play = action?.type === 'PlayCard' ? action : undefined
 
   switch (effect.kind) {

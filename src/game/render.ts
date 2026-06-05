@@ -43,7 +43,7 @@ export function selectCardFrontKey(
 
 // Cards are sized to carry their full rules text on the face: the player face
 // shows the whole describeEffect block (Modal/Sequence included), the Hazard
-// face shows full penalty/reward sentences. Six fit the 900px table.
+// face shows full onDiscarded/onCleared sentences. Six fit the 900px table.
 const CARD_W = 150
 const CARD_H = 196
 
@@ -150,8 +150,8 @@ export function createCardObject(
       container.add(kwText)
     }
 
-    // Penalty (on discard) then reward (on clear), as full sentences
-    const penaltyText = describeEffect(worldCard.penalty)
+    // onDiscarded then onCleared, as full sentences
+    const penaltyText = describeEffect(worldCard.onDiscarded)
       .map((l) => `If discarded: ${l}`)
       .join('\n')
     if (penaltyText !== '') {
@@ -165,7 +165,7 @@ export function createCardObject(
       container.add(penText)
     }
 
-    const rewardText = describeEffect(worldCard.reward)
+    const rewardText = describeEffect(worldCard.onCleared)
       .map((l) => `Clear it: ${l}`)
       .join('\n')
     if (rewardText !== '') {
