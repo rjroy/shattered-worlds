@@ -13,12 +13,12 @@ export type {
   Keyword,
   CardTemplateId,
   Dest,
-} from './types'
-export { IllegalActionError } from './errors'
-export type { UnknownTemplateError, CatalogError } from './errors'
-export { intensity } from './intensity'
-export type { GameCore } from './game'
-export { createGame } from './game'
-export { availableActions } from './available'
-export type { CardCatalog, CardCount, DeckComposition, WorldData } from './catalog'
-export { assembleCatalog } from './catalog'
+} from './model/types'
+export { IllegalActionError } from './model/errors'
+export type { UnknownTemplateError, CatalogError } from './model/errors'
+export { intensity } from './engine/intensity'
+export type { GameCore } from './engine/game'
+export { createGame } from './engine/game'
+export { availableActions } from './engine/available'
+export type { CardCatalog, CardCount, DeckComposition, WorldData } from './model/catalog'
+export { assembleCatalog } from './model/catalog'
