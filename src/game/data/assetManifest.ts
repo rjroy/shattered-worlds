@@ -10,6 +10,12 @@ import zombieIntrusionUrl from '../assets/themes/zombie-big-box/intrusion-overla
 import zombieCardfrontUrl from '../assets/themes/zombie-big-box/zombie-cardfront.webp'
 import starterJsonUrl from '../../data/worlds/starter.json?url'
 import zombieJsonUrl from '../../data/worlds/zombie-big-box.json?url'
+import insetSprintUrl from '../assets/insets/inset-sprint.webp'
+import insetExploreUrl from '../assets/insets/inset-explore.webp'
+import insetBarricadeUrl from '../assets/insets/inset-barricade.webp'
+import insetMedKitUrl from '../assets/insets/inset-medkit.webp'
+import insetPanicUrl from '../assets/insets/inset-panic.webp'
+import insetAdrenalineUrl from '../assets/insets/inset-adrenaline.webp'
 
 export const assetManifest: Record<string, string> = {
   cardback: cardbackUrl,
@@ -23,4 +29,10 @@ export const assetManifest: Record<string, string> = {
   'zombie-cardfront': zombieCardfrontUrl,
   'world-starter': starterJsonUrl,
   'world-zombie-big-box': zombieJsonUrl,
+  'inset-sprint': insetSprintUrl,
+  'inset-explore': insetExploreUrl,
+  'inset-barricade': insetBarricadeUrl,
+  'inset-medkit': insetMedKitUrl,
+  'inset-panic': insetPanicUrl,
+  'inset-adrenaline': insetAdrenalineUrl,
 }

@@ -29,6 +29,10 @@ import {
 // face shows full onDiscarded/onCleared sentences. Six fit the 900px table.
 const CARD_W = 150
 const CARD_H = 196
+const INSET_X = 0
+const INSET_Y = 50
+const INSET_W = 100
+const INSET_H = 70
 
 // ---------------------------------------------------------------------------
 // Card object factory
@@ -114,6 +118,13 @@ export function createCardObject(
   bg.setRounded(10)
   bg.setAlpha(0.4)
   container.add(bg)
+
+  // Card inset image: if the template defines an insetKey, render the corresponding image on top of the cardfront. This is used for player cards' unique artwork, and world cards don't have insets at all.
+  if ('insetKey' in card && card.insetKey && card.insetKey !== '') {
+    const insetImg = scene.add.image(INSET_X, INSET_Y, card.insetKey)
+    insetImg.setDisplaySize(INSET_W, INSET_H)
+    container.add(insetImg)
+  }
 
   // Name at top — identical for player and world cards.
   addCardText(scene, container, -CARD_H / 2 + 8, card.name, {

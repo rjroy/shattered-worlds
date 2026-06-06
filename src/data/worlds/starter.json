@@ -4,6 +4,7 @@
     "Sprint": {
       "kind": "player",
       "name": "Sprint",
+      "insetKey": "inset-sprint",
       "effect": {
         "kind": "Modal",
         "branches": [
@@ -15,11 +16,13 @@
     "Explore": {
       "kind": "player",
       "name": "Explore",
+      "insetKey": "inset-explore",
       "effect": { "kind": "DealProgress", "base": 1, "bonus": { "tag": "Hidden", "amount": 1 } }
     },
     "Barricade": {
       "kind": "player",
       "name": "Barricade",
+      "insetKey": "inset-barricade",
       "effect": {
         "kind": "Sequence",
         "steps": [
@@ -31,11 +34,13 @@
     "Med Kit": {
       "kind": "player",
       "name": "Med Kit",
+      "insetKey": "inset-medkit",
       "effect": { "kind": "Heal", "amount": 2 }
     },
     "Panic": {
       "kind": "player",
       "name": "Panic",
+      "insetKey": "inset-panic",
       "effect": {
         "kind": "Sequence",
         "steps": [
@@ -47,6 +52,7 @@
     "Adrenaline": {
       "kind": "player",
       "name": "Adrenaline",
+      "insetKey": "inset-adrenaline",
       "effect": { "kind": "DiscardThenDraw", "player": 2 }
     }
   },

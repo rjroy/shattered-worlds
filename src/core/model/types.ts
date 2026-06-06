@@ -28,18 +28,20 @@ export type CardEffect =
   | { kind: 'SurviveWorld' }
   | { kind: 'None' }
 
-export interface PlayerCard {
-  kind: 'player'
+export interface BasicCard {
   id: CardId
   name: string
+  insetKey: string
+}
+
+export interface PlayerCard extends BasicCard {
+  kind: 'player'
   sourceWorldId: string
   effect: CardEffect
 }
 
-export interface WorldCard {
+export interface WorldCard extends BasicCard {
   kind: 'world'
-  id: CardId
-  name: string
   cost: number
   keywords: readonly Keyword[]
   discardable: boolean

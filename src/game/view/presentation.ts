@@ -51,8 +51,8 @@ export function selectCardFrontKey(
   // Player card: resolve theme by sourceWorldId. worldCardfrontKey is the
   // world CARD front, not the player card front. Player cards use 'cardfront'
   // (generic) until per-player-world art ships.
-  void resolveTheme(card.sourceWorldId) // seam: use result when per-player-world art is defined
-  return 'cardfront'
+  const theme = resolveTheme(card.sourceWorldId) // seam: use result when per-player-world art is defined
+  return theme.worldCardfrontKey ?? 'cardfront'
 }
 
 // ---------------------------------------------------------------------------

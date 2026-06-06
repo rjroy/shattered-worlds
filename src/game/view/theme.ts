@@ -65,7 +65,7 @@ const THEMES: Record<string, VisualTheme> = {
 }
 
 export function selectTheme(worldId: string): VisualTheme {
-  return THEMES[worldId] ?? ZOMBIE_BIG_BOX_THEME
+  return THEMES[worldId] ?? 'starter'
 }
 
 export function getRealityPalette(
