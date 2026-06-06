@@ -2,7 +2,7 @@
  * Test preload: registers a real (headless) DOM so Phaser can be imported
  * under Bun. Phaser assumes browser globals (window, document, navigator,
  * canvas) exist at module-load time — see `class CommonLabel extends
- * Phaser.GameObjects.Container` in render.ts, which forces the engine to
+ * Phaser.GameObjects.Container` in components.ts, which forces the engine to
  * evaluate the moment a test imports that module.
  *
  * happy-dom supplies a maintained DOM, replacing the hand-rolled window /
