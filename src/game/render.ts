@@ -61,6 +61,34 @@ const TEXT = {
 }
 
 // ---------------------------------------------------------------------------
+// Text style factory
+// ---------------------------------------------------------------------------
+
+/**
+ * Device pixel ratio used to rasterize text. Phaser renders each Text object to
+ * an internal canvas at this resolution; at the default of 1 the glyphs are
+ * rasterized at one device-pixel per game-pixel, then bilinearly upscaled by
+ * Scale.FIT (and again by a HiDPI display). The averaging that smear produces
+ * reads as both haze (partial transparency) and blur, worst on the small fonts.
+ * Guarded so the module stays importable in non-DOM test environments.
+ */
+function textResolution(): number {
+  return typeof window !== 'undefined' ? window.devicePixelRatio || 1 : 1
+}
+
+/**
+ * Build a Phaser text style with the device-appropriate render resolution.
+ * Every text object in the renderer goes through here so DPI is set in one
+ * place rather than on each scene.add.text call site. The resolution is forced
+ * last so it always reflects the current device, never a caller override.
+ */
+export function textStyle(
+  style: Phaser.Types.GameObjects.Text.TextStyle,
+): Phaser.Types.GameObjects.Text.TextStyle {
+  return { ...style, resolution: textResolution() }
+}
+
+// ---------------------------------------------------------------------------
 // Card object factories
 // ---------------------------------------------------------------------------
 
@@ -89,26 +117,26 @@ export function createCardObject(
 
   if (card.kind === 'player') {
     // Card name at top
-    const nameText = scene.add.text(0, -CARD_H / 2 + 8, card.name, {
+    const nameText = scene.add.text(0, -CARD_H / 2 + 8, card.name, textStyle({
       fontSize: '13px',
       color: TEXT.textLight,
       fontStyle: 'bold',
       wordWrap: { width: CARD_W - 12 },
       align: 'center',
-    })
+    }))
     nameText.setOrigin(0.5, 0)
     container.add(nameText)
 
     // Full effect description — the whole face is self-explanatory. Modal and
     // Sequence cards render every branch / step, so nothing reads as "Choose…".
     const effectLines = describeEffect(card.effect).join('\n')
-    const effectText = scene.add.text(0, -CARD_H / 2 + 38, effectLines, {
+    const effectText = scene.add.text(0, -CARD_H / 2 + 38, effectLines, textStyle({
       fontSize: '11px',
       lineSpacing: 2,
       color: TEXT.textLight,
       wordWrap: { width: CARD_W - 16 },
       align: 'center',
-    })
+    }))
     effectText.setOrigin(0.5, 0)
     container.add(effectText)
   } else {
@@ -116,13 +144,13 @@ export function createCardObject(
     const worldCard = card as WorldCard
 
     // Name at top
-    const nameText = scene.add.text(0, -CARD_H / 2 + 8, worldCard.name, {
+    const nameText = scene.add.text(0, -CARD_H / 2 + 8, worldCard.name, textStyle({
       fontSize: '13px',
       color: TEXT.textLight,
       fontStyle: 'bold',
       wordWrap: { width: CARD_W - 12 },
       align: 'center',
-    })
+    }))
     nameText.setOrigin(0.5, 0)
     container.add(nameText)
 
@@ -140,26 +168,26 @@ export function createCardObject(
       costRing
 
     // Cost label + value (cost is the Progress needed to clear the Hazard)
-    const costText = scene.add.text(0, -CARD_H / 2 + 40, String(worldCard.cost), {
+    const costText = scene.add.text(0, -CARD_H / 2 + 40, String(worldCard.cost), textStyle({
       fontSize: '30px',
       color: TEXT.textCost,
       fontStyle: 'bold',
-    })
+    }))
     costText.setOrigin(0.5, 0)
     container.add(costText)
-    const costLabel = scene.add.text(0, -CARD_H / 2 + 74, 'to clear', {
+    const costLabel = scene.add.text(0, -CARD_H / 2 + 74, 'to clear', textStyle({
       fontSize: '8px',
       color: TEXT.textMuted,
-    })
+    }))
     costLabel.setOrigin(0.5, 0)
     container.add(costLabel)
 
     // Keywords
     if (worldCard.keywords.length > 0) {
-      const kwText = scene.add.text(0, -CARD_H / 2 + 88, worldCard.keywords.join(' · '), {
+      const kwText = scene.add.text(0, -CARD_H / 2 + 88, worldCard.keywords.join(' · '), textStyle({
         fontSize: '9px',
         color: TEXT.textKeyword,
-      })
+      }))
       kwText.setOrigin(0.5, 0)
       container.add(kwText)
     }
@@ -167,12 +195,12 @@ export function createCardObject(
     // onEndOfTurn (fires each turn while held), onDiscarded, onCleared — as full sentences
     if (worldCard.onEndOfTurn.kind !== 'None') {
       const heldLines = describeEffect(worldCard.onEndOfTurn).map((l) => `Each turn: ${l}`).join('\n')
-      const heldText = scene.add.text(0, CARD_H / 2 - 78, heldLines, {
+      const heldText = scene.add.text(0, CARD_H / 2 - 78, heldLines, textStyle({
         fontSize: '9px',
         color: TEXT.textHeld,
         wordWrap: { width: CARD_W - 16 },
         align: 'center',
-      })
+      }))
       heldText.setOrigin(0.5, 1)
       container.add(heldText)
     }
@@ -181,12 +209,12 @@ export function createCardObject(
       const penaltyText = describeEffect(worldCard.onDiscarded)
         .map((l) => `If discarded: ${l}`)
         .join('\n')
-      const penText = scene.add.text(0, CARD_H / 2 - 52, penaltyText, {
+      const penText = scene.add.text(0, CARD_H / 2 - 52, penaltyText, textStyle({
         fontSize: '9px',
         color: TEXT.textPenalty,
         wordWrap: { width: CARD_W - 16 },
         align: 'center',
-      })
+      }))
       penText.setOrigin(0.5, 1)
       container.add(penText)
     }
@@ -196,12 +224,12 @@ export function createCardObject(
         .map((l) => `Clear it: ${l}`)
         .join('\n')
       if (rewardText !== '') {
-        const rewText = scene.add.text(0, CARD_H / 2 - 26, rewardText, {
+        const rewText = scene.add.text(0, CARD_H / 2 - 26, rewardText, textStyle({
           fontSize: '9px',
           color: TEXT.textReward,
           wordWrap: { width: CARD_W - 16 },
           align: 'center',
-        })
+        }))
         rewText.setOrigin(0.5, 1)
         container.add(rewText)
       }
@@ -209,11 +237,11 @@ export function createCardObject(
 
     // Discard indicator
     if (worldCard.discardable) {
-      const discText = scene.add.text(0, CARD_H / 2 - 10, 'click to discard', {
+      const discText = scene.add.text(0, CARD_H / 2 - 10, 'click to discard', textStyle({
         fontSize: '8px',
         color: '#ffaa44',
         fontStyle: 'bold',
-      })
+      }))
       discText.setOrigin(0.5, 1)
       container.add(discText)
     }
@@ -238,8 +266,8 @@ export interface HUDRefs {
 
 /** Create HUD text objects at the top of the screen. */
 export function createHUD(scene: Phaser.Scene): HUDRefs {
-  const style = { fontSize: '14px', color: TEXT.textLight, backgroundColor: 'rgba(0,0,0,0.5)', padding: { x: 4, y: 2 } }
-  const mutedStyle = { fontSize: '12px', color: TEXT.textMuted, backgroundColor: 'rgba(0,0,0,0.5)', padding: { x: 4, y: 2 }  }
+  const style = textStyle({ fontSize: '14px', color: TEXT.textLight, backgroundColor: 'rgba(0,0,0,0.5)', padding: { x: 4, y: 2 } })
+  const mutedStyle = textStyle({ fontSize: '12px', color: TEXT.textMuted, backgroundColor: 'rgba(0,0,0,0.5)', padding: { x: 4, y: 2 } })
 
   const hpText = scene.add.text(12, 10, 'HP: —', { ...style, color: '#ff8888' })
   const actText = scene.add.text(120, 10, 'Act 1', style)
@@ -271,18 +299,18 @@ export function createWinScreen(scene: Phaser.Scene): Phaser.GameObjects.Contain
   const bg = scene.add.rectangle(0, 0, 900, 600, 0x000000, 0.8)
   container.add(bg)
 
-  const text = scene.add.text(0, -30, 'YOU WIN', {
+  const text = scene.add.text(0, -30, 'YOU WIN', textStyle({
     fontSize: '72px',
     color: '#88ee88',
     fontStyle: 'bold',
-  })
+  }))
   text.setOrigin(0.5, 0.5)
   container.add(text)
 
-  const sub = scene.add.text(0, 50, 'The world survived.', {
+  const sub = scene.add.text(0, 50, 'The world survived.', textStyle({
     fontSize: '20px',
     color: '#9aa3b2',
-  })
+  }))
   sub.setOrigin(0.5, 0.5)
   container.add(sub)
 
@@ -298,18 +326,18 @@ export function createLossScreen(scene: Phaser.Scene): Phaser.GameObjects.Contai
   const bg = scene.add.rectangle(0, 0, 900, 600, 0x000000, 0.8)
   container.add(bg)
 
-  const text = scene.add.text(0, -30, 'YOU LOSE', {
+  const text = scene.add.text(0, -30, 'YOU LOSE', textStyle({
     fontSize: '72px',
     color: '#ff8888',
     fontStyle: 'bold',
-  })
+  }))
   text.setOrigin(0.5, 0.5)
   container.add(text)
 
-  const sub = scene.add.text(0, 50, 'The world was lost.', {
+  const sub = scene.add.text(0, 50, 'The world was lost.', textStyle({
     fontSize: '20px',
     color: '#9aa3b2',
-  })
+  }))
   sub.setOrigin(0.5, 0.5)
   container.add(sub)
 
@@ -326,13 +354,13 @@ export function createEndTurnButton(
   x: number,
   y: number,
 ): Phaser.GameObjects.Text {
-  const btn = scene.add.text(x, y, '[ End Turn ]', {
+  const btn = scene.add.text(x, y, '[ End Turn ]', textStyle({
     fontSize: '16px',
     color: '#88aaff',
     fontStyle: 'bold',
     backgroundColor: 'rgba(0,0,0,0.5)',
     padding: { x: 6, y: 4 },
-  })
+  }))
   btn.setOrigin(0.5, 0.5)
   btn.setInteractive({ useHandCursor: true })
   return btn
@@ -340,12 +368,12 @@ export function createEndTurnButton(
 
 /** Create a Cancel button (shown during active selections). */
 export function createCancelButton(scene: Phaser.Scene): Phaser.GameObjects.Text {
-  const btn = scene.add.text(820, 560, '[ Cancel ]', {
+  const btn = scene.add.text(820, 560, '[ Cancel ]', textStyle({
     fontSize: '13px',
     color: '#ff8888',
     backgroundColor: 'rgba(0,0,0,0.5)',
     padding: { x: 6, y: 4 },
-  })
+  }))
   btn.setOrigin(1, 1)
   btn.setInteractive({ useHandCursor: true })
   btn.setVisible(false)
@@ -354,13 +382,13 @@ export function createCancelButton(scene: Phaser.Scene): Phaser.GameObjects.Text
 
 /** Create a Confirm button (shown during multi-select phases). */
 export function createConfirmButton(scene: Phaser.Scene): Phaser.GameObjects.Text {
-  const btn = scene.add.text(820, 540, '[ Confirm ]', {
+  const btn = scene.add.text(820, 540, '[ Confirm ]', textStyle({
     fontSize: '13px',
     color: '#88ee88',
     fontStyle: 'bold',
     backgroundColor: 'rgba(0,0,0,0.5)',
     padding: { x: 6, y: 4 },
-  })
+  }))
   btn.setOrigin(1, 1)
   btn.setInteractive({ useHandCursor: true })
   btn.setVisible(false)

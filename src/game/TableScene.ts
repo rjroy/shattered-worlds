@@ -42,6 +42,7 @@ import {
   updateCostRing,
   emphasizeCard,
   clearEmphasis,
+  textStyle,
 } from './render'
 import { ringFraction, connectorLine, selectConnectorStyle } from './feedback'
 import type { ConnectorStyle, Point } from './feedback'
@@ -201,12 +202,12 @@ export class TableScene extends Phaser.Scene {
     this.winScreen = createWinScreen(this)
     this.lossScreen = createLossScreen(this)
 
-    this.selectionHint = this.add.text(450, 568, '', {
+    this.selectionHint = this.add.text(450, 568, '', textStyle({
       fontSize: '12px',
       color: '#9aa3b2',
       backgroundColor: 'rgba(0,0,0,0.75)',
       padding: { x: 6, y: 2 },
-    })
+    }))
     this.selectionHint.setOrigin(0.5, 1)
 
     // Sits in a dedicated slot directly above selectionHint. selectionHint has
@@ -214,12 +215,12 @@ export class TableScene extends Phaser.Scene {
     // tops out around y=552; anchoring previewSlot's bottom edge at y=550 keeps
     // the two surfaces from ever overlapping. Degrades fine on touch (no hover
     // means this slot simply stays empty).
-    this.previewSlot = this.add.text(450, 550, '', {
+    this.previewSlot = this.add.text(450, 550, '', textStyle({
       fontSize: '12px',
       color: '#9aa3b2',
       backgroundColor: 'rgba(0,0,0,0.75)',
       padding: { x: 6, y: 2 },
-    })
+    }))
     this.previewSlot.setOrigin(0.5, 1)
 
     // Persistent connector graphic. setDepth controls draw order only; we never
@@ -713,11 +714,11 @@ export class TableScene extends Phaser.Scene {
     bg.setStrokeStyle(1, 0x2a2f3d)
     container.add(bg)
 
-    const title = this.add.text(0, -80, 'Choose an effect:', {
+    const title = this.add.text(0, -80, 'Choose an effect:', textStyle({
       fontSize: '16px',
       color: '#e8eaf0',
       fontStyle: 'bold',
-    })
+    }))
     title.setOrigin(0.5, 0.5)
     container.add(title)
 
@@ -732,11 +733,11 @@ export class TableScene extends Phaser.Scene {
       const isLegal = branchIsLegal(branchSpec, idx, available, cardId)
 
       const btnY = -30 + idx * 60
-      const btn = this.add.text(0, btnY, label, {
+      const btn = this.add.text(0, btnY, label, textStyle({
         fontSize: '14px',
         color: isLegal ? '#88aaff' : '#555577',
         fontStyle: 'bold',
-      })
+      }))
       btn.setOrigin(0.5, 0.5)
 
       if (isLegal) {
@@ -763,10 +764,10 @@ export class TableScene extends Phaser.Scene {
     })
 
     // Cancel modal button
-    const cancelBtn = this.add.text(0, 80, '[ Cancel ]', {
+    const cancelBtn = this.add.text(0, 80, '[ Cancel ]', textStyle({
       fontSize: '13px',
       color: '#ff8888',
-    })
+    }))
     cancelBtn.setOrigin(0.5, 0.5)
     cancelBtn.setInteractive({ useHandCursor: true })
     cancelBtn.on('pointerdown', () => {

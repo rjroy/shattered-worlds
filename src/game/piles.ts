@@ -9,6 +9,7 @@
  * every drawAll().
  */
 import Phaser from 'phaser'
+import { textStyle } from './render'
 
 const PILE_CARD_W = 50
 const PILE_CARD_H = 64
@@ -57,12 +58,12 @@ export class PileLayer {
       container.addAt(img, 0) // add at bottom so first card is on top visually
     }
     // Show count text below the stack
-    const label = scene.add.text(0, 4, String(count), {
+    const label = scene.add.text(0, 4, String(count), textStyle({
       fontSize: '10px',
       backgroundColor: 'rgba(0,0,0,0.5)',
       padding: { x: 4, y: 2 },
       color: '#9aa3b2',
-    })
+    }))
     label.setOrigin(0.5, 0)
     container.add(label)
   }
