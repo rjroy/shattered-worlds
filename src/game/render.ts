@@ -11,6 +11,73 @@ import type { FrameStyle, VisualTheme } from './theme'
 import { describeEffect } from './describe'
 
 // ---------------------------------------------------------------------------
+// Reusable UI components
+// ---------------------------------------------------------------------------
+export class CommonLabel extends Phaser.GameObjects.Container {
+
+  protected txtBg: Phaser.GameObjects.NineSlice
+  protected label: Phaser.GameObjects.Text
+
+  constructor(scene: Phaser.Scene, x: number, y: number, text: string, textStyle: Phaser.Types.GameObjects.Text.TextStyle) {
+    super(scene, x, y)
+
+        this.txtBg = scene.add
+      .nineslice(
+        0, 0,
+        'text-back',
+        undefined,
+        30, 20,
+        4, 4, 2, 2,
+      )
+      .setOrigin(0.5, 0.5)
+      .setTint(0x888888)
+    this.add(this.txtBg)
+
+    this.label = scene.add.text(0, 0, text, textStyle)
+    this.label.setOrigin(0.5, 0.5)
+    this.txtBg.setSize(this.label.width + 20, this.label.height + 10)
+
+    this.add(this.label)
+    this.setPosition(x, y)
+    scene.add.existing(this)
+  }
+
+  setText(text: string): void {
+    this.label.setText(text)
+    this.txtBg.setSize(this.label.width + 20, this.label.height + 10)
+  }
+}
+
+export class CommonButton extends CommonLabel {
+
+  constructor(scene: Phaser.Scene, x: number, y: number, text: string, textStyle: Phaser.Types.GameObjects.Text.TextStyle) {
+    super(scene, x, y, text, textStyle)
+    this.txtBg.setInteractive({ useHandCursor: true })
+  }
+
+  on(event: string, callback: () => void): this {
+    // super.on(event, callback)
+    if (this.txtBg !== undefined) {
+      this.txtBg.on(event, callback)
+    }
+    return this
+  }
+
+  disableInteractive(): this {
+    if (this.txtBg !== undefined) {
+      this.txtBg.disableInteractive()
+    }
+    return this
+  }
+
+  setInteractive(config?: Phaser.Types.Input.InputConfiguration): this {
+    if (this.txtBg !== undefined) {
+      this.txtBg.setInteractive(config)
+    }
+    return this
+  }
+}
+// ---------------------------------------------------------------------------
 // Pure helpers
 // ---------------------------------------------------------------------------
 
@@ -360,7 +427,7 @@ export function createWinScreen(scene: Phaser.Scene): Phaser.GameObjects.Contain
   text.setOrigin(0.5, 0.5)
   container.add(text)
 
-  const sub = scene.add.text(0, 50, 'The world survived.', textStyle({
+  const sub = scene.add.text(0, 50, 'You survived.', textStyle({
     fontSize: '20px',
     color: '#9aa3b2',
   }))
@@ -387,7 +454,7 @@ export function createLossScreen(scene: Phaser.Scene): Phaser.GameObjects.Contai
   text.setOrigin(0.5, 0.5)
   container.add(text)
 
-  const sub = scene.add.text(0, 50, 'The world was lost.', textStyle({
+  const sub = scene.add.text(0, 50, 'You did not survive meeting the Walker.', textStyle({
     fontSize: '20px',
     color: '#9aa3b2',
   }))
@@ -400,50 +467,37 @@ export function createLossScreen(scene: Phaser.Scene): Phaser.GameObjects.Contai
 // ---------------------------------------------------------------------------
 // Interactive buttons
 // ---------------------------------------------------------------------------
-
 /** Create the End Turn button. */
 export function createEndTurnButton(
   scene: Phaser.Scene,
   x: number,
   y: number,
-): Phaser.GameObjects.Text {
-  const btn = scene.add.text(x, y, '[ End Turn ]', textStyle({
+): CommonButton {
+  const btn = new CommonButton(scene, x, y, '[ End Turn ]', textStyle({
     fontSize: '16px',
     color: '#88aaff',
     fontStyle: 'bold',
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    padding: { x: 6, y: 4 },
   }))
-  btn.setOrigin(0.5, 0.5)
-  btn.setInteractive({ useHandCursor: true })
   return btn
 }
 
 /** Create a Cancel button (shown during active selections). */
-export function createCancelButton(scene: Phaser.Scene): Phaser.GameObjects.Text {
-  const btn = scene.add.text(820, 560, '[ Cancel ]', textStyle({
+export function createCancelButton(scene: Phaser.Scene, x: number, y: number): CommonButton {
+  const btn = new CommonButton(scene, x, y, '[ Cancel ]', textStyle({
     fontSize: '13px',
     color: '#ff8888',
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    padding: { x: 6, y: 4 },
   }))
-  btn.setOrigin(1, 1)
-  btn.setInteractive({ useHandCursor: true })
   btn.setVisible(false)
   return btn
 }
 
 /** Create a Confirm button (shown during multi-select phases). */
-export function createConfirmButton(scene: Phaser.Scene): Phaser.GameObjects.Text {
-  const btn = scene.add.text(820, 540, '[ Confirm ]', textStyle({
+export function createConfirmButton(scene: Phaser.Scene, x: number, y: number): CommonButton {
+  const btn = new CommonButton(scene, x, y, '[ Confirm ]', textStyle({
     fontSize: '13px',
     color: '#88ee88',
     fontStyle: 'bold',
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    padding: { x: 6, y: 4 },
   }))
-  btn.setOrigin(1, 1)
-  btn.setInteractive({ useHandCursor: true })
   btn.setVisible(false)
   return btn
 }
@@ -729,37 +783,3 @@ export function positionCard(container: Phaser.GameObjects.Container, x: number,
   container.setPosition(x, y)
 }
 
-export class CommonLabel extends Phaser.GameObjects.Container {
-
-  private txtBg: Phaser.GameObjects.NineSlice
-  private label: Phaser.GameObjects.Text
-
-  constructor(scene: Phaser.Scene, x: number, y: number, text: string, textStyle: Phaser.Types.GameObjects.Text.TextStyle) {
-    super(scene, x, y)
-
-        this.txtBg = scene.add
-      .nineslice(
-        0, 0,
-        'text-back',
-        undefined,
-        30, 20,
-        4, 4, 2, 2,
-      )
-      .setOrigin(0.5, 0.5)
-      .setTint(0x888888)
-    this.add(this.txtBg)
-
-    this.label = scene.add.text(0, 0, text, textStyle)
-    this.label.setOrigin(0.5, 0.5)
-    this.txtBg.setSize(this.label.width + 20, this.label.height + 10)
-
-    this.add(this.label)
-    this.setPosition(x, y)
-    scene.add.existing(this)
-  }
-
-  setText(text: string): void {
-    this.label.setText(text)
-    this.txtBg.setSize(this.label.width + 20, this.label.height + 10)
-  }
-}

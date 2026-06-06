@@ -46,7 +46,7 @@ import {
 } from './render'
 import { ringFraction, connectorLine, selectConnectorStyle } from './feedback'
 import type { ConnectorStyle, Point } from './feedback'
-import type { HUDRefs } from './render'
+import type { CommonButton, HUDRefs } from './render'
 import { CommonLabel } from './render'
 import { describeEffect, previewPlay } from './describe'
 import { PileLayer } from './piles'
@@ -95,9 +95,9 @@ export class TableScene extends Phaser.Scene {
 
   // Persistent HUD objects (created once, updated on drawAll)
   private hudRefs!: HUDRefs
-  private endTurnBtn!: Phaser.GameObjects.Text
-  private cancelBtn!: Phaser.GameObjects.Text
-  private confirmBtn!: Phaser.GameObjects.Text
+  private endTurnBtn!: CommonButton
+  private cancelBtn!: CommonButton
+  private confirmBtn!: CommonButton
   private winScreen!: Phaser.GameObjects.Container
   private lossScreen!: Phaser.GameObjects.Container
 
@@ -192,7 +192,7 @@ export class TableScene extends Phaser.Scene {
     this.endTurnBtn = createEndTurnButton(this, 820, 560)
     this.endTurnBtn.on('pointerdown', () => this.onEndTurnClick())
 
-    this.cancelBtn = createCancelButton(this)
+    this.cancelBtn = createCancelButton(this, 770, 570)
     this.cancelBtn.on('pointerdown', () => {
       this.sel = cancel()
       this.dismissModal()
@@ -200,7 +200,7 @@ export class TableScene extends Phaser.Scene {
       this.drawAll()
     })
 
-    this.confirmBtn = createConfirmButton(this)
+    this.confirmBtn = createConfirmButton(this, 770, 550)
     this.confirmBtn.on('pointerdown', () => this.onConfirmClick())
 
     this.winScreen = createWinScreen(this)
