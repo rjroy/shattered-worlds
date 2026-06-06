@@ -2,7 +2,7 @@ import { describe, expect, it } from 'bun:test'
 import { createRng } from '../../core/engine/rng'
 import type { CardEffect, GameState, PlayerCard, WorldCard } from '../../core/index'
 import { previewPlay } from '../interaction/describe'
-import { ringFraction, selectConnectorStyle, connectorLine } from '../interaction/feedback'
+import { ringFraction, selectConnectorStyle, connectorLine, effectAtStep } from '../interaction/feedback'
 
 // ---------------------------------------------------------------------------
 // Helpers — mirror describe.test.ts so fixtures stay consistent.
@@ -27,7 +27,7 @@ function makeState(progress: Record<string, number> = {}): GameState {
 }
 
 function player(effect: CardEffect): PlayerCard {
-  return { kind: 'player', id: 'p1', name: 'Test', sourceWorldId: 'test', effect }
+  return { kind: 'player', id: 'p1', name: 'Test', insetKey: undefined, sourceWorldId: 'test', effect }
 }
 
 function hazard(over: Partial<WorldCard>): WorldCard {
@@ -35,6 +35,7 @@ function hazard(over: Partial<WorldCard>): WorldCard {
     kind: 'world',
     id: 'w1',
     name: 'Zombie',
+    insetKey: undefined,
     cost: 1,
     keywords: [],
     discardable: true,
@@ -223,5 +224,34 @@ describe('connectorLine', () => {
     const line = connectorLine({ x: 50, y: 50 }, { x: 50, y: 50 })
     expect(line.from).toEqual({ x: 50, y: 50 })
     expect(line.to).toEqual({ x: 50, y: 50 })
+  })
+})
+
+// ---------------------------------------------------------------------------
+// effectAtStep — resolve the per-step effect through Sequence / Modal
+// ---------------------------------------------------------------------------
+
+describe('effectAtStep', () => {
+  const deal: CardEffect = { kind: 'DealProgress', base: 1 }
+  const ret: CardEffect = { kind: 'ReturnWorldCards', min: 1, max: 2 }
+
+  it('returns a single effect regardless of step', () => {
+    expect(effectAtStep(deal, 0)).toEqual(deal)
+    expect(effectAtStep(deal, 5)).toEqual(deal)
+  })
+
+  it('indexes Sequence steps and Modal branches by step', () => {
+    const seq: CardEffect = { kind: 'Sequence', steps: [deal, ret] }
+    expect(effectAtStep(seq, 0)).toEqual(deal)
+    expect(effectAtStep(seq, 1)).toEqual(ret)
+
+    const modal: CardEffect = { kind: 'Modal', branches: [deal, ret] }
+    expect(effectAtStep(modal, 0)).toEqual(deal)
+    expect(effectAtStep(modal, 1)).toEqual(ret)
+  })
+
+  it('returns null for an out-of-range step/branch', () => {
+    expect(effectAtStep({ kind: 'Sequence', steps: [deal] }, 3)).toBeNull()
+    expect(effectAtStep({ kind: 'Modal', branches: [deal] }, 3)).toBeNull()
   })
 })

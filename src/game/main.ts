@@ -1,11 +1,12 @@
 import Phaser from 'phaser'
 import { BootScene } from './scenes/BootScene'
 import { TableScene } from './scenes/TableScene'
+import { CANVAS_W, CANVAS_H } from './view/presentation'
 
 const game = new Phaser.Game({
   type: Phaser.AUTO,
-  width: 900,
-  height: 600,
+  width: CANVAS_W,
+  height: CANVAS_H,
   backgroundColor: '#171920',
   scale: {
     mode: Phaser.Scale.FIT,

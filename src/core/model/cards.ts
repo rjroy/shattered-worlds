@@ -13,15 +13,18 @@ import { UnknownTemplateError } from './errors'
 // Static template shapes
 // ---------------------------------------------------------------------------
 
-export interface PlayerCardTemplate {
-  kind: 'player'
+export interface BasicCardTemplate {
   name: string
+  insetKey?: string
+}
+
+export interface PlayerCardTemplate extends BasicCardTemplate {
+  kind: 'player'
   effect: CardEffect
 }
 
-export interface WorldCardTemplate {
+export interface WorldCardTemplate extends BasicCardTemplate {
   kind: 'world'
-  name: string
   cost: number
   keywords: readonly Keyword[]
   discardable: boolean
@@ -57,6 +60,7 @@ export function mintCard(
       kind: 'player',
       id,
       name: template.name,
+      insetKey: template.insetKey,
       sourceWorldId: state.worldId,
       effect: template.effect,
     }
@@ -67,6 +71,7 @@ export function mintCard(
     kind: 'world',
     id,
     name: template.name,
+    insetKey: template.insetKey,
     cost: template.cost,
     keywords: template.keywords,
     discardable: template.discardable,

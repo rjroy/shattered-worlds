@@ -10,42 +10,49 @@
  */
 import Phaser from 'phaser'
 import { assetManifest } from '../data/assetManifest'
-import { selectTheme, getRealityPalellete } from '../view/theme'
+import { selectTheme, getRealityPalette } from '../view/theme'
 import type { VisualTheme } from '../view/theme'
-import { createGame, availableActions, assembleCatalog } from '../../core/index'
-import type { GameCore, Card, Action, TargetSpec, WorldData, CardEffect } from '../../core/index'
-import { CatalogError } from '../../core/model/errors'
-import type { RawCardSource } from '../../core/model/catalog'
+import { createGame, availableActions, assembleCatalog, CatalogError } from '../../core/index'
+import type {
+  GameCore,
+  Card,
+  Action,
+  TargetSpec,
+  WorldData,
+  RawCardSource,
+} from '../../core/index'
 import {
   IDLE,
   cancel,
-  selectCard,
   chooseModal,
   addTarget,
   removeTarget,
   buildAction,
   isComplete,
+  activeStep,
+  hintForSelection,
 } from '../interaction/selection'
 import type { SelectionState } from '../interaction/selection'
+import { classifyHighlight } from '../interaction/highlight'
 import {
   createCardObject,
-  createHUD,
-  updateHUD,
-  createWinScreen,
-  createLossScreen,
   applyCardHighlight,
   dimCard,
   positionCard,
   updateCostRing,
   emphasizeCard,
   clearEmphasis,
-} from '../view/render'
+} from '../view/cardObjects'
+import { createHUD, updateHUD } from '../view/hud'
+import type { HUDRefs } from '../view/hud'
+import { createWinScreen, createLossScreen } from '../view/overlays'
 import { textStyle } from '../view/presentation'
-import { ringFraction, connectorLine, selectConnectorStyle } from '../interaction/feedback'
-import type { ConnectorStyle, Point } from '../interaction/feedback'
-import type { HUDRefs } from '../view/render'
+import { ringFraction, connectorLine, selectConnectorStyle, effectAtStep } from '../interaction/feedback'
+import type { ConnectorStyle } from '../interaction/feedback'
+import { drawConnector } from '../view/connector'
+import { createModalChooser, modalBranchViews } from '../view/modal'
 import { CommonLabel, CommonButton } from '../view/components'
-import { describeEffect, previewPlay } from '../interaction/describe'
+import { previewPlay } from '../interaction/describe'
 import { PileLayer } from '../view/piles'
 import { BackdropLayer } from '../view/backdrop'
 
@@ -144,6 +151,12 @@ export class TableScene extends Phaser.Scene {
       'door',
       'door-glow',
       'text-back',
+      'inset-sprint',
+      'inset-explore',
+      'inset-barricade',
+      'inset-medkit',
+      'inset-panic',
+      'inset-adrenaline',
       theme.backdrop.realityKey,
       theme.backdrop.intrusionKey,
       ...(theme.worldCardfrontKey ? [theme.worldCardfrontKey] : []),
@@ -188,7 +201,7 @@ export class TableScene extends Phaser.Scene {
     this.hudRefs = createHUD(this)
     this.endTurnBtn = new CommonButton(this, 820, 560, '[ End Turn ]', textStyle({
       fontSize: '16px',
-      color: getRealityPalellete(this.theme_, 'text', '#88aaff'),
+      color: getRealityPalette(this.theme_, 'text', '#88aaff'),
       fontStyle: 'bold',
     }))
   
@@ -196,7 +209,7 @@ export class TableScene extends Phaser.Scene {
 
     this.cancelBtn = new CommonButton(this, 740, 570, '[ Cancel ]', textStyle({
       fontSize: '13px',
-      color: getRealityPalellete(this.theme_, 'cancel', '#ff8888'),
+      color: getRealityPalette(this.theme_, 'cancel', '#ff8888'),
     }))
     this.cancelBtn.setVisible(false)
 
@@ -210,7 +223,7 @@ export class TableScene extends Phaser.Scene {
     this.confirmBtn = new CommonButton(this, 740, 540, '[ Confirm ]', textStyle({
       fontSize: '13px',
       fontStyle: 'bold',
-      color: getRealityPalellete(this.theme_, 'confirm', '#88ee88'),
+      color: getRealityPalette(this.theme_, 'confirm', '#88ee88'),
     }))
     this.confirmBtn.setVisible(false)
     this.confirmBtn.on('pointerdown', () => this.onConfirmClick())
@@ -220,7 +233,7 @@ export class TableScene extends Phaser.Scene {
 
     this.selectionHint = new CommonLabel(this, 450, 578, '', textStyle({
         fontSize: '12px',
-        color: getRealityPalellete(this.theme_, 'text', '#9aa3b2'),  
+        color: getRealityPalette(this.theme_, 'text', '#9aa3b2'),  
     }))
     this.selectionHint.setVisible(false)
 
@@ -232,7 +245,7 @@ export class TableScene extends Phaser.Scene {
     // means this slot simply stays empty).
     this.previewSlot = new CommonLabel(this, 450, 550, '', textStyle({
       fontSize: '12px',
-      color: getRealityPalellete(this.theme_, 'title', '#9aa3b2'),  
+      color: getRealityPalette(this.theme_, 'title', '#9aa3b2'),  
     }))
     this.previewSlot.setVisible(false)
 
@@ -468,71 +481,15 @@ export class TableScene extends Phaser.Scene {
     discardableIds: Set<string>,
     legalTargetIds: Set<string>,
   ): void {
-    const id = card.id
-    const sel = this.sel
-
-    const fs = this.theme_.frameStyle
-
-    // Selected card (all non-idle variants have cardId)
-    if ('cardId' in sel && sel.cardId === id) {
-      applyCardHighlight(container, 'selected', fs)
-      dimCard(container, false)
-      return
-    }
-
-    // Legal target during a targeting phase
-    if (legalTargetIds.has(id)) {
-      applyCardHighlight(container, 'target', fs)
-      dimCard(container, false)
-      return
-    }
-
-    // Discardable world card (not during a selection)
-    if (discardableIds.has(id) && sel.phase === 'idle') {
-      applyCardHighlight(container, 'discard', fs)
-      dimCard(container, false)
-      return
-    }
-
-    // Playable player card (in idle state)
-    if (card.kind === 'player' && playableIds.has(id) && sel.phase === 'idle') {
-      applyCardHighlight(container, 'none', fs)
-      dimCard(container, false)
-      return
-    }
-
-    // During awaiting-return, mark already-selected return targets
-    if (sel.phase === 'awaiting-return' && sel.selected.includes(id)) {
-      applyCardHighlight(container, 'selected', fs)
-      dimCard(container, false)
-      return
-    }
-
-    // During awaiting-return, keep the hazard the EARLIER step locked onto lit
-    // with a muted "committed" mark (S10/REQ-FEEDBACK-6). It is no longer a live
-    // legal target in the return phase, so without this it would fall through to
-    // dimmed/neutral and go dark. Placed AFTER the legal-target and selected-list
-    // checks so an actively selectable card always wins precedence; the committed
-    // hazard id is never one of those, so the marked card stays distinct. Not
-    // dimmed — the muted mark itself carries "settled, not active".
-    if (sel.phase === 'awaiting-return' && sel.targetId === id) {
-      applyCardHighlight(container, 'committed', fs)
-      dimCard(container, false)
-      return
-    }
-
-    // Everything else is dimmed when a selection is active, or when unplayable
-    const selActive = sel.phase !== 'idle'
-    if (selActive) {
-      applyCardHighlight(container, 'none', fs)
-      dimCard(container, true)
-    } else if (card.kind === 'player' && !playableIds.has(id)) {
-      applyCardHighlight(container, 'none', fs)
-      dimCard(container, true)
-    } else {
-      applyCardHighlight(container, 'none', fs)
-      dimCard(container, false)
-    }
+    const { kind, dim } = classifyHighlight(
+      this.sel,
+      card,
+      playableIds,
+      discardableIds,
+      legalTargetIds,
+    )
+    applyCardHighlight(container, kind, this.theme_.frameStyle)
+    dimCard(container, dim)
   }
 
   // ---------------------------------------------------------------------------
@@ -567,11 +524,7 @@ export class TableScene extends Phaser.Scene {
       this.sel.phase === 'awaiting-discard' ||
       this.sel.phase === 'awaiting-destroy'
     ) {
-      const step =
-        this.sel.phase === 'awaiting-hazard' && this.sel.modalChoice !== undefined
-          ? this.sel.modalChoice
-          : 0
-      const legalTargets = available.legalTargets(this.sel.cardId, step)
+      const legalTargets = available.legalTargets(this.sel.cardId, activeStep(this.sel))
       if (!legalTargets.includes(cardId)) return
 
       const newSel = addTarget(this.sel, cardId)
@@ -611,8 +564,7 @@ export class TableScene extends Phaser.Scene {
 
     // ---- Awaiting return multi-select ----
     if (this.sel.phase === 'awaiting-return') {
-      const step = this.sel.targetId !== undefined ? 1 : 0
-      const legalTargets = available.legalTargets(this.sel.cardId, step)
+      const legalTargets = available.legalTargets(this.sel.cardId, activeStep(this.sel))
       if (!legalTargets.includes(cardId)) return
 
       if (this.sel.selected.includes(cardId)) {
@@ -635,7 +587,6 @@ export class TableScene extends Phaser.Scene {
         return
       }
       case 'hazard': {
-        this.sel = selectCard(IDLE, cardId)
         // Transition directly to awaiting-hazard
         this.sel = { phase: 'awaiting-hazard', cardId }
         this.drawAll()
@@ -702,7 +653,7 @@ export class TableScene extends Phaser.Scene {
   private onConfirmClick(): void {
     const spec = this.currentSpec()
     if (spec === null) return
-    if (!isComplete(this.sel, spec)) return
+    if (!isComplete(this.sel)) return
     const action = buildAction(this.sel)
     if (action !== null) {
       this.dispatch(action)
@@ -720,82 +671,47 @@ export class TableScene extends Phaser.Scene {
     this.dismissModal()
 
     const available = availableActions(this.game_.state)
-    const container = this.add.container(450, 300)
-    this.modalContainer = container
-
-    // Backdrop
-    const bg = this.add.nineslice(
-      0, 0, 'text-back', undefined, 480, 240, 32, 32, 16, 16
-    ).setTint(0x666666)
-    container.add(bg)
-
-    const title = this.add.text(0, -80, 'Choose an effect:', textStyle({
-      fontSize: '16px',
-      color: getRealityPalellete(this.theme_, 'title', '#9aa3b2'),  
-      fontStyle: 'bold',
-    }))
-    title.setOrigin(0.5, 0.5)
-    container.add(title)
-
-    // Label each branch from the card's actual Modal effect, so the chooser
-    // can never drift from what the card does.
+    // Label each branch from the card's actual Modal effect, so the chooser can
+    // never drift from what the card does.
     const card = this.game_.state.hand.find((c) => c.id === cardId)
     const effectBranches =
       card?.kind === 'player' && card.effect.kind === 'Modal' ? card.effect.branches : []
+    const branches = modalBranchViews(spec.branches, effectBranches, available, cardId)
 
-    spec.branches.forEach((branchSpec, idx) => {
-      const label = branchLabel(effectBranches[idx], idx)
-      const isLegal = branchIsLegal(branchSpec, idx, available, cardId)
+    this.modalContainer = createModalChooser(
+      this,
+      this.theme_,
+      branches,
+      (idx) => this.onModalChoose(cardId, spec, idx),
+      () => {
+        this.sel = cancel()
+        this.dismissModal()
+        this.clearConnector()
+        this.drawAll()
+      },
+    )
+  }
 
-      const btnY = -30 + idx * 60
-      const btn = this.add.text(0, btnY, label, textStyle({
-        fontSize: '14px',
-        color: isLegal ? 
-          getRealityPalellete(this.theme_, 'text', '#88aaff') :
-          getRealityPalellete(this.theme_, 'disabled', '#555577'),
-        fontStyle: 'bold',
-      }))
-      btn.setOrigin(0.5, 0.5)
+  /** Apply a chosen modal branch: advance selection, or commit if it's a 'none' branch. */
+  private onModalChoose(
+    cardId: string,
+    spec: Extract<TargetSpec, { kind: 'modal' }>,
+    idx: number,
+  ): void {
+    this.dismissModal()
+    const newSel = chooseModal(this.sel, idx, spec)
+    this.sel = newSel
 
-      if (isLegal) {
-        btn.setInteractive({ useHandCursor: true })
-        btn.on('pointerdown', () => {
-          this.dismissModal()
-          const newSel = chooseModal(this.sel, idx, spec)
-          this.sel = newSel
-
-          // If the branch is 'none' after modal — build and dispatch immediately
-          if (newSel.phase === 'selected') {
-            const action = buildAction({ ...newSel, cardId })
-            if (action !== null) {
-              this.dispatch({ ...action, choice: idx } as Action)
-              return
-            }
-          }
-
-          this.drawAll()
-        })
+    // If the branch is 'none' after modal — build and dispatch immediately
+    if (newSel.phase === 'selected') {
+      const action = buildAction({ ...newSel, cardId })
+      if (action !== null) {
+        this.dispatch({ ...action, choice: idx } as Action)
+        return
       }
+    }
 
-      container.add(btn)
-    })
-
-    // Cancel modal button
-    const cancelBtn = this.add.text(0, 80, '[ Cancel ]', textStyle({
-      fontSize: '13px',
-      color: getRealityPalellete(this.theme_, 'cancel', '#ff8888'),
-    }))
-    cancelBtn.setOrigin(0.5, 0.5)
-    cancelBtn.setInteractive({ useHandCursor: true })
-    cancelBtn.on('pointerdown', () => {
-      this.sel = cancel()
-      this.dismissModal()
-      this.clearConnector()
-      this.drawAll()
-    })
-    container.add(cancelBtn)
-
-    this.children.bringToTop(container)
+    this.drawAll()
   }
 
   private dismissModal(): void {
@@ -841,13 +757,7 @@ export class TableScene extends Phaser.Scene {
     ) {
       return new Set<string>()
     }
-    const step =
-      this.sel.phase === 'awaiting-return' && 'targetId' in this.sel && this.sel.targetId !== undefined
-        ? 1
-        : this.sel.phase === 'awaiting-hazard' && this.sel.modalChoice !== undefined
-        ? this.sel.modalChoice
-        : 0
-    return new Set(available.legalTargets(this.sel.cardId, step))
+    return new Set(available.legalTargets(this.sel.cardId, activeStep(this.sel)))
   }
 
   /** Return the TargetSpec for the card currently being played, or null. */
@@ -915,7 +825,7 @@ export class TableScene extends Phaser.Scene {
    * style is resolved from the acting card's effect *for the current step* — a
    * compound card (Barricade) deals progress in step 0 and returns world cards
    * in step 1, so the connector must follow the active targeting phase, not the
-   * card as a whole. See stepEffect() for how the per-step CardEffect is found.
+   * card as a whole. See stepConnectorStyle() for the per-step style lookup.
    */
   private showConnector(targetId: string): void {
     const sel = this.sel
@@ -927,15 +837,7 @@ export class TableScene extends Phaser.Scene {
       return
     }
 
-    // Step index mirrors the click/highlight gating: awaiting-return advances to
-    // step 1 once its hazard target is chosen; awaiting-hazard with a modal
-    // choice keys off that branch; everything else is step 0.
-    const step =
-      sel.phase === 'awaiting-return' && sel.targetId !== undefined
-        ? 1
-        : sel.phase === 'awaiting-hazard' && sel.modalChoice !== undefined
-        ? sel.modalChoice
-        : 0
+    const step = activeStep(sel)
     const legal = availableActions(this.game_.state).legalTargets(sel.cardId, step)
     if (!legal.includes(targetId)) return
 
@@ -944,153 +846,31 @@ export class TableScene extends Phaser.Scene {
     if (source === undefined || target === undefined) return
 
     const { from, to } = connectorLine(source, target)
-    // Resolve the style from the acting card's effect for THIS step, then hand
-    // off to the matching draw routine. selectConnectorStyle is the single
-    // source of truth (S1, unit-tested); we only render its verdict here.
+    // Resolve the style from the acting card's effect for THIS step, then render.
+    // selectConnectorStyle is the single source of truth (S1, unit-tested).
     const style = this.stepConnectorStyle(sel.cardId, step)
     this.connectorGfx.clear()
-    this.drawConnector(style, from, to)
+    drawConnector(
+      this.connectorGfx,
+      style,
+      from,
+      to,
+      this.pileLayer.worldPileCenter(),
+      this.theme_.frameStyle,
+    )
   }
 
   /**
-   * The CardEffect the acting card runs at `step`, looking through a Sequence
-   * or Modal so the connector style tracks the active branch/step.
-   *
-   * The acting card is always a player card; its `effect` is either a single
-   * CardEffect (Explore→DealProgress, Regroup/Zombie-Big-Box→DestroyCardInHand)
-   * or a compound effect indexed by `step`:
-   *
-   *  - Sequence: `steps` line up 1:1 with the TargetSpec compound steps the
-   *    click/highlight gating already indexes by `step` (Barricade: step 0
-   *    DealProgress, step 1 ReturnWorldCards) — so we take `steps[step]`.
-   *  - Modal: `step` is the chosen branch index (`sel.modalChoice`), matching
-   *    how core's computeLegalTargets resolves a Modal via `effect.branches[step]`
-   *    and how onCardClick/showConnector pass the step — so we take
-   *    `branches[step]`. Without this the style would scan all branches and pick
-   *    the first match, ignoring the player's modal choice.
-   *
-   * Otherwise the card's lone effect. Returns null if the acting card can't be
-   * found or the step is out of range (drawConnector then falls back to a plain
-   * accent line).
-   */
-  private stepEffect(cardId: string, step: number): CardEffect | null {
-    const card = this.game_.state.hand.find((c) => c.id === cardId)
-    if (card === undefined || card.kind !== 'player') return null
-    const effect = card.effect
-    if (effect.kind === 'Sequence') {
-      return effect.steps[step] ?? null
-    }
-    if (effect.kind === 'Modal') {
-      return effect.branches[step] ?? null
-    }
-    return effect
-  }
-
-  /**
-   * Resolve the ConnectorStyle for the current step's effect. Wraps stepEffect
-   * + selectConnectorStyle so callers get one answer. Returns null only when no
-   * effect is found; drawConnector then falls back to the plain accent line.
+   * Resolve the ConnectorStyle for the acting card's effect at `step` (looked up
+   * through any Sequence/Modal via effectAtStep, so the style tracks the active
+   * branch/step rather than the card as a whole). Null when no effect is found;
+   * drawConnector then falls back to the plain accent line.
    */
   private stepConnectorStyle(cardId: string, step: number): ConnectorStyle | null {
-    const effect = this.stepEffect(cardId, step)
+    const card = this.game_.state.hand.find((c) => c.id === cardId)
+    if (card === undefined || card.kind !== 'player') return null
+    const effect = effectAtStep(card.effect, step)
     return effect !== null ? selectConnectorStyle(effect) : null
-  }
-
-  /**
-   * Draw the connector in one of three learnable styles, colours from the theme.
-   *
-   *  - progress → straight accent line (connectorProgress, pairs with ringAccent)
-   *    feeding the acting card into the target's cost ring.
-   *  - destroy  → harsh jagged red line (connectorDestroy) acting → target.
-   *  - return   → curved arrow looping from the hovered target toward the world
-   *    deck (connectorReturn), endpoint read live from pileLayer.worldPileCenter()
-   *    to read "this world card goes back to the deck".
-   *
-   * A null style (shouldn't occur for the three real phases) falls back to the
-   * plain progress accent line rather than throwing or drawing nothing.
-   */
-  private drawConnector(style: ConnectorStyle | null, from: Point, to: Point): void {
-    const fs = this.theme_.frameStyle
-    switch (style) {
-      case 'destroy':
-        this.drawJaggedLine(from, to, fs.connectorDestroy)
-        break
-      case 'return':
-        this.drawReturnArrow(to, this.pileLayer.worldPileCenter(), fs.connectorReturn)
-        break
-      case 'progress':
-      default:
-        this.drawStraightLine(from, to, fs.connectorProgress)
-        break
-    }
-  }
-
-  /** Plain straight accent line (progress / fallback). */
-  private drawStraightLine(from: Point, to: Point, color: number): void {
-    this.connectorGfx.lineStyle(3, color, 0.9)
-    this.connectorGfx.lineBetween(from.x, from.y, to.x, to.y)
-  }
-
-  /**
-   * Harsh jagged line for destroy: a zig-zag of segments perpendicular-offset
-   * from the straight path, evoking a tear/strike rather than a clean feed.
-   */
-  private drawJaggedLine(from: Point, to: Point, color: number): void {
-    const segments = 8
-    const dx = to.x - from.x
-    const dy = to.y - from.y
-    const len = Math.hypot(dx, dy) || 1
-    // Unit normal, perpendicular to the line, to push alternating vertices off.
-    const nx = -dy / len
-    const ny = dx / len
-    const amp = 7
-    this.connectorGfx.lineStyle(3, color, 0.95)
-    this.connectorGfx.beginPath()
-    this.connectorGfx.moveTo(from.x, from.y)
-    for (let i = 1; i < segments; i++) {
-      const t = i / segments
-      const sign = i % 2 === 0 ? 1 : -1
-      this.connectorGfx.lineTo(from.x + dx * t + nx * amp * sign, from.y + dy * t + ny * amp * sign)
-    }
-    this.connectorGfx.lineTo(to.x, to.y)
-    this.connectorGfx.strokePath()
-  }
-
-  /**
-   * Curved arrow looping from the hovered world card toward the world-deck pile,
-   * communicating "this card goes back to the deck". Source is the target card
-   * (the world card being returned); destination is the live pile centre. A
-   * quadratic curve bows the path and a small arrowhead marks the deck end.
-   */
-  private drawReturnArrow(from: Point, deck: Point, color: number): void {
-    this.connectorGfx.lineStyle(3, color, 0.9)
-    // Control point bowed above the chord so the arc reads as a loop, not a line.
-    const midX = (from.x + deck.x) / 2
-    const midY = (from.y + deck.y) / 2
-    const ctrlX = midX
-    const ctrlY = midY - 60
-    const curve = new Phaser.Curves.QuadraticBezier(
-      new Phaser.Math.Vector2(from.x, from.y),
-      new Phaser.Math.Vector2(ctrlX, ctrlY),
-      new Phaser.Math.Vector2(deck.x, deck.y),
-    )
-    curve.draw(this.connectorGfx, 32)
-    // Arrowhead at the deck end, aimed along the tangent leaving the control pt.
-    const angle = Math.atan2(deck.y - ctrlY, deck.x - ctrlX)
-    const headLen = 12
-    const spread = Math.PI / 7
-    this.connectorGfx.beginPath()
-    this.connectorGfx.moveTo(deck.x, deck.y)
-    this.connectorGfx.lineTo(
-      deck.x - headLen * Math.cos(angle - spread),
-      deck.y - headLen * Math.sin(angle - spread),
-    )
-    this.connectorGfx.moveTo(deck.x, deck.y)
-    this.connectorGfx.lineTo(
-      deck.x - headLen * Math.cos(angle + spread),
-      deck.y - headLen * Math.sin(angle + spread),
-    )
-    this.connectorGfx.strokePath()
   }
 
   /** Remove any drawn connector. Safe to call when nothing is drawn. */
@@ -1099,61 +879,9 @@ export class TableScene extends Phaser.Scene {
   }
 
   private updateHint(): void {
-    const sel = this.sel
-    switch (sel.phase) {
-      case 'idle':
-        this.selectionHint.setText('')
-        this.selectionHint.setVisible(false)
-        break
-      case 'awaiting-hazard':
-        this.selectionHint.setText('Select a Hazard target')
-        this.selectionHint.setVisible(true)
-        break
-      case 'awaiting-return':
-        this.selectionHint.setText(
-          `Select ${sel.min}–${sel.max} world cards to return (${sel.selected.length} chosen)`,
-        )
-        this.selectionHint.setVisible(true)
-        break
-      case 'awaiting-discard':
-        this.selectionHint.setText('Select a player card to discard')
-        this.selectionHint.setVisible(true)
-        break
-      case 'awaiting-destroy':
-        this.selectionHint.setText('Select a card to destroy (optional)')
-        this.selectionHint.setVisible(true)
-        break
-      case 'awaiting-modal':
-        this.selectionHint.setText('Choose an option above')
-        this.selectionHint.setVisible(true)
-        break
-      case 'selected':
-        this.selectionHint.setText('')
-        this.selectionHint.setVisible(false)
-        break
-    }
+    const { text, visible } = hintForSelection(this.sel)
+    this.selectionHint.setText(text)
+    this.selectionHint.setVisible(visible)
   }
 }
 
-// ---------------------------------------------------------------------------
-// Modal label helpers (module-level, not class methods)
-// ---------------------------------------------------------------------------
-
-function branchLabel(effectBranch: import('../../core/index').CardEffect | undefined, idx: number): string {
-  // Derive the label from the branch's actual effect (Sprint, etc.); no
-  // hardcoded, index-keyed strings that could lie if the catalog changes.
-  return effectBranch !== undefined ? describeEffect(effectBranch).join(', ') : `Option ${idx + 1}`
-}
-
-function branchIsLegal(
-  spec: TargetSpec,
-  idx: number,
-  available: import('../../core/index').AvailableActions,
-  cardId: string,
-): boolean {
-  if (spec.kind === 'hazard') {
-    const targets = available.legalTargets(cardId, idx)
-    return targets.length > 0
-  }
-  return true
-}

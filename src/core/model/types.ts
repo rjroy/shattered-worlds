@@ -32,6 +32,7 @@ export interface PlayerCard {
   kind: 'player'
   id: CardId
   name: string
+  insetKey: string | undefined
   sourceWorldId: string
   effect: CardEffect
 }
@@ -40,6 +41,7 @@ export interface WorldCard {
   kind: 'world'
   id: CardId
   name: string
+  insetKey: string | undefined
   cost: number
   keywords: readonly Keyword[]
   discardable: boolean

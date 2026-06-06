@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'bun:test'
-import { updateCostRing, emphasizeCard, clearEmphasis, applyCardHighlight } from '../view/render'
+import { updateCostRing, emphasizeCard, clearEmphasis, applyCardHighlight } from '../view/cardObjects'
 import { selectTheme } from '../view/theme'
 
 // ---------------------------------------------------------------------------

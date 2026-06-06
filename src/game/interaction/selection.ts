@@ -29,11 +29,6 @@ export const IDLE: SelectionState = { phase: 'idle' }
 // Pure state transitions
 // ---------------------------------------------------------------------------
 
-/** From idle, enter selected state. */
-export function selectCard(_sel: SelectionState, cardId: CardId): SelectionState {
-  return { phase: 'selected', cardId }
-}
-
 /**
  * From awaiting-modal, advance to the next phase based on the branch spec.
  * `choice` is the 0-based branch index; `spec` is the full modal TargetSpec.
@@ -101,11 +96,50 @@ export function cancel(): SelectionState {
 }
 
 // ---------------------------------------------------------------------------
+// Selection read-models (pure derivations from SelectionState)
+// ---------------------------------------------------------------------------
+
+/**
+ * The active step/branch index for the current targeting phase — the single
+ * source of truth shared by click gating, highlight, and the connector so they
+ * can never disagree. awaiting-return advances to step 1 once its hazard target
+ * is chosen; awaiting-hazard keys off the chosen modal branch; everything else
+ * is step 0.
+ */
+export function activeStep(sel: SelectionState): number {
+  if (sel.phase === 'awaiting-return') return sel.targetId !== undefined ? 1 : 0
+  if (sel.phase === 'awaiting-hazard') return sel.modalChoice ?? 0
+  return 0
+}
+
+/** The phase-instruction text (and whether to show it) for a selection state. */
+export function hintForSelection(sel: SelectionState): { text: string; visible: boolean } {
+  switch (sel.phase) {
+    case 'awaiting-hazard':
+      return { text: 'Select a Hazard target', visible: true }
+    case 'awaiting-return':
+      return {
+        text: `Select ${sel.min}–${sel.max} world cards to return (${sel.selected.length} chosen)`,
+        visible: true,
+      }
+    case 'awaiting-discard':
+      return { text: 'Select a player card to discard', visible: true }
+    case 'awaiting-destroy':
+      return { text: 'Select a card to destroy (optional)', visible: true }
+    case 'awaiting-modal':
+      return { text: 'Choose an option above', visible: true }
+    case 'idle':
+    case 'selected':
+      return { text: '', visible: false }
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Completion checks and action building
 // ---------------------------------------------------------------------------
 
 /** True when the selection is ready to commit. */
-export function isComplete(sel: SelectionState, _spec: TargetSpec): boolean {
+export function isComplete(sel: SelectionState): boolean {
   switch (sel.phase) {
     case 'idle':
       return false
