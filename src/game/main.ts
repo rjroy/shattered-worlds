@@ -11,6 +11,14 @@ const game = new Phaser.Game({
     mode: Phaser.Scale.FIT,
     autoCenter: Phaser.Scale.CENTER_BOTH,
   },
+  // roundPixels snaps texture draws to whole-integer positions, removing the
+  // sub-pixel smear that setOrigin(0.5, …) produces on odd-width text (CARD_W is
+  // 150). Antialias stays on (the AUTO/WebGL default) and pixelArt stays off —
+  // text crispness comes from per-object resolution (see render.ts textStyle),
+  // not nearest-neighbor scaling.
+  render: {
+    roundPixels: true,
+  },
   scene: [BootScene, TableScene],
 })
 
