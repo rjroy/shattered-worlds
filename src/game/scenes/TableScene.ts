@@ -10,7 +10,7 @@
  */
 import Phaser from 'phaser'
 import { assetManifest } from '../data/assetManifest'
-import { selectTheme } from '../view/theme'
+import { selectTheme, getRealityPalellete } from '../view/theme'
 import type { VisualTheme } from '../view/theme'
 import { createGame, availableActions, assembleCatalog } from '../../core/index'
 import type { GameCore, Card, Action, TargetSpec, WorldData, CardEffect } from '../../core/index'
@@ -33,9 +33,6 @@ import {
   updateHUD,
   createWinScreen,
   createLossScreen,
-  createEndTurnButton,
-  createCancelButton,
-  createConfirmButton,
   applyCardHighlight,
   dimCard,
   positionCard,
@@ -47,8 +44,7 @@ import { textStyle } from '../view/presentation'
 import { ringFraction, connectorLine, selectConnectorStyle } from '../interaction/feedback'
 import type { ConnectorStyle, Point } from '../interaction/feedback'
 import type { HUDRefs } from '../view/render'
-import type { CommonButton } from '../view/components'
-import { CommonLabel } from '../view/components'
+import { CommonLabel, CommonButton } from '../view/components'
 import { describeEffect, previewPlay } from '../interaction/describe'
 import { PileLayer } from '../view/piles'
 import { BackdropLayer } from '../view/backdrop'
@@ -190,10 +186,20 @@ export class TableScene extends Phaser.Scene {
     this.theme_ = selectTheme(this.game_.state.worldId)
 
     this.hudRefs = createHUD(this)
-    this.endTurnBtn = createEndTurnButton(this, 820, 560)
+    this.endTurnBtn = new CommonButton(this, 820, 560, '[ End Turn ]', textStyle({
+      fontSize: '16px',
+      color: getRealityPalellete(this.theme_, 'text', '#88aaff'),
+      fontStyle: 'bold',
+    }))
+  
     this.endTurnBtn.on('pointerdown', () => this.onEndTurnClick())
 
-    this.cancelBtn = createCancelButton(this, 770, 570)
+    this.cancelBtn = new CommonButton(this, 740, 570, '[ Cancel ]', textStyle({
+      fontSize: '13px',
+      color: getRealityPalellete(this.theme_, 'cancel', '#ff8888'),
+    }))
+    this.cancelBtn.setVisible(false)
+
     this.cancelBtn.on('pointerdown', () => {
       this.sel = cancel()
       this.dismissModal()
@@ -201,7 +207,12 @@ export class TableScene extends Phaser.Scene {
       this.drawAll()
     })
 
-    this.confirmBtn = createConfirmButton(this, 770, 550)
+    this.confirmBtn = new CommonButton(this, 740, 540, '[ Confirm ]', textStyle({
+      fontSize: '13px',
+      fontStyle: 'bold',
+      color: getRealityPalellete(this.theme_, 'confirm', '#88ee88'),
+    }))
+    this.confirmBtn.setVisible(false)
     this.confirmBtn.on('pointerdown', () => this.onConfirmClick())
 
     this.winScreen = createWinScreen(this)
@@ -209,7 +220,7 @@ export class TableScene extends Phaser.Scene {
 
     this.selectionHint = new CommonLabel(this, 450, 578, '', textStyle({
         fontSize: '12px',
-        color: '#9aa3b2'
+        color: getRealityPalellete(this.theme_, 'text', '#9aa3b2'),  
     }))
     this.selectionHint.setVisible(false)
 
@@ -221,7 +232,7 @@ export class TableScene extends Phaser.Scene {
     // means this slot simply stays empty).
     this.previewSlot = new CommonLabel(this, 450, 550, '', textStyle({
       fontSize: '12px',
-      color: '#9aa3b2'
+      color: getRealityPalellete(this.theme_, 'title', '#9aa3b2'),  
     }))
     this.previewSlot.setVisible(false)
 
@@ -713,13 +724,14 @@ export class TableScene extends Phaser.Scene {
     this.modalContainer = container
 
     // Backdrop
-    const bg = this.add.rectangle(0, 0, 500, 220, 0x0f1117, 0.95)
-    bg.setStrokeStyle(1, 0x2a2f3d)
+    const bg = this.add.nineslice(
+      0, 0, 'text-back', undefined, 480, 240, 32, 32, 16, 16
+    ).setTint(0x666666)
     container.add(bg)
 
     const title = this.add.text(0, -80, 'Choose an effect:', textStyle({
       fontSize: '16px',
-      color: '#e8eaf0',
+      color: getRealityPalellete(this.theme_, 'title', '#9aa3b2'),  
       fontStyle: 'bold',
     }))
     title.setOrigin(0.5, 0.5)
@@ -738,7 +750,9 @@ export class TableScene extends Phaser.Scene {
       const btnY = -30 + idx * 60
       const btn = this.add.text(0, btnY, label, textStyle({
         fontSize: '14px',
-        color: isLegal ? '#88aaff' : '#555577',
+        color: isLegal ? 
+          getRealityPalellete(this.theme_, 'text', '#88aaff') :
+          getRealityPalellete(this.theme_, 'disabled', '#555577'),
         fontStyle: 'bold',
       }))
       btn.setOrigin(0.5, 0.5)
@@ -769,7 +783,7 @@ export class TableScene extends Phaser.Scene {
     // Cancel modal button
     const cancelBtn = this.add.text(0, 80, '[ Cancel ]', textStyle({
       fontSize: '13px',
-      color: '#ff8888',
+      color: getRealityPalellete(this.theme_, 'cancel', '#ff8888'),
     }))
     cancelBtn.setOrigin(0.5, 0.5)
     cancelBtn.setInteractive({ useHandCursor: true })

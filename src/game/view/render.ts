@@ -9,7 +9,6 @@ import Phaser from 'phaser'
 import type { Card, GameState, WorldCard } from '../../core/index'
 import type { FrameStyle, VisualTheme } from './theme'
 import { describeEffect } from '../interaction/describe'
-import { CommonButton } from './components'
 import {
   TEXT,
   textStyle,
@@ -52,8 +51,10 @@ export function createCardObject(
 
   // Transparent overlay rectangle used only for selection highlight strokes.
   // list[1] — applyCardHighlight depends on this position.
-  const bg = scene.add.rectangle(0, 0, CARD_W, CARD_H, 0x000000, 0)
+  const bg = scene.add.rectangle(1, 1, CARD_W - 2, CARD_H - 2, 0x000000, 0)
   bg.setStrokeStyle(0)
+  bg.setRounded(10)
+  bg.setAlpha(0.4)
   container.add(bg)
 
   if (card.kind === 'player') {
@@ -335,44 +336,6 @@ export function createLossScreen(scene: Phaser.Scene): Phaser.GameObjects.Contai
   container.add(sub)
 
   return container
-}
-
-// ---------------------------------------------------------------------------
-// Interactive buttons
-// ---------------------------------------------------------------------------
-/** Create the End Turn button. */
-export function createEndTurnButton(
-  scene: Phaser.Scene,
-  x: number,
-  y: number,
-): CommonButton {
-  const btn = new CommonButton(scene, x, y, '[ End Turn ]', textStyle({
-    fontSize: '16px',
-    color: '#88aaff',
-    fontStyle: 'bold',
-  }))
-  return btn
-}
-
-/** Create a Cancel button (shown during active selections). */
-export function createCancelButton(scene: Phaser.Scene, x: number, y: number): CommonButton {
-  const btn = new CommonButton(scene, x, y, '[ Cancel ]', textStyle({
-    fontSize: '13px',
-    color: '#ff8888',
-  }))
-  btn.setVisible(false)
-  return btn
-}
-
-/** Create a Confirm button (shown during multi-select phases). */
-export function createConfirmButton(scene: Phaser.Scene, x: number, y: number): CommonButton {
-  const btn = new CommonButton(scene, x, y, '[ Confirm ]', textStyle({
-    fontSize: '13px',
-    color: '#88ee88',
-    fontStyle: 'bold',
-  }))
-  btn.setVisible(false)
-  return btn
 }
 
 // ---------------------------------------------------------------------------

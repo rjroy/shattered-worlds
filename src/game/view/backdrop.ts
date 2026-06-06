@@ -7,7 +7,7 @@ import type { WalkerPresentation } from './walker'
 
 const WALKER_START = { size: WALKER_CONSTS.far.size, x: 450, y: 330 }
 const WALKER_END = { size: WALKER_CONSTS.present.size, x: 180, y: 480 }
-const DOOR = { size: WALKER_CONSTS.far.size * DOOR_CONSTS.scalar, x: 120, y: 490 }
+const DOOR = { size: WALKER_CONSTS.present.size * DOOR_CONSTS.scalar, x: 120, y: 490 }
 
 export class BackdropLayer {
   private scene: Phaser.Scene
@@ -42,7 +42,7 @@ export class BackdropLayer {
     const doorSprint = scene.add.image(DOOR.x, DOOR.y, 'door')
     doorSprint.setOrigin(0.5, 1)
     doorSprint.setScale(DOOR.size / doorSprint.height)  // base size is 75 height at 1.0 scale
-    doorSprint.setAlpha(WALKER_CONSTS.far.alpha / 2)
+    doorSprint.setAlpha(0) // start invisible, will fade in with tween
     doorSprint.setDepth(-9)
     if (theme.doorTint !== undefined) {
       doorSprint.setTint(theme.doorTint)
@@ -55,7 +55,7 @@ export class BackdropLayer {
     const doorGlowSprint = scene.add.image(DOOR.x, DOOR.y, 'door-glow')
     doorGlowSprint.setOrigin(0.5, 1)
     doorGlowSprint.setScale(DOOR.size / doorGlowSprint.height)  // base size is 75 height at 1.0 scale
-    doorGlowSprint.setAlpha(WALKER_CONSTS.far.alpha * DOOR_CONSTS.glowAlpha)
+    doorGlowSprint.setAlpha(0) // start invisible, will fade in with tween
     doorGlowSprint.setDepth(-8)
     if (theme.doorGlowTint !== undefined) {
       doorGlowSprint.setTint(theme.doorGlowTint)
@@ -130,18 +130,22 @@ export class BackdropLayer {
         this.tweenWalker(1, p.size, p.alpha)
       }
     } else if (pres.kind === 'proximity') {
-      const actChanged = state.actIndex !== this.lastActIndex
+      const p = pres.proximity
       const returnFromFg = this.lastPresKind === 'foreground'
-      if (actChanged || returnFromFg) {
-        const p = pres.proximity
-        this.tweenWalker(state.actIndex / 3, p.size, p.alpha)
-        this.lastActIndex = state.actIndex
+      if (returnFromFg) {
+        this.tweenWalker(1, WALKER_CONSTS.present.size, 0)
+      } else {
+        const actChanged = state.actIndex !== this.lastActIndex
+        if (actChanged) {
+          this.tweenWalker(state.actIndex / 3, p.size, p.alpha)
+          this.lastActIndex = state.actIndex
+        }
       }
     }
 
     this.lastPresKind = pres.kind
   }
- 
+
   /**
    * Call from drawAll(). Updates intrusion alpha and Walker position.
    * Transitions tween rather than snapping.
@@ -178,19 +182,14 @@ export class BackdropLayer {
     if (this.doorGlowTween !== undefined) {
       this.doorGlowTween.stop()
     }
-    const doorSize = size * DOOR_CONSTS.scalar // Door is a bit bigger than the walker proximity size to make it more visible
     this.doorTween = this.scene.tweens.add({
       targets: this.doorSprite,
-      scaleX: doorSize / this.doorSprite.height,
-      scaleY: doorSize / this.doorSprite.height,
       alpha,
       duration: 1800,
       ease: 'Sine.easeInOut',
     })
     this.doorGlowTween = this.scene.tweens.add({
       targets: this.doorGlowSprite,
-      scaleX: doorSize / this.doorGlowSprite.height,
-      scaleY: doorSize / this.doorGlowSprite.height,
       alpha: alpha * DOOR_CONSTS.glowAlpha,  // glow is a bit dimmer than the door itself
       duration: 1800,
       ease: 'Sine.easeInOut',
