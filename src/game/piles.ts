@@ -9,7 +9,7 @@
  * every drawAll().
  */
 import Phaser from 'phaser'
-import { textStyle } from './render'
+import { textStyle } from './presentation'
 import { CommonLabel } from './components'
 
 const PILE_CARD_W = 50

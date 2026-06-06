@@ -42,8 +42,8 @@ import {
   updateCostRing,
   emphasizeCard,
   clearEmphasis,
-  textStyle,
 } from './render'
+import { textStyle } from './presentation'
 import { ringFraction, connectorLine, selectConnectorStyle } from './feedback'
 import type { ConnectorStyle, Point } from './feedback'
 import type { HUDRefs } from './render'

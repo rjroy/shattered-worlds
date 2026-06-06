@@ -10,36 +10,17 @@ import type { Card, GameState, WorldCard } from '../core/index'
 import type { FrameStyle, VisualTheme } from './theme'
 import { describeEffect } from './describe'
 import { CommonButton } from './components'
+import {
+  TEXT,
+  textStyle,
+  selectCardFrontKey,
+  highlightDescriptor,
+  costRingArc,
+  emphasisDescriptor,
+} from './presentation'
 
 // ---------------------------------------------------------------------------
-// Pure helpers
-// ---------------------------------------------------------------------------
-
-/**
- * Select the texture key for a card's front face.
- * World card: keyed by the active world's theme.
- * Player card: keyed by the card's sourceWorldId (seam for future per-world
- * player art). No theme currently defines a player-card front, so this always
- * returns 'cardfront'. The resolveTheme call is the seam — wired but unused
- * today so future per-world player art slots in without API changes.
- */
-export function selectCardFrontKey(
-  card: Card,
-  activeTheme: VisualTheme,
-  resolveTheme: (worldId: string) => VisualTheme,
-): string {
-  if (card.kind === 'world') {
-    return activeTheme.worldCardfrontKey ?? 'cardfront'
-  }
-  // Player card: resolve theme by sourceWorldId. worldCardfrontKey is the
-  // world CARD front, not the player card front. Player cards use 'cardfront'
-  // (generic) until per-player-world art ships.
-  void resolveTheme(card.sourceWorldId) // seam: use result when per-player-world art is defined
-  return 'cardfront'
-}
-
-// ---------------------------------------------------------------------------
-// Card dimensions and palette
+// Card dimensions
 // ---------------------------------------------------------------------------
 
 // Cards are sized to carry their full rules text on the face: the player face
@@ -47,48 +28,6 @@ export function selectCardFrontKey(
 // face shows full onDiscarded/onCleared sentences. Six fit the 900px table.
 const CARD_W = 150
 const CARD_H = 196
-
-// Text colors are theme-independent — all pass WCAG AA against the frame
-// backgrounds used by every current theme.
-const TEXT = {
-  textLight: '#e8eaf0',
-  textMuted: '#b6c0d1',
-  textCost: '#ffcc44',
-  textKeyword: '#88ccff',
-  textPenalty: '#ff8888',
-  textReward: '#88ee88',
-  textHeld: '#ffaa66',
-  dimAlpha: 0.35,
-  textBackTint: 0xBBBBBB,
-}
-
-// ---------------------------------------------------------------------------
-// Text style factory
-// ---------------------------------------------------------------------------
-
-/**
- * Device pixel ratio used to rasterize text. Phaser renders each Text object to
- * an internal canvas at this resolution; at the default of 1 the glyphs are
- * rasterized at one device-pixel per game-pixel, then bilinearly upscaled by
- * Scale.FIT (and again by a HiDPI display). The averaging that smear produces
- * reads as both haze (partial transparency) and blur, worst on the small fonts.
- * Guarded so the module stays importable in non-DOM test environments.
- */
-function textResolution(): number {
-  return typeof window !== 'undefined' ? window.devicePixelRatio || 1 : 1
-}
-
-/**
- * Build a Phaser text style with the device-appropriate render resolution.
- * Every text object in the renderer goes through here so DPI is set in one
- * place rather than on each scene.add.text call site. The resolution is forced
- * last so it always reflects the current device, never a caller override.
- */
-export function textStyle(
-  style: Phaser.Types.GameObjects.Text.TextStyle,
-): Phaser.Types.GameObjects.Text.TextStyle {
-  return { ...style, resolution: textResolution() }
-}
 
 // ---------------------------------------------------------------------------
 // Card object factories
@@ -440,7 +379,11 @@ export function createConfirmButton(scene: Phaser.Scene, x: number, y: number): 
 // Highlight helpers — called by TableScene after drawAll
 // ---------------------------------------------------------------------------
 
-/** Apply a coloured stroke to a card container to communicate its state. */
+/**
+ * Apply a coloured stroke to a card container to communicate its state. The
+ * "decide what it looks like" half lives in `highlightDescriptor`; this wrapper
+ * only pushes that descriptor onto the list[1] overlay rectangle.
+ */
 export function applyCardHighlight(
   container: Phaser.GameObjects.Container,
   kind: 'selected' | 'target' | 'discard' | 'committed' | 'none',
@@ -449,33 +392,9 @@ export function applyCardHighlight(
   // The highlight rectangle is list[1] (list[0] is the cardfront image)
   const bg = container.list[1] as Phaser.GameObjects.Rectangle | undefined
   if (bg === undefined) return
-  // The overlay rect is fill-transparent by default; only 'committed' tints it.
-  // Clear any prior committed fill so a reused container never keeps a stale
-  // tint when it transitions to another state (reconcile re-applies each cycle).
-  bg.setFillStyle(0x000000, 0)
-  switch (kind) {
-    case 'selected':
-      bg.setStrokeStyle(3, frameStyle.selectedBorder)
-      break
-    case 'target':
-      bg.setStrokeStyle(3, frameStyle.targetBorder)
-      break
-    case 'discard':
-      bg.setStrokeStyle(3, frameStyle.discardBorder)
-      break
-    case 'committed':
-      // Muted, steady "already locked here" mark for an earlier-step pick that
-      // is no longer a live legal target. Uses the dark committedTarget colour
-      // (distinct from the bright targetBorder) and adds a faint matching fill
-      // so the card stays read as marked-but-settled — no lift, no glow (those
-      // belong to the active hover emphasis applied separately in S9).
-      bg.setStrokeStyle(2, frameStyle.committedTarget)
-      bg.setFillStyle(frameStyle.committedTarget, 0.18)
-      break
-    case 'none':
-      bg.setStrokeStyle(0)
-      break
-  }
+  const { strokeWidth, strokeColor, fillColor, fillAlpha } = highlightDescriptor(kind, frameStyle)
+  bg.setFillStyle(fillColor, fillAlpha)
+  bg.setStrokeStyle(strokeWidth, strokeColor)
 }
 
 // Ring geometry — shared by the snap path and the tween onUpdate so a tweened
@@ -507,12 +426,10 @@ function drawCostRing(ring: Phaser.GameObjects.Graphics, fraction: number, ringA
   ring.lineStyle(RING_LINE_WIDTH, ringAccent, 0.18)
   ring.strokeCircle(0, 0, RING_RADIUS)
 
-  const clamped = Math.min(1, Math.max(0, fraction))
+  // Angle math (clamp + clockwise sweep from the top) lives in costRingArc.
+  const { clamped, start, end } = costRingArc(fraction)
   if (clamped <= 0) return
 
-  // Arc from the top (−π/2), sweeping clockwise by clamped * 2π.
-  const start = -Math.PI / 2
-  const end = start + clamped * Math.PI * 2
   ring.lineStyle(RING_LINE_WIDTH, ringAccent, 1)
   ring.beginPath()
   ring.arc(0, 0, RING_RADIUS, start, end, false)
@@ -605,13 +522,9 @@ const EMPHASIS_GLOW_PAD = 7 // px the glow ring extends past the card edge
 const EMPHASIS_GLOW_LINE = 6 // glow stroke width
 const EMPHASIS_GLOW_RADIUS = 10 // rounded-corner radius
 
-// Magnitude scales with intensity() ∈ [0,1]. At intensity 0 the emphasis is
-// already clearly visible (base); at 1 it is at its loudest. These bound the
-// scale-up and glow alpha so even a calm board shows an obvious hover read.
-const EMPHASIS_SCALE_BASE = 1.06
-const EMPHASIS_SCALE_RANGE = 0.06 // → up to 1.12 at full intensity
-const EMPHASIS_GLOW_ALPHA_BASE = 0.45
-const EMPHASIS_GLOW_ALPHA_RANGE = 0.45 // → up to 0.9 at full intensity
+// The scale (lift) and glow alpha magnitudes scale with intensity in
+// emphasisDescriptor (presentation.ts). The fixed glow rectangle geometry above
+// stays here because it feeds the draw call directly.
 
 // The glow Graphics is stored on the container under this key (mirrors costRing)
 // so it persists across reconcile cycles and stays inside container.list for the
@@ -621,10 +534,6 @@ const EMPHASIS_GLOW_ALPHA_RANGE = 0.45 // → up to 0.9 at full intensity
 type EmphasisContainer = Phaser.GameObjects.Container & {
   targetGlow?: Phaser.GameObjects.Graphics
   emphasized?: boolean
-}
-
-function clampUnit(n: number): number {
-  return Math.max(0, Math.min(1, n))
 }
 
 /** Lazily create the glow child, appended AFTER all existing children. */
@@ -680,9 +589,9 @@ export function emphasizeCard(
   const c = container as EmphasisContainer
   if (c.emphasized === true) return // idempotent: already loud, don't re-apply
 
-  const t = clampUnit(intensity)
-  const scale = EMPHASIS_SCALE_BASE + EMPHASIS_SCALE_RANGE * t
-  const glowAlpha = EMPHASIS_GLOW_ALPHA_BASE + EMPHASIS_GLOW_ALPHA_RANGE * t
+  // The "how loud" decision (lift + glow alpha from intensity) is pure; this
+  // function only pushes those magnitudes onto the container and glow.
+  const { scale, glowAlpha } = emphasisDescriptor(intensity)
 
   container.setScale(scale)
   const glow = obtainGlow(scene, c)
