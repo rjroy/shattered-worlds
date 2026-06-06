@@ -729,3 +729,37 @@ export function positionCard(container: Phaser.GameObjects.Container, x: number,
   container.setPosition(x, y)
 }
 
+export class CommonLabel extends Phaser.GameObjects.Container {
+
+  private txtBg: Phaser.GameObjects.NineSlice
+  private label: Phaser.GameObjects.Text
+
+  constructor(scene: Phaser.Scene, x: number, y: number, text: string, textStyle: Phaser.Types.GameObjects.Text.TextStyle) {
+    super(scene, x, y)
+
+        this.txtBg = scene.add
+      .nineslice(
+        0, 0,
+        'text-back',
+        undefined,
+        30, 20,
+        4, 4, 2, 2,
+      )
+      .setOrigin(0.5, 0.5)
+      .setTint(0x888888)
+    this.add(this.txtBg)
+
+    this.label = scene.add.text(0, 0, text, textStyle)
+    this.label.setOrigin(0.5, 0.5)
+    this.txtBg.setSize(this.label.width + 20, this.label.height + 10)
+
+    this.add(this.label)
+    this.setPosition(x, y)
+    scene.add.existing(this)
+  }
+
+  setText(text: string): void {
+    this.label.setText(text)
+    this.txtBg.setSize(this.label.width + 20, this.label.height + 10)
+  }
+}

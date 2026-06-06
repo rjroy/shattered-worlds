@@ -47,6 +47,7 @@ import {
 import { ringFraction, connectorLine, selectConnectorStyle } from './feedback'
 import type { ConnectorStyle, Point } from './feedback'
 import type { HUDRefs } from './render'
+import { CommonLabel } from './render'
 import { describeEffect, previewPlay } from './describe'
 import { PileLayer } from './piles'
 import { BackdropLayer } from './backdrop'
@@ -110,11 +111,11 @@ export class TableScene extends Phaser.Scene {
   private backdropLayer!: BackdropLayer
 
   // Phase-instruction text ("Select a Hazard target", etc.)
-  private selectionHint!: Phaser.GameObjects.Text
+  private selectionHint!: CommonLabel
 
   // Live target preview ("Deals 3 → clears …"), a separate surface from the
   // instruction so the two never overwrite each other.
-  private previewSlot!: Phaser.GameObjects.Text
+  private previewSlot!: CommonLabel
 
   // Targeting connector: a single persistent Graphics that draws a line from the
   // acting card to the hovered legal target. Created once, redrawn on hover,
@@ -205,26 +206,23 @@ export class TableScene extends Phaser.Scene {
     this.winScreen = createWinScreen(this)
     this.lossScreen = createLossScreen(this)
 
-    this.selectionHint = this.add.text(450, 568, '', textStyle({
-      fontSize: '12px',
-      color: '#9aa3b2',
-      backgroundColor: 'rgba(0,0,0,0.75)',
-      padding: { x: 6, y: 2 },
+    this.selectionHint = new CommonLabel(this, 450, 578, '', textStyle({
+        fontSize: '12px',
+        color: '#9aa3b2'
     }))
-    this.selectionHint.setOrigin(0.5, 1)
+    this.selectionHint.setVisible(false)
+
 
     // Sits in a dedicated slot directly above selectionHint. selectionHint has
     // origin (0.5, 1) at y=568, so with 12px text + 2px vertical padding it
     // tops out around y=552; anchoring previewSlot's bottom edge at y=550 keeps
     // the two surfaces from ever overlapping. Degrades fine on touch (no hover
     // means this slot simply stays empty).
-    this.previewSlot = this.add.text(450, 550, '', textStyle({
+    this.previewSlot = new CommonLabel(this, 450, 550, '', textStyle({
       fontSize: '12px',
-      color: '#9aa3b2',
-      backgroundColor: 'rgba(0,0,0,0.75)',
-      padding: { x: 6, y: 2 },
+      color: '#9aa3b2'
     }))
-    this.previewSlot.setOrigin(0.5, 1)
+    this.previewSlot.setVisible(false)
 
     // Persistent connector graphic. setDepth controls draw order only; we never
     // call setInteractive on it, so Phaser keeps it out of the input hit-test
@@ -442,6 +440,7 @@ export class TableScene extends Phaser.Scene {
       // Instruction stays stable in its own slot; clear only the preview slot.
       this.updateHint()
       this.previewSlot.setText('')
+      this.previewSlot.setVisible(false)
       // No stale line may survive hover-out.
       this.clearConnector()
     })
@@ -864,7 +863,12 @@ export class TableScene extends Phaser.Scene {
     if (card?.kind !== 'player' || target?.kind !== 'world') return
 
     const preview = previewPlay(card, target, state, branchIndex)
-    if (preview !== null) this.previewSlot.setText(preview)
+    if (preview !== null) {
+      this.previewSlot.setText(preview)
+      this.previewSlot.setVisible(true)
+    } else {
+      this.previewSlot.setVisible(false)
+    }
   }
 
   /**
@@ -1084,26 +1088,33 @@ export class TableScene extends Phaser.Scene {
     switch (sel.phase) {
       case 'idle':
         this.selectionHint.setText('')
+        this.selectionHint.setVisible(false)
         break
       case 'awaiting-hazard':
         this.selectionHint.setText('Select a Hazard target')
+        this.selectionHint.setVisible(true)
         break
       case 'awaiting-return':
         this.selectionHint.setText(
           `Select ${sel.min}–${sel.max} world cards to return (${sel.selected.length} chosen)`,
         )
+        this.selectionHint.setVisible(true)
         break
       case 'awaiting-discard':
         this.selectionHint.setText('Select a player card to discard')
+        this.selectionHint.setVisible(true)
         break
       case 'awaiting-destroy':
         this.selectionHint.setText('Select a card to destroy (optional)')
+        this.selectionHint.setVisible(true)
         break
       case 'awaiting-modal':
         this.selectionHint.setText('Choose an option above')
+        this.selectionHint.setVisible(true)
         break
       case 'selected':
         this.selectionHint.setText('')
+        this.selectionHint.setVisible(false)
         break
     }
   }
