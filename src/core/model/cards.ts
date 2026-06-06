@@ -15,7 +15,7 @@ import { UnknownTemplateError } from './errors'
 
 export interface BasicCardTemplate {
   name: string
-  insetKey: string
+  insetKey?: string
 }
 
 export interface PlayerCardTemplate extends BasicCardTemplate {
