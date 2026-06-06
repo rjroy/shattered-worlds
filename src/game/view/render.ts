@@ -9,7 +9,6 @@ import Phaser from 'phaser'
 import type { Card, GameState, WorldCard } from '../../core/index'
 import type { FrameStyle, VisualTheme } from './theme'
 import { describeEffect } from '../interaction/describe'
-import { CommonButton } from './components'
 import {
   TEXT,
   textStyle,
