@@ -6,7 +6,6 @@ describe('selectTheme', () => {
     const theme = selectTheme('zombie-big-box')
     expect(theme.worldId).toBe('zombie-big-box')
     expect(theme.intrusionHue).toBe('#9bff6a')
-    expect(theme.walker).toBeDefined()
   })
 
   it('returns default (zombie-big-box) for unknown worldId', () => {

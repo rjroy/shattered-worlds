@@ -142,9 +142,12 @@ export class TableScene extends Phaser.Scene {
     const keysToLoad = [
       'cardback',
       'cardfront',
+      'walker',
+      'door',
+      'door-glow',
+      'text-back',
       theme.backdrop.realityKey,
       theme.backdrop.intrusionKey,
-      ...(theme.walker ? [theme.walker.textureKey] : []),
       ...(theme.worldCardfrontKey ? [theme.worldCardfrontKey] : []),
     ]
     for (const key of keysToLoad) {
