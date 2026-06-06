@@ -1,4 +1,3 @@
-import './testSetup'
 import { describe, it, expect } from 'bun:test'
 import { selectCardFrontKey, updateCostRing, emphasizeCard, clearEmphasis, applyCardHighlight } from './render'
 import { selectTheme } from './theme'
