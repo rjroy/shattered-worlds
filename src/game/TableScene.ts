@@ -42,12 +42,13 @@ import {
   updateCostRing,
   emphasizeCard,
   clearEmphasis,
-  textStyle,
 } from './render'
+import { textStyle } from './presentation'
 import { ringFraction, connectorLine, selectConnectorStyle } from './feedback'
 import type { ConnectorStyle, Point } from './feedback'
-import type { CommonButton, HUDRefs } from './render'
-import { CommonLabel } from './render'
+import type { HUDRefs } from './render'
+import type { CommonButton } from './components'
+import { CommonLabel } from './components'
 import { describeEffect, previewPlay } from './describe'
 import { PileLayer } from './piles'
 import { BackdropLayer } from './backdrop'
