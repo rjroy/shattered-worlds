@@ -77,12 +77,10 @@ describe('selectCardFrontKey', () => {
     expect(key).toBe('cardfront')
   })
 
-  it('returns "cardfront" for a player card with zombie sourceWorldId, never the world-specific front', () => {
-    // The zombie theme has worldCardfrontKey: 'zombie-cardfront', but player
-    // cards must never use it — they always use the generic front.
+  it('returns the sourceWorldId theme cardfront for a player card (zombie-cardfront)', () => {
+    // Player cards now use the worldCardfrontKey from their sourceWorldId theme.
     const key = selectCardFrontKey(playerCardZombie, activeThemeWithFront, selectTheme)
-    expect(key).toBe('cardfront')
-    expect(key).not.toBe('zombie-cardfront')
+    expect(key).toBe('zombie-cardfront')
   })
 
   it('returns "cardfront" for a player card with an unknown sourceWorldId (no throw)', () => {

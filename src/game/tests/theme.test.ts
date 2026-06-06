@@ -8,9 +8,9 @@ describe('selectTheme', () => {
     expect(theme.intrusionHue).toBe('#9bff6a')
   })
 
-  it('returns default (zombie-big-box) for unknown worldId', () => {
+  it('returns default (starter) for unknown worldId', () => {
     const theme = selectTheme('unknown-world')
-    expect(theme.worldId).toBe('zombie-big-box')
+    expect(theme.worldId).toBe('starter')
   })
 
   it('backdrop keys are strings (not URLs)', () => {
