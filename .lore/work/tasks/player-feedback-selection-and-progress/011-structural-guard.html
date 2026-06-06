@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Structural guard: no core surface change</title>
+  <meta name="date" content="2026-06-05">
+  <meta name="status" content="complete">
+  <meta name="tags" content="task, feedback, structural, boundary, renderer-only, core">
+  <meta name="source" content=".lore/work/plans/player-feedback-selection-and-progress.html">
+  <meta name="sequence" content="11">
+  <meta name="modules" content="game-render, core">
+  <style>
+    :root{--bg:#14171d;--panel:#1c2029;--panel-2:#232834;--ink:#e8eaf0;--muted:#9aa3b2;--accent:#88aaff;--good:#88ee88;--bad:#ff8888;--warn:#ffcc55;--line:#2a3140;}
+    *{box-sizing:border-box;} body{margin:0;padding:0 0 4rem;background:var(--bg);color:var(--ink);font:16px/1.6 -apple-system,"Segoe UI",Roboto,sans-serif;}
+    main{max-width:880px;margin:0 auto;padding:0 1.2rem;}
+    .top{display:flex;align-items:center;gap:.7rem;flex-wrap:wrap;margin:1.6rem 0 .3rem;}
+    .seq{font-family:ui-monospace,monospace;font-size:1.4rem;font-weight:700;color:var(--accent);background:#0e1116;border:1px solid var(--line);border-radius:8px;padding:.1rem .6rem;}
+    h1{font-size:1.5rem;line-height:1.2;margin:0;}
+    .chip{font-size:.72rem;letter-spacing:.04em;text-transform:uppercase;padding:.15rem .55rem;border-radius:999px;border:1px solid var(--line);color:var(--muted);}
+    .chip.pending{background:rgba(255,204,85,.14);color:var(--warn);border-color:rgba(255,204,85,.35);}
+    .chip.req{background:#0e1116;color:#cfe3ff;}
+    .dep{color:var(--muted);font-size:.9rem;margin:.2rem 0 1.4rem;}
+    h2{font-size:.82rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:1.8rem 0 .5rem;border-bottom:1px solid var(--line);padding-bottom:.3rem;}
+    p{margin:.5rem 0;} ul{margin:.4rem 0;padding-left:1.2rem;} li{margin:.3rem 0;}
+    code{background:#0e1116;padding:.08rem .35rem;border-radius:4px;font-size:.85em;color:#cfe3ff;} a{color:var(--accent);}
+    .validation{border:2px solid var(--good);border-radius:12px;background:linear-gradient(180deg,rgba(136,238,136,.06),rgba(136,238,136,.02));padding:1rem 1.2rem;margin:1rem 0;}
+    .validation h2{border:0;margin-top:0;color:var(--good);}
+    .files{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:.6rem .9rem;font-size:.9rem;}
+    .why{color:var(--muted);}
+  </style>
+</head>
+<body>
+<main>
+  <div class="top">
+    <span class="seq">S11</span>
+    <h1>Structural guard: no core surface change</h1>
+  </div>
+  <div class="top" style="margin-top:0">
+    <span class="chip pending">pending</span>
+    <span class="chip req">REQ-FEEDBACK-11</span>
+  </div>
+  <p class="dep">Dependencies: none — can be authored any time. Parallel-safe. Run in the final gate (S12).</p>
+
+  <h2>What</h2>
+  <p>Add an automated assertion that the feature added nothing to <code>GameState</code> / <code>src/core</code>. Per the spec this
+  is a structural check, not a behavioral unit test.</p>
+  <ul>
+    <li>Implement as a grep / type-definition assertion (a small test file, e.g. <code>src/game/structural.test.ts</code>, or a CI
+      grep step — match existing conventions):
+      <ul>
+        <li><code>src/core/types.ts</code> has no new feedback fields (no new <code>progress</code>/<code>selection</code> fields on
+          <code>GameState</code>, no new <code>GameEvent</code> for feedback).</li>
+        <li>Nothing under <code>src/core</code> imports from <code>src/game</code>.</li>
+        <li>The new <code>src/game/feedback.ts</code> imports core <i>types</i> only (no core values, no Phaser).</li>
+      </ul>
+    </li>
+  </ul>
+
+  <div class="validation">
+    <h2>Validation</h2>
+    <ul>
+      <li>The structural assertion passes.</li>
+      <li><code>git diff --stat src/core</code> shows zero changes under <code>src/core</code> across the whole feature.</li>
+      <li><code>bun test</code> green; eslint clean.</li>
+    </ul>
+  </div>
+
+  <h2>Why</h2>
+  <p class="why">Enforces <a href="../../specs/player-feedback-selection-and-progress.html#REQ-FEEDBACK-11">REQ-FEEDBACK-11</a> —
+  all new feedback is renderer-only; selection stays renderer-only transient state. Codifies the boundary the whole plan respects.
+  Per plan step S11.</p>
+
+  <h2>Files</h2>
+  <div class="files">New: a structural test (e.g. <code>src/game/structural.test.ts</code>) or a CI grep step, whichever matches
+  existing conventions.</div>
+</main>
+</body>
+</html>

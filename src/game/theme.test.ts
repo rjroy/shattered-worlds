@@ -25,6 +25,15 @@ describe('selectTheme', () => {
     expect(typeof ZOMBIE_BIG_BOX_THEME.frameStyle.borderColor).toBe('number')
   })
 
+  it('frameStyle contains numeric feedback colors (hex integers)', () => {
+    expect(typeof ZOMBIE_BIG_BOX_THEME.frameStyle.connectorProgress).toBe('number')
+    expect(typeof ZOMBIE_BIG_BOX_THEME.frameStyle.connectorDestroy).toBe('number')
+    expect(typeof ZOMBIE_BIG_BOX_THEME.frameStyle.connectorReturn).toBe('number')
+    expect(typeof ZOMBIE_BIG_BOX_THEME.frameStyle.ringAccent).toBe('number')
+    expect(typeof ZOMBIE_BIG_BOX_THEME.frameStyle.targetGlow).toBe('number')
+    expect(typeof ZOMBIE_BIG_BOX_THEME.frameStyle.committedTarget).toBe('number')
+  })
+
   it('zombie-big-box has a world cardfront texture key', () => {
     expect(ZOMBIE_BIG_BOX_THEME.worldCardfrontKey).toBe('zombie-cardfront')
   })

@@ -5,6 +5,12 @@ export interface FrameStyle {
   selectedBorder: number
   targetBorder: number
   discardBorder: number
+  connectorProgress: number  // accent line for a progress/deal action; pairs with ringAccent
+  connectorDestroy: number   // red, for destroy actions
+  connectorReturn: number    // cool/blue, for return-to-deck actions
+  ringAccent: number         // cost-ring fill color (targetBorder green family)
+  targetGlow: number         // hover-target emphasis tint/glow
+  committedTarget: number    // muted "already locked here" mark
 }
 
 export interface GrainSpec {
@@ -39,6 +45,12 @@ export const ZOMBIE_BIG_BOX_THEME: VisualTheme = {
     selectedBorder: 0xffee44,
     targetBorder: 0x44ee44,
     discardBorder: 0xff8800,
+    connectorProgress: 0x44ee44,  // pairs with ringAccent (targetBorder green)
+    connectorDestroy: 0xff4444,   // red destroy action
+    connectorReturn: 0x44aaff,    // cool blue return-to-deck action
+    ringAccent: 0x44ee44,         // cost-ring fill, targetBorder green family
+    targetGlow: 0x88ffaa,         // bright green hover-target glow
+    committedTarget: 0x2a6a3a,    // muted dark green "locked here" mark
   },
   grain: { density: 0.12, contrast: 0.4 },
   backdrop: {

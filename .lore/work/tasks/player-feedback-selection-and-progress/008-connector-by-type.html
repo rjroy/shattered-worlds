@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Decorate the connector by targeting type</title>
+  <meta name="date" content="2026-06-05">
+  <meta name="status" content="complete">
+  <meta name="tags" content="task, feedback, connector, decoration, progress, destroy, return">
+  <meta name="source" content=".lore/work/plans/player-feedback-selection-and-progress.html">
+  <meta name="sequence" content="8">
+  <meta name="modules" content="game-tablescene">
+  <style>
+    :root{--bg:#14171d;--panel:#1c2029;--panel-2:#232834;--ink:#e8eaf0;--muted:#9aa3b2;--accent:#88aaff;--good:#88ee88;--bad:#ff8888;--warn:#ffcc55;--line:#2a3140;}
+    *{box-sizing:border-box;} body{margin:0;padding:0 0 4rem;background:var(--bg);color:var(--ink);font:16px/1.6 -apple-system,"Segoe UI",Roboto,sans-serif;}
+    main{max-width:880px;margin:0 auto;padding:0 1.2rem;}
+    .top{display:flex;align-items:center;gap:.7rem;flex-wrap:wrap;margin:1.6rem 0 .3rem;}
+    .seq{font-family:ui-monospace,monospace;font-size:1.4rem;font-weight:700;color:var(--accent);background:#0e1116;border:1px solid var(--line);border-radius:8px;padding:.1rem .6rem;}
+    h1{font-size:1.5rem;line-height:1.2;margin:0;}
+    .chip{font-size:.72rem;letter-spacing:.04em;text-transform:uppercase;padding:.15rem .55rem;border-radius:999px;border:1px solid var(--line);color:var(--muted);}
+    .chip.pending{background:rgba(255,204,85,.14);color:var(--warn);border-color:rgba(255,204,85,.35);}
+    .chip.req{background:#0e1116;color:#cfe3ff;}
+    .dep{color:var(--muted);font-size:.9rem;margin:.2rem 0 1.4rem;}
+    h2{font-size:.82rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:1.8rem 0 .5rem;border-bottom:1px solid var(--line);padding-bottom:.3rem;}
+    p{margin:.5rem 0;} ul{margin:.4rem 0;padding-left:1.2rem;} li{margin:.3rem 0;}
+    code{background:#0e1116;padding:.08rem .35rem;border-radius:4px;font-size:.85em;color:#cfe3ff;} a{color:var(--accent);}
+    .validation{border:2px solid var(--good);border-radius:12px;background:linear-gradient(180deg,rgba(136,238,136,.06),rgba(136,238,136,.02));padding:1rem 1.2rem;margin:1rem 0;}
+    .validation h2{border:0;margin-top:0;color:var(--good);}
+    .files{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:.6rem .9rem;font-size:.9rem;}
+    .why{color:var(--muted);}
+  </style>
+</head>
+<body>
+<main>
+  <div class="top">
+    <span class="seq">S8</span>
+    <h1>Decorate the connector by targeting type</h1>
+  </div>
+  <div class="top" style="margin-top:0">
+    <span class="chip pending">pending</span>
+    <span class="chip req">REQ-FEEDBACK-3</span>
+  </div>
+  <p class="dep">Dependencies: S7 (connector geometry), S1 (<code>selectConnectorStyle</code>), S2 (connector palette).</p>
+
+  <h2>What</h2>
+  <p>Style the connector from <code>selectConnectorStyle</code> (S1) using the theme palette (S2): a small, learnable three-style
+  vocabulary carrying <i>what</i> the action does, not just <i>where</i> it lands.</p>
+  <ul>
+    <li><b>progress</b> → accent straight line feeding into the target's cost ring (<code>connectorProgress</code>, paired with
+      <code>ringAccent</code>).</li>
+    <li><b>destroy</b> → harsh/jagged red line (<code>connectorDestroy</code>).</li>
+    <li><b>back to deck (return)</b> → curved arrow looping toward the world-deck pile (<code>connectorReturn</code>). Get the deck
+      endpoint via a small accessor on <code>PileLayer</code> (e.g. <code>pileLayer.worldPileCenter(): {x,y}</code>) rather than
+      hardcoding coordinates.</li>
+    <li>Resolve the style from the acting card's effect for the current step via <code>selectConnectorStyle</code>. The data→style
+      mapping is authoritatively gated by S1's unit test; this task only renders the three.</li>
+  </ul>
+  <p class="why">All three phases are reachable in a normal Zombie Big-Box run: DealProgress (Explore) on a hazard; ReturnWorldCards
+  (Barricade/Adrenaline) on world cards; DestroyCardInHand (Zombie Big-Box destroy) on a hand card.</p>
+
+  <div class="validation">
+    <h2>Validation</h2>
+    <ul>
+      <li>Mapping is gated by S1's <code>selectConnectorStyle</code> unit test (already green).</li>
+      <li><b>Manual:</b> trigger a DealProgress card on a hazard → accent line into the ring.</li>
+      <li><b>Manual:</b> trigger ReturnWorldCards (Barricade/Adrenaline) on a world card → looping arrow toward the deck.</li>
+      <li><b>Manual:</b> trigger the Zombie Big-Box DestroyCardInHand effect on a hand card → jagged red line.</li>
+      <li><code>bun test</code> green; <code>tsc</code>/eslint clean.</li>
+    </ul>
+  </div>
+
+  <h2>Why</h2>
+  <p class="why">Implements <a href="../../specs/player-feedback-selection-and-progress.html#REQ-FEEDBACK-3">REQ-FEEDBACK-3</a> —
+  the connector pre-reads the effect (chips / kills / bounces), making the link do double duty: disambiguate the target and preview
+  intent. Per plan step S8.</p>
+
+  <h2>Files</h2>
+  <div class="files">Edit: <code>src/game/TableScene.ts</code> (<code>showConnector</code> draw routine);
+  <code>src/game/piles.ts</code> (add <code>worldPileCenter()</code> accessor)</div>
+</main>
+</body>
+</html>
