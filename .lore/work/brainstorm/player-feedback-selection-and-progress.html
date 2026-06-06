@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Player feedback: target clarity before commit and partial hazard progress</title>
+  <meta name="date" content="2026-06-05">
+  <meta name="status" content="spec-ready">
+  <meta name="tags" content="ux, feedback, targeting, target-clarity, hazard-progress, juice">
+  <meta name="modules" content="game-render, game-selection, game-tablescene">
+  <style>
+    :root {
+      --bg: #14171d;
+      --panel: #1c2029;
+      --panel-2: #232834;
+      --ink: #e8eaf0;
+      --muted: #9aa3b2;
+      --accent: #88aaff;
+      --q: #ffcc55;
+      --good: #88ee88;
+      --bad: #ff8888;
+      --line: #2a3140;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; padding: 2.4rem 1.2rem 4rem;
+      background: var(--bg); color: var(--ink);
+      font: 16px/1.6 -apple-system, "Segoe UI", Roboto, sans-serif;
+    }
+    main { max-width: 920px; margin: 0 auto; }
+    h1 { font-size: 1.9rem; line-height: 1.2; margin: 0 0 .3rem; }
+    .sub { color: var(--muted); margin: 0 0 2rem; }
+    h2 {
+      font-size: 1.3rem; margin: 2.6rem 0 .8rem;
+      padding-bottom: .35rem; border-bottom: 1px solid var(--line);
+    }
+    h3 { font-size: 1.05rem; margin: 1.4rem 0 .4rem; color: var(--accent); }
+    p { margin: .5rem 0; }
+    .two { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    @media (max-width: 720px) { .two { grid-template-columns: 1fr; } }
+    .card {
+      background: var(--panel); border: 1px solid var(--line);
+      border-radius: 10px; padding: 1rem 1.1rem; margin: .8rem 0;
+    }
+    .card h3 { margin-top: 0; }
+    .tag {
+      display: inline-block; font-size: .72rem; letter-spacing: .04em;
+      text-transform: uppercase; padding: .1rem .5rem; border-radius: 999px;
+      vertical-align: middle; margin-left: .4rem;
+    }
+    .tag.q { background: rgba(255,204,85,.14); color: var(--q); border: 1px solid rgba(255,204,85,.35); }
+    .tag.fact { background: rgba(136,170,255,.14); color: var(--accent); border: 1px solid rgba(136,170,255,.35); }
+    .tag.dead { background: rgba(255,136,136,.12); color: var(--bad); border: 1px solid rgba(255,136,136,.3); }
+    .question {
+      background: var(--panel-2); border-left: 3px solid var(--q);
+      padding: .7rem .9rem; border-radius: 0 8px 8px 0; margin: .8rem 0;
+    }
+    .question b { color: var(--q); }
+    .fact {
+      background: var(--panel-2); border-left: 3px solid var(--accent);
+      padding: .7rem .9rem; border-radius: 0 8px 8px 0; margin: .8rem 0;
+    }
+    .idea { border-left: 3px solid var(--good); }
+    .idea h3 { color: var(--good); }
+    .deadend { border-left: 3px solid var(--bad); opacity: .92; }
+    .deadend h3 { color: var(--bad); }
+    code { background: #0e1116; padding: .08rem .35rem; border-radius: 4px; font-size: .85em; color: #cfe3ff; }
+    ul { margin: .4rem 0 .4rem 0; padding-left: 1.2rem; }
+    li { margin: .25rem 0; }
+    .note { color: var(--muted); font-size: .9rem; }
+    .pill-row { display: flex; gap: .4rem; flex-wrap: wrap; margin: .5rem 0; }
+    .pill { background: #0e1116; border: 1px solid var(--line); border-radius: 6px; padding: .15rem .55rem; font-size: .82rem; color: var(--muted); }
+    details { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: .3rem .9rem; margin: .6rem 0; }
+    summary { cursor: pointer; padding: .5rem 0; font-weight: 600; }
+    .scope { background: rgba(255,136,136,.08); border: 1px dashed rgba(255,136,136,.4); border-radius: 8px; padding: .8rem 1rem; color: var(--muted); font-size: .92rem; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>Player feedback: which hazard am I about to hit, and partial hazard progress</h1>
+  <p class="sub">Brainstorm &middot; open &middot; two UX-feedback concerns raised before committing to a design</p>
+
+  <div class="scope">
+    <b>Scope note.</b> This file is about <i>feedback design</i>: given the targeting and progress systems as they work today, how should the player read what they are about to do. It is not a bug report &mdash; the current behavior works as intended; the question is whether the <i>feedback</i> on top of it is strong enough.
+  </div>
+
+  <h2>The two concerns</h2>
+  <div class="two">
+    <div class="card">
+      <h3>1. Target clarity before commit</h3>
+      <p>While a play is still uncommitted, can the player tell <b>which world/hazard card is currently targeted</b>? The concern is the read on the <i>receiving end</i> of the action, not which card is in hand. Before they pull the trigger, the target the effect is about to land on should be unmistakable.</p>
+    </div>
+    <div class="card">
+      <h3>2. Partial hazard progress</h3>
+      <p>When a hazard has taken <b>some</b> progress but is not yet cleared, how is that shown on the card? Today the player has almost no read on "how close am I."</p>
+    </div>
+  </div>
+
+  <h2>Grounding facts that shape the design</h2>
+
+  <div class="fact">
+    <b>Partial progress is per-turn and resets.</b> <span class="tag fact">verified in code</span>
+    <p style="margin:.4rem 0 0"><code>handleEndTurn</code> sets <code>progress: {}</code>. The hazard card stays in hand, its <code>onEndOfTurn</code> keeps punishing, but every point of progress dealt this turn is wiped at end of turn. This is a <b>burst-it-down-this-turn-or-lose-the-work</b> model, not a slow accumulator.</p>
+  </div>
+
+  <div class="fact">
+    <b>Accumulated progress is currently never drawn on the card.</b> <span class="tag fact">verified in code</span>
+    <p style="margin:.4rem 0 0">The hazard face shows name, cost ("X to clear"), keywords, and effect lines. <code>state.progress[cardId]</code> is rendered <i>nowhere</i> on the card. The only place it surfaces is the one-line hover preview during active targeting (<code>previewPlay</code>: "Deals 2 &rarr; 1 more to clear").</p>
+  </div>
+
+  <div class="fact">
+    <b>The target read today is carried by color difference alone.</b> <span class="tag fact">verified in code</span>
+    <ul>
+      <li>The acting card gets one colored border; legal targets get a <i>different</i> colored border. "Which card is my target" is therefore a color-decoding task, not a direct read &mdash; exactly the gap concern 1 attacks.</li>
+      <li>Everything else dims to 35% alpha, so the targeted hazard and the merely-legal-but-unselected hazards are only weakly distinguished from each other.</li>
+      <li>One ephemeral bottom-center hint line <i>also</i> doubles as the hover-preview slot, so target instructions and the live preview clobber each other.</li>
+    </ul>
+  </div>
+
+  <div class="fact">
+    <b>No connector is ever drawn.</b> "This card &rarr; that hazard" is implied by two same-time borders, never by a literal link. And multi-step plays lose earlier picks (e.g. once a compound advances to its return step, the already-chosen hazard target is no longer marked).
+  </div>
+
+  <h2>Implementation anchors</h2>
+  <p class="note">Re-verified against current code on 2026-06-05, so the spec can point straight at the seams.</p>
+  <details>
+    <summary>Where each piece lives today (file:line)</summary>
+    <ul>
+      <li><b>Per-turn reset:</b> <code>handleEndTurn</code> &mdash; <code>src/core/reduce.ts:106</code>; world cards kept in hand (<code>:127</code>), <code>onEndOfTurn</code> fired per held card (<code>:111-118</code>), <code>progress: {}</code> wipe (<code>:129</code>).</li>
+      <li><b>Progress value surfaces only in preview:</b> the sole read of <code>state.progress</code> in the renderer is <code>describe.ts:103</code> (inside <code>previewPlay</code>). The card face draws cost (<code>render.ts:130</code>, "to clear" label) but never progress &mdash; the cost-ring meter is net-new surface on the world card face.</li>
+      <li><b>Target read = three weak signals:</b> two border colors (<code>selectedBorder</code> vs <code>targetBorder</code>, <code>render.ts:372-376</code>, applied at <code>TableScene.ts:323</code> vs <code>:330</code>); 35% dim (<code>dimAlpha: 0.35</code>, <code>render.ts:60</code>); one shared hint slot, <code>this.selectionHint</code>, carrying both instructions (<code>updateHint</code>, <code>TableScene.ts:683-703</code>) and live preview (<code>showTargetPreview</code>, <code>:675-676</code>).</li>
+      <li><b>No connector geometry exists:</b> no <code>add.graphics</code> / <code>lineBetween</code> / line primitive anywhere in <code>src/game</code>. "Draw the link" is greenfield, not a tweak.</li>
+      <li><b>Earlier picks go dark:</b> <code>applyHighlight</code> re-lights <code>awaiting-return</code> selections (<code>TableScene.ts:350-353</code>) and current legal targets, but nothing re-lights a stored earlier hazard <code>targetId</code> once the flow advances.</li>
+    </ul>
+  </details>
+
+  <h2>Concern 2 &mdash; partial progress, idea space</h2>
+  <p class="note">Frame: the player needs three things at a glance &mdash; <b>banked this turn</b>, <b>remaining</b>, and <b>it evaporates if I don't finish</b>. The per-turn reset is the hard part; a static bar teaches the first two and hides the third.</p>
+
+  <div class="card idea">
+    <h3>Pip row <span class="tag fact">cheap</span></h3>
+    <p>For low costs (most hazards look small), draw N pips that fill solid as progress lands. "3 pips, 2 filled" is instantly countable at 150px card width in a way a bar is not. Fails for very high costs.</p>
+  </div>
+
+  <div class="card idea">
+    <h3>Filling ring around the cost digit <span class="tag q">chosen direction</span></h3>
+    <p>Keep the big cost number, wrap it in a ring that fills with progress. Reads as a <i>clock</i>, which accidentally implies "running out of time" &mdash; on-theme for the per-turn cliff. <b>Picked.</b> It also pairs naturally with the drain animation below: a clock that <i>fills</i> as you bank progress and <i>empties</i> at end of turn is one consistent visual telling the whole burst-or-lose story. Scales past the pip row's ceiling for higher costs (still pending Q2 on the real range).</p>
+  </div>
+
+  <div class="card idea">
+    <h3>Fraction label <span class="tag fact">cheapest</span></h3>
+    <p>"1 / 3" replacing "3 to clear." Trivial, scales to any cost, but a bare number does not communicate the reset at all.</p>
+  </div>
+
+  <div class="card idea">
+    <h3>The reset deserves its own animation <span class="tag q">maybe the real answer</span></h3>
+    <p>Whatever the meter, at end of turn it should visibly <b>drain back to zero</b> rather than snap. Watching 2/3 bleed away <i>once</i> teaches the mechanic better than any tooltip. This may matter more than which meter style we pick.</p>
+  </div>
+
+  <div class="card idea">
+    <h3>"Can't finish this turn" pre-warning</h3>
+    <p>If the remaining hand cannot possibly cover the gap before end of turn, mark the hazard so the player does not pour cards into a meter that is about to reset. The math already exists in <code>previewPlay</code>; today it is only shown reactively on hover.</p>
+  </div>
+
+  <div class="card deadend">
+    <h3>Progressive "cracked / broken" art states <span class="tag dead">parked</span></h3>
+    <p>Most juice, most on-brand for a Balatro-maximalist feel, but expensive, doesn't scale to data-driven cards, and gives no exact number. Maybe worth it for a single hero hazard later; wrong as the general solution.</p>
+  </div>
+
+  <h2>Concern 1 &mdash; target clarity, idea space</h2>
+  <p class="note">Frame: the player is mid-targeting and needs one thing &mdash; <b>which world/hazard card will this land on</b> &mdash; to read at a glance, with zero ambiguity, before they commit. The acting card in hand is a <i>separate</i> concern (see the cut note below).</p>
+
+  <div class="card idea">
+    <h3>Draw the link <span class="tag q">highest leverage</span></h3>
+    <p>A literal connector (line or arrow) from the acting card to the hovered/committed target points the player's eye straight at the receiving card. The connector's real job here is to <b>name the target</b>, not to dress up the source &mdash; it replaces "bind two same-time border colors in your head" with "follow the line to the thing that's about to get hit."</p>
+    <p style="margin-top:.6rem"><b>Decorate the line by targeting type.</b> The connector can carry <i>what</i> the action does, not just <i>where</i> it lands &mdash; one styled line that previews intent on the target end:</p>
+    <div class="pill-row">
+      <span class="pill">progress &rarr; accent line feeding into the cost ring</span>
+      <span class="pill">destroy &rarr; harsh / jagged red</span>
+      <span class="pill">back to deck &rarr; curved arrow looping toward the deck</span>
+    </div>
+    <p class="note">This makes the link do double duty: it disambiguates the target (concern 1) <i>and</i> pre-reads the effect, so the player isn't guessing whether this hit chips the hazard, kills it, or bounces it. Keep the vocabulary small and consistent so the styles stay learnable.</p>
+  </div>
+
+  <div class="card idea">
+    <h3>Make the target highlight unmistakable on its own <span class="tag q">cheap, direct</span></h3>
+    <p>The hazard's "I am the target" state should be the loudest read on the board: not just a border tint, but lift/scale, a glow, or a reticle on the card itself, distinct from the merely-legal-target dim. Right now "targeted" and "legal but unselected" lean on a color difference the player has to decode. The target the trigger is aimed at should be obvious without comparison.</p>
+  </div>
+
+  <div class="card idea">
+    <h3>Keep earlier picks lit through multi-step plays</h3>
+    <p>During a compound's later step, keep the already-chosen target visibly marked so the player can still see <b>which hazard the earlier step is committed to</b>. Today that earlier target goes dark, so mid-sequence the player loses the read on where their first hit landed.</p>
+  </div>
+
+  <div class="card deadend">
+    <h3>Floating RPG-style damage numbers on the target <span class="tag dead">parked</span></h3>
+    <p>Lands on the right end (the target) but reads as <i>result</i>, not <i>intent</i> &mdash; it confirms after the fact rather than clarifying before commit. Redundant with the concern-2 meter work and gets noisy with modal/multi-effect cards. Revisit only if the highlight + link still underdeliver.</p>
+  </div>
+
+  <div class="card deadend">
+    <h3>Cut: acting-card feedback (action tray, echo modal branch) <span class="tag dead">different concern</span></h3>
+    <p>Earlier framing carried two ideas about the <i>card in hand</i> &mdash; a persistent "action tray" ("Playing <b>Baseball Bat</b> &rarr;...") and echoing the chosen modal branch label during targeting. Both answer "what am I doing / which card did I pick," which is <b>not</b> this concern. Parked here so the thinking isn't lost; pick them back up if "which acting card / which branch" ever becomes its own raised concern.</p>
+  </div>
+
+  <h2>Decisions and remaining open questions</h2>
+  <p class="note">As of 2026-06-05: Q1, Q2, Q3, Q5 resolved (below). Only Q4 (a prioritization within Concern 1) is still open, and it can be settled inside the spec. This brainstorm is spec-ready.</p>
+
+  <div class="fact" style="border-left-color: var(--good)"><b>Q1 &mdash; resolved: burst-or-lose is intended.</b> <span class="tag fact">decided 2026-06-05</span> The per-turn reset is the design, not an artifact. The whole Concern 2 branch stands: cost-ring meter plus a drain animation, with the drain treated as <b>core mechanic-teaching, not polish</b>. (This also settles Q3 below.)</div>
+
+  <div class="fact" style="border-left-color: var(--good)"><b>Q2 &mdash; answered from catalog data.</b> <span class="tag fact">verified in data</span> Every normal hazard in <code>zombie-big-box.json</code> costs <b>1 or 2</b> (Strange Sounds, Rubble, Screams, Zombie, Door, Find Baseball Bat); one boss, <b>The Walker, costs 10</b>. <code>starter.json</code> is the player deck and carries no hazard costs. So the meter must read cleanly from 1 to 2 in the common case and survive a single 10 at the boss. This is why the ring beats the pip row: a 10-pip strip at 150px is cramped, a ring fills to 10 without changing shape. The 10 is the stress case the chosen meter has to pass.</div>
+
+  <div class="fact" style="border-left-color: var(--good)"><b>Q3 &mdash; resolved by Q1: managed tension.</b> <span class="tag fact">decided 2026-06-05</span> The reset is meant to be <i>felt and managed</i> (a roguelike burst-timing decision), not an invisible gotcha. So the drain animation is the core teaching beat: watching banked progress bleed away once should make the timing pressure legible.</div>
+
+  <div class="question"><b>Q4.</b> For concern 1, is the worst case "I committed to the <i>wrong hazard</i> because the target read was ambiguous" (fix = louder target highlight + link), or "mid-sequence I can't tell <i>which hazard</i> my earlier step is locked onto" (fix = keep earlier picks lit)? Both are target-read failures; rank which bites first.</div>
+
+  <div class="fact" style="border-left-color: var(--good)"><b>Q5 &mdash; resolved: stay click-to-commit.</b> <span class="tag fact">decided 2026-06-05</span> No explicit confirm step for single-target plays. <b>Consequence for Concern 1:</b> there is no held "this is your target" beat, so the target read must land <i>on hover, before the click</i>. The hover-state highlight and the on-hover link therefore carry the full weight of preventing a wrong-target commit &mdash; they are the safety margin, not decoration.</div>
+
+  <h2>If I had to pick a starting thread</h2>
+  <p>Concern 2 is settled: the <b>filling ring around the cost digit</b>, paired with a <b>drain animation</b> at end of turn so the ring visibly empties &mdash; one clock that tells the whole burst-or-lose story. Q1 confirmed the reset is intended (so the drain is core), and Q2 fixed the range it must cover (1&ndash;2 common, a single boss at 10). No open questions remain on this branch.</p>
+  <p>Concern 1 has a chosen lead: <b>draw the link</b> from acting card to target, <b>decorated by targeting type</b> (progress / destroy / back to deck) so the line names both the target and the effect, backed by a target highlight loud enough to read on its own. Together the player knows exactly <i>where</i> the hit lands and <i>what</i> it does before committing, instead of decoding two border colors. Because Q5 kept <b>click-to-commit</b> (no confirm beat), both must render on <b>hover</b> &mdash; the hover read is the only thing standing between the player and a wrong-target commit.</p>
+
+</main>
+</body>
+</html>

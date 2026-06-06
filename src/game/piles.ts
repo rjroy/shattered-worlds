@@ -23,6 +23,19 @@ export class PileLayer {
     this.worldPile = scene.add.container(820, 500)
   }
 
+  /**
+   * Screen-space centre of the world-draw pile, read live from the pile
+   * container's own position rather than hardcoded. The stack images are
+   * placed relative to the container origin (the first card sits at 0,0 with
+   * origin 0.5,1), so the container's (x, y) is the pile's anchor point — the
+   * sensible endpoint for a "return to deck" connector. Lifting it slightly
+   * (PILE_CARD_H / 2) points at the visual middle of the stack instead of its
+   * bottom edge.
+   */
+  worldPileCenter(): { x: number; y: number } {
+    return { x: this.worldPile.x, y: this.worldPile.y - PILE_CARD_H / 2 }
+  }
+
   update(scene: Phaser.Scene, playerCount: number, worldCount: number): void {
     this.playerPile.removeAll(true)
     this.worldPile.removeAll(true)

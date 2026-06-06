@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Spec: target clarity before commit and partial hazard progress</title>
+  <meta name="date" content="2026-06-05">
+  <meta name="status" content="draft">
+  <meta name="tags" content="ux, feedback, targeting, target-clarity, hazard-progress, juice, connector, cost-ring">
+  <meta name="modules" content="game-render, game-tablescene, game-selection, game-describe">
+  <meta name="related" content=".lore/work/brainstorm/player-feedback-selection-and-progress.html, .lore/work/design/targeting-interaction.html, .lore/work/specs/world-deck-slice.html, .lore/work/specs/visual-identity.html">
+  <meta name="req-prefix" content="FEEDBACK">
+  <style>
+    :root {
+      --bg: #14171d; --panel: #1c2029; --panel-2: #232834;
+      --ink: #e8eaf0; --muted: #9aa3b2; --accent: #88aaff;
+      --good: #88ee88; --bad: #ff8888; --warn: #ffcc55; --line: #2a3140;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; padding: 0 0 5rem;
+      background: var(--bg); color: var(--ink);
+      font: 16px/1.6 -apple-system, "Segoe UI", Roboto, sans-serif;
+    }
+    main { max-width: 940px; margin: 0 auto; padding: 0 1.2rem; }
+    h1 { font-size: 1.85rem; line-height: 1.2; margin: 1.6rem 0 .3rem; }
+    .sub { color: var(--muted); margin: 0 0 1.4rem; }
+    h2 { font-size: 1.3rem; margin: 2.4rem 0 .6rem; padding-bottom: .35rem; border-bottom: 1px solid var(--line); }
+    h3 { font-size: 1.02rem; margin: 1.2rem 0 .3rem; }
+    p { margin: .5rem 0; }
+    code { background: #0e1116; padding: .08rem .35rem; border-radius: 4px; font-size: .85em; color: #cfe3ff; }
+    ul { margin: .4rem 0; padding-left: 1.2rem; } li { margin: .25rem 0; }
+    .note { color: var(--muted); font-size: .92rem; }
+
+    /* Sticky status header */
+    .sticky {
+      position: sticky; top: 0; z-index: 20;
+      background: rgba(20,23,29,.94); backdrop-filter: blur(6px);
+      border-bottom: 1px solid var(--line);
+      display: flex; gap: .8rem; align-items: center; flex-wrap: wrap;
+      padding: .6rem 1.2rem; margin-bottom: .4rem;
+    }
+    .sticky .wrap { max-width: 940px; margin: 0 auto; width: 100%; display: flex; gap: .8rem; align-items: center; flex-wrap: wrap; }
+    .sticky b { font-size: .95rem; }
+    .chip { font-size: .72rem; letter-spacing: .04em; text-transform: uppercase; padding: .15rem .55rem; border-radius: 999px; border: 1px solid var(--line); color: var(--muted); }
+    .chip.status { background: rgba(136,170,255,.14); color: var(--accent); border-color: rgba(136,170,255,.35); }
+    .chip.prefix { background: #0e1116; color: #cfe3ff; }
+
+    /* Requirement cards */
+    .req {
+      background: var(--panel); border: 1px solid var(--line);
+      border-radius: 10px; padding: .9rem 1.1rem; margin: .8rem 0;
+      scroll-margin-top: 4rem;
+    }
+    .req .head { display: flex; align-items: baseline; gap: .6rem; flex-wrap: wrap; }
+    .req .id { font-family: ui-monospace, monospace; font-size: .8rem; color: var(--muted); }
+    .req .id a { color: var(--muted); text-decoration: none; }
+    .req .id a:hover { color: var(--accent); }
+    .req .title { font-weight: 600; font-size: 1.02rem; }
+    .badge { font-size: .68rem; letter-spacing: .04em; text-transform: uppercase; padding: .12rem .5rem; border-radius: 999px; white-space: nowrap; }
+    .badge.must { background: rgba(255,136,136,.14); color: var(--bad); border: 1px solid rgba(255,136,136,.32); }
+    .badge.should { background: rgba(255,204,85,.14); color: var(--warn); border: 1px solid rgba(255,204,85,.32); }
+    .badge.test { background: rgba(136,238,136,.12); color: var(--good); border: 1px solid rgba(136,238,136,.3); }
+    .badge.manual { background: rgba(136,170,255,.12); color: var(--accent); border: 1px solid rgba(136,170,255,.3); }
+    .req p { margin: .45rem 0; }
+    .req details { margin-top: .5rem; background: var(--panel-2); border: 1px solid var(--line); border-radius: 8px; padding: .2rem .8rem; }
+    .req summary { cursor: pointer; padding: .45rem 0; font-size: .9rem; color: var(--accent); }
+    .req .anchor-on { background: var(--panel-2); }
+
+    .group-h { display:flex; align-items:center; gap:.6rem; }
+    .group-h .lead { font-size:.8rem; color: var(--muted); }
+
+    /* Validation — impossible to miss */
+    .validation {
+      border: 2px solid var(--good); border-radius: 12px;
+      background: linear-gradient(180deg, rgba(136,238,136,.06), rgba(136,238,136,.02));
+      padding: 1.2rem 1.3rem; margin: 2.4rem 0 1rem;
+    }
+    .validation h2 { border: 0; margin-top: 0; color: var(--good); }
+    .validation table { width: 100%; border-collapse: collapse; font-size: .9rem; margin: .6rem 0; }
+    .validation th, .validation td { text-align: left; padding: .45rem .5rem; border-bottom: 1px solid var(--line); vertical-align: top; }
+    .validation th { color: var(--muted); font-weight: 600; font-size: .78rem; text-transform: uppercase; letter-spacing: .03em; }
+    .validation code { font-size: .82em; }
+    .scope { background: rgba(255,136,136,.07); border: 1px dashed rgba(255,136,136,.4); border-radius: 8px; padding: .8rem 1rem; color: var(--muted); font-size: .92rem; margin: 1rem 0; }
+    .anchorlink { color: var(--accent); text-decoration: none; font-size: .85rem; }
+  </style>
+</head>
+<body>
+
+<div class="sticky">
+  <div class="wrap">
+    <b>Target clarity &amp; partial hazard progress</b>
+    <span class="chip status">draft</span>
+    <span class="chip prefix">REQ-FEEDBACK-N</span>
+    <span class="chip">12 reqs &middot; 2 concerns</span>
+  </div>
+</div>
+
+<main>
+  <h1>Spec: target clarity before commit and partial hazard progress</h1>
+  <p class="sub">Two UX-feedback concerns from the deckbuilder table, specced as a delta over the shipped targeting renderer &middot; derived from the <a class="anchorlink" href="../brainstorm/player-feedback-selection-and-progress.html">spec-ready brainstorm</a></p>
+
+  <div class="scope">
+    <b>Framing.</b> This is feedback design, not a mechanics change. The targeting grammar
+    (<a class="anchorlink" href="../design/targeting-interaction.html">targeting-interaction.html</a>) and the
+    progress/reset rules (<a class="anchorlink" href="../specs/world-deck-slice.html">world-deck-slice.html</a>,
+    REQ-WDS-9/10) already ship and stay unchanged. Every requirement here is renderer-side: how the player <i>reads</i>
+    what they are about to do and how close a hazard is to clearing. Nothing in this spec may alter
+    <code>GameState</code> or core reducers.
+  </div>
+
+  <h2>Concern 1 &mdash; Target clarity before commit</h2>
+  <div class="group-h"><span class="lead">The player is mid-targeting and must read, at a glance and before the click, <b>which hazard the hit will land on</b> and <b>what it will do</b>. Q5 kept click-to-commit (no confirm beat), so the entire safety margin is the <b>hover</b> read. Wrong-hazard commit is the worst case, so the loud highlight, connector, decoration, and hover timing (FEEDBACK-1/2/3/4) are the load-bearing requirements; keeping earlier picks lit (FEEDBACK-6) is secondary.</span></div>
+
+  <div class="req" id="REQ-FEEDBACK-1">
+    <div class="head">
+      <span class="id"><a href="#REQ-FEEDBACK-1">REQ-FEEDBACK-1</a></span>
+      <span class="title">Loud, unmistakable target highlight</span>
+      <span class="badge must">must</span>
+      <span class="badge manual">manual</span>
+    </div>
+    <p>The hovered legal target during a targeting phase must be the loudest read on the board, distinct
+    <i>on its own</i> rather than by comparison to other cards. The "I am the target" state must go beyond a border
+    tint (the only signal today) and add at least one of: scale/lift, a glow, or an on-card reticle. It must be
+    visibly different from the merely-legal-but-unhovered target state and from the dimmed non-target state.</p>
+    <details>
+      <summary>Why &amp; seams</summary>
+      <p>Today the target read is carried by color difference alone: <code>applyCardHighlight(container,'target',fs)</code>
+      sets a 3px <code>frameStyle.targetBorder</code> stroke (<code>render.ts:374-376</code>), and everything else dims to
+      <code>dimAlpha 0.35</code> (<code>render.ts:60,387</code>). Targeted vs legal-but-unselected differ only by which cards
+      hold which border color. The brainstorm's Q5 makes this the safety margin: with no confirm step, an ambiguous hover
+      read is a wrong-hazard commit waiting to happen. The new emphasis applies to the hovered target specifically, layered
+      on the existing <code>applyHighlight</code> path (<code>TableScene.ts:308-368</code>).</p>
+    </details>
+  </div>
+
+  <div class="req" id="REQ-FEEDBACK-2">
+    <div class="head">
+      <span class="id"><a href="#REQ-FEEDBACK-2">REQ-FEEDBACK-2</a></span>
+      <span class="title">Connector from acting card to hovered target</span>
+      <span class="badge must">must</span>
+      <span class="badge manual">manual</span>
+    </div>
+    <p>While a target is hovered, a literal connector (line or arrow) must be drawn from the acting card to that target.
+    Its job is to <b>name the target</b>: it replaces "bind two same-time border colors in your head" with "follow the
+    line to the thing about to get hit." The connector appears on hover-over of a legal target and is removed on
+    hover-out or commit.</p>
+    <details>
+      <summary>Why &amp; seams</summary>
+      <p>No connector geometry exists anywhere in <code>src/game</code> today (no <code>lineBetween</code> / line primitive),
+      so this is greenfield. It hangs off the existing hover hooks (<code>TableScene.ts:300-301</code>:
+      <code>pointerover &rarr; showTargetPreview</code>, <code>pointerout &rarr; updateHint</code>). The source endpoint is the
+      selected acting card (<code>sel.cardId</code>); the target endpoint is the hovered legal target. Must respect Phaser
+      depth so the line draws above dimmed cards without eating their pointer events (see the depth-sort / input-block
+      lessons in <code>visual-identity-rollout.html</code>).</p>
+    </details>
+  </div>
+
+  <div class="req" id="REQ-FEEDBACK-3">
+    <div class="head">
+      <span class="id"><a href="#REQ-FEEDBACK-3">REQ-FEEDBACK-3</a></span>
+      <span class="title">Connector decorated by targeting type</span>
+      <span class="badge must">must</span>
+      <span class="badge test">unit + manual</span>
+    </div>
+    <p>The connector must carry <i>what</i> the action does, not just <i>where</i> it lands, using a small, consistent,
+    learnable vocabulary of three styles selected from the acting card's effect against the target:</p>
+    <ul>
+      <li><b>Progress</b> &rarr; accent-colored line feeding into the target's cost ring (FEEDBACK-7).</li>
+      <li><b>Destroy</b> &rarr; harsh / jagged red line.</li>
+      <li><b>Back to deck</b> (return) &rarr; curved arrow looping toward the deck.</li>
+    </ul>
+    <p>The mapping from action to style must be a pure function so it is unit-testable independent of Phaser. The three
+    styles correspond to three distinct targeting phases, not one: the connector draws from the acting card to the hovered
+    target regardless of whether that target is a hazard, a returned world card, or a destroyed hand card.</p>
+    <details>
+      <summary>Why &amp; seams</summary>
+      <p>This makes the link do double duty: disambiguate the target (Concern 1) and pre-read the effect, so the player
+      is not guessing whether the hit chips, kills, or bounces the hazard. The effect kind and selection phase are both
+      discoverable: <code>DealProgress</code> &rarr; <code>awaiting-hazard</code> (see <code>dealProgressOf</code>,
+      <code>describe.ts:112+</code>); <code>DestroyCardInHand</code> &rarr; <code>awaiting-destroy</code> (targets a hand
+      card, e.g. the Zombie Big-Box destroy effect); <code>ReturnWorldCards</code> &rarr; <code>awaiting-return</code>
+      (targets world cards, e.g. Barricade / Adrenaline). All three phases exist in <code>selection.ts</code>. Keep the
+      style-selection logic out of the render call so it can be tested as data &rarr; style.</p>
+    </details>
+  </div>
+
+  <div class="req" id="REQ-FEEDBACK-4">
+    <div class="head">
+      <span class="id"><a href="#REQ-FEEDBACK-4">REQ-FEEDBACK-4</a></span>
+      <span class="title">Highlight and connector render on hover, before click</span>
+      <span class="badge must">must</span>
+      <span class="badge manual">manual</span>
+    </div>
+    <p>Because the game stays click-to-commit with no confirm step (brainstorm Q5), both the loud highlight (FEEDBACK-1)
+    and the connector (FEEDBACK-2/3) must appear on <b>hover</b> of a legal target, before any click. The hover state is
+    the only thing standing between the player and a wrong-target commit; nothing about the target read may depend on a
+    held post-selection beat that does not exist.</p>
+    <details>
+      <summary>Why &amp; seams</summary>
+      <p><code>showTargetPreview(targetId)</code> already fires on <code>pointerover</code> during <code>awaiting-hazard</code>
+      and no-ops for illegal targets (<code>TableScene.ts:662-677</code>). The new highlight/connector hook into the same
+      hover entry/exit so they live and die with the pointer, matching the preview's lifecycle.</p>
+    </details>
+  </div>
+
+  <div class="req" id="REQ-FEEDBACK-5">
+    <div class="head">
+      <span class="id"><a href="#REQ-FEEDBACK-5">REQ-FEEDBACK-5</a></span>
+      <span class="title">Instruction hint and live preview must not clobber each other</span>
+      <span class="badge must">must</span>
+      <span class="badge manual">manual</span>
+    </div>
+    <p>The targeting instruction ("Select a Hazard target") and the live hover preview ("Deals 2 &rarr; 1 more to clear")
+    must occupy distinct surfaces so one does not overwrite the other. Today a single bottom-center slot carries both.</p>
+    <details>
+      <summary>Why &amp; seams</summary>
+      <p><code>this.selectionHint</code> is shared: <code>updateHint()</code> writes phase instructions
+      (<code>TableScene.ts:679-706</code>) and <code>showTargetPreview()</code> writes the preview into the <i>same</i>
+      <code>setText</code> target (<code>:676</code>). On <code>pointerout</code> the preview is cleared by re-running
+      <code>updateHint()</code>. The fix is a second text/preview surface (e.g. anchored near the hovered target or a
+      dedicated preview slot) so instruction and preview coexist. The preview string itself stays sourced from
+      <code>previewPlay</code> (single source of truth; honor <code>self-describing-card-faces.html</code>).
+      The targeting design requires affordances to work on touch as well as mouse, so a pointer-following floating slot
+      must degrade gracefully when there is no hover (touch): the preview may appear on the target's own tap-to-preview,
+      but the two surfaces must never collapse back into one shared slot.</p>
+    </details>
+  </div>
+
+  <div class="req" id="REQ-FEEDBACK-6">
+    <div class="head">
+      <span class="id"><a href="#REQ-FEEDBACK-6">REQ-FEEDBACK-6</a></span>
+      <span class="title">Keep earlier picks lit through multi-step plays</span>
+      <span class="badge should">should</span>
+      <span class="badge manual">manual</span>
+    </div>
+    <p>During a compound play's later step, the hazard target already chosen by an earlier step must stay visibly marked,
+    so the player can still see which hazard the earlier step is committed to. Secondary to the single-step read
+    (FEEDBACK-1/2/3): wrong-hazard commit was ranked the worse failure, so this is a SHOULD, but the read still must not
+    go fully dark mid-sequence. The committed-earlier-step target must carry a persistent "committed" mark that is
+    visually distinct from both the active hover highlight (FEEDBACK-1) and the legal-but-unhovered state &mdash; a muted,
+    steady version of the target emphasis reads as "already locked here," not "hover me." (Only Barricade produces a
+    compound flow in the current catalog, so this requirement has a single live trigger today.)</p>
+    <details>
+      <summary>Why &amp; seams</summary>
+      <p><code>applyHighlight</code> re-lights <code>awaiting-return</code> selections (<code>TableScene.ts:349-354</code>) and
+      current legal targets, but nothing re-lights a stored earlier hazard <code>targetId</code> once the flow advances past
+      it. The renderer would need to track the earlier-committed target id(s) for the in-flight compound and apply the
+      persistent "committed target" mark.</p>
+    </details>
+  </div>
+
+  <h2>Concern 2 &mdash; Partial hazard progress</h2>
+  <div class="group-h"><span class="lead">A hazard can take <b>some</b> progress this turn without clearing, and every point evaporates at end of turn (REQ-WDS-10; <code>handleEndTurn</code> sets <code>progress:{}</code> at <code>reduce.ts:129</code>). The player needs three reads at a glance: <b>banked this turn</b>, <b>remaining to clear</b>, and <b>it resets if I don't finish</b>. A static bar teaches the first two and hides the third, so the drain animation (FEEDBACK-9) is core teaching, not polish.</span></div>
+
+  <div class="req" id="REQ-FEEDBACK-7">
+    <div class="head">
+      <span class="id"><a href="#REQ-FEEDBACK-7">REQ-FEEDBACK-7</a></span>
+      <span class="title">Cost-ring progress meter on the world card face</span>
+      <span class="badge must">must</span>
+      <span class="badge test">unit + manual</span>
+    </div>
+    <p>The hazard card face must show accumulated progress as a ring wrapping the existing cost digit. The ring's filled
+    fraction equals <code>min(progress, cost) / cost</code>. The big cost number stays readable inside the ring. The meter
+    must read cleanly in the common case (cost 1&ndash;2) and survive the single boss at cost 10 (The Walker) without
+    changing shape, which is why a ring beats a pip row (brainstorm Q2). The fill-fraction computation must be a pure,
+    unit-testable function.</p>
+    <details>
+      <summary>Why &amp; seams</summary>
+      <p>Accumulated progress is drawn <i>nowhere</i> on the card today: the face shows name, cost digit + "to clear" label
+      (<code>render.ts:130-142</code>), keywords, and effect lines; <code>state.progress[cardId]</code> only surfaces in the
+      one-line hover preview (<code>previewPlay</code>, <code>describe.ts:103</code>). The cost-ring is net-new surface on the
+      world card face. Reads from <code>state.progress[cardId] ?? 0</code> and <code>worldCard.cost</code> &mdash; no new state.
+      Ring color for the progress-feeding line (FEEDBACK-3) should pair with this ring's accent.
+      When progress reaches cost the hazard resolves (<code>HazardResolved</code>) and the card leaves the board on its own
+      exit animation; the ring is not expected to play a separate "cleared" beat &mdash; reaching full and the card exiting
+      is the resolution read. No drain (FEEDBACK-9) fires for a resolved hazard, only for one still held at end of turn.</p>
+    </details>
+  </div>
+
+  <div class="req" id="REQ-FEEDBACK-8">
+    <div class="head">
+      <span class="id"><a href="#REQ-FEEDBACK-8">REQ-FEEDBACK-8</a></span>
+      <span class="title">Ring fills as progress is banked this turn</span>
+      <span class="badge must">must</span>
+      <span class="badge manual">manual</span>
+    </div>
+    <p>When progress lands on a hazard, the ring must visibly fill toward the new fraction rather than snapping. Together
+    with the drain (FEEDBACK-9) this is one consistent clock: it <i>fills</i> as you bank and <i>empties</i> at end of turn,
+    telling the whole burst-or-lose story in one visual. The fill and the drain should share a comparable, clearly
+    perceptible animation duration (roughly 200&ndash;400ms) so they read as the same clock running in two directions.</p>
+  </div>
+
+  <div class="req" id="REQ-FEEDBACK-9">
+    <div class="head">
+      <span class="id"><a href="#REQ-FEEDBACK-9">REQ-FEEDBACK-9</a></span>
+      <span class="title">End-of-turn drain animation (core teaching beat)</span>
+      <span class="badge must">must</span>
+      <span class="badge manual">manual</span>
+    </div>
+    <p>At end of turn, any hazard holding partial progress must visibly <b>drain back to zero</b> rather than snap. This is
+    treated as core mechanic-teaching (brainstorm Q1/Q3: the per-turn reset is intended and meant to be felt and managed),
+    not polish. Watching banked progress bleed away once should make the burst-timing pressure legible without a tooltip.</p>
+    <details>
+      <summary>Why &amp; seams</summary>
+      <p>The reset happens in <code>handleEndTurn</code>: world cards stay in hand (<code>reduce.ts:127</code>) and
+      <code>progress</code> is wiped to <code>{}</code> (<code>:129</code>), emitting a <code>TurnEnded</code> event
+      (<code>:107</code>). The renderer must animate the drain on the held hazards <i>between</i> the old progress value and
+      zero, driven off the turn-end event rather than a silent state swap. Because the card persists across the reset, the
+      same ring object animates down. <b>Source of the pre-reset value:</b> <code>TurnEnded</code> carries no progress
+      snapshot, so the renderer is responsible for caching the last-known progress per held hazard; on <code>TurnEnded</code>
+      it reads the cache, tweens the ring to zero, then discards the cache. This is renderer-side state (consistent with
+      FEEDBACK-11); the event payload stays unchanged.</p>
+    </details>
+  </div>
+
+  <h2>Cross-cutting constraints</h2>
+
+  <div class="req" id="REQ-FEEDBACK-10">
+    <div class="head">
+      <span class="id"><a href="#REQ-FEEDBACK-10">REQ-FEEDBACK-10</a></span>
+      <span class="title">Progress reads from a single source of truth</span>
+      <span class="badge must">must</span>
+      <span class="badge test">unit</span>
+    </div>
+    <p>Everything that senses "how close is this hazard to clearing" must derive from the same data
+    (<code>state.progress</code> + <code>cost</code>, surfaced through the existing describe/preview layer): the ring meter
+    (FEEDBACK-7), the hover preview and any "X more to clear" text (FEEDBACK-5), and the progress-vs-other-effect decision
+    that selects the connector style (FEEDBACK-3). No second progress computation may be introduced that could drift from
+    <code>previewPlay</code>. This is a cross-cutting constraint because both concerns read progress: Concern 2 to fill the
+    ring, Concern 1 to know the hit is a progress hit and to preview its result.</p>
+    <details>
+      <summary>Why &amp; seams</summary>
+      <p>Honors the <code>self-describing-card-faces.html</code> retro conclusion: card-text and preview already flow through
+      a single describe layer. The ring fraction (FEEDBACK-7), the preview string (<code>previewPlay</code>,
+      <code>describe.ts:91-110</code>), and the connector-style resolver (FEEDBACK-3) must agree by construction &mdash; two
+      code paths computing "how close to clearing" differently is a known bug source.</p>
+    </details>
+  </div>
+
+  <div class="req" id="REQ-FEEDBACK-11">
+    <div class="head">
+      <span class="id"><a href="#REQ-FEEDBACK-11">REQ-FEEDBACK-11</a></span>
+      <span class="title">All new feedback is renderer-only</span>
+      <span class="badge must">must</span>
+      <span class="badge test">structural</span>
+    </div>
+    <p>No requirement in this spec may add to or change <code>GameState</code>, the core reducers, or any pure-core module.
+    Connector geometry, the cost ring, the highlight emphasis, and the drain animation all live in <code>src/game</code>
+    (the thin renderer). Selection remains renderer-only transient state per
+    <a class="anchorlink" href="../design/targeting-interaction.html">targeting-interaction.html</a> and
+    <a class="anchorlink" href="../design/core-render-architecture.html">core-render-architecture.html</a>.</p>
+  </div>
+
+  <div class="req" id="REQ-FEEDBACK-12">
+    <div class="head">
+      <span class="id"><a href="#REQ-FEEDBACK-12">REQ-FEEDBACK-12</a></span>
+      <span class="title">Juice and colors hook the existing theme / intensity system</span>
+      <span class="badge must">must</span>
+      <span class="badge manual">manual</span>
+    </div>
+    <p>Connector colors, highlight glow, ring accent, and any intensity-scaled emphasis must draw from the existing
+    <code>VisualTheme.frameStyle</code> and the intensity signal (<a class="anchorlink" href="../specs/visual-identity.html">visual-identity.html</a>),
+    not a parallel hardcoded palette. Theme-supplied colors already exist for borders
+    (<code>frameStyle.selectedBorder/targetBorder/discardBorder</code>, <code>theme.ts:5-7</code>); new feedback surfaces
+    extend that set rather than inventing one.</p>
+    <details>
+      <summary>Why &amp; seams</summary>
+      <p>The targeting design explicitly says highlight/commit juice should be intensity-scaled and renderer-owned. New
+      theme fields (e.g. a connector palette keyed by targeting type, a ring accent) belong in <code>FrameStyle</code> /
+      <code>VisualTheme</code> so every world theme can restyle them, consistent with the visual-identity seam.</p>
+    </details>
+  </div>
+
+  <h2>Out of scope (deferred)</h2>
+  <p class="note">Captured so the thinking is not lost; explicitly <b>not</b> required by this spec.</p>
+  <ul>
+    <li><b>"Can't finish this turn" pre-warning</b> &mdash; marking a hazard when the remaining hand mathematically cannot
+      cover the gap. Deferred; revisit as a follow-on once the ring + connector ship.</li>
+    <li><b>Pip-row meter</b> &mdash; the ring was chosen as the single meter (Q2); a pip alternative is redundant.</li>
+    <li><b>Floating RPG damage numbers on the target</b> &mdash; reads as result, not intent; revisit only if highlight +
+      link underdeliver.</li>
+    <li><b>Progressive cracked / broken hazard art states</b> &mdash; expensive, does not scale to data-driven cards, gives
+      no exact number. Maybe a single hero hazard later.</li>
+    <li><b>Acting-card feedback</b> (action tray, modal-branch echo) &mdash; answers "which card / which branch am I
+      playing," a different concern from "which target will this hit."</li>
+  </ul>
+
+  <!-- ===================== VALIDATION ===================== -->
+  <div class="validation" id="ai-validation">
+    <h2>AI Validation</h2>
+    <p>How the AI verifies this spec is done. Pure-function requirements are gated by unit tests the AI runs; the
+    perceptual requirements (a highlight being "loud," a drain being "visible") require launching the game in a browser
+    and observing, the same manual-check pattern used for REQ-VIS-18 in <code>visual-identity.html</code>. Both paths are
+    listed per requirement below.</p>
+
+    <h3>Automated gate (AI runs these)</h3>
+    <ul>
+      <li><code>bun test</code> &mdash; full suite green, including new unit tests below. No existing test (currently 149)
+        regresses.</li>
+      <li>Typecheck and lint clean (<code>tsc</code> / eslint), no new warnings &mdash; warnings are never suppressed.</li>
+      <li><b>New unit tests required:</b>
+        <ul>
+          <li>Ring fill fraction (FEEDBACK-7): pure fn returns <code>0</code> at progress 0, <code>0.5</code> at 1/2,
+            <code>1.0</code> at progress&ge;cost, and clamps (progress 3, cost 2 &rarr; <code>1.0</code>); correct for the
+            cost-10 boss case.</li>
+          <li>Connector style selection (FEEDBACK-3): pure fn maps a DealProgress action &rarr; progress style, a destroy
+            action &rarr; destroy style, a return action &rarr; back-to-deck style.</li>
+          <li>Single-source agreement (FEEDBACK-10): for a sampled set of (card, target, progress) cases, the ring
+            fraction and <code>previewPlay</code>'s "more to clear" number describe the same remaining amount (ring
+            reaches full exactly when the preview says "clears").</li>
+          <li>No core surface change (FEEDBACK-11): this is a <i>structural</i> check, not a behavioral unit test &mdash;
+            an import-boundary / grep assertion that the feature adds nothing to <code>GameState</code> or
+            <code>src/core</code> (no new progress/selection fields in core types, no new core imports from
+            <code>src/game</code>). Satisfied by CI lint + a type-definition grep, not by a unit test.</li>
+        </ul>
+      </li>
+    </ul>
+
+    <h3>Manual browser observation (AI launches the game, then checks)</h3>
+    <p>Run the dev build, start a Zombie Big-Box run, and observe:</p>
+    <table>
+      <thead><tr><th>Req</th><th>Observe</th><th>Pass condition</th></tr></thead>
+      <tbody>
+        <tr><td>FEEDBACK-1</td><td>Hover a legal hazard while a card is selected</td><td>Hovered target is obviously the loudest card (scale/lift/glow/reticle), distinct from other legal targets and from dimmed cards, without color-decoding.</td></tr>
+        <tr><td>FEEDBACK-2</td><td>Hover a legal target</td><td>A connector is drawn from the acting card to that target; it tracks hover and disappears on hover-out.</td></tr>
+        <tr><td>FEEDBACK-3</td><td>Trigger each phase: a DealProgress card (e.g. Explore) on a hazard; Barricade or Adrenaline (ReturnWorldCards) on a world card; the Zombie Big-Box DestroyCardInHand effect on a hand card</td><td>Connector style differs per type: accent line into the ring (progress), looping arrow to deck (back-to-deck), jagged red (destroy). The data&rarr;style mapping is authoritatively gated by the unit test above; this row confirms the three styles render in-engine. All three are reachable in a normal Zombie Big-Box run given the right cards in hand.</td></tr>
+        <tr><td>FEEDBACK-4</td><td>Hover before clicking</td><td>Highlight + connector appear on hover, before any click; no reliance on a post-click held state.</td></tr>
+        <tr><td>FEEDBACK-5</td><td>Hover a target during a targeting phase</td><td>Instruction text and the live preview are both visible at once; neither overwrites the other.</td></tr>
+        <tr><td>FEEDBACK-6</td><td>Play a compound card past its first step</td><td>The hazard chosen by the earlier step stays visibly marked during the later step (does not go dark).</td></tr>
+        <tr><td>FEEDBACK-7</td><td>Deal partial progress to a cost-2 hazard, then look at the boss (cost 10)</td><td>Ring around the cost digit shows the filled fraction; cost number stays readable; ring shape holds at cost 10.</td></tr>
+        <tr><td>FEEDBACK-8</td><td>Bank progress on a hazard</td><td>Ring animates upward to the new fraction rather than snapping.</td></tr>
+        <tr><td>FEEDBACK-9</td><td>End a turn with a hazard holding partial progress</td><td>The ring visibly drains to zero (animated), legible as "the work I banked just evaporated."</td></tr>
+        <tr><td>FEEDBACK-12</td><td>Only one theme ships today, so add a second theme with contrasting connector/ring/highlight colors to <code>theme.ts</code>, point <code>selectTheme()</code> at it, and relaunch the dev build</td><td>Highlight/connector/ring colors track the active theme's values; under the second theme they change to match it (no stray hardcoded palette). Revert the temporary theme afterward.</td></tr>
+      </tbody>
+    </table>
+    <p class="note">FEEDBACK-10 and FEEDBACK-11 are fully covered by the automated gate. FEEDBACK-6 is a SHOULD; its manual
+    check is informational, not a release blocker.</p>
+  </div>
+
+</main>
+
+<script>
+  // Highlight the requirement targeted by the URL hash, and on anchor click.
+  function flashTarget() {
+    document.querySelectorAll('.req').forEach(function (r) { r.classList.remove('anchor-on'); });
+    var id = location.hash.slice(1);
+    if (!id) return;
+    var el = document.getElementById(id);
+    if (el && el.classList.contains('req')) el.classList.add('anchor-on');
+  }
+  window.addEventListener('hashchange', flashTarget);
+  window.addEventListener('DOMContentLoaded', flashTarget);
+</script>
+</body>
+</html>

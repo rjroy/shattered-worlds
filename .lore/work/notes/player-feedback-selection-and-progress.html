@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Implementation notes: player feedback (selection &amp; progress)</title>
+  <meta name="date" content="2026-06-05">
+  <meta name="status" content="complete">
+  <meta name="tags" content="implementation, notes, feedback, targeting, cost-ring, connector, renderer-refactor">
+  <meta name="source" content=".lore/work/plans/player-feedback-selection-and-progress.html">
+  <meta name="modules" content="game-render, game-tablescene, game-theme, game-describe">
+  <style>
+    :root{--bg:#14171d;--panel:#1c2029;--panel-2:#232834;--ink:#e8eaf0;--muted:#9aa3b2;--accent:#88aaff;--good:#88ee88;--bad:#ff8888;--warn:#ffcc55;--line:#2a3140;--struct:#b98aff;}
+    *{box-sizing:border-box;}
+    body{margin:0;padding:0 0 5rem;background:var(--bg);color:var(--ink);font:16px/1.6 -apple-system,"Segoe UI",Roboto,sans-serif;}
+    main{max-width:980px;margin:0 auto;padding:0 1.2rem;}
+    h1{font-size:1.7rem;margin:1.4rem 0 .2rem;}
+    .sub{color:var(--muted);margin:0 0 1rem;}
+    a{color:var(--accent);}
+    code{background:#0e1116;padding:.08rem .35rem;border-radius:4px;font-size:.85em;color:#cfe3ff;}
+    /* Summary banner */
+    .banner{display:flex;gap:1rem;align-items:center;flex-wrap:wrap;border-radius:12px;padding:1rem 1.2rem;margin:1rem 0 1.6rem;
+      background:linear-gradient(180deg,rgba(136,170,255,.10),rgba(136,170,255,.03));border:1px solid var(--line);}
+    .banner .big{font-size:1.5rem;font-weight:700;}
+    .banner .stat{font-size:.85rem;color:var(--muted);}
+    .banner .stat b{color:var(--ink);font-size:1.1rem;}
+    .bar{flex:1 1 240px;height:14px;border-radius:999px;background:#0e1116;overflow:hidden;border:1px solid var(--line);min-width:200px;}
+    .bar > span{display:block;height:100%;background:linear-gradient(90deg,var(--good),#5fcf7a);width:0%;transition:width .3s;}
+    /* Phase list */
+    .phase{background:var(--panel);border:1px solid var(--line);border-radius:10px;margin:.7rem 0;overflow:hidden;}
+    .phase > summary{cursor:pointer;list-style:none;display:flex;align-items:center;gap:.7rem;padding:.7rem 1rem;flex-wrap:wrap;}
+    .phase > summary::-webkit-details-marker{display:none;}
+    .phase .seq{font-family:ui-monospace,monospace;font-weight:700;color:var(--accent);background:#0e1116;border:1px solid var(--line);border-radius:6px;padding:.05rem .5rem;font-size:.85rem;}
+    .phase .name{font-weight:600;flex:1 1 auto;}
+    .phase .reqs{font-size:.72rem;color:var(--muted);}
+    .chip{font-size:.68rem;letter-spacing:.04em;text-transform:uppercase;padding:.12rem .55rem;border-radius:999px;border:1px solid var(--line);white-space:nowrap;}
+    .chip.pending{background:rgba(154,163,178,.12);color:var(--muted);}
+    .chip.inprogress{background:rgba(255,204,85,.16);color:var(--warn);border-color:rgba(255,204,85,.4);}
+    .chip.done{background:rgba(136,238,136,.16);color:var(--good);border-color:rgba(136,238,136,.4);}
+    .chip.failed{background:rgba(255,136,136,.16);color:var(--bad);border-color:rgba(255,136,136,.4);}
+    .chip.manual{background:rgba(136,170,255,.14);color:var(--accent);border-color:rgba(136,170,255,.35);}
+    .phase .log{padding:.2rem 1.1rem 1rem;border-top:1px solid var(--line);background:var(--panel-2);font-size:.9rem;}
+    .phase .log h4{margin:.8rem 0 .3rem;font-size:.78rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);}
+    .phase .log ul{margin:.3rem 0;padding-left:1.1rem;} .phase .log li{margin:.2rem 0;}
+    .legend{font-size:.8rem;color:var(--muted);margin:.4rem 0 0;}
+    .note{color:var(--muted);font-size:.9rem;}
+    .manualbox{border:1px solid rgba(136,170,255,.35);background:rgba(136,170,255,.06);border-radius:10px;padding:.8rem 1rem;margin:1.4rem 0;}
+    .manualbox h3{margin:.2rem 0 .5rem;color:var(--accent);font-size:1rem;}
+  </style>
+</head>
+<body>
+<main>
+  <h1>Implementation notes: player feedback (selection &amp; progress)</h1>
+  <p class="sub">Orchestrated build of <a href="../plans/player-feedback-selection-and-progress.html">the plan</a> (12 task files, S1–S12). Renderer-only; nothing touches <code>src/core</code>.</p>
+
+  <div class="banner">
+    <div>
+      <div class="big" id="overall">Code-complete &middot; manual browser gate owed</div>
+      <div class="stat">All 12 phases built &middot; <b>240</b> tests green (from 168) &middot; tsc clean &middot; eslint clean &middot; <code>src/core</code> untouched</div>
+    </div>
+    <div class="bar"><span id="progbar" style="width:100%"></span></div>
+    <div class="stat"><b id="donecount">12</b> / 12 phases built</div>
+  </div>
+
+  <p class="legend">Status chips: <span class="chip pending">pending</span> <span class="chip inprogress">in progress</span> <span class="chip done">done</span> <span class="chip failed">failed</span> &middot; <span class="chip manual">manual-pending</span> = automated gate passed, browser observation still owed (collected in S12).</p>
+
+  <!-- PHASES -->
+  <details class="phase" id="p1">
+    <summary><span class="seq">S1</span><span class="name">Pure feedback module: ringFraction + connector-style resolver</span><span class="reqs">FB-7,3,10</span><span class="chip done">done</span></summary>
+    <div class="log"><h4>Log</h4><ul>
+      <li><b>Implemented.</b> New <code>src/game/feedback.ts</code> (<code>ringFraction</code>, <code>ConnectorStyle</code>, <code>selectConnectorStyle</code>) + <code>feedback.test.ts</code>. Imports core <code>CardEffect</code> as <code>import type</code> only — no Phaser, no core runtime values.</li>
+      <li><b>Decision recorded:</b> <code>selectConnectorStyle</code> walks <code>Modal</code> by scanning all branches (first match), deliberately differing from <code>dealProgressOf</code> which gates on a chosen <code>branchIndex</code>. Correct for a pre-selection connector hint; now documented in-code.</li>
+      <li><b>Quality pass:</b> strengthened the FEEDBACK-10 agreement test to assert the iff (<code>ringFraction===1</code> ⟺ <code>previewPlay</code> says "clears") deriving from real <code>previewPlay</code> output instead of hardcoded wording. Mutation-tested: breaking <code>ringFraction</code> genuinely fails it.</li>
+      <li><b>Gate:</b> feedback tests green, tsc + eslint clean.</li>
+    </ul></div>
+  </details>
+  <details class="phase" id="p2">
+    <summary><span class="seq">S2</span><span class="name">Extend theme with feedback colors</span><span class="reqs">FB-12 (color seam)</span><span class="chip done">done</span></summary>
+    <div class="log"><h4>Log</h4><ul>
+      <li><b>Implemented.</b> Six numeric-hex fields added to <code>FrameStyle</code> and populated in <code>ZOMBIE_BIG_BOX_THEME</code>: <code>connectorProgress</code>=<code>ringAccent</code>=0x44ee44 (paired green), <code>connectorDestroy</code>=0xff4444, <code>connectorReturn</code>=0x44aaff, <code>targetGlow</code>=0x88ffaa, <code>committedTarget</code>=0x2a6a3a.</li>
+      <li>Only other <code>VisualTheme</code> literals (in <code>render.test.ts</code>) spread from <code>selectTheme</code>, so they inherit the new fields; tsc confirms exhaustive population.</li>
+      <li><b>Gate:</b> theme tests green, tsc + eslint clean.</li>
+    </ul></div>
+  </details>
+  <details class="phase" id="p3">
+    <summary><span class="seq">S3</span><span class="name">Refactor drawAll() to reuse card containers</span><span class="reqs">enabling refactor</span><span class="chip done">done</span><span class="chip manual">smoke owed</span></summary>
+    <div class="log"><h4>Log</h4><ul>
+      <li><b>Implemented.</b> <code>drawAll()</code> now reconciles persistent containers against <code>this.cardObjects</code> via new <code>obtainCardContainer(card)</code> (get-or-create, handlers bound once on create only). <code>layoutRow</code> records laid-out ids into a <code>desiredIds</code> set; a single destruction pass kills tweens then destroys + removes any id not in the set. <code>positionCard</code> helper added to <code>render.ts</code>. New <code>hoveredCardId</code> field tracked (set on over, cleared on out-if-match and on destroy); no emphasis wired yet (S9).</li>
+      <li><b>Fresh-eyes review (mandated): all four invariants HOLD, no blockers.</b> (1) exactly one container per id; (2) handlers attached once, close over stable id + read <code>this.sel</code> live — the most plausible fix for the open input bug; (3) <code>killTweensOf</code> before every destroy; (4) only ids absent from the hand are destroyed. <code>applyHighlight</code> re-asserts stroke+alpha every cycle so reused containers don't keep stale visuals.</li>
+      <li><b>Benign change noted:</b> display-list z-order is no longer rebuilt each cycle. Harmless today (depth-0 cards, non-overlapping rows, overlays at depth 1000); revisit only if cards ever overlap (fanned/drag hand).</li>
+      <li><b>Guardrail carried forward to S4/S5/S9:</b> when child tweens (ring/hover) are added, ensure children are still in <code>container.list</code> at the destroy site so their tweens are killed.</li>
+      <li><b>Gate:</b> tsc + eslint clean, full suite 219 green (no regression). <b>Manual browser smoke OWED</b> (select, target, commit, discard, end turn, draw — no orphans/dead clicks); collected for S12. No fix claimed for the input bug without manual confirmation.</li>
+    </ul></div>
+  </details>
+  <details class="phase" id="p4">
+    <summary><span class="seq">S4</span><span class="name">Cost-ring progress meter (static)</span><span class="reqs">FB-7</span><span class="chip done">done</span><span class="chip manual">visual owed</span></summary>
+    <div class="log"><h4>Log</h4><ul>
+      <li><b>Implemented.</b> Persistent <code>Graphics</code> ring stored as <code>container.costRing</code>, child index 3 (after bg=0, highlight rect=1, name=2; cost text=4 on top → digit stays readable). <code>updateCostRing(container, fraction, ringAccent)</code> in <code>render.ts</code> snaps the arc; threaded from <code>state.progress[id] ?? 0</code> via <code>ringFraction</code>, color from <code>frameStyle.ringAccent</code>. World cards only (two guards). Arc scaled by angle → shape holds at the cost-10 boss.</li>
+      <li><b>Review (with S5): list[0]/list[1] contract preserved</b>, geometry cost-independent, player cards no-op.</li>
+      <li><b>Gate:</b> tsc + eslint clean, 219 green. <b>Visual check OWED</b> (partial ring on cost-2 hazard; shape + digit on cost-10 boss).</li>
+    </ul></div>
+  </details>
+  <details class="phase" id="p5">
+    <summary><span class="seq">S5</span><span class="name">Ring fill + end-of-turn drain animation</span><span class="reqs">FB-8,9</span><span class="chip done">done</span><span class="chip manual">visual owed</span></summary>
+    <div class="log"><h4>Log</h4><ul>
+      <li><b>Implemented.</b> <code>updateCostRing(scene, container, fraction, ringAccent)</code> now animates from the ring's stored <code>displayedFraction</code> to target: <code>killTweensOf(ring)</code> + <code>scene.tweens.add</code> over a shared 300ms / <code>Sine.easeInOut</code> both directions ("one clock"). First render snaps; epsilon guard (0.001) makes repeat cycles idempotent; <code>onComplete</code> settles exactly. Banking → fills; EndTurn wipes <code>progress</code> to <code>{}</code> (held hazard stays in hand per <code>reduce.ts:122/127</code>) → same ring drains to 0. No events wired.</li>
+      <li><b>Tween-kill safety (S3↔S5 seam): tween targets the ring object itself</b> (in <code>container.list</code>), so the destruction pass's <code>killTweensOf(container.list)</code> cancels any in-flight tween before destroy — <code>onUpdate</code> can't fire on a dead Graphics. Resolved hazards (<code>effects.ts:61-71</code>, <code>HazardResolved</code>) leave the hand and exit with no drain beat. No retained Tween reference (retro dead-end avoided).</li>
+      <li><b>Headless tests added (+7):</b> fake ring + fake <code>scene.tweens</code> exercise snap, idempotence, one-clock equal duration/easing, <code>targets===ring</code>, onUpdate/onComplete geometry. <b>Hardened:</b> kill-before-add ordering now asserted via a shared call-log (mutation-proven: reordering fails it).</li>
+      <li><b>Gate:</b> tsc + eslint clean, full suite 226 green. <b>Visual check OWED</b> (animates up on bank; visibly drains at end of turn; feels like one clock).</li>
+    </ul></div>
+  </details>
+  <details class="phase" id="p6">
+    <summary><span class="seq">S6</span><span class="name">Split instruction hint &amp; live preview</span><span class="reqs">FB-5</span><span class="chip done">done</span><span class="chip manual">visual owed</span></summary>
+    <div class="log"><h4>Log</h4><ul>
+      <li><b>Implemented.</b> New persistent <code>previewSlot</code> Text (y=550) above <code>selectionHint</code> (y=568), non-overlapping. <code>updateHint</code> writes instruction → <code>selectionHint</code> only; <code>showTargetPreview</code> writes <code>previewPlay</code> string → <code>previewSlot</code> only. <code>pointerout</code> runs <code>updateHint()</code> + <code>previewSlot.setText('')</code>. Grep-verified every <code>setText</code> is disjoint — slots never merge.</li>
+      <li><b>Review: conforms.</b> Gate: tsc + eslint clean, 226 green. <b>Visual check OWED</b> (instruction + preview both visible during targeting; preview clears on hover-out).</li>
+    </ul></div>
+  </details>
+  <details class="phase" id="p7">
+    <summary><span class="seq">S7</span><span class="name">Connector geometry on hover</span><span class="reqs">FB-2,4</span><span class="chip done">done</span><span class="chip manual">visual owed</span></summary>
+    <div class="log"><h4>Log</h4><ul>
+      <li><b>Implemented.</b> One persistent draw-only <code>Graphics</code> (<code>connectorGfx</code>, depth 500), <b>never</b> <code>setInteractive</code> → cannot steal input (addresses the open clicking bug). <code>showConnector(targetId)</code> gates on the three targeting phases + legal-target check with step-index logic matching the click-path/drawAll exactly; draws acting→hovered (endpoints from persistent <code>cardObjects</code>). Pure <code>connectorLine</code> geometry added to <code>feedback.ts</code> (copies points, no aliasing; +3 tests). Cleared on hover-out, commit, both cancel buttons.</li>
+      <li><b>Review found + fixed a stale-line bug:</b> the compound hazard→return transition and the awaiting-return re-click both call <code>drawAll()</code> without a <code>pointerout</code> firing, leaving the connector pointing at a now-non-target. Added <code>clearConnector()</code> before <code>drawAll()</code> at both sites; doc comment reworded. No input-safety impact (graphic non-interactive); no keyboard cancel path exists.</li>
+      <li><b>Gate:</b> tsc + eslint clean, full suite 229 green. <b>Visual check OWED</b> (connector draws on hover before click, tracks, clears on out/commit/cancel; clicks still register).</li>
+    </ul></div>
+  </details>
+  <details class="phase" id="p8">
+    <summary><span class="seq">S8</span><span class="name">Decorate connector by targeting type</span><span class="reqs">FB-3</span><span class="chip done">done</span><span class="chip manual">visual owed</span></summary>
+    <div class="log"><h4>Log</h4><ul>
+      <li><b>Implemented.</b> Three themed draw routines in <code>showConnector</code>: progress=straight <code>connectorProgress</code> line into the ring, destroy=jagged <code>connectorDestroy</code> red, return=<code>QuadraticBezier</code> arrow (<code>connectorReturn</code>) from the hovered world card to <code>pileLayer.worldPileCenter()</code> (new accessor reading live pile position, +2 tests). Style resolved via <code>stepEffect</code>→<code>selectConnectorStyle</code> (single source of truth); null → plain line fallback.</li>
+      <li><b>Review: conforms, key risk ALIGNED.</b> The <code>Sequence</code> effect IS the source — core (<code>available.ts</code>) and renderer index <code>steps[step]</code> identically (Barricade: step 0 progress, step 1 return). Phaser API correct; non-interactivity + S7 gating intact.</li>
+      <li><b>Hardened:</b> <code>stepEffect</code> made Modal-branch-accurate (<code>branches[step]</code>, verified <code>step</code>==<code>modalChoice</code>==core branch index) so a future multi-targeting-branch Modal tracks the chosen branch instead of scanning all.</li>
+      <li><b>Gate:</b> tsc + eslint clean, full suite 231 green. <b>Visual check OWED</b> (all three styles render in a normal run).</li>
+    </ul></div>
+  </details>
+  <details class="phase" id="p9">
+    <summary><span class="seq">S9</span><span class="name">Loud hover-target highlight</span><span class="reqs">FB-1,4,12 (intensity)</span><span class="chip done">done</span><span class="chip manual">visual owed</span></summary>
+    <div class="log"><h4>Log</h4><ul>
+      <li><b>Implemented.</b> Static emphasis = scale lift (1.06–1.12) + a <code>targetGlow</code> halo ring stroked 7px outside the card edge (glow child appended after existing children → <code>list[0]</code>/<code>list[1]</code> preserved). Magnitude scales by <code>this.game_.intensity()</code> (clamped) → completes FB-12. <b>+5 headless tests</b> (236 total) asserting lift&gt;1, intensity scaling non-vacuously, idempotence, clear restores scale 1.</li>
+      <li><b>S3↔S9 seam (S9 owns clearing), review CONFORMS all 8 points:</b> (a) <code>pointerout</code> clears id + restores; (b) <code>drawAll</code> seam-clear runs <i>before</i> <code>layoutRow</code> so a now-illegal hovered card is cleared with no stale window; (c) left-hand cards destroyed by S3. Non-hovered cards get <code>clearEmphasis</code> every cycle (no stale emphasis); over-B-before-out-A handled. Legality unified into one <code>currentLegalTargetIds</code> source. Emphasis is static (no tween → trivial hygiene).</li>
+      <li><b>Fixed:</b> stale "pulse tween" comments (described a non-existent animation) reworded to match the static implementation.</li>
+      <li><b>Gate:</b> tsc + eslint clean, full suite 236 green. <b>Visual check OWED</b> (hovered target loudest; distinct from legal + dimmed; on hover before click; intensity tracks — with S12 theme check).</li>
+    </ul></div>
+  </details>
+  <details class="phase" id="p10">
+    <summary><span class="seq">S10</span><span class="name">Keep earlier picks lit (compound)</span><span class="reqs">FB-6 (SHOULD)</span><span class="chip done">done</span><span class="chip manual">visual owed</span></summary>
+    <div class="log"><h4>Log</h4><ul>
+      <li><b>Implemented.</b> New <code>'committed'</code> kind in <code>applyCardHighlight</code>: muted dark-green (<code>committedTarget</code>) 2px stroke + faint 0.18 fill, no lift/glow — distinct from S9 emphasis (bright glow + scale) and the legal-target border (bright 3px). <code>applyHighlight</code> branch: <code>sel.phase==='awaiting-return' && sel.targetId===id</code> → committed mark, placed after live target/selected checks, before the dimmed fall-through, so the earlier hazard stays marked instead of going dark. Keyed off phase/targetId (general, not card name). +4 headless tests.</li>
+      <li>Added a fill reset at the top of the <code>applyCardHighlight</code> switch so a reused container leaving the committed state never keeps a stale tint (other kinds never set fill → visual no-op for them). <b>Review folded into S12 holistic validation</b> (shared-path fill-reset + precedence).</li>
+      <li><b>Gate:</b> tsc + eslint clean, full suite 240 green. <b>Visual check OWED (SHOULD/informational):</b> Barricade past step 1 → earlier hazard stays marked, distinct from hover + legal, not dark.</li>
+    </ul></div>
+  </details>
+  <details class="phase" id="p11">
+    <summary><span class="seq">S11</span><span class="name">Structural guard: no core surface change</span><span class="reqs">FB-11</span><span class="chip done">done</span></summary>
+    <div class="log"><h4>Log</h4><ul>
+      <li><b>Implemented early</b> (now runs in every later gate). New <code>src/game/structural.test.ts</code> asserts: (1) no <code>.ts</code> under <code>src/core</code> imports <code>src/game</code> or <code>phaser</code> (recursive, non-empty-glob guarded); (2) <code>feedback.ts</code> imports core via <code>import type</code> only and no phaser; (3) <code>core/types.ts</code> contains no renderer tokens. 33 assertions.</li>
+      <li>Author caught + correctly handled a false positive: <code>src/core/contract.ts</code> imports <code>./game</code> (core-internal <code>src/core/game.ts</code>), not a leak — detector tightened to flag only escaping <code>../game</code>/<code>src/game</code> specifiers, assertion not weakened.</li>
+      <li><b>Review: guard is sound.</b> Catches <code>../game</code>, <code>../../game</code>, <code>src/game</code>, <code>phaser</code>; the only theoretical evasions (alias paths) are unreachable (no tsconfig/vite aliases). The "<code>git diff src/core</code> empty" backstop is a CLI gate in S12, documented in-file.</li>
+      <li><b>Gate:</b> green; tsc + eslint clean.</li>
+    </ul></div>
+  </details>
+  <details class="phase" id="p12">
+    <summary><span class="seq">S12</span><span class="name">Final validation against the spec</span><span class="reqs">FB-1…12</span><span class="chip done">automated done</span><span class="chip manual">browser gate owed</span></summary>
+    <div class="log"><h4>Log</h4><ul>
+      <li><b>Automated gate FULLY GREEN.</b> <code>bun test</code> 240 pass / 0 fail (orig baseline 168). <code>tsc</code> clean, <code>eslint</code> clean. <code>git diff --stat src/core</code> empty both uncommitted AND vs base commit <code>d62c4ff</code> → FB-11 confirmed two ways. Structural guard green.</li>
+      <li><b>Holistic spec review: every REQ-FEEDBACK-1…12 satisfied by code.</b> Genuinely test-covered: FB-3 (style mapping), FB-7 (ring fraction), FB-8 (ring animation logic), FB-10 (single-source agreement), FB-11 (structural), plus committed-mark + theme-field tests. Risk areas all clear: connector/glow/ring never <code>setInteractive</code> (input-safe); S10 fill-reset is a verified visual no-op for other kinds; only the cost-ring tween exists and it's killable by the destruction pass.</li>
+      <li><b>FB-9 divergence = pre-approved architecture decision</b> (plan, confirmed 2026-06-05): persistent-ring drain instead of the spec's suggested progress-cache. Same observed behavior, simpler. Not a miss.</li>
+      <li><b>OWED: manual browser observation</b> (perceptual gate, cannot run headlessly). 11 checks listed in the box above. FB-10 + FB-11 need no manual check.</li>
+    </ul></div>
+  </details>
+
+  <div class="manualbox">
+    <h3>Manual browser observations owed</h3>
+    <p class="note">Renderer-visual gates (rings, connector, hover emphasis, drain) cannot be verified by the headless test suite. Each such phase is marked <span class="chip manual">manual-pending</span> once its automated gate (tsc/eslint/bun test) is green. The collected list is verified in S12 against the spec's browser-observation table. This list is updated as phases complete.</p>
+    <ul id="manuallist">
+      <li><b>S3 smoke:</b> full Zombie Big-Box turn (select, target, commit, discard, end turn, draw) — every interaction as before, no orphaned/duplicated cards, no dead clicks. Report whether the open input bug changed.</li>
+      <li><b>S4 (FB-7):</b> partial ring on a cost-2 hazard reads the right fraction, digit readable; cost-10 boss (The Walker) holds shape, no clipping.</li>
+      <li><b>S5 (FB-8/9):</b> ring animates upward on bank (not a snap); visibly drains to 0 at end of turn with held partial progress; fill + drain feel like one clock; resolved hazard exits with no orphan tween.</li>
+      <li><b>S6 (FB-5):</b> instruction text and live preview both visible at once during a targeting phase; preview clears on hover-out, instruction persists.</li>
+      <li><b>S7 (FB-2/4):</b> connector draws acting→target on hover before any click, tracks hover, disappears on hover-out, clears on commit/cancel; clicks and target commits still register (no input regression).</li>
+      <li><b>S8 (FB-3):</b> all three connector styles render in a normal Zombie Big-Box run — accent line into ring (Explore/progress), jagged red (Zombie Big-Box destroy), looping arrow to deck (Barricade/Adrenaline return).</li>
+      <li><b>S9 (FB-1/4/12):</b> hovered target obviously loudest (lift+glow), distinct from other legal + dimmed cards, on hover before click; emphasis intensity tracks <code>intensity()</code> (verify with the S12 second-theme check).</li>
+      <li><b>S10 (FB-6, SHOULD):</b> play Barricade past step 1 → the earlier hazard stays visibly marked (committed), distinct from hover + legal states, does not go dark.</li>
+      <li><b>S12 (FB-12):</b> add a temporary second theme with contrasting connector/ring/glow colors, point <code>selectTheme()</code> at it, relaunch → all feedback colors track the active theme (no stray hardcoded palette); revert after. Confirm emphasis intensity tracks <code>intensity()</code>.</li>
+      <li><b>Input safety (runtime):</b> connector/glow never eat clicks meant for cards; rapid hover/commit cycles never accumulate duplicate click handlers (does the S3 reuse refactor improve the open rollout input bug?).</li>
+    </ul>
+  </div>
+
+  <h2 style="font-size:1.1rem;border-bottom:1px solid var(--line);padding-bottom:.3rem;">Session log</h2>
+  <ul id="sessionlog">
+    <li><b>2026-06-05 complete (automated).</b> All 12 phases built and serialized per the plan (S1/S2/S11 isolated-parallel; S3→S10 serial on the shared <code>TableScene.ts</code>/<code>render.ts</code>; S12 holistic). Each phase ran implement → test → fresh-eyes review; corrections routed for: S1 agreement-test contract + Modal-doc, S5 kill-before-add test ordering, S7 stale-connector-on-transition bug, S8 Modal-branch-accurate stepEffect, S9 stale pulse-tween comments. Suite grew 168 → 240, all green; tsc + eslint clean throughout; <code>src/core</code> never touched. <b>Remaining gate: the 11 manual browser observations above</b> (perceptual; not runnable headlessly). Spec/plan status left unbumped pending that gate.</li>
+    <li><b>2026-06-05 init.</b> Read plan + all 12 task files. Confirmed task dir is newer than plan (no staleness warning). No <code>.lore/lore-agents.md</code> &rarr; all roles fall back to <code>general-purpose</code>. Baseline: 168 tests green (plan's "149" is stale), tsc + eslint clean. Researcher surfaced two load-bearing warnings from the visual-identity rollout retro: (1) never hold a stale <code>Tween</code> reference &mdash; use <code>killTweensOf</code> + <code>scene.tweens.add</code>; (2) keep decorative overlays non-interactive at correct depth to avoid the open input bug. <code>applyCardHighlight</code>/<code>dimCard</code> already operate on the bg rect at child index 0 &mdash; reuse that seam.</li>
+  </ul>
+</main>
+</body>
+</html>

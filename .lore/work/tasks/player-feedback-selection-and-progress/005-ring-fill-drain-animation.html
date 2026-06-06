@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Ring fill + end-of-turn drain animation (one clock)</title>
+  <meta name="date" content="2026-06-05">
+  <meta name="status" content="complete">
+  <meta name="tags" content="task, feedback, cost-ring, animation, tween, drain, end-of-turn">
+  <meta name="source" content=".lore/work/plans/player-feedback-selection-and-progress.html">
+  <meta name="sequence" content="5">
+  <meta name="modules" content="game-render, game-tablescene">
+  <style>
+    :root{--bg:#14171d;--panel:#1c2029;--panel-2:#232834;--ink:#e8eaf0;--muted:#9aa3b2;--accent:#88aaff;--good:#88ee88;--bad:#ff8888;--warn:#ffcc55;--line:#2a3140;}
+    *{box-sizing:border-box;} body{margin:0;padding:0 0 4rem;background:var(--bg);color:var(--ink);font:16px/1.6 -apple-system,"Segoe UI",Roboto,sans-serif;}
+    main{max-width:880px;margin:0 auto;padding:0 1.2rem;}
+    .top{display:flex;align-items:center;gap:.7rem;flex-wrap:wrap;margin:1.6rem 0 .3rem;}
+    .seq{font-family:ui-monospace,monospace;font-size:1.4rem;font-weight:700;color:var(--accent);background:#0e1116;border:1px solid var(--line);border-radius:8px;padding:.1rem .6rem;}
+    h1{font-size:1.5rem;line-height:1.2;margin:0;}
+    .chip{font-size:.72rem;letter-spacing:.04em;text-transform:uppercase;padding:.15rem .55rem;border-radius:999px;border:1px solid var(--line);color:var(--muted);}
+    .chip.pending{background:rgba(255,204,85,.14);color:var(--warn);border-color:rgba(255,204,85,.35);}
+    .chip.req{background:#0e1116;color:#cfe3ff;}
+    .dep{color:var(--muted);font-size:.9rem;margin:.2rem 0 1.4rem;}
+    h2{font-size:.82rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:1.8rem 0 .5rem;border-bottom:1px solid var(--line);padding-bottom:.3rem;}
+    p{margin:.5rem 0;} ul{margin:.4rem 0;padding-left:1.2rem;} li{margin:.3rem 0;}
+    code{background:#0e1116;padding:.08rem .35rem;border-radius:4px;font-size:.85em;color:#cfe3ff;} a{color:var(--accent);}
+    .validation{border:2px solid var(--good);border-radius:12px;background:linear-gradient(180deg,rgba(136,238,136,.06),rgba(136,238,136,.02));padding:1rem 1.2rem;margin:1rem 0;}
+    .validation h2{border:0;margin-top:0;color:var(--good);}
+    .risk{background:rgba(255,136,136,.07);border:1px dashed rgba(255,136,136,.4);border-radius:8px;padding:.8rem 1rem;margin:1rem 0;}
+    .risk b{color:var(--bad);}
+    .files{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:.6rem .9rem;font-size:.9rem;}
+    .why{color:var(--muted);}
+  </style>
+</head>
+<body>
+<main>
+  <div class="top">
+    <span class="seq">S5</span>
+    <h1>Ring fill + end-of-turn drain animation (one clock)</h1>
+  </div>
+  <div class="top" style="margin-top:0">
+    <span class="chip pending">pending</span>
+    <span class="chip req">REQ-FEEDBACK-8</span>
+    <span class="chip req">REQ-FEEDBACK-9</span>
+  </div>
+  <p class="dep">Dependencies: S4 (the ring + <code>updateCostRing</code>). Relies on S3's persistent container.</p>
+
+  <h2>What</h2>
+  <p>Make <code>updateCostRing</code> animate from the ring's <i>currently displayed</i> fraction to the new target instead of
+  snapping. Because the ring persists (S3), banking and the per-turn reset are the same tween in opposite directions.</p>
+  <ul>
+    <li>Track the ring's displayed fraction on the ring object. In <code>updateCostRing</code>, if target ≠ displayed,
+      <code>killTweensOf</code> the ring then <code>scene.tweens.add</code> a tween over a shared duration (~200–400ms) that
+      interpolates a <code>{ value }</code> proxy and redraws the arc on <code>onUpdate</code>. First render (no prior displayed
+      value) snaps.</li>
+    <li>On a progress play the post-dispatch <code>drawAll</code> computes a higher fraction → ring fills. On <code>EndTurn</code>,
+      <code>progress</code> is wiped to <code>{}</code> (<code>reduce.ts:129</code>), the held hazard persists in hand
+      (<code>reduce.ts:127</code>), and the post-dispatch <code>drawAll</code> computes fraction 0 → the same ring drains 2→0.</li>
+    <li>Same duration/easing both directions so they read as one clock (FEEDBACK-8); the drain must be clearly perceptible, not a
+      1-frame snap (FEEDBACK-9, core teaching beat).</li>
+    <li><b>No events required:</b> the spec's FEEDBACK-9 suggested consuming <code>TurnEnded</code> and caching pre-reset progress
+      because it assumed the ring is destroyed; with reuse, the ring's displayed fraction <i>is</i> the pre-reset value. Do not wire
+      <code>dispatch</code>'s returned <code>events</code> for this.</li>
+  </ul>
+
+  <div class="risk"><b>Drain safety invariant.</b> A world card whose ring is mid-tween must not be destroyed/recreated, or the
+  displayed fraction is lost and the drain snaps. S3's reconcile destroys only cards <i>not</i> in <code>state.hand</code>; a hazard
+  still holding progress at turn-end stays in hand, so its container persists through the drain. The only world cards destroyed
+  mid-frame are resolved hazards (<code>HazardResolved</code> → left the hand); those exit immediately and never drain.</div>
+
+  <div class="validation">
+    <h2>Validation</h2>
+    <ul>
+      <li><b>FEEDBACK-8 (manual):</b> bank progress on a hazard → the ring animates upward to the new fraction, not a snap.</li>
+      <li><b>FEEDBACK-9 (manual):</b> end a turn with a hazard holding partial progress → the ring visibly drains to zero (animated),
+        legible as "the work I banked just evaporated."</li>
+      <li>Fill and drain feel like the same clock (comparable duration/easing).</li>
+      <li>Resolve a hazard (progress reaches cost) → it exits without a separate drain beat; no orphaned ring tween.</li>
+      <li><code>bun test</code> green; <code>tsc</code>/eslint clean.</li>
+    </ul>
+  </div>
+
+  <h2>Why</h2>
+  <p class="why">Implements <a href="../../specs/player-feedback-selection-and-progress.html#REQ-FEEDBACK-8">REQ-FEEDBACK-8</a>
+  (fill as banked) and <a href="../../specs/player-feedback-selection-and-progress.html#REQ-FEEDBACK-9">REQ-FEEDBACK-9</a> (drain at
+  end of turn) as one clock telling the burst-or-lose story. Per plan step S5.</p>
+
+  <h2>Files</h2>
+  <div class="files">Edit: <code>src/game/render.ts</code> (<code>updateCostRing</code> animation);
+  <code>src/game/TableScene.ts</code> (drive the update during <code>drawAll</code>)</div>
+</main>
+</body>
+</html>
