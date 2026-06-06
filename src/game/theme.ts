@@ -24,6 +24,8 @@ export interface VisualTheme {
   realityPalette: string[]       // 2-4 desaturated slate hex strings for UI accents
   frameStyle: FrameStyle
   grain: GrainSpec
+  doorGlowTint?: number          // optional tint for the door glow (Phaser hex int); if not set, glow is default color
+  doorTint?: number              // optional tint for the door (Phaser hex int); if not set, door is default color
   backdrop: {
     realityKey: string            // 'bigbox-reality'
     intrusionKey: string          // 'zombie-intrusion'
@@ -38,6 +40,8 @@ export const ZOMBIE_BIG_BOX_THEME: VisualTheme = {
   worldId: 'zombie-big-box',
   intrusionHue: '#9bff6a',
   realityPalette: ['#8a9ba8', '#5c6e7a', '#3d4f5e', '#2a3540'],
+  doorGlowTint: 0x9bff6a,
+  doorTint: 0x5c6e7a,
   frameStyle: {
     borderColor: 0x3d4f5e,
     playerBg: 0x1a2a3a,
@@ -56,9 +60,6 @@ export const ZOMBIE_BIG_BOX_THEME: VisualTheme = {
   backdrop: {
     realityKey: 'bigbox-reality',
     intrusionKey: 'zombie-intrusion',
-  },
-  walker: {
-    textureKey: 'zombie-walker',
   },
   worldCardfrontKey: 'zombie-cardfront',
 }

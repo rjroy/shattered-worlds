@@ -3,6 +3,18 @@ export interface WalkerProximity {
   alpha: number      // 0-1 opacity
 }
 
+export const WALKER_CONSTS = {
+  far: { size: 75, alpha: 0.35 },
+  mid: { size: 175, alpha: 0.60 },
+  looming: { size: 300, alpha: 0.85 },
+  present: { size: 400, alpha: 1.0 },
+}
+
+export const DOOR_CONSTS = {
+  scalar: 1.35,  // door is this times walker size at each tier
+  glowAlpha: 0.4, // max alpha for door glow at each tier (multiplied by walker proximity alpha)
+}
+
 /**
  * Maps intensity [0,1] to overlay alpha [0,1].
  * Monotonically non-decreasing. Clamped at both ends.
@@ -25,11 +37,11 @@ export function intrusionForIntensity(intensity: number): number {
 export function walkerProximityForAct(actIndex: number): WalkerProximity {
   const tiers: WalkerProximity[] = [
     // far — distant, small, barely visible
-    { size:  75, alpha: 0.35 },
+    { size: WALKER_CONSTS.far.size, alpha: WALKER_CONSTS.far.alpha },
     // mid — closer, more visible
-    { size: 175, alpha: 0.60 },
+    { size: WALKER_CONSTS.mid.size, alpha: WALKER_CONSTS.mid.alpha },
     // looming — large, dominant
-    { size: 300, alpha: 0.85 }
+    { size: WALKER_CONSTS.looming.size, alpha: WALKER_CONSTS.looming.alpha }
   ]
   const idx = Math.max(0, Math.min(2, actIndex))
   return tiers[idx]!
