@@ -2,8 +2,8 @@ import type { GameState } from '../model/types'
 
 /**
  * Tunable read-model: returns a value in [0.0, 1.0] expressing how intense
- * the current game state feels. Weights (0.4 / 0.4 / 0.2) are starting
- * points — adjust them as playtesting reveals what actually drives tension.
+ * the current game state feels. Weights (0.6 act / 0.3 hp / 0.1 held-hazards)
+ * are starting points — adjust them as playtesting reveals what drives tension.
  */
 export function intensity(state: GameState): number {
   const actFraction = state.actIndex / 2

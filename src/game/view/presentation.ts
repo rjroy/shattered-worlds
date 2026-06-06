@@ -16,6 +16,17 @@
 import type Phaser from 'phaser'
 import type { Card } from '../../core/index'
 import type { FrameStyle, VisualTheme } from './theme'
+import type { HighlightKind } from '../interaction/highlight'
+
+// ---------------------------------------------------------------------------
+// Canvas dimensions
+// ---------------------------------------------------------------------------
+
+// The logical game resolution. main.ts's Phaser.Game config uses these, and the
+// view layer (full-screen backdrops, full-screen overlays) sizes against them.
+// Single source of truth — change here, not in scattered literals.
+export const CANVAS_W = 900
+export const CANVAS_H = 600
 
 // ---------------------------------------------------------------------------
 // Card texture selection
@@ -59,7 +70,6 @@ export const TEXT = {
   textReward: '#88ee88',
   textHeld: '#ffaa66',
   dimAlpha: 0.35,
-  textBackTint: 0xBBBBBB,
 }
 
 // ---------------------------------------------------------------------------
@@ -117,7 +127,7 @@ export interface HighlightStyle {
  * bright `targetBorder`) so the card reads as marked-but-settled.
  */
 export function highlightDescriptor(
-  kind: 'selected' | 'target' | 'discard' | 'committed' | 'none',
+  kind: HighlightKind,
   frameStyle: FrameStyle,
 ): HighlightStyle {
   const transparentFill = { fillColor: 0x000000, fillAlpha: 0 }

@@ -6,9 +6,7 @@ import { availableActions } from '../core/engine/available'
 // ---------------------------------------------------------------------------
 
 function pick<T>(items: readonly T[]): T {
-  // Callers guarantee non-empty lists before calling pick.
-  // The assertion comment is accurate: this function is only called when
-  // the list has been checked to be non-empty at the call site.
+  // Callers guarantee a non-empty list; the cast covers the empty-array type.
   return items[Math.floor(Math.random() * items.length)] as T
 }
 
@@ -31,15 +29,7 @@ function pickSubset<T>(items: readonly T[], count: number): T[] {
 // Build a complete PlayCard action from a spec entry
 // ---------------------------------------------------------------------------
 
-interface PlayCardFields {
-  type: 'PlayCard'
-  cardId: CardId
-  targetId?: CardId
-  choice?: number
-  returnIds?: readonly CardId[]
-  destroyId?: CardId
-  discardId?: CardId
-}
+type PlayCardFields = Extract<Action, { type: 'PlayCard' }>
 
 function buildPlayAction(
   cardId: CardId,
@@ -101,7 +91,7 @@ function buildPlayAction(
           if (targets.length === 0) continue
           return { ...base, choice: branchIdx, targetId: pick(targets) }
         }
-        // 'none', 'draw', or any non-targeting branch
+        // 'none' or any non-targeting branch
         return { ...base, choice: branchIdx }
       }
 
@@ -126,7 +116,7 @@ function buildPlayAction(
           const chosen = pickSubset(targets, count)
           action = { ...action, returnIds: chosen }
         }
-        // 'none' / 'draw': no supplementary fields needed
+        // 'none': no supplementary fields needed
       }
 
       return action

@@ -1,47 +1,14 @@
-import type { Card, GameState } from '../core/model/types'
 import { createWorld } from '../core/engine/world'
 import { reduce } from '../core/engine/reduce'
-import { assembleCatalog } from '../core/model/catalog'
-import type { WorldData } from '../core/model/catalog'
-import { STARTER_SOURCE, ZOMBIE_SOURCE } from '../game/data/worldData'
+import { buildZombieWorld } from '../data/zombieWorld'
+import { checkIdAccounting } from './accounting'
 import { pickAction } from './policy'
 
 // ---------------------------------------------------------------------------
 // Catalog + world descriptor — assembled once at startup
 // ---------------------------------------------------------------------------
 
-const catalog = assembleCatalog([STARTER_SOURCE, ZOMBIE_SOURCE])
-
-const worldData: WorldData = {
-  worldId: ZOMBIE_SOURCE.worldId,
-  // STARTER_SOURCE.starterDeck is guaranteed present — starter.json defines it.
-  // ZOMBIE_SOURCE.deckComposition is guaranteed present — zombie-big-box.json defines it.
-  starterDeck: STARTER_SOURCE.starterDeck!,
-  deckComposition: ZOMBIE_SOURCE.deckComposition!,
-}
-
-// ---------------------------------------------------------------------------
-// ID accounting — verifies no card id appears in more than one zone
-// ---------------------------------------------------------------------------
-
-function checkIdAccounting(state: GameState): void {
-  const allZones: Card[] = [
-    ...state.playerDraw,
-    ...state.hand,
-    ...state.playerDiscard,
-    ...state.worldDraw,
-    ...state.acts.flat(),
-  ]
-  const seen = new Set<string>()
-  for (const card of allZones) {
-    if (seen.has(card.id)) {
-      throw new Error(
-        `Duplicate card id: ${card.id} (${card.name}) appears in multiple zones`,
-      )
-    }
-    seen.add(card.id)
-  }
-}
+const { catalog, worldData } = buildZombieWorld()
 
 // ---------------------------------------------------------------------------
 // Main sim loop

@@ -55,72 +55,59 @@ function structuralSpec(effect: CardEffect): TargetSpec {
 
 /**
  * Determine whether a single Effect has a legal play given the current hand.
- * Returns the TargetSpec when playable, or null when the card should be
- * excluded from `playable`.
  *
  * `selfId` is the id of the card being evaluated — used to exclude self from
  * target lists for DiscardThenDraw legality checks.
+ */
+function isPlayable(effect: CardEffect, state: GameState, selfId: CardId): boolean {
+  switch (effect.kind) {
+    case 'DealProgress':
+      // Requires at least one world card in hand as a target.
+      return worldCardsInHand(state).length > 0
+
+    case 'Heal':
+    case 'AddWorldCardToTop':
+    case 'AddCard':
+    case 'Draw':
+      return true
+
+    case 'DestroyCardInHand':
+      // min is 0, so destroying nothing is valid — always playable.
+      return true
+
+    case 'DiscardThenDraw':
+      // Requires at least one other player card in hand to discard.
+      return playerCardsInHand(state).some((c) => c.id !== selfId)
+
+    case 'ReturnWorldCards':
+      // When min >= 1, the player must return that many world cards — requires
+      // at least `min` world cards in hand.
+      return !(effect.min > 0 && worldCardsInHand(state).length < effect.min)
+
+    case 'Modal':
+      // Playable as long as at least one branch is viable.
+      return effect.branches.some((branch) => isPlayable(branch, state, selfId))
+
+    case 'Sequence':
+      // The first step determines whether the whole sequence is playable.
+      return isPlayable(effect.steps[0]!, state, selfId)
+
+    default:
+      return false
+  }
+}
+
+/**
+ * Returns the structural TargetSpec when the effect is playable given the
+ * current hand, or null when the card should be excluded from `playable`.
+ * Legality (isPlayable) and spec shape (structuralSpec) each have one home.
  */
 function playableSpec(
   effect: CardEffect,
   state: GameState,
   selfId: CardId,
 ): TargetSpec | null {
-  switch (effect.kind) {
-    case 'DealProgress': {
-      // Requires at least one world card in hand as a target.
-      if (worldCardsInHand(state).length === 0) return null
-      return structuralSpec(effect)
-    }
-
-    case 'Heal':
-    case 'AddWorldCardToTop':
-    case 'AddCard':
-      return { kind: 'none' }
-
-    case 'DestroyCardInHand':
-      // min is 0, so destroying nothing is valid — always playable.
-      return structuralSpec(effect)
-
-    case 'DiscardThenDraw': {
-      // Requires at least one other player card in hand to discard.
-      const others = playerCardsInHand(state).filter((c) => c.id !== selfId)
-      if (others.length === 0) return null
-      return { kind: 'discardPlayer' }
-    }
-
-    case 'Draw':
-      return { kind: 'none' }
-
-    case 'ReturnWorldCards': {
-      // When min >= 1, the player must return that many world cards — requires
-      // at least `min` world cards in hand.
-      if (effect.min > 0 && worldCardsInHand(state).length < effect.min) return null
-      return structuralSpec(effect)
-    }
-
-    case 'Modal': {
-      // Each branch is checked for playability. The modal card is playable as
-      // long as at least one branch is viable. Branch specs always use their
-      // structural shape so the UI knows what each branch requires.
-      const anyBranchLegal = effect.branches.some(
-        (branch) => playableSpec(branch, state, selfId) !== null,
-      )
-      if (!anyBranchLegal) return null
-      return { kind: 'modal', branches: effect.branches.map(structuralSpec) }
-    }
-
-    case 'Sequence': {
-      // The first step determines whether the card is playable — if it
-      // returns null the whole sequence is unplayable.
-      const firstSpec = playableSpec(effect.steps[0]!, state, selfId)
-      if (firstSpec === null) return null
-      return { kind: 'compound', steps: effect.steps.map(structuralSpec) }
-    }
-
-    default:
-      return null
-  }
+  return isPlayable(effect, state, selfId) ? structuralSpec(effect) : null
 }
 
 // ---------------------------------------------------------------------------

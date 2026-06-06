@@ -54,15 +54,11 @@ export function shuffle<T>(items: readonly T[], rng: RngState): [shuffled: T[], 
     // Scale raw [0,1) to [0, i+1) and floor to get a swap index in [0, i].
     const j = Math.floor(raw * (i + 1))
 
-    // noUncheckedIndexedAccess: i and j are always valid indices given the
-    // loop bounds and the floor above, but the compiler cannot prove it.
-    // We guard with a runtime check that can never fire to satisfy the types.
-    const tmp = result[i]
-    const swp = result[j]
-    if (tmp !== undefined && swp !== undefined) {
-      result[i] = swp
-      result[j] = tmp
-    }
+    // i and j are always valid indices (loop bounds + floor above); the `!`
+    // satisfies noUncheckedIndexedAccess without a branch that can never run.
+    const tmp = result[i]!
+    result[i] = result[j]!
+    result[j] = tmp
   }
 
   return [result, state]

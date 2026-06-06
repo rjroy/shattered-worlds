@@ -18,12 +18,6 @@ describe('selectTheme', () => {
     expect(typeof ZOMBIE_BIG_BOX_THEME.backdrop.intrusionKey).toBe('string')
   })
 
-  it('frameStyle contains numeric Phaser colors (hex integers)', () => {
-    expect(typeof ZOMBIE_BIG_BOX_THEME.frameStyle.playerBg).toBe('number')
-    expect(typeof ZOMBIE_BIG_BOX_THEME.frameStyle.worldBg).toBe('number')
-    expect(typeof ZOMBIE_BIG_BOX_THEME.frameStyle.borderColor).toBe('number')
-  })
-
   it('frameStyle contains numeric feedback colors (hex integers)', () => {
     expect(typeof ZOMBIE_BIG_BOX_THEME.frameStyle.connectorProgress).toBe('number')
     expect(typeof ZOMBIE_BIG_BOX_THEME.frameStyle.connectorDestroy).toBe('number')

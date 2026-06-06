@@ -1,48 +1,22 @@
 import { describe, expect, test } from 'bun:test'
-import type { Card, GameState } from '../../core/model/types'
+import type { GameState } from '../../core/model/types'
 import { createWorld } from '../../core/engine/world'
 import { reduce } from '../../core/engine/reduce'
-import { assembleCatalog } from '../../core/model/catalog'
-import type { WorldData } from '../../core/model/catalog'
-import { STARTER_SOURCE, ZOMBIE_SOURCE } from '../../game/data/worldData'
+import { buildZombieWorld } from '../../data/zombieWorld'
+import { checkIdAccounting } from '../accounting'
 import { pickAction } from '../policy'
 
 // ---------------------------------------------------------------------------
 // Catalog + world descriptor — assembled once at module load
 // ---------------------------------------------------------------------------
 
-const catalog = assembleCatalog([STARTER_SOURCE, ZOMBIE_SOURCE])
-
-const worldData: WorldData = {
-  worldId: ZOMBIE_SOURCE.worldId,
-  starterDeck: STARTER_SOURCE.starterDeck!,
-  deckComposition: ZOMBIE_SOURCE.deckComposition!,
-}
+const { catalog, worldData } = buildZombieWorld()
 
 // ---------------------------------------------------------------------------
 // Shared helpers
 // ---------------------------------------------------------------------------
 
 const MAX_ACTIONS = 500
-
-function checkIdAccounting(state: GameState): void {
-  const allZones: Card[] = [
-    ...state.playerDraw,
-    ...state.hand,
-    ...state.playerDiscard,
-    ...state.worldDraw,
-    ...state.acts.flat(),
-  ]
-  const seen = new Set<string>()
-  for (const card of allZones) {
-    if (seen.has(card.id)) {
-      throw new Error(
-        `Duplicate card id: ${card.id} (${card.name}) appears in multiple zones`,
-      )
-    }
-    seen.add(card.id)
-  }
-}
 
 function runWorld(seed: number): { finalState: GameState; turns: number; actions: number } {
   let state = createWorld(catalog, worldData, seed)

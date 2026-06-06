@@ -1,14 +1,16 @@
 /**
- * Phaser 3 factory and update functions for the table view.
+ * Phaser factory and mutators for card containers — the card face, its
+ * selection highlight, the world-card cost ring, and the hover emphasis.
  *
- * All functions are stateless — they create or mutate Phaser game objects but
- * never read or write GameState directly. The scene passes data in; nothing
- * here has a reference to GameCore.
+ * All functions are stateless: they create or mutate Phaser game objects but
+ * never read or write GameState. The scene passes data in; nothing here holds a
+ * reference to GameCore.
  */
 import Phaser from 'phaser'
-import type { Card, GameState, WorldCard } from '../../core/index'
+import type { Card, CardEffect, WorldCard } from '../../core/index'
 import type { FrameStyle, VisualTheme } from './theme'
 import { describeEffect } from '../interaction/describe'
+import type { HighlightKind } from '../interaction/highlight'
 import {
   TEXT,
   textStyle,
@@ -29,8 +31,64 @@ const CARD_W = 150
 const CARD_H = 196
 
 // ---------------------------------------------------------------------------
-// Card object factories
+// Card object factory
 // ---------------------------------------------------------------------------
+
+interface CardTextOpts {
+  fontSize: string
+  color: string
+  originY: number      // 0 = top-anchored, 1 = bottom-anchored
+  bold?: boolean
+  wrapWidth?: number   // when set, the text wraps at this width and centers
+  lineSpacing?: number
+}
+
+/** Add a horizontally-centered text line to a card container; returns it. */
+function addCardText(
+  scene: Phaser.Scene,
+  container: Phaser.GameObjects.Container,
+  y: number,
+  str: string,
+  opts: CardTextOpts,
+): Phaser.GameObjects.Text {
+  const style: Phaser.Types.GameObjects.Text.TextStyle = {
+    fontSize: opts.fontSize,
+    color: opts.color,
+  }
+  if (opts.bold === true) style.fontStyle = 'bold'
+  if (opts.lineSpacing !== undefined) style.lineSpacing = opts.lineSpacing
+  if (opts.wrapWidth !== undefined) {
+    style.wordWrap = { width: opts.wrapWidth }
+    style.align = 'center'
+  }
+  const text = scene.add.text(0, y, str, textStyle(style))
+  text.setOrigin(0.5, opts.originY)
+  container.add(text)
+  return text
+}
+
+/**
+ * Add a bottom-anchored world-card effect block (onEndOfTurn / onDiscarded /
+ * onCleared), each line carrying `prefix`. Skips effects with no content.
+ */
+function addEffectBlock(
+  scene: Phaser.Scene,
+  container: Phaser.GameObjects.Container,
+  effect: CardEffect,
+  prefix: string,
+  y: number,
+  color: string,
+): void {
+  if (effect.kind === 'None') return
+  const lines = describeEffect(effect).map((l) => `${prefix}${l}`).join('\n')
+  if (lines === '') return
+  addCardText(scene, container, y, lines, {
+    fontSize: '9px',
+    color,
+    originY: 1,
+    wrapWidth: CARD_W - 16,
+  })
+}
 
 /** Create a Phaser Container representing a single card (player or world). */
 export function createCardObject(
@@ -57,44 +115,28 @@ export function createCardObject(
   bg.setAlpha(0.4)
   container.add(bg)
 
-  if (card.kind === 'player') {
-    // Card name at top
-    const nameText = scene.add.text(0, -CARD_H / 2 + 8, card.name, textStyle({
-      fontSize: '13px',
-      color: TEXT.textLight,
-      fontStyle: 'bold',
-      wordWrap: { width: CARD_W - 12 },
-      align: 'center',
-    }))
-    nameText.setOrigin(0.5, 0)
-    container.add(nameText)
+  // Name at top — identical for player and world cards.
+  addCardText(scene, container, -CARD_H / 2 + 8, card.name, {
+    fontSize: '13px',
+    color: TEXT.textLight,
+    bold: true,
+    wrapWidth: CARD_W - 12,
+    originY: 0,
+  })
 
+  if (card.kind === 'player') {
     // Full effect description — the whole face is self-explanatory. Modal and
     // Sequence cards render every branch / step, so nothing reads as "Choose…".
-    const effectLines = describeEffect(card.effect).join('\n')
-    const effectText = scene.add.text(0, -CARD_H / 2 + 38, effectLines, textStyle({
+    addCardText(scene, container, -CARD_H / 2 + 38, describeEffect(card.effect).join('\n'), {
       fontSize: '11px',
-      lineSpacing: 2,
       color: TEXT.textLight,
-      wordWrap: { width: CARD_W - 16 },
-      align: 'center',
-    }))
-    effectText.setOrigin(0.5, 0)
-    container.add(effectText)
+      originY: 0,
+      wrapWidth: CARD_W - 16,
+      lineSpacing: 2,
+    })
   } else {
     // World / Hazard card
     const worldCard = card as WorldCard
-
-    // Name at top
-    const nameText = scene.add.text(0, -CARD_H / 2 + 8, worldCard.name, textStyle({
-      fontSize: '13px',
-      color: TEXT.textLight,
-      fontStyle: 'bold',
-      wordWrap: { width: CARD_W - 12 },
-      align: 'center',
-    }))
-    nameText.setOrigin(0.5, 0)
-    container.add(nameText)
 
     // Progress ring backing the cost digit. Added BEFORE the cost text so it
     // renders underneath it (the digit must stay readable on top), and AFTER
@@ -110,82 +152,40 @@ export function createCardObject(
       costRing
 
     // Cost label + value (cost is the Progress needed to clear the Hazard)
-    const costText = scene.add.text(0, -CARD_H / 2 + 40, String(worldCard.cost), textStyle({
+    addCardText(scene, container, -CARD_H / 2 + 40, String(worldCard.cost), {
       fontSize: '30px',
       color: TEXT.textCost,
-      fontStyle: 'bold',
-    }))
-    costText.setOrigin(0.5, 0)
-    container.add(costText)
-    const costLabel = scene.add.text(0, -CARD_H / 2 + 74, 'to clear', textStyle({
+      bold: true,
+      originY: 0,
+    })
+    addCardText(scene, container, -CARD_H / 2 + 74, 'to clear', {
       fontSize: '8px',
       color: TEXT.textMuted,
-    }))
-    costLabel.setOrigin(0.5, 0)
-    container.add(costLabel)
+      originY: 0,
+    })
 
     // Keywords
     if (worldCard.keywords.length > 0) {
-      const kwText = scene.add.text(0, -CARD_H / 2 + 88, worldCard.keywords.join(' · '), textStyle({
+      addCardText(scene, container, -CARD_H / 2 + 88, worldCard.keywords.join(' · '), {
         fontSize: '9px',
         color: TEXT.textKeyword,
-      }))
-      kwText.setOrigin(0.5, 0)
-      container.add(kwText)
+        originY: 0,
+      })
     }
 
-    // onEndOfTurn (fires each turn while held), onDiscarded, onCleared — as full sentences
-    if (worldCard.onEndOfTurn.kind !== 'None') {
-      const heldLines = describeEffect(worldCard.onEndOfTurn).map((l) => `Each turn: ${l}`).join('\n')
-      const heldText = scene.add.text(0, CARD_H / 2 - 78, heldLines, textStyle({
-        fontSize: '9px',
-        color: TEXT.textHeld,
-        wordWrap: { width: CARD_W - 16 },
-        align: 'center',
-      }))
-      heldText.setOrigin(0.5, 1)
-      container.add(heldText)
-    }
-
-    if (worldCard.onDiscarded.kind !== 'None') {
-      const penaltyText = describeEffect(worldCard.onDiscarded)
-        .map((l) => `If discarded: ${l}`)
-        .join('\n')
-      const penText = scene.add.text(0, CARD_H / 2 - 52, penaltyText, textStyle({
-        fontSize: '9px',
-        color: TEXT.textPenalty,
-        wordWrap: { width: CARD_W - 16 },
-        align: 'center',
-      }))
-      penText.setOrigin(0.5, 1)
-      container.add(penText)
-    }
-
-    if (worldCard.onCleared.kind !== 'None') {
-      const rewardText = describeEffect(worldCard.onCleared)
-        .map((l) => `Clear it: ${l}`)
-        .join('\n')
-      if (rewardText !== '') {
-        const rewText = scene.add.text(0, CARD_H / 2 - 26, rewardText, textStyle({
-          fontSize: '9px',
-          color: TEXT.textReward,
-          wordWrap: { width: CARD_W - 16 },
-          align: 'center',
-        }))
-        rewText.setOrigin(0.5, 1)
-        container.add(rewText)
-      }
-    }
+    // onEndOfTurn (fires each turn while held), onDiscarded, onCleared — full sentences.
+    addEffectBlock(scene, container, worldCard.onEndOfTurn, 'Each turn: ', CARD_H / 2 - 78, TEXT.textHeld)
+    addEffectBlock(scene, container, worldCard.onDiscarded, 'If discarded: ', CARD_H / 2 - 52, TEXT.textPenalty)
+    addEffectBlock(scene, container, worldCard.onCleared, 'Clear it: ', CARD_H / 2 - 26, TEXT.textReward)
 
     // Discard indicator
     if (worldCard.discardable) {
-      const discText = scene.add.text(0, CARD_H / 2 - 10, 'click to discard', textStyle({
+      addCardText(scene, container, CARD_H / 2 - 10, 'click to discard', {
         fontSize: '8px',
         color: '#ffaa44',
-        fontStyle: 'bold',
-      }))
-      discText.setOrigin(0.5, 1)
-      container.add(discText)
+        bold: true,
+        originY: 1,
+      })
     }
   }
 
@@ -196,150 +196,7 @@ export function createCardObject(
 }
 
 // ---------------------------------------------------------------------------
-// HUD
-// ---------------------------------------------------------------------------
-
-export interface HUDRefs {
-  // The whole HUD (backing panel + every label) lives in this container, so the
-  // caller can move the bar as one object via container.setPosition. Child
-  // coordinates below are relative to the container origin.
-  container: Phaser.GameObjects.Container
-  hpText: Phaser.GameObjects.Text
-  actText: Phaser.GameObjects.Text
-  drawText: Phaser.GameObjects.Text
-  worldText: Phaser.GameObjects.Text
-}
-
-// HUD backing panel geometry. The text-back texture is a 600×600 grunge frame:
-// a thick decorated border around a dark interior. As a nine-slice we keep the
-// decorated LEFT/RIGHT edges intact (wide side insets) and sample only a thin
-// strip of the TOP/BOTTOM border (small insets), so the dark interior stretches
-// to fill the bar behind the text instead of the frame swallowing it. Insets are
-// chosen so the interior band (panel top + top inset .. panel bottom − bottom
-// inset) brackets the 14px text sitting at y=10.
-const HUD_PANEL_X = 30
-const HUD_PANEL_Y = 0
-const HUD_PANEL_W = 530
-const HUD_PANEL_H = 45
-const HUD_PANEL_SIDE_INSET = 6 // left/right: keep the decorated vertical frame
-const HUD_PANEL_EDGE_INSET = 6 // top/bottom: thin frayed edge, interior shows through
-
-/** Create the HUD: a textured backing panel plus the status text objects. */
-export function createHUD(scene: Phaser.Scene): HUDRefs {
-  // Everything lives in this container so the bar moves as one object. Default
-  // position (0,0) keeps child local coordinates equal to the old absolute ones,
-  // so the rendered HUD is unchanged until the caller repositions the container.
-  const container = scene.add.container(0, 0)
-
-  // Backing panel, added first so it sits behind every HUD label. A nine-slice
-  // (not a stretched image) so the square frame's decorated edges don't distort
-  // when scaled to the wide, short HUD strip.
-  const panel = scene.add
-    .nineslice(
-      0,
-      0,
-      'text-back',
-      undefined,
-      HUD_PANEL_W,
-      HUD_PANEL_H,
-      HUD_PANEL_SIDE_INSET,
-      HUD_PANEL_SIDE_INSET,
-      HUD_PANEL_EDGE_INSET,
-      HUD_PANEL_EDGE_INSET,
-    )
-    .setOrigin(0, 0)
-    .setTint(0xBBBBBB)
-  container.add(panel)
-
-  // The textured panel supplies the dark backing, so the labels no longer carry
-  // their own translucent-black backgroundColor.
-  const style = textStyle({ fontSize: '16px', fontStyle: 'bold', color: TEXT.textLight })
-  const mutedStyle = textStyle({ fontSize: '14px', color: TEXT.textMuted })
-
-  // Origin (0, 0.5): x is the panel-relative left edge of the label, y is the
-  // panel's vertical center, so every label is vertically centered in the bar.
-  const hpText = scene.add.text(30, HUD_PANEL_H / 2, 'HP: —', { ...style, color: '#FF8888' })
-  const actText = scene.add.text(140, HUD_PANEL_H / 2, 'Act 1', style)
-  const drawText = scene.add.text(214, HUD_PANEL_H / 2, 'Draw: — | Discard: —', mutedStyle)
-  const worldText = scene.add.text(434, HUD_PANEL_H / 2, 'World: —', mutedStyle)
-  for (const label of [hpText, actText, drawText, worldText]) {
-    label.setOrigin(0, 0.5)
-  }
-  container.add([hpText, actText, drawText, worldText])
-  container.setPosition(HUD_PANEL_X, HUD_PANEL_Y)
-
-  return { container, hpText, actText, drawText, worldText }
-}
-
-/** Update HUD text to match the current GameState. */
-export function updateHUD(refs: HUDRefs, state: GameState): void {
-  refs.hpText.setText(`HP: ${state.hp}/20`)
-  refs.actText.setText(`Act ${state.actIndex + 1}`)
-  refs.drawText.setText(`Draw: ${state.playerDraw.length} | Discard: ${state.playerDiscard.length}`)
-  const worldPile = state.worldDraw.length
-  refs.worldText.setText(`World: ${worldPile}`)
-}
-
-// ---------------------------------------------------------------------------
-// Win / loss screens
-// ---------------------------------------------------------------------------
-
-/** Create a full-screen win overlay (hidden by default). */
-export function createWinScreen(scene: Phaser.Scene): Phaser.GameObjects.Container {
-  const container = scene.add.container(450, 300)
-  container.setDepth(1000)
-  container.setVisible(false)
-
-  const bg = scene.add.rectangle(0, 0, 900, 600, 0x000000, 0.8)
-  container.add(bg)
-
-  const text = scene.add.text(0, -30, 'YOU WIN', textStyle({
-    fontSize: '72px',
-    color: '#88ee88',
-    fontStyle: 'bold',
-  }))
-  text.setOrigin(0.5, 0.5)
-  container.add(text)
-
-  const sub = scene.add.text(0, 50, 'You survived.', textStyle({
-    fontSize: '20px',
-    color: '#9aa3b2',
-  }))
-  sub.setOrigin(0.5, 0.5)
-  container.add(sub)
-
-  return container
-}
-
-/** Create a full-screen loss overlay (hidden by default). */
-export function createLossScreen(scene: Phaser.Scene): Phaser.GameObjects.Container {
-  const container = scene.add.container(450, 300)
-  container.setDepth(1000)
-  container.setVisible(false)
-
-  const bg = scene.add.rectangle(0, 0, 900, 600, 0x000000, 0.8)
-  container.add(bg)
-
-  const text = scene.add.text(0, -30, 'YOU LOSE', textStyle({
-    fontSize: '72px',
-    color: '#ff8888',
-    fontStyle: 'bold',
-  }))
-  text.setOrigin(0.5, 0.5)
-  container.add(text)
-
-  const sub = scene.add.text(0, 50, 'You did not survive meeting the Walker.', textStyle({
-    fontSize: '20px',
-    color: '#9aa3b2',
-  }))
-  sub.setOrigin(0.5, 0.5)
-  container.add(sub)
-
-  return container
-}
-
-// ---------------------------------------------------------------------------
-// Highlight helpers — called by TableScene after drawAll
+// Highlight — called by TableScene after drawAll
 // ---------------------------------------------------------------------------
 
 /**
@@ -349,7 +206,7 @@ export function createLossScreen(scene: Phaser.Scene): Phaser.GameObjects.Contai
  */
 export function applyCardHighlight(
   container: Phaser.GameObjects.Container,
-  kind: 'selected' | 'target' | 'discard' | 'committed' | 'none',
+  kind: HighlightKind,
   frameStyle: FrameStyle,
 ): void {
   // The highlight rectangle is list[1] (list[0] is the cardfront image)
@@ -359,6 +216,10 @@ export function applyCardHighlight(
   bg.setFillStyle(fillColor, fillAlpha)
   bg.setStrokeStyle(strokeWidth, strokeColor)
 }
+
+// ---------------------------------------------------------------------------
+// Cost ring (S5) — world-card progress arc
+// ---------------------------------------------------------------------------
 
 // Ring geometry — shared by the snap path and the tween onUpdate so a tweened
 // frame is drawn byte-for-byte the same as a snapped one.
@@ -588,4 +449,3 @@ export function clearEmphasis(container: Phaser.GameObjects.Container): void {
 export function positionCard(container: Phaser.GameObjects.Container, x: number, y: number): void {
   container.setPosition(x, y)
 }
-
