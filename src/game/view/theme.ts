@@ -20,8 +20,14 @@ export interface GrainSpec {
 
 export interface VisualTheme {
   worldId: string
-  intrusionHue: string           // '#9bff6a' for zombie-big-box (fluorescent green)
-  realityPalette: string[]       // 2-4 desaturated slate hex strings for UI accents
+  intrusionHue: string
+  realityPalette: {
+    title: string
+    text: string
+    disabled: string
+    confirm: string
+    cancel: string
+  }
   frameStyle: FrameStyle
   grain: GrainSpec
   doorGlowTint?: number          // optional tint for the door glow (Phaser hex int); if not set, glow is default color
@@ -39,7 +45,13 @@ export interface VisualTheme {
 export const ZOMBIE_BIG_BOX_THEME: VisualTheme = {
   worldId: 'zombie-big-box',
   intrusionHue: '#9bff6a',
-  realityPalette: ['#8a9ba8', '#5c6e7a', '#3d4f5e', '#2a3540'],
+  realityPalette: {
+    title: '#9aa3b2',
+    text: '#6a96e2',
+    disabled: '#5f707c',
+    confirm: '#88ee88',
+    cancel: '#e29266',
+  },
   doorGlowTint: 0x9bff6a,
   doorTint: 0x5c6e7a,
   frameStyle: {
@@ -71,3 +83,12 @@ const THEMES: Record<string, VisualTheme> = {
 export function selectTheme(worldId: string): VisualTheme {
   return THEMES[worldId] ?? ZOMBIE_BIG_BOX_THEME
 }
+
+export function getRealityPalellete(
+  theme: VisualTheme,
+  index: keyof VisualTheme['realityPalette'],
+  defaultColor: string
+): string {
+  return theme.realityPalette[index] ?? defaultColor
+}
+

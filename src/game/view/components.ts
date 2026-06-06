@@ -24,12 +24,12 @@ export class CommonLabel extends Phaser.GameObjects.Container {
         4, 4, 2, 2,
       )
       .setOrigin(0.5, 0.5)
-      .setTint(0x888888)
+      .setTint(0x777777)
     this.add(this.txtBg)
 
     this.label = scene.add.text(0, 0, text, textStyle)
     this.label.setOrigin(0.5, 0.5)
-    this.txtBg.setSize(this.label.width + 20, this.label.height + 10)
+    this.txtBg.setSize(this.label.width + 24, this.label.height + 14)
 
     this.add(this.label)
     this.setPosition(x, y)
@@ -38,7 +38,7 @@ export class CommonLabel extends Phaser.GameObjects.Container {
 
   setText(text: string): void {
     this.label.setText(text)
-    this.txtBg.setSize(this.label.width + 20, this.label.height + 10)
+    this.txtBg.setSize(this.label.width + 24, this.label.height + 14)
   }
 }
 

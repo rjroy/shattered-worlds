@@ -340,44 +340,6 @@ export function createLossScreen(scene: Phaser.Scene): Phaser.GameObjects.Contai
 }
 
 // ---------------------------------------------------------------------------
-// Interactive buttons
-// ---------------------------------------------------------------------------
-/** Create the End Turn button. */
-export function createEndTurnButton(
-  scene: Phaser.Scene,
-  x: number,
-  y: number,
-): CommonButton {
-  const btn = new CommonButton(scene, x, y, '[ End Turn ]', textStyle({
-    fontSize: '16px',
-    color: '#88aaff',
-    fontStyle: 'bold',
-  }))
-  return btn
-}
-
-/** Create a Cancel button (shown during active selections). */
-export function createCancelButton(scene: Phaser.Scene, x: number, y: number): CommonButton {
-  const btn = new CommonButton(scene, x, y, '[ Cancel ]', textStyle({
-    fontSize: '13px',
-    color: '#ff8888',
-  }))
-  btn.setVisible(false)
-  return btn
-}
-
-/** Create a Confirm button (shown during multi-select phases). */
-export function createConfirmButton(scene: Phaser.Scene, x: number, y: number): CommonButton {
-  const btn = new CommonButton(scene, x, y, '[ Confirm ]', textStyle({
-    fontSize: '13px',
-    color: '#88ee88',
-    fontStyle: 'bold',
-  }))
-  btn.setVisible(false)
-  return btn
-}
-
-// ---------------------------------------------------------------------------
 // Highlight helpers — called by TableScene after drawAll
 // ---------------------------------------------------------------------------
 
