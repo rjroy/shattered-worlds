@@ -52,8 +52,10 @@ export function createCardObject(
 
   // Transparent overlay rectangle used only for selection highlight strokes.
   // list[1] — applyCardHighlight depends on this position.
-  const bg = scene.add.rectangle(0, 0, CARD_W, CARD_H, 0x000000, 0)
+  const bg = scene.add.rectangle(1, 1, CARD_W - 2, CARD_H - 2, 0x000000, 0)
   bg.setStrokeStyle(0)
+  bg.setRounded(10)
+  bg.setAlpha(0.4)
   container.add(bg)
 
   if (card.kind === 'player') {
