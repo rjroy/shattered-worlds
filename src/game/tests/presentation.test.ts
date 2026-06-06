@@ -27,6 +27,7 @@ const playerCardZombie: PlayerCard = {
   kind: 'player',
   id: '1',
   name: 'Sprint',
+  insetKey: undefined,
   sourceWorldId: 'zombie-big-box',
   effect: { kind: 'Draw', player: 1 },
 }
@@ -35,6 +36,7 @@ const playerCardUnknown: PlayerCard = {
   kind: 'player',
   id: '2',
   name: 'Explore',
+  insetKey: undefined,
   sourceWorldId: 'unknown-world',
   effect: { kind: 'Draw', player: 1 },
 }
@@ -43,6 +45,7 @@ const worldCard: WorldCard = {
   kind: 'world',
   id: '3',
   name: 'The Horde',
+  insetKey: undefined,
   cost: 3,
   keywords: [],
   discardable: false,
