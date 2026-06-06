@@ -1,9 +1,9 @@
-import type { Card, GameState } from '../core/types'
-import { createWorld } from '../core/world'
-import { reduce } from '../core/reduce'
-import { assembleCatalog } from '../core/catalog'
-import type { WorldData } from '../core/catalog'
-import { STARTER_SOURCE, ZOMBIE_SOURCE } from '../game/worldData'
+import type { Card, GameState } from '../core/model/types'
+import { createWorld } from '../core/engine/world'
+import { reduce } from '../core/engine/reduce'
+import { assembleCatalog } from '../core/model/catalog'
+import type { WorldData } from '../core/model/catalog'
+import { STARTER_SOURCE, ZOMBIE_SOURCE } from '../game/data/worldData'
 import { pickAction } from './policy'
 
 // ---------------------------------------------------------------------------

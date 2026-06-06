@@ -1,6 +1,6 @@
 import Phaser from 'phaser'
-import { BootScene } from './BootScene'
-import { TableScene } from './TableScene'
+import { BootScene } from './scenes/BootScene'
+import { TableScene } from './scenes/TableScene'
 
 const game = new Phaser.Game({
   type: Phaser.AUTO,

@@ -30,9 +30,22 @@ The codebase is split into three packages by role. The boundary between `core` a
 
 ```
 src/
-  core/   — pure TypeScript, zero Phaser imports
-  game/   — Phaser renderer, imports core
-  sim/    — headless runner, imports core
+  core/                  — pure TypeScript, zero Phaser imports
+    index.ts contract.ts — public surface
+    model/               — types, errors, cards, catalog
+    engine/              — world, game, reduce, effects, available, draw, intensity, rng
+    tests/               — *.test.ts + testFixture
+  game/                  — Phaser renderer, imports core
+    index.ts main.ts     — entry points
+    scenes/              — BootScene, TableScene
+    view/                — render, components, presentation, theme, visualMappers, backdrop, walker, piles
+    interaction/         — selection, describe, feedback
+    data/                — assetManifest, worldData
+    assets/              — webp art + per-theme assets
+    tests/               — *.test.ts + testSetup
+  sim/                   — headless runner, imports core
+    tests/               — *.test.ts
+  data/worlds/           — world definition JSON
 ```
 
 ### `src/core/` — the rules engine
@@ -95,7 +108,7 @@ Design documents, specs, research, and retros live in `.lore/`. They are HTML fi
 
 ## Testing
 
-Tests live alongside source (`*.test.ts`). Run them with `bun run test`.
+Tests live in a `tests/` folder within each module (`*.test.ts`). Run them with `bun run test`.
 
 The core module has near-complete unit test coverage. New core logic requires tests. The sim runner provides integration-level validation of the full game loop.
 

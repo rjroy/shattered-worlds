@@ -1,5 +1,5 @@
-import type { Action, CardId, GameState, TargetSpec } from '../core/types'
-import { availableActions } from '../core/available'
+import type { Action, CardId, GameState, TargetSpec } from '../core/model/types'
+import { availableActions } from '../core/engine/available'
 
 // ---------------------------------------------------------------------------
 // Random helpers (policy-local, not deterministic with game state RNG)
