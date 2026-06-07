@@ -61,7 +61,7 @@ import { buildWorld } from '../../data/worldManifest'
 // ---------------------------------------------------------------------------
 
 /** Vertical centre of the world cards (hazard) row. */
-const WORLD_ROW_Y = 180
+const WORLD_ROW_Y = 140
 /** Vertical centre of the player hand row. */
 const HAND_ROW_Y = 420
 /** Horizontal spacing between card centres (cards are 150px wide). */
