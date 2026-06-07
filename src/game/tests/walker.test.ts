@@ -11,7 +11,7 @@ function makeState(
     hand: hand as unknown as GameState['hand'],
     actIndex,
     playerDraw: [], playerDiscard: [], worldDraw: [], acts: [],
-    progress: {}, hp: 20, skipDrawNext: false, status: 'playing',
+    progress: {}, hp: 10, skipDrawNext: false, status: 'playing',
     rng: { a: 0, b: 0, c: 0, d: 0 }, nextId: 0, worldId: 'zombie-big-box',
   }
 }
@@ -66,7 +66,7 @@ describe('walkerPresentation', () => {
       // far: small, barely visible
       if (result.kind === 'proximity') {
         expect(result.proximity.size).toBe(75)
-        expect(result.proximity.alpha).toBe(0.35)
+        expect(result.proximity.alpha).toBe(0.50)
       }
     })
 
@@ -76,7 +76,7 @@ describe('walkerPresentation', () => {
       expect(result).toEqual({ kind: 'proximity', proximity: walkerProximityForAct(1) })
       if (result.kind === 'proximity') {
         expect(result.proximity.size).toBe(175)
-        expect(result.proximity.alpha).toBe(0.60)
+        expect(result.proximity.alpha).toBe(0.65)
       }
     })
 

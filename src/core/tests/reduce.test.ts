@@ -159,11 +159,11 @@ describe('EndTurn hold vs discard', () => {
 })
 
 // ---------------------------------------------------------------------------
-// 4. DiscardHazard legal: discarding Zombie applies Damage(1) onDiscarded
+// 4. DiscardHazard legal: discarding Zombie applies Damage(5) onDiscarded
 // ---------------------------------------------------------------------------
 
 describe('DiscardHazard legal', () => {
-  it('discarding Zombie (Damage 1) decrements HP', () => {
+  it('discarding Zombie (Damage 5) decrements HP', () => {
     const base = createWorld(catalog, worldData, 42)
     const [zombie, s1] = mintCard(catalog, base, 'Zombie')
 
@@ -175,7 +175,7 @@ describe('DiscardHazard legal', () => {
 
     const result = reduce(catalog, state, { type: 'DiscardHazard', cardId: zombie.id })
 
-    expect(result.state.hp).toBe(9)
+    expect(result.state.hp).toBe(5)
 
     const types = result.events.map((e) => e.type)
     expect(types).toContain('HazardDiscarded')

@@ -65,6 +65,7 @@ export const TEXT = {
   textLight: '#e8eaf0',
   textMuted: '#b6c0d1',
   textCost: '#ffcc44',
+  textCostInt: 0xffcc44,
   textKeyword: '#88ccff',
   textPenalty: '#ff8888',
   textReward: '#88ee88',

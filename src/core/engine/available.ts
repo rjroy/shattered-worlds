@@ -72,8 +72,8 @@ function isPlayable(effect: CardEffect, state: GameState, selfId: CardId): boole
       return true
 
     case 'DestroyCardInHand':
-      // min is 0, so destroying nothing is valid — always playable.
-      return true
+      // Requires at least one other card in hand to destroy, optionally with a cost filter.
+      return worldCardsInHand(state).some((c) => effect.maxCost ? c.cost <= effect.maxCost : true) || playerCardsInHand(state).length > effect.min
 
     case 'DiscardThenDraw':
       // Requires at least one other player card in hand to discard.
@@ -136,12 +136,14 @@ function computeLegalTargets(
       const branch = effect.branches[step]
       if (branch === undefined) return []
       if (branch.kind === 'DealProgress') {
-        const tag = branch.bonus?.tag
-        if (tag !== undefined) {
-          // Filter to world cards that have the matching keyword
-          return worldCardsInHand(state)
-            .filter((c) => c.keywords.includes(tag))
-            .map((c) => c.id)
+        if (branch.base === 0) {
+          const tag = branch.bonus?.tag
+          if (tag !== undefined) {
+            // Filter to world cards that have the matching keyword
+            return worldCardsInHand(state)
+              .filter((c) => c.keywords.includes(tag))
+              .map((c) => c.id)
+          }
         }
         return worldCardsInHand(state).map((c) => c.id)
       }
@@ -172,7 +174,13 @@ function computeLegalTargets(
     case 'DestroyCardInHand':
       // step 0: all cards in hand except self
       if (step !== 0) return []
-      return state.hand.filter((c) => c.id !== card.id).map((c) => c.id)
+      return state.hand
+        .filter((c) => c.id !== card.id && (
+          effect.maxCost === undefined || 
+          c.kind === 'player' || 
+          (c.kind === 'world' && c.cost <= effect.maxCost)
+        ))
+        .map((c) => c.id)
 
     case 'Heal':
     case 'AddWorldCardToTop':

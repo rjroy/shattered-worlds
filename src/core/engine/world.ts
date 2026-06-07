@@ -4,6 +4,8 @@ import { createRng, shuffle } from './rng'
 import { mintCard } from '../model/cards'
 import { refillHand } from './draw'
 
+export const START_HP = 10
+
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
@@ -65,7 +67,7 @@ export function createWorld(catalog: CardCatalog, world: WorldData, seed: number
     acts: [],
     actIndex: 0,
     progress: {},
-    hp: 20,
+    hp: START_HP,
     skipDrawNext: false,
     status: 'playing',
     worldId: 'starter',

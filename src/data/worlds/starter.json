@@ -9,7 +9,7 @@
         "kind": "Modal",
         "branches": [
           { "kind": "Draw", "player": 2, "world": 1 },
-          { "kind": "DealProgress", "base": 1, "bonus": { "tag": "Slow", "amount": 1 } }
+          { "kind": "DealProgress", "base": 0, "bonus": { "tag": "Slow", "amount": 3 } }
         ]
       }
     },
@@ -27,7 +27,7 @@
         "kind": "Sequence",
         "steps": [
           { "kind": "DealProgress", "base": 1 },
-          { "kind": "ReturnWorldCards", "min": 0, "max": 2 }
+          { "kind": "ReturnWorldCards", "min": 0, "max": 1 }
         ]
       }
     },
@@ -44,7 +44,7 @@
       "effect": {
         "kind": "Sequence",
         "steps": [
-          { "kind": "ReturnWorldCards", "min": 1, "max": 1 },
+          { "kind": "ReturnWorldCards", "min": 1, "max": 2 },
           { "kind": "Draw", "world": 1 }
         ]
       }

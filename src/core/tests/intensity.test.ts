@@ -33,10 +33,10 @@ describe('intensity — act index', () => {
 // ---------------------------------------------------------------------------
 
 describe('intensity — hp', () => {
-  it('hp=5 produces higher intensity than hp=20 (all else equal)', () => {
+  it('hp=5 produces higher intensity than hp=10 (all else equal)', () => {
     const base = createWorld(catalog, worldData, 42)
-    const lowHp = { ...base, hp: 5 }
-    const fullHp = { ...base, hp: 20 }
+    const lowHp = { ...base, hp: 2 }
+    const fullHp = { ...base, hp: 10 }
     expect(intensity(lowHp)).toBeGreaterThan(intensity(fullHp))
   })
 })
@@ -85,7 +85,7 @@ describe('intensity — range', () => {
     const minState = {
       ...base,
       actIndex: 0,
-      hp: 20,
+      hp: 10,
       hand: base.hand.filter(c => c.kind === 'player'),
     }
     const result = intensity(minState)
@@ -93,7 +93,7 @@ describe('intensity — range', () => {
     expect(result).toBeLessThanOrEqual(1.0)
   })
 
-  it('hp above 20 (healed beyond start) is clamped — result stays in [0.0, 1.0]', () => {
+  it('hp above 10 (healed beyond start) is clamped — result stays in [0.0, 1.0]', () => {
     const base = createWorld(catalog, worldData, 42)
     const healedState = { ...base, actIndex: 0, hp: 25 }
     const result = intensity(healedState)

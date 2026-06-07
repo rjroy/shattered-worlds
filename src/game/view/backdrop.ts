@@ -54,7 +54,7 @@ export class BackdropLayer {
     const walker = scene.add.image(WALKER_START.x, WALKER_START.y, 'walker')
     walker.setOrigin(0.5, 1)
     scaleToSize(walker, WALKER_START.size)
-    walker.setAlpha(VISUAL_CONSTS.walker.proximity.far.alpha)
+    walker.setAlpha(0)
     walker.setDepth(-7)
     this.walkerSprite = walker
 
@@ -62,8 +62,8 @@ export class BackdropLayer {
     this.intrusionImg = scene.add.image(0, 0, theme.backdrop.intrusionKey)
     this.intrusionImg.setOrigin(0, 0)
     this.intrusionImg.setDisplaySize(CANVAS_W, CANVAS_H)
-    this.intrusionImg.setDepth(-8)
     this.intrusionImg.setAlpha(0)
+    this.intrusionImg.setDepth(-8)
   }
 
   updateIntrusion(intensity: number): void {

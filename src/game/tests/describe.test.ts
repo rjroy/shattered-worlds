@@ -16,7 +16,7 @@ function makeState(progress: Record<string, number> = {}): GameState {
     acts: [],
     actIndex: 0,
     progress,
-    hp: 20,
+    hp: 10,
     skipDrawNext: false,
     status: 'playing',
     worldId: 'zombie-big-box',
@@ -54,7 +54,7 @@ describe('describeEffect', () => {
     expect(describeEffect({ kind: 'DealProgress', base: 1 })).toEqual(['Add 1 Progress'])
     expect(
       describeEffect({ kind: 'DealProgress', base: 1, bonus: { tag: 'Hidden', amount: 2 } }),
-    ).toEqual(['Add 1 Progress (+2 vs Hidden)'])
+    ).toEqual(['Add 1 Progress\n(+2 vs Hidden)'])
   })
 
   it('describes Draw with player and/or world counts', () => {
@@ -66,7 +66,9 @@ describe('describeEffect', () => {
   it('describes the simple effects', () => {
     expect(describeEffect({ kind: 'Heal', amount: 2 })).toEqual(['Heal 2 HP'])
     expect(describeEffect({ kind: 'DestroyCardInHand', min: 0, max: 1 })).toEqual([
-      'Destroy a card in hand (optional)',
+      'Destroy a card in hand',
+      '(optional)',
+      '',
     ])
     expect(describeEffect({ kind: 'DiscardThenDraw', player: 2 })).toEqual([
       'Discard a card, then draw 2',
@@ -99,7 +101,7 @@ describe('describeEffect', () => {
     expect(describeEffect(sprint)).toEqual([
       'Choose one:',
       '• Draw 2, +1 world',
-      '• Add 1 Progress (+1 vs Slow)',
+      '• Add 1 Progress\n(+1 vs Slow)',
     ])
   })
 

@@ -15,7 +15,7 @@ export type CardEffect =
   | { kind: 'Draw'; player?: number; world?: number }
   | { kind: 'Heal'; amount: number }
   | { kind: 'ReturnWorldCards'; min: number; max: number }
-  | { kind: 'DestroyCardInHand'; min: 0; max: 1 }
+  | { kind: 'DestroyCardInHand'; min: number; max: number; maxCost?: number }
   | { kind: 'DiscardThenDraw'; player: number }
   | { kind: 'AddCard'; template: CardTemplateId; dest: Dest }
   | { kind: 'AddWorldCardToTop'; template: CardTemplateId }
@@ -93,7 +93,7 @@ export type TargetSpec =
   | { kind: 'hazard'; tag?: Keyword }
   | { kind: 'modal'; branches: readonly TargetSpec[] }
   | { kind: 'returnWorld'; min: number; max: number }
-  | { kind: 'destroyHand'; min: 0; max: 1 }
+  | { kind: 'destroyHand'; min: number; max: number; maxCost?: number }
   | { kind: 'discardPlayer' }
   | { kind: 'compound'; steps: readonly TargetSpec[] }
 
