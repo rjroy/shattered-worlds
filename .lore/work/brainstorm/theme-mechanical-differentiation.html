@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Making themes play differently, not just look different</title>
+  <meta name="date" content="2026-06-07">
+  <meta name="status" content="open">
+  <meta name="tags" content="theme, world, gameplay, mechanics, differentiation, keyword-bias, threat-verb, deckbuilder">
+  <meta name="modules" content="core-engine, worlds, theme-authoring">
+  <meta name="related" content=".lore/reference/theme-authoring.html">
+  <style>
+    :root {
+      --bg: #0c0a10; --panel: #18141f; --panel-2: #211a2b;
+      --ink: #ece6f2; --muted: #9b8fb0; --accent: #b98aff;
+      --gold: #d6b15c; --intrude: #ff4fa3; --ember: #ff8a3c;
+      --good: #6cd08a; --refuse: #ff8a8a; --border: #2c2438; --code: #c9b8e6;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: radial-gradient(1100px 560px at 50% -8%, #241433 0%, var(--bg) 58%);
+      color: var(--ink); font: 16px/1.65 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      padding: 2.5rem 1rem 6rem; }
+    .wrap { max-width: 940px; margin: 0 auto; }
+    .hero { text-align: center; margin-bottom: 2.4rem; }
+    .kicker { letter-spacing: .28em; text-transform: uppercase; font-size: .72rem; color: var(--gold); margin-bottom: .6rem; }
+    h1 { font-size: 2.3rem; margin: 0 0 .5rem; line-height: 1.08;
+      background: linear-gradient(180deg, #fff, #c9b8e6); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+    .one-liner { font-size: 1.1rem; color: var(--ink); max-width: 720px; margin: .5rem auto 0; }
+    .badge { display: inline-block; margin-top: 1rem; background: rgba(185,138,255,.12);
+      border: 1px solid rgba(185,138,255,.35); color: var(--accent); border-radius: 999px;
+      padding: .2rem .8rem; font-size: .75rem; font-weight: 600; }
+    h2 { font-size: 1.4rem; margin: 2.8rem 0 1rem; display: flex; align-items: center; gap: .6rem;
+      border-bottom: 1px solid var(--border); padding-bottom: .5rem; }
+    h2 .mark { font-size: 1rem; }
+    h3 { font-size: 1.05rem; margin: 1.5rem 0 .4rem; color: var(--accent); }
+    p { margin: .6rem 0; }
+    .panel { background: linear-gradient(180deg, var(--panel-2), var(--panel));
+      border: 1px solid var(--border); border-radius: 16px; padding: 1.3rem 1.5rem; margin: 1.1rem 0; }
+    .panel p:first-child { margin-top: 0; } .panel p:last-child { margin-bottom: 0; }
+    .term { color: var(--gold); font-weight: 600; }
+    code { font-family: "SF Mono", ui-monospace, "Cascadia Code", Menlo, Consolas, monospace;
+      font-size: .87em; color: var(--code); background: rgba(185,138,255,.08);
+      border: 1px solid rgba(185,138,255,.16); border-radius: 5px; padding: .05rem .35rem; }
+    table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: .9rem; }
+    th, td { text-align: left; padding: .55rem .7rem; border-bottom: 1px solid var(--border); vertical-align: top; }
+    th { color: var(--gold); font-size: .76rem; text-transform: uppercase; letter-spacing: .06em; }
+    .diag { border-left: 3px solid var(--gold); background: rgba(214,177,92,.06);
+      border-radius: 0 10px 10px 0; padding: .8rem 1.1rem; margin: 1rem 0; }
+    .diag .n { color: var(--gold); font-weight: 700; margin-right: .4rem; }
+    .free { border-left: 3px solid var(--good); background: rgba(108,208,138,.06);
+      border-radius: 0 10px 10px 0; padding: 1rem 1.2rem; margin: 1.2rem 0; }
+    .free .tag { color: var(--good); font-weight: 700; font-size: .78rem; text-transform: uppercase; letter-spacing: .06em; }
+    .wild { border-left: 3px dashed var(--intrude); background: rgba(255,79,163,.05);
+      border-radius: 0 10px 10px 0; padding: .7rem 1rem; margin: .7rem 0; }
+    .core { border-left: 3px solid var(--ember); background: rgba(255,138,60,.07);
+      border-radius: 0 10px 10px 0; padding: .7rem 1rem; margin: .7rem 0; }
+    .core .tag, .wild .tag { font-weight: 700; font-size: .72rem; text-transform: uppercase; letter-spacing: .06em; }
+    .core .tag { color: var(--ember); } .wild .tag { color: var(--intrude); }
+    .pill { display: inline-block; font-size: .68rem; font-weight: 700; text-transform: uppercase; letter-spacing: .05em;
+      padding: .08rem .5rem; border-radius: 999px; margin-left: .4rem; vertical-align: middle; }
+    .pill.none { background: rgba(108,208,138,.16); color: var(--good); border: 1px solid rgba(108,208,138,.35); }
+    .pill.data { background: rgba(214,177,92,.14); color: var(--gold); border: 1px solid rgba(214,177,92,.35); }
+    .pill.codez { background: rgba(255,138,60,.14); color: var(--ember); border: 1px solid rgba(255,138,60,.4); }
+    .q { border-left: 3px solid var(--accent); background: rgba(185,138,255,.06);
+      border-radius: 0 10px 10px 0; padding: .8rem 1.1rem; margin: .9rem 0; }
+    .q .qid { color: var(--accent); font-weight: 700; margin-right: .4rem; }
+    details { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: .3rem 1rem; margin: .7rem 0; }
+    details summary { cursor: pointer; font-weight: 600; color: var(--ink); padding: .5rem 0; }
+    details[open] summary { color: var(--accent); border-bottom: 1px solid var(--border); margin-bottom: .6rem; }
+    .legend { font-size: .82rem; color: var(--muted); margin: .4rem 0 0; }
+    .meta-foot { margin-top: 3.5rem; padding-top: 1rem; border-top: 1px solid var(--border);
+      color: var(--muted); font-size: .82rem; text-align: center; }
+    em.threat { color: var(--intrude); font-style: normal; font-weight: 700; }
+  </style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="hero">
+    <div class="kicker">Shattered Worlds · Brainstorm</div>
+    <h1>Making themes <em>play</em> differently, not just look different</h1>
+    <p class="one-liner">Three worlds that are identical in play with different names. The authoring recipe is what made them the same. Here's the engine reality and the levers that actually exist to pull them apart.</p>
+    <div class="badge">Status: open · 2026-06-07</div>
+    <p class="legend">Effort tags:
+      <span class="pill none">no code</span> data-only, reuses existing effects ·
+      <span class="pill data">data + tuning</span> recompose effects/composition ·
+      <span class="pill codez">core change</span> new effect kind or state shape</p>
+  </div>
+
+  <h2><span class="mark">◈</span> The diagnosis</h2>
+  <p>Before any idea: three facts read straight from the engine that change what "fixing" even means.</p>
+
+  <div class="diag"><span class="n">1.</span><strong>There is no energy / mana.</strong> <code>handlePlayCard</code> charges nothing. Player cards are free; the only limit is how many sit in your hand. So a hazard's <code>cost</code> is <em>not</em> a budget — it is purely the progress threshold needed to clear it.</div>
+  <div class="diag"><span class="n">2.</span><strong>Progress resets every turn.</strong> <code>handleEndTurn</code> sets <code>progress: {}</code>. Clearing a hazard is a <em>burst</em> you must land within one turn, not savings you accumulate across turns.</div>
+  <div class="diag"><span class="n">3.</span><strong>World cards stay in hand; player cards don't.</strong> Held hazards eat your 6 hand slots, tick <code>onEndOfTurn</code>, and starve next turn's player draw (the refill formula draws 1–2 world cards first, then fills the rest with player cards).</div>
+
+  <div class="panel">
+    <p><strong>So the real pressure levers are: HP, hand-slot clogging, the one-turn burst, and keyword gating.</strong> Not cost. Any differentiation plan that leans on "cost curves" is leaning on a knob that barely does anything right now.</p>
+  </div>
+
+  <div class="panel" style="border-color: rgba(214,177,92,.4);">
+    <p><span class="term">The actual culprit.</span> The theme-authoring rules enforce sameness <em>by design</em>: "map onto these five archetypes, reuse the same effects, the same numbers." That is a recipe for a reskin. The doc itself notes the Zombie's <code>onEndOfTurn</code> is just <code>Damage 1</code> and that <code>AddWorldCardToTop</code> is used by no theme. The worlds are identical because the recipe told them to be.</p>
+    <p>The reframe: stop asking "what new effects do we add" first. Ask <strong>"what single threat-<em>verb</em> does each catastrophe embody"</strong> — and notice most of those verbs are already expressible.</p>
+  </div>
+
+  <h2><span class="mark">◈</span> The free win nobody's using: keyword bias <span class="pill none">no code</span></h2>
+  <div class="free">
+    <span class="tag">Highest leverage, zero code</span>
+    <p>The starter deck is shared and unchanged across worlds. But <code>Sprint</code> keys off <code>Slow</code>, <code>Explore</code>/<code>Listen</code> key off <code>Hidden</code>, <code>Baseball Bat</code> keys off <code>Creature</code>. So if each world biases its hazards toward a <em>different</em> keyword, <strong>the same starter deck plays differently</strong> — a different starter card becomes MVP per world, with no engine change at all.</p>
+  </div>
+  <table>
+    <tr><th>World</th><th>Keyword bias</th><th>Fiction</th><th>What becomes the answer</th></tr>
+    <tr><td>Zombie big-box</td><td><code>Creature</code>-dense</td><td>The swarm is bodies</td><td>Melee / weapon cards (already true)</td></tr>
+    <tr><td>Highway volcano</td><td><code>Slow</code>-dense</td><td>Lava is slow but inexorable</td><td><code>Sprint</code> — outrun, don't fight</td></tr>
+    <tr><td>Bird building</td><td><code>Hidden</code>-dense</td><td>In cloud / at altitude you can't see what's coming</td><td><code>Explore</code> / <code>Listen</code> — scout, don't swing</td></tr>
+  </table>
+  <p>This differentiates the player's moment-to-moment decisions across all three worlds for the price of editing JSON keyword arrays.</p>
+
+  <h2><span class="mark">◈</span> Threat-verbs: the catastrophe as a verb, not a noun</h2>
+  <p>Each disaster wants a different verb. Most are recomposable from the effects that already exist.</p>
+
+  <h3>Zombie = <em class="threat">multiply</em> <span class="pill data">data + tuning</span></h3>
+  <p>Change the Zombie's <code>onEndOfTurn</code> from <code>Damage 1</code> to <code>AddWorldCardToTop: Zombie</code>. Ignoring it now floods your hand exponentially; the pressure becomes <em>spread</em>, and the counter is anything that clears in bulk. <code>AddWorldCardToTop</code> already exists — no code change.</p>
+
+  <h3>Volcano = <em class="threat">compound</em> <span class="pill data">data + tuning</span></h3>
+  <p>A held <code>Lava</code> whose <code>onEndOfTurn</code> spawns a cheap <code>Ash</code> clog <em>and</em> deals small damage. Damage scales with how much lava you let accumulate — a doomsday-by-card-count, entirely within the vocabulary. Pairs naturally with the <code>Slow</code> keyword bias.</p>
+
+  <h3>Bird = <em class="threat">displace</em> <span class="pill codez">core change</span></h3>
+  <p>This is the one that genuinely needs a new effect — the bird <em>carries your stuff off</em>. There is no "discard / steal a random player card from hand" effect today. That's a real core addition. Flag it; don't pretend it's data.</p>
+
+  <h2><span class="mark">◈</span> The wild pile <span style="font-size:.8rem;color:var(--muted);font-weight:400">(bad ideas welcome)</span></h2>
+
+  <div class="wild"><span class="tag">Volcano · the floor is lava</span> <span class="pill codez">core change</span>
+    <p>At end of turn, <em>unplayed player cards burn</em> — destroyed, not discarded. Punishes hoarding, rewards dumping your whole hand every turn. The exact opposite of zombie, where holding is safe. Needs a new end-of-turn rule over player cards.</p>
+  </div>
+  <div class="wild"><span class="tag">Bird · weight limit</span> <span class="pill codez">core change</span>
+    <p>Reframe held-hazard count from a soft 10% intensity nudge into a <em>hard fail</em>: too many world cards in hand and the building can't stay aloft — you crash. Turns clogging into a lose condition, not just chip damage.</p>
+  </div>
+  <div class="wild"><span class="tag">Bird · updrafts = shortcuts</span> <span class="pill data">data + tuning</span>
+    <p>A card that yanks the next act forward (a <code>Draw</code> world-burst) to rush the Door — trade safety for speed. Verticality as risk/reward.</p>
+  </div>
+  <div class="wild"><span class="tag">Zombie · corpses</span> <span class="pill data">data + tuning</span>
+    <p>A cleared Zombie's <code>onCleared</code> drops a <code>Corpse</code> into the world deck that can re-animate. Clearing isn't clean.</p>
+  </div>
+  <div class="wild"><span class="tag">Theme the intensity weights</span> <span class="pill codez">core change</span>
+    <p><code>intensity()</code> is hardcoded 0.6 act / 0.3 hp / 0.1 held. Make it per-theme so the <em>juice ramps from a different source</em>: volcano spikes on time, bird on clog, zombie on HP. The music / screen-shake would crescendo differently per world — direct tie-in to the Balatro-maximalist juice goal.</p>
+  </div>
+
+  <h2><span class="mark">◈</span> Structural knobs (per-world rules) <span class="pill codez">core change</span></h2>
+  <p>If worlds should differ at the rules layer, not just the cards:</p>
+  <ul>
+    <li><strong>Per-world HP</strong> — volcano lower / more lethal; bird higher but you lose cards.</li>
+    <li><strong>Per-world hand size</strong> — bird smaller; you can only carry so much aloft.</li>
+    <li><strong>Per-world draw formula</strong> — volcano forces more world cards in; the eruption floods you.</li>
+    <li><strong>Per-world global end-of-turn tick</strong> — volcano: lose 1 HP every turn no matter what (ambient heat).</li>
+    <li><strong>Per-world win condition</strong> — zombie reaches the Door; volcano survives N turns (outrun the lava).</li>
+  </ul>
+
+  <h2><span class="mark">◈</span> Open questions (resolve before building)</h2>
+  <div class="q"><span class="qid">Q1</span><strong>Is "no energy" deliberate or an unfinished slice?</strong> This is the biggest fork. Adding an energy budget makes <code>cost</code> meaningful and unlocks a whole class of "you can't clear everything, choose" decisions — itself a per-world lever (zombie gives lots of energy; volcano drains it from heat). Almost everything else is cheaper if this stays as-is, and more powerful if it changes.</div>
+  <div class="q"><span class="qid">Q2</span><strong>How much divergence do you actually want?</strong> Re-skinned-but-tuned (keyword bias + threat-verbs, all data) versus genuinely-different-rules (structural knobs, core changes). Very different amounts of work, and they're not mutually exclusive — keyword bias is worth doing regardless.</div>
+  <div class="q"><span class="qid">Q3</span><strong>Does the shared starter deck stay sacred?</strong> The keyword-bias win leans entirely on it being shared. But injecting <em>one</em> themed player card per world (Glide, Heat Shimmer) is another cheap differentiator that bends authoring rule D2.</div>
+
+  <h2><span class="mark">◈</span> If we pull one thread first</h2>
+  <div class="panel">
+    <p>Recommended order if this graduates from brainstorm: <strong>(1) keyword bias</strong> — free, immediate, differentiates all three; <strong>(2) threat-verbs for zombie + volcano</strong> — data-only, gives each its signature pressure; then <strong>(3) decide Q1</strong>, because the energy answer reshapes everything structural that follows. The bird's "displace" verb is the natural first core change to scope, since it's the world with no within-vocabulary identity.</p>
+  </div>
+
+  <div class="meta-foot">
+    Shattered Worlds · Brainstorm · related: <code>.lore/reference/theme-authoring.html</code>
+  </div>
+
+</div>
+</body>
+</html>
