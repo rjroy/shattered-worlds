@@ -15,7 +15,7 @@
  */
 import type Phaser from 'phaser'
 import type { Card } from '../../core/index'
-import type { FrameStyle, VisualTheme } from './theme'
+import type { FrameStyle, VisualTheme } from './themes/theme'
 import type { HighlightKind } from '../interaction/highlight'
 
 // ---------------------------------------------------------------------------

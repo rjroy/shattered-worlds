@@ -15,9 +15,9 @@ import {
   costRingArc,
   emphasisDescriptor,
 } from '../view/presentation'
-import { selectTheme } from '../view/theme'
+import { selectTheme } from '../view/themes/themeManifest'
 import type { PlayerCard, WorldCard } from '../../core/index'
-import type { VisualTheme } from '../view/theme'
+import type { VisualTheme } from '../view/themes/theme'
 
 // ---------------------------------------------------------------------------
 // Stubs

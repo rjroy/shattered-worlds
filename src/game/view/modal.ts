@@ -5,8 +5,8 @@
  * or selection logic lives here.
  */
 import Phaser from 'phaser'
-import { getRealityPalette } from './theme'
-import type { VisualTheme } from './theme'
+import { getRealityPalette } from './themes/theme'
+import type { VisualTheme } from './themes/theme'
 import { textStyle } from './presentation'
 import { describeEffect } from '../interaction/describe'
 import type { AvailableActions, CardEffect, TargetSpec } from '../../core/index'

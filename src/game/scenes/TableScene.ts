@@ -10,8 +10,9 @@
  */
 import Phaser from 'phaser'
 import { assetManifest } from '../data/assetManifest'
-import { selectTheme, getRealityPalette } from '../view/theme'
-import type { VisualTheme } from '../view/theme'
+import { getRealityPalette } from '../view/themes/theme'
+import { selectTheme } from '../view/themes/themeManifest'
+import type { VisualTheme } from '../view/themes/theme'
 import { createGame, availableActions, CatalogError } from '../../core/index'
 import type {
   GameCore,

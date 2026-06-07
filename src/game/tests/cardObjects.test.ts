@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'bun:test'
 import { updateCostRing, emphasizeCard, clearEmphasis, applyCardHighlight } from '../view/cardObjects'
-import { selectTheme } from '../view/theme'
+import { selectTheme } from '../view/themes/themeManifest'
 
 // ---------------------------------------------------------------------------
 // updateCostRing — fill/drain animation (S5)
