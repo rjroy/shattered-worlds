@@ -51,6 +51,7 @@ interface CardTextOpts {
 function addCardText(
   scene: Phaser.Scene,
   container: Phaser.GameObjects.Container,
+  x: number,
   y: number,
   str: string,
   opts: CardTextOpts,
@@ -65,7 +66,7 @@ function addCardText(
     style.wordWrap = { width: opts.wrapWidth }
     style.align = 'center'
   }
-  const text = scene.add.text(0, y, str, textStyle(style))
+  const text = scene.add.text(x, y, str, textStyle(style))
   text.setOrigin(0.5, opts.originY)
   container.add(text)
   return text
@@ -86,11 +87,11 @@ function addEffectBlock(
   if (effect.kind === 'None') return
   const lines = describeEffect(effect).map((l) => `${prefix}${l}`).join('\n')
   if (lines === '') return
-  addCardText(scene, container, y, lines, {
+  addCardText(scene, container, 0, y, lines, {
     fontSize: '9px',
     color,
-    originY: 1,
-    wrapWidth: CARD_W - 16,
+    originY: 0,
+    wrapWidth: CARD_W - 18,
   })
 }
 
@@ -127,7 +128,7 @@ export function createCardObject(
   }
 
   // Name at top — identical for player and world cards.
-  addCardText(scene, container, -CARD_H / 2 + 8, card.name, {
+  addCardText(scene, container, 0, -CARD_H / 2 + 8, card.name, {
     fontSize: '13px',
     color: TEXT.textLight,
     bold: true,
@@ -138,7 +139,7 @@ export function createCardObject(
   if (card.kind === 'player') {
     // Full effect description — the whole face is self-explanatory. Modal and
     // Sequence cards render every branch / step, so nothing reads as "Choose…".
-    addCardText(scene, container, -CARD_H / 2 + 38, describeEffect(card.effect).join('\n'), {
+    addCardText(scene, container, 0, -CARD_H / 2 + 28, describeEffect(card.effect).join('\n'), {
       fontSize: '11px',
       color: TEXT.textLight,
       originY: 0,
@@ -155,29 +156,28 @@ export function createCardObject(
     // applyCardHighlight list[1] contract holds. Persistent: stays in
     // container.list for its whole life so the reconcile's killTweensOf(list)
     // (and S5's tween) can find it. Centered on the cost digit's center.
-    const costCenterY = -CARD_H / 2 + 40 + 30 / 2 // text top y + half the 30px font height
     const costRing = scene.add.graphics()
-    costRing.setPosition(0, costCenterY)
+    costRing.setPosition(CARD_W / 2 - 21, CARD_H / 2 - 21)
     container.add(costRing)
     ;(container as Phaser.GameObjects.Container & { costRing: Phaser.GameObjects.Graphics }).costRing =
       costRing
 
     // Cost label + value (cost is the Progress needed to clear the Hazard)
-    addCardText(scene, container, -CARD_H / 2 + 40, String(worldCard.cost), {
+    addCardText(scene, container, CARD_W / 2 - 21, CARD_H / 2 - 21, String(worldCard.cost), {
       fontSize: '30px',
       color: TEXT.textCost,
       bold: true,
-      originY: 0,
+      originY: 0.5,
     })
-    addCardText(scene, container, -CARD_H / 2 + 74, 'to clear', {
+    addCardText(scene, container, CARD_W / 2 - 21, CARD_H / 2 - 3, 'to clear', {
       fontSize: '8px',
       color: TEXT.textMuted,
-      originY: 0,
+      originY: 1,
     })
 
     // Keywords
     if (worldCard.keywords.length > 0) {
-      addCardText(scene, container, -CARD_H / 2 + 88, worldCard.keywords.join(' · '), {
+      addCardText(scene, container, 0, -CARD_H / 2 + 22, worldCard.keywords.join(' · '), {
         fontSize: '9px',
         color: TEXT.textKeyword,
         originY: 0,
@@ -185,17 +185,17 @@ export function createCardObject(
     }
 
     // onEndOfTurn (fires each turn while held), onDiscarded, onCleared — full sentences.
-    addEffectBlock(scene, container, worldCard.onEndOfTurn, 'Each turn: ', CARD_H / 2 - 78, TEXT.textHeld)
-    addEffectBlock(scene, container, worldCard.onDiscarded, 'If discarded: ', CARD_H / 2 - 52, TEXT.textPenalty)
-    addEffectBlock(scene, container, worldCard.onCleared, 'Clear it: ', CARD_H / 2 - 26, TEXT.textReward)
+    addEffectBlock(scene, container, worldCard.onEndOfTurn, 'Each turn: ', -CARD_H / 2 + 74, TEXT.textHeld)
+    addEffectBlock(scene, container, worldCard.onDiscarded, 'If discarded: ', -CARD_H / 2 + 54, TEXT.textPenalty)
+    addEffectBlock(scene, container, worldCard.onCleared, 'Clear it: ', -CARD_H / 2 + 34, TEXT.textReward)
 
     // Discard indicator
     if (worldCard.discardable) {
-      addCardText(scene, container, CARD_H / 2 - 10, 'click to discard', {
+      addCardText(scene, container, 0, 8, 'click to discard', {
         fontSize: '8px',
         color: '#ffaa44',
         bold: true,
-        originY: 1,
+        originY: 0,
       })
     }
   }
@@ -234,7 +234,7 @@ export function applyCardHighlight(
 
 // Ring geometry — shared by the snap path and the tween onUpdate so a tweened
 // frame is drawn byte-for-byte the same as a snapped one.
-const RING_RADIUS = 22
+const RING_RADIUS = 18
 const RING_LINE_WIDTH = 3
 
 // Fill/drain share one duration and easing so banking and the end-of-turn
@@ -260,6 +260,8 @@ function drawCostRing(ring: Phaser.GameObjects.Graphics, fraction: number, ringA
   // Faint full-circle track so the ring reads even at low progress.
   ring.lineStyle(RING_LINE_WIDTH, ringAccent, 0.18)
   ring.strokeCircle(0, 0, RING_RADIUS)
+  ring.fillStyle(ringAccent, 0.08)
+  ring.fillCircle(0, 0, RING_RADIUS - RING_LINE_WIDTH / 2)
 
   // Angle math (clamp + clockwise sweep from the top) lives in costRingArc.
   const { clamped, start, end } = costRingArc(fraction)

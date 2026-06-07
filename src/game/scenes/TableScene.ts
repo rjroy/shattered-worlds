@@ -157,14 +157,23 @@ export class TableScene extends Phaser.Scene {
       'inset-medkit',
       'inset-panic',
       'inset-adrenaline',
+      'inset-door',
+      'inset-walker',
+      'zombie-inset-baseball',
+      'zombie-inset-regroup',
+      'zombie-inset-rubble',
+      'zombie-inset-screams',
+      'zombie-inset-listen',
+      'zombie-inset-strange-sounds',
+      'zombie-inset-zombie',
       theme.backdrop.realityKey,
       theme.backdrop.intrusionKey,
       ...(theme.worldCardfrontKey ? [theme.worldCardfrontKey] : []),
     ]
-    for (const key of keysToLoad) {
-      const url = assetManifest[key]
-      if (url !== undefined) {
-        this.load.image(key, url)
+for (const key of keysToLoad) {
+  const url = assetManifest[key]
+  if (url !== undefined) {
+    this.load.image(key, url)
       }
     }
 

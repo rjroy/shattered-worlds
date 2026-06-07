@@ -47,6 +47,8 @@ function makeFakeRing(): {
     },
     lineStyle(): void {},
     strokeCircle(): void {},
+    fillStyle(): void {},
+    fillCircle(): void {},
     beginPath(): void {},
     // The arc's end angle encodes the drawn fraction: end = -π/2 + frac*2π.
     arc(_x: number, _y: number, _r: number, _start: number, end: number): void {

@@ -4,6 +4,7 @@
     "Strange Sounds": {
       "kind": "world",
       "name": "Strange Sounds",
+      "insetKey": "zombie-inset-strange-sounds",
       "cost": 2,
       "keywords": [],
       "discardable": true,
@@ -14,6 +15,7 @@
     "Rubble": {
       "kind": "world",
       "name": "Rubble",
+      "insetKey": "zombie-inset-rubble",
       "cost": 1,
       "keywords": [],
       "discardable": true,
@@ -24,6 +26,7 @@
     "Screams": {
       "kind": "world",
       "name": "Screams",
+      "insetKey": "zombie-inset-screams",
       "cost": 1,
       "keywords": [],
       "discardable": true,
@@ -34,6 +37,7 @@
     "Zombie": {
       "kind": "world",
       "name": "Zombie",
+      "insetKey": "zombie-inset-zombie",
       "cost": 1,
       "keywords": ["Slow", "Creature"],
       "discardable": true,
@@ -44,6 +48,7 @@
     "Find Baseball Bat": {
       "kind": "world",
       "name": "Find Baseball Bat",
+      "insetKey": "zombie-inset-baseball",
       "cost": 2,
       "keywords": ["Hidden"],
       "discardable": true,
@@ -54,6 +59,7 @@
     "The Walker": {
       "kind": "world",
       "name": "The Walker",
+      "insetKey": "inset-walker",
       "cost": 10,
       "keywords": [],
       "discardable": true,
@@ -64,6 +70,7 @@
     "Door": {
       "kind": "world",
       "name": "Door",
+      "insetKey": "inset-door",
       "cost": 2,
       "keywords": [],
       "discardable": false,
@@ -74,21 +81,25 @@
     "Listen": {
       "kind": "player",
       "name": "Listen",
+      "insetKey": "zombie-inset-listen",
       "effect": { "kind": "DealProgress", "base": 1, "bonus": { "tag": "Hidden", "amount": 2 } }
     },
     "Baseball Bat": {
       "kind": "player",
       "name": "Baseball Bat",
+      "insetKey": "zombie-inset-baseball",
       "effect": { "kind": "DealProgress", "base": 2, "bonus": { "tag": "Creature", "amount": 3 } }
     },
     "Regroup": {
       "kind": "player",
       "name": "Regroup",
+      "insetKey": "zombie-inset-regroup",
       "effect": { "kind": "DestroyCardInHand", "min": 0, "max": 1 }
     },
     "Summon Door": {
       "kind": "player",
       "name": "Summon Door",
+      "insetKey": "inset-door",
       "effect": { "kind": "AddWorldCardToTop", "template": "Door" }
     }
   },
