@@ -1,4 +1,6 @@
 import Phaser from 'phaser'
+import { themeManifest } from '../view/themes/themeManifest'
+import { rngFromSeed } from '../../core/engine/rng'
 
 export class BootScene extends Phaser.Scene {
   constructor() {
@@ -6,7 +8,10 @@ export class BootScene extends Phaser.Scene {
   }
 
   create(): void {
+    const worldIds = Object.keys(themeManifest)
     const seed = Math.floor(Math.random() * 2 ** 32)
-    this.scene.start('Table', { worldId: 'zombie-big-box', seed })
+    const rng = rngFromSeed(seed)
+    const worldId = worldIds[Math.floor(rng() * worldIds.length)]
+    this.scene.start('Table', { worldId, seed })
   }
 }

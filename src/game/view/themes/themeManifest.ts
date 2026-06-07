@@ -2,7 +2,7 @@ import { VisualTheme } from './theme'
 import { STARTER } from './starter'
 import { ZOMBIE_BIG_BOX_THEME } from './zombie-big-box'
 
-const themeManifest: Record<string, VisualTheme> = {
+export const themeManifest: Record<string, VisualTheme> = {
   'zombie-big-box': ZOMBIE_BIG_BOX_THEME,
 }
 
