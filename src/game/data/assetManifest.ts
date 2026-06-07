@@ -16,6 +16,15 @@ import insetBarricadeUrl from '../assets/insets/inset-barricade.webp'
 import insetMedKitUrl from '../assets/insets/inset-medkit.webp'
 import insetPanicUrl from '../assets/insets/inset-panic.webp'
 import insetAdrenalineUrl from '../assets/insets/inset-adrenaline.webp'
+import insetDoorUrl from '../assets/insets/inset-door.webp'
+import insetWalkerUrl from '../assets/insets/inset-walker.webp'
+import zombieInsetBaseballUrl from '../assets/themes/zombie-big-box/insets/inset-baseball.webp'
+import zombieInsetRegroupUrl from '../assets/themes/zombie-big-box/insets/inset-regroup.webp'
+import zombieInsetRubbleUrl from '../assets/themes/zombie-big-box/insets/inset-rubble.webp'
+import zombieInsetScreamsUrl from '../assets/themes/zombie-big-box/insets/inset-screams.webp'
+import zombieInsetStrangeSoundsUrl from '../assets/themes/zombie-big-box/insets/inset-strange-sounds.webp'
+import zombieInsetZombieUrl from '../assets/themes/zombie-big-box/insets/inset-zombie.webp'
+import zombieInsetListenUrl from '../assets/themes/zombie-big-box/insets/inset-listen.webp'
 
 export const assetManifest: Record<string, string> = {
   cardback: cardbackUrl,
@@ -35,4 +44,13 @@ export const assetManifest: Record<string, string> = {
   'inset-medkit': insetMedKitUrl,
   'inset-panic': insetPanicUrl,
   'inset-adrenaline': insetAdrenalineUrl,
+  'inset-door': insetDoorUrl,
+  'inset-walker': insetWalkerUrl,
+  'zombie-inset-baseball': zombieInsetBaseballUrl,
+  'zombie-inset-regroup': zombieInsetRegroupUrl,
+  'zombie-inset-rubble': zombieInsetRubbleUrl,
+  'zombie-inset-screams': zombieInsetScreamsUrl,
+  'zombie-inset-listen': zombieInsetListenUrl,
+  'zombie-inset-strange-sounds': zombieInsetStrangeSoundsUrl,
+  'zombie-inset-zombie': zombieInsetZombieUrl,
 }
