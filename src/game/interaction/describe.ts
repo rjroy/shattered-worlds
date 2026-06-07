@@ -23,7 +23,7 @@ export function describeEffect(effect: CardEffect): string[] {
   switch (effect.kind) {
     case 'DealProgress': {
       const bonus = effect.bonus ? ` (+${effect.bonus.amount} vs ${effect.bonus.tag})` : ''
-      return [`Deal ${effect.base} Progress${bonus}`]
+      return [`Add ${effect.base} Progress${bonus}`]
     }
     case 'Draw': {
       const parts: string[] = []

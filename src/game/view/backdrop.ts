@@ -1,14 +1,14 @@
 import Phaser from 'phaser'
 import type { GameState } from '../../core/index'
 import type { VisualTheme } from './theme'
-import { intrusionForIntensity, WALKER_CONSTS, DOOR_CONSTS } from './visualMappers'
+import { intrusionForIntensity, VISUAL_CONSTS } from './visualMappers'
 import { CANVAS_W, CANVAS_H } from './presentation'
-import { walkerPresentation } from './walker'
+import { doorPresentation, walkerPresentation } from './walker'
 import type { WalkerPresentation } from './walker'
 
-const WALKER_START = { size: WALKER_CONSTS.far.size, x: 450, y: 330 }
-const WALKER_END = { size: WALKER_CONSTS.present.size, x: 180, y: 480 }
-const DOOR = { size: WALKER_CONSTS.present.size * DOOR_CONSTS.scalar, x: 120, y: 490 }
+const WALKER_START = { size: VISUAL_CONSTS.walker.proximity.far.size, x: 450, y: 330 }
+const WALKER_END = { size: VISUAL_CONSTS.walker.proximity.present.size, x: 180, y: 480 }
+const DOOR = { size: VISUAL_CONSTS.door.size, x: 120, y: 490 }
 
 /** Scale an image so it renders `size` px tall (base art is 75px tall at 1.0). */
 function scaleToSize(sprite: Phaser.GameObjects.Image, size: number): void {
@@ -32,8 +32,9 @@ export class BackdropLayer {
   // Walker (the antagonist sprite advancing through the acts)
   private walkerSprite: Phaser.GameObjects.Image
   private walkerTween?: Phaser.Tweens.Tween
-  private lastPresKind: WalkerPresentation['kind'] = 'hidden'
-  private lastActIndex = -1
+  private lastWalkerPresKind: WalkerPresentation['kind'] = 'hidden'
+  private lastWalkerActIndex = -1
+  private hasWalkerLeft = false
 
   constructor(scene: Phaser.Scene, theme: VisualTheme) {
     this.scene = scene
@@ -53,7 +54,7 @@ export class BackdropLayer {
     const walker = scene.add.image(WALKER_START.x, WALKER_START.y, 'walker')
     walker.setOrigin(0.5, 1)
     scaleToSize(walker, WALKER_START.size)
-    walker.setAlpha(WALKER_CONSTS.far.alpha)
+    walker.setAlpha(VISUAL_CONSTS.walker.proximity.far.alpha)
     walker.setDepth(-7)
     this.walkerSprite = walker
 
@@ -84,7 +85,7 @@ export class BackdropLayer {
   updateDoor(state: GameState): void {
     if (this.lastDoorPresKind === 'foreground') return // Stop at foreground
 
-    const pres = walkerPresentation(state, true)
+    const pres = doorPresentation(state, true)
 
     if (pres.kind === 'foreground') {
       this.tweenDoor(pres.proximity.alpha)
@@ -100,28 +101,31 @@ export class BackdropLayer {
   }
 
   updateWalker(state: GameState): void {
+    if (this.hasWalkerLeft) return // Once the Walker has left, it doesn't come back
+
     const pres = walkerPresentation(state, true)
 
     if (pres.kind === 'foreground') {
-      if (this.lastPresKind !== 'foreground') {
+      if (this.lastWalkerPresKind !== 'foreground') {
         const p = pres.proximity
         this.tweenWalker(1, p.size, p.alpha)
       }
     } else if (pres.kind === 'proximity') {
       const p = pres.proximity
-      const returnFromFg = this.lastPresKind === 'foreground'
+      const returnFromFg = this.lastWalkerPresKind === 'foreground'
       if (returnFromFg) {
-        this.tweenWalker(1, WALKER_CONSTS.present.size, 0)
+        this.tweenWalker(1, VISUAL_CONSTS.walker.proximity.present.size, 0)
+        this.hasWalkerLeft = true
       } else {
-        const actChanged = state.actIndex !== this.lastActIndex
+        const actChanged = state.actIndex !== this.lastWalkerActIndex
         if (actChanged) {
           this.tweenWalker(state.actIndex / 3, p.size, p.alpha)
-          this.lastActIndex = state.actIndex
+          this.lastWalkerActIndex = state.actIndex
         }
       }
     }
 
-    this.lastPresKind = pres.kind
+    this.lastWalkerPresKind = pres.kind
   }
 
   /**
@@ -165,7 +169,7 @@ export class BackdropLayer {
     })
     this.doorGlowTween = this.scene.tweens.add({
       targets: this.doorGlowSprite,
-      alpha: alpha * DOOR_CONSTS.glowAlpha,  // glow is a bit dimmer than the door itself
+      alpha: alpha * VISUAL_CONSTS.door.glowAlpha,  // glow is a bit dimmer than the door itself
       duration: 1800,
       ease: 'Sine.easeInOut',
     })

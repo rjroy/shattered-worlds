@@ -51,10 +51,10 @@ function hazard(over: Partial<WorldCard>): WorldCard {
 
 describe('describeEffect', () => {
   it('describes DealProgress with and without a keyword bonus', () => {
-    expect(describeEffect({ kind: 'DealProgress', base: 1 })).toEqual(['Deal 1 Progress'])
+    expect(describeEffect({ kind: 'DealProgress', base: 1 })).toEqual(['Add 1 Progress'])
     expect(
       describeEffect({ kind: 'DealProgress', base: 1, bonus: { tag: 'Hidden', amount: 2 } }),
-    ).toEqual(['Deal 1 Progress (+2 vs Hidden)'])
+    ).toEqual(['Add 1 Progress (+2 vs Hidden)'])
   })
 
   it('describes Draw with player and/or world counts', () => {
@@ -99,7 +99,7 @@ describe('describeEffect', () => {
     expect(describeEffect(sprint)).toEqual([
       'Choose one:',
       '• Draw 2, +1 world',
-      '• Deal 1 Progress (+1 vs Slow)',
+      '• Add 1 Progress (+1 vs Slow)',
     ])
   })
 
@@ -112,7 +112,7 @@ describe('describeEffect', () => {
       ],
     }
     expect(describeEffect(barricade)).toEqual([
-      'Deal 1 Progress',
+      'Add 1 Progress',
       'then return 0–2 world cards to the deck',
     ])
   })

@@ -1,6 +1,6 @@
 import type { GameState } from '../../core/index'
-import { walkerProximityForAct } from './visualMappers'
-import type { WalkerProximity } from './visualMappers'
+import { walkerProximityForAct, VISUAL_CONSTS, doorProximityForAct  } from './visualMappers'
+import type { WalkerProximity} from './visualMappers'
 
 export type WalkerPresentation =
   | { kind: 'proximity'; proximity: WalkerProximity }
@@ -14,7 +14,15 @@ export type WalkerPresentation =
 export function walkerPresentation(state: GameState, hasWalker: boolean): WalkerPresentation {
   if (!hasWalker) return { kind: 'hidden' }
   if (state.hand.some((c) => c.name === 'The Walker')) {
-    return { kind: 'foreground', proximity: { size: 400, alpha: 1.0 } }
+    return { kind: 'foreground', proximity: { size: VISUAL_CONSTS.walker.proximity.present.size, alpha: VISUAL_CONSTS.walker.proximity.present.alpha } }
   }
   return { kind: 'proximity', proximity: walkerProximityForAct(state.actIndex) }
+}
+
+export function doorPresentation(state: GameState, hasWalker: boolean): WalkerPresentation {
+  if (!hasWalker) return { kind: 'hidden' }
+  if (state.hand.some((c) => c.name === 'The Walker')) {
+    return { kind: 'foreground', proximity: { size: VISUAL_CONSTS.door.size, alpha: VISUAL_CONSTS.door.proximity.present.alpha } }
+  }
+  return { kind: 'proximity', proximity: doorProximityForAct(state.actIndex) }
 }
