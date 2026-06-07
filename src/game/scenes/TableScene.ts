@@ -61,11 +61,13 @@ import { buildWorld } from '../../data/worldManifest'
 // ---------------------------------------------------------------------------
 
 /** Vertical centre of the world cards (hazard) row. */
-const WORLD_ROW_Y = 180
+const WORLD_ROW_Y = 140
 /** Vertical centre of the player hand row. */
 const HAND_ROW_Y = 420
 /** Horizontal spacing between card centres (cards are 150px wide). */
 const CARD_SPACING = 156
+/** Screen width for layout calculations. */
+const SCREEN_WIDTH = 900
 
 /**
  * Depth for the targeting connector. Cards live at the default depth 0 and the
@@ -343,11 +345,14 @@ export class TableScene extends Phaser.Scene {
     legalTargetIds: Set<string>,
     desiredIds: Set<string>,
   ): void {
-    const totalWidth = (cards.length - 1) * CARD_SPACING
+
+    const totalWidth = Math.min(SCREEN_WIDTH - CARD_SPACING - 25, (cards.length - 1) * CARD_SPACING)
     const startX = 450 - totalWidth / 2
+    const spacing = cards.length > 1 ? totalWidth / (cards.length - 1) : CARD_SPACING
+    console.log(`Layout row with ${cards.length} cards: totalWidth=${totalWidth}, startX=${startX}, spacing=${spacing}`)
 
     cards.forEach((card, i) => {
-      const x = startX + i * CARD_SPACING
+      const x = startX + i * spacing
       const container = this.obtainCardContainer(card)
       desiredIds.add(card.id)
 

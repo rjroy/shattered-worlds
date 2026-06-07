@@ -10,6 +10,7 @@ function makeState(
   return {
     hand: hand as unknown as GameState['hand'],
     actIndex,
+    totalActs: 3,
     playerDraw: [], playerDiscard: [], worldDraw: [], acts: [],
     progress: {}, hp: 10, skipDrawNext: false, status: 'playing',
     rng: { a: 0, b: 0, c: 0, d: 0 }, nextId: 0, worldId: 'zombie-big-box',
@@ -62,7 +63,7 @@ describe('walkerPresentation', () => {
     it('act 0 proximity matches walkerProximityForAct(0) — far tier', () => {
       const state = makeState([], 0)
       const result = walkerPresentation(state as GameState, true)
-      expect(result).toEqual({ kind: 'proximity', proximity: walkerProximityForAct(0) })
+      expect(result).toEqual({ kind: 'proximity', proximity: walkerProximityForAct(0, 3) })
       // far: small, barely visible
       if (result.kind === 'proximity') {
         expect(result.proximity.size).toBe(75)
@@ -73,7 +74,7 @@ describe('walkerPresentation', () => {
     it('act 1 proximity matches walkerProximityForAct(1) — mid tier', () => {
       const state = makeState([], 1)
       const result = walkerPresentation(state as GameState, true)
-      expect(result).toEqual({ kind: 'proximity', proximity: walkerProximityForAct(1) })
+      expect(result).toEqual({ kind: 'proximity', proximity: walkerProximityForAct(1, 3) })
       if (result.kind === 'proximity') {
         expect(result.proximity.size).toBe(175)
         expect(result.proximity.alpha).toBe(0.65)
@@ -83,7 +84,7 @@ describe('walkerPresentation', () => {
     it('act 2 proximity matches walkerProximityForAct(2) — looming tier', () => {
       const state = makeState([], 2)
       const result = walkerPresentation(state as GameState, true)
-      expect(result).toEqual({ kind: 'proximity', proximity: walkerProximityForAct(2) })
+      expect(result).toEqual({ kind: 'proximity', proximity: walkerProximityForAct(2, 3) })
       if (result.kind === 'proximity') {
         expect(result.proximity.size).toBe(300)
         expect(result.proximity.alpha).toBe(0.85)
@@ -93,7 +94,7 @@ describe('walkerPresentation', () => {
     it('act index beyond 2 clamps to looming tier', () => {
       const state = makeState([], 5)
       const result = walkerPresentation(state as GameState, true)
-      expect(result).toEqual({ kind: 'proximity', proximity: walkerProximityForAct(2) })
+      expect(result).toEqual({ kind: 'proximity', proximity: walkerProximityForAct(2, 3) })
     })
   })
 })

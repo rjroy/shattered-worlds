@@ -14,8 +14,6 @@ export interface HUDRefs {
   container: Phaser.GameObjects.Container
   hpText: Phaser.GameObjects.Text
   actText: Phaser.GameObjects.Text
-  drawText: Phaser.GameObjects.Text
-  worldText: Phaser.GameObjects.Text
 }
 
 // HUD backing panel geometry. The text-back texture is a 600×600 grunge frame:
@@ -27,9 +25,9 @@ export interface HUDRefs {
 // inset) brackets the 14px text sitting at y=10.
 const HUD_PANEL_X = 30
 const HUD_PANEL_Y = 0
-const HUD_PANEL_W = 530
+const HUD_PANEL_W = 260
 const HUD_PANEL_H = 45
-const HUD_PANEL_SIDE_INSET = 6 // left/right: keep the decorated vertical frame
+const HUD_PANEL_SIDE_INSET = 20 // left/right: keep the decorated vertical frame
 const HUD_PANEL_EDGE_INSET = 6 // top/bottom: thin frayed edge, interior shows through
 
 /** Create the HUD: a textured backing panel plus the status text objects. */
@@ -62,28 +60,24 @@ export function createHUD(scene: Phaser.Scene): HUDRefs {
   // The textured panel supplies the dark backing, so the labels no longer carry
   // their own translucent-black backgroundColor.
   const style = textStyle({ fontSize: '16px', fontStyle: 'bold', color: TEXT.textLight })
-  const mutedStyle = textStyle({ fontSize: '14px', color: TEXT.textMuted })
 
   // Origin (0, 0.5): x is the panel-relative left edge of the label, y is the
   // panel's vertical center, so every label is vertically centered in the bar.
   const hpText = scene.add.text(30, HUD_PANEL_H / 2, 'HP: —', { ...style, color: '#FF8888' })
-  const actText = scene.add.text(140, HUD_PANEL_H / 2, 'Act 1', style)
-  const drawText = scene.add.text(214, HUD_PANEL_H / 2, 'Draw: — | Discard: —', mutedStyle)
-  const worldText = scene.add.text(434, HUD_PANEL_H / 2, 'World: —', mutedStyle)
-  for (const label of [hpText, actText, drawText, worldText]) {
+  const actText = scene.add.text(140, HUD_PANEL_H / 2, 'Act 1 / 3', style)
+
+  for (const label of [hpText, actText]) {
     label.setOrigin(0, 0.5)
+    container.add(label)
   }
-  container.add([hpText, actText, drawText, worldText])
+
   container.setPosition(HUD_PANEL_X, HUD_PANEL_Y)
 
-  return { container, hpText, actText, drawText, worldText }
+  return { container, hpText, actText }
 }
 
 /** Update HUD text to match the current GameState. */
 export function updateHUD(refs: HUDRefs, state: GameState): void {
   refs.hpText.setText(`HP: ${state.hp}/${START_HP}`)
-  refs.actText.setText(`Act ${state.actIndex + 1}`)
-  refs.drawText.setText(`Draw: ${state.playerDraw.length} | Discard: ${state.playerDiscard.length}`)
-  const worldPile = state.worldDraw.length
-  refs.worldText.setText(`World: ${worldPile}`)
+  refs.actText.setText(`Act ${state.actIndex + 1} / ${state.totalActs}`)
 }

@@ -17,6 +17,7 @@ function makeEmptyState(nextId = 0): GameState {
     worldDraw: [],
     acts: [],
     actIndex: 0,
+    totalActs: 3,
     progress: {},
     hp: 10,
     skipDrawNext: false,
