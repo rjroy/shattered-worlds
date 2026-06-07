@@ -8,6 +8,12 @@ import textBackUrl from '../assets/text-background.webp'
 import bigboxRealityUrl from '../assets/themes/zombie-big-box/bigbox-reality.webp'
 import zombieIntrusionUrl from '../assets/themes/zombie-big-box/intrusion-overlay.webp'
 import zombieCardfrontUrl from '../assets/themes/zombie-big-box/zombie-cardfront.webp'
+import birdRealityUrl from '../assets/themes/bird-building/bird-building-bg.webp'
+import birdOverlayUrl from '../assets/themes/bird-building/bird-building-overlay.webp'
+import birdCardfrontUrl from '../assets/themes/bird-building/bird-building-cardfront.webp'
+import volcanoRealityUrl from '../assets/themes/highway-volcano/highway-volcano-bg.webp'
+import volcanoOverlayUrl from '../assets/themes/highway-volcano/highway-volcano-overlay.webp'
+import volcanoCardfrontUrl from '../assets/themes/highway-volcano/highway-volcano-cardfront.webp'
 import insetSprintUrl from '../assets/insets/inset-sprint.webp'
 import insetExploreUrl from '../assets/insets/inset-explore.webp'
 import insetBarricadeUrl from '../assets/insets/inset-barricade.webp'
@@ -25,6 +31,8 @@ import zombieInsetZombieUrl from '../assets/themes/zombie-big-box/insets/inset-z
 import zombieInsetListenUrl from '../assets/themes/zombie-big-box/insets/inset-listen.webp'
 import starterJsonUrl from '../../data/worlds/starter.json?url'
 import zombieJsonUrl from '../../data/worlds/zombie-big-box.json?url'
+import birdJsonUrl from '../../data/worlds/bird-building.json?url'
+import volcanoJsonUrl from '../../data/worlds/highway-volcano.json?url'
 
 export const assetManifest: Record<string, string> = {
   cardback: cardbackUrl,
@@ -36,6 +44,12 @@ export const assetManifest: Record<string, string> = {
   'bigbox-reality': bigboxRealityUrl,
   'zombie-intrusion': zombieIntrusionUrl,
   'zombie-cardfront': zombieCardfrontUrl,
+  'bird-building-bg': birdRealityUrl,
+  'bird-building-overlay': birdOverlayUrl,
+  'bird-building-cardfront': birdCardfrontUrl,
+  'highway-volcano-bg': volcanoRealityUrl,
+  'highway-volcano-overlay': volcanoOverlayUrl,
+  'highway-volcano-cardfront': volcanoCardfrontUrl,
   'inset-sprint': insetSprintUrl,
   'inset-explore': insetExploreUrl,
   'inset-barricade': insetBarricadeUrl,
@@ -54,4 +68,6 @@ export const assetManifest: Record<string, string> = {
   // JSON files are loaded as URLs so Phaser can load them asynchronously.
   'world-starter': starterJsonUrl,
   'world-zombie-big-box': zombieJsonUrl,
+  'world-bird-building': birdJsonUrl,
+  'world-highway-volcano': volcanoJsonUrl,
 }

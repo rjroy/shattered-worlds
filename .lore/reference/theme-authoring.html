@@ -1,0 +1,208 @@
+<!DOCTYPE html><html lang="en"><head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Shattered Worlds — Theme Authoring Rules</title>
+  <meta name="date" content="2026-06-07">
+  <meta name="status" content="current">
+  <meta name="tags" content="theme, world, authoring, rules, the-walker, deck, visual-theme, reference">
+  <meta name="related" content=".lore/reference/visual-direction.html, .lore/reference/vision.html">
+  <style>
+    :root {
+      --bg: #0c0a10;
+      --panel: #18141f;
+      --panel-2: #211a2b;
+      --ink: #ece6f2;
+      --muted: #9b8fb0;
+      --accent: #b98aff;       /* intrusion violet */
+      --gold: #d6b15c;         /* occult cartography gold */
+      --intrude: #ff4fa3;      /* hot intrusion magenta */
+      --ember: #ff8a3c;        /* catastrophe ember */
+      --reality: #7d8a93;      /* desaturated mundane */
+      --good: #6cd08a;
+      --refuse: #ff8a8a;
+      --border: #2c2438;
+      --code: #c9b8e6;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: radial-gradient(1100px 560px at 50% -8%, #241433 0%, var(--bg) 58%);
+      color: var(--ink);
+      font: 16px/1.65 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      padding: 2.5rem 1rem 6rem;
+    }
+    .wrap { max-width: 920px; margin: 0 auto; }
+
+    .hero { text-align: center; margin-bottom: 2.4rem; }
+    .kicker { letter-spacing: .28em; text-transform: uppercase; font-size: .72rem; color: var(--gold); margin-bottom: .6rem; }
+    h1 { font-size: 2.6rem; margin: 0 0 .5rem; line-height: 1.05;
+      background: linear-gradient(180deg, #fff, #c9b8e6); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+    .one-liner { font-size: 1.15rem; color: var(--ink); max-width: 680px; margin: .5rem auto 0; }
+    .badge { display: inline-block; margin-top: 1rem; background: rgba(185,138,255,.12);
+      border: 1px solid rgba(185,138,255,.35); color: var(--accent); border-radius: 999px;
+      padding: .2rem .8rem; font-size: .75rem; font-weight: 600; }
+
+    h2 { font-size: 1.45rem; margin: 2.8rem 0 1rem; display: flex; align-items: center; gap: .6rem;
+      border-bottom: 1px solid var(--border); padding-bottom: .5rem; }
+    h2 .mark { font-size: 1rem; }
+    h3 { font-size: 1.08rem; margin: 1.6rem 0 .5rem; color: var(--accent); }
+    p { margin: .6rem 0; }
+
+    .panel { background: linear-gradient(180deg, var(--panel-2), var(--panel));
+      border: 1px solid var(--border); border-radius: 16px; padding: 1.4rem 1.6rem; margin: 1.2rem 0; }
+    .panel p:first-child { margin-top: 0; }
+    .panel p:last-child { margin-bottom: 0; }
+
+    .term { color: var(--gold); font-weight: 600; }
+    code { font-family: "SF Mono", ui-monospace, "Cascadia Code", Menlo, Consolas, monospace;
+      font-size: .88em; color: var(--code); background: rgba(185,138,255,.08);
+      border: 1px solid rgba(185,138,255,.16); border-radius: 5px; padding: .05rem .35rem; }
+    pre { background: #100c16; border: 1px solid var(--border); border-radius: 12px;
+      padding: 1rem 1.1rem; overflow-x: auto; font-size: .82rem; line-height: 1.5; }
+    pre code { background: none; border: none; padding: 0; color: #d9cef0; }
+
+    table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: .92rem; }
+    th, td { text-align: left; padding: .6rem .7rem; border-bottom: 1px solid var(--border); vertical-align: top; }
+    th { color: var(--gold); font-size: .78rem; text-transform: uppercase; letter-spacing: .06em; }
+    td code { white-space: nowrap; }
+
+    /* Rule cards */
+    .rule { border-left: 3px solid var(--accent); background: rgba(185,138,255,.05);
+      border-radius: 0 10px 10px 0; padding: .7rem 1rem; margin: .8rem 0; }
+    .rule .rid { color: var(--accent); font-weight: 700; font-size: .8rem; letter-spacing: .04em; margin-right: .4rem; }
+
+    /* Three-beat arc */
+    .arc { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: .9rem; margin: 1.2rem 0; }
+    @media (max-width: 680px) { .arc { grid-template-columns: 1fr; } }
+    .beat { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 1rem; }
+    .beat .num { color: var(--gold); font-size: .75rem; letter-spacing: .15em; text-transform: uppercase; }
+    .beat .name { font-weight: 700; margin: .3rem 0 .4rem; }
+    .beat .body { color: var(--muted); font-size: .88rem; }
+
+    .warn { border-left: 3px solid var(--ember); background: rgba(255,138,60,.07);
+      border-radius: 0 10px 10px 0; padding: .8rem 1rem; margin: 1rem 0; }
+    .warn .tag { color: var(--ember); font-weight: 700; font-size: .78rem; text-transform: uppercase; letter-spacing: .06em; }
+
+    ol.check { list-style: none; counter-reset: step; padding-left: 0; }
+    ol.check li { counter-increment: step; position: relative; padding: .5rem 0 .5rem 2.4rem; border-bottom: 1px solid var(--border); }
+    ol.check li::before { content: counter(step); position: absolute; left: 0; top: .5rem;
+      width: 1.7rem; height: 1.7rem; border-radius: 50%; background: rgba(185,138,255,.14);
+      border: 1px solid rgba(185,138,255,.4); color: var(--accent); font-size: .8rem; font-weight: 700;
+      display: flex; align-items: center; justify-content: center; }
+
+    .meta-foot { margin-top: 3.5rem; padding-top: 1rem; border-top: 1px solid var(--border);
+      color: var(--muted); font-size: .82rem; text-align: center; }
+  </style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="hero">
+    <div class="kicker">Shattered Worlds · Reference</div>
+    <h1>Theme Authoring Rules</h1>
+    <p class="one-liner">How to define a world theme so it slots into the engine, tells the canon story, and reads as its own place. Derived from the shipped <span class="term">Zombie Big Box</span> theme.</p>
+    <div class="badge">Status: current · 2026-06-07</div>
+  </div>
+
+  <h2><span class="mark">◈</span> What a theme is</h2>
+  <p>A theme is one <code>worldId</code> plus four coordinated artifacts that all key off that id.</p>
+  <table>
+    <tr><th>Layer</th><th>File</th><th>Holds</th></tr>
+    <tr><td>Narrative</td><td><em>fiction, no file</em></td><td>The Walker arrival, the world's catastrophe, the mythic Door</td></tr>
+    <tr><td>Data</td><td><code>src/data/worlds/&lt;worldId&gt;.json</code></td><td>Card templates + 3-act deck composition</td></tr>
+    <tr><td>Visual</td><td><code>src/game/view/themes/&lt;worldId&gt;.ts</code></td><td>Palette, frame colors, backdrop + door tints</td></tr>
+    <tr><td>Wiring</td><td><code>worldManifest.ts</code>, <code>themeManifest.ts</code>, <code>assetManifest.ts</code></td><td>Registration</td></tr>
+    <tr><td>Assets</td><td><code>src/game/assets/themes/&lt;worldId&gt;/…</code></td><td>Backdrop, intrusion overlay, cardfront, insets</td></tr>
+  </table>
+  <div class="rule"><span class="rid">RULE 0</span><code>worldId</code> is the single join key. It must be identical (kebab-case) in the JSON <code>worldId</code> field, the <code>VisualTheme.worldId</code> field, and every manifest entry. If they drift, <code>selectTheme</code> silently falls back to <code>STARTER</code> and <code>buildWorld</code> throws.</div>
+
+  <h2><span class="mark">◈</span> The narrative spine</h2>
+  <p>This is the constraint that makes every world feel like one game. Each theme is a variation on a fixed three-beat arc.</p>
+  <div class="arc">
+    <div class="beat">
+      <div class="num">Beat I</div>
+      <div class="name">Calm before</div>
+      <div class="body">The player is in an ordinary place — a big-box store, an office building, a highway. Ambient unease creeps in.</div>
+    </div>
+    <div class="beat">
+      <div class="num">Beat II</div>
+      <div class="name">The intrusion</div>
+      <div class="body">The Walker appears in the distance, <em>not</em> as a threat, and his arrival triggers the world's signature catastrophe.</div>
+    </div>
+    <div class="beat">
+      <div class="num">Beat III</div>
+      <div class="name">The Door</div>
+      <div class="body">The Walker opens a mythic door — "Follow or meet your Destiny" — and walks through. Reach and clear it to escape.</div>
+    </div>
+  </div>
+  <div class="rule"><span class="rid">N1</span>The Walker is never the enemy and never themed. He and the Door are the constant across all worlds. They live in <code>starter.json</code> (shared <code>The Walker</code>, <code>Summon Door</code>, <code>Door</code> templates), so a theme JSON must <strong>not</strong> redefine them — the catalog throws on duplicate template ids. A theme only <em>references</em> <code>The Walker</code> in its final act.</div>
+  <div class="rule"><span class="rid">N2</span>The catastrophe is the theme's identity. Whatever the world's disaster is, it maps to the intrusion backdrop overlay, the signature threat-creature card, and the obstacle/ambient cards. Zombie swarm → airborne building → lava and ash.</div>
+
+  <h2><span class="mark">◈</span> Deck structure</h2>
+  <p>Composition lives under <code>deckComposition.acts</code> and is always <strong>three acts</strong> of escalating threat, each roughly six cards.</p>
+  <table>
+    <tr><th>Act</th><th>Role</th><th>Contents (Zombie example)</th></tr>
+    <tr><td>1 — Foreshadow</td><td>Ambient/sensory cards + minor obstacles only. No real threat yet.</td><td>Strange Sounds ×2, Rubble ×2, Screams ×2</td></tr>
+    <tr><td>2 — Escalation</td><td>Introduce the signature threat creature in numbers, plus the tool-fetch that counters it.</td><td>Rubble ×2, Zombie ×3, Find Baseball Bat ×1</td></tr>
+    <tr><td>3 — Climax + exit</td><td>Peak threat density, ending on the fixed Walker closer.</td><td>Find Baseball Bat ×1, Zombie ×4, The Walker ×1</td></tr>
+  </table>
+  <div class="rule"><span class="rid">D1</span>Act 3 always ends with <code>{ "templateId": "The Walker", "count": 1 }</code>. That is the fixed closer that spawns the Door: <code>The Walker</code> discarded → adds <code>Door</code>; cleared → grants <code>Summon Door</code>; <code>Door</code> cleared → <code>SurviveWorld</code>.</div>
+  <div class="rule"><span class="rid">D2</span>The starter deck is shared, not themed. <code>starter.json</code> provides the player's <code>starterDeck</code>; theme JSON provides only <code>cardTemplates</code> and <code>deckComposition</code>. The world manifest assembles <code>[STARTER_SOURCE, THEME_SOURCE]</code>.</div>
+
+  <h2><span class="mark">◈</span> Card archetypes</h2>
+  <p>Every theme reuses the same mechanical roles, re-skinned to its fiction. This is the real recipe — map your new world's flavor onto these slots.</p>
+
+  <h3>1 · Ambient foreshadow <span style="color:var(--muted);font-weight:400;font-size:.85rem">(world card, cheap, discardable)</span></h3>
+  <p>Sets mood; on discard or clear it seeds a reaction card into the player deck. Zombie: <em>Strange Sounds</em> (clear → gain <em>Listen</em>), <em>Screams</em> (discard → gain <em>Panic</em>, clear → gain <em>Regroup</em>).</p>
+
+  <h3>2 · Obstacle <span style="color:var(--muted);font-weight:400;font-size:.85rem">(world card, cheap)</span></h3>
+  <p>Punishes ignoring it. Zombie: <em>Rubble</em> (discard → <code>SkipDrawNextTurn</code>).</p>
+
+  <h3>3 · Signature threat creature <span style="color:var(--muted);font-weight:400;font-size:.85rem">(world card, costly, <code>Creature</code>+<code>Slow</code>)</span></h3>
+  <p>The catastrophe embodied. Ongoing <code>onEndOfTurn</code> <code>Damage</code>, plus a discard-<code>Damage</code> penalty so you can't just dump it. Zombie: <em>Zombie</em>.</p>
+
+  <h3>4 · Tool fetch <span style="color:var(--muted);font-weight:400;font-size:.85rem">(world card, <code>Hidden</code>)</span></h3>
+  <p>Clearing it grants the weapon that counters the creature. Zombie: <em>Find Baseball Bat</em> → <em>Baseball Bat</em> (player card with a <code>Creature</code> bonus).</p>
+
+  <h3>5 · Reaction player cards</h3>
+  <p>Gained mid-run from archetypes 1–2, tuned to the threat. Zombie: <em>Listen</em> (<code>Hidden</code> bonus), <em>Regroup</em> (<code>DestroyCardInHand</code>).</p>
+
+  <div class="rule"><span class="rid">C1</span>Stay inside the existing effect vocabulary (<code>src/core/model/types.ts</code>): <code>DealProgress</code>, <code>Draw</code>, <code>Heal</code>, <code>ReturnWorldCards</code>, <code>DestroyCardInHand</code>, <code>DiscardThenDraw</code>, <code>AddCard</code>, <code>AddWorldCardToTop</code>, <code>AddPlayerCardToTop</code>, <code>GainCard</code>, <code>Modal</code>, <code>Sequence</code>, <code>Damage</code>, <code>SkipDrawNextTurn</code>, <code>SurviveWorld</code>, <code>None</code>. Adding a theme should not require new effect kinds. If a flavor truly needs one, that is a core change to flag separately, not a theme edit.</div>
+  <div class="rule"><span class="rid">C2</span>Keywords are the only three: <code>Hidden</code>, <code>Creature</code>, <code>Slow</code>. Use them consistently so shared/starter cards still interact — e.g. <em>Sprint</em>'s <code>Slow</code> bonus must still hit your threat creature, so your creature should carry <code>Slow</code> like Zombie does. Don't invent keywords per theme without a core change.</div>
+  <div class="rule"><span class="rid">C3</span>Every world card defines all three hooks (<code>onDiscarded</code>, <code>onCleared</code>, <code>onEndOfTurn</code>), using <code>{ "kind": "None" }</code> for the ones that do nothing. Player cards define <code>effect</code>.</div>
+
+  <h2><span class="mark">◈</span> Visual identity</h2>
+  <p>The <code>VisualTheme</code> interface is the contract. Required: <code>worldId</code>, <code>intrusionHue</code>, <code>realityPalette</code> (title/text/disabled/confirm/cancel), <code>frameStyle</code> (9 colors), <code>backdrop</code> (realityKey/intrusionKey). Optional: <code>doorGlowTint</code>, <code>doorTint</code>, <code>worldCardfrontKey</code>.</p>
+  <div class="rule"><span class="rid">V1</span>Each theme needs its own color identity. Pick a distinct <code>intrusionHue</code> and frame family per world (e.g. sky/feather blues for the bird, ember orange-red for the volcano) so worlds read differently at a glance.</div>
+  <div class="rule"><span class="rid">V2</span>Semantic colors keep their meaning across themes. Within <code>frameStyle</code> the roles are fixed even as hues shift: <code>connectorDestroy</code> reads as danger (warm/red), <code>connectorReturn</code> reads as cool/retreat (blue), <code>ringAccent</code>/<code>connectorProgress</code> pair with <code>targetBorder</code>. Re-tint per theme but preserve the warm-danger / cool-return logic.</div>
+  <div class="rule"><span class="rid">V3</span><code>intrusionHue</code> is the theme's keynote and typically matches <code>doorGlowTint</code>. Pick it first; derive the rest.</div>
+  <div class="warn"><span class="tag">Known debt</span> <code>zombie-big-box.ts</code> is currently a near-verbatim copy of <code>starter.ts</code> (same green intrusion hue, same frame palette). That is a latent bug, not a model to copy. Giving Zombie Big Box its own palette is an open cleanup.</div>
+
+  <h2><span class="mark">◈</span> Assets &amp; wiring</h2>
+  <div class="rule"><span class="rid">W1</span>Asset layout is by convention. Theme assets live under <code>src/game/assets/themes/&lt;worldId&gt;/</code> with insets in <code>…/&lt;worldId&gt;/insets/</code>. You need at minimum a backdrop (<code>&lt;x&gt;-reality.webp</code>), <code>intrusion-overlay.webp</code>, a <code>&lt;x&gt;-cardfront.webp</code>, and one inset per themed card.</div>
+  <div class="rule"><span class="rid">W2</span>Inset keys are namespaced per theme to avoid collisions: <code>zombie-inset-zombie</code>, etc. A card's <code>insetKey</code> in JSON must have a matching entry in <code>assetManifest.ts</code>. Shared cards (Walker, Door, starter deck) use the un-namespaced <code>inset-*</code> keys already registered. Unregistered key → missing texture at runtime.</div>
+  <div class="rule"><span class="rid">W3</span>Three registrations per new theme, or it won't load:</div>
+  <ul>
+    <li><code>assetManifest.ts</code> — import every new <code>.webp</code> (backdrops, cardfront, each inset) and the <code>&lt;worldId&gt;.json?url</code>, keyed <code>world-&lt;worldId&gt;</code>.</li>
+    <li><code>worldManifest.ts</code> — add a <code>build&lt;World&gt;()</code> that assembles <code>[STARTER_SOURCE, &lt;THEME&gt;_SOURCE]</code> and register it under <code>worldId</code>.</li>
+    <li><code>themeManifest.ts</code> — add the <code>VisualTheme</code> to the <code>themeManifest</code> record. (<code>STARTER</code> is the fallback, not a registered entry; a theme must be in the record to be selectable.)</li>
+  </ul>
+
+  <h2><span class="mark">◈</span> Author's checklist</h2>
+  <ol class="check">
+    <li>Name it: pick <code>worldId</code> (e.g. <code>bird-building</code>, <code>highway-volcano</code>).</li>
+    <li>Write the three-beat fiction: ordinary place → Walker + signature catastrophe → Door.</li>
+    <li>Fill the five card archetypes with themed names/flavor; reuse existing effects + keywords.</li>
+    <li>Lay out three escalating acts (~6 cards each); end act 3 with one <code>The Walker</code>.</li>
+    <li>Pick <code>intrusionHue</code>, derive a distinct palette + frame family.</li>
+    <li>Produce assets in the conventional folders with namespaced inset keys.</li>
+    <li>Register in all three manifests.</li>
+    <li>Verify: <code>selectTheme(worldId)</code> returns your theme (not STARTER), <code>buildWorld(worldId)</code> assembles without duplicate-template errors, and the test suite passes.</li>
+  </ol>
+
+  <div class="meta-foot">
+    Shattered Worlds · Theme Authoring Rules · related: <code>visual-direction.html</code>, <code>vision.html</code>
+  </div>
+
+</div>
+</body></html>
