@@ -66,6 +66,7 @@ export function createWorld(catalog: CardCatalog, world: WorldData, seed: number
     worldDraw: [],
     acts: [],
     actIndex: 0,
+    totalActs: world.deckComposition.acts.length,
     progress: {},
     hp: START_HP,
     skipDrawNext: false,

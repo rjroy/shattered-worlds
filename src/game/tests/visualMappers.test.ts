@@ -27,9 +27,9 @@ describe('intrusionForIntensity', () => {
 
 describe('walkerProximityForAct', () => {
   it('returns distinct values for each act tier', () => {
-    const far = walkerProximityForAct(0)
-    const mid = walkerProximityForAct(1)
-    const looming = walkerProximityForAct(2)
+    const far = walkerProximityForAct(0, 3)
+    const mid = walkerProximityForAct(1, 3)
+    const looming = walkerProximityForAct(2, 3)
     // Each tier is closer (larger size) than the previous
     expect(far.size).toBeLessThan(mid.size)
     expect(mid.size).toBeLessThan(looming.size)
@@ -39,14 +39,14 @@ describe('walkerProximityForAct', () => {
   })
 
   it('clamps out-of-range act indices', () => {
-    expect(walkerProximityForAct(-1)).toEqual(walkerProximityForAct(0))
-    expect(walkerProximityForAct(3)).toEqual(walkerProximityForAct(2))
-    expect(walkerProximityForAct(99)).toEqual(walkerProximityForAct(2))
+    expect(walkerProximityForAct(-1, 3)).toEqual(walkerProximityForAct(0, 3))
+    expect(walkerProximityForAct(3, 3)).toEqual(walkerProximityForAct(2, 3))
+    expect(walkerProximityForAct(99, 3)).toEqual(walkerProximityForAct(2, 3))
   })
 
   it('all values are in valid ranges', () => {
     for (let i = 0; i <= 2; i++) {
-      const p = walkerProximityForAct(i)
+      const p = walkerProximityForAct(i, 3)
       expect(p.size).toBeGreaterThan(0)
       expect(p.alpha).toBeGreaterThan(0)
       expect(p.alpha).toBeLessThanOrEqual(1)

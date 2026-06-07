@@ -16,7 +16,7 @@ export function walkerPresentation(state: GameState, hasWalker: boolean): Walker
   if (state.hand.some((c) => c.name === 'The Walker')) {
     return { kind: 'foreground', proximity: { size: VISUAL_CONSTS.walker.proximity.present.size, alpha: VISUAL_CONSTS.walker.proximity.present.alpha } }
   }
-  return { kind: 'proximity', proximity: walkerProximityForAct(state.actIndex) }
+  return { kind: 'proximity', proximity: walkerProximityForAct(state.actIndex, state.totalActs) }
 }
 
 export function doorPresentation(state: GameState, hasWalker: boolean): WalkerPresentation {
@@ -24,5 +24,5 @@ export function doorPresentation(state: GameState, hasWalker: boolean): WalkerPr
   if (state.hand.some((c) => c.name === 'The Walker')) {
     return { kind: 'foreground', proximity: { size: VISUAL_CONSTS.door.size, alpha: VISUAL_CONSTS.door.proximity.present.alpha } }
   }
-  return { kind: 'proximity', proximity: doorProximityForAct(state.actIndex) }
+  return { kind: 'proximity', proximity: doorProximityForAct(state.actIndex, state.totalActs) }
 }

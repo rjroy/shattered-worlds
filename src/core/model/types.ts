@@ -79,6 +79,7 @@ export interface GameState {
   worldDraw: readonly WorldCard[]
   acts: readonly (readonly WorldCard[])[]
   actIndex: number
+  totalActs: number
   progress: Readonly<Record<CardId, number>>
   hp: number
   skipDrawNext: boolean
