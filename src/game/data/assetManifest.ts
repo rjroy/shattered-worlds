@@ -51,7 +51,7 @@ export const assetManifest: Record<string, string> = {
   'zombie-inset-listen': zombieInsetListenUrl,
   'zombie-inset-strange-sounds': zombieInsetStrangeSoundsUrl,
   'zombie-inset-zombie': zombieInsetZombieUrl,
-  // JSON files are loaded as URLs so Phaser can load them asynchronously. The buildZombieWorld() function in worldManifest.ts assembles the same JSON data into a catalog + world descriptor for use by the headless sim and core tests, so the JSON sources are exported from there and imported here.  
+  // JSON files are loaded as URLs so Phaser can load them asynchronously.
   'world-starter': starterJsonUrl,
   'world-zombie-big-box': zombieJsonUrl,
 }

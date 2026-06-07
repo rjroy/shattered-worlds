@@ -12,14 +12,12 @@ import Phaser from 'phaser'
 import { assetManifest } from '../data/assetManifest'
 import { selectTheme, getRealityPalette } from '../view/theme'
 import type { VisualTheme } from '../view/theme'
-import { createGame, availableActions, assembleCatalog, CatalogError } from '../../core/index'
+import { createGame, availableActions, CatalogError } from '../../core/index'
 import type {
   GameCore,
   Card,
   Action,
   TargetSpec,
-  WorldData,
-  RawCardSource,
 } from '../../core/index'
 import {
   IDLE,
@@ -55,7 +53,7 @@ import { CommonLabel, CommonButton } from '../view/components'
 import { previewPlay } from '../interaction/describe'
 import { PileLayer } from '../view/piles'
 import { BackdropLayer } from '../view/backdrop'
-import { worldManifest } from '../../data/worldManifest'
+import { buildWorld } from '../../data/worldManifest'
 
 // ---------------------------------------------------------------------------
 // Layout constants
@@ -163,46 +161,42 @@ export class TableScene extends Phaser.Scene {
       throw new CatalogError('JSON asset failed to load')
     }
 
-    const worldBuilder = worldManifest[this.worldId_]
-    if (typeof worldBuilder !== 'function') {
-      console.error(`[TableScene] World "${this.worldId_}" cannot be loaded: no builder function found in worldManifest.`)
-      throw new CatalogError(`World "${this.worldId_}" cannot be loaded.`)
-    }
-
-    const { catalog, worldData } = worldBuilder()
+    const { catalog, worldData } = buildWorld(this.worldId_)
 
     this.game_ = createGame(catalog, worldData, this.seed_)
     this.theme_ = selectTheme(this.game_.state.worldId)
 
     this.hudRefs = createHUD(this)
-    this.endTurnBtn = new CommonButton(this, 820, 560, '[ End Turn ]', textStyle({
+
+    const endTurnStyle = textStyle({
       fontSize: '16px',
       color: getRealityPalette(this.theme_, 'text', '#88aaff'),
       fontStyle: 'bold',
-    }))
+    })
+    this.endTurnBtn = new CommonButton(this, 820, 560, '[ End Turn ]', endTurnStyle)
+      .on('pointerdown', () => this.onEndTurnClick())
 
-    this.endTurnBtn.on('pointerdown', () => this.onEndTurnClick())
-
-    this.cancelBtn = new CommonButton(this, 740, 570, '[ Cancel ]', textStyle({
+    const cancelStyle = textStyle({
       fontSize: '13px',
       color: getRealityPalette(this.theme_, 'cancel', '#ff8888'),
-    }))
-    this.cancelBtn.setVisible(false)
-
-    this.cancelBtn.on('pointerdown', () => {
-      this.sel = cancel()
-      this.dismissModal()
-      this.clearConnector()
-      this.drawAll()
     })
+    this.cancelBtn = new CommonButton(this, 740, 570, '[ Cancel ]', cancelStyle)
+      .on('pointerdown', () => {
+        this.sel = cancel()
+        this.dismissModal()
+        this.clearConnector()
+        this.drawAll()
+      })
+      .setVisible(false)
 
-    this.confirmBtn = new CommonButton(this, 740, 540, '[ Confirm ]', textStyle({
+    const confirmStyle = textStyle({
       fontSize: '13px',
       fontStyle: 'bold',
       color: getRealityPalette(this.theme_, 'confirm', '#88ee88'),
-    }))
-    this.confirmBtn.setVisible(false)
-    this.confirmBtn.on('pointerdown', () => this.onConfirmClick())
+    })
+    this.confirmBtn = new CommonButton(this, 740, 540, '[ Confirm ]', confirmStyle)
+      .on('pointerdown', () => this.onConfirmClick())
+      .setVisible(false)
 
     this.winScreen = createWinScreen(this)
     this.lossScreen = createLossScreen(this)
@@ -210,9 +204,7 @@ export class TableScene extends Phaser.Scene {
     this.selectionHint = new CommonLabel(this, 450, 578, '', textStyle({
       fontSize: '12px',
       color: getRealityPalette(this.theme_, 'text', '#9aa3b2'),
-    }))
-    this.selectionHint.setVisible(false)
-
+    })).setVisible(false)
 
     // Sits in a dedicated slot directly above selectionHint. selectionHint has
     // origin (0.5, 1) at y=568, so with 12px text + 2px vertical padding it
