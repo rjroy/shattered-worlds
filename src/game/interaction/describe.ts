@@ -108,9 +108,9 @@ export function previewPlay(
   const total = already + amount
 
   if (total >= target.cost) {
-    return `Deals ${amount} → clears ${target.name}`
+    return `Make ${amount} Progress → clears ${target.name}`
   }
-  return `Deals ${amount} → ${target.cost - total} more to clear ${target.name}`
+  return `Make ${amount} Progress → ${target.cost - total} more to clear ${target.name}`
 }
 
 /** The Progress payload of an effect, looking through Modal/Sequence. */

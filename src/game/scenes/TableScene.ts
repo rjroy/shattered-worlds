@@ -143,44 +143,16 @@ export class TableScene extends Phaser.Scene {
   }
 
   preload(): void {
-    const theme = selectTheme(this.worldId_)
-    const keysToLoad = [
-      'cardback',
-      'cardfront',
-      'walker',
-      'door',
-      'door-glow',
-      'text-back',
-      'inset-sprint',
-      'inset-explore',
-      'inset-barricade',
-      'inset-medkit',
-      'inset-panic',
-      'inset-adrenaline',
-      'inset-door',
-      'inset-walker',
-      'zombie-inset-baseball',
-      'zombie-inset-regroup',
-      'zombie-inset-rubble',
-      'zombie-inset-screams',
-      'zombie-inset-listen',
-      'zombie-inset-strange-sounds',
-      'zombie-inset-zombie',
-      theme.backdrop.realityKey,
-      theme.backdrop.intrusionKey,
-      ...(theme.worldCardfrontKey ? [theme.worldCardfrontKey] : []),
-    ]
-for (const key of keysToLoad) {
-  const url = assetManifest[key]
-  if (url !== undefined) {
-    this.load.image(key, url)
+    for (const [key, url] of Object.entries(assetManifest)) {
+      if (url !== undefined) {
+        if (url.endsWith('.json')) {
+          this.load.json(key, url)
+        } else {
+          this.load.image(key, url)
+        }
       }
     }
 
-    const starterUrl = assetManifest['world-starter']
-    const worldUrl = assetManifest['world-' + this.worldId_]
-    if (starterUrl !== undefined) this.load.json('world-starter', starterUrl)
-    if (worldUrl !== undefined) this.load.json('world-' + this.worldId_, worldUrl)
     this.load.once('loaderror', () => { this.loadError_ = true })
   }
 
@@ -213,7 +185,7 @@ for (const key of keysToLoad) {
       color: getRealityPalette(this.theme_, 'text', '#88aaff'),
       fontStyle: 'bold',
     }))
-  
+
     this.endTurnBtn.on('pointerdown', () => this.onEndTurnClick())
 
     this.cancelBtn = new CommonButton(this, 740, 570, '[ Cancel ]', textStyle({
@@ -241,8 +213,8 @@ for (const key of keysToLoad) {
     this.lossScreen = createLossScreen(this)
 
     this.selectionHint = new CommonLabel(this, 450, 578, '', textStyle({
-        fontSize: '12px',
-        color: getRealityPalette(this.theme_, 'text', '#9aa3b2'),  
+      fontSize: '12px',
+      color: getRealityPalette(this.theme_, 'text', '#9aa3b2'),
     }))
     this.selectionHint.setVisible(false)
 
@@ -254,7 +226,7 @@ for (const key of keysToLoad) {
     // means this slot simply stays empty).
     this.previewSlot = new CommonLabel(this, 450, 550, '', textStyle({
       fontSize: '12px',
-      color: getRealityPalette(this.theme_, 'title', '#9aa3b2'),  
+      color: getRealityPalette(this.theme_, 'title', '#9aa3b2'),
     }))
     this.previewSlot.setVisible(false)
 
