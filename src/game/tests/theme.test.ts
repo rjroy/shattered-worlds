@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'bun:test'
-import { selectTheme, ZOMBIE_BIG_BOX_THEME } from '../view/theme'
+import { selectTheme } from '../view/themes/themeManifest'
+import { ZOMBIE_BIG_BOX_THEME } from '../view/themes/zombie-big-box'
 
 describe('selectTheme', () => {
   it('returns zombie-big-box theme for that worldId', () => {

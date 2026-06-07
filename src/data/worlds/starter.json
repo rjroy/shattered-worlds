@@ -54,6 +54,34 @@
       "name": "Adrenaline",
       "insetKey": "inset-adrenaline",
       "effect": { "kind": "DiscardThenDraw", "player": 2 }
+    },
+    "The Walker": {
+      "kind": "world",
+      "name": "The Walker",
+      "insetKey": "inset-walker",
+      "cost": 10,
+      "keywords": [],
+      "discardable": true,
+      "onDiscarded": { "kind": "AddWorldCardToTop", "template": "Door" },
+      "onCleared": { "kind": "AddPlayerCardToTop", "template": "Summon Door" },
+      "onEndOfTurn": { "kind": "None" }
+    },
+    "Summon Door": {
+      "kind": "player",
+      "name": "Summon Door",
+      "insetKey": "inset-door",
+      "effect": { "kind": "AddWorldCardToTop", "template": "Door" }
+    },
+    "Door": {
+      "kind": "world",
+      "name": "Door",
+      "insetKey": "inset-door",
+      "cost": 4,
+      "keywords": ["Hidden"],
+      "discardable": false,
+      "onDiscarded": { "kind": "None" },
+      "onCleared": { "kind": "SurviveWorld" },
+      "onEndOfTurn": { "kind": "None" }
     }
   },
   "starterDeck": [

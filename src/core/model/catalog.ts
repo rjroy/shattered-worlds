@@ -19,6 +19,11 @@ export interface WorldData {
   deckComposition: DeckComposition
 }
 
+export interface AssembledWorld {
+  catalog: CardCatalog
+  worldData: WorldData
+}
+
 export interface RawCardSource {
   worldId: string
   cardTemplates: Record<string, CardTemplate>

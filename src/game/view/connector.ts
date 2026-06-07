@@ -5,7 +5,7 @@
  */
 import Phaser from 'phaser'
 import type { ConnectorStyle, Point } from '../interaction/feedback'
-import type { FrameStyle } from './theme'
+import type { FrameStyle } from './themes/theme'
 
 /** Plain straight accent line (progress / fallback). */
 function drawStraightLine(gfx: Phaser.GameObjects.Graphics, from: Point, to: Point, color: number): void {

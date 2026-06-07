@@ -3,15 +3,9 @@ import type { GameState } from '../../core/model/types'
 import { createWorld } from '../../core/engine/world'
 import { reduce } from '../../core/engine/reduce'
 import { rngFromSeed } from '../../core/engine/rng'
-import { buildZombieWorld } from '../../data/worldManifest'
 import { checkIdAccounting } from '../accounting'
-import { pickAction } from '../policy'
+import { pickAction, catalog, worldData } from '../policy'
 
-// ---------------------------------------------------------------------------
-// Catalog + world descriptor — assembled once at module load
-// ---------------------------------------------------------------------------
-
-const { catalog, worldData } = buildZombieWorld()
 
 // ---------------------------------------------------------------------------
 // Shared helpers

@@ -1,6 +1,8 @@
 import type { Action, CardId, GameState, TargetSpec } from '../core/model/types'
 import { availableActions } from '../core/engine/available'
 
+export { catalog, worldData } from '../core/tests/testFixture'
+
 // ---------------------------------------------------------------------------
 // Random helpers (policy-local)
 // ---------------------------------------------------------------------------

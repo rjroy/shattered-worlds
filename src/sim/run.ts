@@ -1,14 +1,8 @@
 import { createWorld } from '../core/engine/world'
 import { reduce } from '../core/engine/reduce'
-import { buildZombieWorld } from '../data/worldManifest'
 import { checkIdAccounting } from './accounting'
-import { pickAction } from './policy'
+import { pickAction, catalog, worldData } from './policy'
 
-// ---------------------------------------------------------------------------
-// Catalog + world descriptor — assembled once at startup
-// ---------------------------------------------------------------------------
-
-const { catalog, worldData } = buildZombieWorld()
 
 // ---------------------------------------------------------------------------
 // Main sim loop
