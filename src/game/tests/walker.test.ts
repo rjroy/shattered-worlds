@@ -11,7 +11,7 @@ function makeState(
     hand: hand as unknown as GameState['hand'],
     actIndex,
     playerDraw: [], playerDiscard: [], worldDraw: [], acts: [],
-    progress: {}, hp: 20, skipDrawNext: false, status: 'playing',
+    progress: {}, hp: 10, skipDrawNext: false, status: 'playing',
     rng: { a: 0, b: 0, c: 0, d: 0 }, nextId: 0, worldId: 'zombie-big-box',
   }
 }

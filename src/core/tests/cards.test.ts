@@ -18,7 +18,7 @@ function makeEmptyState(nextId = 0): GameState {
     acts: [],
     actIndex: 0,
     progress: {},
-    hp: 20,
+    hp: 10,
     skipDrawNext: false,
     status: 'playing',
     worldId: 'zombie-big-box',

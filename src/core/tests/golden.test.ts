@@ -235,8 +235,8 @@ describe('replay equivalence', () => {
   it('replay state is consistent: hp, status, hand sizes match expected values', () => {
     const state = runReplay()
 
-    // Med Kit healed +2 but initial hp=20, Screams onDiscarded=GainCard (no damage), so hp unchanged
-    expect(state.hp).toBe(22) // 20 + 2 from Med Kit
+    // Med Kit healed +2 but initial hp=10, Screams onDiscarded=GainCard (no damage), so hp unchanged
+    expect(state.hp).toBe(12) // 10 + 2 from Med Kit
 
     expect(state.status).toBe('playing')
 
