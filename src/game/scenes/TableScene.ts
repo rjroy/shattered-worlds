@@ -55,6 +55,7 @@ import { CommonLabel, CommonButton } from '../view/components'
 import { previewPlay } from '../interaction/describe'
 import { PileLayer } from '../view/piles'
 import { BackdropLayer } from '../view/backdrop'
+import { worldManifest } from '../../data/worldManifest'
 
 // ---------------------------------------------------------------------------
 // Layout constants
@@ -162,20 +163,14 @@ export class TableScene extends Phaser.Scene {
       throw new CatalogError('JSON asset failed to load')
     }
 
-    const starterRaw = this.cache.json.get('world-starter') as RawCardSource | undefined
-    const worldRaw = this.cache.json.get('world-' + this.worldId_) as RawCardSource | undefined
-
-    if (starterRaw === undefined || worldRaw === undefined) {
-      console.error('[TableScene] JSON cache miss — cannot assemble catalog.')
-      throw new CatalogError('JSON not available in Phaser cache')
+    const worldBuilder = worldManifest[this.worldId_]
+    if (typeof worldBuilder !== 'function') {
+      console.error(`[TableScene] World "${this.worldId_}" cannot be loaded: no builder function found in worldManifest.`)
+      throw new CatalogError(`World "${this.worldId_}" cannot be loaded.`)
     }
 
-    const catalog = assembleCatalog([starterRaw, worldRaw])
-    const worldData: WorldData = {
-      worldId: worldRaw.worldId,
-      starterDeck: starterRaw.starterDeck ?? [],
-      deckComposition: worldRaw.deckComposition ?? { acts: [] },
-    }
+    const { catalog, worldData } = worldBuilder()
+
     this.game_ = createGame(catalog, worldData, this.seed_)
     this.theme_ = selectTheme(this.game_.state.worldId)
 
