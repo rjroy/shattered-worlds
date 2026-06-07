@@ -1,5 +1,5 @@
 import type { GameEvent, GameState } from '../model/types'
-import { refillHand } from './draw'
+import { refillHand, resolveForceDestroy } from './draw'
 
 // ---------------------------------------------------------------------------
 // EffectResult type (used consistently across energy, draw, effects)
@@ -56,11 +56,14 @@ export function spendEnergy(state: GameState, cost: number): EffectResult {
 // ---------------------------------------------------------------------------
 
 /**
- * Compose gainEnergy and refillHand to represent a complete turn start.
+ * Compose gainEnergy, refillHand, and resolveForceDestroy to represent a
+ * complete turn start.
  *
- * Order guarantee: +1 energy happens BEFORE hand refill (REQ-5).
+ * Order guarantee: +1 energy happens BEFORE hand refill (REQ-5). Forced
+ * destruction runs LAST, so it acts on the just-dealt hand.
  *
- * Returns: { state, events } with EnergyChanged first, then all draw/shuffle events.
+ * Returns: { state, events } with EnergyChanged first, then all draw/shuffle
+ * events, then any CardDestroyed events from pending ForceDestroy charges.
  */
 export function startTurn(state: GameState): EffectResult {
   // Gain 1 energy first
@@ -71,9 +74,12 @@ export function startTurn(state: GameState): EffectResult {
   // Then refill the hand
   const refillResult = refillHand(stateWithEnergy)
 
-  // Combine events: energy gain first, then draw/shuffle events
+  // Finally, drain any pending ForceDestroy charges against the new hand
+  const destroyResult = resolveForceDestroy(refillResult.state)
+
+  // Combine events: energy gain first, then draw/shuffle, then destruction
   return {
-    state: refillResult.state,
-    events: [...energyEvents, ...refillResult.events],
+    state: destroyResult.state,
+    events: [...energyEvents, ...refillResult.events, ...destroyResult.events],
   }
 }

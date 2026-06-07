@@ -26,6 +26,9 @@ export type CardEffect =
   | { kind: 'GainCard'; template: CardTemplateId }
   | { kind: 'AddPlayerCardToTop'; template: CardTemplateId }
   | { kind: 'SurviveWorld' }
+  // Queues a forced destruction of a random player card from the *next* hand.
+  // Resolves at turn start after the hand refills (see resolveForceDestroy).
+  | { kind: 'ForceDestroy' }
   | { kind: 'None' }
 
 export interface PlayerCard {
@@ -85,6 +88,9 @@ export interface GameState {
   hp: number
   energy: number
   skipDrawNext: boolean
+  // Count of random player cards to destroy from the next refilled hand.
+  // Queued by the ForceDestroy effect; drained at turn start.
+  pendingForceDestroy: number
   status: 'playing' | 'won' | 'lost'
   worldId: string
   rng: RngState

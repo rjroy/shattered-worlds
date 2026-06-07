@@ -20,6 +20,7 @@ function makeState(progress: Record<string, number> = {}): GameState {
     hp: 10,
     energy: 0,
     skipDrawNext: false,
+    pendingForceDestroy: 0,
     status: 'playing',
     worldId: 'zombie-big-box',
     rng: createRng(0),

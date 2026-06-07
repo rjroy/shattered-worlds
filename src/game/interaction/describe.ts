@@ -63,6 +63,8 @@ export function describeEffect(effect: CardEffect): string[] {
       return [`+${effect.template} to your deck`]
     case 'SurviveWorld':
       return ['you survive the world']
+    case 'ForceDestroy':
+      return ['destroy a random card from your next hand']
     case 'None':
       return []
   }

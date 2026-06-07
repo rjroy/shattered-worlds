@@ -346,6 +346,17 @@ export function applyEffect(
       return { state: current, events }
     }
 
+    case 'ForceDestroy': {
+      // Queue one forced destruction; it resolves against the next refilled
+      // hand at turn start (resolveForceDestroy), not the current hand. No
+      // event fires here — CardDestroyed is emitted when the card is taken.
+      const current: GameState = {
+        ...state,
+        pendingForceDestroy: state.pendingForceDestroy + 1,
+      }
+      return { state: current, events: [] }
+    }
+
     case 'None':
       return { state, events: [] }
   }

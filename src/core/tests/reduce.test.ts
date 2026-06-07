@@ -191,6 +191,82 @@ describe('DiscardHazard legal', () => {
 })
 
 // ---------------------------------------------------------------------------
+// 4b. ForceDestroy: discard queues a charge that hits the NEXT hand
+// ---------------------------------------------------------------------------
+
+describe('ForceDestroy onDiscarded', () => {
+  /** A discardable world card whose onDiscarded queues a ForceDestroy. */
+  function grippingTalon(base: GameState): [WorldCard, GameState] {
+    const [zombie, next] = mintCard(catalog, base, 'Zombie')
+    const talon: WorldCard = {
+      ...(zombie as WorldCard),
+      name: 'Gripping Talon',
+      onDiscarded: { kind: 'ForceDestroy' },
+    }
+    return [talon, next]
+  }
+
+  it('discarding queues a charge but does NOT destroy from the current hand', () => {
+    const base = createWorld(catalog, worldData, 42)
+    const [talon, s1] = grippingTalon(base)
+    const state = makeState({ ...s1, hand: [talon] })
+
+    const result = reduce(catalog, state, { type: 'DiscardHazard', cardId: talon.id })
+
+    expect(result.state.pendingForceDestroy).toBe(1)
+    expect(result.events.map((e) => e.type)).toContain('HazardDiscarded')
+    // Nothing is destroyed yet — the charge resolves at the next turn start.
+    expect(result.events.map((e) => e.type)).not.toContain('CardDestroyed')
+  })
+
+  it('the queued charge destroys a player card from the refilled hand on EndTurn', () => {
+    const base = createWorld(catalog, worldData, 42)
+    const [talon, s1] = grippingTalon(base)
+
+    // Six player cards to refill from, plus world cards so the livelock guard
+    // (no world cards anywhere) does not fire and the refill draws normally.
+    let acc: GameState = s1
+    const playerDraw: PlayerCard[] = []
+    for (let i = 0; i < 6; i++) {
+      const [c, next] = mintCard(catalog, acc, 'Explore')
+      playerDraw.push(c as PlayerCard)
+      acc = next
+    }
+    const worldDraw: WorldCard[] = []
+    for (let i = 0; i < 3; i++) {
+      const [c, next] = mintCard(catalog, acc, 'Rubble')
+      worldDraw.push(c as WorldCard)
+      acc = next
+    }
+
+    const state = makeState({
+      ...acc,
+      hand: [talon],
+      playerDraw,
+      worldDraw,
+    })
+
+    // Discard the talon → charge queued.
+    const afterDiscard = reduce(catalog, state, { type: 'DiscardHazard', cardId: talon.id })
+    expect(afterDiscard.state.pendingForceDestroy).toBe(1)
+
+    // End the turn → hand refills, then the charge takes one player card.
+    const afterEnd = reduce(catalog, afterDiscard.state, { type: 'EndTurn' })
+
+    expect(afterEnd.state.status).toBe('playing')
+    expect(afterEnd.state.pendingForceDestroy).toBe(0)
+    expect(afterEnd.events.map((e) => e.type)).toContain('CardDestroyed')
+
+    // The destroyed card is gone from the new hand.
+    const destroyed = afterEnd.events.find((e) => e.type === 'CardDestroyed')
+    const destroyedId = (destroyed as { id: string }).id
+    expect(afterEnd.state.hand.some((c) => c.id === destroyedId)).toBe(false)
+    // One player card fewer than a full refill would have produced.
+    expect(afterEnd.state.hand.filter((c) => c.kind === 'player')).toHaveLength(3)
+  })
+})
+
+// ---------------------------------------------------------------------------
 // 5. DiscardHazard on Door throws IllegalActionError
 // ---------------------------------------------------------------------------
 

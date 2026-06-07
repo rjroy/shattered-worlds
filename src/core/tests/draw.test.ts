@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'bun:test'
-import { drawPlayer, drawWorld, refillHand } from '../engine/draw'
+import { drawPlayer, drawWorld, refillHand, resolveForceDestroy } from '../engine/draw'
 import { createWorld } from '../engine/world'
-import type { GameState, WorldCard } from '../model/types'
+import type { GameState, PlayerCard, WorldCard } from '../model/types'
 import { mintCard } from '../model/cards'
 import { catalog, worldData } from './testFixture'
 
@@ -264,5 +264,99 @@ describe('determinism', () => {
     const aNamesStr = a.hand.map((c) => c.name).join(',')
     const bNamesStr = b.hand.map((c) => c.name).join(',')
     expect(aNamesStr).not.toEqual(bNamesStr)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// 9. resolveForceDestroy
+// ---------------------------------------------------------------------------
+
+describe('resolveForceDestroy', () => {
+  /** Build a hand of n player cards (minted from the Explore template). */
+  function handOfPlayers(base: GameState, n: number): [PlayerCard[], GameState] {
+    const cards: PlayerCard[] = []
+    let state = base
+    for (let i = 0; i < n; i++) {
+      const [card, next] = mintCard(catalog, state, 'Explore')
+      cards.push(card as PlayerCard)
+      state = next
+    }
+    return [cards, state]
+  }
+
+  it('no pending charge is a no-op', () => {
+    const base = createWorld(catalog, worldData, 1)
+    const [players, s1] = handOfPlayers(base, 3)
+    const state: GameState = { ...s1, hand: players, pendingForceDestroy: 0 }
+
+    const { state: after, events } = resolveForceDestroy(state)
+
+    expect(after.hand).toHaveLength(3)
+    expect(events).toHaveLength(0)
+  })
+
+  it('destroys one random player card and drains the charge', () => {
+    const base = createWorld(catalog, worldData, 1)
+    const [players, s1] = handOfPlayers(base, 3)
+    const state: GameState = { ...s1, hand: players, pendingForceDestroy: 1 }
+
+    const { state: after, events } = resolveForceDestroy(state)
+
+    expect(after.hand).toHaveLength(2)
+    expect(after.pendingForceDestroy).toBe(0)
+    expect(events).toEqual([
+      { type: 'CardDestroyed', id: expect.any(String) },
+    ])
+    // The destroyed id is one that was in the original hand.
+    const destroyedId = (events[0] as { id: string }).id
+    expect(players.some((c) => c.id === destroyedId)).toBe(true)
+    expect(after.hand.some((c) => c.id === destroyedId)).toBe(false)
+  })
+
+  it('spares world cards — only player cards are eligible', () => {
+    const base = createWorld(catalog, worldData, 1)
+    const [zombie, s1] = mintCard(catalog, base, 'Zombie')
+    const [players, s2] = handOfPlayers(s1, 1)
+    const state: GameState = {
+      ...s2,
+      hand: [zombie as WorldCard, ...players],
+      pendingForceDestroy: 5, // more charges than player cards
+    }
+
+    const { state: after, events } = resolveForceDestroy(state)
+
+    // The single player card is taken; the world card survives.
+    expect(after.hand).toEqual([zombie as WorldCard])
+    expect(events).toHaveLength(1)
+    expect(after.pendingForceDestroy).toBe(0)
+  })
+
+  it('fizzles (drains the charge) when no player cards are present', () => {
+    const base = createWorld(catalog, worldData, 1)
+    const [zombie, s1] = mintCard(catalog, base, 'Zombie')
+    const state: GameState = {
+      ...s1,
+      hand: [zombie as WorldCard],
+      pendingForceDestroy: 2,
+    }
+
+    const { state: after, events } = resolveForceDestroy(state)
+
+    expect(after.hand).toEqual([zombie as WorldCard])
+    expect(events).toHaveLength(0)
+    expect(after.pendingForceDestroy).toBe(0)
+  })
+
+  it('multiple charges destroy multiple distinct player cards', () => {
+    const base = createWorld(catalog, worldData, 1)
+    const [players, s1] = handOfPlayers(base, 3)
+    const state: GameState = { ...s1, hand: players, pendingForceDestroy: 2 }
+
+    const { state: after, events } = resolveForceDestroy(state)
+
+    expect(after.hand).toHaveLength(1)
+    expect(events).toHaveLength(2)
+    const ids = events.map((e) => (e as { id: string }).id)
+    expect(new Set(ids).size).toBe(2) // distinct
   })
 })
