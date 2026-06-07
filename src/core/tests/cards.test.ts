@@ -20,6 +20,7 @@ function makeEmptyState(nextId = 0): GameState {
     totalActs: 3,
     progress: {},
     hp: 10,
+    energy: 0,
     skipDrawNext: false,
     status: 'playing',
     worldId: 'zombie-big-box',
@@ -244,6 +245,42 @@ describe('unknown template', () => {
     expect(caught).toBeInstanceOf(UnknownTemplateError)
     if (caught instanceof UnknownTemplateError) {
       expect(caught.message).toContain('Nope')
+    }
+  })
+})
+
+// ---------------------------------------------------------------------------
+// 8. Energy cost
+// ---------------------------------------------------------------------------
+
+describe('energy cost', () => {
+  it('minting a player card without energyCost field yields energyCost: 0 (default)', () => {
+    const state = makeEmptyState()
+    const [card] = mintCard(catalog, state, 'Sprint')
+    if (card.kind !== 'player') throw new Error('expected player card')
+    expect(card.energyCost).toBe(0)
+  })
+
+  it('starter deck cards have correct energyCost values', () => {
+    const starterCards: Array<[CardTemplateId, number]> = [
+      ['Sprint', 0],
+      ['Sprint', 0],
+      ['Explore', 0],
+      ['Explore', 0],
+      ['Explore', 0],
+      ['Barricade', 1],
+      ['Barricade', 1],
+      ['Med Kit', 0],
+      ['Panic', 0],
+      ['Adrenaline', 0],
+    ]
+
+    let state = makeEmptyState()
+    for (const [templateId, expectedEnergyCost] of starterCards) {
+      const [card, next] = mintCard(catalog, state, templateId)
+      if (card.kind !== 'player') throw new Error(`expected player card for ${templateId}`)
+      expect(card.energyCost).toBe(expectedEnergyCost)
+      state = next
     }
   })
 })

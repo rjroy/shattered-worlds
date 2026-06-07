@@ -30,6 +30,7 @@ const playerCardZombie: PlayerCard = {
   insetKey: undefined,
   sourceWorldId: 'zombie-big-box',
   effect: { kind: 'Draw', player: 1 },
+  energyCost: 0,
 }
 
 const playerCardUnknown: PlayerCard = {
@@ -39,6 +40,7 @@ const playerCardUnknown: PlayerCard = {
   insetKey: undefined,
   sourceWorldId: 'unknown-world',
   effect: { kind: 'Draw', player: 1 },
+  energyCost: 0,
 }
 
 const worldCard: WorldCard = {

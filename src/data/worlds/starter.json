@@ -23,6 +23,7 @@
       "kind": "player",
       "name": "Barricade",
       "insetKey": "inset-barricade",
+      "energyCost": 1,
       "effect": {
         "kind": "Sequence",
         "steps": [

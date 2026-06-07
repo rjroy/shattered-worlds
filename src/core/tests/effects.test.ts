@@ -31,6 +31,7 @@ function makeState(overrides: Partial<GameState> = {}): GameState {
     acts: [],
     progress: {},
     hp: 10,
+    energy: 0,
     skipDrawNext: false,
     status: 'playing',
     ...overrides,

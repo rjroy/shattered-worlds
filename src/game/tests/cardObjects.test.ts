@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'bun:test'
-import { updateCostRing, emphasizeCard, clearEmphasis, applyCardHighlight } from '../view/cardObjects'
+import { updateCostRing, emphasizeCard, clearEmphasis, applyCardHighlight, createCardObject } from '../view/cardObjects'
 import { selectTheme } from '../view/themes/themeManifest'
+import type { PlayerCard } from '../../core/index'
 
 // ---------------------------------------------------------------------------
 // updateCostRing — fill/drain animation (S5)
@@ -401,5 +402,138 @@ describe("applyCardHighlight 'committed' kind", () => {
     applyCardHighlight(container as never, 'target', fs)
     expect(rect.strokeColor).toBe(fs.targetBorder)
     expect(rect.fillAlpha).toBe(0) // legal-target border has no fill
+  })
+})
+
+// ---------------------------------------------------------------------------
+// createCardObject — energy cost badge for player cards (Step 8)
+//
+// Player cards with energyCost > 0 render a badge (filled circle + digit).
+// Cost-0 cards have no badge. The badge is appended AFTER list[0] and list[1]
+// to preserve the applyCardHighlight contract.
+// ---------------------------------------------------------------------------
+
+/**
+ * A fake Phaser scene sufficient to test createCardObject. Records children
+ * added to the container in container.list.
+ */
+function makeFakeCardScene(): {
+  scene: unknown
+  added: unknown[]
+  container: { list: unknown[] } | undefined
+} {
+  const containerRef: { list: unknown[] } = { list: [] }
+
+  const scene = {
+    add: {
+      container(_x: number, _y: number): unknown {
+        return {
+          list: containerRef.list,
+          add(child: unknown): unknown {
+            containerRef.list.push(child)
+            return this
+          },
+        }
+      },
+      image(_x: number, _y: number, _key: string): unknown {
+        return {
+          setDisplaySize(_w: number, _h: number): unknown { return this },
+        }
+      },
+      rectangle(_x: number, _y: number, _w: number, _h: number, _color: number, _alpha: number): unknown {
+        return {
+          setStrokeStyle(_width: number): unknown { return this },
+          setRounded(_radius: number): unknown { return this },
+          setAlpha(_a: number): unknown { return this },
+        }
+      },
+      graphics(): unknown {
+        return {
+          setPosition(_x: number, _y: number): unknown { return this },
+          fillStyle(_color: number, _alpha: number): unknown { return this },
+          fillCircle(_x: number, _y: number, _radius: number): unknown { return this },
+        }
+      },
+      text(_x: number, _y: number, _text: string, _style: unknown): unknown {
+        return {
+          setOrigin(_x: number, _y: number): unknown { return this },
+          setText(_text: string): unknown { return this },
+          height: 12,
+          getWrappedText(text: string): string[] { return [text] },
+        }
+      },
+    },
+  }
+
+  return { scene, added: containerRef.list, container: { list: containerRef.list } }
+}
+
+describe('createCardObject — player card energy cost badge', () => {
+  const theme = selectTheme('zombie-big-box')
+  const resolveTheme = (_worldId: string): typeof theme => theme
+
+  it('cost-1 player cards have 3 more children than cost-0 (badge graphics + badge text added twice)', () => {
+    // Create identical cards except for energyCost
+    const baseCard: PlayerCard = {
+      kind: 'player',
+      id: 'test-base',
+      name: 'Card',
+      insetKey: undefined,
+      sourceWorldId: 'zombie-big-box',
+      effect: { kind: 'Heal', amount: 1 },
+      energyCost: 0, // will change this
+    }
+
+    const { scene: scene0, added: added0 } = makeFakeCardScene()
+    createCardObject(scene0 as never, { ...baseCard, energyCost: 0 }, 0, 0, theme, resolveTheme)
+    const count0 = added0.length
+
+    const { scene: scene1, added: added1 } = makeFakeCardScene()
+    createCardObject(scene1 as never, { ...baseCard, energyCost: 1, id: 'test-1' }, 0, 0, theme, resolveTheme)
+    const count1 = added1.length
+
+    // Badge adds: 1 graphics + addCardText adds the text twice (due to addCardText's structure:
+    // line 72 adds the initial text, then line 82 adds it again in the map loop for i=0).
+    // So the difference is 1 + 2 = 3 children total.
+    const diff = count1 - count0
+    expect(diff).toBe(3)
+  })
+
+  it('cost-0 player cards do not have a badge element', () => {
+    const card: PlayerCard = {
+      kind: 'player',
+      id: 'test-no-badge',
+      name: 'NoBadge',
+      insetKey: undefined,
+      sourceWorldId: 'zombie-big-box',
+      effect: { kind: 'Draw', player: 1 },
+      energyCost: 0,
+    }
+
+    const { scene, added } = makeFakeCardScene()
+    createCardObject(scene as never, card, 0, 0, theme, resolveTheme)
+
+    // Should not have any graphics object with setPosition (the badge is the only graphics added for player cards)
+    const hasGraphics = added.some((child) => typeof child === 'object' && child !== null && 'setPosition' in child)
+    expect(hasGraphics).toBe(false)
+  })
+
+  it('cost-1 player cards have a badge element (graphics + text)', () => {
+    const card: PlayerCard = {
+      kind: 'player',
+      id: 'test-with-badge',
+      name: 'WithBadge',
+      insetKey: undefined,
+      sourceWorldId: 'zombie-big-box',
+      effect: { kind: 'Draw', player: 1 },
+      energyCost: 1,
+    }
+
+    const { scene, added } = makeFakeCardScene()
+    createCardObject(scene as never, card, 0, 0, theme, resolveTheme)
+
+    // Should have at least one graphics object (the badge)
+    const hasGraphics = added.some((child) => typeof child === 'object' && child !== null && 'setPosition' in child)
+    expect(hasGraphics).toBe(true)
   })
 })

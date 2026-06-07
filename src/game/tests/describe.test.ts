@@ -18,6 +18,7 @@ function makeState(progress: Record<string, number> = {}): GameState {
     totalActs: 3,
     progress,
     hp: 10,
+    energy: 0,
     skipDrawNext: false,
     status: 'playing',
     worldId: 'zombie-big-box',
@@ -27,7 +28,7 @@ function makeState(progress: Record<string, number> = {}): GameState {
 }
 
 function player(effect: CardEffect): PlayerCard {
-  return { kind: 'player', id: 'p1', name: 'Test', insetKey: undefined, sourceWorldId: 'test', effect }
+  return { kind: 'player', id: 'p1', name: 'Test', insetKey: undefined, sourceWorldId: 'test', effect, energyCost: 0 }
 }
 
 function hazard(over: Partial<WorldCard>): WorldCard {

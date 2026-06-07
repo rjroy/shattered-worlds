@@ -21,6 +21,7 @@ export interface BasicCardTemplate {
 export interface PlayerCardTemplate extends BasicCardTemplate {
   kind: 'player'
   effect: CardEffect
+  energyCost?: number
 }
 
 export interface WorldCardTemplate extends BasicCardTemplate {
@@ -63,6 +64,7 @@ export function mintCard(
       insetKey: template.insetKey,
       sourceWorldId: state.worldId,
       effect: template.effect,
+      energyCost: template.energyCost ?? 0,
     }
     return [card, next]
   }

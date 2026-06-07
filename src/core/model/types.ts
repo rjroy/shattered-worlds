@@ -35,6 +35,7 @@ export interface PlayerCard {
   insetKey: string | undefined
   sourceWorldId: string
   effect: CardEffect
+  energyCost: number
 }
 
 export interface WorldCard {
@@ -82,6 +83,7 @@ export interface GameState {
   totalActs: number
   progress: Readonly<Record<CardId, number>>
   hp: number
+  energy: number
   skipDrawNext: boolean
   status: 'playing' | 'won' | 'lost'
   worldId: string
@@ -116,6 +118,7 @@ export type GameEvent =
   | { type: 'CardDestroyed'; id: CardId }
   | { type: 'WorldCardsReturned'; ids: readonly CardId[] }
   | { type: 'HpChanged'; hp: number }
+  | { type: 'EnergyChanged'; energy: number }
   | { type: 'CardsDiscarded'; cardIds: readonly CardId[] }
   | { type: 'DeckShuffled' }
   | { type: 'ActAdvanced'; act: number }

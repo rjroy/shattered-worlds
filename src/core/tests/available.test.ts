@@ -24,6 +24,7 @@ function makeState(overrides: Partial<GameState> = {}): GameState {
     acts: [],
     progress: {},
     hp: 10,
+    energy: 0,
     skipDrawNext: false,
     status: 'playing',
     ...overrides,
@@ -304,5 +305,66 @@ describe('Adrenaline absent without other player cards to discard', () => {
     const actions = availableActions(state)
     const entry = actions.playable.find((p) => p.cardId === adrenaline.id)
     expect(entry).toBeUndefined()
+  })
+})
+
+// ---------------------------------------------------------------------------
+// 11. Energy affordability gate
+// ---------------------------------------------------------------------------
+
+describe('Energy affordability gate', () => {
+  it('Listen (cost 1) is absent from playable when energy === 0', () => {
+    const s0 = makeState()
+    const [listen, s1] = mintPlayer(s0, 'Listen')
+    const [zombie, s2] = mintWorld(s1, 'Zombie')
+    const state = { ...s2, hand: [listen, zombie], energy: 0 }
+
+    const actions = availableActions(state)
+    const entry = actions.playable.find((p) => p.cardId === listen.id)
+    expect(entry).toBeUndefined()
+  })
+
+  it('Listen (cost 1) is present in playable when energy === 1', () => {
+    const s0 = makeState()
+    const [listen, s1] = mintPlayer(s0, 'Listen')
+    const [zombie, s2] = mintWorld(s1, 'Zombie')
+    const state = { ...s2, hand: [listen, zombie], energy: 1 }
+
+    const actions = availableActions(state)
+    const entry = actions.playable.find((p) => p.cardId === listen.id)
+    expect(entry).toBeDefined()
+  })
+
+  it('Listen (cost 1) is present in playable when energy > 1', () => {
+    const s0 = makeState()
+    const [listen, s1] = mintPlayer(s0, 'Listen')
+    const [zombie, s2] = mintWorld(s1, 'Zombie')
+    const state = { ...s2, hand: [listen, zombie], energy: 3 }
+
+    const actions = availableActions(state)
+    const entry = actions.playable.find((p) => p.cardId === listen.id)
+    expect(entry).toBeDefined()
+  })
+
+  it('ignoreEnergy: true bypasses the affordability check', () => {
+    const s0 = makeState()
+    const [listen, s1] = mintPlayer(s0, 'Listen')
+    const [zombie, s2] = mintWorld(s1, 'Zombie')
+    const state = { ...s2, hand: [listen, zombie], energy: 0 }
+
+    const actions = availableActions(state, { ignoreEnergy: true })
+    const entry = actions.playable.find((p) => p.cardId === listen.id)
+    expect(entry).toBeDefined()
+  })
+
+  it('Cost-0 cards are always playable regardless of energy', () => {
+    const s0 = makeState()
+    const [sprint, s1] = mintPlayer(s0, 'Sprint')
+    // Sprint is cost-0, and is playable without world cards (branch 0 is Draw)
+    const state = { ...s1, hand: [sprint], energy: 0 }
+
+    const actions = availableActions(state)
+    const entry = actions.playable.find((p) => p.cardId === sprint.id)
+    expect(entry).toBeDefined()
   })
 })
