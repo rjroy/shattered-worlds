@@ -14,6 +14,7 @@ export interface HUDRefs {
   container: Phaser.GameObjects.Container
   hpText: Phaser.GameObjects.Text
   actText: Phaser.GameObjects.Text
+  energyText: Phaser.GameObjects.Text
 }
 
 // HUD backing panel geometry. The text-back texture is a 600×600 grunge frame:
@@ -65,19 +66,21 @@ export function createHUD(scene: Phaser.Scene): HUDRefs {
   // panel's vertical center, so every label is vertically centered in the bar.
   const hpText = scene.add.text(30, HUD_PANEL_H / 2, 'HP: —', { ...style, color: '#FF8888' })
   const actText = scene.add.text(140, HUD_PANEL_H / 2, 'Act 1 / 3', style)
+  const energyText = scene.add.text(200, HUD_PANEL_H / 2, '⚡ —', { ...style, color: TEXT.textCost })
 
-  for (const label of [hpText, actText]) {
+  for (const label of [hpText, actText, energyText]) {
     label.setOrigin(0, 0.5)
     container.add(label)
   }
 
   container.setPosition(HUD_PANEL_X, HUD_PANEL_Y)
 
-  return { container, hpText, actText }
+  return { container, hpText, actText, energyText }
 }
 
 /** Update HUD text to match the current GameState. */
 export function updateHUD(refs: HUDRefs, state: GameState): void {
   refs.hpText.setText(`HP: ${state.hp}/${START_HP}`)
   refs.actText.setText(`Act ${state.actIndex + 1} / ${state.totalActs}`)
+  refs.energyText.setText(`⚡ ${state.energy}`)
 }

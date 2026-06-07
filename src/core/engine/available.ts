@@ -292,12 +292,25 @@ function checkSpec(
 /**
  * Pure selector: derives all legal actions from the current GameState.
  * No state mutation; no effects applied.
+ *
+ * @param state The current game state
+ * @param opts.ignoreEnergy When true, skip energy affordability checks (used by loss guard in Step 6)
  */
-export function availableActions(state: GameState): AvailableActions {
+export function availableActions(
+  state: GameState,
+  opts?: { ignoreEnergy?: boolean },
+): AvailableActions {
   const playable: { cardId: CardId; spec: TargetSpec }[] = []
 
   for (const card of state.hand) {
     if (card.kind !== 'player') continue
+
+    // Energy affordability gate: skip if card costs more than current energy,
+    // unless ignoreEnergy is explicitly true (used only by loss guard in Step 6).
+    if (opts?.ignoreEnergy !== true && card.energyCost > state.energy) {
+      continue
+    }
+
     const spec = playableSpec(card.effect, state, card.id)
     if (spec !== null) {
       playable.push({ cardId: card.id, spec })

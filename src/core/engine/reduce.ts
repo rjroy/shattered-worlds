@@ -2,7 +2,7 @@ import type { Action, GameEvent, GameState, WorldCard } from '../model/types'
 import type { CardCatalog } from '../model/catalog'
 import { availableActions, checkPlayAction } from './available'
 import { applyEffect } from './effects'
-import { refillHand } from './draw'
+import { startTurn, spendEnergy } from './energy'
 import { IllegalActionError } from '../model/errors'
 
 // ---------------------------------------------------------------------------
@@ -47,8 +47,14 @@ function handlePlayCard(
 
   const events: GameEvent[] = [{ type: 'CardPlayed', cardId }]
 
-  // Apply the card's effect
-  const effectResult = applyEffect(catalog, stateAfterPlay, card.effect, action)
+  // Deduct energy cost (REQ-ENERGY-10)
+  // spendEnergy only emits EnergyChanged when cost > 0; cost-0 cards are silent
+  const spendResult = spendEnergy(stateAfterPlay, card.energyCost)
+  const stateAfterSpend = spendResult.state
+  events.push(...spendResult.events)
+
+  // Apply the card's effect (on the post-spend state)
+  const effectResult = applyEffect(catalog, stateAfterSpend, card.effect, action)
   events.push(...effectResult.events)
 
   return { state: effectResult.state, events }
@@ -133,13 +139,13 @@ function handleEndTurn(catalog: CardCatalog, state: GameState): ReduceResult {
     events.push({ type: 'CardsDiscarded', cardIds: discardedIds })
   }
 
-  // Refill hand (handles skipDrawNext internally)
-  const refillResult = refillHand(stateAfterDiscard)
-  events.push(...refillResult.events)
+  // Start turn: gain +1 energy, then refill hand (handles skipDrawNext internally)
+  const turnStartResult = startTurn(stateAfterDiscard)
+  events.push(...turnStartResult.events)
 
   // Livelock guard A: all draw piles and acts exhausted (player cards also
   // gone, e.g. all destroyed by Regroup) — nothing can ever enter the hand.
-  const afterRefill = refillResult.state
+  const afterRefill = turnStartResult.state
 
   if (afterRefill.status === 'playing') {
     const hasNoFutureCards =
@@ -149,7 +155,9 @@ function handleEndTurn(catalog: CardCatalog, state: GameState): ReduceResult {
       afterRefill.acts.length === 0
 
     if (hasNoFutureCards) {
-      const avail = availableActions(afterRefill)
+      // REQ-13: Check if ANY structural play exists, ignoring energy. Unaffordable
+      // cards count as future progress (they will become affordable when energy rises).
+      const avail = availableActions(afterRefill, { ignoreEnergy: true })
       const noProgressPossible = avail.playable.length === 0 && avail.discardable.length === 0
       if (noProgressPossible) {
         const lostState: GameState = { ...afterRefill, status: 'lost' }
@@ -167,6 +175,8 @@ function handleEndTurn(catalog: CardCatalog, state: GameState): ReduceResult {
   //
   // The Walker in hand is a world card and keeps the check false; Summon Door
   // anywhere in the player zones is the only escape hatch.
+  //
+  // REQ-13: Guard B checks for AddWorldCardToTop across zones, unaffected by energy.
   if (afterRefill.status === 'playing') {
     const noWorldAnywhere =
       afterRefill.worldDraw.length === 0 &&

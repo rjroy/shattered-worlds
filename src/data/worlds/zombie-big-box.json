@@ -60,6 +60,7 @@
       "kind": "player",
       "name": "Listen",
       "insetKey": "zombie-inset-listen",
+      "energyCost": 1,
       "effect": { "kind": "DealProgress", "base": 2, "bonus": { "tag": "Hidden", "amount": 2 } }
     },
     "Baseball Bat": {
@@ -72,6 +73,7 @@
       "kind": "player",
       "name": "Regroup",
       "insetKey": "zombie-inset-regroup",
+      "energyCost": 1,
       "effect": { "kind": "DestroyCardInHand", "min": 0, "max": 1, "maxCost": 2 }
     }
   },

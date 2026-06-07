@@ -192,6 +192,17 @@ describe('starter provenance', () => {
 })
 
 // ---------------------------------------------------------------------------
+// 9. Energy initialization
+// ---------------------------------------------------------------------------
+
+describe('energy initialization', () => {
+  it('createWorld initializes energy to 1 (opening hand is a turn start)', () => {
+    const state = createWorld(catalog, worldData, 42)
+    expect(state.energy).toBe(1)
+  })
+})
+
+// ---------------------------------------------------------------------------
 // 8. onCleared provenance
 // ---------------------------------------------------------------------------
 

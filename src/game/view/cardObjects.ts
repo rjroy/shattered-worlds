@@ -158,6 +158,26 @@ export function createCardObject(
       wrapWidth: CARD_W - 16,
       lineSpacing: 2,
     })
+
+    // Energy cost badge: only for cards with energyCost > 0. Positioned in the
+    // top-right corner (mirroring the world card's cost ring placement). Added
+    // AFTER list[0] and list[1] so applyCardHighlight's contract holds.
+    if (card.energyCost > 0) {
+      // Badge backing: a filled circle using the energy cost color
+      const badgeBg = scene.add.graphics()
+      badgeBg.setPosition(CARD_W / 2 - 16, -CARD_H / 2 + 16)
+      badgeBg.fillStyle(TEXT.textCostInt, 1)
+      badgeBg.fillCircle(0, 0, 11)
+      container.add(badgeBg)
+
+      // Cost digit in white for contrast against the gold badge background
+      addCardText(scene, container, CARD_W / 2 - 16, -CARD_H / 2 + 16, String(card.energyCost), {
+        fontSize: '16px',
+        color: '#ffffff',
+        bold: true,
+        originY: 0.5,
+      })
+    }
   } else {
     // World / Hazard card
     const worldCard = card as WorldCard

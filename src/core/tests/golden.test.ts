@@ -34,6 +34,7 @@ function makeState(overrides: Partial<GameState>): GameState {
     worldDraw: [],
     acts: [],
     progress: {},
+    energy: 0,
     status: 'playing',
     ...overrides,
   }

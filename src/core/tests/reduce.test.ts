@@ -31,6 +31,7 @@ function makeState(overrides: Partial<GameState>): GameState {
     worldDraw: [],
     acts: [],
     progress: {},
+    energy: 0,
     status: 'playing',
     ...overrides,
   }
@@ -556,5 +557,365 @@ describe('EndTurn onEndOfTurn', () => {
 
     expect(result.state.hp).toBe(10)
     expect(result.events.map((e) => e.type)).not.toContain('DamageDealt')
+  })
+})
+
+// ---------------------------------------------------------------------------
+// 9. Energy lifecycle (gainEnergy, spendEnergy, startTurn)
+// ---------------------------------------------------------------------------
+
+describe('EndTurn gains energy', () => {
+  it('EndTurn with no plays gains exactly +1 energy', () => {
+    const base = createWorld(catalog, worldData, 42)
+    const initialEnergy = base.energy
+    expect(initialEnergy).toBe(1) // Opening hand is a turn start
+
+    // Crafted state with just world cards (no plays)
+    const state = makeState({
+      hand: base.hand.filter((c) => c.kind === 'world'),
+      energy: initialEnergy,
+    })
+
+    const result = reduce(catalog, state, { type: 'EndTurn' })
+    expect(result.state.energy).toBe(initialEnergy + 1)
+  })
+
+  it('several EndTurns are monotonic +1 with no cap', () => {
+    const base = createWorld(catalog, worldData, 42)
+    let state = makeState({
+      hand: base.hand.filter((c) => c.kind === 'world'),
+      energy: 1,
+    })
+
+    for (let i = 0; i < 5; i++) {
+      const energyBefore = state.energy
+      const result = reduce(catalog, state, { type: 'EndTurn' })
+      expect(result.state.energy).toBe(energyBefore + 1)
+      state = result.state
+    }
+
+    expect(state.energy).toBe(6)
+  })
+
+  it('skipDrawNext does not prevent energy gain', () => {
+    const base = createWorld(catalog, worldData, 42)
+    const state = makeState({
+      hand: base.hand.filter((c) => c.kind === 'world'),
+      energy: 1,
+      skipDrawNext: true,
+    })
+
+    const result = reduce(catalog, state, { type: 'EndTurn' })
+
+    expect(result.state.energy).toBe(2)
+    expect(result.state.skipDrawNext).toBe(false)
+    expect(result.events.map((e) => e.type)).toContain('DrawSkipped')
+  })
+
+  it('EnergyChanged event appears during turn start (after TurnEnded)', () => {
+    const base = createWorld(catalog, worldData, 42)
+    const state = makeState({
+      hand: base.hand.filter((c) => c.kind === 'world'),
+      energy: 1,
+    })
+
+    const result = reduce(catalog, state, { type: 'EndTurn' })
+    const types = result.events.map((e) => e.type)
+
+    const turnEndedIdx = types.indexOf('TurnEnded')
+    const energyChangedIdx = types.indexOf('EnergyChanged')
+
+    expect(turnEndedIdx).not.toBe(-1)
+    expect(energyChangedIdx).not.toBe(-1)
+    expect(turnEndedIdx).toBeLessThan(energyChangedIdx)
+  })
+
+  it('energy is identical across ActAdvanced boundary', () => {
+    // Create a state where the next EndTurn will cause an ActAdvanced event.
+    // We do this by draining worldDraw to empty and queuing an act.
+    const base = createWorld(catalog, worldData, 42)
+    const [walker, s1] = mintCard(catalog, base, 'The Walker')
+
+    const state = makeState({
+      ...s1,
+      hand: [walker as WorldCard],
+      worldDraw: [],
+      acts: base.acts, // Copy the queued acts
+      actIndex: 1,
+      energy: 2,
+    })
+
+    const result = reduce(catalog, state, { type: 'EndTurn' })
+
+    // Energy should be 3 (2 + 1)
+    expect(result.state.energy).toBe(3)
+    // ActAdvanced should have occurred
+    expect(result.events.map((e) => e.type)).toContain('ActAdvanced')
+  })
+})
+
+// ---------------------------------------------------------------------------
+// 10. Energy deduction on costed card play (Step 5)
+// ---------------------------------------------------------------------------
+
+describe('PlayCard deducts energy cost (Step 5)', () => {
+  it('playing a cost-1 card deducts energy: energy 1 → 0', () => {
+    const base = createWorld(catalog, worldData, 42)
+    // Find or create a cost-1 card and a target
+    const [listen, s1] = mintCard(catalog, base, 'Listen')
+    const [rubble, s2] = mintCard(catalog, s1, 'Rubble')
+
+    const state = makeState({
+      ...s2,
+      hand: [rubble as WorldCard, listen as PlayerCard],
+      energy: 1,
+    })
+
+    const result = reduce(catalog, state, {
+      type: 'PlayCard',
+      cardId: listen.id,
+      targetId: rubble.id,
+    })
+
+    expect(result.state.energy).toBe(0)
+    // EnergyChanged event should be present in events (after CardPlayed, before effect events)
+    const types = result.events.map((e) => e.type)
+    expect(types).toContain('EnergyChanged')
+    const cardPlayedIdx = types.indexOf('CardPlayed')
+    const energyChangedIdx = types.indexOf('EnergyChanged')
+    expect(cardPlayedIdx).toBeLessThan(energyChangedIdx)
+  })
+
+  it('playing a cost-1 card when energy 2 leaves energy 1', () => {
+    const base = createWorld(catalog, worldData, 42)
+    const [listen, s1] = mintCard(catalog, base, 'Listen')
+    const [rubble, s2] = mintCard(catalog, s1, 'Rubble')
+
+    const state = makeState({
+      ...s2,
+      hand: [rubble as WorldCard, listen as PlayerCard],
+      energy: 2,
+    })
+
+    const result = reduce(catalog, state, {
+      type: 'PlayCard',
+      cardId: listen.id,
+      targetId: rubble.id,
+    })
+
+    expect(result.state.energy).toBe(1)
+  })
+
+  it('playing a cost-0 card leaves energy unchanged and no EnergyChanged event', () => {
+    const base = createWorld(catalog, worldData, 42)
+    const [explore, s1] = mintCard(catalog, base, 'Explore')
+    const [rubble, s2] = mintCard(catalog, s1, 'Rubble')
+
+    const state = makeState({
+      ...s2,
+      hand: [rubble as WorldCard, explore as PlayerCard],
+      energy: 1,
+    })
+
+    const result = reduce(catalog, state, {
+      type: 'PlayCard',
+      cardId: explore.id,
+      targetId: rubble.id,
+    })
+
+    expect(result.state.energy).toBe(1)
+    const types = result.events.map((e) => e.type)
+    // No EnergyChanged event for cost-0 cards
+    expect(types).not.toContain('EnergyChanged')
+  })
+
+  it('playing a cost-1 card with energy 0 throws IllegalActionError (affordability gate)', () => {
+    const base = createWorld(catalog, worldData, 42)
+    const [listen, s1] = mintCard(catalog, base, 'Listen')
+    const [rubble, s2] = mintCard(catalog, s1, 'Rubble')
+
+    const state = makeState({
+      ...s2,
+      hand: [rubble as WorldCard, listen as PlayerCard],
+      energy: 0,
+    })
+
+    expect(() => {
+      reduce(catalog, state, {
+        type: 'PlayCard',
+        cardId: listen.id,
+        targetId: rubble.id,
+      })
+    }).toThrow(IllegalActionError)
+  })
+
+  it('energy never goes negative during play', () => {
+    const base = createWorld(catalog, worldData, 42)
+    const [barricade, s1] = mintCard(catalog, base, 'Barricade')
+    const [rubble, s2] = mintCard(catalog, s1, 'Rubble')
+
+    const state = makeState({
+      ...s2,
+      hand: [rubble as WorldCard, barricade as PlayerCard],
+      energy: 1, // cost-1 card, should not go negative
+    })
+
+    const result = reduce(catalog, state, {
+      type: 'PlayCard',
+      cardId: barricade.id,
+      targetId: rubble.id,
+      returnIds: [],
+    })
+
+    expect(result.state.energy).toBeGreaterThanOrEqual(0)
+  })
+
+  it('EnergyChanged event carries the new energy total', () => {
+    const base = createWorld(catalog, worldData, 42)
+    const [listen, s1] = mintCard(catalog, base, 'Listen')
+    const [rubble, s2] = mintCard(catalog, s1, 'Rubble')
+
+    const state = makeState({
+      ...s2,
+      hand: [rubble as WorldCard, listen as PlayerCard],
+      energy: 3,
+    })
+
+    const result = reduce(catalog, state, {
+      type: 'PlayCard',
+      cardId: listen.id,
+      targetId: rubble.id,
+    })
+
+    const energyEvent = result.events.find((e) => e.type === 'EnergyChanged')
+    expect(energyEvent).toBeDefined()
+    if (energyEvent?.type === 'EnergyChanged') {
+      expect(energyEvent.energy).toBe(2) // 3 - 1
+    }
+  })
+
+  it('REQ-12: Barricade (cost-1 Sequence) deducts energy exactly once despite multi-step effect', () => {
+    // Barricade is a Sequence with DealProgress + ReturnWorldCards.
+    // Energy should be deducted once for the whole card, not per step.
+    const base = createWorld(catalog, worldData, 42)
+    const [barricade, s1] = mintCard(catalog, base, 'Barricade')
+    const [rubble, s2] = mintCard(catalog, s1, 'Rubble')
+
+    const state = makeState({
+      ...s2,
+      hand: [rubble as WorldCard, barricade as PlayerCard],
+      energy: 2,
+    })
+
+    const result = reduce(catalog, state, {
+      type: 'PlayCard',
+      cardId: barricade.id,
+      targetId: rubble.id,
+      returnIds: [],
+    })
+
+    // Energy should be 2 - 1 = 1 (deducted once for the whole card)
+    expect(result.state.energy).toBe(1)
+
+    // Exactly one EnergyChanged event should be present
+    const energyChangedEvents = result.events.filter((e) => e.type === 'EnergyChanged')
+    expect(energyChangedEvents).toHaveLength(1)
+    expect(energyChangedEvents[0]).toBeDefined()
+    if (energyChangedEvents[0]?.type === 'EnergyChanged') {
+      expect(energyChangedEvents[0].energy).toBe(1)
+    }
+  })
+})
+
+// ---------------------------------------------------------------------------
+// 11. Loss guard A: unaffordable cards do not trigger loss when energy is the
+// only blocker (Step 6: fix ignoreEnergy flag)
+// ---------------------------------------------------------------------------
+
+describe('EndTurn loss guard A with ignoreEnergy', () => {
+  it('unaffordable cost-1 card does NOT trigger loss (energy will rise)', () => {
+    // Craft a state with:
+    // - All draw piles and acts exhausted (no future cards)
+    // - Barricade (cost 1 card) in hand but with energy=0 (unaffordable)
+    // - A world card in hand to make Barricade structurally playable
+    // Expected: status stays 'playing' (not lost), because energy rises +1/turn
+    // and Barricade will become affordable
+
+    const base = createWorld(catalog, worldData, 42)
+    const [barricade, s1] = mintCard(catalog, base, 'Barricade')
+    const [rubble, s2] = mintCard(catalog, s1, 'Rubble')
+
+    const state = makeState({
+      ...s2,
+      hand: [rubble as WorldCard, barricade as PlayerCard],
+      playerDraw: [],
+      playerDiscard: [],
+      worldDraw: [],
+      acts: [],
+      energy: 0,
+    })
+
+    const result = reduce(catalog, state, { type: 'EndTurn' })
+
+    // Status should be 'playing' — the card is structurally playable (ignoring energy)
+    expect(result.state.status).toBe('playing')
+    // No WorldLost event should be emitted
+    expect(result.events.map((e) => e.type)).not.toContain('WorldLost')
+    // Energy should have risen
+    expect(result.state.energy).toBe(1)
+  })
+
+  it('genuinely dead state (no structural play at all) still loses', () => {
+    // Craft a state with:
+    // - All draw piles and acts exhausted
+    // - No cards in hand (world or player)
+    // Expected: WorldLost is emitted, because there is NO structural play at all,
+    // not even when ignoring energy
+
+    const base = createWorld(catalog, worldData, 42)
+
+    const state = makeState({
+      ...base,
+      hand: [], // Completely empty
+      playerDraw: [],
+      playerDiscard: [],
+      worldDraw: [],
+      acts: [],
+      energy: 5,
+    })
+
+    const result = reduce(catalog, state, { type: 'EndTurn' })
+
+    // Status should be 'lost'
+    expect(result.state.status).toBe('lost')
+    // WorldLost event should be emitted
+    expect(result.events.map((e) => e.type)).toContain('WorldLost')
+  })
+
+  it('world card in hand prevents loss even when hand is otherwise empty', () => {
+    // Craft a state with:
+    // - All draw piles and acts exhausted
+    // - Only a discardable world card in hand (e.g., Rubble)
+    // Expected: status stays 'playing', because discard is a valid action
+
+    const base = createWorld(catalog, worldData, 42)
+    const [rubble, s1] = mintCard(catalog, base, 'Rubble')
+
+    const state = makeState({
+      ...s1,
+      hand: [rubble as WorldCard],
+      playerDraw: [],
+      playerDiscard: [],
+      worldDraw: [],
+      acts: [],
+      energy: 0,
+    })
+
+    const result = reduce(catalog, state, { type: 'EndTurn' })
+
+    // Status should be 'playing' — Rubble is discardable
+    expect(result.state.status).toBe('playing')
+    // No WorldLost event
+    expect(result.events.map((e) => e.type)).not.toContain('WorldLost')
   })
 })

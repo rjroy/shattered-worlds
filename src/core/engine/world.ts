@@ -2,7 +2,7 @@ import type { GameState, WorldCard } from '../model/types'
 import type { CardCatalog, CardCount, WorldData } from '../model/catalog'
 import { createRng, shuffle } from './rng'
 import { mintCard } from '../model/cards'
-import { refillHand } from './draw'
+import { startTurn } from './energy'
 
 export const START_HP = 10
 
@@ -69,6 +69,7 @@ export function createWorld(catalog: CardCatalog, world: WorldData, seed: number
     totalActs: world.deckComposition.acts.length,
     progress: {},
     hp: START_HP,
+    energy: 0,
     skipDrawNext: false,
     status: 'playing',
     worldId: 'starter',
@@ -111,6 +112,7 @@ export function createWorld(catalog: CardCatalog, world: WorldData, seed: number
   }
 
   // Deal the opening hand — events are discarded at init time.
-  const { state: dealt } = refillHand(baseState)
+  // startTurn ensures the opening hand is a turn start (energy === 1).
+  const { state: dealt } = startTurn(baseState)
   return dealt
 }

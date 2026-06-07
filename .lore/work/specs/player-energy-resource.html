@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Player resource: Energy</title>
+  <meta name="date" content="2026-06-07">
+  <meta name="status" content="draft">
+  <meta name="tags" content="energy, resource, cards, turn-economy, cost">
+  <meta name="modules" content="core-model, core-engine, game-view">
+  <meta name="related" content=".lore/work/specs/world-deck-slice.html, .lore/work/specs/card-data-externalization.html, .lore/work/specs/player-feedback-selection-and-progress.html">
+  <meta name="req-prefix" content="ENERGY">
+  <style>
+    :root {
+      --bg: #14161a; --panel: #1d2026; --ink: #e6e8ec; --muted: #9aa3ad;
+      --line: #2b2f37; --accent: #f4c95d; --ok: #5fcf80; --warn: #e98a3c;
+      --info: #6db3f2; --chip: #2a2e36;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; background: var(--bg); color: var(--ink);
+      font: 15px/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+    .wrap { max-width: 920px; margin: 0 auto; padding: 0 24px 96px; }
+    header.sticky {
+      position: sticky; top: 0; z-index: 10; background: rgba(20,22,26,0.95);
+      backdrop-filter: blur(6px); border-bottom: 1px solid var(--line);
+      padding: 14px 24px; margin-bottom: 8px;
+    }
+    .sticky-inner { max-width: 920px; margin: 0 auto; display: flex; gap: 12px; align-items: baseline; flex-wrap: wrap; }
+    .sticky-inner h1 { font-size: 18px; margin: 0; }
+    .badge { font-size: 12px; font-weight: 700; padding: 2px 9px; border-radius: 999px; letter-spacing: .03em; }
+    .badge.draft { background: #3a2e12; color: var(--accent); }
+    .badge.prefix { background: var(--chip); color: var(--muted); }
+    h2 { margin-top: 40px; border-bottom: 1px solid var(--line); padding-bottom: 6px; }
+    .lead { color: var(--muted); }
+    .req {
+      border: 1px solid var(--line); border-radius: 10px; background: var(--panel);
+      margin: 14px 0; overflow: hidden;
+    }
+    .req > summary {
+      list-style: none; cursor: pointer; padding: 12px 16px;
+      display: flex; gap: 12px; align-items: center;
+    }
+    .req > summary::-webkit-details-marker { display: none; }
+    .req > summary:hover { background: #22262e; }
+    .req-id {
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12.5px;
+      color: var(--accent); white-space: nowrap;
+    }
+    .req-id a { color: inherit; text-decoration: none; }
+    .req-title { font-weight: 600; flex: 1; }
+    .pill { font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 999px; text-transform: uppercase; letter-spacing: .04em; }
+    .pill.must { background: #3a1f1f; color: #ff9b9b; }
+    .pill.should { background: #2a2f1f; color: #cfe08a; }
+    .req-body { padding: 0 16px 16px 16px; color: var(--ink); border-top: 1px solid var(--line); }
+    .req-body p { margin: 12px 0; }
+    code, .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 13px; background: #0f1115; padding: 1px 5px; border-radius: 4px; }
+    .validation { border: 2px solid var(--accent); border-radius: 12px; background: #1e1a10; padding: 4px 22px 22px; margin-top: 16px; }
+    .validation h2 { border: 0; color: var(--accent); }
+    .check { display: flex; gap: 10px; padding: 8px 0; border-bottom: 1px dashed var(--line); }
+    .check:last-child { border-bottom: 0; }
+    .check .ref { font-family: ui-monospace, monospace; font-size: 12px; color: var(--info); white-space: nowrap; }
+    table { border-collapse: collapse; width: 100%; margin: 14px 0; }
+    th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); }
+    th { color: var(--muted); font-weight: 600; font-size: 13px; }
+    .note { background: #16202a; border-left: 3px solid var(--info); padding: 10px 14px; border-radius: 0 8px 8px 0; margin: 14px 0; }
+    .controls { margin: 8px 0 0; }
+    .controls button { background: var(--chip); color: var(--ink); border: 1px solid var(--line); border-radius: 7px; padding: 5px 11px; cursor: pointer; font-size: 13px; }
+    .controls button:hover { background: #333845; }
+  </style>
+</head>
+<body>
+  <header class="sticky">
+    <div class="sticky-inner">
+      <h1>Player resource: Energy</h1>
+      <span class="badge draft">DRAFT</span>
+      <span class="badge prefix">REQ-ENERGY</span>
+    </div>
+  </header>
+
+  <div class="wrap">
+    <p class="lead">
+      Energy is a per-turn player resource that gates a subset of cards. The player
+      gains 1 energy at the start of every turn (including the first), unspent energy
+      carries over with no cap, and certain cards require energy to play. This spec
+      defines the resource, its lifecycle, and the cost gate. It does not prescribe
+      implementation; that belongs to the plan.
+    </p>
+
+    <div class="note">
+      <strong>Terminology guard:</strong> <code>WorldCard</code> already has a numeric
+      <code>cost</code> field (the difficulty/clear-cost of a hazard, consumed by
+      <code>DealProgress</code> and <code>DestroyCardInHand.maxCost</code>). Energy cost is a
+      <em>separate</em> concept that lives on <strong>player cards</strong>. The two costs must
+      not be conflated. Where ambiguity is possible, this spec says "energy cost."
+    </div>
+
+    <div class="controls">
+      <button id="expandAll">Expand all</button>
+      <button id="collapseAll">Collapse all</button>
+    </div>
+
+    <h2>State &amp; data model</h2>
+
+    <details class="req" id="REQ-ENERGY-1" open>
+      <summary>
+        <span class="req-id"><a href="#REQ-ENERGY-1">REQ-ENERGY-1</a></span>
+        <span class="req-title">GameState carries an energy field</span>
+        <span class="pill must">Must</span>
+      </summary>
+      <div class="req-body">
+        <p><code>GameState</code> gains an <code>energy</code> field: a non-negative integer
+        representing the player's currently available energy. It is part of the serializable
+        game state and threads through the pure reducer like every other field.</p>
+      </div>
+    </details>
+
+    <details class="req" id="REQ-ENERGY-2">
+      <summary>
+        <span class="req-id"><a href="#REQ-ENERGY-2">REQ-ENERGY-2</a></span>
+        <span class="req-title">Player cards carry an energy cost (default 0)</span>
+        <span class="pill must">Must</span>
+      </summary>
+      <div class="req-body">
+        <p>Player cards have an energy cost: a non-negative integer. The cost is authored in
+        card data (the catalog/world JSON, consistent with card-data-externalization), not
+        hardcoded in engine logic. When a player card's data omits the cost, it defaults to
+        <code>0</code> (free), so every existing card keeps its current behavior unless its data
+        opts in.</p>
+        <p>The minted <code>PlayerCard</code> instance carries its energy cost so the engine can
+        read it without re-consulting the catalog, matching how other per-card fields are minted.</p>
+      </div>
+    </details>
+
+    <details class="req" id="REQ-ENERGY-3">
+      <summary>
+        <span class="req-id"><a href="#REQ-ENERGY-3">REQ-ENERGY-3</a></span>
+        <span class="req-title">Listen, Barricade, and Regroup cost 1 energy</span>
+        <span class="pill must">Must</span>
+      </summary>
+      <div class="req-body">
+        <p>The card data for <code>Listen</code>, <code>Barricade</code>, and <code>Regroup</code>
+        sets an energy cost of <code>1</code> each. All other existing cards remain at the default
+        cost of <code>0</code>.</p>
+        <table>
+          <tr><th>Card</th><th>Source world</th><th>Energy cost</th></tr>
+          <tr><td>Listen</td><td>zombie-big-box</td><td>1</td></tr>
+          <tr><td>Regroup</td><td>zombie-big-box</td><td>1</td></tr>
+          <tr><td>Barricade</td><td>starter</td><td>1</td></tr>
+          <tr><td>(all others)</td><td>—</td><td>0</td></tr>
+        </table>
+      </div>
+    </details>
+
+    <h2>Lifecycle: gain, carry-over, reset</h2>
+
+    <details class="req" id="REQ-ENERGY-4">
+      <summary>
+        <span class="req-id"><a href="#REQ-ENERGY-4">REQ-ENERGY-4</a></span>
+        <span class="req-title">Energy initializes to 0 at world start, before the first turn's gain</span>
+        <span class="pill must">Must</span>
+      </summary>
+      <div class="req-body">
+        <p>When a world is created, energy starts at <code>0</code>. The start-of-turn gain
+        (REQ-ENERGY-5) then applies to the opening turn, so the player <strong>begins turn 1 with
+        1 energy</strong> and can afford one cost-1 card immediately.</p>
+        <p>Concretely: the opening hand deal is a turn start and triggers the +1, exactly as every
+        subsequent turn does. There is no special-casing of turn 1 beyond the initial value of 0.</p>
+        <p><strong>Implementation site:</strong> <code>createWorld</code> builds its bootstrap
+        <code>GameState</code> inline and currently has no per-turn hook. The bootstrap must
+        initialize <code>energy: 0</code>, and the start-of-turn gain (REQ-ENERGY-5) must run for the
+        opening hand so the returned state has <code>energy === 1</code>. The gain belongs in a shared
+        step invoked by both <code>createWorld</code> and the <code>EndTurn</code> handler, not
+        duplicated in two places (see REQ-ENERGY-5 for ordering relative to <code>refillHand</code>).</p>
+      </div>
+    </details>
+
+    <details class="req" id="REQ-ENERGY-5">
+      <summary>
+        <span class="req-id"><a href="#REQ-ENERGY-5">REQ-ENERGY-5</a></span>
+        <span class="req-title">+1 energy at the start of every turn</span>
+        <span class="pill must">Must</span>
+      </summary>
+      <div class="req-body">
+        <p>At the start of each turn, energy increases by exactly 1. "Start of turn" is the same
+        boundary at which the hand is refilled: the opening hand at world creation, and after each
+        <code>EndTurn</code>. The gain happens once per turn boundary.</p>
+        <p>The gain is unconditional. It is not suppressed by <code>skipDrawNext</code> or any other
+        flag, and it is not tied to whether any cards are actually drawn.</p>
+        <p><strong>Ordering:</strong> the +1 is applied to <code>GameState.energy</code> before
+        <code>refillHand</code> runs, so any effect that reads energy during the turn-start sequence
+        sees the post-gain value. A single shared "gain energy" step is the only place energy
+        increments per turn.</p>
+      </div>
+    </details>
+
+    <details class="req" id="REQ-ENERGY-6">
+      <summary>
+        <span class="req-id"><a href="#REQ-ENERGY-6">REQ-ENERGY-6</a></span>
+        <span class="req-title">Unspent energy carries over between turns, with no cap</span>
+        <span class="pill must">Must</span>
+      </summary>
+      <div class="req-body">
+        <p>Energy is never reset or reduced at the end of a turn. Whatever the player did not spend
+        carries into the next turn and accumulates with that turn's gain. There is no maximum; energy
+        may grow without bound (e.g. a player who never spends reaches energy <code>N</code> on turn
+        <code>N</code>).</p>
+      </div>
+    </details>
+
+    <details class="req" id="REQ-ENERGY-7">
+      <summary>
+        <span class="req-id"><a href="#REQ-ENERGY-7">REQ-ENERGY-7</a></span>
+        <span class="req-title">Energy resets only at world start, never on act transitions</span>
+        <span class="pill must">Must</span>
+      </summary>
+      <div class="req-body">
+        <p>Energy is reset to <code>0</code> only when a new world is created. It persists unchanged
+        across act transitions within a world (the <code>ActAdvanced</code> boundary does not touch
+        energy). Advancing from act 1 to act 2 carries the player's current energy forward.</p>
+        <p>World-to-world transitions (the win path, where the next world is built via a fresh
+        <code>createWorld</code>) reset energy to 0 by definition of REQ-ENERGY-4. Only act-internal
+        boundaries preserve it.</p>
+      </div>
+    </details>
+
+    <h2>Spending &amp; the cost gate</h2>
+
+    <details class="req" id="REQ-ENERGY-8">
+      <summary>
+        <span class="req-id"><a href="#REQ-ENERGY-8">REQ-ENERGY-8</a></span>
+        <span class="req-title">A card is affordable only when energy &ge; its energy cost</span>
+        <span class="pill must">Must</span>
+      </summary>
+      <div class="req-body">
+        <p>A player card may be played only when current energy is greater than or equal to its
+        energy cost. Affordability is an additional gate layered on top of the existing
+        playability rules (target availability, etc.): a card must satisfy <em>both</em> its
+        structural requirements and the energy requirement to be playable.</p>
+        <p>Cost-0 cards are always affordable and behave exactly as they do today.</p>
+      </div>
+    </details>
+
+    <details class="req" id="REQ-ENERGY-9">
+      <summary>
+        <span class="req-id"><a href="#REQ-ENERGY-9">REQ-ENERGY-9</a></span>
+        <span class="req-title">Unaffordable cards are excluded from available actions</span>
+        <span class="pill must">Must</span>
+      </summary>
+      <div class="req-body">
+        <p>A card the player cannot afford does not appear in
+        <code>availableActions().playable</code>. The selector is the single source of truth for
+        what the UI may offer, so an unaffordable card is simply not offered.</p>
+      </div>
+    </details>
+
+    <details class="req" id="REQ-ENERGY-10">
+      <summary>
+        <span class="req-id"><a href="#REQ-ENERGY-10">REQ-ENERGY-10</a></span>
+        <span class="req-title">Playing a card deducts its energy cost</span>
+        <span class="pill must">Must</span>
+      </summary>
+      <div class="req-body">
+        <p>When a player card is successfully played, energy decreases by that card's energy cost.
+        The deduction is part of resolving the play. After playing a cost-1 card, energy is exactly
+        1 lower than before; playing a cost-0 card leaves energy unchanged.</p>
+        <p>Energy must never go negative. Because the affordability gate (REQ-ENERGY-8) is enforced
+        before deduction, a legal play can always pay its cost in full.</p>
+      </div>
+    </details>
+
+    <details class="req" id="REQ-ENERGY-11">
+      <summary>
+        <span class="req-id"><a href="#REQ-ENERGY-11">REQ-ENERGY-11</a></span>
+        <span class="req-title">Illegal (unaffordable) plays are rejected by the reducer</span>
+        <span class="pill must">Must</span>
+      </summary>
+      <div class="req-body">
+        <p>If a <code>PlayCard</code> action for an unaffordable card reaches the reducer, it is
+        rejected with <code>IllegalActionError</code> (the same failure mode as any other illegal
+        play). The reducer never silently no-ops or partially applies the effect.</p>
+      </div>
+    </details>
+
+    <details class="req" id="REQ-ENERGY-12">
+      <summary>
+        <span class="req-id"><a href="#REQ-ENERGY-12">REQ-ENERGY-12</a></span>
+        <span class="req-title">Energy cost is per-card, independent of modal/sequence branch</span>
+        <span class="pill should">Should</span>
+      </summary>
+      <div class="req-body">
+        <p>A card's energy cost is a single value for the whole card. For cards whose effect is a
+        <code>Modal</code> or <code>Sequence</code>, the cost does not vary by chosen branch or step:
+        the same cost is required to play the card and is deducted once, regardless of which branch
+        the player selects.</p>
+        <p>(None of the three costed cards in this spec are modal; this requirement fixes the rule so
+        future costed cards are unambiguous.)</p>
+      </div>
+    </details>
+
+    <h2>Loss detection &amp; events</h2>
+
+    <details class="req" id="REQ-ENERGY-13">
+      <summary>
+        <span class="req-id"><a href="#REQ-ENERGY-13">REQ-ENERGY-13</a></span>
+        <span class="req-title">Energy gating must not trigger a false loss</span>
+        <span class="pill must">Must</span>
+      </summary>
+      <div class="req-body">
+        <p>The existing livelock loss guards in <code>EndTurn</code> declare a loss when no progress
+        is possible. Because affordability now removes cards from <code>playable</code>, a card that
+        is unaffordable <em>only because energy is currently too low</em> must not be treated as
+        permanently dead: energy regenerates +1 every turn with no cap, so such a card becomes
+        affordable in a finite number of turns.</p>
+        <p>Therefore the loss guards must not declare <code>WorldLost</code> in a state where the
+        only thing standing between the player and a legal play is insufficient energy. A player who
+        can reach a legal play by ending turns to bank energy is not in a lost state.</p>
+        <p><strong>Per-guard analysis</strong> (reduce.ts has two loss guards at <code>EndTurn</code>):</p>
+        <ul>
+          <li><strong>Guard A</strong> (all piles exhausted, then "no progress possible" via
+          <code>availableActions().playable</code> and <code>discardable</code>) <em>is</em> affected:
+          affordability now removes cards from <code>playable</code>, so a costed-but-soon-affordable
+          card could make this guard falsely conclude no progress. This guard must treat a card that
+          is unaffordable only due to current energy as future progress, not as dead.</li>
+          <li><strong>Guard B</strong> (<code>noWorldAnywhere</code> and no player card with
+          <code>AddWorldCardToTop</code>) is <em>not</em> affected: it tests for the
+          <em>existence</em> of an <code>AddWorldCardToTop</code> card across all player zones, not
+          its current playability or affordability. Energy gating never changes a card's existence,
+          so guard B needs no change. This spec records that conclusion so the implementer does not
+          re-derive it.</li>
+        </ul>
+      </div>
+    </details>
+
+    <details class="req" id="REQ-ENERGY-14">
+      <summary>
+        <span class="req-id"><a href="#REQ-ENERGY-14">REQ-ENERGY-14</a></span>
+        <span class="req-title">Energy changes emit an observable event</span>
+        <span class="pill should">Should</span>
+      </summary>
+      <div class="req-body">
+        <p>Changes to energy (gain at turn start, spend on play) emit an <code>EnergyChanged</code>
+        game event carrying the new energy total (<code>{ type: 'EnergyChanged'; energy: number }</code>),
+        mirroring <code>HpChanged</code>. This lets the renderer animate or react to energy changes
+        without diffing whole states.</p>
+      </div>
+    </details>
+
+    <h2>Presentation</h2>
+
+    <details class="req" id="REQ-ENERGY-15">
+      <summary>
+        <span class="req-id"><a href="#REQ-ENERGY-15">REQ-ENERGY-15</a></span>
+        <span class="req-title">The HUD surfaces current energy</span>
+        <span class="pill must">Must</span>
+      </summary>
+      <div class="req-body">
+        <p>The HUD displays the player's current energy alongside HP and act status, updating in step
+        with <code>GameState</code>. The exact label and styling are a view-layer detail; the
+        requirement is that the player can always see how much energy they have.</p>
+      </div>
+    </details>
+
+    <details class="req" id="REQ-ENERGY-16">
+      <summary>
+        <span class="req-id"><a href="#REQ-ENERGY-16">REQ-ENERGY-16</a></span>
+        <span class="req-title">A card's energy cost is prominently displayed on the card</span>
+        <span class="pill must">Must</span>
+      </summary>
+      <div class="req-body">
+        <p>Cards with a non-zero energy cost display that cost prominently on the card face: a
+        dedicated cost indicator (e.g. a corner cost badge) that reads as a primary attribute of the
+        card, not buried in description text. The player must be able to tell a card's cost at a
+        glance, before committing to play it.</p>
+        <p>Cost-0 cards need not display a cost. The exact visual treatment (placement, shape, color)
+        is a view-layer detail; what is mandated is that a non-zero cost is present and prominent.</p>
+      </div>
+    </details>
+
+    <!-- ===================== VALIDATION ===================== -->
+    <section class="validation">
+      <h2>✅ AI Validation</h2>
+      <p class="lead">How the AI verifies this is done. Each check is behavioral and runnable
+      against the pure core (and the view where noted). All core checks should be expressed as unit
+      tests in <code>src/core/tests/</code>; presentation checks in <code>src/game/tests/</code> or
+      manual browser observation.</p>
+
+      <div class="check"><span class="ref">REQ-1,2,3</span>
+        <span>Load each relevant world source separately (<code>Listen</code>/<code>Regroup</code>
+        from <code>zombie-big-box.json</code>, <code>Barricade</code> from <code>starter.json</code>)
+        and confirm each resolves to a player card with energy cost <code>1</code>. Confirm at least
+        one other player card resolves to energy cost <code>0</code> (default applied when data omits
+        the field).</span></div>
+
+      <div class="check"><span class="ref">REQ-4</span>
+        <span>Assert the return value of <code>createWorld</code> has <code>energy === 1</code>
+        (bootstrap initial 0 plus the turn-1 gain applied before the opening hand is dealt).</span></div>
+
+      <div class="check"><span class="ref">REQ-5,6</span>
+        <span>From a known state, dispatch <code>EndTurn</code> with no plays and assert energy
+        increased by exactly 1. Repeat several turns and assert monotonic <code>+1</code> with no cap
+        (e.g. energy reaches 5 after 4 additional end-turns from energy 1).</span></div>
+
+      <div class="check"><span class="ref">REQ-5</span>
+        <span>Set <code>skipDrawNext</code> true, end the turn, and assert energy still gained +1
+        (gain is independent of the draw-skip).</span></div>
+
+      <div class="check"><span class="ref">REQ-6,7</span>
+        <span>Drive the game to an act transition (<code>ActAdvanced</code> in the returned events),
+        capturing <code>state.energy</code> immediately before and after, and assert the value is
+        identical across the boundary (act transition never resets energy). Separately, end a turn and
+        assert energy incremented by exactly 1 — together these show energy changes only via the
+        turn-start gain, not act boundaries.</span></div>
+
+      <div class="check"><span class="ref">REQ-8,9</span>
+        <span>Construct a state with energy 0 and a cost-1 card (Listen) in hand whose structural
+        requirements are otherwise met; assert it is <em>absent</em> from
+        <code>availableActions().playable</code>. Raise energy to 1 and assert it now appears.</span></div>
+
+      <div class="check"><span class="ref">REQ-10</span>
+        <span>With energy 1 and a cost-1 card legally played, assert <code>state.energy === 0</code>
+        afterward, and that energy never reads negative at any step.</span></div>
+
+      <div class="check"><span class="ref">REQ-11</span>
+        <span>With energy 0, dispatch a <code>PlayCard</code> for a cost-1 card directly to the
+        reducer and assert it throws <code>IllegalActionError</code> and leaves state unchanged.</span></div>
+
+      <div class="check"><span class="ref">REQ-12</span>
+        <span>Add a synthetic test fixture: a costed card whose effect is a <code>Modal</code>/<code>Sequence</code>
+        (none of the three shipping costed cards are modal). Assert the same cost is deducted exactly
+        once regardless of the chosen branch. If no such fixture is added, mark this check explicitly
+        deferred rather than silently passing.</span></div>
+
+      <div class="check"><span class="ref">REQ-13</span>
+        <span>Construct an end-of-turn state where the only player card that could make progress is a
+        costed card currently unaffordable, with energy that will rise next turn, and assert the game
+        does <strong>not</strong> transition to <code>lost</code> / emit <code>WorldLost</code>.</span></div>
+
+      <div class="check"><span class="ref">REQ-14</span>
+        <span>Assert an energy-change event with the new total is present in the returned events on a
+        turn-start gain and on a costed play.</span></div>
+
+      <div class="check"><span class="ref">REQ-15</span>
+        <span>Unit-test the HUD updater shows the current energy value; manually confirm in the
+        browser that the energy readout updates on gain and spend.</span></div>
+
+      <div class="check"><span class="ref">REQ-16</span>
+        <span>Unit-test that a card object built for a cost-1 card (Listen/Barricade/Regroup) includes
+        a distinct cost indicator element, and a cost-0 card does not. Manually confirm in the browser
+        that the cost reads as a prominent, at-a-glance badge on the card face (not buried in
+        description text) and cost-0 cards show no misleading cost.</span></div>
+
+      <div class="check"><span class="ref">regression</span>
+        <span>Full <code>bun test</code> suite green. Golden-state tests updated intentionally (energy
+        field present) rather than accidentally; review every golden diff.</span></div>
+    </section>
+
+    <p class="lead" style="margin-top:40px">
+      Open question deferred to the plan, not blocking this spec: whether energy and its per-card cost
+      become part of meta-progression / destiny-shard differentiation later. For now energy is a flat
+      per-world resource with the rules above.
+    </p>
+  </div>
+
+  <script>
+    const reqs = () => Array.from(document.querySelectorAll('details.req'));
+    document.getElementById('expandAll').onclick = () => reqs().forEach(d => d.open = true);
+    document.getElementById('collapseAll').onclick = () => reqs().forEach(d => d.open = false);
+    // Open and scroll to a requirement when linked directly.
+    function openHash() {
+      if (!location.hash) return;
+      const el = document.querySelector(location.hash);
+      if (el && el.tagName === 'DETAILS') { el.open = true; el.scrollIntoView({ block: 'start' }); }
+    }
+    window.addEventListener('hashchange', openHash);
+    openHash();
+  </script>
+</body>
+</html>
