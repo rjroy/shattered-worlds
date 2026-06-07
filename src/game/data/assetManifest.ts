@@ -8,8 +8,6 @@ import textBackUrl from '../assets/text-background.webp'
 import bigboxRealityUrl from '../assets/themes/zombie-big-box/bigbox-reality.webp'
 import zombieIntrusionUrl from '../assets/themes/zombie-big-box/intrusion-overlay.webp'
 import zombieCardfrontUrl from '../assets/themes/zombie-big-box/zombie-cardfront.webp'
-import starterJsonUrl from '../../data/worlds/starter.json?url'
-import zombieJsonUrl from '../../data/worlds/zombie-big-box.json?url'
 import insetSprintUrl from '../assets/insets/inset-sprint.webp'
 import insetExploreUrl from '../assets/insets/inset-explore.webp'
 import insetBarricadeUrl from '../assets/insets/inset-barricade.webp'
@@ -25,6 +23,8 @@ import zombieInsetScreamsUrl from '../assets/themes/zombie-big-box/insets/inset-
 import zombieInsetStrangeSoundsUrl from '../assets/themes/zombie-big-box/insets/inset-strange-sounds.webp'
 import zombieInsetZombieUrl from '../assets/themes/zombie-big-box/insets/inset-zombie.webp'
 import zombieInsetListenUrl from '../assets/themes/zombie-big-box/insets/inset-listen.webp'
+import starterJsonUrl from '../../data/worlds/starter.json?url'
+import zombieJsonUrl from '../../data/worlds/zombie-big-box.json?url'
 
 export const assetManifest: Record<string, string> = {
   cardback: cardbackUrl,
@@ -36,8 +36,6 @@ export const assetManifest: Record<string, string> = {
   'bigbox-reality': bigboxRealityUrl,
   'zombie-intrusion': zombieIntrusionUrl,
   'zombie-cardfront': zombieCardfrontUrl,
-  'world-starter': starterJsonUrl,
-  'world-zombie-big-box': zombieJsonUrl,
   'inset-sprint': insetSprintUrl,
   'inset-explore': insetExploreUrl,
   'inset-barricade': insetBarricadeUrl,
@@ -53,4 +51,7 @@ export const assetManifest: Record<string, string> = {
   'zombie-inset-listen': zombieInsetListenUrl,
   'zombie-inset-strange-sounds': zombieInsetStrangeSoundsUrl,
   'zombie-inset-zombie': zombieInsetZombieUrl,
+  // JSON files are loaded as URLs so Phaser can load them asynchronously. The buildZombieWorld() function in worldManifest.ts assembles the same JSON data into a catalog + world descriptor for use by the headless sim and core tests, so the JSON sources are exported from there and imported here.  
+  'world-starter': starterJsonUrl,
+  'world-zombie-big-box': zombieJsonUrl,
 }

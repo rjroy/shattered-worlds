@@ -41,17 +41,18 @@ export class PileLayer {
   update(scene: Phaser.Scene, playerCount: number, worldCount: number): void {
     this.playerPile.removeAll(true)
     this.worldPile.removeAll(true)
-    this.renderStack(scene, this.playerPile, playerCount)
-    this.renderStack(scene, this.worldPile, worldCount)
+    this.renderStack(scene, this.playerPile, 'Player', playerCount)
+    this.renderStack(scene, this.worldPile, 'World', worldCount)
   }
 
   private renderStack(
     scene: Phaser.Scene,
     container: Phaser.GameObjects.Container,
+    str: string,
     count: number,
   ): void {
     if (count === 0) return
-    const visibleCards = Math.min(count, 4) // show up to 4 cards in the stack
+    const visibleCards = Math.min(count, 5) // show up to 4 cards in the stack
     for (let i = 0; i < visibleCards; i++) {
       const img = scene.add.image(-i * PILE_OFFSET, -i * PILE_OFFSET, 'cardback')
       img.setDisplaySize(PILE_CARD_W, PILE_CARD_H)
@@ -60,7 +61,7 @@ export class PileLayer {
     }
 
     // Show count text below the stack
-    const label = new CommonLabel(scene, 0, 20, String(count), textStyle({
+    const label = new CommonLabel(scene, 0, 20, `${str}: ${count}`, textStyle({
       fontSize: '10px',
       color: '#b6c0d1',
     }))

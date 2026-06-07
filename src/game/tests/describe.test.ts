@@ -145,21 +145,21 @@ describe('previewPlay', () => {
   it('adds the keyword bonus and reports a clear (Baseball Bat vs Zombie)', () => {
     const bat = player({ kind: 'DealProgress', base: 2, bonus: { tag: 'Creature', amount: 3 } })
     const zombie = hazard({ name: 'Zombie', cost: 1, keywords: ['Slow', 'Creature'] })
-    expect(previewPlay(bat, zombie, makeState())).toBe('Deals 5 → clears Zombie')
+    expect(previewPlay(bat, zombie, makeState())).toBe('Make 5 Progress → clears Zombie')
   })
 
   it('omits the bonus when the target lacks the tag', () => {
     const explore = player({ kind: 'DealProgress', base: 1, bonus: { tag: 'Hidden', amount: 1 } })
     const zombie = hazard({ name: 'Zombie', cost: 1, keywords: ['Creature'] })
-    expect(previewPlay(explore, zombie, makeState())).toBe('Deals 1 → clears Zombie')
+    expect(previewPlay(explore, zombie, makeState())).toBe('Make 1 Progress → clears Zombie')
   })
 
   it('reports remaining Progress and counts what was already dealt this turn', () => {
     const explore = player({ kind: 'DealProgress', base: 1 })
     const walker = hazard({ id: 'w9', name: 'The Walker', cost: 10 })
-    expect(previewPlay(explore, walker, makeState())).toBe('Deals 1 → 9 more to clear The Walker')
+    expect(previewPlay(explore, walker, makeState())).toBe('Make 1 Progress → 9 more to clear The Walker')
     expect(previewPlay(explore, walker, makeState({ w9: 3 }))).toBe(
-      'Deals 1 → 6 more to clear The Walker',
+      'Make 1 Progress → 6 more to clear The Walker',
     )
   })
 
@@ -172,7 +172,7 @@ describe('previewPlay', () => {
       ],
     })
     const zombie = hazard({ name: 'Zombie', cost: 1, keywords: ['Slow', 'Creature'] })
-    expect(previewPlay(sprint, zombie, makeState(), 1)).toBe('Deals 2 → clears Zombie')
+    expect(previewPlay(sprint, zombie, makeState(), 1)).toBe('Make 2 Progress → clears Zombie')
     expect(previewPlay(sprint, zombie, makeState(), 0)).toBeNull()
   })
 
@@ -186,7 +186,7 @@ describe('previewPlay', () => {
     })
     const sounds = hazard({ name: 'Strange Sounds', cost: 2 })
     expect(previewPlay(barricade, sounds, makeState())).toBe(
-      'Deals 1 → 1 more to clear Strange Sounds',
+      'Make 1 Progress → 1 more to clear Strange Sounds',
     )
   })
 

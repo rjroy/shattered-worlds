@@ -164,10 +164,10 @@ describe('ringFraction agrees with previewPlay (FEEDBACK-10)', () => {
   const explore = player({ kind: 'DealProgress', base: 1 })
   const cost = 10
 
-  // previewPlay starts every line with "Deals <amount> →"; pull the amount out
+  // previewPlay starts every line with "Make <amount> Progress →"; pull the amount out
   // of its real output so the test never restates the card's base value.
   function amountDealt(output: string | null): number {
-    const match = output?.match(/Deals (\d+)/)
+    const match = output?.match(/Make (\d+) Progress/)
     if (match === null || match === undefined) throw new Error(`unexpected preview: ${output}`)
     return Number(match[1])
   }

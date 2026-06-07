@@ -2,7 +2,7 @@ import { describe, expect, test } from 'bun:test'
 import type { GameState } from '../../core/model/types'
 import { createWorld } from '../../core/engine/world'
 import { reduce } from '../../core/engine/reduce'
-import { buildZombieWorld } from '../../data/zombieWorld'
+import { buildZombieWorld } from '../../data/worldManifest'
 import { checkIdAccounting } from '../accounting'
 import { pickAction } from '../policy'
 
