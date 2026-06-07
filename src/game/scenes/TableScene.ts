@@ -349,7 +349,6 @@ export class TableScene extends Phaser.Scene {
     const totalWidth = Math.min(SCREEN_WIDTH - CARD_SPACING - 25, (cards.length - 1) * CARD_SPACING)
     const startX = 450 - totalWidth / 2
     const spacing = cards.length > 1 ? totalWidth / (cards.length - 1) : CARD_SPACING
-    console.log(`Layout row with ${cards.length} cards: totalWidth=${totalWidth}, startX=${startX}, spacing=${spacing}`)
 
     cards.forEach((card, i) => {
       const x = startX + i * spacing
