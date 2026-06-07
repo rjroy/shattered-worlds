@@ -21,13 +21,18 @@ export interface VisualTheme {
     cancel: string
   }
   frameStyle: FrameStyle
-  doorGlowTint?: number          // optional tint for the door glow (Phaser hex int); if not set, glow is default color
-  doorTint?: number              // optional tint for the door (Phaser hex int); if not set, door is default color
+  // optional tint for the door glow (Phaser hex int); if not set, glow is default color
+  doorGlowTint?: number          
+  // optional tint for the door (Phaser hex int); if not set, door is default color
+  doorTint?: number              
   backdrop: {
-    realityKey: string            // 'bigbox-reality'
-    intrusionKey: string          // 'zombie-intrusion'
+    // Texture key for the reality backdrop
+    realityKey: string
+    // Texture key for the intrusion overlay
+    intrusionKey: string
   }
-  worldCardfrontKey?: string      // theme-specific frame for world/hazard cards; falls back to 'cardfront'
+  // theme-specific frame for world/hazard cards; falls back to 'cardfront'
+  worldCardfrontKey?: string      
 }
 
 export function getRealityPalette(
