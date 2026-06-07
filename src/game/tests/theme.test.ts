@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'bun:test'
-import { selectTheme } from '../view/themes/themeManifest'
+import { selectTheme, themeManifest } from '../view/themes/themeManifest'
+import { STARTER } from '../view/themes/starter'
 import { ZOMBIE_BIG_BOX_THEME } from '../view/themes/zombie-big-box'
 
 describe('selectTheme', () => {
@@ -30,5 +31,41 @@ describe('selectTheme', () => {
 
   it('zombie-big-box has a world cardfront texture key', () => {
     expect(ZOMBIE_BIG_BOX_THEME.worldCardfrontKey).toBe('zombie-cardfront')
+  })
+
+  it('returns the bird-building theme for that worldId', () => {
+    const theme = selectTheme('bird-building')
+    expect(theme.worldId).toBe('bird-building')
+    expect(theme.backdrop.realityKey).toBe('bird-building-bg')
+    expect(theme.backdrop.intrusionKey).toBe('bird-building-overlay')
+    expect(theme.worldCardfrontKey).toBe('bird-building-cardfront')
+  })
+
+  it('returns the highway-volcano theme for that worldId', () => {
+    const theme = selectTheme('highway-volcano')
+    expect(theme.worldId).toBe('highway-volcano')
+    expect(theme.backdrop.realityKey).toBe('highway-volcano-bg')
+    expect(theme.backdrop.intrusionKey).toBe('highway-volcano-overlay')
+    expect(theme.worldCardfrontKey).toBe('highway-volcano-cardfront')
+  })
+})
+
+// ---------------------------------------------------------------------------
+// Each theme must read as its own place. Guards the regression where
+// zombie-big-box was a verbatim copy of the starter palette: no two themes
+// (including the starter baseline) may share an intrusionHue.
+// ---------------------------------------------------------------------------
+
+describe('theme color identity is distinct per world', () => {
+  const themes = [STARTER, ...Object.values(themeManifest)]
+
+  it('every registered theme has a unique intrusionHue', () => {
+    const hues = themes.map((t) => t.intrusionHue)
+    expect(new Set(hues).size).toBe(hues.length)
+  })
+
+  it('zombie-big-box no longer shares the starter palette', () => {
+    expect(ZOMBIE_BIG_BOX_THEME.intrusionHue).not.toBe(STARTER.intrusionHue)
+    expect(ZOMBIE_BIG_BOX_THEME.frameStyle.targetBorder).not.toBe(STARTER.frameStyle.targetBorder)
   })
 })

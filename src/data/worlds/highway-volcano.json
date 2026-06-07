@@ -1,0 +1,95 @@
+{
+  "worldId": "highway-volcano",
+  "cardTemplates": {
+    "Tremors": {
+      "kind": "world",
+      "name": "Tremors",
+      "cost": 2,
+      "keywords": [],
+      "discardable": true,
+      "onDiscarded": { "kind": "None" },
+      "onCleared": { "kind": "GainCard", "template": "Spot a Path" },
+      "onEndOfTurn": { "kind": "None" }
+    },
+    "Gridlock": {
+      "kind": "world",
+      "name": "Gridlock",
+      "cost": 1,
+      "keywords": [],
+      "discardable": true,
+      "onDiscarded": { "kind": "SkipDrawNextTurn" },
+      "onCleared": { "kind": "None" },
+      "onEndOfTurn": { "kind": "None" }
+    },
+    "Ash Fall": {
+      "kind": "world",
+      "name": "Ash Fall",
+      "cost": 1,
+      "keywords": [],
+      "discardable": true,
+      "onDiscarded": { "kind": "GainCard", "template": "Panic" },
+      "onCleared": { "kind": "GainCard", "template": "Ditch Gear" },
+      "onEndOfTurn": { "kind": "None" }
+    },
+    "Lava Flow": {
+      "kind": "world",
+      "name": "Lava Flow",
+      "cost": 3,
+      "keywords": ["Slow", "Creature"],
+      "discardable": true,
+      "onDiscarded": { "kind": "Damage", "amount": 5 },
+      "onCleared": { "kind": "None" },
+      "onEndOfTurn": { "kind": "Damage", "amount": 1 }
+    },
+    "Find a Vehicle": {
+      "kind": "world",
+      "name": "Find a Vehicle",
+      "cost": 2,
+      "keywords": ["Hidden"],
+      "discardable": true,
+      "onDiscarded": { "kind": "None" },
+      "onCleared": { "kind": "GainCard", "template": "Floor It" },
+      "onEndOfTurn": { "kind": "None" }
+    },
+    "Spot a Path": {
+      "kind": "player",
+      "name": "Spot a Path",
+      "effect": { "kind": "DealProgress", "base": 2, "bonus": { "tag": "Hidden", "amount": 2 } }
+    },
+    "Floor It": {
+      "kind": "player",
+      "name": "Floor It",
+      "effect": { "kind": "DealProgress", "base": 1, "bonus": { "tag": "Creature", "amount": 3 } }
+    },
+    "Ditch Gear": {
+      "kind": "player",
+      "name": "Ditch Gear",
+      "effect": { "kind": "DestroyCardInHand", "min": 0, "max": 1, "maxCost": 2 }
+    }
+  },
+  "deckComposition": {
+    "acts": [
+      {
+        "cards": [
+          { "templateId": "Tremors", "count": 2 },
+          { "templateId": "Gridlock", "count": 2 },
+          { "templateId": "Ash Fall", "count": 2 }
+        ]
+      },
+      {
+        "cards": [
+          { "templateId": "Gridlock", "count": 2 },
+          { "templateId": "Lava Flow", "count": 3 },
+          { "templateId": "Find a Vehicle", "count": 1 }
+        ]
+      },
+      {
+        "cards": [
+          { "templateId": "Find a Vehicle", "count": 1 },
+          { "templateId": "Lava Flow", "count": 4 },
+          { "templateId": "The Walker", "count": 1 }
+        ]
+      }
+    ]
+  }
+}
