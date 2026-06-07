@@ -148,7 +148,7 @@ function buildBreadcrumbs(parts: string[]): string {
 
 export default defineConfig({
   base: '/shattered-worlds/',
-  build: { outDir: 'dist' },
+  build: { outDir: 'dist', assetsInlineLimit: 0 },
   server: {
     allowedHosts: ['gsai.raptor-piranha.ts.net'],
   },
