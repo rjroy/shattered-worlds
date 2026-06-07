@@ -2,23 +2,25 @@ import type { Action, CardId, GameState, TargetSpec } from '../core/model/types'
 import { availableActions } from '../core/engine/available'
 
 // ---------------------------------------------------------------------------
-// Random helpers (policy-local, not deterministic with game state RNG)
+// Random helpers (policy-local)
 // ---------------------------------------------------------------------------
 
-function pick<T>(items: readonly T[]): T {
+type Rng = () => number
+
+function pick<T>(items: readonly T[], rng: Rng): T {
   // Callers guarantee a non-empty list; the cast covers the empty-array type.
-  return items[Math.floor(Math.random() * items.length)] as T
+  return items[Math.floor(rng() * items.length)] as T
 }
 
-function pickCount(min: number, max: number): number {
-  return min + Math.floor(Math.random() * (max - min + 1))
+function pickCount(min: number, max: number, rng: Rng): number {
+  return min + Math.floor(rng() * (max - min + 1))
 }
 
-function pickSubset<T>(items: readonly T[], count: number): T[] {
+function pickSubset<T>(items: readonly T[], count: number, rng: Rng): T[] {
   const pool = [...items]
   const result: T[] = []
   for (let i = 0; i < count && pool.length > 0; i++) {
-    const idx = Math.floor(Math.random() * pool.length)
+    const idx = Math.floor(rng() * pool.length)
     result.push(pool[idx] as T)
     pool.splice(idx, 1)
   }
@@ -35,6 +37,7 @@ function buildPlayAction(
   cardId: CardId,
   spec: TargetSpec,
   legalTargets: (cardId: CardId, step: number) => readonly CardId[],
+  rng: Rng,
 ): PlayCardFields {
   const base: PlayCardFields = { type: 'PlayCard', cardId }
 
@@ -45,27 +48,27 @@ function buildPlayAction(
     case 'hazard': {
       const targets = legalTargets(cardId, 0)
       if (targets.length === 0) return base
-      return { ...base, targetId: pick(targets) }
+      return { ...base, targetId: pick(targets, rng) }
     }
 
     case 'discardPlayer': {
       const targets = legalTargets(cardId, 0)
       if (targets.length === 0) return base
-      return { ...base, discardId: pick(targets) }
+      return { ...base, discardId: pick(targets, rng) }
     }
 
     case 'destroyHand': {
       // min is always 0 — destruction is optional. Flip a coin.
-      if (Math.random() < 0.5) return base
+      if (rng() < 0.5) return base
       const targets = legalTargets(cardId, 0)
       if (targets.length === 0) return base
-      return { ...base, destroyId: pick(targets) }
+      return { ...base, destroyId: pick(targets, rng) }
     }
 
     case 'returnWorld': {
       const targets = legalTargets(cardId, 0)
-      const count = Math.min(pickCount(spec.min, spec.max), targets.length)
-      const chosen = pickSubset(targets, count)
+      const count = Math.min(pickCount(spec.min, spec.max, rng), targets.length)
+      const chosen = pickSubset(targets, count, rng)
       return { ...base, returnIds: chosen }
     }
 
@@ -78,7 +81,7 @@ function buildPlayAction(
       const indices = [...spec.branches.keys()]
       // Shuffle indices in-place
       for (let i = indices.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1))
+        const j = Math.floor(rng() * (i + 1))
         const tmp = indices[i]!
         indices[i] = indices[j]!
         indices[j] = tmp
@@ -89,7 +92,7 @@ function buildPlayAction(
         if (branchSpec.kind === 'hazard') {
           const targets = legalTargets(cardId, branchIdx)
           if (targets.length === 0) continue
-          return { ...base, choice: branchIdx, targetId: pick(targets) }
+          return { ...base, choice: branchIdx, targetId: pick(targets, rng) }
         }
         // 'none' or any non-targeting branch
         return { ...base, choice: branchIdx }
@@ -108,12 +111,12 @@ function buildPlayAction(
         if (stepSpec.kind === 'hazard') {
           const targets = legalTargets(cardId, stepIdx)
           if (targets.length > 0) {
-            action = { ...action, targetId: pick(targets) }
+            action = { ...action, targetId: pick(targets, rng) }
           }
         } else if (stepSpec.kind === 'returnWorld') {
           const targets = legalTargets(cardId, stepIdx)
-          const count = Math.min(pickCount(stepSpec.min, stepSpec.max), targets.length)
-          const chosen = pickSubset(targets, count)
+          const count = Math.min(pickCount(stepSpec.min, stepSpec.max, rng), targets.length)
+          const chosen = pickSubset(targets, count, rng)
           action = { ...action, returnIds: chosen }
         }
         // 'none': no supplementary fields needed
@@ -130,15 +133,16 @@ function buildPlayAction(
 
 /**
  * Selects a uniformly random legal action from the current state.
- * Uses Math.random() for policy choices — the game state RNG is unaffected.
+ * All randomness goes through `rng` — the game state RNG is unaffected.
+ * Pass `() => Math.random()` for live play, or a seeded closure for tests.
  */
-export function pickAction(state: GameState): Action {
+export function pickAction(state: GameState, rng: Rng): Action {
   const available = availableActions(state)
 
   const actions: Action[] = []
 
   for (const { cardId, spec } of available.playable) {
-    actions.push(buildPlayAction(cardId, spec, available.legalTargets))
+    actions.push(buildPlayAction(cardId, spec, available.legalTargets, rng))
   }
 
   for (const cardId of available.discardable) {
@@ -154,5 +158,5 @@ export function pickAction(state: GameState): Action {
     return { type: 'EndTurn' }
   }
 
-  return pick(actions)
+  return pick(actions, rng)
 }

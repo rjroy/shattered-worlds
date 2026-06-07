@@ -2,6 +2,7 @@ import { describe, expect, test } from 'bun:test'
 import type { GameState } from '../../core/model/types'
 import { createWorld } from '../../core/engine/world'
 import { reduce } from '../../core/engine/reduce'
+import { rngFromSeed } from '../../core/engine/rng'
 import { buildZombieWorld } from '../../data/worldManifest'
 import { checkIdAccounting } from '../accounting'
 import { pickAction } from '../policy'
@@ -20,11 +21,12 @@ const MAX_ACTIONS = 500
 
 function runWorld(seed: number): { finalState: GameState; turns: number; actions: number } {
   let state = createWorld(catalog, worldData, seed)
+  const rng = rngFromSeed(seed)
   let turns = 0
   let actions = 0
 
   while (state.status === 'playing' && actions < MAX_ACTIONS) {
-    const action = pickAction(state)
+    const action = pickAction(state, rng)
     const result = reduce(catalog, state, action)
     state = result.state
     if (action.type === 'EndTurn') turns++
@@ -58,11 +60,12 @@ describe('policy', () => {
   test('ID accounting holds for 5 worlds', () => {
     for (let seed = 1; seed <= 5; seed++) {
       let state = createWorld(catalog, worldData, seed)
+      const rng = rngFromSeed(seed)
       let actions = 0
 
       while (state.status === 'playing' && actions < MAX_ACTIONS) {
         expect(() => checkIdAccounting(state)).not.toThrow()
-        const action = pickAction(state)
+        const action = pickAction(state, rng)
         const result = reduce(catalog, state, action)
         state = result.state
         actions++

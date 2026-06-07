@@ -39,6 +39,20 @@ export function nextFloat(rng: RngState): [value: number, next: RngState] {
 }
 
 /**
+ * Returns a stateful () => number closure backed by a seeded sfc32 RNG.
+ * Useful when calling code that expects a Math.random()-style function but
+ * requires determinism (e.g. policy logic in tests).
+ */
+export function rngFromSeed(seed: number): () => number {
+  let state = createRng(seed)
+  return () => {
+    const [value, next] = nextFloat(state)
+    state = next
+    return value
+  }
+}
+
+/**
  * Fisher-Yates shuffle using the provided rng state.
  * Returns a new array and the advanced rng state. Neither the input array
  * nor the input rng are mutated.
