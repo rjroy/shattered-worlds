@@ -19,10 +19,12 @@ const PILE_OFFSET = 2 // px offset per stacked card
 export class PileLayer {
   private playerPile: Phaser.GameObjects.Container
   private worldPile: Phaser.GameObjects.Container
+  private discardPile: Phaser.GameObjects.Container
 
   constructor(scene: Phaser.Scene) {
-    this.playerPile = scene.add.container(80, 500)
-    this.worldPile = scene.add.container(820, 500)
+    this.playerPile = scene.add.container(80, 440)
+    this.worldPile = scene.add.container(820, 440)
+    this.discardPile = scene.add.container(80, 560)
   }
 
   /**
@@ -38,11 +40,13 @@ export class PileLayer {
     return { x: this.worldPile.x, y: this.worldPile.y - PILE_CARD_H / 2 }
   }
 
-  update(scene: Phaser.Scene, playerCount: number, worldCount: number): void {
+  update(scene: Phaser.Scene, playerCount: number, worldCount: number, discardCount: number): void {
     this.playerPile.removeAll(true)
     this.worldPile.removeAll(true)
-    this.renderStack(scene, this.playerPile, 'Player', playerCount)
-    this.renderStack(scene, this.worldPile, 'World', worldCount)
+    this.discardPile.removeAll(true)
+    this.renderStack(scene, this.playerPile, 'Player', playerCount, 'cardback')
+    this.renderStack(scene, this.worldPile, 'World', worldCount, 'cardback')
+    this.renderStack(scene, this.discardPile, 'Discard', discardCount, 'cardfront')
   }
 
   private renderStack(
@@ -50,11 +54,12 @@ export class PileLayer {
     container: Phaser.GameObjects.Container,
     str: string,
     count: number,
+    texture: string
   ): void {
     if (count === 0) return
     const visibleCards = Math.min(count, 5) // show up to 4 cards in the stack
     for (let i = 0; i < visibleCards; i++) {
-      const img = scene.add.image(-i * PILE_OFFSET, -i * PILE_OFFSET, 'cardback')
+      const img = scene.add.image(-i * PILE_OFFSET, -i * PILE_OFFSET, texture)
       img.setDisplaySize(PILE_CARD_W, PILE_CARD_H)
       img.setOrigin(0.5, 1)
       container.addAt(img, 0) // add at bottom so first card is on top visually

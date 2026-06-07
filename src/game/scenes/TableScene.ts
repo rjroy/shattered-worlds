@@ -300,7 +300,7 @@ export class TableScene extends Phaser.Scene {
     updateHUD(this.hudRefs, state)
 
     // Pile stacks (player draw + world draw)
-    this.pileLayer.update(this, state.playerDraw.length, state.worldDraw.length)
+    this.pileLayer.update(this, state.playerDraw.length, state.worldDraw.length, state.playerDiscard.length)
 
     // End Turn button
     const selectionActive = this.sel.phase !== 'idle'
