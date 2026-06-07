@@ -31,7 +31,7 @@ for (let seed = 1; seed <= N; seed++) {
 
     while (state.status === 'playing' && actions < MAX_ACTIONS_PER_WORLD) {
       checkIdAccounting(state)
-      const action = pickAction(state)
+      const action = pickAction(state, Math.random.bind(Math))
       const result = reduce(catalog, state, action)
       state = result.state
       if (action.type === 'EndTurn') turns++
