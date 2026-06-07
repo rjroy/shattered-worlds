@@ -66,7 +66,7 @@ describe('walkerPresentation', () => {
       // far: small, barely visible
       if (result.kind === 'proximity') {
         expect(result.proximity.size).toBe(75)
-        expect(result.proximity.alpha).toBe(0.35)
+        expect(result.proximity.alpha).toBe(0.50)
       }
     })
 
@@ -76,7 +76,7 @@ describe('walkerPresentation', () => {
       expect(result).toEqual({ kind: 'proximity', proximity: walkerProximityForAct(1) })
       if (result.kind === 'proximity') {
         expect(result.proximity.size).toBe(175)
-        expect(result.proximity.alpha).toBe(0.60)
+        expect(result.proximity.alpha).toBe(0.65)
       }
     })
 

@@ -6,8 +6,8 @@ export interface WalkerProximity {
 export const VISUAL_CONSTS = {
   walker: {
     proximity: {
-      far: { size: 75, alpha: 0.35 },
-      mid: { size: 175, alpha: 0.60 },
+      far: { size: 75, alpha: 0.50 },
+      mid: { size: 175, alpha: 0.65 },
       looming: { size: 300, alpha: 0.85 },
       present: { size: 400, alpha: 1.0 },
     },

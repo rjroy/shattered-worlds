@@ -370,9 +370,9 @@ describe('applyEffect Modal (Sprint)', () => {
     }
     const { events } = applyEffect(catalog, state, sprintEffect, action)
 
-    // Zombie has Slow keyword → 1 + 1 = 2 progress, and cost is 1 → auto-resolves
+    // Zombie has Slow keyword → 1 + 1 = 2 progress, and cost is 3 → not resolved yet
     expect(events.some((e) => e.type === 'ProgressDealt')).toBe(true)
-    expect(events.some((e) => e.type === 'HazardResolved')).toBe(true)
+    expect(events.some((e) => e.type === 'HazardResolved')).toBe(false)
   })
 })
 
@@ -381,12 +381,12 @@ describe('applyEffect Modal (Sprint)', () => {
 // ---------------------------------------------------------------------------
 
 describe('applyEffect Sequence (Barricade)', () => {
-  it('resolves Zombie in step 0, then step 1 returnIds with the resolved id is skipped', () => {
+  it('resolves Rubble in step 0, then step 1 returnIds with the resolved id is skipped', () => {
     let state = makeState()
-    const [zombie, s1] = mintWorld(state, 'Zombie')
+    const [rubble, s1] = mintWorld(state, 'Rubble')
     // Also mint extra world cards to return so the return step isn't entirely empty
-    const [rubble, s2] = mintWorld(s1, 'Rubble')
-    state = { ...s2, hand: [zombie, rubble], worldDraw: [] }
+    const [screams, s2] = mintWorld(s1, 'Screams')
+    state = { ...s2, hand: [rubble, screams], worldDraw: [] }
 
     // Barricade: Sequence [ DealProgress{base:1}, ReturnWorldCards{min:0,max:2} ]
     const barricadeEffect = {
@@ -397,40 +397,40 @@ describe('applyEffect Sequence (Barricade)', () => {
       ],
     }
 
-    // action.returnIds includes the zombie id (which will be resolved by step 0)
-    // and the rubble id (which is still in hand)
+    // action.returnIds includes the rubble id (which will be resolved by step 0)
+    // and the screams id (which is still in hand)
     const action = {
       type: 'PlayCard' as const,
       cardId: 'barricade-id',
-      targetId: zombie.id,
-      returnIds: [zombie.id, rubble.id] as readonly string[],
+      targetId: rubble.id,
+      returnIds: [rubble.id, screams.id] as readonly string[],
     }
 
-    // Should not throw — missing zombie is skipped gracefully
+    // Should not throw — missing rubble is skipped gracefully
     const { state: after, events } = applyEffect(catalog, state, barricadeEffect, action)
 
-    // Step 0: Zombie resolved (cost 1, progress 1)
+    // Step 0: Rubble resolved (cost 1, progress 1)
     expect(events.some((e) => e.type === 'HazardResolved')).toBe(true)
 
-    // Step 1: Rubble returned (zombie was not in hand at that point — skipped)
+    // Step 1: Screams returned (rubble was not in hand at that point — skipped)
     const returnEvent = events.find((e) => e.type === 'WorldCardsReturned')
     expect(returnEvent).toBeDefined()
     if (returnEvent?.type === 'WorldCardsReturned') {
-      // Only rubble should be in the returned list
-      expect(returnEvent.ids).toContain(rubble.id)
-      expect(returnEvent.ids).not.toContain(zombie.id)
+      // Only screams should be in the returned list
+      expect(returnEvent.ids).toContain(screams.id)
+      expect(returnEvent.ids).not.toContain(rubble.id)
     }
 
-    // Rubble is no longer in hand
-    expect(after.hand.find((c) => c.id === rubble.id)).toBeUndefined()
-    // Rubble is now in worldDraw
-    expect(after.worldDraw.find((c) => c.id === rubble.id)).toBeDefined()
+    // Screams is no longer in hand
+    expect(after.hand.find((c) => c.id === screams.id)).toBeUndefined()
+    // Screams is now in worldDraw
+    expect(after.worldDraw.find((c) => c.id === screams.id)).toBeDefined()
   })
 
   it('handles Barricade with no valid returnIds (all already resolved)', () => {
     let state = makeState()
-    const [zombie, s1] = mintWorld(state, 'Zombie')
-    state = { ...s1, hand: [zombie], worldDraw: [] }
+    const [rubble, s1] = mintWorld(state, 'Rubble')
+    state = { ...s1, hand: [rubble], worldDraw: [] }
 
     const barricadeEffect = {
       kind: 'Sequence' as const,
@@ -440,12 +440,12 @@ describe('applyEffect Sequence (Barricade)', () => {
       ],
     }
 
-    // returnIds only contains the zombie which will be resolved in step 0
+    // returnIds only contains the rubble which will be resolved in step 0
     const action = {
       type: 'PlayCard' as const,
       cardId: 'barricade-id',
-      targetId: zombie.id,
-      returnIds: [zombie.id] as readonly string[],
+      targetId: rubble.id,
+      returnIds: [rubble.id] as readonly string[],
     }
 
     // Should not throw

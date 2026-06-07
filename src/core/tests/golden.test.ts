@@ -82,7 +82,7 @@ describe('golden win: Door via two Explore plays', () => {
       hp: 10,
     })
 
-    // Turn 1, play 1: Explore on Door → 1 progress (cost 2, not resolved yet)
+    // Turn 1, play 1: Explore on Door → 2 progress (Hidden bonus, cost 4, not resolved yet)
     const r1 = reduce(catalog, state, {
       type: 'PlayCard',
       cardId: ex1Card.id,
@@ -90,14 +90,14 @@ describe('golden win: Door via two Explore plays', () => {
     })
 
     expect(r1.state.status).toBe('playing')
-    expect(r1.state.progress[doorCard.id]).toBe(1)
+    expect(r1.state.progress[doorCard.id]).toBe(2)
 
     const r1Types = r1.events.map((e) => e.type)
     expect(r1Types).toContain('CardPlayed')
     expect(r1Types).toContain('ProgressDealt')
     expect(r1Types).not.toContain('HazardResolved')
 
-    // Turn 1, play 2: Explore on Door → 2 total progress → auto-resolves → WorldWon
+    // Turn 1, play 2: Explore on Door → 4 total progress → auto-resolves → WorldWon
     const r2 = reduce(catalog, r1.state, {
       type: 'PlayCard',
       cardId: ex2Card.id,
@@ -135,9 +135,9 @@ describe('golden win: Door via two Explore plays', () => {
 // Golden loss: HP → 0 via Zombie discard
 //
 // Setup:
-//   Hand = [Zombie (Damage 1 onDiscarded)]
-//   HP = 1
-//   DiscardHazard(Zombie) → Damage(1) → HP=0 → WorldLost → status='lost'
+//   Hand = [Zombie (Damage 5 onDiscarded)]
+//   HP = 5
+//   DiscardHazard(Zombie) → Damage(5) → HP=0 → WorldLost → status='lost'
 // ---------------------------------------------------------------------------
 
 describe('golden loss: HP reaches 0 via Zombie discard', () => {
@@ -145,10 +145,10 @@ describe('golden loss: HP reaches 0 via Zombie discard', () => {
   const [zombie, minted] = mintCard(catalog, base, 'Zombie')
   const zombieCard = zombie as WorldCard
 
-  it('discarding Zombie at hp=1 transitions to status=lost', () => {
+  it('discarding Zombie at hp=5 transitions to status=lost', () => {
     const state = makeState({
       ...minted,
-      hp: 1,
+      hp: 5,
       hand: [zombieCard],
     })
 
