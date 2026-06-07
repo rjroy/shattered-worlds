@@ -22,7 +22,7 @@ import type { CardEffect, GameState, PlayerCard, WorldCard } from '../../core/in
 export function describeEffect(effect: CardEffect): string[] {
   switch (effect.kind) {
     case 'DealProgress': {
-      const bonus = effect.bonus ? ` (+${effect.bonus.amount} vs ${effect.bonus.tag})` : ''
+      const bonus = effect.bonus ? `\n(+${effect.bonus.amount} vs ${effect.bonus.tag})` : ''
       return [`Add ${effect.base} Progress${bonus}`]
     }
     case 'Draw': {
@@ -36,7 +36,11 @@ export function describeEffect(effect: CardEffect): string[] {
     case 'ReturnWorldCards':
       return [describeReturn(effect.min, effect.max)]
     case 'DestroyCardInHand':
-      return ['Destroy a card in hand (optional)']
+      return [
+        effect.max == 1 ? `Destroy a card in hand` : `Destroy ${effect.min}–${effect.max} cards in hand`, 
+        (effect.min == 0 && effect.max == 1) ? '(optional)' : ``,
+        effect.maxCost !== undefined ? `(cost ≤ ${effect.maxCost})` : ''
+      ]
     case 'DiscardThenDraw':
       return [`Discard a card, then draw ${effect.player}`]
     case 'AddCard':

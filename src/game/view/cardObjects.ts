@@ -55,7 +55,7 @@ function addCardText(
   y: number,
   str: string,
   opts: CardTextOpts,
-): Phaser.GameObjects.Text {
+): Phaser.GameObjects.Text[] {
   const style: Phaser.Types.GameObjects.Text.TextStyle = {
     fontSize: opts.fontSize,
     color: opts.color,
@@ -66,10 +66,22 @@ function addCardText(
     style.wordWrap = { width: opts.wrapWidth }
     style.align = 'center'
   }
-  const text = scene.add.text(x, y, str, textStyle(style))
+  const text = scene.add.text(x, y, '', textStyle(style))
   text.setOrigin(0.5, opts.originY)
+  const wrapped = text.getWrappedText(str)
   container.add(text)
-  return text
+  let currY = y
+  return wrapped.map((line, i) => {
+    const lineText = i == 0 ? text : scene.add.text(x, currY, '', textStyle(style))
+    lineText.setText(line)
+    lineText.setOrigin(0.5, opts.originY)
+    currY += text.height + (opts.lineSpacing ?? 0)  
+    if (line.includes('Progress')) {
+      lineText.preFX?.addGlow(TEXT.textCostInt, 0.8, 2)
+    }
+    container.add(lineText)
+    return lineText
+  })
 }
 
 /**

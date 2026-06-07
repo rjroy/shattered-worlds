@@ -38,10 +38,10 @@
       "kind": "world",
       "name": "Zombie",
       "insetKey": "zombie-inset-zombie",
-      "cost": 1,
+      "cost": 3,
       "keywords": ["Slow", "Creature"],
       "discardable": true,
-      "onDiscarded": { "kind": "Damage", "amount": 1 },
+      "onDiscarded": { "kind": "Damage", "amount": 5 },
       "onCleared": { "kind": "None" },
       "onEndOfTurn": { "kind": "Damage", "amount": 1 }
     },
@@ -71,8 +71,8 @@
       "kind": "world",
       "name": "Door",
       "insetKey": "inset-door",
-      "cost": 2,
-      "keywords": [],
+      "cost": 4,
+      "keywords": ["Hidden"],
       "discardable": false,
       "onDiscarded": { "kind": "None" },
       "onCleared": { "kind": "SurviveWorld" },
@@ -82,19 +82,19 @@
       "kind": "player",
       "name": "Listen",
       "insetKey": "zombie-inset-listen",
-      "effect": { "kind": "DealProgress", "base": 1, "bonus": { "tag": "Hidden", "amount": 2 } }
+      "effect": { "kind": "DealProgress", "base": 2, "bonus": { "tag": "Hidden", "amount": 2 } }
     },
     "Baseball Bat": {
       "kind": "player",
       "name": "Baseball Bat",
       "insetKey": "zombie-inset-baseball",
-      "effect": { "kind": "DealProgress", "base": 2, "bonus": { "tag": "Creature", "amount": 3 } }
+      "effect": { "kind": "DealProgress", "base": 1, "bonus": { "tag": "Creature", "amount": 3 } }
     },
     "Regroup": {
       "kind": "player",
       "name": "Regroup",
       "insetKey": "zombie-inset-regroup",
-      "effect": { "kind": "DestroyCardInHand", "min": 0, "max": 1 }
+      "effect": { "kind": "DestroyCardInHand", "min": 0, "max": 1, "maxCost": 2 }
     },
     "Summon Door": {
       "kind": "player",
