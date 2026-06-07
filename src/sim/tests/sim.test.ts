@@ -17,6 +17,8 @@ const { catalog, worldData } = buildZombieWorld()
 // Shared helpers
 // ---------------------------------------------------------------------------
 
+const WORLD_TIMEOUT = 10000 // ms, for test timeouts
+const WORLD_COUNT = 1000
 const MAX_ACTIONS = 500
 
 function runWorld(seed: number): { finalState: GameState; turns: number; actions: number } {
@@ -41,24 +43,34 @@ function runWorld(seed: number): { finalState: GameState; turns: number; actions
 // ---------------------------------------------------------------------------
 
 describe('policy', () => {
-  test('never throws across 10 worlds', () => {
-    for (let seed = 1; seed <= 10; seed++) {
+  test(`all worlds reach terminal state within ${MAX_ACTIONS} actions`, () => {
+    for (let seed = 1; seed <= WORLD_COUNT; seed++) {
+      const { finalState, actions } = runWorld(seed)
+      expect(
+        finalState.status === 'won' || finalState.status === 'lost',
+        `World seed=${seed} did not reach terminal state in ${actions} actions`,
+      ).toBe(true)
+    }
+  }, { timeout: WORLD_TIMEOUT })
+
+  test(`never throws across ${WORLD_COUNT} worlds`, () => {
+    for (let seed = 1; seed <= WORLD_COUNT; seed++) {
       expect(() => runWorld(seed)).not.toThrow()
     }
-  })
+  }, { timeout: WORLD_TIMEOUT })
 
-  test('at least 1 win in 1000 worlds', () => {
+  test(`at least 1 win in ${WORLD_COUNT} worlds`, () => {
     let wins = 0
-    // 1000 is used because `runWorld` isn't designed to win consistently; it's a smoke test to catch catastrophic regressions, not a benchmark for the policy's win rate. If this test fails, it indicates a severe issue with the game logic or policy. 
-    for (let seed = 1; seed <= 1000; seed++) {
+    // WORLD_COUNT is used because `runWorld` isn't designed to win consistently; it's a smoke test to catch catastrophic regressions, not a benchmark for the policy's win rate. If this test fails, it indicates a severe issue with the game logic or policy. 
+    for (let seed = 1; seed <= WORLD_COUNT; seed++) {
       const { finalState } = runWorld(seed)
       if (finalState.status === 'won') wins++
     }
     expect(wins).toBeGreaterThanOrEqual(1)
-  })
+  }, { timeout: WORLD_TIMEOUT })
 
-  test('ID accounting holds for 5 worlds', () => {
-    for (let seed = 1; seed <= 5; seed++) {
+  test(`ID accounting holds for ${WORLD_COUNT} worlds`, () => {
+    for (let seed = 1; seed <= WORLD_COUNT; seed++) {
       let state = createWorld(catalog, worldData, seed)
       const rng = rngFromSeed(seed)
       let actions = 0
@@ -74,15 +86,5 @@ describe('policy', () => {
       // Final state check
       expect(() => checkIdAccounting(state)).not.toThrow()
     }
-  })
-
-  test('all worlds reach terminal state within 500 actions', () => {
-    for (let seed = 1; seed <= 50; seed++) {
-      const { finalState, actions } = runWorld(seed)
-      expect(
-        finalState.status === 'won' || finalState.status === 'lost',
-        `World seed=${seed} did not reach terminal state in ${actions} actions`,
-      ).toBe(true)
-    }
-  })
+  }, { timeout: WORLD_TIMEOUT })
 })
