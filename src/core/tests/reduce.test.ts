@@ -191,6 +191,82 @@ describe('DiscardHazard legal', () => {
 })
 
 // ---------------------------------------------------------------------------
+// 4b. ForceDestroy: discard queues a charge that hits the NEXT hand
+// ---------------------------------------------------------------------------
+
+describe('ForceDestroy onDiscarded', () => {
+  /** A discardable world card whose onDiscarded queues a ForceDestroy. */
+  function grippingTalon(base: GameState): [WorldCard, GameState] {
+    const [zombie, next] = mintCard(catalog, base, 'Zombie')
+    const talon: WorldCard = {
+      ...(zombie as WorldCard),
+      name: 'Gripping Talon',
+      onDiscarded: { kind: 'ForceDestroy' },
+    }
+    return [talon, next]
+  }
+
+  it('discarding queues a charge but does NOT destroy from the current hand', () => {
+    const base = createWorld(catalog, worldData, 42)
+    const [talon, s1] = grippingTalon(base)
+    const state = makeState({ ...s1, hand: [talon] })
+
+    const result = reduce(catalog, state, { type: 'DiscardHazard', cardId: talon.id })
+
+    expect(result.state.pendingForceDestroy).toBe(1)
+    expect(result.events.map((e) => e.type)).toContain('HazardDiscarded')
+    // Nothing is destroyed yet — the charge resolves at the next turn start.
+    expect(result.events.map((e) => e.type)).not.toContain('CardDestroyed')
+  })
+
+  it('the queued charge destroys a player card from the refilled hand on EndTurn', () => {
+    const base = createWorld(catalog, worldData, 42)
+    const [talon, s1] = grippingTalon(base)
+
+    // Six player cards to refill from, plus world cards so the livelock guard
+    // (no world cards anywhere) does not fire and the refill draws normally.
+    let acc: GameState = s1
+    const playerDraw: PlayerCard[] = []
+    for (let i = 0; i < 6; i++) {
+      const [c, next] = mintCard(catalog, acc, 'Explore')
+      playerDraw.push(c as PlayerCard)
+      acc = next
+    }
+    const worldDraw: WorldCard[] = []
+    for (let i = 0; i < 3; i++) {
+      const [c, next] = mintCard(catalog, acc, 'Rubble')
+      worldDraw.push(c as WorldCard)
+      acc = next
+    }
+
+    const state = makeState({
+      ...acc,
+      hand: [talon],
+      playerDraw,
+      worldDraw,
+    })
+
+    // Discard the talon → charge queued.
+    const afterDiscard = reduce(catalog, state, { type: 'DiscardHazard', cardId: talon.id })
+    expect(afterDiscard.state.pendingForceDestroy).toBe(1)
+
+    // End the turn → hand refills, then the charge takes one player card.
+    const afterEnd = reduce(catalog, afterDiscard.state, { type: 'EndTurn' })
+
+    expect(afterEnd.state.status).toBe('playing')
+    expect(afterEnd.state.pendingForceDestroy).toBe(0)
+    expect(afterEnd.events.map((e) => e.type)).toContain('CardDestroyed')
+
+    // The destroyed card is gone from the new hand.
+    const destroyed = afterEnd.events.find((e) => e.type === 'CardDestroyed')
+    const destroyedId = (destroyed as { id: string }).id
+    expect(afterEnd.state.hand.some((c) => c.id === destroyedId)).toBe(false)
+    // One player card fewer than a full refill would have produced.
+    expect(afterEnd.state.hand.filter((c) => c.kind === 'player')).toHaveLength(3)
+  })
+})
+
+// ---------------------------------------------------------------------------
 // 5. DiscardHazard on Door throws IllegalActionError
 // ---------------------------------------------------------------------------
 
@@ -479,6 +555,156 @@ describe('Regroup destroyHand', () => {
 })
 
 // ---------------------------------------------------------------------------
+// 11b. Exhaust: a played card is destroyed instead of discarded
+// ---------------------------------------------------------------------------
+
+describe('PlayCard exhaust', () => {
+  /**
+   * Mint an Explore (cost-0, DealProgress on a hazard) and flag it exhaust.
+   * Mirrors the grippingTalon helper: mint from the catalog, then spread an
+   * override onto the minted card.
+   */
+  function exhaustExplore(base: GameState): [PlayerCard, GameState] {
+    const [explore, next] = mintCard(catalog, base, 'Explore')
+    return [{ ...(explore as PlayerCard), exhaust: true }, next]
+  }
+
+  /** Mint a Med Kit (Heal) and flag it exhaust. */
+  function exhaustMedKit(base: GameState): [PlayerCard, GameState] {
+    const [medKit, next] = mintCard(catalog, base, 'Med Kit')
+    return [{ ...(medKit as PlayerCard), exhaust: true }, next]
+  }
+
+  it('playing an exhaust card removes it from hand AND keeps it out of playerDiscard', () => {
+    const base = createWorld(catalog, worldData, 42)
+    const [exhaustCard, s1] = exhaustExplore(base)
+    const [rubble, s2] = mintCard(catalog, s1, 'Rubble')
+
+    const state = makeState({
+      ...s2,
+      hand: [rubble as WorldCard, exhaustCard],
+    })
+
+    const result = reduce(catalog, state, {
+      type: 'PlayCard',
+      cardId: exhaustCard.id,
+      targetId: rubble.id,
+    })
+
+    expect(result.state.hand.some((c) => c.id === exhaustCard.id)).toBe(false)
+    expect(result.state.playerDiscard.some((c) => c.id === exhaustCard.id)).toBe(false)
+  })
+
+  it('playing an exhaust card emits CardDestroyed with the card id alongside CardPlayed', () => {
+    const base = createWorld(catalog, worldData, 42)
+    const [exhaustCard, s1] = exhaustExplore(base)
+    const [rubble, s2] = mintCard(catalog, s1, 'Rubble')
+
+    const state = makeState({
+      ...s2,
+      hand: [rubble as WorldCard, exhaustCard],
+    })
+
+    const result = reduce(catalog, state, {
+      type: 'PlayCard',
+      cardId: exhaustCard.id,
+      targetId: rubble.id,
+    })
+
+    const types = result.events.map((e) => e.type)
+    expect(types).toContain('CardPlayed')
+    expect(types).toContain('CardDestroyed')
+
+    const destroyed = result.events.find((e) => e.type === 'CardDestroyed')
+    expect(destroyed).toBeDefined()
+    if (destroyed?.type === 'CardDestroyed') {
+      expect(destroyed.id).toBe(exhaustCard.id)
+    }
+
+    // CardDestroyed must come AFTER CardPlayed and after the effect events.
+    const cardPlayedIdx = types.indexOf('CardPlayed')
+    const destroyedIdx = types.indexOf('CardDestroyed')
+    const progressIdx = types.indexOf('ProgressDealt')
+    expect(cardPlayedIdx).toBeLessThan(destroyedIdx)
+    expect(progressIdx).toBeLessThan(destroyedIdx)
+  })
+
+  it("an exhaust card's effect still applies (exhaust + Heal raises hp)", () => {
+    const base = createWorld(catalog, worldData, 42)
+    const [medKit, s1] = exhaustMedKit(base)
+
+    const state = makeState({
+      ...s1,
+      hp: 5,
+      hand: [medKit],
+    })
+
+    const result = reduce(catalog, state, { type: 'PlayCard', cardId: medKit.id })
+
+    // Med Kit heals 2 (starter.json) — effect resolves despite the exhaust.
+    expect(result.state.hp).toBe(7)
+    expect(result.events.map((e) => e.type)).toContain('CardDestroyed')
+    // Destroyed, not recycled.
+    expect(result.state.playerDiscard.some((c) => c.id === medKit.id)).toBe(false)
+  })
+
+  it('control: a non-exhaust card lands in playerDiscard and emits NO CardDestroyed', () => {
+    const base = createWorld(catalog, worldData, 42)
+    const [explore, s1] = mintCard(catalog, base, 'Explore')
+    const [rubble, s2] = mintCard(catalog, s1, 'Rubble')
+
+    const state = makeState({
+      ...s2,
+      hand: [rubble as WorldCard, explore as PlayerCard],
+    })
+
+    const result = reduce(catalog, state, {
+      type: 'PlayCard',
+      cardId: explore.id,
+      targetId: rubble.id,
+    })
+
+    expect(result.state.playerDiscard.some((c) => c.id === explore.id)).toBe(true)
+    expect(result.events.map((e) => e.type)).not.toContain('CardDestroyed')
+  })
+
+  it("deck-recycle guard: an exhausted card's id never reappears in any zone after a reshuffle", () => {
+    // Empty playerDraw with a non-empty playerDiscard forces refillHand to
+    // recycle the discard into a reshuffled draw pile on the next turn start.
+    // The exhausted card must not be anywhere to be recycled.
+    const base = createWorld(catalog, worldData, 42)
+    const [exhaustCard, s1] = exhaustExplore(base)
+    const [rubble, s2] = mintCard(catalog, s1, 'Rubble')
+    // A second player card lands in playerDiscard so the reshuffle path runs.
+    const [filler, s3] = mintCard(catalog, s2, 'Explore')
+
+    const state = makeState({
+      ...s3,
+      hand: [rubble as WorldCard, exhaustCard],
+      playerDraw: [],
+      playerDiscard: [filler as PlayerCard],
+    })
+
+    // Play the exhaust card → destroyed.
+    const afterPlay = reduce(catalog, state, {
+      type: 'PlayCard',
+      cardId: exhaustCard.id,
+      targetId: rubble.id,
+    })
+
+    // End the turn → hand refills, draw recycles from discard (reshuffle).
+    const afterEnd = reduce(catalog, afterPlay.state, { type: 'EndTurn' })
+
+    const everywhere = [
+      ...afterEnd.state.hand,
+      ...afterEnd.state.playerDraw,
+      ...afterEnd.state.playerDiscard,
+    ]
+    expect(everywhere.some((c) => c.id === exhaustCard.id)).toBe(false)
+  })
+})
+
+// ---------------------------------------------------------------------------
 // 12. onEndOfTurn: world cards fire their effect at the end of each turn
 // ---------------------------------------------------------------------------
 
@@ -557,6 +783,129 @@ describe('EndTurn onEndOfTurn', () => {
 
     expect(result.state.hp).toBe(10)
     expect(result.events.map((e) => e.type)).not.toContain('DamageDealt')
+  })
+})
+
+// ---------------------------------------------------------------------------
+// 8b. EndTurn Corpse self-transform (DestroySelf + AddWorldCardToTop)
+// ---------------------------------------------------------------------------
+
+describe('EndTurn Corpse self-transform', () => {
+  // Mints one Corpse plus five Explores from a single id-allocation chain (so
+  // no ids collide), puts the Corpse alone in hand, and empties the world/act
+  // piles so the only world card that can appear is one the end-of-turn loop
+  // spawns. Returns the crafted state and the minted Corpse.
+  function makeCorpseState(): { state: GameState; corpse: WorldCard } {
+    const base = createWorld(catalog, worldData, 42)
+    const [corpse, c1] = mintCard(catalog, base, 'Corpse')
+
+    let acc: GameState = c1
+    const playerDraw: PlayerCard[] = []
+    for (let i = 0; i < 5; i++) {
+      const [c, next] = mintCard(catalog, acc, 'Explore')
+      playerDraw.push(c as PlayerCard)
+      acc = next
+    }
+
+    const state = makeState({
+      ...acc,
+      hp: 10,
+      hand: [corpse as WorldCard],
+      worldDraw: [],
+      acts: [],
+      playerDraw,
+    })
+    return { state, corpse: corpse as WorldCard }
+  }
+
+  it('an undealt Corpse degrades: gone from hand and a Zombie is spawned onto the world deck', () => {
+    const { state, corpse } = makeCorpseState()
+
+    const beforeWorldDraw = state.worldDraw.length
+    const result = reduce(catalog, state, { type: 'EndTurn' })
+
+    // The DestroySelf step removes the Corpse and the AddWorldCardToTop step
+    // mints a Zombie onto worldDrawTop. CardGained fires for that Zombie, and
+    // CardDestroyed for the Corpse, in onEndOfTurn order (before the refill).
+    const gained = result.events.find((e) => e.type === 'CardGained')
+    expect(gained).toBeDefined()
+    const destroyed = result.events.find((e) => e.type === 'CardDestroyed')
+    expect(destroyed).toBeDefined()
+    if (destroyed?.type === 'CardDestroyed') {
+      expect(destroyed.id).toBe(corpse.id)
+    }
+
+    // Net world-card count grew by exactly one (the spawned Zombie), even
+    // though startTurn then draws it from worldDraw into the next hand.
+    const corpseGone = !result.state.hand.some((c) => c.id === corpse.id)
+    expect(corpseGone).toBe(true)
+    const worldCardsAfter =
+      result.state.worldDraw.length +
+      result.state.hand.filter((c) => c.kind === 'world').length
+    expect(worldCardsAfter).toBe(beforeWorldDraw + 1)
+
+    // The spawned world card is a Zombie (it was drawn into the refilled hand).
+    const spawnedZombie = result.state.hand.find(
+      (c) => c.kind === 'world' && c.name === 'Zombie',
+    )
+    expect(spawnedZombie).toBeDefined()
+  })
+
+  it('does not re-fire same turn: exactly one Zombie is spawned by one Corpse', () => {
+    const { state } = makeCorpseState()
+
+    const result = reduce(catalog, state, { type: 'EndTurn' })
+
+    // Exactly one CardGained event: the spawned Zombie does NOT also run its
+    // own onEndOfTurn this turn (which would add more cards / deal damage),
+    // because the end-of-turn loop iterates a snapshot taken at loop entry.
+    const gained = result.events.filter((e) => e.type === 'CardGained')
+    expect(gained).toHaveLength(1)
+
+    // The spawned Zombie's onEndOfTurn (Damage 1) never ran this turn.
+    expect(result.events.some((e) => e.type === 'DamageDealt')).toBe(false)
+    expect(result.state.hp).toBe(10)
+  })
+
+  it('the spawned Zombie behaves as a normal Zombie next turn: its onEndOfTurn deals 1 damage on turn 2', () => {
+    const { state } = makeCorpseState()
+
+    // Turn 1: the Corpse degrades and a Zombie spawns. World cards stay in hand
+    // across EndTurn (only player cards are discarded), so the spawned Zombie is
+    // drawn into the refilled hand and persists into turn 2. The Corpse's own
+    // onEndOfTurn deals no damage, so hp is unchanged this turn — our baseline.
+    const afterTurn1 = reduce(catalog, state, { type: 'EndTurn' })
+    expect(afterTurn1.state.hp).toBe(10)
+    const spawnedZombie = afterTurn1.state.hand.find(
+      (c) => c.kind === 'world' && c.name === 'Zombie',
+    )
+    expect(spawnedZombie).toBeDefined()
+
+    // Turn 2: the spawned Zombie is now a normal world card in hand, so its own
+    // onEndOfTurn (Damage 1, per zombie-big-box.json) fires this turn.
+    const afterTurn2 = reduce(catalog, afterTurn1.state, { type: 'EndTurn' })
+
+    expect(afterTurn2.events.map((e) => e.type)).toContain('DamageDealt')
+    expect(afterTurn2.state.hp).toBe(afterTurn1.state.hp - 1)
+  })
+
+  it('a Corpse discarded during the turn does not degrade (its onEndOfTurn never runs)', () => {
+    // Hand holds only the Corpse; discard it before ending the turn.
+    const { state, corpse } = makeCorpseState()
+
+    const afterDiscard = reduce(catalog, state, {
+      type: 'DiscardHazard',
+      cardId: corpse.id,
+    })
+    // Corpse is gone from hand via discard.
+    expect(afterDiscard.state.hand.some((c) => c.id === corpse.id)).toBe(false)
+
+    const result = reduce(catalog, afterDiscard.state, { type: 'EndTurn' })
+
+    // No Zombie spawned by a degrade — onEndOfTurn never ran for the Corpse,
+    // so no CardGained from the Sequence fires during the end-of-turn loop.
+    expect(result.events.some((e) => e.type === 'CardGained')).toBe(false)
+    expect(result.state.hand.some((c) => c.kind === 'world' && c.name === 'Zombie')).toBe(false)
   })
 })
 

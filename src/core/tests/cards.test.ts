@@ -22,6 +22,7 @@ function makeEmptyState(nextId = 0): GameState {
     hp: 10,
     energy: 0,
     skipDrawNext: false,
+    pendingForceDestroy: 0,
     status: 'playing',
     worldId: 'zombie-big-box',
     rng: createRng(0),
@@ -45,6 +46,7 @@ const ALL_TEMPLATE_IDS: readonly CardTemplateId[] = [
   'Screams',
   'Zombie',
   'Find Baseball Bat',
+  'Corpse',
   'The Walker',
   'Door',
 ]
@@ -54,14 +56,14 @@ const ALL_TEMPLATE_IDS: readonly CardTemplateId[] = [
 // ---------------------------------------------------------------------------
 
 describe('catalog completeness', () => {
-  it('all 17 CardTemplateIds mint a card without throwing', () => {
+  it('all 18 CardTemplateIds mint a card without throwing', () => {
     for (const id of ALL_TEMPLATE_IDS) {
       expect(() => mintCard(catalog, makeEmptyState(), id)).not.toThrow()
     }
   })
 
-  it('catalog has exactly 17 entries', () => {
-    expect(Object.keys(catalog)).toHaveLength(17)
+  it('catalog has exactly 18 entries', () => {
+    expect(Object.keys(catalog)).toHaveLength(18)
   })
 })
 

@@ -37,12 +37,13 @@ function handlePlayCard(
     throw new IllegalActionError(action, state, `Card ${cardId} not found in hand`)
   }
 
-  // Remove the card from hand and send it to playerDiscard so it recycles
-  const handAfterPlay = state.hand.filter((c) => c.id !== cardId)
+  // Remove the card from hand. A normal card recycles to playerDiscard; an
+  // exhaust card is destroyed (sent to no zone).
+  const exhaust = card.exhaust === true
   const stateAfterPlay: GameState = {
     ...state,
-    hand: handAfterPlay,
-    playerDiscard: [card, ...state.playerDiscard],
+    hand: state.hand.filter((c) => c.id !== cardId),
+    playerDiscard: exhaust ? state.playerDiscard : [card, ...state.playerDiscard],
   }
 
   const events: GameEvent[] = [{ type: 'CardPlayed', cardId }]
@@ -56,6 +57,12 @@ function handlePlayCard(
   // Apply the card's effect (on the post-spend state)
   const effectResult = applyEffect(catalog, stateAfterSpend, card.effect, action)
   events.push(...effectResult.events)
+
+  // CardDestroyed comes AFTER the effect events so the play reads as
+  // play → spend → effect → the card vanishes.
+  if (exhaust) {
+    events.push({ type: 'CardDestroyed', id: cardId })
+  }
 
   return { state: effectResult.state, events }
 }
@@ -112,10 +119,15 @@ function handleDiscardHazard(
 function handleEndTurn(catalog: CardCatalog, state: GameState): ReduceResult {
   const events: GameEvent[] = [{ type: 'TurnEnded' }]
 
-  // Fire onEndOfTurn for each world card in hand
+  // Fire onEndOfTurn for each world card in hand. The loop iterates a snapshot
+  // of the world cards captured at loop entry (state.hand.filter(...)), so a
+  // card spawned during the loop (e.g. AddWorldCardToTop) is NOT re-processed
+  // this turn — this is what prevents a same-turn transform chain.
   let current = state
   for (const card of state.hand.filter((c): c is WorldCard => c.kind === 'world')) {
-    const r = applyEffect(catalog, current, card.onEndOfTurn)
+    // Pass card.id as selfId so self-referential hooks (DestroySelf) know which
+    // card fired them.
+    const r = applyEffect(catalog, current, card.onEndOfTurn, undefined, card.id)
     current = r.state
     events.push(...r.events)
     if (current.status !== 'playing') {

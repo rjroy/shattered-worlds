@@ -41,7 +41,7 @@
       "cost": 3,
       "keywords": ["Slow", "Creature"],
       "discardable": true,
-      "onDiscarded": { "kind": "Damage", "amount": 5 },
+      "onDiscarded": { "kind": "ForceDestroy" },
       "onCleared": { "kind": "None" },
       "onEndOfTurn": { "kind": "Damage", "amount": 1 }
     },

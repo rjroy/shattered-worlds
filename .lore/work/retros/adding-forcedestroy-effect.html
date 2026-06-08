@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Adding the ForceDestroy card effect end-to-end</title>
+  <meta name="date" content="2026-06-07">
+  <meta name="status" content="open">
+  <meta name="tags" content="card-effect, effect-system, deferred-effect, next-hand, exhaustive-switch, gamestate-field, turn-cycle, testing, renderer-state-diff, deckbuilder">
+  <meta name="modules" content="core-engine, effects, draw, energy, worlds, theme-authoring, renderer">
+  <meta name="related" content=".lore/work/brainstorm/theme-mechanical-differentiation.html, .lore/reference/theme-authoring.html">
+  <style>
+    :root {
+      --bg: #0c0a10; --panel: #18141f; --panel-2: #211a2b;
+      --ink: #ece6f2; --muted: #9b8fb0; --accent: #b98aff;
+      --gold: #d6b15c; --ember: #ff8a3c; --good: #6cd08a; --intrude: #ff4fa3;
+      --border: #2c2438; --code: #c9b8e6;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: radial-gradient(1100px 560px at 50% -8%, #241433 0%, var(--bg) 58%);
+      color: var(--ink); font: 16px/1.65 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      padding: 2.5rem 1rem 6rem; }
+    .wrap { max-width: 900px; margin: 0 auto; }
+    h1 { font-size: 2rem; margin: 0 0 .4rem; line-height: 1.1;
+      background: linear-gradient(180deg, #fff, #c9b8e6); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+    .sub { color: var(--muted); margin: 0 0 2rem; }
+    h2 { font-size: 1.3rem; margin: 2.4rem 0 .8rem; border-bottom: 1px solid var(--border); padding-bottom: .4rem; }
+    h3 { font-size: 1rem; color: var(--accent); margin: 1.4rem 0 .3rem; }
+    p { margin: .6rem 0; }
+    code { font-family: "SF Mono", ui-monospace, "Cascadia Code", Menlo, Consolas, monospace;
+      font-size: .87em; color: var(--code); background: rgba(185,138,255,.08);
+      border: 1px solid rgba(185,138,255,.16); border-radius: 5px; padding: .05rem .35rem; }
+    .step { border-left: 3px solid var(--accent); background: rgba(185,138,255,.05);
+      border-radius: 0 10px 10px 0; padding: .6rem 1rem; margin: .8rem 0; }
+    .step .n { color: var(--accent); font-weight: 700; margin-right: .4rem; }
+    .surprise { border-left: 3px solid var(--ember); background: rgba(255,138,60,.07);
+      border-radius: 0 10px 10px 0; padding: .7rem 1rem; margin: 1rem 0; }
+    .surprise .tag { color: var(--ember); font-weight: 700; font-size: .72rem; text-transform: uppercase; letter-spacing: .06em; }
+    .seam { border-left: 3px solid var(--gold); background: rgba(214,177,92,.06);
+      border-radius: 0 10px 10px 0; padding: .7rem 1rem; margin: 1rem 0; }
+    .seam .tag { color: var(--gold); font-weight: 700; font-size: .72rem; text-transform: uppercase; letter-spacing: .06em; }
+    table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: .9rem; }
+    th, td { text-align: left; padding: .5rem .7rem; border-bottom: 1px solid var(--border); vertical-align: top; }
+    th { color: var(--gold); font-size: .74rem; text-transform: uppercase; letter-spacing: .06em; }
+    ul { margin: .5rem 0; padding-left: 1.3rem; }
+    li { margin: .25rem 0; }
+    .meta-foot { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid var(--border);
+      color: var(--muted); font-size: .82rem; }
+  </style>
+</head>
+<body>
+<div class="wrap">
+
+  <h1>Adding the ForceDestroy card effect end-to-end</h1>
+  <p class="sub">What it took to add one new <code>CardEffect</code> kind to the engine: queue on discard, destroy a random player card from the next hand. Bird-building's Gripping Talon. 2026-06-07.</p>
+
+  <h2>The setup</h2>
+  <p>The session opened pointed at the brainstorm <code>theme-mechanical-differentiation.html</code>, where the bird world's "displace" threat-verb was flagged as the one idea that genuinely needs a new effect ("the bird carries your stuff off — no discard/steal-a-random-player-card effect exists today"). The request: add a <code>ForceDestroy</code> effect, put it on Gripping Talon's <code>onDiscard</code>, destroying a random card from the player's next hand.</p>
+  <p>First move was reading the request as a doc edit because of where we'd left off. It was a code task; the brainstorm was only the breadcrumb. No artifact (spec/plan) was written — this went straight from request to implementation after reading the engine.</p>
+
+  <h2>What the change actually touched</h2>
+  <p>"One new effect" landed across eight non-test files plus four test files. The spread came from two things: a new effect needs a slot in the discriminated union (which ripples into every exhaustive switch), and "next hand" is a <em>deferred</em> effect that can't resolve where it's invoked.</p>
+
+  <table>
+    <tr><th>File</th><th>What it needed</th></tr>
+    <tr><td><code>core/model/types.ts</code></td><td><code>{ kind: 'ForceDestroy' }</code> in the <code>CardEffect</code> union, and a new <code>pendingForceDestroy: number</code> field on <code>GameState</code></td></tr>
+    <tr><td><code>core/engine/effects.ts</code></td><td><code>ForceDestroy</code> case: increments the counter, emits nothing</td></tr>
+    <tr><td><code>core/engine/draw.ts</code></td><td>new <code>resolveForceDestroy()</code> — picks random player cards from the refilled hand via seeded <code>shuffle</code>, emits <code>CardDestroyed</code></td></tr>
+    <tr><td><code>core/engine/energy.ts</code></td><td><code>startTurn</code> now composes energy → refill → <em>resolveForceDestroy</em>, in that order</td></tr>
+    <tr><td><code>core/engine/world.ts</code></td><td>seed <code>pendingForceDestroy: 0</code> in the initial skeleton state</td></tr>
+    <tr><td><code>game/interaction/describe.ts</code></td><td><code>ForceDestroy</code> case in the card-text switch</td></tr>
+    <tr><td><code>data/worlds/bird-building.json</code></td><td>Gripping Talon <code>onDiscarded</code>: <code>Damage 5</code> → <code>ForceDestroy</code></td></tr>
+    <tr><td>4 test files</td><td>new unit + integration tests, plus the required field added to 6 GameState literals</td></tr>
+  </table>
+
+  <h2>The timing problem: "next hand" can't resolve at discard</h2>
+  <p>A discard fires <code>onDiscarded</code> mid-turn through <code>handleDiscardHazard</code>. The "next hand" does not exist yet — it gets built at the following <code>EndTurn</code> in <code>refillHand</code>. So the effect had to split into two stages, mirroring how <code>skipDrawNext</code> already works (a boolean queued at discard, consumed at the next refill, emitting <code>DrawSkipped</code> when it fires):</p>
+  <div class="step"><span class="n">1.</span><strong>Queue.</strong> <code>ForceDestroy</code> increments <code>pendingForceDestroy</code>. No card touched, no event.</div>
+  <div class="step"><span class="n">2.</span><strong>Resolve.</strong> <code>resolveForceDestroy</code> runs at turn start <em>after</em> the refill, drains the counter against the new hand, emits one <code>CardDestroyed</code> per card taken.</div>
+  <p><code>skipDrawNext</code> was the template followed throughout — both for the queued-state-field pattern and for the "emit the event at resolution, not at queue time" choice.</p>
+
+  <h2>Where it got bumpy</h2>
+
+  <div class="surprise">
+    <span class="tag">Exhaustive switch with no default forced a touch</span>
+    <p><code>describeEffect</code> in <code>describe.ts</code> switches over every <code>CardEffect</code> kind with no <code>default</code> branch. Adding a union member broke its compile until a <code>ForceDestroy</code> case was added. This was the helpful kind of break — the type system pointed at the one renderer file that needed a string. By contrast, <code>available.ts</code> (structuralSpec / isPlayable) and <code>sim/policy.ts</code> all have <code>default</code> cases or switch on <code>TargetSpec</code> rather than <code>CardEffect</code>, so they silently did the right thing (ForceDestroy never becomes a playable player card, so it correctly reports none/false).</p>
+  </div>
+
+  <div class="surprise">
+    <span class="tag">Adding a required GameState field broke 6 test literals</span>
+    <p><code>pendingForceDestroy</code> being required (not optional) meant every hand-built full <code>GameState</code> literal failed typecheck. <code>tsc --noEmit</code> was the authoritative finder: 6 errors across <code>cards.test.ts</code>, <code>describe.test.ts</code>, <code>feedback.test.ts</code>, and <code>hud.test.ts</code> (3 sites). Test helpers that spread a <code>createWorld</code> base (the <code>makeState</code> pattern) were unaffected — only the from-scratch object literals needed the field. Grepping <code>skipDrawNext:</code> over-reported candidate sites; tsc gave the real list.</p>
+  </div>
+
+  <div class="surprise">
+    <span class="tag">The JSON change is never typechecked</span>
+    <p>World JSON is cast <code>as unknown as RawCardSource</code> in <code>worldManifest.ts</code>, so changing Gripping Talon's <code>onDiscarded</code> to an effect kind that didn't exist yet would not have been caught at the data layer. It only works because the union member was added in <code>types.ts</code>; the runtime <code>applyEffect</code> switch is what actually validates the kind. The cast bypasses the data-side safety net entirely.</p>
+  </div>
+
+  <h2>A design fork resolved without asking</h2>
+  <p>"A random card from the player's next hand" is literally ambiguous — the hand holds both player and world cards. Resolving it as written would let the effect destroy a world hazard, which <em>helps</em> the player and contradicts a threat. <code>resolveForceDestroy</code> was scoped to player cards only, with two further unspecified calls made and documented in code comments:</p>
+  <ul>
+    <li><strong>Fizzles, doesn't linger.</strong> Excess charges over available player cards are drained to 0, not carried into a later turn.</li>
+    <li><strong>Stacks.</strong> Two discards queue two charges and take two distinct player cards.</li>
+  </ul>
+
+  <h2>Renderer reality: the destruction lands without juice</h2>
+  <div class="seam">
+    <span class="tag">State-diff renderer, not event-driven</span>
+    <p>Tracing whether <code>CardDestroyed</code> produces any feedback turned up that <code>TableScene</code> never reads the event stream at all. It reconciles card objects against <code>game_.state.hand</code> in <code>drawAll()</code> after every dispatch: cards whose id is no longer in the hand have their Phaser container <code>destroy()</code>ed (after killing tweens). So a force-destroyed card just vanishes on the next repaint. There is no <code>CardDestroyed</code> handler anywhere in <code>src/game</code> — the existing <code>DestroyCardInHand</code> effect (Regroup, Steady) has the same silent removal. Feedback was explicitly deferred ("we'll add feedback later").</p>
+  </div>
+
+  <h2>Verification</h2>
+  <p><code>tsc --noEmit</code> clean, <code>eslint</code> on changed files clean, full suite <strong>326 pass / 0 fail</strong> (6 new tests). New tests: <code>resolveForceDestroy</code> unit coverage in <code>draw.test.ts</code> (no-op, single destroy, world-cards-spared, fizzle, multi-charge-distinct) and a discard→EndTurn integration in <code>reduce.test.ts</code> (charge queued but current hand untouched; charge resolves against the refilled hand). The integration test needed world cards seeded in <code>worldDraw</code> so the livelock guard ("no world cards anywhere + no way to make them") wouldn't fire <code>WorldLost</code> and mask the destruction being tested.</p>
+
+  <h2>Shape of "add an effect" in this engine</h2>
+  <p>For the next person adding a <code>CardEffect</code> kind, the surfaces that came up:</p>
+  <ul>
+    <li>Union member in <code>types.ts</code> + the <code>applyEffect</code> case in <code>effects.ts</code> are the irreducible minimum.</li>
+    <li><code>describeEffect</code> in <code>describe.ts</code> will fail compile until handled (no default). That's the trip-wire that reminds you the card needs display text.</li>
+    <li>A <em>deferred</em> effect (acts on a future hand/turn) needs a queued <code>GameState</code> field + a resolution point in the turn cycle. <code>skipDrawNext</code> is the existing reference pattern; <code>startTurn</code> in <code>energy.ts</code> is where post-refill resolution hooks in.</li>
+    <li>A new required <code>GameState</code> field breaks from-scratch literals in tests; <code>createWorld</code>-spread helpers survive. Let <code>tsc</code> enumerate the sites.</li>
+    <li>World JSON effect changes are unchecked casts — the union member must exist or it fails only at runtime.</li>
+    <li>If the effect should feel like anything on screen, that's separate work: the renderer is state-diff based and currently ignores the event stream.</li>
+  </ul>
+
+  <div class="meta-foot">
+    Shattered Worlds · Retro · related: <code>.lore/work/brainstorm/theme-mechanical-differentiation.html</code>
+  </div>
+
+</div>
+</body>
+</html>

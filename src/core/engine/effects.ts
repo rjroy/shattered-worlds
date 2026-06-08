@@ -240,12 +240,17 @@ export function heal(state: GameState, n: number): EffectResult {
  * Apply any CardEffect. Pass `action` for player-card effects that require
  * targeting information (DealProgress, ReturnWorldCards, etc.); omit it for
  * onDiscarded and onCleared effects that run without player input.
+ *
+ * `selfId` is the id of the world card whose hook is firing, for
+ * self-referential effects like DestroySelf; undefined for player-played
+ * effects.
  */
 export function applyEffect(
   catalog: CardCatalog,
   state: GameState,
   effect: CardEffect,
   action?: Action,
+  selfId?: CardId,
 ): EffectResult {
   // Narrow to PlayCard once; cases that need targeting fields (DealProgress,
   // ReturnWorldCards, etc.) use this. onDiscarded/onCleared cases ignore it.
@@ -309,7 +314,7 @@ export function applyEffect(
       const choice = play?.choice ?? 0
       const branch = effect.branches[choice]
       if (branch === undefined) return { state, events: [] }
-      return applyEffect(catalog, state, branch, action)
+      return applyEffect(catalog, state, branch, action, selfId)
     }
 
     case 'Sequence': {
@@ -317,7 +322,7 @@ export function applyEffect(
       const events: GameEvent[] = []
 
       for (const step of effect.steps) {
-        const r = applyEffect(catalog, current, step, action)
+        const r = applyEffect(catalog, current, step, action, selfId)
         current = r.state
         events.push(...r.events)
       }
@@ -345,6 +350,20 @@ export function applyEffect(
       const events: GameEvent[] = [{ type: 'WorldWon' }]
       return { state: current, events }
     }
+
+    case 'ForceDestroy': {
+      // Queue one forced destruction; it resolves against the next refilled
+      // hand at turn start (resolveForceDestroy), not the current hand. No
+      // event fires here — CardDestroyed is emitted when the card is taken.
+      const current: GameState = {
+        ...state,
+        pendingForceDestroy: state.pendingForceDestroy + 1,
+      }
+      return { state: current, events: [] }
+    }
+
+    case 'DestroySelf':
+      return destroyInHand(state, selfId)
 
     case 'None':
       return { state, events: [] }

@@ -26,6 +26,12 @@ export type CardEffect =
   | { kind: 'GainCard'; template: CardTemplateId }
   | { kind: 'AddPlayerCardToTop'; template: CardTemplateId }
   | { kind: 'SurviveWorld' }
+  // Queues a forced destruction of a random player card from the *next* hand.
+  // Resolves at turn start after the hand refills (see resolveForceDestroy).
+  | { kind: 'ForceDestroy' }
+  // Removes the world card whose hook is firing (its selfId) from hand. Used by
+  // onEndOfTurn to let a card degrade into another (Corpse → Zombie).
+  | { kind: 'DestroySelf' }
   | { kind: 'None' }
 
 export interface PlayerCard {
@@ -36,6 +42,9 @@ export interface PlayerCard {
   sourceWorldId: string
   effect: CardEffect
   energyCost: number
+  // When true, the card is destroyed (sent to no zone) on play instead of
+  // recycling to playerDiscard.
+  exhaust?: boolean
 }
 
 export interface WorldCard {
@@ -85,6 +94,9 @@ export interface GameState {
   hp: number
   energy: number
   skipDrawNext: boolean
+  // Count of random player cards to destroy from the next refilled hand.
+  // Queued by the ForceDestroy effect; drained at turn start.
+  pendingForceDestroy: number
   status: 'playing' | 'won' | 'lost'
   worldId: string
   rng: RngState

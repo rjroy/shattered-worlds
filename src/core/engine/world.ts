@@ -71,6 +71,7 @@ export function createWorld(catalog: CardCatalog, world: WorldData, seed: number
     hp: START_HP,
     energy: 0,
     skipDrawNext: false,
+    pendingForceDestroy: 0,
     status: 'playing',
     worldId: 'starter',
     rng,

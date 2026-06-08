@@ -1,4 +1,4 @@
-import type { GameEvent, GameState, WorldCard } from '../model/types'
+import type { CardId, GameEvent, GameState, WorldCard } from '../model/types'
 import { shuffle } from './rng'
 
 // ---------------------------------------------------------------------------
@@ -188,4 +188,52 @@ export function refillHand(state: GameState): { state: GameState; events: GameEv
   }
 
   return { state: current, events: allEvents }
+}
+
+// ---------------------------------------------------------------------------
+// resolveForceDestroy
+// ---------------------------------------------------------------------------
+
+/**
+ * Drain pending ForceDestroy charges against the freshly refilled hand: remove
+ * up to `pendingForceDestroy` random *player* cards (the bird carries off your
+ * gear; destroying a world hazard would only help you, so hazards are spared).
+ *
+ * Destroyed cards leave the game entirely — they are not sent to playerDiscard.
+ * The counter is fully consumed even if fewer player cards are available, so an
+ * unsatisfiable charge fizzles rather than lingering into a later turn.
+ *
+ * Emits: CardDestroyed (one per card removed).
+ */
+export function resolveForceDestroy(
+  state: GameState,
+): { state: GameState; events: GameEvent[] } {
+  if (state.pendingForceDestroy <= 0) {
+    return { state, events: [] }
+  }
+
+  const playerCards = state.hand.filter((c) => c.kind === 'player')
+  const takeCount = Math.min(state.pendingForceDestroy, playerCards.length)
+
+  if (takeCount === 0) {
+    // Nothing to grab — consume the charge so it does not carry over.
+    return { state: { ...state, pendingForceDestroy: 0 }, events: [] }
+  }
+
+  const [shuffled, nextRng] = shuffle(playerCards, state.rng)
+  const doomedIds = new Set<CardId>(shuffled.slice(0, takeCount).map((c) => c.id))
+
+  const current: GameState = {
+    ...state,
+    rng: nextRng,
+    hand: state.hand.filter((c) => !doomedIds.has(c.id)),
+    pendingForceDestroy: 0,
+  }
+
+  const events: GameEvent[] = [...doomedIds].map((id) => ({
+    type: 'CardDestroyed' as const,
+    id,
+  }))
+
+  return { state: current, events }
 }

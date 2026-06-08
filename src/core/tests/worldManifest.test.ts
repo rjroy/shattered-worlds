@@ -84,3 +84,32 @@ describe.each(worldIds)('world "%s"', (worldId) => {
     expect(missing).toEqual([])
   })
 })
+
+// ---------------------------------------------------------------------------
+// Corpse self-transform card: confirm the zombie-big-box catalog builds with
+// the Corpse template and its onEndOfTurn Sequence references a valid Zombie.
+// ---------------------------------------------------------------------------
+
+describe('zombie-big-box Corpse card', () => {
+  it('resolves Corpse and its onEndOfTurn Sequence references a valid Zombie template', () => {
+    const { catalog } = buildWorld('zombie-big-box')
+
+    const corpse = catalog['Corpse']
+    expect(corpse).toBeDefined()
+    if (corpse === undefined || corpse.kind !== 'world') return
+
+    const eot = corpse.onEndOfTurn
+    expect(eot.kind).toBe('Sequence')
+    if (eot.kind !== 'Sequence') return
+
+    // The Sequence spawns a Zombie then destroys itself.
+    const kinds = eot.steps.map((s) => s.kind)
+    expect(kinds).toContain('AddWorldCardToTop')
+    expect(kinds).toContain('DestroySelf')
+
+    // Every template the Sequence names resolves in the catalog (Zombie).
+    const refs = eot.steps.flatMap(templateRefs)
+    expect(refs).toContain('Zombie')
+    expect(refs.filter((id) => catalog[id] === undefined)).toEqual([])
+  })
+})
