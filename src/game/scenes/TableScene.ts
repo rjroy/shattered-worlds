@@ -571,20 +571,10 @@ export class TableScene extends Phaser.Scene {
         return
       }
       case 'compound': {
-        const firstStep = spec.steps[0]
-        if (firstStep !== undefined && firstStep.kind === 'returnWorld') {
-          this.sel = {
-            phase: 'awaiting-return',
-            cardId,
-            selected: [],
-            min: firstStep.min,
-            max: firstStep.max,
-          }
-        } else {
-          // Default: first step is hazard targeting (Barricade)
-          this.sel = { phase: 'awaiting-hazard', cardId }
+        const firstStep= spec.steps[0]
+        if (firstStep !== undefined) {
+          this.startSelection(cardId, firstStep)
         }
-        this.drawAll()
         return
       }
       case 'discardPlayer': {

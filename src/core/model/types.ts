@@ -14,6 +14,7 @@ export type CardEffect =
   | { kind: 'DealProgress'; base: number; bonus?: { tag: Keyword; amount: number } }
   | { kind: 'Draw'; player?: number; world?: number }
   | { kind: 'Heal'; amount: number }
+  | { kind: 'GainEnergy'; amount: number }
   | { kind: 'ReturnWorldCards'; min: number; max: number }
   | { kind: 'DestroyCardInHand'; min: number; max: number; maxCost?: number }
   | { kind: 'DiscardThenDraw'; player: number }

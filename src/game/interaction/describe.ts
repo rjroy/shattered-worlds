@@ -33,6 +33,8 @@ export function describeEffect(effect: CardEffect): string[] {
     }
     case 'Heal':
       return [`Heal ${effect.amount} HP`]
+    case 'GainEnergy':
+      return [`Gain ${effect.amount} Energy`]
     case 'ReturnWorldCards':
       return [describeReturn(effect.min, effect.max)]
     case 'DestroyCardInHand':

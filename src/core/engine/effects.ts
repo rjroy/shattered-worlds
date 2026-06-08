@@ -225,6 +225,20 @@ export function heal(state: GameState, n: number): EffectResult {
 }
 
 // ---------------------------------------------------------------------------
+// gainEnergy
+// ---------------------------------------------------------------------------
+
+/**
+ * Increase player energy by n (uncapped in this slice).
+ */
+export function gainEnergy(state: GameState, n: number): EffectResult {
+  const newEnergy = state.energy + n
+  const current: GameState = { ...state, energy: newEnergy }
+  const events: GameEvent[] = [{ type: 'EnergyChanged', energy: newEnergy }]
+  return { state: current, events }
+}
+
+// ---------------------------------------------------------------------------
 // applyEffect
 // ---------------------------------------------------------------------------
 
@@ -274,6 +288,9 @@ export function applyEffect(
 
     case 'Heal':
       return heal(state, effect.amount)
+
+    case 'GainEnergy': 
+      return gainEnergy(state, effect.amount)
 
     case 'ReturnWorldCards':
       return returnToActiveWorldDeck(state, play?.returnIds ?? [])

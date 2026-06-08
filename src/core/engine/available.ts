@@ -34,6 +34,7 @@ function structuralSpec(effect: CardEffect): TargetSpec {
       return tag !== undefined ? { kind: 'hazard', tag } : { kind: 'hazard' }
     }
     case 'Heal':
+    case 'GainEnergy':
     case 'AddWorldCardToTop':
     case 'AddCard':
     case 'Draw':
@@ -66,6 +67,7 @@ function isPlayable(effect: CardEffect, state: GameState, selfId: CardId): boole
       return worldCardsInHand(state).length > 0
 
     case 'Heal':
+    case 'GainEnergy':
     case 'AddWorldCardToTop':
     case 'AddCard':
     case 'Draw':
@@ -118,62 +120,31 @@ function playableSpec(
  * Resolve concrete target ids for a card at a specific step/branch index.
  * Operates on the current hand state — does not simulate effect application.
  */
-function computeLegalTargets(
+function computeLegalTargetsForEffect(
   card: PlayerCard,
-  step: number,
+  effect: CardEffect,
   state: GameState,
 ): readonly CardId[] {
-  const effect = card.effect
 
   switch (effect.kind) {
     case 'DealProgress':
-      // step 0: all world cards in hand are legal targets
-      if (step !== 0) return []
+      if (effect.base === 0) {
+        const tag = effect.bonus?.tag
+        if (tag !== undefined) {
+          // Filter to world cards that have the matching keyword
+          return worldCardsInHand(state)
+            .filter((c) => c.keywords.includes(tag))
+            .map((c) => c.id)
+        }
+      }
       return worldCardsInHand(state).map((c) => c.id)
 
-    case 'Modal': {
-      // step = branch index
-      const branch = effect.branches[step]
-      if (branch === undefined) return []
-      if (branch.kind === 'DealProgress') {
-        if (branch.base === 0) {
-          const tag = branch.bonus?.tag
-          if (tag !== undefined) {
-            // Filter to world cards that have the matching keyword
-            return worldCardsInHand(state)
-              .filter((c) => c.keywords.includes(tag))
-              .map((c) => c.id)
-          }
-        }
-        return worldCardsInHand(state).map((c) => c.id)
-      }
-      // Draw or other non-targeting branch
-      return []
-    }
-
-    case 'Sequence': {
-      const stepEffect = effect.steps[step]
-      if (stepEffect === undefined) return []
-      if (stepEffect.kind === 'DealProgress') {
-        return worldCardsInHand(state).map((c) => c.id)
-      }
-      if (stepEffect.kind === 'ReturnWorldCards') {
-        return worldCardsInHand(state).map((c) => c.id)
-      }
-      // Draw or other non-targeting step
-      return []
-    }
-
     case 'DiscardThenDraw':
-      // step 0: all player cards in hand except self
-      if (step !== 0) return []
       return playerCardsInHand(state)
         .filter((c) => c.id !== card.id)
         .map((c) => c.id)
 
     case 'DestroyCardInHand':
-      // step 0: all cards in hand except self
-      if (step !== 0) return []
       return state.hand
         .filter((c) => c.id !== card.id && (
           effect.maxCost === undefined || 
@@ -182,14 +153,59 @@ function computeLegalTargets(
         ))
         .map((c) => c.id)
 
+    case 'ReturnWorldCards':
+      return worldCardsInHand(state).map((c) => c.id)
+
+    case 'Modal':
+    case 'Sequence':
+      return [] // legalTargets is computed at the branch/step level for these
+
     case 'Heal':
+    case 'GainEnergy':
+    case 'AddWorldCardToTop':
+    case 'AddCard':
+    case 'Draw':
+      return []
+    default:
+      return []
+  }
+}
+
+function computeLegalTargets(
+  card: PlayerCard,
+  step: number,
+  state: GameState,
+): readonly CardId[] {
+  const effect = card.effect
+
+  switch (effect.kind) {
+
+    case 'Modal': {
+      // step = branch index
+      const branch = effect.branches[step]
+      if (branch === undefined) return []
+      return computeLegalTargetsForEffect(card, branch, state)
+    }
+
+    case 'Sequence': {
+      const stepEffect = effect.steps[step]
+      if (stepEffect === undefined) return []
+      return computeLegalTargetsForEffect(card, stepEffect, state)
+    }
+
+    case 'DealProgress':
+    case 'DiscardThenDraw':
+    case 'DestroyCardInHand':
+    case 'Heal':
+    case 'GainEnergy':
     case 'AddWorldCardToTop':
     case 'AddCard':
     case 'Draw':
     case 'ReturnWorldCards':
-      return []
     default:
-      return []
+       // step 0: all cards in hand except self
+      if (step !== 0) return []
+      return computeLegalTargetsForEffect(card, effect, state)
   }
 }
 
