@@ -30,8 +30,8 @@ import {
 const CARD_W = 150
 const CARD_H = 196
 const INSET_X = 0
-const INSET_Y = 50
-const INSET_W = 100
+const INSET_Y = 90
+const INSET_W = 120
 const INSET_H = 70
 
 // ---------------------------------------------------------------------------
@@ -45,6 +45,7 @@ interface CardTextOpts {
   bold?: boolean
   wrapWidth?: number   // when set, the text wraps at this width and centers
   lineSpacing?: number
+  background?: boolean
 }
 
 /** Add a horizontally-centered text line to a card container; returns it. */
@@ -80,7 +81,16 @@ function addCardText(
       const textCostInt = Phaser.Display.Color.HexStringToColor(TEXT.textCost).color32
       lineText.preFX?.addGlow(textCostInt, 0.8, 0.8)
     }
-    container.add(lineText)
+    if (opts.background) {
+      const bg = scene.add.rectangle(0, lineText.y - 1, lineText.width + 6, lineText.height + 2, 0x000000, 0.75)
+        .setOrigin(0.5, opts.originY)
+        .setRounded(4)
+      container.add(bg)
+      container.add(lineText)
+      lineText.setAbove(bg)
+    } else {
+      container.add(lineText)
+    }
     return lineText
   })
 }
@@ -105,6 +115,7 @@ function addEffectBlock(
     color,
     originY: 0,
     wrapWidth: CARD_W - 18,
+    background: true,
   })
 }
 
@@ -136,8 +147,15 @@ export function createCardObject(
   // Card inset image: if the template defines an insetKey, render the corresponding image on top of the cardfront. This is used for player cards' unique artwork, and world cards don't have insets at all.
   if ('insetKey' in card && card.insetKey && card.insetKey !== '') {
     const insetImg = scene.add.image(INSET_X, INSET_Y, card.insetKey)
-    insetImg.setDisplaySize(INSET_W, INSET_H)
+      .setOrigin(0.5, 1)
+    const ratio = Math.max(INSET_W / insetImg.width, INSET_H / insetImg.height)
+    insetImg.setDisplaySize(insetImg.width * ratio, insetImg.height * ratio)
     container.add(insetImg)
+    const frame = scene.add.nineslice(INSET_X, INSET_Y, 'inset-frame', undefined, 
+      insetImg.width * ratio + 8, insetImg.height * ratio + 8, 
+      4,4,4,4
+    ).setOrigin(0.5, 1)
+    container.add(frame)
   }
 
   // Name at top — identical for player and world cards.
@@ -158,6 +176,7 @@ export function createCardObject(
       originY: 0,
       wrapWidth: CARD_W - 16,
       lineSpacing: 2,
+      background: true,
     })
 
     // Energy cost badge: only for cards with energyCost > 0. Positioned in the
@@ -189,6 +208,7 @@ export function createCardObject(
         color: TEXT.textKeyword,
         bold: true,
         originY: 1,
+        background: true,
       })
     }
   } else {
@@ -240,11 +260,12 @@ export function createCardObject(
 
     // Discard indicator
     if (worldCard.discardable) {
-      addCardText(scene, container, 0, 8, 'click to discard', {
+      addCardText(scene, container, 0, CARD_H / 2 - 20, 'click to discard', {
         fontSize: '8px',
         color: '#ffaa44',
         bold: true,
         originY: 0,
+        background: true,
       })
     }
   }
