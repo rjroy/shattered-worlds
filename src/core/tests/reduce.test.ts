@@ -368,31 +368,36 @@ describe('Sprint modal', () => {
     expect(types).toContain('CardsDrawn')
   })
 
-  it('Sprint choice=1 (Slow hazard) deals 2 progress on a Zombie and resolves it', () => {
-    // Craft a state with Sprint + Zombie (Slow keyword, cost=1)
+  it('Sprint choice=1 (Slow hazard) deals progress on a Slow hazard and resolves it', () => {
     const base = createWorld(catalog, worldData, 42)
-    const [zombie, s1] = mintCard(catalog, base, 'Zombie')
-    const [sprint, s2] = mintCard(catalog, s1, 'Sprint')
+    const [sprint, s1] = mintCard(catalog, base, 'Sprint')
+
+    // Construct a Slow hazard directly — avoids dependency on which world cards carry the keyword
+    const slowHazard: WorldCard = {
+      kind: 'world', id: 'slow-test', name: 'Slow Hazard', insetKey: undefined,
+      cost: 1, keywords: ['Slow'], discardable: false,
+      onDiscarded: { kind: 'None' }, onCleared: { kind: 'None' }, onEndOfTurn: { kind: 'None' },
+    }
 
     const state = makeState({
-      ...s2,
-      hand: [zombie as WorldCard, sprint as PlayerCard],
+      ...s1,
+      hand: [slowHazard, sprint as PlayerCard],
+      energy: 1,
     })
 
-    // Sprint branch 1: DealProgress base=1 bonus={Slow,+1} → 1+1=2 on Zombie (cost=1) → resolves
+    // Sprint branch 1: DealProgress base=0 bonus={Slow,+3} → 3 on cost-1 Slow hazard → resolves
     const result = reduce(catalog, state, {
       type: 'PlayCard',
       cardId: sprint.id,
       choice: 1,
-      targetId: zombie.id,
+      targetId: slowHazard.id,
     })
 
     const types = result.events.map((e) => e.type)
     expect(types).toContain('CardPlayed')
     expect(types).toContain('ProgressDealt')
     expect(types).toContain('HazardResolved')
-
-    expect(result.state.hand.some((c) => c.id === zombie.id)).toBe(false)
+    expect(result.state.hand.some((c) => c.id === slowHazard.id)).toBe(false)
   })
 
   it('Sprint choice=1 throws when no Slow hazard is in hand', () => {

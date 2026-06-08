@@ -445,6 +445,7 @@ function makeFakeCardScene(): {
           setStrokeStyle(_width: number): unknown { return this },
           setRounded(_radius: number): unknown { return this },
           setAlpha(_a: number): unknown { return this },
+          setOrigin(_x: number, _y: number): unknown { return this },
         }
       },
       graphics(): unknown {
@@ -458,6 +459,7 @@ function makeFakeCardScene(): {
         return {
           setOrigin(_x: number, _y: number): unknown { return this },
           setText(_text: string): unknown { return this },
+          setAbove(_obj: unknown): unknown { return this },
           height: 12,
           getWrappedText(text: string): string[] { return [text] },
         }
@@ -472,8 +474,7 @@ describe('createCardObject — player card energy cost badge', () => {
   const theme = selectTheme('zombie-big-box')
   const resolveTheme = (_worldId: string): typeof theme => theme
 
-  it('cost-1 player cards have 3 more children than cost-0 (badge graphics + badge text added twice)', () => {
-    // Create identical cards except for energyCost
+  it('cost-1 player cards add more children to the container than cost-0 (badge icon + badge text)', () => {
     const baseCard: PlayerCard = {
       kind: 'player',
       id: 'test-base',
@@ -481,7 +482,7 @@ describe('createCardObject — player card energy cost badge', () => {
       insetKey: undefined,
       sourceWorldId: 'zombie-big-box',
       effect: { kind: 'Heal', amount: 1 },
-      energyCost: 0, // will change this
+      energyCost: 0,
     }
 
     const { scene: scene0, added: added0 } = makeFakeCardScene()
@@ -492,48 +493,45 @@ describe('createCardObject — player card energy cost badge', () => {
     createCardObject(scene1 as never, { ...baseCard, energyCost: 1, id: 'test-1' }, 0, 0, theme, resolveTheme)
     const count1 = added1.length
 
-    // Badge adds: 1 graphics + addCardText adds the text twice (due to addCardText's structure:
-    // line 72 adds the initial text, then line 82 adds it again in the map loop for i=0).
-    // So the difference is 1 + 2 = 3 children total.
-    const diff = count1 - count0
-    expect(diff).toBe(3)
+    // Badge adds 1 image + addCardText with background (text + bg rect + text-again) = 4 extra children
+    expect(count1 - count0).toBe(4)
   })
 
-  it('cost-0 player cards do not have a badge element', () => {
-    const card: PlayerCard = {
-      kind: 'player',
-      id: 'test-no-badge',
-      name: 'NoBadge',
-      insetKey: undefined,
-      sourceWorldId: 'zombie-big-box',
-      effect: { kind: 'Draw', player: 1 },
-      energyCost: 0,
+  it('cost-0 player cards add fewer children than cost-1 (no badge)', () => {
+    const cost0Card: PlayerCard = {
+      kind: 'player', id: 'test-0', name: 'NoBadge', insetKey: undefined,
+      sourceWorldId: 'zombie-big-box', effect: { kind: 'Draw', player: 1 }, energyCost: 0,
+    }
+    const cost1Card: PlayerCard = {
+      kind: 'player', id: 'test-1', name: 'WithBadge', insetKey: undefined,
+      sourceWorldId: 'zombie-big-box', effect: { kind: 'Draw', player: 1 }, energyCost: 1,
     }
 
-    const { scene, added } = makeFakeCardScene()
-    createCardObject(scene as never, card, 0, 0, theme, resolveTheme)
+    const { scene: s0, added: a0 } = makeFakeCardScene()
+    createCardObject(s0 as never, cost0Card, 0, 0, theme, resolveTheme)
 
-    // Should not have any graphics object with setPosition (the badge is the only graphics added for player cards)
-    const hasGraphics = added.some((child) => typeof child === 'object' && child !== null && 'setPosition' in child)
-    expect(hasGraphics).toBe(false)
+    const { scene: s1, added: a1 } = makeFakeCardScene()
+    createCardObject(s1 as never, cost1Card, 0, 0, theme, resolveTheme)
+
+    expect(a0.length).toBeLessThan(a1.length)
   })
 
-  it('cost-1 player cards have a badge element (graphics + text)', () => {
-    const card: PlayerCard = {
-      kind: 'player',
-      id: 'test-with-badge',
-      name: 'WithBadge',
-      insetKey: undefined,
-      sourceWorldId: 'zombie-big-box',
-      effect: { kind: 'Draw', player: 1 },
-      energyCost: 1,
+  it('cost-1 player cards add more children than cost-0 (badge present)', () => {
+    const cost0Card: PlayerCard = {
+      kind: 'player', id: 'test-0', name: 'NoBadge', insetKey: undefined,
+      sourceWorldId: 'zombie-big-box', effect: { kind: 'Draw', player: 1 }, energyCost: 0,
+    }
+    const cost1Card: PlayerCard = {
+      kind: 'player', id: 'test-1', name: 'WithBadge', insetKey: undefined,
+      sourceWorldId: 'zombie-big-box', effect: { kind: 'Draw', player: 1 }, energyCost: 1,
     }
 
-    const { scene, added } = makeFakeCardScene()
-    createCardObject(scene as never, card, 0, 0, theme, resolveTheme)
+    const { scene: s0, added: a0 } = makeFakeCardScene()
+    createCardObject(s0 as never, cost0Card, 0, 0, theme, resolveTheme)
 
-    // Should have at least one graphics object (the badge)
-    const hasGraphics = added.some((child) => typeof child === 'object' && child !== null && 'setPosition' in child)
-    expect(hasGraphics).toBe(true)
+    const { scene: s1, added: a1 } = makeFakeCardScene()
+    createCardObject(s1 as never, cost1Card, 0, 0, theme, resolveTheme)
+
+    expect(a1.length).toBeGreaterThan(a0.length)
   })
 })

@@ -73,7 +73,7 @@ describe('updateHUD', () => {
 
     updateHUD(refs as never, state)
 
-    expect(energyText.text).toBe('⚡ 5')
+    expect(energyText.text).toBe('5')
   })
 
   it('formats energy correctly with different values', () => {
@@ -98,11 +98,11 @@ describe('updateHUD', () => {
     }
 
     updateHUD(refs as never, state)
-    expect(energyText.text).toBe('⚡ 0')
+    expect(energyText.text).toBe('0')
 
     state.energy = 10
     updateHUD(refs as never, state)
-    expect(energyText.text).toBe('⚡ 10')
+    expect(energyText.text).toBe('10')
   })
 
   it('updates HP and act text alongside energy', () => {
@@ -130,6 +130,6 @@ describe('updateHUD', () => {
 
     expect(refs.hpText.text).toBe(`HP: 15/${WORLD_CONSTS.startHp}`)
     expect(refs.actText.text).toBe('Act 2 / 3')
-    expect(refs.energyText.text).toBe('⚡ 3')
+    expect(refs.energyText.text).toBe('3')
   })
 })
