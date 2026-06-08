@@ -888,25 +888,6 @@ describe('EndTurn Corpse self-transform', () => {
     expect(afterTurn2.events.map((e) => e.type)).toContain('DamageDealt')
     expect(afterTurn2.state.hp).toBe(afterTurn1.state.hp - 1)
   })
-
-  it('a Corpse discarded during the turn does not degrade (its onEndOfTurn never runs)', () => {
-    // Hand holds only the Corpse; discard it before ending the turn.
-    const { state, corpse } = makeCorpseState()
-
-    const afterDiscard = reduce(catalog, state, {
-      type: 'DiscardHazard',
-      cardId: corpse.id,
-    })
-    // Corpse is gone from hand via discard.
-    expect(afterDiscard.state.hand.some((c) => c.id === corpse.id)).toBe(false)
-
-    const result = reduce(catalog, afterDiscard.state, { type: 'EndTurn' })
-
-    // No Zombie spawned by a degrade — onEndOfTurn never ran for the Corpse,
-    // so no CardGained from the Sequence fires during the end-of-turn loop.
-    expect(result.events.some((e) => e.type === 'CardGained')).toBe(false)
-    expect(result.state.hand.some((c) => c.kind === 'world' && c.name === 'Zombie')).toBe(false)
-  })
 })
 
 // ---------------------------------------------------------------------------

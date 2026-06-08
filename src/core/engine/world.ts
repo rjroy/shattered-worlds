@@ -4,7 +4,14 @@ import { createRng, shuffle } from './rng'
 import { mintCard } from '../model/cards'
 import { startTurn } from './energy'
 
-export const START_HP = 10
+export const WORLD_CONSTS = {
+  startHp: 10,
+  maxHandSize: 6,
+  startWorldCards: 2,
+  get startPlayerCards(): number {
+    return WORLD_CONSTS.maxHandSize - WORLD_CONSTS.startWorldCards
+  },
+}
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -68,7 +75,7 @@ export function createWorld(catalog: CardCatalog, world: WorldData, seed: number
     actIndex: 0,
     totalActs: world.deckComposition.acts.length,
     progress: {},
-    hp: START_HP,
+    hp: WORLD_CONSTS.startHp,
     energy: 0,
     skipDrawNext: false,
     pendingForceDestroy: 0,
@@ -117,3 +124,4 @@ export function createWorld(catalog: CardCatalog, world: WorldData, seed: number
   const { state: dealt } = startTurn(baseState)
   return dealt
 }
+

@@ -5,7 +5,7 @@ import {
   dealProgress,
   destroyInHand,
   gainCard,
-  returnToTopThree,
+  returnToActiveWorldDeck,
 } from '../engine/effects'
 import { mintCard } from '../model/cards'
 import { createWorld } from '../engine/world'
@@ -135,11 +135,11 @@ describe('dealProgress auto-resolve at threshold', () => {
 })
 
 // ---------------------------------------------------------------------------
-// 4. returnToTopThree
+// 4. returnToActiveWorldDeck
 // ---------------------------------------------------------------------------
 
-describe('returnToTopThree', () => {
-  it('merges returned cards into the first-3 pool and preserves the remainder', () => {
+describe('returnToActiveWorldDeck', () => {
+  it('merges returned cards into the active world deck', () => {
     let state = makeState()
 
     // Mint 5 world cards for the worldDraw pile
@@ -162,28 +162,23 @@ describe('returnToTopThree', () => {
     const [yCard, s3] = mintWorld(s2, 'Screams')
     state = { ...s3, hand: [xCard, yCard], worldDraw: drawPile }
 
-    const { state: after, events } = returnToTopThree(state, [xCard.id, yCard.id])
+    const { state: after, events } = returnToActiveWorldDeck(state, [xCard.id, yCard.id])
 
     // Total cards in worldDraw: 5 original + 2 returned = 7
     expect(after.worldDraw).toHaveLength(7)
 
-    // Positions 3 and 4 (0-indexed) must be the original D and E (indices 3 and 4)
-    // drawPile[3] and drawPile[4] are the last two cards
-    const trailD = drawPile[3]!
-    const trailE = drawPile[4]!
-    expect(after.worldDraw[5]).toEqual(trailD)
-    expect(after.worldDraw[6]).toEqual(trailE)
-
-    // The first 5 positions are a permutation of [A,B,C,X,Y]
-    const topFive = after.worldDraw.slice(0, 5).map((c) => c.id)
+    // The full deck is now shuffled together, so all 7 cards should be present.
+    const shuffledIds = new Set(after.worldDraw.map((c) => c.id))
     const expectedIds = new Set([
       drawPile[0]!.id,
       drawPile[1]!.id,
       drawPile[2]!.id,
+      drawPile[3]!.id,
+      drawPile[4]!.id,
       xCard.id,
       yCard.id,
     ])
-    expect(new Set(topFive)).toEqual(expectedIds)
+    expect(shuffledIds).toEqual(expectedIds)
 
     // WorldCardsReturned event emitted with both ids
     const returnEvent = events.find((e) => e.type === 'WorldCardsReturned')

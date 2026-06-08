@@ -25,8 +25,8 @@ import type { HighlightKind } from '../interaction/highlight'
 // The logical game resolution. main.ts's Phaser.Game config uses these, and the
 // view layer (full-screen backdrops, full-screen overlays) sizes against them.
 // Single source of truth — change here, not in scattered literals.
-export const CANVAS_W = 900
 export const CANVAS_H = 600
+export const CANVAS_W = 900
 
 // ---------------------------------------------------------------------------
 // Card texture selection
@@ -65,7 +65,6 @@ export const TEXT = {
   textLight: '#e8eaf0',
   textMuted: '#b6c0d1',
   textCost: '#ffcc44',
-  textCostInt: 0xffcc44,
   textKeyword: '#88ccff',
   textPenalty: '#ff8888',
   textReward: '#88ee88',
