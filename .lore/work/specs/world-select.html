@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>World-select screen</title>
+  <meta name="date" content="2026-06-08">
+  <meta name="status" content="draft">
+  <meta name="tags" content="ui, scene, world-select, navigation, story, ux">
+  <meta name="modules" content="world-select-scene, world-display-manifest, boot-scene">
+  <meta name="related" content=".lore/work/brainstorm/story-detail-and-help-screens.html, .lore/reference/vision.html">
+  <meta name="req-prefix" content="WS">
+  <style>
+    :root {
+      --bg: #0f1117;
+      --surface: #181c28;
+      --surface2: #1f2436;
+      --border: #2a3050;
+      --text: #c8cde0;
+      --muted: #6b7099;
+      --accent: #7eb8f7;
+      --gold: #e8c56a;
+      --green: #72c472;
+      --red: #e06060;
+      --purple: #a78bfa;
+      --yellow: #f0d070;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      font-size: 15px;
+      line-height: 1.6;
+    }
+
+    /* ── Sticky header ─────────────────────────────────────────────── */
+    #sticky-header {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(15,17,23,0.95);
+      backdrop-filter: blur(8px);
+      border-bottom: 1px solid var(--border);
+      padding: 0.6rem 2rem;
+      display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;
+    }
+    #sticky-header .title { font-weight: 700; color: var(--accent); font-size: 1rem; }
+    .badge {
+      display: inline-block;
+      padding: 2px 10px; border-radius: 4px;
+      font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em;
+    }
+    .badge-draft    { background: #2a2218; color: var(--gold); border: 1px solid #4a3a28; }
+    .badge-approved { background: #182818; color: var(--green); border: 1px solid #285028; }
+    .prefix-badge { background: var(--surface2); color: var(--muted); border: 1px solid var(--border); }
+    #sticky-header .counts { color: var(--muted); font-size: 0.8rem; margin-left: auto; }
+
+    /* ── Body layout ────────────────────────────────────────────────── */
+    .wrap { max-width: 960px; margin: 0 auto; padding: 2.5rem 2rem 6rem; }
+    h1 { font-size: 1.7rem; color: var(--accent); margin-bottom: 0.25rem; }
+    .meta { color: var(--muted); font-size: 0.85rem; margin-bottom: 2.5rem; }
+    h2 {
+      font-size: 1.1rem; color: var(--gold);
+      margin: 2.5rem 0 0.8rem;
+      border-bottom: 1px solid var(--border); padding-bottom: 0.4rem;
+    }
+    p { margin-bottom: 0.8rem; }
+
+    /* ── Requirement cards ──────────────────────────────────────────── */
+    .req {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--accent);
+      border-radius: 0 8px 8px 0;
+      margin: 0.6rem 0;
+      overflow: hidden;
+    }
+    .req-header {
+      display: flex; align-items: center; gap: 0.7rem;
+      padding: 0.6rem 1rem;
+      cursor: pointer;
+      user-select: none;
+    }
+    .req-header:hover { background: var(--surface2); }
+    .req-id {
+      font-family: monospace; font-size: 0.8rem; font-weight: 700;
+      color: var(--accent); min-width: 90px;
+    }
+    .req-title { flex: 1; font-weight: 600; }
+    .req-status {
+      font-size: 0.72rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.05em; padding: 2px 8px; border-radius: 4px;
+    }
+    .status-must   { background: #2a1818; color: #e07070; border: 1px solid #5a2828; }
+    .status-should { background: #1e1e2a; color: #8888dd; border: 1px solid #3a3a5a; }
+    .status-note   { background: #1e221a; color: #88aa88; border: 1px solid #3a4a3a; }
+    .req details > summary { display: none; }
+    .req-body {
+      padding: 0 1rem 0.8rem 1rem;
+      color: var(--text);
+      font-size: 0.92rem;
+      border-top: 1px solid var(--border);
+    }
+    .req-body p { margin-top: 0.6rem; }
+    .req-body ul { padding-left: 1.3rem; margin-top: 0.4rem; }
+    .req-body li { margin-bottom: 0.3rem; }
+    .req-body code {
+      background: var(--surface2); padding: 0.1em 0.35em;
+      border-radius: 3px; font-size: 0.88em; color: var(--yellow);
+    }
+
+    /* ── Deferred note ──────────────────────────────────────────────── */
+    .deferred {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--muted);
+      border-radius: 0 8px 8px 0;
+      padding: 0.7rem 1rem;
+      margin: 0.5rem 0;
+      color: var(--muted);
+      font-size: 0.88rem;
+    }
+    .deferred strong { color: var(--text); }
+
+    /* ── Validation section ─────────────────────────────────────────── */
+    .validation {
+      background: #0f1f0f;
+      border: 1px solid #2a4a2a;
+      border-radius: 8px;
+      padding: 1.2rem 1.4rem;
+      margin: 1rem 0;
+    }
+    .validation h3 { color: var(--green); margin-bottom: 0.8rem; font-size: 1rem; }
+    .check { display: flex; gap: 0.7rem; margin: 0.4rem 0; align-items: flex-start; }
+    .check .box {
+      min-width: 18px; height: 18px; border: 1px solid #4a6a4a;
+      border-radius: 3px; margin-top: 0.1rem;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.7rem; color: var(--green);
+    }
+    .check .label { font-size: 0.88rem; }
+    .check .label code { background: var(--surface2); padding: 0.1em 0.3em; border-radius: 3px; font-size: 0.85em; color: var(--yellow); }
+
+    /* ── Data schema box ────────────────────────────────────────────── */
+    pre {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 0.8rem 1rem;
+      font-size: 0.82rem;
+      overflow-x: auto;
+      margin: 0.6rem 0;
+      color: var(--yellow);
+      line-height: 1.5;
+    }
+
+    /* ── Layout sketch ──────────────────────────────────────────────── */
+    .sketch {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1rem 1.2rem;
+      font-family: monospace;
+      font-size: 0.78rem;
+      color: var(--muted);
+      white-space: pre;
+      line-height: 1.4;
+      margin: 0.8rem 0;
+    }
+    .sketch .hi { color: var(--accent); }
+    .sketch .md { color: var(--gold); }
+  </style>
+</head>
+<body>
+
+<!-- ── Sticky header ─────────────────────────────────────────────────── -->
+<div id="sticky-header">
+  <span class="title">World-select screen</span>
+  <span class="badge badge-draft">Draft</span>
+  <span class="badge prefix-badge">REQ-WS-*</span>
+  <span class="counts" id="req-count">Loading…</span>
+</div>
+
+<div class="wrap">
+<h1>World-select screen</h1>
+<p class="meta">
+  Spec · 2026-06-08 · status: draft<br>
+  Related: <a href="../brainstorm/story-detail-and-help-screens.html">brainstorm</a>, <a href="../../reference/vision.html">vision</a>
+</p>
+
+<p>A pre-run screen that replaces the current random world assignment in BootScene. The player sees all available worlds, reads a short mood sketch for each, and chooses their shard before any cards are dealt.</p>
+
+<!-- ════════════════════════════════════════════════════════════════════ -->
+<h2>Scene architecture</h2>
+
+<div class="req" id="WS-1">
+  <div class="req-header" onclick="toggle('WS-1')">
+    <span class="req-id">REQ-WS-1</span>
+    <span class="req-title">WorldSelectScene is added to the Phaser game and sits between Boot and Table</span>
+    <span class="req-status status-must">Must</span>
+  </div>
+  <div class="req-body">
+    <p>A <code>WorldSelectScene</code> class is registered in the Phaser config alongside <code>BootScene</code> and <code>TableScene</code>. <code>BootScene.create()</code> launches <code>WorldSelectScene</code> unconditionally — it no longer picks a world or generates a seed. After this change, BootScene's sole responsibility is <code>this.scene.start('WorldSelect')</code>; it retains no world selection or seed logic. It may be removed in a later cleanup pass.</p>
+    <p>The scene key is <code>'WorldSelect'</code>.</p>
+  </div>
+</div>
+
+<div class="req" id="WS-2">
+  <div class="req-header" onclick="toggle('WS-2')">
+    <span class="req-id">REQ-WS-2</span>
+    <span class="req-title">TableScene interface is unchanged</span>
+    <span class="req-status status-must">Must</span>
+  </div>
+  <div class="req-body">
+    <p><code>TableScene.init</code> continues to accept <code>{ worldId: string, seed: number }</code>. No changes to its public interface. The caller changes (WorldSelectScene instead of BootScene) but the contract does not.</p>
+  </div>
+</div>
+
+<div class="req" id="WS-3">
+  <div class="req-header" onclick="toggle('WS-3')">
+    <span class="req-id">REQ-WS-3</span>
+    <span class="req-title">WorldSelectScene launches TableScene with the chosen worldId and a fresh seed</span>
+    <span class="req-status status-must">Must</span>
+  </div>
+  <div class="req-body">
+    <p>When the player confirms a selection, WorldSelectScene calls <code>this.scene.start('Table', { worldId, seed })</code> where <code>seed</code> is generated as <code>Math.floor(Math.random() * 2 ** 32)</code> — matching the formula used in BootScene today. Each selection produces a fresh seed; there is no seed persistence or display in this version.</p>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════════ -->
+<h2>Display data model</h2>
+
+<p>The existing <code>worldManifest.ts</code> (catalog builders and <code>WorldData</code>) is not changed. A sibling file carries display-only metadata.</p>
+
+<div class="req" id="WS-4">
+  <div class="req-header" onclick="toggle('WS-4')">
+    <span class="req-id">REQ-WS-4</span>
+    <span class="req-title">A WorldDisplayData type and worldDisplayManifest are defined in src/data/</span>
+    <span class="req-status status-must">Must</span>
+  </div>
+  <div class="req-body">
+    <p>A new file <code>src/data/worldDisplayManifest.ts</code> exports:</p>
+    <pre>export interface WorldDisplayData {
+  name:    string   // Display name, e.g. "The Big Box"
+  tagline: string   // One punchy line, e.g. "Corporate hell meets the undead."
+  story:   string   // 2–4 sentences of mood. No mechanical explanation.
+}
+
+export const worldDisplayManifest: Record&lt;string, WorldDisplayData&gt;</pre>
+    <p>This is the single authoring source for all world UI text. Neither <code>TableScene</code> nor any game-logic module imports it.</p>
+    <p>The scene should guard the lookup at runtime: if <code>worldDisplayManifest[worldId]</code> is <code>undefined</code>, throw an error immediately (e.g. <code>"No display entry for worldId: &lt;id&gt;"</code>). This surfaces authoring omissions at scene load, not as a silent crash mid-render. The manifest completeness test (REQ-WS-6) is the primary guard; this throw is a belt-and-suspenders fallback.</p>
+  </div>
+</div>
+
+<div class="req" id="WS-5">
+  <div class="req-header" onclick="toggle('WS-5')">
+    <span class="req-id">REQ-WS-5</span>
+    <span class="req-title">All three worlds have display manifest entries</span>
+    <span class="req-status status-must">Must</span>
+  </div>
+  <div class="req-body">
+    <p>Entries exist for <code>'zombie-big-box'</code>, <code>'bird-building'</code>, and <code>'highway-volcano'</code>. All three are selectable with no locked state in this version.</p>
+    <p>The zombie-big-box entry conveys: big-box store setting, Walker's arrival signalled by environmental dread (flickering lights, strange sounds), zombie invasion. Tone is mood-setting, not tutorial.</p>
+    <p>Bird-building and highway-volcano entries may use placeholder story text if full lore text isn't written yet. Placeholder text must be a non-empty string (e.g. <code>'Coming soon…'</code>) — an empty string would fail the completeness test in REQ-WS-6. Name and tagline must be real.</p>
+  </div>
+</div>
+
+<div class="req" id="WS-6">
+  <div class="req-header" onclick="toggle('WS-6')">
+    <span class="req-id">REQ-WS-6</span>
+    <span class="req-title">A test verifies manifest completeness and shape</span>
+    <span class="req-status status-must">Must</span>
+  </div>
+  <div class="req-body">
+    <p>A unit test confirms:</p>
+    <ul>
+      <li>Every <code>worldId</code> key in <code>Object.keys(worldManifest)</code> has a corresponding entry in <code>worldDisplayManifest</code>. The test iterates keys only — it must not invoke the builder functions (calling them throws <code>CatalogError</code> in the test environment because the Phaser asset cache is absent).</li>
+      <li>Each entry satisfies the <code>WorldDisplayData</code> shape (all fields present and non-empty strings).</li>
+    </ul>
+    <p>This test guards against a new world being added to the game manifest without a display entry, which would cause a runtime crash on world-select.</p>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════════ -->
+<h2>Visual layout</h2>
+
+<p>Canvas is 900 × 600. The world-select screen has its own visual identity (dark, pre-game) and does not use any world's VisualTheme for the screen itself — each world card uses its theme's accent color as a tint only.</p>
+
+<div class="sketch"><span class="hi">┌─────────────────────────── 900 ───────────────────────────────┐</span>
+<span class="hi">│</span>                                                               <span class="hi">│</span>
+<span class="hi">│</span>          <span class="md">SHATTERED WORLDS</span>      <span class="hi">Choose your shard</span>              <span class="hi">│</span>
+<span class="hi">│</span>                                                               <span class="hi">│</span>
+<span class="hi">│</span>  ┌──────────────┐   ┌──────────────┐   ┌──────────────┐     <span class="hi">│</span>
+<span class="hi">│</span>  │  [accent bg] │   │  [accent bg] │   │  [accent bg] │     <span class="hi">│</span>
+<span class="hi">│</span>  │              │   │              │   │              │     <span class="hi">│</span>
+<span class="hi">│</span>  │  World Name  │   │  World Name  │   │  World Name  │     <span class="hi">│</span>
+<span class="hi">│</span>  │  Tagline     │   │  Tagline     │   │  Tagline     │     <span class="hi">│</span>
+<span class="hi">│</span>  │              │   │              │   │              │     <span class="hi">│</span>
+<span class="hi">│</span>  │  Story text  │   │  Story text  │   │  Story text  │     <span class="hi">│</span>
+<span class="hi">│</span>  │  paragraph   │   │  paragraph   │   │  paragraph   │     <span class="hi">│</span>
+<span class="hi">│</span>  │  here…       │   │  here…       │   │  here…       │     <span class="hi">│</span>
+<span class="hi">│</span>  └──────────────┘   └──────────────┘   └──────────────┘     <span class="hi">│</span>
+<span class="hi">│</span>                                                               <span class="hi">│</span>
+<span class="hi">└───────────────────────────────────────────────────────────────┘</span>
+  3 cards × ~240px wide, ~30px gap, centered (~60px side margins)</div>
+
+<div class="req" id="WS-7">
+  <div class="req-header" onclick="toggle('WS-7')">
+    <span class="req-id">REQ-WS-7</span>
+    <span class="req-title">The screen has a title and subtitle in the header region</span>
+    <span class="req-status status-must">Must</span>
+  </div>
+  <div class="req-body">
+    <p>The upper portion of the screen (above the world cards) shows the game title <strong>"SHATTERED WORLDS"</strong> and a subtitle such as <strong>"Choose your shard"</strong>. The title uses a large, bold font; the subtitle is smaller and muted. Both are legible against the dark background.</p>
+  </div>
+</div>
+
+<div class="req" id="WS-8">
+  <div class="req-header" onclick="toggle('WS-8')">
+    <span class="req-id">REQ-WS-8</span>
+    <span class="req-title">One interactive card per world, arranged horizontally and centered</span>
+    <span class="req-status status-must">Must</span>
+  </div>
+  <div class="req-body">
+    <p>Three world cards are arranged in a single horizontal row, centered on the 900px canvas. Each card is a <code>Phaser.GameObjects.Container</code> containing a background rectangle and text objects. Cards are equally sized and spaced.</p>
+    <p>Approximate layout: cards ~240px wide, ~350px tall, ~30px gap, ~60px side margins.</p>
+  </div>
+</div>
+
+<div class="req" id="WS-9">
+  <div class="req-header" onclick="toggle('WS-9')">
+    <span class="req-id">REQ-WS-9</span>
+    <span class="req-title">Each card displays name, tagline, and story text</span>
+    <span class="req-status status-must">Must</span>
+  </div>
+  <div class="req-body">
+    <p>From top to bottom within each card:</p>
+    <ul>
+      <li><strong>Name</strong> — world display name, larger bold text</li>
+      <li><strong>Tagline</strong> — one line, smaller, styled distinctly (italic or muted color)</li>
+      <li><strong>Story</strong> — 2–4 sentence paragraph, smaller text, word-wrapped within the card width</li>
+    </ul>
+    <p>All text content is sourced from <code>worldDisplayManifest</code>.</p>
+  </div>
+</div>
+
+<div class="req" id="WS-10">
+  <div class="req-header" onclick="toggle('WS-10')">
+    <span class="req-id">REQ-WS-10</span>
+    <span class="req-title">Card accent color comes from VisualTheme; no backdrop textures are loaded</span>
+    <span class="req-status status-must">Must</span>
+  </div>
+  <div class="req-body">
+    <p>Each card's background uses a dark solid fill with an accent border or tint drawn from <code>theme.intrusionHue</code> — the world's keynote color (a CSS hex string on <code>VisualTheme</code>, e.g. <code>'#9bff6a'</code> for zombie-big-box). Convert it to a Phaser hex integer for rectangle/graphics calls using <code>Phaser.Display.Color.HexStringToColor(intrusionHue).color</code>.</p>
+    <p>No backdrop or card texture images are loaded by <code>WorldSelectScene</code>. The scene is self-contained with no <code>preload()</code> requirements — all theme data is available synchronously from TypeScript imports.</p>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════════ -->
+<h2>Interaction</h2>
+
+<div class="req" id="WS-11">
+  <div class="req-header" onclick="toggle('WS-11')">
+    <span class="req-id">REQ-WS-11</span>
+    <span class="req-title">Hovering a card produces a visible emphasis</span>
+    <span class="req-status status-must">Must</span>
+  </div>
+  <div class="req-body">
+    <p>On <code>pointerover</code>, the card receives a visible emphasis: a scale increase (e.g. <code>setScale(1.03)</code>), a brighter border, or both. Scale alone is sufficient. On <code>pointerout</code>, the card returns to its rest state. This provides pointer affordance before committing to a click.</p>
+  </div>
+</div>
+
+<div class="req" id="WS-12">
+  <div class="req-header" onclick="toggle('WS-12')">
+    <span class="req-id">REQ-WS-12</span>
+    <span class="req-title">Clicking a card starts the run in that world</span>
+    <span class="req-status status-must">Must</span>
+  </div>
+  <div class="req-body">
+    <p>On <code>pointerdown</code> (or <code>pointerup</code>), the scene calls <code>this.scene.start('Table', { worldId, seed })</code> with the card's worldId and a freshly generated seed. Any additional click feedback (brief scale-down, flash) is acceptable but not required.</p>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════════ -->
+<h2>Not in scope</h2>
+
+<div class="deferred">
+  <strong>Backdrop thumbnails</strong> — Using backdrop textures as card backgrounds. This would require preloading all backdrop images in WorldSelectScene (or an earlier scene). Deferred; theme colors are sufficient for v1.
+</div>
+<div class="deferred">
+  <strong>Animated card reveal / flip transitions</strong> — Cards appearing with a stagger or flip animation on scene entry. Deferred.
+</div>
+<div class="deferred">
+  <strong>Back navigation from in-game to world-select</strong> — Win/loss screen returning to WorldSelectScene rather than dead-ending. Deferred to a future run-flow spec.
+</div>
+<div class="deferred">
+  <strong>Locked / coming-soon world state</strong> — All three worlds are selectable in v1. A locked state is deferred until a formal availability policy is decided.
+</div>
+<div class="deferred">
+  <strong>Seed input or "daily run"</strong> — Player-visible seed or shared seed for daily challenges. Deferred.
+</div>
+<div class="deferred">
+  <strong>Keyboard / gamepad navigation</strong> — Pointer-only for now.
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════════ -->
+<h2>AI validation</h2>
+
+<div class="validation">
+  <h3>How to verify this spec is implemented</h3>
+
+  <p style="color:#6a8a6a;font-size:0.85rem;margin-bottom:1rem">Run these checks in order. All must pass before the spec is marked <em>implemented</em>.</p>
+
+  <h4 style="color:#88aa88;margin:0.8rem 0 0.4rem">Automated</h4>
+
+  <div class="check">
+    <div class="box">□</div>
+    <div class="label"><code>bun test</code> passes. The manifest-completeness test (REQ-WS-6) exists and is green: every worldId in <code>worldManifest</code> has a corresponding entry in <code>worldDisplayManifest</code>, each entry has non-empty <code>name</code>, <code>tagline</code>, and <code>story</code> strings.</div>
+  </div>
+  <div class="check">
+    <div class="box">□</div>
+    <div class="label">TypeScript strict check passes with no errors (<code>tsc --noEmit</code>).</div>
+  </div>
+  <div class="check">
+    <div class="box">□</div>
+    <div class="label">ESLint passes with no new warnings.</div>
+  </div>
+
+  <h4 style="color:#88aa88;margin:0.8rem 0 0.4rem">Browser (manual / automated screenshot)</h4>
+
+  <div class="check">
+    <div class="box">□</div>
+    <div class="label">Launch game (<code>bun run dev</code>). The first screen shown after loading is the world-select screen — NOT the table. No card play is possible before selection.</div>
+  </div>
+  <div class="check">
+    <div class="box">□</div>
+    <div class="label">The screen shows "SHATTERED WORLDS" (title) and "Choose your shard" (or equivalent subtitle).</div>
+  </div>
+  <div class="check">
+    <div class="box">□</div>
+    <div class="label">Three world cards are visible, horizontally arranged. Each shows a name, a tagline, and a story paragraph. Text is not clipped or overflowing the card bounds.</div>
+  </div>
+  <div class="check">
+    <div class="box">□</div>
+    <div class="label">Hovering over any card produces visible emphasis (scale, brightness, or border change). Moving the pointer off the card restores the default state.</div>
+  </div>
+  <div class="check">
+    <div class="box">□</div>
+    <div class="label">Clicking the zombie-big-box card: world-select disappears and TableScene appears. Confirm the correct world loaded by observing the green-tinted (<code>intrusionHue: #9bff6a</code>) backdrop and zombie-themed hazard cards — not the bird or volcano visuals.</div>
+  </div>
+  <div class="check">
+    <div class="box">□</div>
+    <div class="label">Clicking bird-building and highway-volcano cards also each start a run in the respective world (no crash, correct theme applies).</div>
+  </div>
+  <div class="check">
+    <div class="box">□</div>
+    <div class="label">Cards for different worlds use visually distinct accent colors (not identical grey rectangles). The distinction traces back to each world's VisualTheme.</div>
+  </div>
+</div>
+
+</div><!-- /.wrap -->
+
+<script>
+  function toggle(id) {
+    const el = document.getElementById(id)
+    el.classList.toggle('open')
+    const body = el.querySelector('.req-body')
+    if (body) body.style.display = el.classList.contains('open') ? 'block' : 'none'
+  }
+
+  // Show req bodies by default
+  document.querySelectorAll('.req-body').forEach(b => b.style.display = 'block')
+
+  // Count requirements
+  const reqs = document.querySelectorAll('.req')
+  document.getElementById('req-count').textContent = `${reqs.length} requirements`
+</script>
+
+</body>
+</html>

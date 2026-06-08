@@ -1,5 +1,6 @@
 import Phaser from 'phaser'
 import { BootScene } from './scenes/BootScene'
+import { WorldSelectScene } from './scenes/WorldSelectScene'
 import { TableScene } from './scenes/TableScene'
 import { CANVAS_W, CANVAS_H } from './view/presentation'
 
@@ -20,7 +21,7 @@ const game = new Phaser.Game({
   render: {
     roundPixels: true,
   },
-  scene: [BootScene, TableScene],
+  scene: [BootScene, WorldSelectScene, TableScene],
 })
 
 // Prevent tree-shaking of the game instance in some bundler configurations
