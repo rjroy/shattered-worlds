@@ -18,6 +18,7 @@
       "insetKey": "zombie-inset-rubble",
       "cost": 1,
       "keywords": [],
+      "discardable": true,
       "onDiscarded": { "kind": "SkipDrawNextTurn" },
       "onCleared": { "kind": "None" },
       "onEndOfTurn": { "kind": "None" }

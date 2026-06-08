@@ -51,18 +51,11 @@
         ]
       }
     },
-    "Adrenaline-old": {
+    "Adrenaline": {
       "kind": "player",
       "name": "Adrenaline",
       "insetKey": "inset-adrenaline",
-      "effect": 
-          { "kind": "DiscardThenDraw", "player": 2 }
-    },
-     "Adrenaline": {
-      "kind": "player",
-      "name": "Adrenaline",
-      "insetKey": "inset-adrenaline",
-      "effect": { 
+      "effect": {
         "kind": "Sequence",
         "steps": [
           { "kind": "DiscardThenDraw", "player": 2 },
