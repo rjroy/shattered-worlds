@@ -66,7 +66,6 @@ function addCardText(
     style.wordWrap = { width: opts.wrapWidth }
     style.align = 'center'
   }
-  const tmp = textStyle(style)
   const text = scene.add.text(x, y, '', textStyle(style))
   text.setOrigin(0.5, opts.originY)
   const wrapped = text.getWrappedText(str)
