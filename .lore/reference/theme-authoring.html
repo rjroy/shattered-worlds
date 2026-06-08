@@ -167,9 +167,23 @@
   <h3>5 · Reaction player cards</h3>
   <p>Gained mid-run from archetypes 1–2, tuned to the threat. Zombie: <em>Listen</em> (<code>Hidden</code> bonus), <em>Regroup</em> (<code>DestroyCardInHand</code>).</p>
 
-  <div class="rule"><span class="rid">C1</span>Stay inside the existing effect vocabulary (<code>src/core/model/types.ts</code>): <code>DealProgress</code>, <code>Draw</code>, <code>Heal</code>, <code>ReturnWorldCards</code>, <code>DestroyCardInHand</code>, <code>DiscardThenDraw</code>, <code>AddCard</code>, <code>AddWorldCardToTop</code>, <code>AddPlayerCardToTop</code>, <code>GainCard</code>, <code>Modal</code>, <code>Sequence</code>, <code>Damage</code>, <code>SkipDrawNextTurn</code>, <code>SurviveWorld</code>, <code>None</code>. Adding a theme should not require new effect kinds. If a flavor truly needs one, that is a core change to flag separately, not a theme edit.</div>
+  <h3>Self-transform pattern <span style="color:var(--muted);font-weight:400;font-size:.85rem">(world card that degrades if ignored)</span></h3>
+  <p>A world card that worsens when not dealt with spawns its successor and removes itself, both in <code>onEndOfTurn</code>:</p>
+<pre><code>"onEndOfTurn": {
+  "kind": "Sequence",
+  "steps": [
+    { "kind": "AddWorldCardToTop", "template": "&lt;worse-card&gt;" },
+    { "kind": "DestroySelf" }
+  ]
+}</code></pre>
+  <p>The <code>AddWorldCardToTop</code> spawns the worse card onto the <strong>top</strong> of the world draw pile (it surfaces next turn), and <code>DestroySelf</code> removes the original from hand. The canonical example ships in zombie-big-box: a <em>Corpse</em> whose <code>onEndOfTurn</code> spawns a <em>Zombie</em> then fires <code>DestroySelf</code>.</p>
+  <p><strong>Placement decision:</strong> this degrades onto the world draw pile (drawn next turn), <strong>not</strong> an in-place hand replacement. The threat resurfaces a turn later rather than persisting in front of the player.</p>
+
+  <div class="rule"><span class="rid">C1</span>Stay inside the existing effect vocabulary (<code>src/core/model/types.ts</code>): <code>DealProgress</code>, <code>Draw</code>, <code>Heal</code>, <code>ReturnWorldCards</code>, <code>DestroyCardInHand</code>, <code>DiscardThenDraw</code>, <code>AddCard</code>, <code>AddWorldCardToTop</code>, <code>AddPlayerCardToTop</code>, <code>GainCard</code>, <code>Modal</code>, <code>Sequence</code>, <code>Damage</code>, <code>SkipDrawNextTurn</code>, <code>SurviveWorld</code>, <code>DestroySelf</code>, <code>None</code>. Adding a theme should not require new effect kinds. If a flavor truly needs one, that is a core change to flag separately, not a theme edit.</div>
+  <div class="rule"><span class="rid">C1a</span><code>DestroySelf</code> removes the firing card from hand. Only meaningful in a world card's <code>onEndOfTurn</code> hook, where the engine knows which card is firing (it threads the card id as <code>selfId</code>). A no-op everywhere else (a played player card has already left the hand).</div>
   <div class="rule"><span class="rid">C2</span>Keywords are the only three: <code>Hidden</code>, <code>Creature</code>, <code>Slow</code>. Use them consistently so shared/starter cards still interact — e.g. <em>Sprint</em>'s <code>Slow</code> bonus must still hit your threat creature, so your creature should carry <code>Slow</code> like Zombie does. Don't invent keywords per theme without a core change.</div>
   <div class="rule"><span class="rid">C3</span>Every world card defines all three hooks (<code>onDiscarded</code>, <code>onCleared</code>, <code>onEndOfTurn</code>), using <code>{ "kind": "None" }</code> for the ones that do nothing. Player cards define <code>effect</code>.</div>
+  <div class="rule"><span class="rid">C4</span>Player cards may carry an optional <code>exhaust</code> flag. It is not an effect, it is a boolean property on the card. <code>exhaust: true</code> destroys the card when played instead of sending it to the discard pile, so it never recycles into the deck. Defaults to false.</div>
 
   <h2><span class="mark">◈</span> Visual identity</h2>
   <p>The <code>VisualTheme</code> interface is the contract. Required: <code>worldId</code>, <code>intrusionHue</code>, <code>realityPalette</code> (title/text/disabled/confirm/cancel), <code>frameStyle</code> (9 colors), <code>backdrop</code> (realityKey/intrusionKey). Optional: <code>doorGlowTint</code>, <code>doorTint</code>, <code>worldCardfrontKey</code>.</p>

@@ -65,6 +65,8 @@ export function describeEffect(effect: CardEffect): string[] {
       return ['you survive the world']
     case 'ForceDestroy':
       return ['destroy a random card from your next hand']
+    case 'DestroySelf':
+      return ['vanishes']
     case 'None':
       return []
   }

@@ -35,7 +35,7 @@ describe('act queuing', () => {
     expect(state.acts).toHaveLength(2)
   })
 
-  it('acts[0] has 6 cards: Rubble×2, Zombie×3, Find Baseball Bat×1', () => {
+  it('acts[0] has 6 cards: Rubble×2, Zombie×1, Corpse×2, Find Baseball Bat×1', () => {
     const state = createWorld(catalog, worldData, 42)
     const act2 = state.acts[0]
     if (act2 === undefined) throw new Error('acts[0] missing')
@@ -43,7 +43,8 @@ describe('act queuing', () => {
     expect(act2).toHaveLength(6)
     const names = act2.map((c) => c.name)
     expect(names.filter((n) => n === 'Rubble')).toHaveLength(2)
-    expect(names.filter((n) => n === 'Zombie')).toHaveLength(3)
+    expect(names.filter((n) => n === 'Zombie')).toHaveLength(1)
+    expect(names.filter((n) => n === 'Corpse')).toHaveLength(2)
     expect(names.filter((n) => n === 'Find Baseball Bat')).toHaveLength(1)
   })
 

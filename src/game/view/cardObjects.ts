@@ -178,6 +178,18 @@ export function createCardObject(
         originY: 0.5,
       })
     }
+
+    // Exhaust badge: the flag lives on the card (not the effect), so it cannot
+    // come through describeEffect. Bottom-anchored, small, and muted to match
+    // the other card-face footnotes ("to clear", "click to discard").
+    if (card.exhaust === true) {
+      addCardText(scene, container, 0, CARD_H / 2 - 8, 'Exhaust', {
+        fontSize: '9px',
+        color: TEXT.textKeyword,
+        bold: true,
+        originY: 1,
+      })
+    }
   } else {
     // World / Hazard card
     const worldCard = card as WorldCard

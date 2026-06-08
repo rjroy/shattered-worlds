@@ -56,7 +56,23 @@
       "onCleared": { "kind": "GainCard", "template": "Baseball Bat" },
       "onEndOfTurn": { "kind": "None" }
     },
-   "Listen": {
+    "Corpse": {
+      "kind": "world",
+      "name": "Corpse",
+      "cost": 2,
+      "keywords": [],
+      "discardable": true,
+      "onDiscarded": { "kind": "Damage", "amount": 2 },
+      "onCleared": { "kind": "None" },
+      "onEndOfTurn": {
+        "kind": "Sequence",
+        "steps": [
+          { "kind": "AddWorldCardToTop", "template": "Zombie" },
+          { "kind": "DestroySelf" }
+        ]
+      }
+    },
+    "Listen": {
       "kind": "player",
       "name": "Listen",
       "insetKey": "zombie-inset-listen",
@@ -89,7 +105,8 @@
       {
         "cards": [
           { "templateId": "Rubble", "count": 2 },
-          { "templateId": "Zombie", "count": 3 },
+          { "templateId": "Zombie", "count": 1 },
+          { "templateId": "Corpse", "count": 2 },
           { "templateId": "Find Baseball Bat", "count": 1 }
         ]
       },

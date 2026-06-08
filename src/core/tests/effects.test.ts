@@ -486,3 +486,78 @@ describe('destroyInHand', () => {
     expect(events).toHaveLength(0)
   })
 })
+
+// ---------------------------------------------------------------------------
+// 12. applyEffect DestroySelf
+// ---------------------------------------------------------------------------
+
+describe('applyEffect DestroySelf', () => {
+  it('removes the firing card from hand and emits CardDestroyed{ id: selfId }', () => {
+    let state = makeState()
+    const [corpse, s1] = mintWorld(state, 'Corpse')
+    state = { ...s1, hand: [corpse] }
+
+    const { state: after, events } = applyEffect(
+      catalog,
+      state,
+      { kind: 'DestroySelf' },
+      undefined,
+      corpse.id,
+    )
+
+    expect(after.hand.find((c) => c.id === corpse.id)).toBeUndefined()
+    const destroyed = events.find((e) => e.type === 'CardDestroyed')
+    expect(destroyed).toBeDefined()
+    if (destroyed?.type === 'CardDestroyed') {
+      expect(destroyed.id).toBe(corpse.id)
+    }
+  })
+
+  it('is a no-op when selfId is undefined', () => {
+    let state = makeState()
+    const [corpse, s1] = mintWorld(state, 'Corpse')
+    state = { ...s1, hand: [corpse] }
+
+    const { state: after, events } = applyEffect(
+      catalog,
+      state,
+      { kind: 'DestroySelf' },
+      undefined,
+      undefined,
+    )
+
+    expect(after.hand).toHaveLength(1)
+    expect(events).toHaveLength(0)
+  })
+
+  it('Sequence[AddWorldCardToTop(Zombie), DestroySelf] removes self and adds a Zombie on top', () => {
+    let state = makeState()
+    const [corpse, s1] = mintWorld(state, 'Corpse')
+    state = { ...s1, hand: [corpse], worldDraw: [] }
+
+    const sequence = {
+      kind: 'Sequence' as const,
+      steps: [
+        { kind: 'AddWorldCardToTop' as const, template: 'Zombie' },
+        { kind: 'DestroySelf' as const },
+      ],
+    }
+
+    const { state: after, events } = applyEffect(catalog, state, sequence, undefined, corpse.id)
+
+    // Corpse gone from hand
+    expect(after.hand.find((c) => c.id === corpse.id)).toBeUndefined()
+
+    // A Zombie is on top of worldDraw
+    expect(after.worldDraw).toHaveLength(1)
+    expect(after.worldDraw[0]!.name).toBe('Zombie')
+
+    // Both events present
+    expect(events.some((e) => e.type === 'CardGained')).toBe(true)
+    const destroyed = events.find((e) => e.type === 'CardDestroyed')
+    expect(destroyed).toBeDefined()
+    if (destroyed?.type === 'CardDestroyed') {
+      expect(destroyed.id).toBe(corpse.id)
+    }
+  })
+})
