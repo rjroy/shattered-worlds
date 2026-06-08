@@ -12,7 +12,7 @@ import { pickAction, catalog, worldData } from '../policy'
 // ---------------------------------------------------------------------------
 
 const WORLD_TIMEOUT = 10000 // ms, for test timeouts
-const WORLD_COUNT = 1000
+const WORLD_COUNT = 2000
 const MAX_ACTIONS = 500
 
 function runWorld(seed: number): { finalState: GameState; turns: number; actions: number } {
