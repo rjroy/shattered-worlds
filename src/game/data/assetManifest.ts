@@ -14,6 +14,14 @@ import birdCardfrontUrl from '../assets/themes/bird-building/bird-building-cardf
 import volcanoRealityUrl from '../assets/themes/highway-volcano/highway-volcano-bg.webp'
 import volcanoOverlayUrl from '../assets/themes/highway-volcano/highway-volcano-overlay.webp'
 import volcanoCardfrontUrl from '../assets/themes/highway-volcano/highway-volcano-cardfront.webp'
+import volcanoInsetAshFallUrl from '../assets/themes/highway-volcano/insets/inset-ash-fall.webp'
+import volcanoInsetDitchGearUrl from '../assets/themes/highway-volcano/insets/inset-ditch-gear.webp'
+import volcanoInsetFloorItUrl from '../assets/themes/highway-volcano/insets/inset-floor-it.webp'
+import volcanoInsetGridlockUrl from '../assets/themes/highway-volcano/insets/inset-gridlock.webp'
+import volcanoInsetLavaFlowUrl from '../assets/themes/highway-volcano/insets/inset-lava-flow.webp'
+import volcanoInsetSpotPathUrl from '../assets/themes/highway-volcano/insets/inset-spot-path.webp'
+import volcanoInsetTremorsUrl from '../assets/themes/highway-volcano/insets/inset-tremors.webp'
+import volcanoInsetVehicleUrl from '../assets/themes/highway-volcano/insets/inset-vehicle.webp'
 import insetSprintUrl from '../assets/insets/inset-sprint.webp'
 import insetExploreUrl from '../assets/insets/inset-explore.webp'
 import insetBarricadeUrl from '../assets/insets/inset-barricade.webp'
@@ -50,6 +58,14 @@ export const assetManifest: Record<string, string> = {
   'highway-volcano-bg': volcanoRealityUrl,
   'highway-volcano-overlay': volcanoOverlayUrl,
   'highway-volcano-cardfront': volcanoCardfrontUrl,
+  'volcano-inset-ash-fall': volcanoInsetAshFallUrl,
+  'volcano-inset-ditch-gear': volcanoInsetDitchGearUrl,
+  'volcano-inset-floor-it': volcanoInsetFloorItUrl,
+  'volcano-inset-gridlock': volcanoInsetGridlockUrl,
+  'volcano-inset-lava-flow': volcanoInsetLavaFlowUrl,
+  'volcano-inset-spot-path': volcanoInsetSpotPathUrl,
+  'volcano-inset-tremors': volcanoInsetTremorsUrl,
+  'volcano-inset-vehicle': volcanoInsetVehicleUrl,
   'inset-sprint': insetSprintUrl,
   'inset-explore': insetExploreUrl,
   'inset-barricade': insetBarricadeUrl,
