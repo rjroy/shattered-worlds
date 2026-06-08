@@ -26,7 +26,7 @@ export interface HUDRefs {
 // inset) brackets the 14px text sitting at y=10.
 const HUD_PANEL_X = 30
 const HUD_PANEL_Y = 0
-const HUD_PANEL_W = 260
+const HUD_PANEL_W = 310
 const HUD_PANEL_H = 45
 const HUD_PANEL_SIDE_INSET = 20 // left/right: keep the decorated vertical frame
 const HUD_PANEL_EDGE_INSET = 6 // top/bottom: thin frayed edge, interior shows through
@@ -66,7 +66,7 @@ export function createHUD(scene: Phaser.Scene): HUDRefs {
   // panel's vertical center, so every label is vertically centered in the bar.
   const hpText = scene.add.text(30, HUD_PANEL_H / 2, 'HP: —', { ...style, color: '#FF8888' })
   const actText = scene.add.text(140, HUD_PANEL_H / 2, 'Act 1 / 3', style)
-  const energyText = scene.add.text(200, HUD_PANEL_H / 2, '⚡ —', { ...style, color: TEXT.textCost })
+  const energyText = scene.add.text(240, HUD_PANEL_H / 2, '⚡ —', { ...style, color: TEXT.textCost })
 
   for (const label of [hpText, actText, energyText]) {
     label.setOrigin(0, 0.5)

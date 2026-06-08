@@ -166,14 +166,14 @@ export function createCardObject(
       // Badge backing: a filled circle using the energy cost color
       const badgeBg = scene.add.graphics()
       badgeBg.setPosition(CARD_W / 2 - 16, -CARD_H / 2 + 16)
-      badgeBg.fillStyle(TEXT.textCostInt, 1)
+      badgeBg.fillStyle(TEXT.textCostInt, 0.75)
       badgeBg.fillCircle(0, 0, 11)
       container.add(badgeBg)
 
       // Cost digit in white for contrast against the gold badge background
       addCardText(scene, container, CARD_W / 2 - 16, -CARD_H / 2 + 16, String(card.energyCost), {
         fontSize: '16px',
-        color: '#ffffff',
+        color: '#000000',
         bold: true,
         originY: 0.5,
       })
