@@ -5,7 +5,7 @@
 import Phaser from 'phaser'
 import type { GameState } from '../../core/index'
 import { TEXT, textStyle } from './presentation'
-import { START_HP } from '../../core/engine/world'
+import { WORLD_CONSTS } from '../../core/engine/world'
 
 export interface HUDRefs {
   // The whole HUD (backing panel + every label) lives in this container, so the
@@ -80,7 +80,7 @@ export function createHUD(scene: Phaser.Scene): HUDRefs {
 
 /** Update HUD text to match the current GameState. */
 export function updateHUD(refs: HUDRefs, state: GameState): void {
-  refs.hpText.setText(`HP: ${state.hp}/${START_HP}`)
+  refs.hpText.setText(`HP: ${state.hp}/${WORLD_CONSTS.startHp}`)
   refs.actText.setText(`Act ${state.actIndex + 1} / ${state.totalActs}`)
   refs.energyText.setText(`⚡ ${state.energy}`)
 }

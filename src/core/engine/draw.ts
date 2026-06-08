@@ -1,4 +1,5 @@
 import type { CardId, GameEvent, GameState, WorldCard } from '../model/types'
+import { WORLD_CONSTS } from './world'
 import { shuffle } from './rng'
 
 // ---------------------------------------------------------------------------
@@ -130,16 +131,16 @@ export function drawWorld(
 // ---------------------------------------------------------------------------
 
 /**
- * Fill the hand to 6 cards using the draw formula from REQ-WDS-7.
+ * Fill the hand to {WORLD_CONSTS.maxHandSize} cards using the draw formula from REQ-WDS-7.
  *
  * Formula (evaluated after player cards have been discarded at EndTurn, so
  * hand contains only world cards):
  *
  *   heldWorld = hand.filter(c => c.kind === 'world').length
- *   room      = 6 - hand.length
+ *   room      = WORLD_CONSTS.maxHandSize - hand.length
  *
- *   worldToDraw = clamp(max(1, 2 - heldWorld), 0, min(room, worldCardsRemaining))
- *   playerToDraw = max(0, 6 - newHand.length)   — after world draw
+ *   worldToDraw = clamp(max(1, WORLD_CONSTS.startWorldCards - heldWorld), 0, min(room, worldCardsRemaining))
+ *   playerToDraw = max(0, WORLD_CONSTS.maxHandSize - newHand.length)   — after world draw
  *
  * If skipDrawNext is true: player draws are suppressed, DrawSkipped is emitted,
  * and the flag is consumed.
@@ -148,7 +149,7 @@ export function refillHand(state: GameState): { state: GameState; events: GameEv
   const allEvents: GameEvent[] = []
 
   const heldWorld = state.hand.filter((c) => c.kind === 'world').length
-  const room = 6 - state.hand.length
+  const room = WORLD_CONSTS.maxHandSize - state.hand.length
 
   if (room === 0) {
     return { state, events: [] }
@@ -159,7 +160,7 @@ export function refillHand(state: GameState): { state: GameState; events: GameEv
   // collapses to 0 via the min(…, worldCardsRemaining) clip.
   const totalWorldRemaining = worldCardsRemaining(state)
   const worldToDraw = Math.min(
-    Math.max(1, 2 - heldWorld),
+    Math.max(1, WORLD_CONSTS.startWorldCards - heldWorld),
     room,
     totalWorldRemaining,
   )
@@ -172,8 +173,8 @@ export function refillHand(state: GameState): { state: GameState; events: GameEv
     allEvents.push(...result.events)
   }
 
-  // Player draw: fill remaining room up to 6
-  let playerToDraw = Math.max(0, 6 - current.hand.length)
+  // Player draw: fill remaining room up to WORLD_CONSTS.maxHandSize
+  let playerToDraw = Math.max(0, WORLD_CONSTS.maxHandSize - current.hand.length)
 
   if (current.skipDrawNext) {
     allEvents.push({ type: 'DrawSkipped' })

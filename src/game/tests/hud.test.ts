@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'bun:test'
 import { updateHUD } from '../view/hud'
 import type { GameState } from '../../core/index'
-import { START_HP } from '../../core/engine/world'
+import { WORLD_CONSTS } from '../../core/engine/world'
 
 // ---------------------------------------------------------------------------
 // Fakes
@@ -128,7 +128,7 @@ describe('updateHUD', () => {
 
     updateHUD(refs as never, state)
 
-    expect(refs.hpText.text).toBe(`HP: 15/${START_HP}`)
+    expect(refs.hpText.text).toBe(`HP: 15/${WORLD_CONSTS.startHp}`)
     expect(refs.actText.text).toBe('Act 2 / 3')
     expect(refs.energyText.text).toBe('⚡ 3')
   })
