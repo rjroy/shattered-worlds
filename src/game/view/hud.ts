@@ -67,15 +67,13 @@ export function createHUD(scene: Phaser.Scene): HUDRefs {
   const hpText = scene.add.text(30, HUD_PANEL_H / 2, 'HP: —', { ...style, color: TEXT.textHp })
   const actText = scene.add.text(140, HUD_PANEL_H / 2, 'Act 1 / 3', style)
   const energyText = scene.add.text(260, HUD_PANEL_H / 2, '—', { ...style, color: TEXT.textEnergy })
-  const energyIcon = scene.add.image(energyText.x - 6, energyText.y, 'energy-icon').setDisplaySize(22, 22)
-  const energyRect = scene.add.rectangle(energyIcon.x + 3, energyIcon.y, energyText.width + 6, energyText.height + 2, TEXT.bgEnergy, 0.5).setRounded(4)
+  const energyIcon = scene.add.image(energyText.x - 9, energyText.y, 'energy-icon').setDisplaySize(28, 28)
 
-  for (const label of [hpText, actText, energyText, energyIcon, energyRect]) {
+  for (const label of [hpText, actText, energyText, energyIcon]) {
     label.setOrigin(0, 0.5)
     container.add(label)
   }
-  energyRect.setAbove(energyIcon)
-  energyText.setAbove(energyRect)
+  energyText.setAbove(energyIcon)
 
   container.setPosition(HUD_PANEL_X, HUD_PANEL_Y)
 
