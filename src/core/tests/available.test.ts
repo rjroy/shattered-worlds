@@ -127,7 +127,7 @@ describe('Sprint playability', () => {
     const [sprint, s1] = mintPlayer(s0, 'Sprint')
     // No world cards in hand — branch 1 (DealProgress Slow) is not legal,
     // but branch 0 (Draw) is always legal.
-    const state = { ...s1, hand: [sprint] }
+    const state = { ...s1, hand: [sprint], energy: 1 }
 
     const actions = availableActions(state)
     const sprintEntry = actions.playable.find((p) => p.cardId === sprint.id)
@@ -262,14 +262,23 @@ describe('legalTargets Sprint (modal)', () => {
   it('branch 1 (DealProgress Slow) returns only Slow-keyword world cards', () => {
     const s0 = makeState()
     const [sprint, s1] = mintPlayer(s0, 'Sprint')
-    const [zombie, s2] = mintWorld(s1, 'Zombie') // has Slow keyword
-    const [rubble, s3] = mintWorld(s2, 'Rubble') // no keywords
-    const state = { ...s3, hand: [sprint, zombie, rubble] }
+    // Construct cards directly to control keywords, independent of world data
+    const slowCard: WorldCard = {
+      kind: 'world', id: 'slow-1', name: 'Slow Hazard', insetKey: undefined,
+      cost: 1, keywords: ['Slow'], discardable: false,
+      onDiscarded: { kind: 'None' }, onCleared: { kind: 'None' }, onEndOfTurn: { kind: 'None' },
+    }
+    const otherCard: WorldCard = {
+      kind: 'world', id: 'other-1', name: 'Other Hazard', insetKey: undefined,
+      cost: 1, keywords: [], discardable: false,
+      onDiscarded: { kind: 'None' }, onCleared: { kind: 'None' }, onEndOfTurn: { kind: 'None' },
+    }
+    const state = { ...s1, hand: [sprint, slowCard, otherCard], energy: 1 }
 
     const actions = availableActions(state)
     const targets = actions.legalTargets(sprint.id, 1)
-    expect(targets).toContain(zombie.id)
-    expect(targets).not.toContain(rubble.id)
+    expect(targets).toContain(slowCard.id)
+    expect(targets).not.toContain(otherCard.id)
   })
 })
 
@@ -359,12 +368,11 @@ describe('Energy affordability gate', () => {
 
   it('Cost-0 cards are always playable regardless of energy', () => {
     const s0 = makeState()
-    const [sprint, s1] = mintPlayer(s0, 'Sprint')
-    // Sprint is cost-0, and is playable without world cards (branch 0 is Draw)
-    const state = { ...s1, hand: [sprint], energy: 0 }
+    const [medKit, s1] = mintPlayer(s0, 'Med Kit')
+    const state = { ...s1, hand: [medKit], energy: 0 }
 
     const actions = availableActions(state)
-    const entry = actions.playable.find((p) => p.cardId === sprint.id)
+    const entry = actions.playable.find((p) => p.cardId === medKit.id)
     expect(entry).toBeDefined()
   })
 })

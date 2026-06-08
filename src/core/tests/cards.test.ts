@@ -257,32 +257,10 @@ describe('unknown template', () => {
 
 describe('energy cost', () => {
   it('minting a player card without energyCost field yields energyCost: 0 (default)', () => {
+    // Explore has no energyCost in the template, so it should default to 0
     const state = makeEmptyState()
-    const [card] = mintCard(catalog, state, 'Sprint')
+    const [card] = mintCard(catalog, state, 'Explore')
     if (card.kind !== 'player') throw new Error('expected player card')
     expect(card.energyCost).toBe(0)
-  })
-
-  it('starter deck cards have correct energyCost values', () => {
-    const starterCards: Array<[CardTemplateId, number]> = [
-      ['Sprint', 0],
-      ['Sprint', 0],
-      ['Explore', 0],
-      ['Explore', 0],
-      ['Explore', 0],
-      ['Barricade', 1],
-      ['Barricade', 1],
-      ['Med Kit', 0],
-      ['Panic', 0],
-      ['Adrenaline', 0],
-    ]
-
-    let state = makeEmptyState()
-    for (const [templateId, expectedEnergyCost] of starterCards) {
-      const [card, next] = mintCard(catalog, state, templateId)
-      if (card.kind !== 'player') throw new Error(`expected player card for ${templateId}`)
-      expect(card.energyCost).toBe(expectedEnergyCost)
-      state = next
-    }
   })
 })

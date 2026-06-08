@@ -5,10 +5,11 @@
       "kind": "player",
       "name": "Sprint",
       "insetKey": "inset-sprint",
+      "energyCost": 1,
       "effect": {
         "kind": "Modal",
         "branches": [
-          { "kind": "Draw", "player": 2, "world": 1 },
+          { "kind": "Draw", "player": 3, "world": 1 },
           { "kind": "DealProgress", "base": 0, "bonus": { "tag": "Slow", "amount": 3 } }
         ]
       }
@@ -54,7 +55,13 @@
       "kind": "player",
       "name": "Adrenaline",
       "insetKey": "inset-adrenaline",
-      "effect": { "kind": "DiscardThenDraw", "player": 2 }
+      "effect": {
+        "kind": "Sequence",
+        "steps": [
+          { "kind": "DiscardThenDraw", "player": 2 },
+          { "kind": "GainEnergy", "amount": 2 }
+        ]
+      }
     },
     "The Walker": {
       "kind": "world",
@@ -71,6 +78,7 @@
       "kind": "player",
       "name": "Summon Door",
       "insetKey": "inset-door",
+      "energyCost": 6,
       "effect": { "kind": "AddWorldCardToTop", "template": "Door" }
     },
     "Door": {

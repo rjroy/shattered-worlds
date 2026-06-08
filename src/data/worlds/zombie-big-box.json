@@ -39,22 +39,37 @@
       "name": "Zombie",
       "insetKey": "zombie-inset-zombie",
       "cost": 3,
-      "keywords": ["Slow", "Creature"],
+      "keywords": ["Creature"],
       "discardable": true,
       "onDiscarded": { "kind": "Damage", "amount": 5 },
       "onCleared": { "kind": "None" },
-      "onEndOfTurn": { "kind": "Damage", "amount": 1 }
+      "onEndOfTurn": {
+        "kind": "Sequence",
+        "steps": [
+          { "kind": "Damage", "amount": 1 },
+          { "kind": "AddWorldCardToTop", "template": "Zombie" }
+        ]
+      }
     },
     "Find Baseball Bat": {
       "kind": "world",
       "name": "Find Baseball Bat",
       "insetKey": "zombie-inset-baseball",
       "cost": 2,
-      "keywords": ["Hidden"],
+      "keywords": [
+        "Hidden"
+      ],
       "discardable": true,
-      "onDiscarded": { "kind": "None" },
-      "onCleared": { "kind": "GainCard", "template": "Baseball Bat" },
-      "onEndOfTurn": { "kind": "None" }
+      "onDiscarded": {
+        "kind": "None"
+      },
+      "onCleared": {
+        "kind": "GainCard",
+        "template": "Baseball Bat"
+      },
+      "onEndOfTurn": {
+        "kind": "None"
+      }
     },
     "Corpse": {
       "kind": "world",
@@ -63,13 +78,22 @@
       "cost": 2,
       "keywords": [],
       "discardable": false,
-      "onDiscarded": { "kind": "None" },
-      "onCleared": { "kind": "None" },
+      "onDiscarded": {
+        "kind": "None"
+      },
+      "onCleared": {
+        "kind": "None"
+      },
       "onEndOfTurn": {
         "kind": "Sequence",
         "steps": [
-          { "kind": "AddWorldCardToTop", "template": "Zombie" },
-          { "kind": "DestroySelf" }
+          {
+            "kind": "AddWorldCardToTop",
+            "template": "Zombie"
+          },
+          {
+            "kind": "DestroySelf"
+          }
         ]
       }
     },
@@ -78,7 +102,14 @@
       "name": "Listen",
       "insetKey": "zombie-inset-listen",
       "energyCost": 1,
-      "effect": { "kind": "DealProgress", "base": 2, "bonus": { "tag": "Hidden", "amount": 2 } }
+      "effect": {
+        "kind": "DealProgress",
+        "base": 2,
+        "bonus": {
+          "tag": "Hidden",
+          "amount": 2
+        }
+      }
     },
     "Baseball Bat": {
       "kind": "player",

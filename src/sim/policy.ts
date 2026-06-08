@@ -115,13 +115,18 @@ function buildPlayAction(
           if (targets.length > 0) {
             action = { ...action, targetId: pick(targets, rng) }
           }
+        } else if (stepSpec.kind === 'discardPlayer') {
+          const targets = legalTargets(cardId, stepIdx)
+          if (targets.length > 0) {
+            action = { ...action, discardId: pick(targets, rng) }
+          }
         } else if (stepSpec.kind === 'returnWorld') {
           const targets = legalTargets(cardId, stepIdx)
           const count = Math.min(pickCount(stepSpec.min, stepSpec.max, rng), targets.length)
           const chosen = pickSubset(targets, count, rng)
           action = { ...action, returnIds: chosen }
         }
-        // 'none': no supplementary fields needed
+        // 'none' / 'destroyHand' / 'modal': no supplementary fields needed or handled at top level
       }
 
       return action
