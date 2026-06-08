@@ -11,6 +11,14 @@ import zombieCardfrontUrl from '../assets/themes/zombie-big-box/zombie-cardfront
 import birdRealityUrl from '../assets/themes/bird-building/bird-building-bg.webp'
 import birdOverlayUrl from '../assets/themes/bird-building/bird-building-overlay.webp'
 import birdCardfrontUrl from '../assets/themes/bird-building/bird-building-cardfront.webp'
+import birdInsetFindFootingUrl from '../assets/themes/bird-building/insets/inset-find-footing.webp'
+import birdInsetFireAxeUrl from '../assets/themes/bird-building/insets/inset-fire-axe.webp'
+import birdInsetFireAxeFindUrl from '../assets/themes/bird-building/insets/inset-fire-axe-find.webp'
+import birdInsetGrippingTalonUrl from '../assets/themes/bird-building/insets/inset-gripping-talon.webp'
+import birdInsetGroaningGirdersUrl from '../assets/themes/bird-building/insets/inset-groaning-girders.webp'
+import birdInsetShadowOverheadUrl from '../assets/themes/bird-building/insets/inset-shadow-overhead.webp'
+import birdInsetSlidingDebrisUrl from '../assets/themes/bird-building/insets/inset-sliding-debris.webp'
+import birdInsetSteadyUrl from '../assets/themes/bird-building/insets/inset-steady.webp'
 import volcanoRealityUrl from '../assets/themes/highway-volcano/highway-volcano-bg.webp'
 import volcanoOverlayUrl from '../assets/themes/highway-volcano/highway-volcano-overlay.webp'
 import volcanoCardfrontUrl from '../assets/themes/highway-volcano/highway-volcano-cardfront.webp'
@@ -55,6 +63,14 @@ export const assetManifest: Record<string, string> = {
   'bird-building-bg': birdRealityUrl,
   'bird-building-overlay': birdOverlayUrl,
   'bird-building-cardfront': birdCardfrontUrl,
+  'bird-inset-find-footing': birdInsetFindFootingUrl,
+  'bird-inset-fire-axe': birdInsetFireAxeUrl,
+  'bird-inset-fire-axe-find': birdInsetFireAxeFindUrl,
+  'bird-inset-gripping-talon': birdInsetGrippingTalonUrl,
+  'bird-inset-groaning-girders': birdInsetGroaningGirdersUrl,
+  'bird-inset-shadow-overhead': birdInsetShadowOverheadUrl,
+  'bird-inset-sliding-debris': birdInsetSlidingDebrisUrl,
+  'bird-inset-steady': birdInsetSteadyUrl,
   'highway-volcano-bg': volcanoRealityUrl,
   'highway-volcano-overlay': volcanoOverlayUrl,
   'highway-volcano-cardfront': volcanoCardfrontUrl,
