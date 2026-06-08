@@ -75,7 +75,7 @@ function addCardText(
     const lineText = i == 0 ? text : scene.add.text(x, currY, '', textStyle(style))
     lineText.setText(line)
     lineText.setOrigin(0.5, opts.originY)
-    currY += text.height + (opts.lineSpacing ?? 0)  
+    currY += lineText.height + (opts.lineSpacing ?? 0)  
     if (line.includes('Progress')) {
       lineText.preFX?.addGlow(TEXT.textCostInt, 0.8, 2)
     }
@@ -95,11 +95,11 @@ function addEffectBlock(
   prefix: string,
   y: number,
   color: string,
-): void {
-  if (effect.kind === 'None') return
+): Phaser.GameObjects.Text[] {
+  if (effect.kind === 'None') return []
   const lines = describeEffect(effect).map((l) => `${prefix}${l}`).join('\n')
-  if (lines === '') return
-  addCardText(scene, container, 0, y, lines, {
+  if (lines === '') return []
+  return addCardText(scene, container, 0, y, lines, {
     fontSize: '9px',
     color,
     originY: 0,
@@ -221,7 +221,7 @@ export function createCardObject(
 
     // Keywords
     if (worldCard.keywords.length > 0) {
-      addCardText(scene, container, 0, -CARD_H / 2 + 22, worldCard.keywords.join(' · '), {
+      addCardText(scene, container, 0, -CARD_H / 2 + 23, worldCard.keywords.join(' · '), {
         fontSize: '9px',
         color: TEXT.textKeyword,
         originY: 0,
@@ -229,9 +229,16 @@ export function createCardObject(
     }
 
     // onEndOfTurn (fires each turn while held), onDiscarded, onCleared — full sentences.
-    addEffectBlock(scene, container, worldCard.onEndOfTurn, 'Each turn: ', -CARD_H / 2 + 74, TEXT.textHeld)
-    addEffectBlock(scene, container, worldCard.onDiscarded, 'If discarded: ', -CARD_H / 2 + 54, TEXT.textPenalty)
-    addEffectBlock(scene, container, worldCard.onCleared, 'Clear it: ', -CARD_H / 2 + 34, TEXT.textReward)
+    const effectLineSpacing = 4 
+    let currY = -CARD_H /2 + 36
+    console.log(`End: Current Y: ${currY} (for card ${card.name})`)
+    const onEnd = addEffectBlock(scene, container, worldCard.onEndOfTurn, 'Each turn: ', currY, TEXT.textHeld)
+    currY = onEnd.reduce((highest, text) => Math.max(highest, text.y + text.height + effectLineSpacing), currY)
+    console.log(`Discard: Current Y: ${currY} (for card ${card.name})`)
+    const onDiscarded = addEffectBlock(scene, container, worldCard.onDiscarded, 'If discarded: ', currY, TEXT.textPenalty)
+    currY = onDiscarded.reduce((highest, text) => Math.max(highest, text.y + text.height + effectLineSpacing), currY)
+    console.log(`Cleared: Current Y: ${currY} (for card ${card.name})`)
+    const onCleared = addEffectBlock(scene, container, worldCard.onCleared, 'Clear it: ', currY, TEXT.textReward)
 
     // Discard indicator
     if (worldCard.discardable) {
