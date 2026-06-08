@@ -187,7 +187,7 @@ export function createCardObject(
     if (card.energyCost > 0) {
       // Badge backing: a filled circle using the energy cost color
       const badgeBg = scene.add.image(CARD_W / 2 - 16, -CARD_H / 2 + 16, 'energy-icon')
-      badgeBg.setDisplaySize(22, 22)
+      badgeBg.setDisplaySize(28, 28)
       container.add(badgeBg)
 
       // Cost digit in black for contrast against the gold badge background
@@ -196,7 +196,6 @@ export function createCardObject(
         color: TEXT.textEnergy,
         bold: true,
         originY: 0.5,
-        background: TEXT.bgEnergy,
       })
     }
 

@@ -493,8 +493,8 @@ describe('createCardObject — player card energy cost badge', () => {
     createCardObject(scene1 as never, { ...baseCard, energyCost: 1, id: 'test-1' }, 0, 0, theme, resolveTheme)
     const count1 = added1.length
 
-    // Badge adds 1 image + addCardText with background (text + bg rect + text-again) = 4 extra children
-    expect(count1 - count0).toBe(4)
+    // Badge adds 1 image + addCardText without a background = 3 extra children
+    expect(count1 - count0).toBe(3)
   })
 
   it('cost-0 player cards add fewer children than cost-1 (no badge)', () => {
