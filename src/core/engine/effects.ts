@@ -119,18 +119,14 @@ export function gainCard(
 }
 
 // ---------------------------------------------------------------------------
-// returnToTopThree
+// returnToActiveWorldDeck
 // ---------------------------------------------------------------------------
 
 /**
- * Return world cards from hand back into the top of worldDraw, shuffled with
- * the first three existing cards in that pile.
- *
- * Pool construction: first min(3, worldDraw.length) cards of worldDraw
- * + returned cards. The pool is shuffled (seeded), then placed at the front
- * of worldDraw with the remainder appended after.
+ * Return world cards from hand back into worldDraw, shuffled with the current
+ * active deck.
  */
-export function returnToTopThree(
+export function returnToActiveWorldDeck(
   state: GameState,
   ids: readonly CardId[],
 ): EffectResult {
@@ -153,18 +149,14 @@ export function returnToTopThree(
   const returnedIds = returned.map((c) => c.id)
   const handAfter = state.hand.filter((c) => !returnedIds.includes(c.id))
 
-  const poolSize = Math.min(3, state.worldDraw.length)
-  const poolBase = state.worldDraw.slice(0, poolSize)
-  const remainder = state.worldDraw.slice(poolSize)
-
-  const pool: WorldCard[] = [...poolBase, ...returned]
+  const pool: WorldCard[] = [...state.worldDraw, ...returned]
   const [shuffled, nextRng] = shuffle(pool, state.rng)
 
   const current: GameState = {
     ...state,
     rng: nextRng,
     hand: handAfter,
-    worldDraw: [...shuffled, ...remainder],
+    worldDraw: shuffled,
   }
 
   const events: GameEvent[] = [{ type: 'WorldCardsReturned', ids: returnedIds }]
@@ -284,7 +276,7 @@ export function applyEffect(
       return heal(state, effect.amount)
 
     case 'ReturnWorldCards':
-      return returnToTopThree(state, play?.returnIds ?? [])
+      return returnToActiveWorldDeck(state, play?.returnIds ?? [])
 
     case 'DestroyCardInHand':
       return destroyInHand(state, play?.destroyId)

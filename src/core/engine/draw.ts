@@ -223,7 +223,6 @@ export function resolveForceDestroy(
 
   const [shuffled, nextRng] = shuffle(playerCards, state.rng)
   const doomedIds = new Set<CardId>(shuffled.slice(0, takeCount).map((c) => c.id))
-  console.log(`resolveForceDestroy: taking ${takeCount} cards, doomedIds = ${[...doomedIds].join(', ')}`) 
 
   const current: GameState = {
     ...state,
