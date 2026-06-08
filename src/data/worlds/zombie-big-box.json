@@ -59,6 +59,7 @@
     "Corpse": {
       "kind": "world",
       "name": "Corpse",
+      "insetKey": "zombie-inset-corpse",
       "cost": 2,
       "keywords": [],
       "discardable": false,

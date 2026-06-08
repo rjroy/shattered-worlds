@@ -39,6 +39,7 @@ import insetAdrenalineUrl from '../assets/insets/inset-adrenaline.webp'
 import insetDoorUrl from '../assets/insets/inset-door.webp'
 import insetWalkerUrl from '../assets/insets/inset-walker.webp'
 import zombieInsetBaseballUrl from '../assets/themes/zombie-big-box/insets/inset-baseball.webp'
+import zombieInsetCorpseUrl from '../assets/themes/zombie-big-box/insets/inset-corpse.webp'
 import zombieInsetRegroupUrl from '../assets/themes/zombie-big-box/insets/inset-regroup.webp'
 import zombieInsetRubbleUrl from '../assets/themes/zombie-big-box/insets/inset-rubble.webp'
 import zombieInsetScreamsUrl from '../assets/themes/zombie-big-box/insets/inset-screams.webp'
@@ -91,6 +92,7 @@ export const assetManifest: Record<string, string> = {
   'inset-door': insetDoorUrl,
   'inset-walker': insetWalkerUrl,
   'zombie-inset-baseball': zombieInsetBaseballUrl,
+  'zombie-inset-corpse': zombieInsetCorpseUrl,
   'zombie-inset-regroup': zombieInsetRegroupUrl,
   'zombie-inset-rubble': zombieInsetRubbleUrl,
   'zombie-inset-screams': zombieInsetScreamsUrl,
