@@ -124,7 +124,4 @@ export function createWorld(catalog: CardCatalog, world: WorldData, seed: number
   const { state: dealt } = startTurn(baseState)
   return dealt
 }
-function assert(arg0: boolean, arg1: string) {
-  throw new Error('Function not implemented.')
-}
 

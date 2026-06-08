@@ -61,8 +61,8 @@
       "name": "Corpse",
       "cost": 2,
       "keywords": [],
-      "discardable": true,
-      "onDiscarded": { "kind": "Damage", "amount": 2 },
+      "discardable": false,
+      "onDiscarded": { "kind": "None" },
       "onCleared": { "kind": "None" },
       "onEndOfTurn": {
         "kind": "Sequence",

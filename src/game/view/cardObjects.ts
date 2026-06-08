@@ -66,6 +66,7 @@ function addCardText(
     style.wordWrap = { width: opts.wrapWidth }
     style.align = 'center'
   }
+  const tmp = textStyle(style)
   const text = scene.add.text(x, y, '', textStyle(style))
   text.setOrigin(0.5, opts.originY)
   const wrapped = text.getWrappedText(str)
@@ -77,7 +78,8 @@ function addCardText(
     lineText.setOrigin(0.5, opts.originY)
     currY += lineText.height + (opts.lineSpacing ?? 0)  
     if (line.includes('Progress')) {
-      lineText.preFX?.addGlow(TEXT.textCostInt, 0.8, 2)
+      const textCostInt = Phaser.Display.Color.HexStringToColor(TEXT.textCost).color32
+      lineText.preFX?.addGlow(textCostInt, 0.8, 0.8)
     }
     container.add(lineText)
     return lineText
@@ -166,7 +168,7 @@ export function createCardObject(
       // Badge backing: a filled circle using the energy cost color
       const badgeBg = scene.add.graphics()
       badgeBg.setPosition(CARD_W / 2 - 16, -CARD_H / 2 + 16)
-      badgeBg.fillStyle(TEXT.textCostInt, 0.75)
+      badgeBg.fillStyle(Phaser.Display.Color.HexStringToColor(TEXT.textCost).color32, 0.75)
       badgeBg.fillCircle(0, 0, 11)
       container.add(badgeBg)
 
@@ -231,14 +233,11 @@ export function createCardObject(
     // onEndOfTurn (fires each turn while held), onDiscarded, onCleared — full sentences.
     const effectLineSpacing = 4 
     let currY = -CARD_H /2 + 36
-    console.log(`End: Current Y: ${currY} (for card ${card.name})`)
     const onEnd = addEffectBlock(scene, container, worldCard.onEndOfTurn, 'Each turn: ', currY, TEXT.textHeld)
     currY = onEnd.reduce((highest, text) => Math.max(highest, text.y + text.height + effectLineSpacing), currY)
-    console.log(`Discard: Current Y: ${currY} (for card ${card.name})`)
     const onDiscarded = addEffectBlock(scene, container, worldCard.onDiscarded, 'If discarded: ', currY, TEXT.textPenalty)
     currY = onDiscarded.reduce((highest, text) => Math.max(highest, text.y + text.height + effectLineSpacing), currY)
-    console.log(`Cleared: Current Y: ${currY} (for card ${card.name})`)
-    const onCleared = addEffectBlock(scene, container, worldCard.onCleared, 'Clear it: ', currY, TEXT.textReward)
+    addEffectBlock(scene, container, worldCard.onCleared, 'Clear it: ', currY, TEXT.textReward)
 
     // Discard indicator
     if (worldCard.discardable) {
