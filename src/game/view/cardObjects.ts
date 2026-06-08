@@ -83,7 +83,7 @@ function addCardText(
       const textCostInt = Phaser.Display.Color.HexStringToColor(TEXT.textCost).color32
       lineText.preFX?.addGlow(textCostInt, 0.8, 0.8)
     }
-    if (opts.background) {
+    if (opts.background !== undefined) {
       const bg = scene.add.rectangle(lineText.x, lineText.y, lineText.width + 6, lineText.height + 2, opts.background, 0.5)
         .setOrigin(0.5, opts.originY)
         .setRounded(4)
@@ -261,8 +261,8 @@ export function createCardObject(
 
     // Discard indicator
     if (worldCard.discardable) {
-      addCardText(scene, container, 0, CARD_H / 2 - 20, 'click to discard', {
-        fontSize: '8px',
+      addCardText(scene, container, 0, CARD_H / 2 - 22, 'click to discard', {
+        fontSize: '9px',
         color: '#ffaa44',
         bold: true,
         originY: 0,
