@@ -69,6 +69,9 @@ export const TEXT = {
   textPenalty: '#ff8888',
   textReward: '#88ee88',
   textHeld: '#ffaa66',
+  textEnergy: '#ffeebb',
+  bgEnergy: 0x002244,
+  textHp: '#ff8888',
   dimAlpha: 0.35,
 }
 

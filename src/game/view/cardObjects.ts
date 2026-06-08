@@ -40,12 +40,13 @@ const INSET_H = 70
 
 interface CardTextOpts {
   fontSize: string
+  font?: string
   color: string
   originY: number      // 0 = top-anchored, 1 = bottom-anchored
   bold?: boolean
   wrapWidth?: number   // when set, the text wraps at this width and centers
   lineSpacing?: number
-  background?: boolean
+  background?: number
 }
 
 /** Add a horizontally-centered text line to a card container; returns it. */
@@ -61,6 +62,7 @@ function addCardText(
     fontSize: opts.fontSize,
     color: opts.color,
   }
+  if (opts.font !== undefined) style.fontFamily = opts.font
   if (opts.bold === true) style.fontStyle = 'bold'
   if (opts.lineSpacing !== undefined) style.lineSpacing = opts.lineSpacing
   if (opts.wrapWidth !== undefined) {
@@ -82,7 +84,7 @@ function addCardText(
       lineText.preFX?.addGlow(textCostInt, 0.8, 0.8)
     }
     if (opts.background) {
-      const bg = scene.add.rectangle(0, lineText.y - 1, lineText.width + 6, lineText.height + 2, 0x000000, 0.75)
+      const bg = scene.add.rectangle(lineText.x, lineText.y, lineText.width + 6, lineText.height + 2, opts.background, 0.5)
         .setOrigin(0.5, opts.originY)
         .setRounded(4)
       container.add(bg)
@@ -115,7 +117,7 @@ function addEffectBlock(
     color,
     originY: 0,
     wrapWidth: CARD_W - 18,
-    background: true,
+    background: 0x000000,
   })
 }
 
@@ -176,7 +178,7 @@ export function createCardObject(
       originY: 0,
       wrapWidth: CARD_W - 16,
       lineSpacing: 2,
-      background: true,
+      background: 0x000000,
     })
 
     // Energy cost badge: only for cards with energyCost > 0. Positioned in the
@@ -184,18 +186,17 @@ export function createCardObject(
     // AFTER list[0] and list[1] so applyCardHighlight's contract holds.
     if (card.energyCost > 0) {
       // Badge backing: a filled circle using the energy cost color
-      const badgeBg = scene.add.graphics()
-      badgeBg.setPosition(CARD_W / 2 - 16, -CARD_H / 2 + 16)
-      badgeBg.fillStyle(Phaser.Display.Color.HexStringToColor(TEXT.textCost).color32, 0.75)
-      badgeBg.fillCircle(0, 0, 11)
+      const badgeBg = scene.add.image(CARD_W / 2 - 16, -CARD_H / 2 + 16, 'energy-icon')
+      badgeBg.setDisplaySize(22, 22)
       container.add(badgeBg)
 
-      // Cost digit in white for contrast against the gold badge background
+      // Cost digit in black for contrast against the gold badge background
       addCardText(scene, container, CARD_W / 2 - 16, -CARD_H / 2 + 16, String(card.energyCost), {
         fontSize: '16px',
-        color: '#000000',
+        color: TEXT.textEnergy,
         bold: true,
         originY: 0.5,
+        background: TEXT.bgEnergy,
       })
     }
 
@@ -208,7 +209,7 @@ export function createCardObject(
         color: TEXT.textKeyword,
         bold: true,
         originY: 1,
-        background: true,
+        background: 0x000000,
       })
     }
   } else {
@@ -265,7 +266,7 @@ export function createCardObject(
         color: '#ffaa44',
         bold: true,
         originY: 0,
-        background: true,
+        background: 0x000000,
       })
     }
   }

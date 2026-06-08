@@ -6,6 +6,7 @@ import doorUrl from '../assets/door.webp'
 import doorGlowUrl from '../assets/door-glow.webp'
 import textBackUrl from '../assets/text-background.webp'
 import insetFrameUrl from '../assets/inset-frame.webp'
+import energyIconUrl from '../assets/energy.webp'
 import bigboxRealityUrl from '../assets/themes/zombie-big-box/bigbox-reality.webp'
 import zombieIntrusionUrl from '../assets/themes/zombie-big-box/intrusion-overlay.webp'
 import zombieCardfrontUrl from '../assets/themes/zombie-big-box/zombie-cardfront.webp'
@@ -60,6 +61,7 @@ export const assetManifest: Record<string, string> = {
   'door-glow': doorGlowUrl,
   'text-back': textBackUrl,
   'inset-frame': insetFrameUrl,
+  'energy-icon': energyIconUrl,
   'bigbox-reality': bigboxRealityUrl,
   'zombie-intrusion': zombieIntrusionUrl,
   'zombie-cardfront': zombieCardfrontUrl,

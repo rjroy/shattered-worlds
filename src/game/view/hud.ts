@@ -64,14 +64,18 @@ export function createHUD(scene: Phaser.Scene): HUDRefs {
 
   // Origin (0, 0.5): x is the panel-relative left edge of the label, y is the
   // panel's vertical center, so every label is vertically centered in the bar.
-  const hpText = scene.add.text(30, HUD_PANEL_H / 2, 'HP: —', { ...style, color: '#FF8888' })
+  const hpText = scene.add.text(30, HUD_PANEL_H / 2, 'HP: —', { ...style, color: TEXT.textHp })
   const actText = scene.add.text(140, HUD_PANEL_H / 2, 'Act 1 / 3', style)
-  const energyText = scene.add.text(240, HUD_PANEL_H / 2, '⚡ —', { ...style, color: TEXT.textCost })
+  const energyText = scene.add.text(260, HUD_PANEL_H / 2, '—', { ...style, color: TEXT.textEnergy })
+  const energyIcon = scene.add.image(energyText.x - 6, energyText.y, 'energy-icon').setDisplaySize(22, 22)
+  const energyRect = scene.add.rectangle(energyIcon.x + 3, energyIcon.y, energyText.width + 6, energyText.height + 2, TEXT.bgEnergy, 0.5).setRounded(4)
 
-  for (const label of [hpText, actText, energyText]) {
+  for (const label of [hpText, actText, energyText, energyIcon, energyRect]) {
     label.setOrigin(0, 0.5)
     container.add(label)
   }
+  energyRect.setAbove(energyIcon)
+  energyText.setAbove(energyRect)
 
   container.setPosition(HUD_PANEL_X, HUD_PANEL_Y)
 
@@ -82,5 +86,5 @@ export function createHUD(scene: Phaser.Scene): HUDRefs {
 export function updateHUD(refs: HUDRefs, state: GameState): void {
   refs.hpText.setText(`HP: ${state.hp}/${WORLD_CONSTS.startHp}`)
   refs.actText.setText(`Act ${state.actIndex + 1} / ${state.totalActs}`)
-  refs.energyText.setText(`⚡ ${state.energy}`)
+  refs.energyText.setText(`${state.energy}`)
 }
