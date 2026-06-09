@@ -1,10 +1,11 @@
 /**
- * Phaser factory and mutators for card containers — the card face, its
- * selection highlight, the world-card cost ring, and the hover emphasis.
+ * CardView owns the Phaser objects for one card face, its selection highlight,
+ * the world-card cost ring, and hover emphasis.
  *
- * All functions are stateless: they create or mutate Phaser game objects but
- * never read or write GameState. The scene passes data in; nothing here holds a
- * reference to GameCore.
+ * The methods create or mutate Phaser game objects but never read or write
+ * GameState. The scene passes data in; nothing here holds a reference to
+ * GameCore. The exported functions at the bottom are compatibility wrappers
+ * for older call sites and tests.
  */
 import Phaser from 'phaser'
 import type { Card, CardEffect, WorldCard } from '../../core/index'
@@ -130,6 +131,210 @@ function addEffectBlock(
 }
 
 /** Create a Phaser Container representing a single card (player or world). */
+export class CardView extends Phaser.GameObjects.Container {
+  readonly cardId: string
+
+  private highlightRect: Phaser.GameObjects.Rectangle
+  private costRing?: CostRing
+  private targetGlow?: Phaser.GameObjects.Graphics
+  private emphasized = false
+
+  constructor(
+    scene: Phaser.Scene,
+    card: Card,
+    x: number,
+    y: number,
+    theme: VisualTheme,
+    resolveTheme: (worldId: string) => VisualTheme,
+  ) {
+    super(scene, x, y)
+    scene.add.existing(this)
+    this.cardId = card.id
+
+    // Card frame image: world cards use the theme-specific front if available.
+    const cardfrontKey = selectCardFrontKey(card, theme, resolveTheme)
+    const cardImg = scene.add.image(0, 0, cardfrontKey)
+    cardImg.setDisplaySize(CARD_W, CARD_H)
+    this.add(cardImg)
+
+    // Transparent overlay rectangle used only for selection highlight strokes.
+    const bg = scene.add.rectangle(1, 1, CARD_W - 2, CARD_H - 2, 0x000000, 0)
+    bg.setStrokeStyle(0)
+    bg.setRounded(10)
+    bg.setAlpha(0.4)
+    this.highlightRect = bg
+    this.add(bg)
+
+    // Card inset image: if the template defines an insetKey, render the
+    // corresponding image on top of the cardfront. This is used for player
+    // cards' unique artwork, and world cards don't have insets at all.
+    if ('insetKey' in card && card.insetKey && card.insetKey !== '') {
+      const insetImg = scene.add.image(INSET_X, INSET_Y, card.insetKey)
+        .setOrigin(0.5, 1)
+      const ratio = Math.max(INSET_W / insetImg.width, INSET_H / insetImg.height)
+      insetImg.setDisplaySize(insetImg.width * ratio, insetImg.height * ratio)
+      this.add(insetImg)
+      const frame = scene.add.nineslice(INSET_X, INSET_Y, 'inset-frame', undefined,
+        insetImg.width * ratio + 8, insetImg.height * ratio + 8,
+        4, 4, 4, 4,
+      ).setOrigin(0.5, 1)
+      this.add(frame)
+    }
+
+    // Name at top — identical for player and world cards.
+    addCardText(scene, this, 0, -CARD_H / 2 + 8, card.name, {
+      fontSize: '13px',
+      color: TEXT.textLight,
+      bold: true,
+      wrapWidth: CARD_W - 12,
+      originY: 0,
+    })
+
+    if (card.kind === 'player') {
+      // Full effect description — the whole face is self-explanatory. Modal and
+      // Sequence cards render every branch / step, so nothing reads as "Choose...".
+      addCardText(scene, this, 0, -CARD_H / 2 + 28, describeEffect(card.effect).join('\n'), {
+        fontSize: '11px',
+        color: TEXT.textLight,
+        originY: 0,
+        wrapWidth: CARD_W - 16,
+        lineSpacing: 2,
+        background: 0x000000,
+      })
+
+      // Energy cost badge: only for cards with energyCost > 0.
+      if (card.energyCost > 0) {
+        const badgeBg = scene.add.image(CARD_W / 2 - 16, -CARD_H / 2 + 16, 'energy-icon')
+        badgeBg.setDisplaySize(28, 28)
+        this.add(badgeBg)
+
+        addCardText(scene, this, CARD_W / 2 - 16, -CARD_H / 2 + 16, String(card.energyCost), {
+          fontSize: '16px',
+          color: TEXT.textEnergy,
+          bold: true,
+          originY: 0.5,
+        })
+      }
+
+      // Exhaust badge: the flag lives on the card (not the effect), so it cannot
+      // come through describeEffect.
+      if (card.exhaust === true) {
+        addCardText(scene, this, 0, CARD_H / 2 - 8, 'Exhaust', {
+          fontSize: '9px',
+          color: TEXT.textKeyword,
+          bold: true,
+          originY: 1,
+          background: 0x000000,
+        })
+      }
+    } else {
+      const worldCard = card as WorldCard
+
+      // Progress ring backing the cost digit.
+      const costRing = scene.add.graphics() as CostRing
+      costRing.setPosition(CARD_W / 2 - 21, CARD_H / 2 - 21)
+      this.costRing = costRing
+      this.add(costRing)
+
+      // Cost label + value (cost is the Progress needed to clear the Hazard).
+      addCardText(scene, this, CARD_W / 2 - 21, CARD_H / 2 - 21, String(worldCard.cost), {
+        fontSize: '30px',
+        color: TEXT.textCost,
+        bold: true,
+        originY: 0.5,
+      })
+      addCardText(scene, this, CARD_W / 2 - 21, CARD_H / 2 - 3, 'to clear', {
+        fontSize: '8px',
+        color: TEXT.textMuted,
+        originY: 1,
+      })
+
+      // Keywords.
+      if (worldCard.keywords.length > 0) {
+        addCardText(scene, this, 0, -CARD_H / 2 + 23, worldCard.keywords.join(' · '), {
+          fontSize: '9px',
+          color: TEXT.textKeyword,
+          originY: 0,
+        })
+      }
+
+      // onEndOfTurn, onDiscarded, onCleared — full sentences.
+      const effectLineSpacing = 4
+      let currY = -CARD_H / 2 + 36
+      const onEnd = addEffectBlock(scene, this, worldCard.onEndOfTurn, 'Each turn: ', currY, TEXT.textHeld)
+      currY = onEnd.reduce((highest, text) => Math.max(highest, text.y + text.height + effectLineSpacing), currY)
+      const onDiscarded = addEffectBlock(scene, this, worldCard.onDiscarded, 'If discarded: ', currY, TEXT.textPenalty)
+      currY = onDiscarded.reduce((highest, text) => Math.max(highest, text.y + text.height + effectLineSpacing), currY)
+      addEffectBlock(scene, this, worldCard.onCleared, 'Clear it: ', currY, TEXT.textReward)
+
+      // Discard indicator.
+      if (worldCard.discardable) {
+        addCardText(scene, this, 0, CARD_H / 2 - 22, 'click to discard', {
+          fontSize: '9px',
+          color: '#ffaa44',
+          bold: true,
+          originY: 0,
+          background: 0x000000,
+        })
+      }
+    }
+  }
+
+  /** Apply a coloured stroke to communicate this card's selection state. */
+  applyHighlight(kind: HighlightKind, frameStyle: FrameStyle): void {
+    const { strokeWidth, strokeColor, fillColor, fillAlpha } = highlightDescriptor(kind, frameStyle)
+    this.highlightRect.setFillStyle(fillColor, fillAlpha)
+    this.highlightRect.setStrokeStyle(strokeWidth, strokeColor)
+  }
+
+  /** Dim a card that is not currently playable. */
+  setDimmed(dim: boolean): void {
+    this.setAlpha(dim ? TEXT.dimAlpha : 1.0)
+  }
+
+  /** Animate a world card's progress ring toward `fraction` of a full circle. */
+  updateCostRing(fraction: number, ringAccent: number): void {
+    if (this.costRing === undefined) return
+    updateRingObject(this.scene, this.costRing, fraction, ringAccent)
+  }
+
+  /** Make this hovered legal target the loudest card on the board. */
+  emphasize(glowColor: number, intensity: number): void {
+    if (this.emphasized) return
+
+    const { scale, glowAlpha } = emphasisDescriptor(intensity)
+    this.setScale(scale)
+    const glow = this.obtainGlow()
+    glow.setVisible(true)
+    drawGlow(glow, glowColor, glowAlpha)
+    this.emphasized = true
+  }
+
+  /** Restore base transform: scale 1, glow hidden/cleared, emphasis off. */
+  clearEmphasis(): void {
+    this.setScale(1)
+    if (this.targetGlow !== undefined) {
+      this.targetGlow.clear()
+      this.targetGlow.setVisible(false)
+    }
+    this.emphasized = false
+  }
+
+  /** Re-assert this card's base position. */
+  setCardPosition(x: number, y: number): void {
+    this.setPosition(x, y)
+  }
+
+  private obtainGlow(): Phaser.GameObjects.Graphics {
+    if (this.targetGlow !== undefined) return this.targetGlow
+    const glow = this.scene.add.graphics()
+    this.add(glow)
+    this.targetGlow = glow
+    return glow
+  }
+}
+
+/** Create a Phaser Container representing a single card (player or world). */
 export function createCardObject(
   scene: Phaser.Scene,
   card: Card,
@@ -138,150 +343,7 @@ export function createCardObject(
   theme: VisualTheme,
   resolveTheme: (worldId: string) => VisualTheme,
 ): Phaser.GameObjects.Container {
-  const container = scene.add.container(x, y)
-
-  // Card frame image: world cards use the theme-specific front if available
-  const cardfrontKey = selectCardFrontKey(card, theme, resolveTheme)
-  const cardImg = scene.add.image(0, 0, cardfrontKey)
-  cardImg.setDisplaySize(CARD_W, CARD_H)
-  container.add(cardImg)
-
-  // Transparent overlay rectangle used only for selection highlight strokes.
-  // list[1] — applyCardHighlight depends on this position.
-  const bg = scene.add.rectangle(1, 1, CARD_W - 2, CARD_H - 2, 0x000000, 0)
-  bg.setStrokeStyle(0)
-  bg.setRounded(10)
-  bg.setAlpha(0.4)
-  container.add(bg)
-
-  // Card inset image: if the template defines an insetKey, render the corresponding image on top of the cardfront. This is used for player cards' unique artwork, and world cards don't have insets at all.
-  if ('insetKey' in card && card.insetKey && card.insetKey !== '') {
-    const insetImg = scene.add.image(INSET_X, INSET_Y, card.insetKey)
-      .setOrigin(0.5, 1)
-    const ratio = Math.max(INSET_W / insetImg.width, INSET_H / insetImg.height)
-    insetImg.setDisplaySize(insetImg.width * ratio, insetImg.height * ratio)
-    container.add(insetImg)
-    const frame = scene.add.nineslice(INSET_X, INSET_Y, 'inset-frame', undefined, 
-      insetImg.width * ratio + 8, insetImg.height * ratio + 8, 
-      4,4,4,4
-    ).setOrigin(0.5, 1)
-    container.add(frame)
-  }
-
-  // Name at top — identical for player and world cards.
-  addCardText(scene, container, 0, -CARD_H / 2 + 8, card.name, {
-    fontSize: '13px',
-    color: TEXT.textLight,
-    bold: true,
-    wrapWidth: CARD_W - 12,
-    originY: 0,
-  })
-
-  if (card.kind === 'player') {
-    // Full effect description — the whole face is self-explanatory. Modal and
-    // Sequence cards render every branch / step, so nothing reads as "Choose…".
-    addCardText(scene, container, 0, -CARD_H / 2 + 28, describeEffect(card.effect).join('\n'), {
-      fontSize: '11px',
-      color: TEXT.textLight,
-      originY: 0,
-      wrapWidth: CARD_W - 16,
-      lineSpacing: 2,
-      background: 0x000000,
-    })
-
-    // Energy cost badge: only for cards with energyCost > 0. Positioned in the
-    // top-right corner (mirroring the world card's cost ring placement). Added
-    // AFTER list[0] and list[1] so applyCardHighlight's contract holds.
-    if (card.energyCost > 0) {
-      // Badge backing: a filled circle using the energy cost color
-      const badgeBg = scene.add.image(CARD_W / 2 - 16, -CARD_H / 2 + 16, 'energy-icon')
-      badgeBg.setDisplaySize(28, 28)
-      container.add(badgeBg)
-
-      // Cost digit in black for contrast against the gold badge background
-      addCardText(scene, container, CARD_W / 2 - 16, -CARD_H / 2 + 16, String(card.energyCost), {
-        fontSize: '16px',
-        color: TEXT.textEnergy,
-        bold: true,
-        originY: 0.5,
-      })
-    }
-
-    // Exhaust badge: the flag lives on the card (not the effect), so it cannot
-    // come through describeEffect. Bottom-anchored, small, and muted to match
-    // the other card-face footnotes ("to clear", "click to discard").
-    if (card.exhaust === true) {
-      addCardText(scene, container, 0, CARD_H / 2 - 8, 'Exhaust', {
-        fontSize: '9px',
-        color: TEXT.textKeyword,
-        bold: true,
-        originY: 1,
-        background: 0x000000,
-      })
-    }
-  } else {
-    // World / Hazard card
-    const worldCard = card as WorldCard
-
-    // Progress ring backing the cost digit. Added BEFORE the cost text so it
-    // renders underneath it (the digit must stay readable on top), and AFTER
-    // the cardfront image (list[0]) and highlight rectangle (list[1]) so the
-    // applyCardHighlight list[1] contract holds. Persistent: stays in
-    // container.list for its whole life so the reconcile's killTweensOf(list)
-    // (and S5's tween) can find it. Centered on the cost digit's center.
-    const costRing = scene.add.graphics()
-    costRing.setPosition(CARD_W / 2 - 21, CARD_H / 2 - 21)
-    container.add(costRing)
-    ;(container as Phaser.GameObjects.Container & { costRing: Phaser.GameObjects.Graphics }).costRing =
-      costRing
-
-    // Cost label + value (cost is the Progress needed to clear the Hazard)
-    addCardText(scene, container, CARD_W / 2 - 21, CARD_H / 2 - 21, String(worldCard.cost), {
-      fontSize: '30px',
-      color: TEXT.textCost,
-      bold: true,
-      originY: 0.5,
-    })
-    addCardText(scene, container, CARD_W / 2 - 21, CARD_H / 2 - 3, 'to clear', {
-      fontSize: '8px',
-      color: TEXT.textMuted,
-      originY: 1,
-    })
-
-    // Keywords
-    if (worldCard.keywords.length > 0) {
-      addCardText(scene, container, 0, -CARD_H / 2 + 23, worldCard.keywords.join(' · '), {
-        fontSize: '9px',
-        color: TEXT.textKeyword,
-        originY: 0,
-      })
-    }
-
-    // onEndOfTurn (fires each turn while held), onDiscarded, onCleared — full sentences.
-    const effectLineSpacing = 4 
-    let currY = -CARD_H /2 + 36
-    const onEnd = addEffectBlock(scene, container, worldCard.onEndOfTurn, 'Each turn: ', currY, TEXT.textHeld)
-    currY = onEnd.reduce((highest, text) => Math.max(highest, text.y + text.height + effectLineSpacing), currY)
-    const onDiscarded = addEffectBlock(scene, container, worldCard.onDiscarded, 'If discarded: ', currY, TEXT.textPenalty)
-    currY = onDiscarded.reduce((highest, text) => Math.max(highest, text.y + text.height + effectLineSpacing), currY)
-    addEffectBlock(scene, container, worldCard.onCleared, 'Clear it: ', currY, TEXT.textReward)
-
-    // Discard indicator
-    if (worldCard.discardable) {
-      addCardText(scene, container, 0, CARD_H / 2 - 22, 'click to discard', {
-        fontSize: '9px',
-        color: '#ffaa44',
-        bold: true,
-        originY: 0,
-        background: 0x000000,
-      })
-    }
-  }
-
-  // Store card id on the container for hit testing
-  ;(container as Phaser.GameObjects.Container & { cardId: string }).cardId = card.id
-
-  return container
+  return new CardView(scene, card, x, y, theme, resolveTheme)
 }
 
 // ---------------------------------------------------------------------------
@@ -298,6 +360,11 @@ export function applyCardHighlight(
   kind: HighlightKind,
   frameStyle: FrameStyle,
 ): void {
+  if (container instanceof CardView) {
+    container.applyHighlight(kind, frameStyle)
+    return
+  }
+
   // The highlight rectangle is list[1] (list[0] is the cardfront image)
   const bg = container.list[1] as Phaser.GameObjects.Rectangle | undefined
   if (bg === undefined) return
@@ -383,9 +450,22 @@ export function updateCostRing(
   fraction: number,
   ringAccent: number,
 ): void {
+  if (container instanceof CardView) {
+    container.updateCostRing(fraction, ringAccent)
+    return
+  }
+
   const ring = (container as Phaser.GameObjects.Container & { costRing?: CostRing }).costRing
   if (ring === undefined) return
+  updateRingObject(scene, ring, fraction, ringAccent)
+}
 
+function updateRingObject(
+  scene: Phaser.Scene,
+  ring: CostRing,
+  fraction: number,
+  ringAccent: number,
+): void {
   const target = Math.min(1, Math.max(0, fraction))
   const displayed = ring.displayedFraction
 
@@ -422,6 +502,10 @@ export function updateCostRing(
 
 /** Dim a card that is not currently playable. */
 export function dimCard(container: Phaser.GameObjects.Container, dim: boolean): void {
+  if (container instanceof CardView) {
+    container.setDimmed(dim)
+    return
+  }
   container.setAlpha(dim ? TEXT.dimAlpha : 1.0)
 }
 
@@ -501,6 +585,11 @@ export function emphasizeCard(
   glowColor: number,
   intensity: number,
 ): void {
+  if (container instanceof CardView) {
+    container.emphasize(glowColor, intensity)
+    return
+  }
+
   const c = container as EmphasisContainer
   if (c.emphasized === true) return // idempotent: already loud, don't re-apply
 
@@ -522,6 +611,11 @@ export function emphasizeCard(
  * card is no longer a legal target.
  */
 export function clearEmphasis(container: Phaser.GameObjects.Container): void {
+  if (container instanceof CardView) {
+    container.clearEmphasis()
+    return
+  }
+
   const c = container as EmphasisContainer
   container.setScale(1)
   if (c.targetGlow !== undefined) {
@@ -538,5 +632,9 @@ export function clearEmphasis(container: Phaser.GameObjects.Container): void {
  * No tween — the reconcile sets x/y directly (a later phase may animate movement).
  */
 export function positionCard(container: Phaser.GameObjects.Container, x: number, y: number): void {
+  if (container instanceof CardView) {
+    container.setCardPosition(x, y)
+    return
+  }
   container.setPosition(x, y)
 }
