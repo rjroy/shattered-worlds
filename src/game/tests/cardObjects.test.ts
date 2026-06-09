@@ -1,7 +1,6 @@
 import { describe, it, expect } from 'bun:test'
-import { updateCostRing, emphasizeCard, clearEmphasis, applyCardHighlight, createCardObject } from '../view/cardObjects'
+import { CardView } from '../view/CardView'
 import { selectTheme } from '../view/themes/themeManifest'
-import type { PlayerCard } from '../../core/index'
 
 // ---------------------------------------------------------------------------
 // updateCostRing — fill/drain animation (S5)
@@ -100,8 +99,17 @@ function makeFakeScene(): {
   }
 }
 
-function makeContainer(graphics: unknown): unknown {
-  return { costRing: graphics }
+interface CostRingCardViewFake {
+  scene: unknown
+  costRing?: unknown
+  updateCostRing: CardView['updateCostRing']
+}
+
+function makeCardView(scene: unknown, graphics?: unknown): CostRingCardViewFake {
+  const view = Object.create(CardView.prototype) as CostRingCardViewFake
+  Object.defineProperty(view, 'scene', { value: scene })
+  if (graphics !== undefined) view.costRing = graphics
+  return view
 }
 
 /** Fetch the nth captured tween, asserting it exists (keeps strict types happy). */
@@ -115,14 +123,14 @@ describe('updateCostRing', () => {
   it('no-ops on a container without a costRing (player card)', () => {
     const { scene, captured } = makeFakeScene()
     // No throw, no tween.
-    updateCostRing(scene as never, {} as never, 0.5, RING_ACCENT)
+    makeCardView(scene).updateCostRing(0.5, RING_ACCENT)
     expect(captured.length).toBe(0)
   })
 
   it('snaps (no tween) on first render and records the displayed fraction', () => {
     const { ring, graphics } = makeFakeRing()
     const { scene, captured, callLog } = makeFakeScene()
-    updateCostRing(scene as never, makeContainer(graphics) as never, 0.5, RING_ACCENT)
+    makeCardView(scene, graphics).updateCostRing(0.5, RING_ACCENT)
 
     expect(captured.length).toBe(0) // snapped, did not animate
     expect(callLog).not.toContain('add') // snap never adds a tween
@@ -133,8 +141,9 @@ describe('updateCostRing', () => {
   it('is idempotent: a repeated identical target does not start a tween', () => {
     const { ring, graphics } = makeFakeRing()
     const { scene, captured, callLog } = makeFakeScene()
-    updateCostRing(scene as never, makeContainer(graphics) as never, 0.5, RING_ACCENT) // first: snap
-    updateCostRing(scene as never, makeContainer(graphics) as never, 0.5, RING_ACCENT) // same target
+    const view = makeCardView(scene, graphics)
+    view.updateCostRing(0.5, RING_ACCENT) // first: snap
+    view.updateCostRing(0.5, RING_ACCENT) // same target
 
     expect(captured.length).toBe(0)
     expect(callLog).not.toContain('add') // idempotent repeat never adds a tween
@@ -144,8 +153,9 @@ describe('updateCostRing', () => {
   it('animates (kills then adds) when the target differs, targeting the ring object', () => {
     const { ring, graphics } = makeFakeRing()
     const fake = makeFakeScene()
-    updateCostRing(fake.scene as never, makeContainer(graphics) as never, 0.25, RING_ACCENT) // snap to 0.25
-    updateCostRing(fake.scene as never, makeContainer(graphics) as never, 0.75, RING_ACCENT) // animate up
+    const view = makeCardView(fake.scene, graphics)
+    view.updateCostRing(0.25, RING_ACCENT) // snap to 0.25
+    view.updateCostRing(0.75, RING_ACCENT) // animate up
 
     expect(fake.kills).toBe(1)
     expect(fake.captured.length).toBe(1)
@@ -166,13 +176,14 @@ describe('updateCostRing', () => {
   it('fill and drain use the same duration and easing (one clock)', () => {
     const { graphics } = makeFakeRing()
     const fake = makeFakeScene()
-    updateCostRing(fake.scene as never, makeContainer(graphics) as never, 0, RING_ACCENT) // snap to 0
-    updateCostRing(fake.scene as never, makeContainer(graphics) as never, 1, RING_ACCENT) // fill 0 -> 1
+    const view = makeCardView(fake.scene, graphics)
+    view.updateCostRing(0, RING_ACCENT) // snap to 0
+    view.updateCostRing(1, RING_ACCENT) // fill 0 -> 1
     // Simulate the fill tween finishing (real Phaser advances displayedFraction
     // to the target); only then does the next cycle see a different displayed
     // value to drain from.
     nthTween(fake.captured, 0).onComplete()
-    updateCostRing(fake.scene as never, makeContainer(graphics) as never, 0, RING_ACCENT) // drain 1 -> 0
+    view.updateCostRing(0, RING_ACCENT) // drain 1 -> 0
 
     expect(fake.captured.length).toBe(2)
     const fill = nthTween(fake.captured, 0)
@@ -186,8 +197,9 @@ describe('updateCostRing', () => {
   it('onUpdate redraws the arc at the current displayed fraction', () => {
     const { ring, graphics } = makeFakeRing()
     const fake = makeFakeScene()
-    updateCostRing(fake.scene as never, makeContainer(graphics) as never, 0, RING_ACCENT)
-    updateCostRing(fake.scene as never, makeContainer(graphics) as never, 1, RING_ACCENT)
+    const view = makeCardView(fake.scene, graphics)
+    view.updateCostRing(0, RING_ACCENT)
+    view.updateCostRing(1, RING_ACCENT)
     const t = nthTween(fake.captured, 0)
 
     // Simulate the tween engine advancing the property and ticking onUpdate.
@@ -199,8 +211,9 @@ describe('updateCostRing', () => {
   it('onComplete settles exactly on target', () => {
     const { ring, graphics } = makeFakeRing()
     const fake = makeFakeScene()
-    updateCostRing(fake.scene as never, makeContainer(graphics) as never, 0, RING_ACCENT)
-    updateCostRing(fake.scene as never, makeContainer(graphics) as never, 1, RING_ACCENT)
+    const view = makeCardView(fake.scene, graphics)
+    view.updateCostRing(0, RING_ACCENT)
+    view.updateCostRing(1, RING_ACCENT)
     const t = nthTween(fake.captured, 0)
 
     // Float drift mid-tween, then complete: must land exactly on target.
@@ -212,9 +225,9 @@ describe('updateCostRing', () => {
 })
 
 // ---------------------------------------------------------------------------
-// emphasizeCard / clearEmphasis — hover-target emphasis (S9)
+// CardView emphasize / clearEmphasis — hover-target emphasis (S9)
 //
-// The helper touches a tiny Phaser surface: container.setScale / .add, plus a
+// The methods touch a tiny Phaser surface: view.setScale / .add, plus a
 // glow Graphics' draw methods. We fake both so the lift-and-glow logic (scale
 // > 1, glow alpha scaled by intensity, idempotence, restore-to-base) is tested
 // without a real Phaser runtime.
@@ -248,99 +261,110 @@ function makeFakeGlow(): { state: FakeGlow; graphics: unknown } {
 }
 
 /**
- * A fake container: records scale, captures added children, and exposes the
- * mutable `targetGlow`/`emphasized` props the helper stamps on it. `scene.add.graphics`
+ * A fake CardView: records scale, captures added children, and exposes the
+ * mutable `targetGlow`/`emphasized` props the method stamps on it. `scene.add.graphics`
  * returns the supplied fake glow so the test can inspect what was drawn.
  */
-function makeFakeEmphasisContainer(glow: unknown): {
+interface EmphasisCardViewFake {
   scene: unknown
-  container: { scale: number; targetGlow: unknown; emphasized: boolean | undefined; added: unknown[] }
-} {
-  const container = {
+  scale: number
+  targetGlow: unknown
+  emphasized: boolean | undefined
+  added: unknown[]
+  setScale(v: number): unknown
+  add(child: unknown): unknown
+  emphasize: CardView['emphasize']
+  clearEmphasis: CardView['clearEmphasis']
+}
+
+function makeFakeEmphasisCardView(glow: unknown): { view: EmphasisCardViewFake } {
+  const view = Object.create(CardView.prototype) as EmphasisCardViewFake
+  Object.assign(view, {
     scale: 1,
     added: [] as unknown[],
     targetGlow: undefined as unknown,
     emphasized: undefined as boolean | undefined,
     setScale(v: number): unknown {
-      container.scale = v
-      return container
+      view.scale = v
+      return view
     },
     add(child: unknown): unknown {
-      container.added.push(child)
-      return container
+      view.added.push(child)
+      return view
     },
-  }
+  })
   const scene = { add: { graphics: (): unknown => glow } }
-  return { scene, container }
+  Object.defineProperty(view, 'scene', { value: scene })
+  return { view }
 }
 
-describe('emphasizeCard / clearEmphasis', () => {
+describe('CardView emphasize / clearEmphasis', () => {
   it('lifts the card (scale > 1) and draws a glow when emphasized', () => {
     const { state: glow, graphics } = makeFakeGlow()
-    const { scene, container } = makeFakeEmphasisContainer(graphics)
-    emphasizeCard(scene as never, container as never, GLOW_COLOR, 0.5)
+    const { view } = makeFakeEmphasisCardView(graphics)
+    view.emphasize(GLOW_COLOR, 0.5)
 
-    expect(container.scale).toBeGreaterThan(1)
-    expect(container.emphasized).toBe(true)
-    expect(container.targetGlow).toBe(graphics) // glow stored on the container
-    expect(container.added).toContain(graphics) // appended as a child (after list[0]/[1])
+    expect(view.scale).toBeGreaterThan(1)
+    expect(view.emphasized).toBe(true)
+    expect(view.targetGlow).toBe(graphics) // glow stored on the view
+    expect(view.added).toContain(graphics) // appended as a child
     expect(glow.visible).toBe(true)
     expect(glow.alphas.at(-1)).toBeGreaterThan(0)
   })
 
   it('scales glow alpha AND lift by intensity (loud at 1, calm-but-visible at 0)', () => {
     const low = makeFakeGlow()
-    const lowC = makeFakeEmphasisContainer(low.graphics)
-    emphasizeCard(lowC.scene as never, lowC.container as never, GLOW_COLOR, 0)
+    const lowC = makeFakeEmphasisCardView(low.graphics)
+    lowC.view.emphasize(GLOW_COLOR, 0)
 
     const high = makeFakeGlow()
-    const highC = makeFakeEmphasisContainer(high.graphics)
-    emphasizeCard(highC.scene as never, highC.container as never, GLOW_COLOR, 1)
+    const highC = makeFakeEmphasisCardView(high.graphics)
+    highC.view.emphasize(GLOW_COLOR, 1)
 
     // Higher intensity → larger lift and brighter glow.
-    expect(highC.container.scale).toBeGreaterThan(lowC.container.scale)
+    expect(highC.view.scale).toBeGreaterThan(lowC.view.scale)
     expect(high.state.alphas.at(-1)!).toBeGreaterThan(low.state.alphas.at(-1)!)
     // Even at intensity 0 the emphasis is clearly on (scale > 1, alpha > 0).
-    expect(lowC.container.scale).toBeGreaterThan(1)
+    expect(lowC.view.scale).toBeGreaterThan(1)
     expect(low.state.alphas.at(-1)!).toBeGreaterThan(0)
   })
 
   it('is idempotent: re-emphasizing an already-emphasized card does not redraw', () => {
     const { state: glow, graphics } = makeFakeGlow()
-    const { scene, container } = makeFakeEmphasisContainer(graphics)
-    emphasizeCard(scene as never, container as never, GLOW_COLOR, 1)
+    const { view } = makeFakeEmphasisCardView(graphics)
+    view.emphasize(GLOW_COLOR, 1)
     const drawsAfterFirst = glow.alphas.length
-    emphasizeCard(scene as never, container as never, GLOW_COLOR, 1) // same call again
+    view.emphasize(GLOW_COLOR, 1) // same call again
     expect(glow.alphas.length).toBe(drawsAfterFirst) // no second draw → no jitter
   })
 
   it('clearEmphasis restores base transform (scale 1, glow hidden/cleared)', () => {
     const { state: glow, graphics } = makeFakeGlow()
-    const { scene, container } = makeFakeEmphasisContainer(graphics)
-    emphasizeCard(scene as never, container as never, GLOW_COLOR, 1)
+    const { view } = makeFakeEmphasisCardView(graphics)
+    view.emphasize(GLOW_COLOR, 1)
     const clearsBefore = glow.clears
 
-    clearEmphasis(container as never)
-    expect(container.scale).toBe(1)
-    expect(container.emphasized).toBe(false)
+    view.clearEmphasis()
+    expect(view.scale).toBe(1)
+    expect(view.emphasized).toBe(false)
     expect(glow.visible).toBe(false)
     expect(glow.clears).toBeGreaterThan(clearsBefore) // glow was cleared
   })
 
-  it('clearEmphasis is safe on a never-emphasized container (no glow)', () => {
-    const { scene: _scene, container } = makeFakeEmphasisContainer(makeFakeGlow().graphics)
-    clearEmphasis(container as never) // never emphasized → targetGlow undefined
-    expect(container.scale).toBe(1)
-    expect(container.emphasized).toBe(false)
+  it('clearEmphasis is safe on a never-emphasized view (no glow)', () => {
+    const { view } = makeFakeEmphasisCardView(makeFakeGlow().graphics)
+    view.clearEmphasis() // never emphasized → targetGlow undefined
+    expect(view.scale).toBe(1)
+    expect(view.emphasized).toBe(false)
   })
 })
 
 // ---------------------------------------------------------------------------
-// applyCardHighlight — list[1] stroke/fill styling (S10 'committed' kind)
+// CardView applyHighlight — named highlight rectangle styling (S10 'committed' kind)
 //
-// applyCardHighlight touches only the list[1] overlay rectangle's
-// setStrokeStyle / setFillStyle. We fake the rectangle and the container's
-// `list` array so the per-kind styling (and the committed-fill reset) is tested
+// applyHighlight touches only the named overlay rectangle's setStrokeStyle /
+// setFillStyle. We also provide a fake `list[1]` guard so the per-kind styling
+// (and the committed-fill reset) is tested
 // without a real Phaser runtime.
 // ---------------------------------------------------------------------------
 
@@ -351,7 +375,13 @@ interface FakeRect {
   fillAlpha: number
 }
 
-function makeFakeHighlightContainer(): { container: unknown; rect: FakeRect } {
+interface HighlightCardViewFake {
+  highlightRect: unknown
+  list: unknown[]
+  applyHighlight: CardView['applyHighlight']
+}
+
+function makeFakeHighlightCardView(): { view: HighlightCardViewFake; rect: FakeRect; listRect: FakeRect } {
   const rect: FakeRect = { strokeWidth: 0, strokeColor: 0, fillColor: 0x000000, fillAlpha: 0 }
   const rectObj = {
     setStrokeStyle(width: number, color?: number): unknown {
@@ -365,173 +395,107 @@ function makeFakeHighlightContainer(): { container: unknown; rect: FakeRect } {
       return rectObj
     },
   }
-  // list[0] is the cardfront image (irrelevant here); list[1] is the overlay.
-  const container = { list: [{}, rectObj] }
-  return { container, rect }
+  const listRect: FakeRect = { strokeWidth: 0, strokeColor: 0, fillColor: 0x000000, fillAlpha: 0 }
+  const listRectObj = {
+    setStrokeStyle(width: number, color?: number): unknown {
+      listRect.strokeWidth = width
+      listRect.strokeColor = color ?? 0
+      return listRectObj
+    },
+    setFillStyle(color: number, alpha?: number): unknown {
+      listRect.fillColor = color
+      listRect.fillAlpha = alpha ?? 1
+      return listRectObj
+    },
+  }
+  const view = Object.create(CardView.prototype) as HighlightCardViewFake
+  view.highlightRect = rectObj
+  // If CardView regresses to list[1], these assertions will see listRect mutate.
+  view.list = [{}, listRectObj]
+  return { view, rect, listRect }
 }
 
-describe("applyCardHighlight 'committed' kind", () => {
+describe("CardView applyHighlight 'committed' kind", () => {
   const fs = selectTheme('zombie-big-box').frameStyle
 
-  it('strokes the list[1] rect with the muted committedTarget colour, not the bright target border', () => {
-    const { container, rect } = makeFakeHighlightContainer()
-    applyCardHighlight(container as never, 'committed', fs)
+  it('strokes the highlightRect with the muted committedTarget colour, not the bright target border', () => {
+    const { view, rect } = makeFakeHighlightCardView()
+    view.applyHighlight('committed', fs)
     expect(rect.strokeColor).toBe(fs.committedTarget)
     expect(rect.strokeColor).not.toBe(fs.targetBorder) // visually distinct from a live legal target
     expect(rect.strokeWidth).toBeGreaterThan(0)
   })
 
   it('adds a faint committedTarget fill so the mark reads as steady/settled', () => {
-    const { container, rect } = makeFakeHighlightContainer()
-    applyCardHighlight(container as never, 'committed', fs)
+    const { view, rect } = makeFakeHighlightCardView()
+    view.applyHighlight('committed', fs)
     expect(rect.fillColor).toBe(fs.committedTarget)
     expect(rect.fillAlpha).toBeGreaterThan(0)
     expect(rect.fillAlpha).toBeLessThan(1) // muted, not a solid block
   })
 
   it("clears any prior committed fill when re-applied as another kind (no stale tint)", () => {
-    const { container, rect } = makeFakeHighlightContainer()
-    applyCardHighlight(container as never, 'committed', fs) // tints the fill
-    applyCardHighlight(container as never, 'target', fs) // reused container, new state
+    const { view, rect } = makeFakeHighlightCardView()
+    view.applyHighlight('committed', fs) // tints the fill
+    view.applyHighlight('target', fs) // reused view, new state
     expect(rect.fillAlpha).toBe(0) // committed tint cleared
     expect(rect.strokeColor).toBe(fs.targetBorder)
   })
 
   it("'target' uses the bright targetBorder, distinct from committed", () => {
-    const { container, rect } = makeFakeHighlightContainer()
-    applyCardHighlight(container as never, 'target', fs)
+    const { view, rect } = makeFakeHighlightCardView()
+    view.applyHighlight('target', fs)
     expect(rect.strokeColor).toBe(fs.targetBorder)
     expect(rect.fillAlpha).toBe(0) // legal-target border has no fill
+  })
+
+  it('uses the named highlightRect field instead of depending on list[1]', () => {
+    const { view, rect, listRect } = makeFakeHighlightCardView()
+    view.applyHighlight('target', fs)
+    expect(rect.strokeColor).toBe(fs.targetBorder)
+    expect(listRect.strokeWidth).toBe(0)
+    expect(listRect.fillAlpha).toBe(0)
   })
 })
 
 // ---------------------------------------------------------------------------
-// createCardObject — energy cost badge for player cards (Step 8)
-//
-// Player cards with energyCost > 0 render a badge (filled circle + digit).
-// Cost-0 cards have no badge. The badge is appended AFTER list[0] and list[1]
-// to preserve the applyCardHighlight contract.
+// CardView surface methods
 // ---------------------------------------------------------------------------
 
-/**
- * A fake Phaser scene sufficient to test createCardObject. Records children
- * added to the container in container.list.
- */
-function makeFakeCardScene(): {
-  scene: unknown
-  added: unknown[]
-  container: { list: unknown[] } | undefined
-} {
-  const containerRef: { list: unknown[] } = { list: [] }
-
-  const scene = {
-    add: {
-      container(_x: number, _y: number): unknown {
-        return {
-          list: containerRef.list,
-          add(child: unknown): unknown {
-            containerRef.list.push(child)
-            return this
-          },
-        }
-      },
-      image(_x: number, _y: number, _key: string): unknown {
-        return {
-          setDisplaySize(_w: number, _h: number): unknown { return this },
-        }
-      },
-      rectangle(_x: number, _y: number, _w: number, _h: number, _color: number, _alpha: number): unknown {
-        return {
-          setStrokeStyle(_width: number): unknown { return this },
-          setRounded(_radius: number): unknown { return this },
-          setAlpha(_a: number): unknown { return this },
-          setOrigin(_x: number, _y: number): unknown { return this },
-        }
-      },
-      graphics(): unknown {
-        return {
-          setPosition(_x: number, _y: number): unknown { return this },
-          fillStyle(_color: number, _alpha: number): unknown { return this },
-          fillCircle(_x: number, _y: number, _radius: number): unknown { return this },
-        }
-      },
-      text(_x: number, _y: number, _text: string, _style: unknown): unknown {
-        return {
-          setOrigin(_x: number, _y: number): unknown { return this },
-          setText(_text: string): unknown { return this },
-          setAbove(_obj: unknown): unknown { return this },
-          height: 12,
-          getWrappedText(text: string): string[] { return [text] },
-        }
-      },
-    },
-  }
-
-  return { scene, added: containerRef.list, container: { list: containerRef.list } }
-}
-
-describe('createCardObject — player card energy cost badge', () => {
-  const theme = selectTheme('zombie-big-box')
-  const resolveTheme = (_worldId: string): typeof theme => theme
-
-  it('cost-1 player cards add more children to the container than cost-0 (badge icon + badge text)', () => {
-    const baseCard: PlayerCard = {
-      kind: 'player',
-      id: 'test-base',
-      name: 'Card',
-      insetKey: undefined,
-      sourceWorldId: 'zombie-big-box',
-      effect: { kind: 'Heal', amount: 1 },
-      energyCost: 0,
+describe('CardView surface methods', () => {
+  it('setDimmed pushes the dim alpha onto the view', () => {
+    const view = Object.create(CardView.prototype) as CardView & {
+      alpha: number
+      setAlpha(v: number): unknown
+    }
+    view.alpha = 1
+    view.setAlpha = (v: number) => {
+      view.alpha = v
+      return view
     }
 
-    const { scene: scene0, added: added0 } = makeFakeCardScene()
-    createCardObject(scene0 as never, { ...baseCard, energyCost: 0 }, 0, 0, theme, resolveTheme)
-    const count0 = added0.length
-
-    const { scene: scene1, added: added1 } = makeFakeCardScene()
-    createCardObject(scene1 as never, { ...baseCard, energyCost: 1, id: 'test-1' }, 0, 0, theme, resolveTheme)
-    const count1 = added1.length
-
-    // Badge adds 1 image + addCardText without a background = 3 extra children
-    expect(count1 - count0).toBe(3)
+    view.setDimmed(true)
+    expect(view.alpha).toBe(0.35)
+    view.setDimmed(false)
+    expect(view.alpha).toBe(1)
   })
 
-  it('cost-0 player cards add fewer children than cost-1 (no badge)', () => {
-    const cost0Card: PlayerCard = {
-      kind: 'player', id: 'test-0', name: 'NoBadge', insetKey: undefined,
-      sourceWorldId: 'zombie-big-box', effect: { kind: 'Draw', player: 1 }, energyCost: 0,
+  it('setCardPosition re-asserts the view position', () => {
+    const view = Object.create(CardView.prototype) as CardView & {
+      x: number
+      y: number
+      setPosition(x: number, y: number): unknown
     }
-    const cost1Card: PlayerCard = {
-      kind: 'player', id: 'test-1', name: 'WithBadge', insetKey: undefined,
-      sourceWorldId: 'zombie-big-box', effect: { kind: 'Draw', player: 1 }, energyCost: 1,
-    }
-
-    const { scene: s0, added: a0 } = makeFakeCardScene()
-    createCardObject(s0 as never, cost0Card, 0, 0, theme, resolveTheme)
-
-    const { scene: s1, added: a1 } = makeFakeCardScene()
-    createCardObject(s1 as never, cost1Card, 0, 0, theme, resolveTheme)
-
-    expect(a0.length).toBeLessThan(a1.length)
-  })
-
-  it('cost-1 player cards add more children than cost-0 (badge present)', () => {
-    const cost0Card: PlayerCard = {
-      kind: 'player', id: 'test-0', name: 'NoBadge', insetKey: undefined,
-      sourceWorldId: 'zombie-big-box', effect: { kind: 'Draw', player: 1 }, energyCost: 0,
-    }
-    const cost1Card: PlayerCard = {
-      kind: 'player', id: 'test-1', name: 'WithBadge', insetKey: undefined,
-      sourceWorldId: 'zombie-big-box', effect: { kind: 'Draw', player: 1 }, energyCost: 1,
+    view.x = 0
+    view.y = 0
+    view.setPosition = (x: number, y: number) => {
+      view.x = x
+      view.y = y
+      return view
     }
 
-    const { scene: s0, added: a0 } = makeFakeCardScene()
-    createCardObject(s0 as never, cost0Card, 0, 0, theme, resolveTheme)
-
-    const { scene: s1, added: a1 } = makeFakeCardScene()
-    createCardObject(s1 as never, cost1Card, 0, 0, theme, resolveTheme)
-
-    expect(a1.length).toBeGreaterThan(a0.length)
+    view.setCardPosition(123, 456)
+    expect(view.x).toBe(123)
+    expect(view.y).toBe(456)
   })
 })

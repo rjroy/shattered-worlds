@@ -34,15 +34,7 @@ import {
 } from '../interaction/selection'
 import type { SelectionState } from '../interaction/selection'
 import { classifyHighlight } from '../interaction/highlight'
-import {
-  createCardObject,
-  applyCardHighlight,
-  dimCard,
-  positionCard,
-  updateCostRing,
-  emphasizeCard,
-  clearEmphasis,
-} from '../view/cardObjects'
+import { CardView } from '../view/CardView'
 import { createHUD, updateHUD } from '../view/hud'
 import type { HUDRefs } from '../view/hud'
 import { createWinScreen, createLossScreen, createHelpOverlay } from '../view/overlays'
@@ -87,7 +79,7 @@ export class TableScene extends Phaser.Scene {
   private sel: SelectionState = IDLE
 
   /** All live card containers, keyed by card id. */
-  private cardObjects: Map<string, Phaser.GameObjects.Container> = new Map()
+  private cardObjects: Map<string, CardView> = new Map()
 
   /**
    * Id of the card currently under the pointer, or null. Maintained by the
@@ -324,7 +316,7 @@ export class TableScene extends Phaser.Scene {
     // are handled in the pointerout handler and the destruction pass below.)
     if (this.hoveredCardId !== null && !legalTargetIds.has(this.hoveredCardId)) {
       const stale = this.cardObjects.get(this.hoveredCardId)
-      if (stale !== undefined) clearEmphasis(stale)
+      if (stale !== undefined) stale.clearEmphasis()
       this.hoveredCardId = null
     }
 
@@ -413,7 +405,7 @@ export class TableScene extends Phaser.Scene {
 
       // Position is mutable per cycle (a card may shift slots as the hand
       // changes). The static face was set once, at creation.
-      positionCard(container, x, y)
+      container.setCardPosition(x, y)
 
       // Re-apply mutable visual state every cycle, reused or freshly created.
       this.applyHighlight(container, card, playableIds, discardableIds, legalTargetIds)
@@ -427,9 +419,9 @@ export class TableScene extends Phaser.Scene {
       // here with hoveredCardId === card.id means the card is still a legal
       // target.
       if (this.hoveredCardId === card.id) {
-        emphasizeCard(this, container, this.theme_.frameStyle.targetGlow, this.game_.intensity())
+        container.emphasize(this.theme_.frameStyle.targetGlow, this.game_.intensity())
       } else {
-        clearEmphasis(container)
+        container.clearEmphasis()
       }
 
       // World cards carry a progress ring around the cost digit. Animate it
@@ -442,7 +434,7 @@ export class TableScene extends Phaser.Scene {
       if (card.kind === 'world') {
         const progress = this.game_.state.progress[card.id] ?? 0
         const fraction = ringFraction(progress, card.cost)
-        updateCostRing(this, container, fraction, this.theme_.frameStyle.ringAccent)
+        container.updateCostRing(fraction, this.theme_.frameStyle.ringAccent)
       }
     })
   }
@@ -455,11 +447,11 @@ export class TableScene extends Phaser.Scene {
    * stay correct across cycles and must never be re-bound on reuse (re-binding
    * accumulates duplicate listeners — the suspected input bug from the rollout).
    */
-  private obtainCardContainer(card: Card): Phaser.GameObjects.Container {
+  private obtainCardContainer(card: Card): CardView {
     const existing = this.cardObjects.get(card.id)
     if (existing !== undefined) return existing
 
-    const container = createCardObject(this, card, 0, 0, this.theme_, selectTheme)
+    const container = new CardView(this, card, 0, 0, this.theme_, selectTheme)
     this.cardObjects.set(card.id, container)
 
     // Make card interactive
@@ -490,7 +482,7 @@ export class TableScene extends Phaser.Scene {
       // Seam case (a): pointer-out clears the stored hovered id AND restores
       // this container's base transform (scale 1, glow off).
       if (this.hoveredCardId === id) this.hoveredCardId = null
-      clearEmphasis(container)
+      container.clearEmphasis()
       // Instruction stays stable in its own slot; clear only the preview slot.
       this.updateHint()
       this.previewSlot.setText('')
@@ -504,7 +496,7 @@ export class TableScene extends Phaser.Scene {
 
   /** Apply the correct highlight and alpha to a card container. */
   private applyHighlight(
-    container: Phaser.GameObjects.Container,
+    container: CardView,
     card: Card,
     playableIds: Set<string>,
     discardableIds: Set<string>,
@@ -517,8 +509,8 @@ export class TableScene extends Phaser.Scene {
       discardableIds,
       legalTargetIds,
     )
-    applyCardHighlight(container, kind, this.theme_.frameStyle)
-    dimCard(container, dim)
+    container.applyHighlight(kind, this.theme_.frameStyle)
+    container.setDimmed(dim)
   }
 
   // ---------------------------------------------------------------------------
@@ -844,11 +836,11 @@ export class TableScene extends Phaser.Scene {
    */
   private emphasizeIfLegalTarget(
     cardId: string,
-    container: Phaser.GameObjects.Container,
+    container: CardView,
   ): void {
     const available = availableActions(this.game_.state)
     if (!this.currentLegalTargetIds(available).has(cardId)) return
-    emphasizeCard(this, container, this.theme_.frameStyle.targetGlow, this.game_.intensity())
+    container.emphasize(this.theme_.frameStyle.targetGlow, this.game_.intensity())
   }
 
   /**
