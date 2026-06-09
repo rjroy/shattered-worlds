@@ -1,7 +1,7 @@
 /// <reference types="vite/client" />
 import zombieBigBoxMusicUrl from '../assets/audio/zombie-big-box-music.mp3?url'
 import birdBuildingMusicUrl from '../assets/audio/bird-building-music.mp3?url'
-import highwayVolcanoMusicUrl from '../assets/audio/highway-volcano-music.mo3?url'
+import highwayVolcanoMusicUrl from '../assets/audio/highway-volcano-music.mp3?url'
 
 export interface WorldMusicAsset {
   key: string
