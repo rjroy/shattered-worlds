@@ -41,7 +41,8 @@ import { textStyle, TEXT } from '../view/presentation'
 import { ringFraction, connectorLine, selectConnectorStyle, effectAtStep } from '../interaction/feedback'
 import type { ConnectorStyle } from '../interaction/feedback'
 import { drawConnector } from '../view/connector'
-import { createModalChooser, modalBranchViews } from '../view/modal'
+import { modalBranchViews } from '../view/modal'
+import { ModalChooserView } from '../view/ModalChooserView'
 import { CommonLabel, CommonButton } from '../view/components'
 import { previewPlay } from '../interaction/describe'
 import { PileLayer } from '../view/piles'
@@ -99,7 +100,7 @@ export class TableScene extends Phaser.Scene {
   private questionBtn!: CommonButton
 
   // Modal chooser UI (created/destroyed per card play)
-  private modalContainer: Phaser.GameObjects.Container | null = null
+  private modalChooser: ModalChooserView | null = null
   private worldMusic: Phaser.Sound.BaseSound | null = null
 
   // Pile layer — persistent containers for player draw and world draw stacks
@@ -688,7 +689,7 @@ export class TableScene extends Phaser.Scene {
       card?.kind === 'player' && card.effect.kind === 'Modal' ? card.effect.branches : []
     const branches = modalBranchViews(spec.branches, effectBranches, available, cardId)
 
-    this.modalContainer = createModalChooser(
+    this.modalChooser = new ModalChooserView(
       this,
       this.theme_,
       branches,
@@ -725,9 +726,9 @@ export class TableScene extends Phaser.Scene {
   }
 
   private dismissModal(): void {
-    if (this.modalContainer !== null) {
-      this.modalContainer.destroy()
-      this.modalContainer = null
+    if (this.modalChooser !== null) {
+      this.modalChooser.destroy()
+      this.modalChooser = null
     }
   }
 
