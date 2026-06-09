@@ -201,7 +201,7 @@ describe('ForceDestroy onDiscarded', () => {
     const talon: WorldCard = {
       ...(zombie as WorldCard),
       name: 'Gripping Talon',
-      onDiscarded: { kind: 'ForceDestroy' },
+      onDiscarded: { kind: 'ForceDestroy', amount: 1 },
     }
     return [talon, next]
   }

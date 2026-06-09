@@ -5,7 +5,6 @@
 import Phaser from 'phaser'
 import type { GameState } from '../../core/index'
 import { TEXT, textStyle } from './presentation'
-import { WORLD_CONSTS } from '../../core/engine/world'
 
 export interface HUDRefs {
   // The whole HUD (backing panel + every label) lives in this container, so the
