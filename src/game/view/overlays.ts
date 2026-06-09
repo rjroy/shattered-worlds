@@ -3,7 +3,8 @@
  * scene toggles visibility based on GameState.status or user input.
  */
 import Phaser from 'phaser'
-import { textStyle, CANVAS_W, CANVAS_H, TEXT } from './presentation'
+import { textStyle, TEXT } from './presentation'
+import { CANVAS_W, CANVAS_H } from './layout'
 import { WORLD_CONSTS } from '../../core/engine/world'
 import { worldDisplayManifest } from '../../data/worldDisplayManifest'
 import { worldHelpManifest } from '../../data/worldHelpManifest'
