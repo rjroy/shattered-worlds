@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Help screen</title>
+  <meta name="date" content="2026-06-08">
+  <meta name="status" content="draft">
+  <meta name="tags" content="ui, overlay, help, hud, phaser, keywords, glossary">
+  <meta name="modules" content="table-scene, hud, overlays, world-help-manifest">
+  <meta name="related" content=".lore/work/brainstorm/story-detail-and-help-screens.html, .lore/work/specs/world-select.html">
+  <meta name="req-prefix" content="HELP">
+  <style>
+    :root {
+      --bg: #0f1117;
+      --surface: #181c28;
+      --surface2: #1f2436;
+      --border: #2a3050;
+      --text: #c8cde0;
+      --muted: #6b7099;
+      --accent: #7eb8f7;
+      --gold: #e8c56a;
+      --green: #72c472;
+      --red: #e06060;
+      --purple: #a78bfa;
+      --yellow: #f0d070;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      font-size: 15px;
+      line-height: 1.6;
+    }
+
+    /* ── Sticky header ─────────────────────────────────────────────── */
+    #sticky-header {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(15,17,23,0.95);
+      backdrop-filter: blur(8px);
+      border-bottom: 1px solid var(--border);
+      padding: 0.6rem 2rem;
+      display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;
+    }
+    #sticky-header .title { font-weight: 700; color: var(--accent); font-size: 1rem; }
+    .badge {
+      display: inline-block;
+      padding: 2px 10px; border-radius: 4px;
+      font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em;
+    }
+    .badge-draft    { background: #2a2218; color: var(--gold); border: 1px solid #4a3a28; }
+    .badge-approved { background: #182818; color: var(--green); border: 1px solid #285028; }
+    .prefix-badge { background: var(--surface2); color: var(--muted); border: 1px solid var(--border); }
+    #sticky-header .counts { color: var(--muted); font-size: 0.8rem; margin-left: auto; }
+
+    /* ── Body layout ────────────────────────────────────────────────── */
+    .wrap { max-width: 960px; margin: 0 auto; padding: 2.5rem 2rem 6rem; }
+    h1 { font-size: 1.7rem; color: var(--accent); margin-bottom: 0.25rem; }
+    .meta { color: var(--muted); font-size: 0.85rem; margin-bottom: 2.5rem; }
+    h2 {
+      font-size: 1.1rem; color: var(--gold);
+      margin: 2.5rem 0 0.8rem;
+      border-bottom: 1px solid var(--border); padding-bottom: 0.4rem;
+    }
+    p { margin-bottom: 0.8rem; }
+
+    /* ── Requirement cards ──────────────────────────────────────────── */
+    .req {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--accent);
+      border-radius: 0 8px 8px 0;
+      margin: 0.6rem 0;
+      overflow: hidden;
+    }
+    .req-header {
+      display: flex; align-items: center; gap: 0.7rem;
+      padding: 0.6rem 1rem;
+      cursor: pointer;
+      user-select: none;
+    }
+    .req-header:hover { background: var(--surface2); }
+    .req-id {
+      font-family: monospace; font-size: 0.8rem; font-weight: 700;
+      color: var(--accent); min-width: 100px;
+    }
+    .req-title { flex: 1; font-weight: 600; }
+    .req-status {
+      font-size: 0.72rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.05em; padding: 2px 8px; border-radius: 4px;
+    }
+    .status-must   { background: #2a1818; color: #e07070; border: 1px solid #5a2828; }
+    .status-should { background: #1e1e2a; color: #8888dd; border: 1px solid #3a3a5a; }
+    .status-note   { background: #1e221a; color: #88aa88; border: 1px solid #3a4a3a; }
+    .req-body {
+      padding: 0 1rem 0.8rem 1rem;
+      color: var(--text);
+      font-size: 0.92rem;
+      border-top: 1px solid var(--border);
+    }
+    .req-body p { margin-top: 0.6rem; margin-bottom: 0; }
+    .req-body p + p { margin-top: 0.4rem; }
+    .req-body ul { padding-left: 1.3rem; margin-top: 0.4rem; }
+    .req-body li { margin-bottom: 0.3rem; }
+    .req-body code {
+      background: var(--surface2); padding: 0.1em 0.35em;
+      border-radius: 3px; font-size: 0.88em; color: var(--yellow);
+    }
+
+    /* ── Deferred note ──────────────────────────────────────────────── */
+    .deferred {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--muted);
+      border-radius: 0 8px 8px 0;
+      padding: 0.7rem 1rem;
+      margin: 0.5rem 0;
+      color: var(--muted);
+      font-size: 0.88rem;
+    }
+    .deferred strong { color: var(--text); }
+
+    /* ── Validation section ─────────────────────────────────────────── */
+    .validation {
+      background: #0f1f0f;
+      border: 1px solid #2a4a2a;
+      border-radius: 8px;
+      padding: 1.2rem 1.4rem;
+      margin: 1rem 0;
+    }
+    .validation h3 { color: var(--green); margin-bottom: 0.8rem; font-size: 1rem; }
+    .check { display: flex; gap: 0.7rem; margin: 0.4rem 0; align-items: flex-start; }
+    .check .box {
+      min-width: 18px; height: 18px; border: 1px solid #4a6a4a;
+      border-radius: 3px; margin-top: 0.1rem;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.7rem; color: var(--green);
+    }
+    .check .label { font-size: 0.88rem; }
+    .check .label code { background: var(--surface2); padding: 0.1em 0.3em; border-radius: 3px; font-size: 0.85em; color: var(--yellow); }
+
+    /* ── Data schema / code block ───────────────────────────────────── */
+    pre {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 0.8rem 1rem;
+      font-size: 0.82rem;
+      overflow-x: auto;
+      margin: 0.6rem 0;
+      color: var(--yellow);
+      line-height: 1.5;
+    }
+
+    /* ── Layout sketch ──────────────────────────────────────────────── */
+    .sketch {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1rem 1.2rem;
+      font-family: monospace;
+      font-size: 0.78rem;
+      color: var(--muted);
+      white-space: pre;
+      line-height: 1.4;
+      margin: 0.8rem 0;
+    }
+    .sketch .hi { color: var(--accent); }
+    .sketch .md { color: var(--gold); }
+    .sketch .em { color: var(--green); }
+
+    /* ── Keyword table ──────────────────────────────────────────────── */
+    .kw-table {
+      width: 100%; border-collapse: collapse; margin: 0.6rem 0;
+      font-size: 0.88rem;
+    }
+    .kw-table th {
+      text-align: left; padding: 0.35rem 0.7rem;
+      color: var(--gold); font-size: 0.75rem; text-transform: uppercase;
+      letter-spacing: 0.06em; border-bottom: 1px solid var(--border);
+    }
+    .kw-table td { padding: 0.35rem 0.7rem; border-bottom: 1px solid var(--surface2); vertical-align: top; }
+    .kw-table td:first-child { color: var(--accent); font-family: monospace; font-weight: 700; white-space: nowrap; }
+    .kw-table tr:last-child td { border-bottom: none; }
+  </style>
+</head>
+<body>
+
+<!-- ── Sticky header ─────────────────────────────────────────────────── -->
+<div id="sticky-header">
+  <span class="title">Help screen</span>
+  <span class="badge badge-draft">Draft</span>
+  <span class="badge prefix-badge">REQ-HELP-*</span>
+  <span class="counts" id="req-count">Loading…</span>
+</div>
+
+<div class="wrap">
+<h1>Help screen</h1>
+<p class="meta">
+  Spec · 2026-06-08 · status: draft<br>
+  Related: <a href="../brainstorm/story-detail-and-help-screens.html">brainstorm</a>,
+  <a href="world-select.html">world-select spec</a>
+</p>
+
+<p>A Phaser overlay triggered by a ? button in the top-right corner of the canvas. Shows base rules, a keyword glossary, and world-specific mechanic notes for the active shard. Designed to be consulted mid-run without leaving the canvas.</p>
+
+<!-- ════════════════════════════════════════════════════════════════════ -->
+<h2>Trigger — ? button</h2>
+
+<div class="req" id="HELP-1">
+  <div class="req-header" onclick="toggle('HELP-1')">
+    <span class="req-id">REQ-HELP-1</span>
+    <span class="req-title">A ? button is visible during active gameplay in the top-right corner of the canvas</span>
+    <span class="req-status status-must">Must</span>
+  </div>
+  <div class="req-body">
+    <p>A standalone ? button is created in <code>TableScene.create()</code>, positioned near the top-right corner of the 900×600 canvas (approximately <code>x=860, y=22</code>). It is not part of the HUD container — it is a separate game object in the scene.</p>
+    <p>The button is visible while <code>state.status === 'playing'</code>. It is hidden when the win or loss overlay is shown. The button may remain visible during a modal chooser (branch-selection UI for certain cards) — opening help from that state is allowed, and dismissing help returns to the modal chooser unaffected. On <code>pointerup</code>, it shows the help overlay.</p>
+    <p>Visual treatment: a small rounded rectangle or text button labeled <strong>"?"</strong>, clearly legible against the dark backdrop. A hover state (brightness or scale change) is sufficient affordance.</p>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════════ -->
+<h2>Overlay architecture</h2>
+
+<div class="req" id="HELP-2">
+  <div class="req-header" onclick="toggle('HELP-2')">
+    <span class="req-id">REQ-HELP-2</span>
+    <span class="req-title">Help overlay is a Phaser container at depth 1000, initially hidden</span>
+    <span class="req-status status-must">Must</span>
+  </div>
+  <div class="req-body">
+    <p>A <code>createHelpOverlay(scene, worldId, totalActs)</code> factory in <code>src/game/view/overlays.ts</code> creates the overlay and returns the container. The container is positioned at <code>(CANVAS_W / 2, CANVAS_H / 2)</code>, depth 1000, and <code>setVisible(false)</code> by default — matching the pattern of <code>createWinScreen</code> and <code>createLossScreen</code>.</p>
+    <p><code>TableScene</code> calls <code>createHelpOverlay(this, worldId, state.totalActs)</code> during <code>create()</code> once the <code>GameCore</code> instance is available. It stores the returned container reference and toggles its visibility in response to the ? button and dismiss controls.</p>
+  </div>
+</div>
+
+<div class="req" id="HELP-3">
+  <div class="req-header" onclick="toggle('HELP-3')">
+    <span class="req-id">REQ-HELP-3</span>
+    <span class="req-title">While the overlay is visible, game board interaction is suspended</span>
+    <span class="req-status status-must">Must</span>
+  </div>
+  <div class="req-body">
+    <p>The overlay's background rectangle calls <code>setInteractive()</code>. Phaser's default <code>topOnly</code> behavior means that interactive objects below the topmost interactive object under the pointer do not fire events — so the overlay background, sitting at depth 1000, swallows all pointer events that would otherwise reach cards and action buttons at lower depths.</p>
+    <p>No explicit per-card disableInteractive loop is required. The depth-ordering guarantee is sufficient for current content. If <code>topOnly</code> behavior is ever disabled globally, revisit this requirement.</p>
+  </div>
+</div>
+
+<div class="req" id="HELP-4">
+  <div class="req-header" onclick="toggle('HELP-4')">
+    <span class="req-id">REQ-HELP-4</span>
+    <span class="req-title">Overlay dismisses on X button click or Escape key</span>
+    <span class="req-status status-must">Must</span>
+  </div>
+  <div class="req-body">
+    <p>An X button is positioned in the top-right of the overlay panel. Clicking it hides the container and restores normal gameplay. Pressing the Escape key has the same effect. The Escape handler is registered in <code>TableScene</code> and only fires if the help overlay is visible.</p>
+    <p>After dismissal, the ? button remains visible and can reopen the overlay.</p>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════════ -->
+<h2>Visual layout</h2>
+
+<p>Canvas is 900 × 600. The overlay covers the full canvas. All content is in a centered panel with 50px horizontal padding.</p>
+
+<div class="sketch"><span class="hi">┌─────────────────────────────── 900 ──────────────────────────────────┐</span>
+<span class="hi">│</span>  <span class="md">HELP</span>                                                         <span class="em">[ × ]</span> <span class="hi">│</span> ← 50px header
+<span class="hi">├──────────────────────────────────────────────────────────────────────┤</span>
+<span class="hi">│</span>  <span class="md">HOW IT WORKS</span>                                                         <span class="hi">│</span>
+<span class="hi">│</span>  HP: 10  ·  Energy: +1 per turn  ·  Hand: 6 cards  ·  Acts: 3        <span class="hi">│</span> ← ~80px
+<span class="hi">├──────────────────────────────────────────────────────────────────────┤</span>
+<span class="hi">│</span>  <span class="md">KEYWORDS</span>                                                             <span class="hi">│</span>
+<span class="hi">│</span>  <span class="hi">Energy</span>    Resource: +1 each turn        <span class="hi">Hidden</span>      Concealed hazard  <span class="hi">│</span>
+<span class="hi">│</span>  <span class="hi">Progress</span>  Fill ring to clear            <span class="hi">Creature</span>    Living threat     <span class="hi">│</span>
+<span class="hi">│</span>  <span class="hi">Hazard</span>    Clear it (fill ring)→reward   <span class="hi">Slow</span>        Impedes movement  <span class="hi">│</span>
+<span class="hi">│</span>            Discard it→discard effect     <span class="hi">ForceDestroy</span> Next-hand destroy <span class="hi">│</span>
+<span class="hi">│</span>            End-of-turn→penalty effect                                 <span class="hi">│</span> ← ~155px
+<span class="hi">├──────────────────────────────────────────────────────────────────────┤</span>
+<span class="hi">│</span>  <span class="md">IN THIS WORLD</span> — The Big Box                                          <span class="hi">│</span>
+<span class="hi">│</span>  <span class="hi">Zombies grow</span>       Each Zombie deals damage + spawns at turn end…    <span class="hi">│</span>
+<span class="hi">│</span>  <span class="hi">Corpses transform</span>  Becomes a Zombie at turn end; can't discard…     <span class="hi">│</span>
+<span class="hi">│</span>  <span class="hi">Costly discards</span>    Discarding a Zombie costs 5 HP…                  <span class="hi">│</span>
+<span class="hi">│</span>  <span class="hi">The Walker & Door</span>  Clear the Walker → Summon Door → find the Door…  <span class="hi">│</span> ← ~180px
+<span class="hi">└──────────────────────────────────────────────────────────────────────┘</span></div>
+
+<div class="req" id="HELP-5">
+  <div class="req-header" onclick="toggle('HELP-5')">
+    <span class="req-id">REQ-HELP-5</span>
+    <span class="req-title">Overlay contains three sections in order: Base Rules, Keywords, In This World</span>
+    <span class="req-status status-must">Must</span>
+  </div>
+  <div class="req-body">
+    <p>The panel is divided into three labeled sections, separated by visual dividers. Section order is always Base Rules → Keywords → In This World. Each section has a distinct uppercase header label.</p>
+    <p>All three sections must be visible simultaneously without scrolling for the current content volume (see REQ-HELP-13). The first section header label reads <strong>"HOW IT WORKS"</strong>; the second reads <strong>"KEYWORDS"</strong>; the third reads <strong>"IN THIS WORLD — [name]"</strong>.</p>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════════ -->
+<h2>Content — base rules</h2>
+
+<div class="req" id="HELP-6">
+  <div class="req-header" onclick="toggle('HELP-6')">
+    <span class="req-id">REQ-HELP-6</span>
+    <span class="req-title">Base rules section shows four static facts: HP, energy, hand size, act count</span>
+    <span class="req-status status-must">Must</span>
+  </div>
+  <div class="req-body">
+    <p>The Base Rules section displays the following, on one or two lines:</p>
+    <ul>
+      <li><strong>HP:</strong> 10 (drawn from <code>WORLD_CONSTS.startHp</code>)</li>
+      <li><strong>Energy:</strong> +1 per turn</li>
+      <li><strong>Hand:</strong> 6 cards (drawn from <code>WORLD_CONSTS.maxHandSize</code>)</li>
+      <li><strong>Acts:</strong> 3 per run (passed in as <code>totalActs</code> to the factory — see REQ-HELP-2)</li>
+    </ul>
+    <p>HP and hand size are read from <code>WORLD_CONSTS</code> (accessible inside <code>overlays.ts</code> without additional parameters). Act count is passed in from <code>state.totalActs</code> at the call site in <code>TableScene.create()</code>. None of these values are hard-coded as literals in the overlay factory.</p>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════════ -->
+<h2>Content — keyword glossary</h2>
+
+<div class="req" id="HELP-7">
+  <div class="req-header" onclick="toggle('HELP-7')">
+    <span class="req-id">REQ-HELP-7</span>
+    <span class="req-title">Keywords section defines seven terms in a two-column layout</span>
+    <span class="req-status status-must">Must</span>
+  </div>
+  <div class="req-body">
+    <p>The seven terms and their definitions (authoritative source for implementers):</p>
+    <table class="kw-table">
+      <thead>
+        <tr><th>Term</th><th>Definition</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Energy</td>
+          <td>Resource earned at the start of each turn (+1). Spent to play cards with an energy cost. Some cards grant additional energy mid-turn.</td>
+        </tr>
+        <tr>
+          <td>Progress</td>
+          <td>Damage accumulated on a hazard. When progress equals or exceeds the hazard's cost, the hazard is cleared and its reward fires.</td>
+        </tr>
+        <tr>
+          <td>Hazard</td>
+          <td>A world card dealt into your hand. Three things can happen to it: <strong>Clear</strong> it by filling the progress ring (fires its reward). <strong>Discard</strong> it voluntarily (fires its discard effect — may cost HP, add bad cards, or occasionally help). Or survive the turn with it still in hand (fires its end-of-turn effect, usually a penalty). A hazard's card face shows all three.</td>
+        </tr>
+        <tr>
+          <td>Hidden</td>
+          <td>Keyword on a hazard. Cards like Explore and Listen deal bonus progress against Hidden hazards.</td>
+        </tr>
+        <tr>
+          <td>Creature</td>
+          <td>Keyword on a hazard. Cards like Baseball Bat and Fire Axe deal bonus progress against Creature hazards.</td>
+        </tr>
+        <tr>
+          <td>Slow</td>
+          <td>Keyword on a hazard. Sprint's movement branch deals bonus progress against Slow hazards.</td>
+        </tr>
+        <tr>
+          <td>ForceDestroy</td>
+          <td>Queues one random player card to be permanently destroyed from your next hand. Multiple charges stack.</td>
+        </tr>
+      </tbody>
+    </table>
+    <p>The two-column layout places Energy, Progress, Hazard, Hidden in the left column and Creature, Slow, ForceDestroy in the right column. With 50px horizontal padding on each side, the usable panel width is ~800px. Each column is approximately 380px wide with a ~40px gap. These widths are the <code>wordWrapWidth</code> constraint for the text objects — without an explicit wrap width, Phaser text objects do not auto-wrap into columns. Keyword names are styled distinctly from their definitions (e.g., accent color or bold).</p>
+    <p>The Hazard entry is intentionally multi-line (it covers three interaction paths: clear, discard, end-of-turn). It will be taller than the other entries. The left column should be sized to accommodate Hazard's wrapped definition without overflowing into the section below. Row heights in the two-column layout are not equal — the implementer should position each entry below the previous one rather than assuming a fixed row height.</p>
+    <p>Keyword definitions are static strings in <code>overlays.ts</code> — they are game-rules prose, not data-driven. If definitions need per-world variation in the future, that is a new requirement.</p>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════════ -->
+<h2>Content — in this world</h2>
+
+<div class="req" id="HELP-8">
+  <div class="req-header" onclick="toggle('HELP-8')">
+    <span class="req-id">REQ-HELP-8</span>
+    <span class="req-title">"In This World" section title shows the world's display name; content is world-aware</span>
+    <span class="req-status status-must">Must</span>
+  </div>
+  <div class="req-body">
+    <p>The section header reads <strong>"IN THIS WORLD — [name]"</strong> where <code>[name]</code> is the world's <code>WorldDisplayData.name</code> from <code>worldDisplayManifest</code> (e.g. "The Big Box").</p>
+    <p>Each mechanic note is rendered as a title line followed by a detail sentence. The title is styled distinctly (accent color or bold); the detail is standard body text.</p>
+    <p>If <code>worldHelpManifest[worldId]</code> is <code>undefined</code> at runtime, throw immediately with a clear error: <code>"No help entry for worldId: &lt;id&gt;"</code>. The completeness test (REQ-HELP-12) is the primary guard; the throw is belt-and-suspenders.</td>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════════ -->
+<h2>Content authoring model</h2>
+
+<div class="req" id="HELP-9">
+  <div class="req-header" onclick="toggle('HELP-9')">
+    <span class="req-id">REQ-HELP-9</span>
+    <span class="req-title">WorldHelpData type and worldHelpManifest are defined in src/data/worldHelpManifest.ts</span>
+    <span class="req-status status-must">Must</span>
+  </div>
+  <div class="req-body">
+    <p>A new file <code>src/data/worldHelpManifest.ts</code> exports:</p>
+    <pre>export interface WorldMechanicNote {
+  title:  string   // Short label, e.g. "Zombies grow"
+  detail: string   // 1–2 sentences explaining the mechanic
+}
+
+export interface WorldHelpData {
+  mechanics: readonly WorldMechanicNote[]
+}
+
+export const worldHelpManifest: Record&lt;string, WorldHelpData&gt;</pre>
+    <p>This file has no game-logic dependency and must NOT be imported by <code>core</code> or <code>engine</code> modules. It mirrors the separation established by <code>worldDisplayManifest.ts</code>.</p>
+  </div>
+</div>
+
+<div class="req" id="HELP-10">
+  <div class="req-header" onclick="toggle('HELP-10')">
+    <span class="req-id">REQ-HELP-10</span>
+    <span class="req-title">zombie-big-box has four mechanic notes covering its escalation behaviors</span>
+    <span class="req-status status-must">Must</span>
+  </div>
+  <div class="req-body">
+    <p>The <code>'zombie-big-box'</code> entry must cover these four mechanics:</p>
+    <ul>
+      <li><strong>Zombies grow</strong> — A Zombie in your hand deals 1 damage and adds another Zombie to the world deck at end of every turn. Clear them before they multiply.</li>
+      <li><strong>Corpses transform</strong> — A Corpse becomes a Zombie at end of turn. Corpses cannot be discarded; they must be cleared or endured.</li>
+      <li><strong>Costly discards</strong> — Discarding a Zombie costs 5 HP. Know your limits before you cut your losses.</li>
+      <li><strong>The Walker and the Door</strong> — The Walker (Act 3, cost 10) is the final hazard. Clearing it adds Summon Door to your hand. Play Summon Door to place the Door (a Hidden hazard, cost 4). Clear the Door to survive the world.</li>
+    </ul>
+    <p>Exact wording is up to the implementer as long as each note accurately describes the mechanic named above.</p>
+  </div>
+</div>
+
+<div class="req" id="HELP-11">
+  <div class="req-header" onclick="toggle('HELP-11')">
+    <span class="req-id">REQ-HELP-11</span>
+    <span class="req-title">bird-building and highway-volcano have placeholder mechanics entries</span>
+    <span class="req-status status-must">Must</span>
+  </div>
+  <div class="req-body">
+    <p><code>'bird-building'</code> and <code>'highway-volcano'</code> each have at least one <code>WorldMechanicNote</code> in their <code>mechanics</code> array. Placeholder notes acknowledge the world without misleading the player — for example:</p>
+    <ul>
+      <li><em>title:</em> <code>"Mechanic notes coming"</code></li>
+      <li><em>detail:</em> <code>"This world's mechanics are still being tuned. Content will be added after rebalancing."</code></li>
+    </ul>
+    <p>The placeholder text must be non-empty strings. An empty array would fail the completeness test (REQ-HELP-12). Full mechanic notes for these worlds are deferred until rebalancing is complete.</p>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════════ -->
+<h2>Tests</h2>
+
+<div class="req" id="HELP-12">
+  <div class="req-header" onclick="toggle('HELP-12')">
+    <span class="req-id">REQ-HELP-12</span>
+    <span class="req-title">A unit test verifies all worlds have a worldHelpManifest entry with at least one mechanic note</span>
+    <span class="req-status status-must">Must</span>
+  </div>
+  <div class="req-body">
+    <p>A unit test confirms:</p>
+    <ul>
+      <li>Every key in <code>Object.keys(worldManifest)</code> has a corresponding entry in <code>worldHelpManifest</code>. The test iterates keys only — it must not invoke the builder functions (calling them throws <code>CatalogError</code> without the Phaser asset cache).</li>
+      <li>Each entry's <code>mechanics</code> array has at least one note.</li>
+      <li>Each note has non-empty <code>title</code> and <code>detail</code> strings.</li>
+    </ul>
+    <p>This test guards against adding a new world without a help entry, which would produce a runtime crash when the player opens help in that world.</p>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════════ -->
+<h2>Layout constraint</h2>
+
+<div class="req" id="HELP-13">
+  <div class="req-header" onclick="toggle('HELP-13')">
+    <span class="req-id">REQ-HELP-13</span>
+    <span class="req-title">All three sections fit within the 900×600 canvas without scrolling at current volume</span>
+    <span class="req-status status-must">Must</span>
+  </div>
+  <div class="req-body">
+    <p>For zombie-big-box (the fullest world), all three sections must be simultaneously visible with no vertical overflow beyond the 600px canvas height. The layout sketch above fits: header (~50px) + base rules (~80px) + keywords (~155px, accounting for Hazard's multi-line entry) + in-this-world (~180px) + internal padding ≈ 565px — within budget.</p>
+    <p>If future content growth pushes beyond this constraint, scrolling may be added in a separate spec. At current volume, Phaser text objects are sufficient — no DOM overlay is needed. This is an explicit revisit trigger: if mechanic notes for all worlds ever exceed ~6 entries total, revisit the layout.</p>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════════ -->
+<h2>Not in scope</h2>
+
+<div class="deferred">
+  <strong>Scrollable glossary</strong> — Phaser text with drag/mask. Deferred; current volume fits without scrolling. Revisit if glossary grows past ~15 keyword terms.
+</div>
+<div class="deferred">
+  <strong>First-run help prompt</strong> — Automatically showing help on the first run of a world. Deferred; requires first-run state tracking.
+</div>
+<div class="deferred">
+  <strong>Keyword tooltips on cards</strong> — Hovering a keyword term on a card face shows its definition inline. Deferred; requires card-face text to carry structured keyword links.
+</div>
+<div class="deferred">
+  <strong>Full bird-building and highway-volcano mechanic sections</strong> — Complete "In This World" content for these worlds. Deferred pending rebalance. Bird-building's notable mechanics (Gripping Talon's ForceDestroy on discard, dual Slow+Creature keyword) should be documented when that world is locked.
+</div>
+<div class="deferred">
+  <strong>Pause menu integration</strong> — If a pause screen is ever added, help should live there. For now, the standalone ? button is sufficient.
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════════ -->
+<h2>AI validation</h2>
+
+<div class="validation">
+  <h3>How to verify this spec is implemented</h3>
+  <p style="color:#6a8a6a;font-size:0.85rem;margin-bottom:1rem">Run these checks in order. All must pass before the spec is marked <em>implemented</em>.</p>
+
+  <h4 style="color:#88aa88;margin:0.8rem 0 0.4rem">Automated</h4>
+
+  <div class="check">
+    <div class="box">□</div>
+    <div class="label"><code>bun test</code> passes. The help-manifest completeness test (REQ-HELP-12) exists and is green: every worldId in <code>worldManifest</code> has a corresponding entry in <code>worldHelpManifest</code>, each entry has at least one mechanic note, and each note has non-empty <code>title</code> and <code>detail</code> strings.</div>
+  </div>
+  <div class="check">
+    <div class="box">□</div>
+    <div class="label">TypeScript strict check passes with no errors (<code>tsc --noEmit</code>).</div>
+  </div>
+  <div class="check">
+    <div class="box">□</div>
+    <div class="label">ESLint passes with no new warnings.</div>
+  </div>
+
+  <h4 style="color:#88aa88;margin:0.8rem 0 0.4rem">Browser (manual)</h4>
+
+  <div class="check">
+    <div class="box">□</div>
+    <div class="label">Launch game (<code>bun run dev</code>), select zombie-big-box. A ? button is visible in the top-right of the canvas during gameplay. It is not present on the win or loss overlay.</div>
+  </div>
+  <div class="check">
+    <div class="box">□</div>
+    <div class="label">Click the ? button. The help overlay appears covering the canvas. The game board is visible (or dimmed) underneath. Three sections are present: "HOW IT WORKS", "KEYWORDS", and "IN THIS WORLD — The Big Box".</div>
+  </div>
+  <div class="check">
+    <div class="box">□</div>
+    <div class="label">While the help overlay is open, clicking a card or the end-turn button has no effect. The game state does not change.</div>
+  </div>
+  <div class="check">
+    <div class="box">□</div>
+    <div class="label">Base Rules section shows HP: 10, energy +1 per turn, hand size 6, and acts 3.</div>
+  </div>
+  <div class="check">
+    <div class="box">□</div>
+    <div class="label">Keywords section shows all seven terms: Energy, Progress, Hazard, Hidden, Creature, Slow, ForceDestroy. Each has a definition. Layout is two-column with no text overflow.</div>
+  </div>
+  <div class="check">
+    <div class="box">□</div>
+    <div class="label">In This World section shows four mechanic notes for zombie-big-box covering: Zombies escalating, Corpses transforming, costly Zombie discards, and the Walker/Door win path.</div>
+  </div>
+  <div class="check">
+    <div class="box">□</div>
+    <div class="label">All three sections are visible simultaneously without scrolling. No content is cut off at the bottom of the canvas.</div>
+  </div>
+  <div class="check">
+    <div class="box">□</div>
+    <div class="label">Click the X button in the overlay. The overlay disappears. Game interaction is restored — cards respond to clicks and hover states again.</div>
+  </div>
+  <div class="check">
+    <div class="box">□</div>
+    <div class="label">Open the overlay again, then press Escape. The overlay dismisses.</div>
+  </div>
+  <div class="check">
+    <div class="box">□</div>
+    <div class="label">Start a bird-building run. Open help. "In This World" section shows the bird-building placeholder note. No crash.</div>
+  </div>
+  <div class="check">
+    <div class="box">□</div>
+    <div class="label">Start a highway-volcano run. Open help. "In This World" section shows the highway-volcano placeholder note. No crash.</div>
+  </div>
+</div>
+
+</div><!-- /.wrap -->
+
+<script>
+  function toggle(id) {
+    const el = document.getElementById(id)
+    el.classList.toggle('open')
+    const body = el.querySelector('.req-body')
+    if (body) body.style.display = el.classList.contains('open') ? 'block' : 'none'
+  }
+
+  // Show req bodies by default
+  document.querySelectorAll('.req-body').forEach(b => b.style.display = 'block')
+
+  // Count requirements
+  const reqs = document.querySelectorAll('.req')
+  document.getElementById('req-count').textContent = `${reqs.length} requirements`
+</script>
+
+</body>
+</html>

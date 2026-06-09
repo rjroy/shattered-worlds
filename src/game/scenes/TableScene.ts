@@ -44,8 +44,8 @@ import {
 } from '../view/cardObjects'
 import { createHUD, updateHUD } from '../view/hud'
 import type { HUDRefs } from '../view/hud'
-import { createWinScreen, createLossScreen } from '../view/overlays'
-import { textStyle } from '../view/presentation'
+import { createWinScreen, createLossScreen, createHelpOverlay } from '../view/overlays'
+import { textStyle, TEXT } from '../view/presentation'
 import { ringFraction, connectorLine, selectConnectorStyle, effectAtStep } from '../interaction/feedback'
 import type { ConnectorStyle } from '../interaction/feedback'
 import { drawConnector } from '../view/connector'
@@ -106,6 +106,8 @@ export class TableScene extends Phaser.Scene {
   private confirmBtn!: CommonButton
   private winScreen!: Phaser.GameObjects.Container
   private lossScreen!: Phaser.GameObjects.Container
+  private helpOverlay!: Phaser.GameObjects.Container
+  private questionBtn!: CommonButton
 
   // Modal chooser UI (created/destroyed per card play)
   private modalContainer: Phaser.GameObjects.Container | null = null
@@ -203,6 +205,24 @@ export class TableScene extends Phaser.Scene {
 
     this.winScreen = createWinScreen(this)
     this.lossScreen = createLossScreen(this)
+
+    this.helpOverlay = createHelpOverlay(
+      this,
+      this.worldId_,
+      this.game_.state.totalActs,
+    )
+
+    const questionStyle = textStyle({
+      fontSize: '16px',
+      fontStyle: 'bold',
+      color: TEXT.textLight,
+    })
+    this.questionBtn = new CommonButton(this, 860, 22, '?', questionStyle)
+      .on('pointerup', () => this.helpOverlay.setVisible(true))
+
+    this.input.keyboard?.on('keydown-ESC', () => {
+      if (this.helpOverlay.visible) this.helpOverlay.setVisible(false)
+    })
 
     this.selectionHint = new CommonLabel(this, 450, 578, '', textStyle({
       fontSize: '12px',
@@ -329,6 +349,10 @@ export class TableScene extends Phaser.Scene {
       this.lossScreen.setVisible(true)
       this.winScreen.setVisible(false)
     }
+
+    // Help overlay / ? button
+    this.questionBtn.setVisible(state.status === 'playing')
+    if (state.status !== 'playing') this.helpOverlay.setVisible(false)
   }
 
   /**

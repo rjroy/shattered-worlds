@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Implementation plan: help screen</title>
+  <meta name="date" content="2026-06-08">
+  <meta name="status" content="draft">
+  <meta name="tags" content="plan, ui, overlay, help, hud, phaser, keywords">
+  <meta name="modules" content="table-scene, overlays, world-help-manifest">
+  <meta name="related" content=".lore/work/specs/help-screen.html, .lore/work/brainstorm/story-detail-and-help-screens.html">
+  <style>
+    :root {
+      --bg: #0f1117;
+      --surface: #181c28;
+      --surface2: #1f2436;
+      --border: #2a3050;
+      --text: #c8cde0;
+      --muted: #6b7099;
+      --accent: #7eb8f7;
+      --gold: #e8c56a;
+      --green: #72c472;
+      --red: #e06060;
+      --purple: #a78bfa;
+      --yellow: #f0d070;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      font-size: 15px;
+      line-height: 1.6;
+    }
+
+    /* ── Sticky header ─────────────────────────────────────────────── */
+    #sticky-header {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(15,17,23,0.95);
+      backdrop-filter: blur(8px);
+      border-bottom: 1px solid var(--border);
+      padding: 0.6rem 2rem;
+      display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;
+    }
+    #sticky-header .title { font-weight: 700; color: var(--accent); font-size: 1rem; }
+    .badge {
+      display: inline-block; padding: 2px 10px; border-radius: 4px;
+      font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em;
+    }
+    .badge-draft    { background: #2a2218; color: var(--gold); border: 1px solid #4a3a28; }
+    .badge-approved { background: #182818; color: var(--green); border: 1px solid #285028; }
+    #sticky-header .counts { color: var(--muted); font-size: 0.8rem; margin-left: auto; }
+
+    /* ── Body layout ────────────────────────────────────────────────── */
+    .wrap { max-width: 960px; margin: 0 auto; padding: 2.5rem 2rem 6rem; }
+    h1 { font-size: 1.7rem; color: var(--accent); margin-bottom: 0.25rem; }
+    .meta { color: var(--muted); font-size: 0.85rem; margin-bottom: 2.5rem; }
+    h2 { font-size: 1.1rem; color: var(--gold); margin: 2.5rem 0 0.8rem;
+      border-bottom: 1px solid var(--border); padding-bottom: 0.4rem; }
+    p { margin-bottom: 0.8rem; }
+
+    /* ── Step sequence ──────────────────────────────────────────────── */
+    .steps { display: flex; flex-direction: column; gap: 0; margin: 1rem 0; }
+
+    .step {
+      display: grid;
+      grid-template-columns: 52px 1fr;
+      gap: 0 1.2rem;
+    }
+    .step-spine {
+      display: flex; flex-direction: column; align-items: center;
+    }
+    .step-num {
+      width: 36px; height: 36px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 0.85rem;
+      flex-shrink: 0;
+    }
+    .num-impl  { background: #1a2a3a; color: var(--accent); border: 2px solid var(--accent); }
+    .num-gate  { background: #1a2a1a; color: var(--green);  border: 2px solid var(--green);  }
+    .num-valid { background: #2a1a2a; color: var(--purple); border: 2px solid var(--purple); }
+
+    .step-line {
+      width: 2px; background: var(--border); flex: 1; min-height: 16px; margin: 4px 0;
+    }
+    .step-line-end { background: transparent; }
+
+    .step-body {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      margin-bottom: 8px;
+      overflow: hidden;
+    }
+    .step-body.gate  { border-color: #285028; background: #0d1a0d; }
+    .step-body.final { border-color: #3a2858; background: #120d1a; }
+
+    .step-header {
+      display: flex; align-items: center; gap: 0.7rem;
+      padding: 0.7rem 1rem;
+      cursor: pointer; user-select: none;
+    }
+    .step-header:hover { background: var(--surface2); }
+    .step-header.gate:hover  { background: #152015; }
+    .step-header.final:hover { background: #1a1028; }
+
+    .step-tag {
+      font-size: 0.68rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.07em; padding: 2px 7px; border-radius: 3px;
+    }
+    .tag-impl  { background: #1a2a3a; color: var(--accent); }
+    .tag-gate  { background: #182818; color: var(--green);  }
+    .tag-valid { background: #1a1028; color: var(--purple); }
+
+    .step-title { flex: 1; font-weight: 600; }
+    .step-detail {
+      padding: 0 1rem 0.9rem 1rem;
+      font-size: 0.91rem;
+      border-top: 1px solid var(--border);
+    }
+    .step-detail.gate  { border-top-color: #285028; }
+    .step-detail.final { border-top-color: #3a2858; }
+    .step-detail p { margin-top: 0.6rem; margin-bottom: 0; }
+    .step-detail p + p { margin-top: 0.4rem; }
+    .step-detail ul { padding-left: 1.3rem; margin-top: 0.5rem; }
+    .step-detail li { margin-bottom: 0.3rem; }
+    .step-detail code {
+      background: var(--surface2); padding: 0.1em 0.35em;
+      border-radius: 3px; font-size: 0.87em; color: var(--yellow);
+    }
+    .step-detail pre {
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 6px; padding: 0.75rem 1rem;
+      font-size: 0.82rem; color: var(--yellow);
+      line-height: 1.5; overflow-x: auto; margin-top: 0.6rem;
+    }
+    .step-detail h4 { color: var(--accent); font-size: 0.85rem; margin: 0.8rem 0 0.3rem; }
+
+    /* ── File badge ─────────────────────────────────────────────────── */
+    .file-list { display: flex; flex-wrap: wrap; gap: 0.4rem; margin: 0.6rem 0; }
+    .file-badge {
+      font-family: monospace; font-size: 0.78rem;
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 4px; padding: 2px 8px; color: var(--yellow);
+    }
+    .file-badge.new { border-color: var(--green); color: var(--green); background: #0d1a0d; }
+    .file-badge.mod { border-color: var(--accent); color: var(--accent); background: #0d1828; }
+
+    /* ── Warning / note callout ─────────────────────────────────────── */
+    .note {
+      border-left: 3px solid var(--gold);
+      background: rgba(232,197,106,0.06);
+      padding: 0.6rem 0.9rem;
+      border-radius: 0 6px 6px 0;
+      margin: 0.7rem 0;
+      font-size: 0.88rem;
+    }
+    .note strong { color: var(--gold); }
+  </style>
+</head>
+<body>
+
+<div id="sticky-header">
+  <span class="title">Implementation plan: help screen</span>
+  <span class="badge badge-draft">Draft</span>
+  <span class="counts" id="step-count">Loading…</span>
+</div>
+
+<div class="wrap">
+<h1>Implementation plan: help screen</h1>
+<p class="meta">
+  Plan · 2026-06-08 · status: draft<br>
+  Source spec: <a href="../specs/help-screen.html">help-screen.html</a> (REQ-HELP-1 through REQ-HELP-13)<br>
+  Brainstorm: <a href="../brainstorm/story-detail-and-help-screens.html">story-detail-and-help-screens.html</a>
+</p>
+
+<p>Four steps plus a validation pass. Steps 1 and 2 (data file + test) are independent and can proceed in either order. Steps 3 and 4 build on step 1. Each step ends with a gate check before proceeding.</p>
+
+<h2>Steps</h2>
+
+<div class="steps">
+
+  <!-- ── STEP 1 ─────────────────────────────────────────────────────── -->
+  <div class="step">
+    <div class="step-spine">
+      <div class="step-num num-impl">1</div>
+      <div class="step-line"></div>
+    </div>
+    <div class="step-body">
+      <div class="step-header" onclick="toggle('s1')">
+        <span class="step-tag tag-impl">New file</span>
+        <span class="step-title">Create worldHelpManifest.ts with types and three-world content</span>
+      </div>
+      <div class="step-detail" id="s1">
+        <div class="file-list">
+          <span class="file-badge new">src/data/worldHelpManifest.ts</span>
+        </div>
+
+        <h4>Types to define</h4>
+        <pre>export interface WorldMechanicNote {
+  title:  string   // e.g. "Zombies grow"
+  detail: string   // 1–2 sentences explaining the mechanic
+}
+
+export interface WorldHelpData {
+  mechanics: readonly WorldMechanicNote[]
+}
+
+export const worldHelpManifest: Record&lt;string, WorldHelpData&gt;</pre>
+
+        <h4>No core/engine imports</h4>
+        <p>This file is UI-only. It must not import from <code>src/core</code> or <code>src/game/view</code>. The only allowed imports are the types defined in this file itself.</p>
+
+        <h4>zombie-big-box entry — 4 mechanic notes</h4>
+        <ul>
+          <li><strong>Zombies grow</strong> — A Zombie in your hand deals 1 damage and adds another Zombie to the world deck at end of every turn. Clear them before they multiply.</li>
+          <li><strong>Corpses transform</strong> — A Corpse becomes a Zombie at end of turn. Corpses cannot be discarded; they must be cleared or endured.</li>
+          <li><strong>Costly discards</strong> — Discarding a Zombie costs 5 HP. Know your limits before you cut your losses.</li>
+          <li><strong>The Walker and the Door</strong> — The Walker (Act 3, cost 10) is the final hazard. Clearing it adds Summon Door to your hand. Play Summon Door to place the Door (a Hidden hazard, cost 4). Clear the Door to survive the world.</li>
+        </ul>
+        <p>Exact wording is flexible; the four topics must be covered.</p>
+
+        <h4>bird-building and highway-volcano entries — placeholders</h4>
+        <p>One mechanic note each. Non-empty <code>title</code> and <code>detail</code> strings acknowledging that full content is deferred. Example:</p>
+        <pre>{ title: 'Mechanic notes coming',
+  detail: 'This world\'s mechanics are still being tuned. '
+        + 'Notes will be added after rebalancing.' }</pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── GATE 1 ─────────────────────────────────────────────────────── -->
+  <div class="step">
+    <div class="step-spine">
+      <div class="step-num num-gate">✓</div>
+      <div class="step-line"></div>
+    </div>
+    <div class="step-body gate">
+      <div class="step-header gate" onclick="toggle('g1')">
+        <span class="step-tag tag-gate">Gate</span>
+        <span class="step-title">tsc --noEmit passes with no errors on the new file</span>
+      </div>
+      <div class="step-detail gate" id="g1">
+        <p>Run <code>tsc --noEmit</code>. The new file must be clean. No <code>any</code> types, no unused imports. If TypeScript raises errors, fix them before proceeding to step 2.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── STEP 2 ─────────────────────────────────────────────────────── -->
+  <div class="step">
+    <div class="step-spine">
+      <div class="step-num num-impl">2</div>
+      <div class="step-line"></div>
+    </div>
+    <div class="step-body">
+      <div class="step-header" onclick="toggle('s2')">
+        <span class="step-tag tag-impl">New test</span>
+        <span class="step-title">Write worldHelpManifest completeness test</span>
+      </div>
+      <div class="step-detail" id="s2">
+        <div class="file-list">
+          <span class="file-badge new">src/core/tests/worldHelpManifest.test.ts</span>
+        </div>
+
+        <p>Mirrors the pattern in <code>src/core/tests/worldDisplayManifest.test.ts</code> exactly. Two <code>it()</code> blocks:</p>
+        <pre>import { describe, expect, it } from 'bun:test'
+import { worldManifest } from '../../data/worldManifest'
+import { worldHelpManifest } from '../../data/worldHelpManifest'
+
+describe('worldHelpManifest', () => {
+  const worldIds = Object.keys(worldManifest)  // keys only — never call builders
+
+  it('has an entry for every world in worldManifest', () => {
+    for (const id of worldIds) {
+      expect(worldHelpManifest[id]).toBeDefined()
+    }
+  })
+
+  it('every entry has at least one mechanic note with non-empty title and detail', () => {
+    for (const id of worldIds) {
+      const entry = worldHelpManifest[id]!
+      expect(entry.mechanics.length).toBeGreaterThan(0)
+      for (const note of entry.mechanics) {
+        expect(note.title.length).toBeGreaterThan(0)
+        expect(note.detail.length).toBeGreaterThan(0)
+      }
+    }
+  })
+})</pre>
+        <p>Calling the builder functions (e.g. <code>worldManifest['zombie-big-box']()</code>) throws <code>CatalogError</code> in the test environment because the Phaser asset cache is absent. The test must not call them.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── GATE 2 ─────────────────────────────────────────────────────── -->
+  <div class="step">
+    <div class="step-spine">
+      <div class="step-num num-gate">✓</div>
+      <div class="step-line"></div>
+    </div>
+    <div class="step-body gate">
+      <div class="step-header gate" onclick="toggle('g2')">
+        <span class="step-tag tag-gate">Gate</span>
+        <span class="step-title">bun test passes — new test exists and is green</span>
+      </div>
+      <div class="step-detail gate" id="g2">
+        <p>Run <code>bun test</code>. The two new <code>worldHelpManifest</code> tests must be green. All previously passing tests must still pass — no regressions. Fix any failures before step 3.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── STEP 3 ─────────────────────────────────────────────────────── -->
+  <div class="step">
+    <div class="step-spine">
+      <div class="step-num num-impl">3</div>
+      <div class="step-line"></div>
+    </div>
+    <div class="step-body">
+      <div class="step-header" onclick="toggle('s3')">
+        <span class="step-tag tag-impl">Modify</span>
+        <span class="step-title">Add createHelpOverlay factory to overlays.ts</span>
+      </div>
+      <div class="step-detail" id="s3">
+        <div class="file-list">
+          <span class="file-badge mod">src/game/view/overlays.ts</span>
+        </div>
+
+        <h4>Function signature</h4>
+        <pre>export function createHelpOverlay(
+  scene: Phaser.Scene,
+  worldId: string,
+  totalActs: number,
+): Phaser.GameObjects.Container</pre>
+
+        <h4>Required imports (add to overlays.ts)</h4>
+        <pre>import { WORLD_CONSTS } from '../../core/engine/world'
+import { TEXT } from './presentation'
+import { worldDisplayManifest } from '../../data/worldDisplayManifest'
+import { worldHelpManifest } from '../../data/worldHelpManifest'</pre>
+
+        <h4>Guard — throw on missing manifest entry</h4>
+        <pre>const helpData = worldHelpManifest[worldId]
+if (helpData === undefined) {
+  throw new Error(`No help entry for worldId: ${worldId}`)
+}
+const displayData = worldDisplayManifest[worldId]
+if (displayData === undefined) {
+  throw new Error(`No display entry for worldId: ${worldId}`)
+}</pre>
+
+        <h4>Container setup</h4>
+        <p>Matches the win/loss overlay pattern:</p>
+        <pre>const container = scene.add.container(CANVAS_W / 2, CANVAS_H / 2)
+container.setDepth(1000)
+container.setVisible(false)</pre>
+
+        <h4>Background rectangle — must call setInteractive()</h4>
+        <p>Uses a slightly higher alpha than win/loss (0.92 vs 0.8) so text is legible over the game board.</p>
+        <pre>const bg = scene.add.rectangle(0, 0, CANVAS_W, CANVAS_H, 0x080a12, 0.92)
+bg.setInteractive()  // swallows pointer events; blocks game board input (topOnly default)
+container.add(bg)</pre>
+
+        <div class="note">
+          <strong>topOnly reliance:</strong> Phaser's input system defaults to <code>topOnly = true</code>, meaning only the highest-depth interactive object under the pointer fires events. The background rect at depth 1000 therefore blocks cards and buttons at depth 0 without any per-card <code>disableInteractive()</code> loop. If <code>topOnly</code> is ever disabled globally, this behavior changes — see REQ-HELP-3.
+        </div>
+
+        <h4>Section 1 — HOW IT WORKS</h4>
+        <p>Positioned near top of panel. All Y coordinates are relative to the container center (0,0) at canvas center (450, 300). Approximate anchor for section 1: y ≈ −230.</p>
+        <ul>
+          <li>Section header: <code>"HOW IT WORKS"</code> — gold, uppercase, small font</li>
+          <li>Content line: <code>`HP: ${WORLD_CONSTS.startHp}  ·  Energy: +1 per turn  ·  Hand: ${WORLD_CONSTS.maxHandSize} cards  ·  Acts: ${totalActs}`</code> — muted text, single line</li>
+        </ul>
+
+        <h4>Section 2 — KEYWORDS (two-column layout)</h4>
+        <p>Left column starts at x ≈ −380, right column at x ≈ 10. Each column is 380px wide (<code>wordWrap: { width: 380 }</code>). Rows are positioned with variable heights — advance y by <code>textObject.height + rowGap</code> after each entry, not by a fixed stride. The Hazard entry wraps to ~3 lines; other entries are single-line.</p>
+        <p>Left column entries (in order): Energy, Progress, Hazard, Hidden. Right column: Creature, Slow, ForceDestroy.</p>
+        <p>Keyword names use <code>TEXT.textKeyword</code> (<code>'#88ccff'</code>). Definitions use <code>TEXT.textMuted</code>. Render each entry as two separate text objects (name + definition) OR as a single text object with the name bolded via Phaser's BBCode/style tags — either approach is acceptable.</p>
+
+        <div class="note">
+          <strong>Variable row heights:</strong> The Hazard entry has a three-part definition (clear / discard / end-of-turn). At 370px wrap width it will be significantly taller than the single-line entries. Both columns must be laid out by tracking a running y offset, not by assuming a fixed row height.
+        </div>
+
+        <h4>Section 3 — IN THIS WORLD</h4>
+        <p>Header: <code>`IN THIS WORLD — ${displayData.name}`</code>. Then for each note in <code>helpData.mechanics</code>:</p>
+        <ul>
+          <li>Title: <code>note.title</code> — accent color (<code>TEXT.textKeyword</code>), bold</li>
+          <li>Detail: <code>note.detail</code> — muted, word-wrapped to ~750px width</li>
+        </ul>
+        <p>Advance y by each rendered text height + gap after each note.</p>
+
+        <h4>X dismiss button</h4>
+        <p>A simple <code>scene.add.text</code> or <code>CommonButton</code> labeled <code>"×"</code>, positioned top-right of the panel (approximately x = 380, y = −265). Wire the dismiss internally:</p>
+        <pre>closeBtn.setInteractive({ useHandCursor: true })
+closeBtn.on('pointerup', () => container.setVisible(false))
+container.add(closeBtn)</pre>
+        <p><strong>Add children to the container in this order:</strong> background rect first (behind everything), then section content, then close button last (on top).</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── GATE 3 ─────────────────────────────────────────────────────── -->
+  <div class="step">
+    <div class="step-spine">
+      <div class="step-num num-gate">✓</div>
+      <div class="step-line"></div>
+    </div>
+    <div class="step-body gate">
+      <div class="step-header gate" onclick="toggle('g3')">
+        <span class="step-tag tag-gate">Gate</span>
+        <span class="step-title">tsc --noEmit clean; overlay renders visually correct in dev</span>
+      </div>
+      <div class="step-detail gate" id="g3">
+        <p>Run <code>tsc --noEmit</code>. Then in <code>TableScene.create()</code> temporarily add one line immediately after the <code>createHelpOverlay</code> call: <code>this.helpOverlay.setVisible(true)</code>. Run <code>bun run dev</code> and verify:</p>
+        <ul>
+          <li>Three sections visible, correctly labeled "HOW IT WORKS", "KEYWORDS", "IN THIS WORLD — The Big Box"</li>
+          <li>Keywords two-column layout — no text overflow, Hazard entry wraps correctly</li>
+          <li>zombie-big-box mechanic notes appear (4 entries)</li>
+          <li>No content cut off below canvas edge</li>
+        </ul>
+        <p>Remove the temporary <code>setVisible(true)</code> line before proceeding to step 4.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── STEP 4 ─────────────────────────────────────────────────────── -->
+  <div class="step">
+    <div class="step-spine">
+      <div class="step-num num-impl">4</div>
+      <div class="step-line"></div>
+    </div>
+    <div class="step-body">
+      <div class="step-header" onclick="toggle('s4')">
+        <span class="step-tag tag-impl">Modify</span>
+        <span class="step-title">Wire ? button, overlay creation, and Escape dismiss in TableScene</span>
+      </div>
+      <div class="step-detail" id="s4">
+        <div class="file-list">
+          <span class="file-badge mod">src/game/scenes/TableScene.ts</span>
+        </div>
+
+        <h4>New instance properties (add after the win/loss screen declarations)</h4>
+        <pre>private helpOverlay!: Phaser.GameObjects.Container
+private questionBtn!: CommonButton</pre>
+
+        <h4>In create() — after winScreen / lossScreen creation (lines 204–205)</h4>
+        <pre>this.helpOverlay = createHelpOverlay(
+  this,
+  this.worldId_,
+  this.game_.state.totalActs,
+)
+
+const questionStyle = textStyle({
+  fontSize: '16px',
+  fontStyle: 'bold',
+  color: TEXT.textLight,
+})
+this.questionBtn = new CommonButton(this, 860, 22, '?', questionStyle)
+  .on('pointerup', () => this.helpOverlay.setVisible(true))
+
+this.input.keyboard?.on('keydown-ESC', () => {
+  if (this.helpOverlay.visible) this.helpOverlay.setVisible(false)
+})</pre>
+
+        <div class="note">
+          <strong>Import additions needed:</strong> <code>createHelpOverlay</code> is exported from <code>overlays.ts</code> — add it to the existing import. <code>TEXT</code> is not yet imported in <code>TableScene.ts</code> — add it to the <code>presentation</code> import line.
+        </div>
+
+        <h4>In drawAll() — after the win/loss visibility block (lines 326–330)</h4>
+        <pre>this.questionBtn.setVisible(state.status === 'playing')
+if (state.status !== 'playing') this.helpOverlay.setVisible(false)</pre>
+        <p>The first line hides the ? button on win/loss screens. The second dismisses the help overlay if the player wins or loses while it is open — without it, the overlay persists over the win/loss screen. During normal gameplay (<code>status === 'playing'</code>) the help overlay's visibility is managed by user action only and must not be touched.</p>
+
+        <h4>No changes to drawAll()'s card reconciliation loop</h4>
+        <p>The overlay's input blocking is handled by the background rect's <code>setInteractive()</code>. No card or button needs <code>disableInteractive()</code> while help is open.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── FINAL VALIDATION ───────────────────────────────────────────── -->
+  <div class="step">
+    <div class="step-spine">
+      <div class="step-num num-valid">5</div>
+      <div class="step-line step-line-end"></div>
+    </div>
+    <div class="step-body final">
+      <div class="step-header final" onclick="toggle('s5')">
+        <span class="step-tag tag-valid">Validate</span>
+        <span class="step-title">Full validation against REQ-HELP-1 through REQ-HELP-13</span>
+      </div>
+      <div class="step-detail final" id="s5">
+        <h4>Automated</h4>
+        <ul>
+          <li><code>bun test</code> — all tests pass including the two new <code>worldHelpManifest</code> tests</li>
+          <li><code>tsc --noEmit</code> — no errors</li>
+          <li><code>eslint src/</code> — no new warnings</li>
+        </ul>
+
+        <h4>Browser — zombie-big-box run</h4>
+        <ul>
+          <li>? button visible in top-right during gameplay; absent on win/loss screen</li>
+          <li>Click ? → overlay appears: three sections, correct labels, no content cut off</li>
+          <li>While overlay open: click a card and end-turn button → no game state change</li>
+          <li>Base Rules: HP 10, Energy +1/turn, Hand 6, Acts 3</li>
+          <li>Keywords: all 7 terms present; Hazard entry covers clear/discard/end-of-turn; two-column layout intact</li>
+          <li>In This World: "The Big Box" name, 4 mechanic notes present</li>
+          <li>Click × → overlay dismissed, cards respond to interaction again</li>
+          <li>Reopen overlay → press Escape → overlay dismissed</li>
+        </ul>
+
+        <h4>Browser — other worlds</h4>
+        <ul>
+          <li>Bird-building run: open help → placeholder note visible, no crash</li>
+          <li>Highway-volcano run: open help → placeholder note visible, no crash</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /.steps -->
+
+</div><!-- /.wrap -->
+
+<script>
+  function toggle(id) {
+    const el = document.getElementById(id)
+    if (!el) return
+    el.style.display = (el.style.display === 'none') ? 'block' : 'none'
+  }
+
+  // Open all step details by default
+  document.querySelectorAll('.step-detail').forEach(el => el.style.display = 'block')
+
+  // Count implementation steps (not gates or validation)
+  const implSteps = document.querySelectorAll('.tag-impl').length
+  const gateSteps = document.querySelectorAll('.tag-gate').length
+  document.getElementById('step-count').textContent =
+    `${implSteps} implementation steps · ${gateSteps} gates`
+</script>
+
+</body>
+</html>
