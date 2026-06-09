@@ -37,6 +37,7 @@ import { classifyHighlight } from '../interaction/highlight'
 import { CardView } from '../view/CardView'
 import { HUDView } from '../view/HUDView'
 import { createWinScreen, createLossScreen, createHelpOverlay } from '../view/overlays'
+import { EndScreenView } from '../view/EndScreenView'
 import { textStyle, TEXT } from '../view/presentation'
 import { ringFraction, connectorLine, selectConnectorStyle, effectAtStep } from '../interaction/feedback'
 import type { ConnectorStyle } from '../interaction/feedback'
@@ -94,8 +95,8 @@ export class TableScene extends Phaser.Scene {
   private endTurnBtn!: CommonButton
   private cancelBtn!: CommonButton
   private confirmBtn!: CommonButton
-  private winScreen!: Phaser.GameObjects.Container
-  private lossScreen!: Phaser.GameObjects.Container
+  private winScreen!: EndScreenView
+  private lossScreen!: EndScreenView
   private helpOverlay!: Phaser.GameObjects.Container
   private questionBtn!: CommonButton
 

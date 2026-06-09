@@ -1,6 +1,7 @@
 /**
- * Full-screen overlays (win / loss / help). Stateless Phaser factories; the
- * scene toggles visibility based on GameState.status or user input.
+ * Full-screen overlays (win / loss / help). EndScreenView owns the small
+ * terminal overlays; the help overlay remains a factory until its larger
+ * tab/page state gets its own refactor.
  */
 import Phaser from 'phaser'
 import { textStyle, TEXT } from './presentation'
@@ -9,46 +10,56 @@ import { WORLD_CONSTS } from '../../core/engine/world'
 import { worldDisplayManifest } from '../../data/worldDisplayManifest'
 import { worldHelpManifest } from '../../data/worldHelpManifest'
 
-/** Create a full-screen end overlay (hidden by default), centered on the canvas. */
-function createEndScreen(
-  scene: Phaser.Scene,
-  title: string,
-  titleColor: string,
-  subtitle: string,
-): Phaser.GameObjects.Container {
-  const container = scene.add.container(CANVAS_W / 2, CANVAS_H / 2)
-  container.setDepth(1000)
-  container.setVisible(false)
+export interface EndScreenConfig {
+  title: string
+  titleColor: string
+  subtitle: string
+}
 
-  const bg = scene.add.rectangle(0, 0, CANVAS_W, CANVAS_H, 0x000000, 0.8)
-  container.add(bg)
+/** Full-screen terminal overlay (hidden by default), centered on the canvas. */
+export class EndScreenView extends Phaser.GameObjects.Container {
+  constructor(scene: Phaser.Scene, config: EndScreenConfig) {
+    super(scene, CANVAS_W / 2, CANVAS_H / 2)
+    scene.add.existing(this)
+    this.setDepth(1000)
+    this.setVisible(false)
 
-  const text = scene.add.text(0, -30, title, textStyle({
-    fontSize: '72px',
-    color: titleColor,
-    fontStyle: 'bold',
-  }))
-  text.setOrigin(0.5, 0.5)
-  container.add(text)
+    const bg = scene.add.rectangle(0, 0, CANVAS_W, CANVAS_H, 0x000000, 0.8)
+    this.add(bg)
 
-  const sub = scene.add.text(0, 50, subtitle, textStyle({
-    fontSize: '20px',
-    color: '#9aa3b2',
-  }))
-  sub.setOrigin(0.5, 0.5)
-  container.add(sub)
+    const text = scene.add.text(0, -30, config.title, textStyle({
+      fontSize: '72px',
+      color: config.titleColor,
+      fontStyle: 'bold',
+    }))
+    text.setOrigin(0.5, 0.5)
+    this.add(text)
 
-  return container
+    const sub = scene.add.text(0, 50, config.subtitle, textStyle({
+      fontSize: '20px',
+      color: '#9aa3b2',
+    }))
+    sub.setOrigin(0.5, 0.5)
+    this.add(sub)
+  }
 }
 
 /** Create a full-screen win overlay (hidden by default). */
-export function createWinScreen(scene: Phaser.Scene): Phaser.GameObjects.Container {
-  return createEndScreen(scene, 'YOU WIN', '#88ee88', 'You survived.')
+export function createWinScreen(scene: Phaser.Scene): EndScreenView {
+  return new EndScreenView(scene, {
+    title: 'YOU WIN',
+    titleColor: '#88ee88',
+    subtitle: 'You survived.',
+  })
 }
 
 /** Create a full-screen loss overlay (hidden by default). */
-export function createLossScreen(scene: Phaser.Scene): Phaser.GameObjects.Container {
-  return createEndScreen(scene, 'YOU LOSE', '#ff8888', 'You did not survive meeting the Walker.')
+export function createLossScreen(scene: Phaser.Scene): EndScreenView {
+  return new EndScreenView(scene, {
+    title: 'YOU LOSE',
+    titleColor: '#ff8888',
+    subtitle: 'You did not survive meeting the Walker.',
+  })
 }
 
 // ---------------------------------------------------------------------------
