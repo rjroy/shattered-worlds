@@ -47,6 +47,7 @@ interface CardTextOpts {
   wrapWidth?: number   // when set, the text wraps at this width and centers
   lineSpacing?: number
   background?: number
+  backgroundAlpha?: number
 }
 
 /** Add a horizontally-centered text line to a card container; returns it. */
@@ -84,7 +85,10 @@ function addCardText(
       lineText.preFX?.addGlow(textCostInt, 0.8, 0.8)
     }
     if (opts.background !== undefined) {
-      const bg = scene.add.rectangle(lineText.x, lineText.y, lineText.width + 6, lineText.height + 2, opts.background, 0.5)
+      const bg = scene.add.rectangle(
+        lineText.x, lineText.y, lineText.width + 6, lineText.height + 2,
+        opts.background, opts.backgroundAlpha ?? 0.5
+      )
         .setOrigin(0.5, opts.originY)
         .setRounded(4)
       container.add(bg)
@@ -110,14 +114,17 @@ function addEffectBlock(
   color: string,
 ): Phaser.GameObjects.Text[] {
   if (effect.kind === 'None') return []
-  const lines = describeEffect(effect).map((l) => `${prefix}${l}`).join('\n')
-  if (lines === '') return []
+  const effectLines = describeEffect(effect)
+  if (effectLines.length === 0) return []
+  // apply prefix to the first line only.
+  const lines = [prefix + effectLines[0], ...effectLines.slice(1)].join('\n')
   return addCardText(scene, container, 0, y, lines, {
-    fontSize: '9px',
+    fontSize: '10px',
     color,
     originY: 0,
     wrapWidth: CARD_W - 18,
     background: 0x000000,
+    backgroundAlpha: 0.8,
   })
 }
 

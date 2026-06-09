@@ -18,10 +18,10 @@
       "insetKey": "volcano-inset-gridlock",
       "cost": 1,
       "keywords": [],
-      "discardable": true,
-      "onDiscarded": { "kind": "SkipDrawNextTurn" },
+      "discardable": false,
+      "onDiscarded": { "kind": "None" },
       "onCleared": { "kind": "None" },
-      "onEndOfTurn": { "kind": "None" }
+      "onEndOfTurn": { "kind": "AddWorldCardToTop", "template": "Gridlock" }
     },
     "Ash Fall": {
       "kind": "world",
@@ -30,20 +30,26 @@
       "cost": 1,
       "keywords": [],
       "discardable": true,
-      "onDiscarded": { "kind": "GainCard", "template": "Panic" },
+      "onDiscarded": { "kind": "None" },
       "onCleared": { "kind": "GainCard", "template": "Ditch Gear" },
-      "onEndOfTurn": { "kind": "None" }
+      "onEndOfTurn": { "kind": "GainCard", "template": "Panic" }
     },
     "Lava Flow": {
       "kind": "world",
       "name": "Lava Flow",
       "insetKey": "volcano-inset-lava-flow",
       "cost": 3,
-      "keywords": ["Slow", "Creature"],
+      "keywords": ["Slow"],
       "discardable": true,
       "onDiscarded": { "kind": "Damage", "amount": 5 },
       "onCleared": { "kind": "None" },
-      "onEndOfTurn": { "kind": "Damage", "amount": 1 }
+      "onEndOfTurn": {
+        "kind": "Sequence",
+        "steps": [
+          { "kind": "ForceDestroy", "amount": 1 },
+          { "kind": "AddWorldCardToTop", "template": "Ash Fall" }
+        ]
+      }
     },
     "Find a Vehicle": {
       "kind": "world",
@@ -60,18 +66,20 @@
       "kind": "player",
       "name": "Spot a Path",
       "insetKey": "volcano-inset-spot-path",
+      "energyCost": 1,
       "effect": { "kind": "DealProgress", "base": 2, "bonus": { "tag": "Hidden", "amount": 2 } }
     },
     "Floor It": {
       "kind": "player",
       "name": "Floor It",
       "insetKey": "volcano-inset-floor-it",
-      "effect": { "kind": "DealProgress", "base": 1, "bonus": { "tag": "Creature", "amount": 3 } }
+      "effect": { "kind": "DealProgress", "base": 1, "bonus": { "tag": "Slow", "amount": 3 } }
     },
     "Ditch Gear": {
       "kind": "player",
       "name": "Ditch Gear",
       "insetKey": "volcano-inset-ditch-gear",
+      "energyCost": 1,
       "effect": { "kind": "DestroyCardInHand", "min": 0, "max": 1, "maxCost": 2 }
     }
   },
