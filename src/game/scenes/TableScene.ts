@@ -35,8 +35,7 @@ import {
 import type { SelectionState } from '../interaction/selection'
 import { classifyHighlight } from '../interaction/highlight'
 import { CardView } from '../view/CardView'
-import { createHUD, updateHUD } from '../view/hud'
-import type { HUDRefs } from '../view/hud'
+import { HUDView } from '../view/HUDView'
 import { createWinScreen, createLossScreen, createHelpOverlay } from '../view/overlays'
 import { textStyle, TEXT } from '../view/presentation'
 import { ringFraction, connectorLine, selectConnectorStyle, effectAtStep } from '../interaction/feedback'
@@ -90,7 +89,7 @@ export class TableScene extends Phaser.Scene {
   private hoveredCardId: string | null = null
 
   // Persistent HUD objects (created once, updated on drawAll)
-  private hudRefs!: HUDRefs
+  private hudView!: HUDView
   private endTurnBtn!: CommonButton
   private cancelBtn!: CommonButton
   private confirmBtn!: CommonButton
@@ -173,7 +172,7 @@ export class TableScene extends Phaser.Scene {
     this.startWorldMusic(this.game_.state.worldId)
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => this.stopWorldMusic())
 
-    this.hudRefs = createHUD(this)
+    this.hudView = new HUDView(this)
 
     const endTurnStyle = textStyle({
       fontSize: '16px',
@@ -345,7 +344,7 @@ export class TableScene extends Phaser.Scene {
     }
 
     // HUD
-    updateHUD(this.hudRefs, state)
+    this.hudView.update(state)
 
     // Pile stacks (player draw + world draw)
     this.pileLayer.update(this, state.playerDraw.length, state.worldDraw.length, state.playerDiscard.length)
