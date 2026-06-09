@@ -106,7 +106,7 @@ export function createHelpOverlay(
   // ---------------------------------------------------------------------------
 
   // Section header y advances from after the HOW IT WORKS block.
-  let keywordsHeaderY = -195
+  const keywordsHeaderY = -195
 
   const kwHeader = scene.add.text(-380, keywordsHeaderY, 'KEYWORDS', textStyle({
     fontSize: '11px',

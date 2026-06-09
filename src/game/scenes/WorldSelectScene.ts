@@ -74,7 +74,7 @@ export class WorldSelectScene extends Phaser.Scene {
       img.setInteractive({
         useHandCursor: true,
         hitArea: new Phaser.Geom.Rectangle(cropX, cropY, cropW, cropH),
-        hitAreaCallback: (hitArea: Phaser.Geom.Rectangle, x: number, y: number, gameObject: Phaser.GameObjects.GameObject) => {
+        hitAreaCallback: (hitArea: Phaser.Geom.Rectangle, x: number, y: number, _gameObject: Phaser.GameObjects.GameObject) => {
           return hitArea.contains(x, y)
         }
       })
