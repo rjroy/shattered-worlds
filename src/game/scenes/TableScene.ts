@@ -10,6 +10,7 @@
  */
 import Phaser from 'phaser'
 import { assetManifest } from '../data/assetManifest'
+import { worldMusicManifest } from '../data/audioManifest'
 import { getRealityPalette } from '../view/themes/theme'
 import { selectTheme } from '../view/themes/themeManifest'
 import type { VisualTheme } from '../view/themes/theme'
@@ -108,6 +109,7 @@ export class TableScene extends Phaser.Scene {
 
   // Modal chooser UI (created/destroyed per card play)
   private modalContainer: Phaser.GameObjects.Container | null = null
+  private worldMusic: Phaser.Sound.BaseSound | null = null
 
   // Pile layer — persistent containers for player draw and world draw stacks
   private pileLayer!: PileLayer
@@ -154,7 +156,16 @@ export class TableScene extends Phaser.Scene {
       }
     }
 
-    this.load.once('loaderror', () => { this.loadError_ = true })
+    for (const { key, url } of Object.values(worldMusicManifest)) {
+      this.load.audio(key, url)
+    }
+
+    this.load.on('loaderror', (file: Phaser.Loader.File) => {
+      if (file.type === 'json') this.loadError_ = true
+      if (file.type === 'audio') {
+        console.warn(`[TableScene] Music asset failed to load: ${file.key}`)
+      }
+    })
   }
 
   create(): void {
@@ -167,6 +178,8 @@ export class TableScene extends Phaser.Scene {
 
     this.game_ = createGame(catalog, worldData, this.seed_)
     this.theme_ = selectTheme(this.game_.state.worldId)
+    this.startWorldMusic(this.game_.state.worldId)
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => this.stopWorldMusic())
 
     this.hudRefs = createHUD(this)
 
@@ -740,6 +753,26 @@ export class TableScene extends Phaser.Scene {
     this.drawAll()
   }
 
+  private startWorldMusic(worldId: string): void {
+    this.stopWorldMusic()
+
+    const music = worldMusicManifest[worldId]
+    if (music === undefined || !this.cache.audio.exists(music.key)) return
+
+    this.worldMusic = this.sound.add(music.key, {
+      loop: true,
+      volume: 0.45,
+    })
+    this.worldMusic.play()
+  }
+
+  private stopWorldMusic(): void {
+    if (this.worldMusic === null) return
+    this.worldMusic.stop()
+    this.worldMusic.destroy()
+    this.worldMusic = null
+  }
+
   // ---------------------------------------------------------------------------
   // Helpers
   // ---------------------------------------------------------------------------
@@ -890,4 +923,3 @@ export class TableScene extends Phaser.Scene {
     this.selectionHint.setVisible(visible)
   }
 }
-
