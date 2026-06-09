@@ -5,7 +5,6 @@
 import Phaser from 'phaser'
 import type { GameState } from '../../core/index'
 import { TEXT, textStyle } from './presentation'
-import { WORLD_CONSTS } from '../../core/engine/world'
 
 export interface HUDRefs {
   // The whole HUD (backing panel + every label) lives in this container, so the
@@ -26,7 +25,7 @@ export interface HUDRefs {
 // inset) brackets the 14px text sitting at y=10.
 const HUD_PANEL_X = 30
 const HUD_PANEL_Y = 0
-const HUD_PANEL_W = 310
+const HUD_PANEL_W = 280
 const HUD_PANEL_H = 45
 const HUD_PANEL_SIDE_INSET = 20 // left/right: keep the decorated vertical frame
 const HUD_PANEL_EDGE_INSET = 6 // top/bottom: thin frayed edge, interior shows through
@@ -65,8 +64,8 @@ export function createHUD(scene: Phaser.Scene): HUDRefs {
   // Origin (0, 0.5): x is the panel-relative left edge of the label, y is the
   // panel's vertical center, so every label is vertically centered in the bar.
   const hpText = scene.add.text(30, HUD_PANEL_H / 2, 'HP: —', { ...style, color: TEXT.textHp })
-  const actText = scene.add.text(140, HUD_PANEL_H / 2, 'Act 1 / 3', style)
-  const energyText = scene.add.text(260, HUD_PANEL_H / 2, '—', { ...style, color: TEXT.textEnergy })
+  const actText = scene.add.text(110, HUD_PANEL_H / 2, 'Act 1 / 3', style)
+  const energyText = scene.add.text(230, HUD_PANEL_H / 2, '—', { ...style, color: TEXT.textEnergy })
   const energyIcon = scene.add.image(energyText.x - 9, energyText.y, 'energy-icon').setDisplaySize(28, 28)
 
   for (const label of [hpText, actText, energyText, energyIcon]) {
@@ -82,7 +81,7 @@ export function createHUD(scene: Phaser.Scene): HUDRefs {
 
 /** Update HUD text to match the current GameState. */
 export function updateHUD(refs: HUDRefs, state: GameState): void {
-  refs.hpText.setText(`HP: ${state.hp}/${WORLD_CONSTS.startHp}`)
+  refs.hpText.setText(`HP: ${state.hp}`)
   refs.actText.setText(`Act ${state.actIndex + 1} / ${state.totalActs}`)
   refs.energyText.setText(`${state.energy}`)
 }

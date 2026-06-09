@@ -19,7 +19,7 @@
       "cost": 1,
       "keywords": [],
       "discardable": true,
-      "onDiscarded": { "kind": "SkipDrawNextTurn" },
+      "onDiscarded": { "kind": "ForceDestroy", "amount": 1 },
       "onCleared": { "kind": "None" },
       "onEndOfTurn": { "kind": "None" }
     },
@@ -39,9 +39,9 @@
       "name": "Gripping Talon",
       "insetKey": "bird-inset-gripping-talon",
       "cost": 3,
-      "keywords": ["Slow", "Creature"],
+      "keywords": ["Hidden", "Creature"],
       "discardable": true,
-      "onDiscarded": { "kind": "ForceDestroy" },
+      "onDiscarded": { "kind": "ForceDestroy", "amount": 1 },
       "onCleared": { "kind": "None" },
       "onEndOfTurn": { "kind": "Damage", "amount": 1 }
     },
@@ -60,6 +60,7 @@
       "kind": "player",
       "name": "Find Footing",
       "insetKey": "bird-inset-find-footing",
+      "energyCost": 1,
       "effect": { "kind": "DealProgress", "base": 2, "bonus": { "tag": "Hidden", "amount": 2 } }
     },
     "Fire Axe": {
@@ -72,6 +73,7 @@
       "kind": "player",
       "name": "Steady",
       "insetKey": "bird-inset-steady",
+      "energyCost": 1,
       "effect": { "kind": "DestroyCardInHand", "min": 0, "max": 1, "maxCost": 2 }
     }
   },

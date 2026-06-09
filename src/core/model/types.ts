@@ -29,7 +29,7 @@ export type CardEffect =
   | { kind: 'SurviveWorld' }
   // Queues a forced destruction of a random player card from the *next* hand.
   // Resolves at turn start after the hand refills (see resolveForceDestroy).
-  | { kind: 'ForceDestroy' }
+  | { kind: 'ForceDestroy'; amount: number }
   // Removes the world card whose hook is firing (its selfId) from hand. Used by
   // onEndOfTurn to let a card degrade into another (Corpse → Zombie).
   | { kind: 'DestroySelf' }

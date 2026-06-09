@@ -366,7 +366,7 @@ export function applyEffect(
       // event fires here — CardDestroyed is emitted when the card is taken.
       const current: GameState = {
         ...state,
-        pendingForceDestroy: state.pendingForceDestroy + 1,
+        pendingForceDestroy: state.pendingForceDestroy + effect.amount,
       }
       return { state: current, events: [] }
     }
