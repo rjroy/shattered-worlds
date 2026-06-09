@@ -1,7 +1,6 @@
 import { describe, it, expect } from 'bun:test'
 import { updateHUD } from '../view/hud'
 import type { GameState } from '../../core/index'
-import { WORLD_CONSTS } from '../../core/engine/world'
 
 // ---------------------------------------------------------------------------
 // Fakes
