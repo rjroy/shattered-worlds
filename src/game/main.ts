@@ -2,7 +2,7 @@ import Phaser from 'phaser'
 import { BootScene } from './scenes/BootScene'
 import { WorldSelectScene } from './scenes/WorldSelectScene'
 import { TableScene } from './scenes/TableScene'
-import { CANVAS_W, CANVAS_H } from './view/presentation'
+import { CANVAS_W, CANVAS_H } from './view/layout'
 
 const game = new Phaser.Game({
   type: Phaser.AUTO,

@@ -5,6 +5,7 @@
 import Phaser from 'phaser'
 import type { GameState } from '../../core/index'
 import { TEXT, textStyle } from './presentation'
+import { HUD_LAYOUT } from './layout'
 
 export interface HUDRefs {
   // The whole HUD (backing panel + every label) lives in this container, so the
@@ -23,12 +24,12 @@ export interface HUDRefs {
 // to fill the bar behind the text instead of the frame swallowing it. Insets are
 // chosen so the interior band (panel top + top inset .. panel bottom − bottom
 // inset) brackets the 14px text sitting at y=10.
-const HUD_PANEL_X = 30
-const HUD_PANEL_Y = 0
-const HUD_PANEL_W = 280
-const HUD_PANEL_H = 45
-const HUD_PANEL_SIDE_INSET = 20 // left/right: keep the decorated vertical frame
-const HUD_PANEL_EDGE_INSET = 6 // top/bottom: thin frayed edge, interior shows through
+const HUD_PANEL_X = HUD_LAYOUT.panel.x
+const HUD_PANEL_Y = HUD_LAYOUT.panel.y
+const HUD_PANEL_W = HUD_LAYOUT.panel.width
+const HUD_PANEL_H = HUD_LAYOUT.panel.height
+const HUD_PANEL_SIDE_INSET = HUD_LAYOUT.panel.sideInset // left/right: keep the decorated vertical frame
+const HUD_PANEL_EDGE_INSET = HUD_LAYOUT.panel.edgeInset // top/bottom: thin frayed edge, interior shows through
 
 /** Create the HUD: a textured backing panel plus the status text objects. */
 export function createHUD(scene: Phaser.Scene): HUDRefs {
@@ -63,10 +64,12 @@ export function createHUD(scene: Phaser.Scene): HUDRefs {
 
   // Origin (0, 0.5): x is the panel-relative left edge of the label, y is the
   // panel's vertical center, so every label is vertically centered in the bar.
-  const hpText = scene.add.text(30, HUD_PANEL_H / 2, 'HP: —', { ...style, color: TEXT.textHp })
-  const actText = scene.add.text(110, HUD_PANEL_H / 2, 'Act 1 / 3', style)
-  const energyText = scene.add.text(230, HUD_PANEL_H / 2, '—', { ...style, color: TEXT.textEnergy })
-  const energyIcon = scene.add.image(energyText.x - 9, energyText.y, 'energy-icon').setDisplaySize(28, 28)
+  const hpText = scene.add.text(HUD_LAYOUT.labels.hpX, HUD_PANEL_H / 2, 'HP: —', { ...style, color: TEXT.textHp })
+  const actText = scene.add.text(HUD_LAYOUT.labels.actX, HUD_PANEL_H / 2, 'Act 1 / 3', style)
+  const energyText = scene.add.text(HUD_LAYOUT.labels.energyX, HUD_PANEL_H / 2, '—', { ...style, color: TEXT.textEnergy })
+  const energyIcon = scene.add
+    .image(energyText.x - HUD_LAYOUT.energyIconOffsetX, energyText.y, 'energy-icon')
+    .setDisplaySize(HUD_LAYOUT.energyIconSize, HUD_LAYOUT.energyIconSize)
 
   for (const label of [hpText, actText, energyText, energyIcon]) {
     label.setOrigin(0, 0.5)

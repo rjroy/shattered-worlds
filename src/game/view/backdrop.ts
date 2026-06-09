@@ -2,7 +2,7 @@ import Phaser from 'phaser'
 import type { GameState } from '../../core/index'
 import type { VisualTheme } from './themes/theme'
 import { intrusionForIntensity, VISUAL_CONSTS } from './visualMappers'
-import { CANVAS_W, CANVAS_H } from './presentation'
+import { CANVAS_W, CANVAS_H } from './layout'
 import { doorPresentation, walkerPresentation } from './walker'
 import type { WalkerPresentation } from './walker'
 

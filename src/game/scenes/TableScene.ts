@@ -55,27 +55,24 @@ import { previewPlay } from '../interaction/describe'
 import { PileLayer } from '../view/piles'
 import { BackdropLayer } from '../view/backdrop'
 import { buildWorld } from '../../data/worldManifest'
+import { CARD_FACE, TABLE_LAYOUT } from '../view/layout'
+import { rowCardPositions } from '../view/tableLayout'
 
 // ---------------------------------------------------------------------------
 // Layout constants
 // ---------------------------------------------------------------------------
 
 /** Vertical centre of the world cards (hazard) row. */
-const WORLD_ROW_Y = 140
+const WORLD_ROW_Y = TABLE_LAYOUT.worldRowY
 /** Vertical centre of the player hand row. */
-const HAND_ROW_Y = 420
-/** Horizontal spacing between card centres (cards are 150px wide). */
-const CARD_SPACING = 156
-/** Screen width for layout calculations. */
-const SCREEN_WIDTH = 900
-
+const HAND_ROW_Y = TABLE_LAYOUT.handRowY
 /**
  * Depth for the targeting connector. Cards live at the default depth 0 and the
  * win/loss overlays at 1000; 500 draws the connector over the (possibly dimmed)
  * cards while staying below the end-game screens. The connector is decorative
  * and never interactive, so this depth only affects draw order, not input.
  */
-const CONNECTOR_DEPTH = 500
+const CONNECTOR_DEPTH = TABLE_LAYOUT.connectorDepth
 // ROW_LEFT reserved for future fixed-layout mode
 // const ROW_LEFT = 80
 
@@ -178,14 +175,26 @@ export class TableScene extends Phaser.Scene {
       color: getRealityPalette(this.theme_, 'text', '#88aaff'),
       fontStyle: 'bold',
     })
-    this.endTurnBtn = new CommonButton(this, 820, 560, '[ End Turn ]', endTurnStyle)
+    this.endTurnBtn = new CommonButton(
+      this,
+      TABLE_LAYOUT.buttons.endTurn.x,
+      TABLE_LAYOUT.buttons.endTurn.y,
+      '[ End Turn ]',
+      endTurnStyle,
+    )
       .on('pointerdown', () => this.onEndTurnClick())
 
     const cancelStyle = textStyle({
       fontSize: '13px',
       color: getRealityPalette(this.theme_, 'cancel', '#ff8888'),
     })
-    this.cancelBtn = new CommonButton(this, 740, 570, '[ Cancel ]', cancelStyle)
+    this.cancelBtn = new CommonButton(
+      this,
+      TABLE_LAYOUT.buttons.cancel.x,
+      TABLE_LAYOUT.buttons.cancel.y,
+      '[ Cancel ]',
+      cancelStyle,
+    )
       .on('pointerdown', () => {
         this.sel = cancel()
         this.dismissModal()
@@ -199,7 +208,13 @@ export class TableScene extends Phaser.Scene {
       fontStyle: 'bold',
       color: getRealityPalette(this.theme_, 'confirm', '#88ee88'),
     })
-    this.confirmBtn = new CommonButton(this, 740, 540, '[ Confirm ]', confirmStyle)
+    this.confirmBtn = new CommonButton(
+      this,
+      TABLE_LAYOUT.buttons.confirm.x,
+      TABLE_LAYOUT.buttons.confirm.y,
+      '[ Confirm ]',
+      confirmStyle,
+    )
       .on('pointerdown', () => this.onConfirmClick())
       .setVisible(false)
 
@@ -217,14 +232,20 @@ export class TableScene extends Phaser.Scene {
       fontStyle: 'bold',
       color: TEXT.textLight,
     })
-    this.questionBtn = new CommonButton(this, 860, 22, '?', questionStyle)
+    this.questionBtn = new CommonButton(
+      this,
+      TABLE_LAYOUT.buttons.help.x,
+      TABLE_LAYOUT.buttons.help.y,
+      '?',
+      questionStyle,
+    )
       .on('pointerup', () => this.helpOverlay.setVisible(true))
 
     this.input.keyboard?.on('keydown-ESC', () => {
       if (this.helpOverlay.visible) this.helpOverlay.setVisible(false)
     })
 
-    this.selectionHint = new CommonLabel(this, 450, 578, '', textStyle({
+    this.selectionHint = new CommonLabel(this, TABLE_LAYOUT.selectionHint.x, TABLE_LAYOUT.selectionHint.y, '', textStyle({
       fontSize: '12px',
       color: getRealityPalette(this.theme_, 'text', '#9aa3b2'),
     })).setVisible(false)
@@ -234,7 +255,7 @@ export class TableScene extends Phaser.Scene {
     // tops out around y=552; anchoring previewSlot's bottom edge at y=550 keeps
     // the two surfaces from ever overlapping. Degrades fine on touch (no hover
     // means this slot simply stays empty).
-    this.previewSlot = new CommonLabel(this, 450, 550, '', textStyle({
+    this.previewSlot = new CommonLabel(this, TABLE_LAYOUT.previewSlot.x, TABLE_LAYOUT.previewSlot.y, '', textStyle({
       fontSize: '12px',
       color: getRealityPalette(this.theme_, 'title', '#9aa3b2'),
     }))
@@ -370,18 +391,16 @@ export class TableScene extends Phaser.Scene {
     desiredIds: Set<string>,
   ): void {
 
-    const totalWidth = Math.min(SCREEN_WIDTH - CARD_SPACING - 25, (cards.length - 1) * CARD_SPACING)
-    const startX = 450 - totalWidth / 2
-    const spacing = cards.length > 1 ? totalWidth / (cards.length - 1) : CARD_SPACING
+    const positions = rowCardPositions(cards.length, rowY)
 
     cards.forEach((card, i) => {
-      const x = startX + i * spacing
+      const { x, y } = positions[i]!
       const container = this.obtainCardContainer(card)
       desiredIds.add(card.id)
 
       // Position is mutable per cycle (a card may shift slots as the hand
       // changes). The static face was set once, at creation.
-      positionCard(container, x, rowY)
+      positionCard(container, x, y)
 
       // Re-apply mutable visual state every cycle, reused or freshly created.
       this.applyHighlight(container, card, playableIds, discardableIds, legalTargetIds)
@@ -431,7 +450,7 @@ export class TableScene extends Phaser.Scene {
     this.cardObjects.set(card.id, container)
 
     // Make card interactive
-    container.setSize(150, 196)
+    container.setSize(CARD_FACE.width, CARD_FACE.height)
     container.setInteractive({ useHandCursor: true })
 
     const id = card.id

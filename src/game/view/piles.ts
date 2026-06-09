@@ -11,10 +11,11 @@
 import Phaser from 'phaser'
 import { textStyle } from './presentation'
 import { CommonLabel } from './components'
+import { PILE_LAYOUT } from './layout'
 
-const PILE_CARD_W = 50
-const PILE_CARD_H = 64
-const PILE_OFFSET = 2 // px offset per stacked card
+const PILE_CARD_W = PILE_LAYOUT.cardWidth
+const PILE_CARD_H = PILE_LAYOUT.cardHeight
+const PILE_OFFSET = PILE_LAYOUT.cardOffset // px offset per stacked card
 
 export class PileLayer {
   private playerPile: Phaser.GameObjects.Container
@@ -22,9 +23,9 @@ export class PileLayer {
   private discardPile: Phaser.GameObjects.Container
 
   constructor(scene: Phaser.Scene) {
-    this.playerPile = scene.add.container(80, 440)
-    this.worldPile = scene.add.container(820, 440)
-    this.discardPile = scene.add.container(80, 560)
+    this.playerPile = scene.add.container(PILE_LAYOUT.player.x, PILE_LAYOUT.player.y)
+    this.worldPile = scene.add.container(PILE_LAYOUT.world.x, PILE_LAYOUT.world.y)
+    this.discardPile = scene.add.container(PILE_LAYOUT.discard.x, PILE_LAYOUT.discard.y)
   }
 
   /**
@@ -57,7 +58,7 @@ export class PileLayer {
     texture: string
   ): void {
     if (count === 0) return
-    const visibleCards = Math.min(count, 5) // show up to 4 cards in the stack
+    const visibleCards = Math.min(count, PILE_LAYOUT.maxVisibleCards)
     for (let i = 0; i < visibleCards; i++) {
       const img = scene.add.image(-i * PILE_OFFSET, -i * PILE_OFFSET, texture)
       img.setDisplaySize(PILE_CARD_W, PILE_CARD_H)
@@ -66,7 +67,7 @@ export class PileLayer {
     }
 
     // Show count text below the stack
-    const label = new CommonLabel(scene, 0, 20, `${str}: ${count}`, textStyle({
+    const label = new CommonLabel(scene, 0, PILE_LAYOUT.labelY, `${str}: ${count}`, textStyle({
       fontSize: '10px',
       color: '#b6c0d1',
     }))

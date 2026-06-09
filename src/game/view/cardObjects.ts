@@ -19,6 +19,7 @@ import {
   costRingArc,
   emphasisDescriptor,
 } from './presentation'
+import { CARD_FACE } from './layout'
 
 // ---------------------------------------------------------------------------
 // Card dimensions
@@ -27,12 +28,12 @@ import {
 // Cards are sized to carry their full rules text on the face: the player face
 // shows the whole describeEffect block (Modal/Sequence included), the Hazard
 // face shows full onDiscarded/onCleared sentences. Six fit the 900px table.
-const CARD_W = 150
-const CARD_H = 196
-const INSET_X = 0
-const INSET_Y = 90
-const INSET_W = 120
-const INSET_H = 70
+const CARD_W = CARD_FACE.width
+const CARD_H = CARD_FACE.height
+const INSET_X = CARD_FACE.inset.x
+const INSET_Y = CARD_FACE.inset.y
+const INSET_W = CARD_FACE.inset.width
+const INSET_H = CARD_FACE.inset.height
 
 // ---------------------------------------------------------------------------
 // Card object factory

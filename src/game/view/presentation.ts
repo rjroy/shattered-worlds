@@ -17,16 +17,7 @@ import type Phaser from 'phaser'
 import type { Card } from '../../core/index'
 import type { FrameStyle, VisualTheme } from './themes/theme'
 import type { HighlightKind } from '../interaction/highlight'
-
-// ---------------------------------------------------------------------------
-// Canvas dimensions
-// ---------------------------------------------------------------------------
-
-// The logical game resolution. main.ts's Phaser.Game config uses these, and the
-// view layer (full-screen backdrops, full-screen overlays) sizes against them.
-// Single source of truth — change here, not in scattered literals.
-export const CANVAS_H = 600
-export const CANVAS_W = 900
+export { CANVAS_W, CANVAS_H } from './layout'
 
 // ---------------------------------------------------------------------------
 // Card texture selection
