@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Story detail screen and help screen</title>
+  <meta name="date" content="2026-06-08">
+  <meta name="status" content="open">
+  <meta name="tags" content="ui, screens, story, help, overlay, phaser, ux, immersion">
+  <meta name="modules" content="table-scene, overlays, view">
+  <style>
+    :root {
+      --bg: #12131a;
+      --surface: #1a1c28;
+      --surface2: #22253a;
+      --border: #2e3250;
+      --text: #c8cde0;
+      --muted: #6b7099;
+      --accent: #7eb8f7;
+      --gold: #e8b84b;
+      --red: #e86060;
+      --green: #72c472;
+      --purple: #a78bfa;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      padding: 2rem;
+      max-width: 1080px;
+      margin: 0 auto;
+      line-height: 1.6;
+      font-size: 15px;
+    }
+    h1 { font-size: 1.6rem; color: var(--accent); margin-bottom: 0.3rem; }
+    .meta { color: var(--muted); font-size: 0.85rem; margin-bottom: 2rem; }
+
+    h2 { font-size: 1.15rem; color: var(--gold); margin: 2rem 0 0.8rem; border-bottom: 1px solid var(--border); padding-bottom: 0.4rem; }
+    h3 { font-size: 0.95rem; color: var(--accent); margin: 1.2rem 0 0.4rem; }
+
+    p { margin-bottom: 0.8rem; }
+
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin: 1rem 0; }
+    .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; margin: 1rem 0; }
+    @media (max-width: 720px) { .grid-2, .grid-3 { grid-template-columns: 1fr; } }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1rem;
+    }
+    .card .label {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      margin-bottom: 0.4rem;
+    }
+
+    .tag {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      margin-right: 4px;
+    }
+    .tag-q  { background: #2a2350; color: var(--purple); }
+    .tag-a  { background: #1a2a1a; color: var(--green); }
+    .tag-x  { background: #2a1a1a; color: var(--red); }
+    .tag-?  { background: #2a2218; color: var(--gold); }
+
+    .callout {
+      border-left: 3px solid;
+      padding: 0.7rem 1rem;
+      margin: 1rem 0;
+      border-radius: 0 6px 6px 0;
+      background: var(--surface);
+    }
+    .callout-q  { border-color: var(--purple); }
+    .callout-a  { border-color: var(--green); }
+    .callout-bad { border-color: var(--red); }
+    .callout-tension { border-color: var(--gold); }
+
+    details { margin: 0.5rem 0; }
+    details summary {
+      cursor: pointer;
+      padding: 0.5rem 0.8rem;
+      background: var(--surface2);
+      border-radius: 6px;
+      user-select: none;
+      font-weight: 600;
+      list-style: none;
+    }
+    details summary::before { content: "▶ "; font-size: 0.75rem; }
+    details[open] summary::before { content: "▼ "; }
+    details .body { padding: 0.8rem 0.8rem 0.2rem; }
+
+    .option-row {
+      display: grid;
+      grid-template-columns: auto 1fr 1fr;
+      gap: 0.5rem 1rem;
+      align-items: start;
+      border-bottom: 1px solid var(--border);
+      padding: 0.6rem 0;
+    }
+    .option-row:last-child { border-bottom: none; }
+    .option-num { color: var(--gold); font-weight: 700; font-size: 1.1rem; padding-top: 0.1rem; }
+    .pro { color: var(--green); font-size: 0.85rem; }
+    .con { color: var(--red); font-size: 0.85rem; }
+    .pro li::before { content: "+ "; }
+    .con li::before { content: "− "; }
+    ul.bare { list-style: none; padding: 0; }
+    ul.bare li { margin-bottom: 0.25rem; }
+
+    .verdict {
+      background: var(--surface2);
+      border: 1px solid var(--accent);
+      border-radius: 8px;
+      padding: 1rem 1.2rem;
+      margin: 1.5rem 0;
+    }
+    .verdict strong { color: var(--accent); }
+
+    .dead-end {
+      text-decoration: line-through;
+      color: var(--muted);
+    }
+    .dead-end::after { content: " ✗"; color: var(--red); text-decoration: none; display: inline; }
+  </style>
+</head>
+<body>
+
+<h1>Story detail screen and help screen</h1>
+<p class="meta">Brainstorm · 2026-06-08 · status: open</p>
+
+<!-- ─── FRAMING ─────────────────────────────────────────────────────────────── -->
+
+<h2>What are we actually designing?</h2>
+
+<div class="grid-2">
+  <div class="card">
+    <div class="label">Story detail screen</div>
+    <p>Per-world narrative context. <em>Why are you in this shard? Who is the Walker? What are these hazards?</em> Sets the flavor before (or during) a run. Content volume: 2–5 paragraphs + optional image. Changes per world, possibly per run variant.</p>
+    <p>Likely trigger: world-select screen (pre-run), or a "lore" button accessible mid-game.</p>
+  </div>
+  <div class="card">
+    <div class="label">Help screen</div>
+    <p>Mechanical reference. Rules, keyword glossary (Energy, Exhaust, ForceDestroy…), per-world mechanic differences. Content volume: potentially long — glossary can grow to 20–40 terms. Doesn't change per run.</p>
+    <p>Likely trigger: ? button in HUD, first-run prompt, or pause menu.</p>
+  </div>
+</div>
+
+<div class="callout callout-tension">
+  <strong>Core tension:</strong> The game lives inside a fixed Phaser canvas (900px wide). Both screens want to display text-heavy content. Phaser text objects are expensive and scrolling requires custom implementation. But leaving the canvas — whether via a new tab or DOM overlay — risks breaking the immersive "game shell" feel.
+</div>
+
+<!-- ─── IMPLEMENTATION OPTIONS ──────────────────────────────────────────────── -->
+
+<h2>Implementation options (for both screens)</h2>
+
+<div class="card" style="margin-top:0.5rem">
+  <div class="option-row">
+    <div class="option-num">1</div>
+    <div>
+      <strong>Phaser full-screen overlay</strong><br>
+      <span style="color:var(--muted);font-size:0.85rem">Same pattern as win/loss screens — containers at depth 1000. Already proven in codebase.</span>
+    </div>
+    <div>
+      <ul class="bare pro"><li>Zero immersion break</li><li>Themed automatically by world VisualTheme</li><li>Single codebase, no routing</li></ul>
+      <ul class="bare con"><li>Scrolling text = custom code</li><li>Every paragraph is Phaser text objects (perf/memory)</li><li>Hard to author (no markdown)</li></ul>
+    </div>
+  </div>
+
+  <div class="option-row">
+    <div class="option-num">2</div>
+    <div>
+      <strong>Phaser stacked scene</strong><br>
+      <span style="color:var(--muted);font-size:0.85rem">Launch a StoryScene or HelpScene on top of TableScene using Phaser's scene manager (<code>scene.launch</code> / <code>scene.bringToTop</code>).</span>
+    </div>
+    <div>
+      <ul class="bare pro"><li>Full canvas, can do slide/fade transitions</li><li>Pause/resume TableScene cleanly</li><li>Dedicated scene = cleaner code</li></ul>
+      <ul class="bare con"><li>Same text-heavy pain as option 1</li><li>Scene lifecycle adds complexity</li><li>No new rendering capabilities</li></ul>
+    </div>
+  </div>
+
+  <div class="option-row">
+    <div class="option-num">3</div>
+    <div>
+      <strong>DOM overlay on canvas</strong><br>
+      <span style="color:var(--muted);font-size:0.85rem">A <code>&lt;div&gt;</code> absolutely positioned over the Phaser canvas. CSS-styled to match game palette. Phaser can create DOM elements via <code>scene.add.dom()</code>, or we can use a plain CSS div.</span>
+    </div>
+    <div>
+      <ul class="bare pro"><li>Rich text, real scrolling, markdown possible</li><li>Easy to author story content</li><li>Game canvas still visible underneath (letterbox/blur)</li></ul>
+      <ul class="bare con"><li>Two rendering pipelines (canvas + DOM)</li><li>CSS theming separate from VisualTheme system</li><li>Interaction model changes (pointer leaves canvas)</li></ul>
+    </div>
+  </div>
+
+  <div class="option-row">
+    <div class="option-num">4</div>
+    <div>
+      <strong>Separate web page (same domain)</strong><br>
+      <span style="color:var(--muted);font-size:0.85rem">Vite multi-page: <code>/shattered-worlds/story/zombie-big-box</code>, <code>/shattered-worlds/help</code>. Same HTML/CSS palette, opened via link in main page.</span>
+    </div>
+    <div>
+      <ul class="bare pro"><li>Fully decoupled — easy to maintain, search-engine friendly</li><li>Richest formatting, images, anchor links</li><li>Can share links ("here's the zombie shard lore")</li></ul>
+      <ul class="bare con"><li>Leaves game context (new tab or navigation)</li><li>"Return to game" button UX is clunky</li><li>Build/deploy complexity (Vite multi-page config)</li></ul>
+    </div>
+  </div>
+
+  <div class="option-row">
+    <div class="option-num">5</div>
+    <div>
+      <strong>Content embedded in game data, rendered on-demand</strong><br>
+      <span style="color:var(--muted);font-size:0.85rem">Story content lives in world data files. Help keywords live in card/effect definitions. Rendered inline as tooltips, card details, or a lightweight modal — no dedicated "screen" at all.</span>
+    </div>
+    <div>
+      <ul class="bare pro"><li>No new screen architecture needed</li><li>Context-sensitive (see story for the hazard you're hovering)</li><li>Incremental — add as you go</li></ul>
+      <ul class="bare con"><li>Story "screen" loses its narrative weight</li><li>Hard to expose a complete glossary</li><li>Help fragmented across interaction points</li></ul>
+    </div>
+  </div>
+</div>
+
+<!-- ─── TWO SCREENS ARE DIFFERENT ──────────────────────────────────────────── -->
+
+<h2>These two screens might want different answers</h2>
+
+<div class="callout callout-a">
+  <strong>Asymmetry:</strong> "Story detail" is a pre-run or between-run screen — you're not mid-action, immersion is already at a seam. "Help" is often triggered mid-run, where you want to glance and return. These different triggers suggest different optimal implementations.
+</div>
+
+<div class="grid-2">
+  <div class="card">
+    <div class="label">Story detail — candidate: DOM overlay or separate page</div>
+    <p>You read world lore <em>before</em> you start a run. A world-select screen is a natural seam — not mid-game. Richer HTML formatting makes the lore feel more substantial. Could live at <code>/story/[worldId]</code> or as a DOM panel on the world-select screen.</p>
+    <p>If story detail is on the world-select screen (not yet built), a DOM overlay on that screen is natural — the "game canvas" for world-select is already different from the play canvas.</p>
+  </div>
+  <div class="card">
+    <div class="label">Help — candidate: Phaser overlay or DOM panel</div>
+    <p>You hit ? mid-game. A full-page navigation is disruptive. A Phaser overlay (option 1) is lowest friction. Content volume is the main challenge — a keyword glossary might need 30+ entries.</p>
+    <p>One approach: keep the help overlay thin (5–8 most important keywords) and rely on card tooltips/descriptions for the rest. The full glossary lives on a /help page that's linked from the thin overlay.</p>
+  </div>
+</div>
+
+<!-- ─── TIMING QUESTIONS ────────────────────────────────────────────────────── -->
+
+<h2>When do these appear?</h2>
+
+<details>
+  <summary>Story detail — trigger options</summary>
+  <div class="body">
+    <div class="grid-2">
+      <div class="card">
+        <div class="label">On world select (before run)</div>
+        <p>Shown when you pick a destiny-shard. Could be a card-flip reveal — front shows shard name/visual, back shows lore text. World select doesn't exist yet so we can design this together.</p>
+        <p><span class="tag tag-a">natural seam</span> <span class="tag tag-a">pre-run context</span></p>
+      </div>
+      <div class="card">
+        <div class="label">? / lore button mid-game</div>
+        <p>Always accessible. Could show current world's story. Less narrative weight — you're already playing. Good for "wait, what IS the Walker?"</p>
+        <p><span class="tag tag-?">serves curiosity</span> <span class="tag tag-x">weaker framing</span></p>
+      </div>
+      <div class="card">
+        <div class="label">Forced prologue (first run only)</div>
+        <p>Like Hades — story cutscene before your first run of a new shard. Strong narrative framing. Can be skipped on repeat runs. Requires first-run detection.</p>
+        <p><span class="tag tag-a">high narrative impact</span> <span class="tag tag-?">adds state (first-run tracking)</span></p>
+      </div>
+      <div class="card">
+        <div class="label">Post-run debrief</div>
+        <p>Story advances <em>after</em> each run based on outcome (won/lost). Meta-progression narrative. Interesting but complex — requires story state machine.</p>
+        <p><span class="tag tag-?">deep potential</span> <span class="tag tag-x">major scope increase</span></p>
+      </div>
+    </div>
+  </div>
+</details>
+
+<details>
+  <summary>Help — trigger options</summary>
+  <div class="body">
+    <div class="grid-2">
+      <div class="card">
+        <div class="label">? button in HUD</div>
+        <p>Always present. Opens thin keyword reference. Probably the right primary trigger. Question: does pressing ? pause the game? It should, since you're reading rules not watching the board.</p>
+      </div>
+      <div class="card">
+        <div class="label">First-run tooltip sequence</div>
+        <p>Guided "first time" overlay highlighting each HUD element with a brief description. After that, ? is the reference. Roguelite convention. Requires first-run flag.</p>
+      </div>
+      <div class="card">
+        <div class="label">Hover tooltips on keywords</div>
+        <p>Cards/effects could have keyword terms linked to definitions that pop on hover. No dedicated screen needed — help is contextual. Incremental but doesn't give a glossary overview.</p>
+      </div>
+      <div class="card">
+        <div class="label">Pause menu (not yet built)</div>
+        <p>If a pause screen exists, help lives there. Logical grouping with settings, restart, quit. Adds dependency on pause screen existing first.</p>
+      </div>
+    </div>
+  </div>
+</details>
+
+<!-- ─── BAD IDEAS ────────────────────────────────────────────────────────────── -->
+
+<h2>Bad ideas (worth recording)</h2>
+
+<div class="callout callout-bad">
+  <strong><span class="dead-end">Help screen as a "tutorial world"</span></strong> — a special destiny-shard that teaches mechanics through play. Would be amazing. Scope: enormous. Not now.
+</div>
+
+<div class="callout callout-bad">
+  <strong><span class="dead-end">window.open for story or help</span></strong> — breaks everything. Popup blockers, loses game focus, UX disaster. Immediate no.
+</div>
+
+<div class="callout callout-bad">
+  <strong>Story told entirely through card flavor text</strong> — tempting minimalism, but the Walker/shard context is world-level, not card-level. Cards can <em>reinforce</em> story but can't establish it.
+</div>
+
+<div class="callout callout-bad">
+  <strong>Scrollable Phaser text list for help glossary</strong> — technically possible with a mask + drag handler, but the implementation effort is 80% of building a DOM overlay anyway, with fewer capabilities. If you're scrolling, use the DOM.
+</div>
+
+<div class="callout callout-bad">
+  <strong>Help and story combined into one screen</strong> — they serve different purposes at different times. Merging them muddles both. Separate concerns.
+</div>
+
+<!-- ─── OPEN QUESTIONS ───────────────────────────────────────────────────────── -->
+
+<h2>Open questions — resolved 2026-06-08</h2>
+
+<div class="grid-2">
+  <div class="callout callout-a">
+    <span class="tag tag-a">✓</span> <strong>Does world-select exist yet?</strong><br>
+    No, but it's going on the roadmap now. Story detail lives <em>inside</em> world-select — not a separate screen. The select card for each shard includes a short flavor paragraph.
+  </div>
+  <div class="callout callout-a">
+    <span class="tag tag-a">✓</span> <strong>How much story content exists?</strong><br>
+    Very little — by design. Each shard is a vibe sketch: Walker shows up, world goes sideways. Zombie-big-box: big box store, lights flicker, strange sounds, zombies. 2–4 sentences of mood-setting. Not deep lore.
+  </div>
+  <div class="callout callout-a">
+    <span class="tag tag-a">✓ (partial)</span> <strong>How large does the help glossary get?</strong><br>
+    Unknown, but probably small — one keyword set per world, grows as worlds are added. Bird-building and highway-volcano not rebalanced yet, so their entries can wait. Phaser overlay is fine for now.
+  </div>
+  <div class="callout callout-a">
+    <span class="tag tag-a">✓</span> <strong>Should help be world-aware?</strong><br>
+    Yes. Help shows base rules + a "in this world" section with gameplay differences per shard. Bird-building and highway-volcano mechanics are still being rebalanced, so those sections are deferred.
+  </div>
+</div>
+
+<!-- ─── DECIDED SHAPE ────────────────────────────────────────────────────────── -->
+
+<h2>Decided shape</h2>
+
+<div class="verdict">
+  <strong>Story detail:</strong> Lives inside the world-select screen (not a separate screen). Each shard card shows a 2–4 sentence mood sketch — vibe-setting, not deep lore. The Walker arrives, the world goes sideways, that's enough. Content is authored per world in world data (worldManifest or a parallel story file). World-select is the next major screen to build; story comes along for free.
+</div>
+
+<div class="verdict">
+  <strong>Help screen:</strong> Phaser overlay (depth 1000, same pattern as win/loss). Structure: base rules brief → keyword glossary → "in this world" section with world-specific mechanic notes. Triggered by a ? button added to the HUD. Glossary size is small for now (5–8 terms). Bird-building and highway-volcano mechanic sections are placeholders until those worlds are rebalanced. Phaser overlay is sufficient at current volume — revisit if it grows past ~15 entries.
+</div>
+
+<div class="callout callout-tension">
+  <strong>The "breaks emergence" resolution:</strong> Story is pre-run (world-select seam) so immersion is already broken — richer HTML would be fine, but since content is short, in-canvas is equally valid. Help is mid-game, so overlay wins. Both stay in-canvas. No new tabs needed.
+</div>
+
+<h2>What's next</h2>
+<ul style="padding-left:1.5rem;margin-top:0.5rem;margin-bottom:1rem">
+  <li>Spec the world-select screen (story detail is a sub-section of that spec)</li>
+  <li>Spec the help overlay (simpler, could go first as a standalone)</li>
+  <li>Write zombie-big-box flavor text (2–4 sentences, mood over exposition)</li>
+  <li>Define worldManifest shape changes needed to carry story + help data per shard</li>
+</ul>
+
+</body>
+</html>

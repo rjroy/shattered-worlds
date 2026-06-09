@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Implementation notes: help screen</title>
+  <meta name="date" content="2026-06-08">
+  <meta name="status" content="in_progress">
+  <meta name="tags" content="implementation, notes, ui, overlay, help, phaser">
+  <meta name="source" content=".lore/work/plans/help-screen.html">
+  <meta name="modules" content="table-scene, overlays, world-help-manifest">
+  <style>
+    :root {
+      --bg: #0f1117; --surface: #181c28; --surface2: #1f2436;
+      --border: #2a3050; --text: #c8cde0; --muted: #6b7099;
+      --accent: #7eb8f7; --gold: #e8c56a; --green: #72c472;
+      --red: #e06060; --purple: #a78bfa; --yellow: #f0d070;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: system-ui, sans-serif; background: var(--bg); color: var(--text); font-size: 15px; line-height: 1.6; }
+    .wrap { max-width: 960px; margin: 0 auto; padding: 2rem; }
+    h1 { font-size: 1.5rem; color: var(--accent); margin-bottom: 0.5rem; }
+    h2 { font-size: 1rem; color: var(--gold); margin: 1.5rem 0 0.5rem; border-bottom: 1px solid var(--border); padding-bottom: 0.3rem; }
+    .meta { color: var(--muted); font-size: 0.85rem; margin-bottom: 1.5rem; }
+    .banner {
+      padding: 0.8rem 1.2rem; border-radius: 8px; margin-bottom: 1.5rem;
+      display: flex; align-items: center; gap: 1rem;
+      background: var(--surface); border: 1px solid var(--border);
+    }
+    .banner.in-progress { border-color: var(--gold); background: rgba(232,197,106,0.06); }
+    .banner.complete { border-color: var(--green); background: rgba(114,196,114,0.06); }
+    .banner .label { font-weight: 700; font-size: 1rem; }
+    .banner.in-progress .label { color: var(--gold); }
+    .banner.complete .label { color: var(--green); }
+    .phases { display: flex; flex-direction: column; gap: 0.5rem; margin: 1rem 0; }
+    .phase {
+      display: flex; align-items: flex-start; gap: 0.8rem;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 6px; padding: 0.6rem 0.9rem;
+    }
+    .chip {
+      font-size: 0.7rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.06em; padding: 2px 8px; border-radius: 3px;
+      white-space: nowrap; flex-shrink: 0; margin-top: 2px;
+    }
+    .chip-pending  { background: #1a2a3a; color: var(--muted); border: 1px solid var(--border); }
+    .chip-active   { background: #2a2218; color: var(--gold); border: 1px solid #4a3a28; }
+    .chip-done     { background: #182818; color: var(--green); border: 1px solid #285028; }
+    .chip-failed   { background: #2a1a1a; color: var(--red); border: 1px solid #4a2828; }
+    .phase-body { flex: 1; }
+    .phase-title { font-weight: 600; }
+    .phase-log { font-size: 0.87rem; color: var(--muted); margin-top: 0.3rem; }
+    .phase-log p { margin: 0; }
+    .log-entry { border-left: 3px solid var(--border); padding: 0.5rem 0.8rem; margin: 0.5rem 0; font-size: 0.87rem; }
+    .log-entry.pass { border-color: var(--green); background: rgba(114,196,114,0.04); }
+    .log-entry.fail { border-color: var(--red); background: rgba(224,96,96,0.04); }
+    .log-entry.info { border-color: var(--accent); background: rgba(126,184,247,0.04); }
+    code { background: var(--surface2); padding: 0.1em 0.3em; border-radius: 3px; font-size: 0.87em; color: var(--yellow); }
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Implementation notes: help screen</h1>
+  <p class="meta">2026-06-08 · Source: <a href="../plans/help-screen.html">help-screen.html</a></p>
+
+  <div class="banner complete" id="banner">
+    <span class="label" id="banner-label">COMPLETE</span>
+    <span id="banner-detail">All phases done. Pending browser visual check.</span>
+  </div>
+
+  <h2>Progress</h2>
+  <div class="phases">
+    <div class="phase">
+      <span class="chip chip-done" id="chip-p1">done</span>
+      <div class="phase-body">
+        <div class="phase-title">Phase 1 — Create worldHelpManifest.ts</div>
+        <div class="phase-log" id="log-p1"><p>File created. Gate: tsc --noEmit passed.</p></div>
+      </div>
+    </div>
+    <div class="phase">
+      <span class="chip chip-done" id="chip-p2">done</span>
+      <div class="phase-body">
+        <div class="phase-title">Phase 2 — Write worldHelpManifest.test.ts</div>
+        <div class="phase-log" id="log-p2"><p>Test file created. Gate: bun test passed.</p></div>
+      </div>
+    </div>
+    <div class="phase">
+      <span class="chip chip-done" id="chip-p3">done</span>
+      <div class="phase-body">
+        <div class="phase-title">Phase 3 — Add createHelpOverlay to overlays.ts</div>
+        <div class="phase-log" id="log-p3"><p>Implemented. Fixed in review cycle: keyword definitions updated to match spec (Energy, Progress, Hazard, Hidden, Creature, Slow, ForceDestroy). Keyword names now styled in TEXT.textKeyword bold, definitions in TEXT.textMuted.</p></div>
+      </div>
+    </div>
+    <div class="phase">
+      <span class="chip chip-done" id="chip-p4">done</span>
+      <div class="phase-body">
+        <div class="phase-title">Phase 4 — Wire ? button and Escape in TableScene</div>
+        <div class="phase-log" id="log-p4"><p>helpOverlay and questionBtn instance fields added. createHelpOverlay called in create(). Escape handler registered. drawAll() hides ? button and overlay on non-playing status.</p></div>
+      </div>
+    </div>
+    <div class="phase">
+      <span class="chip chip-done" id="chip-p5">done</span>
+      <div class="phase-body">
+        <div class="phase-title">Phase 5 — Full validation (REQ-HELP-1 through REQ-HELP-13)</div>
+        <div class="phase-log" id="log-p5"><p>Review complete. Code-verifiable gaps found and fixed (keyword definitions, name styling). Browser-only items: REQ-HELP-1 (? button position/visibility), REQ-HELP-3 (input blocking), REQ-HELP-5 (visual dividers), REQ-HELP-13 (layout fit). Manual browser check required.</p></div>
+      </div>
+    </div>
+  </div>
+
+  <h2>Log</h2>
+  <div id="log">
+    <div class="log-entry info">
+      <strong>Init:</strong> Plan read. Key files examined: overlays.ts (54 lines), TableScene.ts (32k), worldDisplayManifest.ts (pattern), worldDisplayManifest.test.ts (pattern). Lore research complete. No prior implementation found. Phases 1 and 2 are independent per plan; dispatching in parallel.
+    </div>
+    <div class="log-entry pass">
+      <strong>Phase 1+2 gates:</strong> tsc --noEmit clean. bun test: 322 pass, 2 fail (2 failures are pre-existing Phaser DOM errors in test env, confirmed present on clean branch before any changes). New worldHelpManifest tests: 2 pass, 0 fail.
+    </div>
+    <div class="log-entry pass">
+      <strong>Phase 3 implementation:</strong> createHelpOverlay added to overlays.ts. Three sections: HOW IT WORKS, KEYWORDS (two-column, variable heights), IN THIS WORLD.
+    </div>
+    <div class="log-entry pass">
+      <strong>Phase 3 review finding — keyword definitions wrong:</strong> Five of seven keyword definitions diverged from spec (Hazard said "Ignored at end of turn" which is wrong; Hidden/Creature/Slow said wrong mechanics; ForceDestroy said "immediately" not "next hand"). Fixed: all seven definitions now match REQ-HELP-7 verbatim. Keyword names changed from uniform TEXT.textMuted to TEXT.textKeyword bold (separate text object per name+definition pair).
+    </div>
+    <div class="log-entry pass">
+      <strong>Phase 4 done:</strong> TableScene wired. questionBtn, helpOverlay, Escape handler all in place. tsc clean.
+    </div>
+    <div class="log-entry info">
+      <strong>Browser check pending:</strong> REQ-HELP-1 (? button visual), REQ-HELP-3 (input blocking), REQ-HELP-5 (visual dividers note: spec sketch shows section separators but code only adds section headers without explicit lines — may be acceptable), REQ-HELP-13 (layout fit in 600px).
+    </div>
+  </div>
+</div>
+</body>
+</html>
