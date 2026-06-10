@@ -390,14 +390,25 @@ export class TableScene extends Phaser.Scene {
     if (state.status === 'won') {
       this.winScreen.setVisible(true)
       this.lossScreen.setVisible(false)
+      this.winScreen.setOnClick(() => {
+        console.log('Restarting world select scene') // --- IGNORE ---
+        this.scene.start('WorldSelect')
+      })
     } else if (state.status === 'lost') {
       this.lossScreen.setVisible(true)
       this.winScreen.setVisible(false)
+      this.lossScreen.setOnClick(() => {
+        console.log('Restarting world select scene') // --- IGNORE ---
+        this.scene.start('WorldSelect')
+      })
     }
 
-    // Help overlay / ? button
-    this.questionBtn.setVisible(state.status === 'playing')
-    if (state.status !== 'playing') this.helpOverlay.setVisible(false)
+    // Cleanup the interactivity of objects at game end.
+    if (state.status !== 'playing') {
+      this.questionBtn.disableInteractive()
+      this.exitBtn.disableInteractive()
+      this.helpOverlay.setVisible(false)
+    }
   }
 
   /**

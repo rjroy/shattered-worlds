@@ -17,7 +17,7 @@ const SUBTITLE_Y = WORLD_SELECT_LAYOUT.subtitleY
 type WorldCardBackground = Phaser.GameObjects.Image | Phaser.GameObjects.Rectangle
 
 export class WorldSelectScene extends Phaser.Scene {
-  cards : WorldCardBackground[]
+  cards : WorldCardBackground[] = []
 
   constructor() { super({ key: 'WorldSelect' }) }
 
