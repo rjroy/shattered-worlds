@@ -10,7 +10,7 @@
 import Phaser from 'phaser'
 import type { Card, CardEffect, WorldCard } from '../../core/index'
 import type { FrameStyle, VisualTheme } from './themes/theme'
-import { describeEffect } from '../interaction/describe'
+import { describeEffect } from '../../core/view/describe'
 import type { HighlightKind } from '../interaction/highlight'
 import {
   TEXT,

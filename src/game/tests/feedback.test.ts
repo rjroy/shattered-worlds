@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'bun:test'
 import { createRng } from '../../core/engine/rng'
 import type { CardEffect, GameState, PlayerCard, WorldCard } from '../../core/index'
-import { previewPlay } from '../interaction/describe'
+import { previewPlay } from '../../core/view/describe'
 import { ringFraction, selectConnectorStyle, connectorLine, effectAtStep } from '../interaction/feedback'
 
 // ---------------------------------------------------------------------------

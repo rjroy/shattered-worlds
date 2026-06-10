@@ -42,10 +42,10 @@ import { textStyle, TEXT } from '../view/presentation'
 import { ringFraction, connectorLine, selectConnectorStyle, effectAtStep } from '../interaction/feedback'
 import type { ConnectorStyle } from '../interaction/feedback'
 import { drawConnector } from '../view/connector'
-import { modalBranchViews } from '../view/modal'
+import { resolveBranchLabels } from '../../core/view/branchLabels'
 import { ModalChooserView } from '../view/ModalChooserView'
 import { CommonLabel, CommonButton } from '../view/components'
-import { previewPlay } from '../interaction/describe'
+import { previewPlay } from '../../core/view/describe'
 import { PileLayer } from '../view/piles'
 import { BackdropLayer } from '../view/backdrop'
 import { buildWorld } from '../../data/worldManifest'
@@ -697,7 +697,7 @@ export class TableScene extends Phaser.Scene {
     const card = this.game_.state.hand.find((c) => c.id === cardId)
     const effectBranches =
       card?.kind === 'player' && card.effect.kind === 'Modal' ? card.effect.branches : []
-    const branches = modalBranchViews(spec.branches, effectBranches, available, cardId)
+    const branches = resolveBranchLabels(spec.branches, effectBranches, available, cardId)
 
     this.modalChooser = new ModalChooserView(
       this,

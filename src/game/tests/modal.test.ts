@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test'
-import { modalBranchViews } from '../view/modal'
+import { resolveBranchLabels } from '../../core/view/branchLabels'
 import type { AvailableActions, CardEffect, TargetSpec } from '../../core/index'
 
 function makeAvailable(targetsByStep: Record<number, string[]>): AvailableActions {
@@ -11,7 +11,7 @@ function makeAvailable(targetsByStep: Record<number, string[]>): AvailableAction
   }
 }
 
-describe('modalBranchViews', () => {
+describe('resolveBranchLabels', () => {
   it('labels branches from their actual card effects', () => {
     const branchSpecs: TargetSpec[] = [
       { kind: 'none' },
@@ -22,7 +22,7 @@ describe('modalBranchViews', () => {
       { kind: 'DealProgress', base: 2, bonus: { tag: 'Slow', amount: 2 } },
     ]
 
-    const views = modalBranchViews(branchSpecs, effectBranches, makeAvailable({ 1: ['w1'] }), 'p1')
+    const views = resolveBranchLabels(branchSpecs, effectBranches, makeAvailable({ 1: ['w1'] }), 'p1')
 
     expect(views).toEqual([
       { label: 'Draw 1', isLegal: true },
@@ -31,7 +31,7 @@ describe('modalBranchViews', () => {
   })
 
   it('falls back to option labels when effect branch data is missing', () => {
-    const views = modalBranchViews(
+    const views = resolveBranchLabels(
       [{ kind: 'none' }, { kind: 'none' }],
       [],
       makeAvailable({}),
@@ -48,7 +48,7 @@ describe('modalBranchViews', () => {
       { kind: 'none' },
     ]
 
-    const views = modalBranchViews(branchSpecs, [], makeAvailable({ 1: ['w1'] }), 'p1')
+    const views = resolveBranchLabels(branchSpecs, [], makeAvailable({ 1: ['w1'] }), 'p1')
 
     expect(views.map((view) => view.isLegal)).toEqual([false, true, true])
   })
