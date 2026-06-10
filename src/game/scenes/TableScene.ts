@@ -36,7 +36,6 @@ import type { SelectionState } from '../interaction/selection'
 import { classifyHighlight } from '../interaction/highlight'
 import { CardView } from '../view/CardView'
 import { HUDView } from '../view/HUDView'
-import { createWinScreen, createLossScreen, createHelpOverlay } from '../view/overlays'
 import { EndScreenView } from '../view/EndScreenView'
 import { HelpOverlayView } from '../view/HelpOverlayView'
 import { textStyle, TEXT } from '../view/presentation'
@@ -225,10 +224,19 @@ export class TableScene extends Phaser.Scene {
       .on('pointerdown', () => this.onConfirmClick())
       .setVisible(false)
 
-    this.winScreen = createWinScreen(this)
-    this.lossScreen = createLossScreen(this)
+    this.winScreen = new EndScreenView(this, {
+      title: 'YOU WIN',
+      titleColor: '#88ee88',
+      subtitle: 'You survived.',
+    })
 
-    this.helpOverlay = createHelpOverlay(
+    this.lossScreen = new EndScreenView(this, {
+      title: 'YOU LOSE',
+      titleColor: '#ff8888',
+      subtitle: 'You did not survive meeting the Walker.',
+    })
+
+    this.helpOverlay = new HelpOverlayView(
       this,
       this.worldId_,
       this.game_.state.totalActs,
