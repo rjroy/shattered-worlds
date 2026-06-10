@@ -15,14 +15,16 @@ export interface EndScreenConfig {
 
 /** Full-screen terminal overlay (hidden by default), centered on the canvas. */
 export class EndScreenView extends Phaser.GameObjects.Container {
+  bg: Phaser.GameObjects.Rectangle
+
   constructor(scene: Phaser.Scene, config: EndScreenConfig) {
     super(scene, CANVAS_W / 2, CANVAS_H / 2)
     scene.add.existing(this)
     this.setDepth(1000)
     this.setVisible(false)
 
-    const bg = scene.add.rectangle(0, 0, CANVAS_W, CANVAS_H, 0x000000, 0.8)
-    this.add(bg)
+    this.bg = scene.add.rectangle(0, 0, CANVAS_W, CANVAS_H, 0x000000, 0.8)
+    this.add(this.bg)
 
     const text = scene.add.text(0, -30, config.title, textStyle({
       fontSize: '72px',
@@ -38,5 +40,14 @@ export class EndScreenView extends Phaser.GameObjects.Container {
     }))
     sub.setOrigin(0.5, 0.5)
     this.add(sub)
+  }
+
+  setOnClick(callback: () => void) {
+    if (this.bg) {
+      this.scene.time.delayedCall(1000, () => {
+        this.bg.setInteractive({ useHandCursor: true })
+        this.bg.once('pointerdown', callback)
+      })
+    }
   }
 }

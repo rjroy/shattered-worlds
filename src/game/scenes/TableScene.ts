@@ -98,6 +98,7 @@ export class TableScene extends Phaser.Scene {
   private lossScreen!: EndScreenView
   private helpOverlay!: HelpOverlayView
   private questionBtn!: CommonButton
+  private exitBtn!: CommonButton
 
   // Modal chooser UI (created/destroyed per card play)
   private modalChooser: ModalChooserView | null = null
@@ -135,6 +136,7 @@ export class TableScene extends Phaser.Scene {
     this.worldId_ = data.worldId ?? 'zombie-big-box'
     this.seed_ = data.seed ?? Math.floor(Math.random() * 2 ** 32)
     this.loadError_ = false
+    this.cardObjects = new Map()
   }
 
   preload(): void {
@@ -250,6 +252,18 @@ export class TableScene extends Phaser.Scene {
       questionStyle,
     )
       .on('pointerup', () => this.helpOverlay.setVisible(true))
+
+    this.exitBtn = new CommonButton(
+      this,
+      TABLE_LAYOUT.buttons.exit.x,
+      TABLE_LAYOUT.buttons.exit.y,
+      'X',
+      questionStyle,
+    )
+      .on('pointerup', () => {
+        this.scene.start('WorldSelect')
+      })
+
 
     this.input.keyboard?.on('keydown-ESC', () => {
       if (this.helpOverlay.visible) this.helpOverlay.setVisible(false)
@@ -376,14 +390,25 @@ export class TableScene extends Phaser.Scene {
     if (state.status === 'won') {
       this.winScreen.setVisible(true)
       this.lossScreen.setVisible(false)
+      this.winScreen.setOnClick(() => {
+        console.log('Restarting world select scene') // --- IGNORE ---
+        this.scene.start('WorldSelect')
+      })
     } else if (state.status === 'lost') {
       this.lossScreen.setVisible(true)
       this.winScreen.setVisible(false)
+      this.lossScreen.setOnClick(() => {
+        console.log('Restarting world select scene') // --- IGNORE ---
+        this.scene.start('WorldSelect')
+      })
     }
 
-    // Help overlay / ? button
-    this.questionBtn.setVisible(state.status === 'playing')
-    if (state.status !== 'playing') this.helpOverlay.setVisible(false)
+    // Cleanup the interactivity of objects at game end.
+    if (state.status !== 'playing') {
+      this.questionBtn.disableInteractive()
+      this.exitBtn.disableInteractive()
+      this.helpOverlay.setVisible(false)
+    }
   }
 
   /**
