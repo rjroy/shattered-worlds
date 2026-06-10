@@ -148,10 +148,6 @@ export class TableScene extends Phaser.Scene {
       }
     }
 
-    for (const { key, url } of Object.values(worldMusicManifest)) {
-      this.load.audio(key, url)
-    }
-
     this.load.on('loaderror', (file: Phaser.Loader.File) => {
       if (file.type === 'json') this.loadError_ = true
       if (file.type === 'audio') {
@@ -754,17 +750,40 @@ export class TableScene extends Phaser.Scene {
     this.drawAll()
   }
 
-  private startWorldMusic(worldId: string): void {
+  private startWorldMusic(worldId: string): Promise<void> {
     this.stopWorldMusic()
 
     const music = worldMusicManifest[worldId]
-    if (music === undefined || !this.cache.audio.exists(music.key)) return
 
-    this.worldMusic = this.sound.add(music.key, {
-      loop: true,
-      volume: 0.45,
+    return new Promise((resolve, reject) => {
+      if (music === undefined) {
+        reject(new Error(`Music asset missing from cache: ${worldId}`))
+        return;
+      } 
+
+      const resolveMusic = () => {
+        this.worldMusic = this.sound.add(music.key, { loop: true, volume: 0.45, })
+        this.worldMusic.play()
+        resolve()
+      };
+
+      if (!this.cache.audio.exists(music.key)) {
+        this.load.audio(music.key, music.url)
+        this.load.once('filecomplete', (key: string) => {
+          if (key === music.key) {
+            resolveMusic()
+          }
+        })
+        this.load.once('loaderror', (file: Phaser.Loader.File) => {
+          if (file.key === music.key) {
+            reject(new Error(`Failed to load music asset: ${music.key}`))
+          }
+        })
+        this.load.start()
+      } else {
+        resolveMusic()
+      }
     })
-    this.worldMusic.play()
   }
 
   private stopWorldMusic(): void {
