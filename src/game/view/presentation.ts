@@ -20,6 +20,41 @@ import type { HighlightKind } from '../interaction/highlight'
 export { CANVAS_W, CANVAS_H } from './layout'
 
 // ---------------------------------------------------------------------------
+// Text palette
+// ---------------------------------------------------------------------------
+
+// Text colors are theme-independent — all pass WCAG AA against the frame
+// backgrounds used by every current theme.
+export const TEXT = {
+  textLight: '#e8eaf0',
+  textMuted: '#b6c0d1',
+  textCost: '#ffcc44',
+  textKeyword: '#88ccff',
+  textDisabled: '#555577',
+  textPenalty: '#ff8888',
+  textReward: '#88ee88',
+  textHeld: '#ffaa66',
+  textDiscard: '#ffaa44',
+  textEnergy: '#ffeebb',
+  bgEnergy: 0x002244,
+  textHp: '#ff8888',
+  dimAlpha: 0.35,
+  textWorldTitle: '#d4c8e0',
+  textWorldTag: '#c178bc',
+  textWorldStory: '#b69fc7',
+  background: '#24221e',
+}
+
+export function getRealityPalette(
+  theme: VisualTheme,
+  index: keyof VisualTheme['realityPalette'],
+  defaultColor: string
+): string {
+  return theme.realityPalette[index] ?? defaultColor
+}
+
+
+// ---------------------------------------------------------------------------
 // Card texture selection
 // ---------------------------------------------------------------------------
 
@@ -44,26 +79,6 @@ export function selectCardFrontKey(
   // (generic) until per-player-world art ships.
   const theme = resolveTheme(card.sourceWorldId) // seam: use result when per-player-world art is defined
   return theme.worldCardfrontKey ?? 'cardfront'
-}
-
-// ---------------------------------------------------------------------------
-// Text palette
-// ---------------------------------------------------------------------------
-
-// Text colors are theme-independent — all pass WCAG AA against the frame
-// backgrounds used by every current theme.
-export const TEXT = {
-  textLight: '#e8eaf0',
-  textMuted: '#b6c0d1',
-  textCost: '#ffcc44',
-  textKeyword: '#88ccff',
-  textPenalty: '#ff8888',
-  textReward: '#88ee88',
-  textHeld: '#ffaa66',
-  textEnergy: '#ffeebb',
-  bgEnergy: 0x002244,
-  textHp: '#ff8888',
-  dimAlpha: 0.35,
 }
 
 // ---------------------------------------------------------------------------

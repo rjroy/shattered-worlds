@@ -24,6 +24,7 @@ export const TABLE_LAYOUT = {
   cardDepth: 100,
   cardHoverDepth: 200,
   connectorDepth: 500,
+  modalDepth: 1000,
   selectionHint: { x: CANVAS_W / 2, y: 578 },
   previewSlot: { x: CANVAS_W / 2, y: 550 },
   buttons: {
@@ -68,7 +69,7 @@ export const WORLD_SELECT_LAYOUT = {
   cardHeight: 350,
   cardGap: 30,
   cardY: 390,
-  subtitleY: 555,
+  subtitleY: CANVAS_H - 20,
   hoverScale: 1.15,
   nameY: 30,
   tagMinY: 60,

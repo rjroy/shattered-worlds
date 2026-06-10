@@ -7,7 +7,9 @@ describe('selectTheme', () => {
   it('returns zombie-big-box theme for that worldId', () => {
     const theme = selectTheme('zombie-big-box')
     expect(theme.worldId).toBe('zombie-big-box')
-    expect(theme.intrusionHue).toBe('#9bff6a')
+    expect(theme.intrusionHue).toBe(ZOMBIE_BIG_BOX_THEME.intrusionHue)
+    expect(theme.backdrop).toEqual(ZOMBIE_BIG_BOX_THEME.backdrop)
+    expect(theme.frameStyle).toEqual(ZOMBIE_BIG_BOX_THEME.frameStyle)
   })
 
   it('returns default (starter) for unknown worldId', () => {

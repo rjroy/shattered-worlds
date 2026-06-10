@@ -1,5 +1,5 @@
 import Phaser from 'phaser'
-import { textStyle } from './presentation'
+import { textStyle, TEXT } from './presentation'
 import { CANVAS_W, CANVAS_H } from './layout'
 
 /**
@@ -34,7 +34,7 @@ export class EndScreenView extends Phaser.GameObjects.Container {
 
     const sub = scene.add.text(0, 50, config.subtitle, textStyle({
       fontSize: '20px',
-      color: '#9aa3b2',
+      color: TEXT.textLight
     }))
     sub.setOrigin(0.5, 0.5)
     this.add(sub)

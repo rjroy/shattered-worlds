@@ -292,7 +292,7 @@ export class CardView extends Phaser.GameObjects.Container {
       if (worldCard.discardable) {
         addCardText(scene, this, 0, CARD_H / 2 - 22, 'click to discard', {
           fontSize: '9px',
-          color: '#ffaa44',
+          color: TEXT.textDiscard,
           bold: true,
           originY: 0,
           background: 0x000000,

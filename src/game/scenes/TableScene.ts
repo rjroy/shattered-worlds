@@ -178,7 +178,7 @@ export class TableScene extends Phaser.Scene {
 
     const endTurnStyle = textStyle({
       fontSize: '16px',
-      color: getRealityPalette(this.theme_, 'text', '#88aaff'),
+      color: getRealityPalette(this.theme_, 'text', TEXT.textKeyword),
       fontStyle: 'bold',
     })
     this.endTurnBtn = new CommonButton(
@@ -192,7 +192,7 @@ export class TableScene extends Phaser.Scene {
 
     const cancelStyle = textStyle({
       fontSize: '13px',
-      color: getRealityPalette(this.theme_, 'cancel', '#ff8888'),
+      color: getRealityPalette(this.theme_, 'cancel', TEXT.textPenalty),
     })
     this.cancelBtn = new CommonButton(
       this,
@@ -212,7 +212,7 @@ export class TableScene extends Phaser.Scene {
     const confirmStyle = textStyle({
       fontSize: '13px',
       fontStyle: 'bold',
-      color: getRealityPalette(this.theme_, 'confirm', '#88ee88'),
+      color: getRealityPalette(this.theme_, 'confirm', TEXT.textReward),
     })
     this.confirmBtn = new CommonButton(
       this,
@@ -226,13 +226,13 @@ export class TableScene extends Phaser.Scene {
 
     this.winScreen = new EndScreenView(this, {
       title: 'YOU WIN',
-      titleColor: '#88ee88',
+      titleColor: TEXT.textReward,
       subtitle: 'You survived.',
     })
 
     this.lossScreen = new EndScreenView(this, {
       title: 'YOU LOSE',
-      titleColor: '#ff8888',
+      titleColor: TEXT.textPenalty,
       subtitle: 'You did not survive meeting the Walker.',
     })
 
@@ -262,7 +262,7 @@ export class TableScene extends Phaser.Scene {
 
     this.selectionHint = new CommonLabel(this, TABLE_LAYOUT.selectionHint.x, TABLE_LAYOUT.selectionHint.y, '', textStyle({
       fontSize: '12px',
-      color: getRealityPalette(this.theme_, 'text', '#9aa3b2'),
+      color: getRealityPalette(this.theme_, 'text', TEXT.textLight),
     })).setVisible(false)
 
     // Sits in a dedicated slot directly above selectionHint. selectionHint has
@@ -272,7 +272,7 @@ export class TableScene extends Phaser.Scene {
     // means this slot simply stays empty).
     this.previewSlot = new CommonLabel(this, TABLE_LAYOUT.previewSlot.x, TABLE_LAYOUT.previewSlot.y, '', textStyle({
       fontSize: '12px',
-      color: getRealityPalette(this.theme_, 'title', '#9aa3b2'),
+      color: getRealityPalette(this.theme_, 'title', TEXT.textLight),
     }))
     this.previewSlot.setVisible(false)
 
