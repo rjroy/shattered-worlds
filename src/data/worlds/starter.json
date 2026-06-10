@@ -90,7 +90,7 @@
       "discardable": false,
       "onDiscarded": { "kind": "None" },
       "onCleared": { "kind": "SurviveWorld" },
-      "onEndOfTurn": { "kind": "None" }
+      "onEndOfTurn": { "kind": "AddThreatToWorldDeck" }
     }
   },
   "starterDeck": [

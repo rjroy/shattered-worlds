@@ -82,6 +82,9 @@ describe('describeEffect', () => {
     expect(describeEffect({ kind: 'AddWorldCardToTop', template: 'Door' })).toEqual([
       '+Door to world deck',
     ])
+    expect(describeEffect({ kind: 'AddThreatToWorldDeck' })).toEqual([
+      '+theme threat to world deck',
+    ])
   })
 
   it('describes ReturnWorldCards as a range or a fixed count', () => {

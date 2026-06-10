@@ -49,6 +49,8 @@ export function describeEffect(effect: CardEffect): string[] {
       return [`Gain a ${effect.template} card`]
     case 'AddWorldCardToTop':
       return [`+${effect.template} to world deck`]
+    case 'AddThreatToWorldDeck':
+      return ['+theme threat to world deck']
     case 'Modal':
       return ['Choose one:', ...effect.branches.map((b) => `• ${describeEffect(b).join(', ')}`)]
     case 'Sequence':
