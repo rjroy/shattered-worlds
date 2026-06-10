@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'bun:test'
-import { PileLayer } from '../view/piles'
+import { PileLayer } from '../view/PileLayer'
 
 // ---------------------------------------------------------------------------
 // Stubs
