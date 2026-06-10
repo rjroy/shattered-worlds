@@ -11,7 +11,6 @@
 import Phaser from 'phaser'
 import { assetManifest } from '../data/assetManifest'
 import { worldMusicManifest } from '../data/audioManifest'
-import { getRealityPalette } from '../view/themes/theme'
 import { selectTheme } from '../view/themes/themeManifest'
 import type { VisualTheme } from '../view/themes/theme'
 import { createGame, availableActions, CatalogError } from '../../core/index'
@@ -36,18 +35,17 @@ import type { SelectionState } from '../interaction/selection'
 import { classifyHighlight } from '../interaction/highlight'
 import { CardView } from '../view/CardView'
 import { HUDView } from '../view/HUDView'
-import { createWinScreen, createLossScreen, createHelpOverlay } from '../view/overlays'
 import { EndScreenView } from '../view/EndScreenView'
 import { HelpOverlayView } from '../view/HelpOverlayView'
-import { textStyle, TEXT } from '../view/presentation'
+import { textStyle, TEXT, getRealityPalette } from '../view/presentation'
 import { ringFraction, connectorLine, selectConnectorStyle, effectAtStep } from '../interaction/feedback'
 import type { ConnectorStyle } from '../interaction/feedback'
 import { drawConnector } from '../view/connector'
-import { modalBranchViews } from '../view/modal'
+import { resolveBranchLabels } from '../../core/view/branchLabels'
 import { ModalChooserView } from '../view/ModalChooserView'
 import { CommonLabel, CommonButton } from '../view/components'
-import { previewPlay } from '../interaction/describe'
-import { PileLayer } from '../view/piles'
+import { previewPlay } from '../../core/view/describe'
+import { PileLayer } from '../view/PileLayer'
 import { BackdropLayer } from '../view/backdrop'
 import { buildWorld } from '../../data/worldManifest'
 import { CARD_FACE, TABLE_LAYOUT } from '../view/layout'
@@ -150,10 +148,6 @@ export class TableScene extends Phaser.Scene {
       }
     }
 
-    for (const { key, url } of Object.values(worldMusicManifest)) {
-      this.load.audio(key, url)
-    }
-
     this.load.on('loaderror', (file: Phaser.Loader.File) => {
       if (file.type === 'json') this.loadError_ = true
       if (file.type === 'audio') {
@@ -179,7 +173,7 @@ export class TableScene extends Phaser.Scene {
 
     const endTurnStyle = textStyle({
       fontSize: '16px',
-      color: getRealityPalette(this.theme_, 'text', '#88aaff'),
+      color: getRealityPalette(this.theme_, 'text'),
       fontStyle: 'bold',
     })
     this.endTurnBtn = new CommonButton(
@@ -193,7 +187,7 @@ export class TableScene extends Phaser.Scene {
 
     const cancelStyle = textStyle({
       fontSize: '13px',
-      color: getRealityPalette(this.theme_, 'cancel', '#ff8888'),
+      color: getRealityPalette(this.theme_, 'cancel'),
     })
     this.cancelBtn = new CommonButton(
       this,
@@ -213,7 +207,7 @@ export class TableScene extends Phaser.Scene {
     const confirmStyle = textStyle({
       fontSize: '13px',
       fontStyle: 'bold',
-      color: getRealityPalette(this.theme_, 'confirm', '#88ee88'),
+      color: getRealityPalette(this.theme_, 'confirm'),
     })
     this.confirmBtn = new CommonButton(
       this,
@@ -225,10 +219,19 @@ export class TableScene extends Phaser.Scene {
       .on('pointerdown', () => this.onConfirmClick())
       .setVisible(false)
 
-    this.winScreen = createWinScreen(this)
-    this.lossScreen = createLossScreen(this)
+    this.winScreen = new EndScreenView(this, {
+      title: 'YOU WIN',
+      titleColor: TEXT.textReward,
+      subtitle: 'You survived.',
+    })
 
-    this.helpOverlay = createHelpOverlay(
+    this.lossScreen = new EndScreenView(this, {
+      title: 'YOU LOSE',
+      titleColor: TEXT.textPenalty,
+      subtitle: 'You did not survive meeting the Walker.',
+    })
+
+    this.helpOverlay = new HelpOverlayView(
       this,
       this.worldId_,
       this.game_.state.totalActs,
@@ -254,7 +257,7 @@ export class TableScene extends Phaser.Scene {
 
     this.selectionHint = new CommonLabel(this, TABLE_LAYOUT.selectionHint.x, TABLE_LAYOUT.selectionHint.y, '', textStyle({
       fontSize: '12px',
-      color: getRealityPalette(this.theme_, 'text', '#9aa3b2'),
+      color: getRealityPalette(this.theme_, 'text'),
     })).setVisible(false)
 
     // Sits in a dedicated slot directly above selectionHint. selectionHint has
@@ -264,7 +267,7 @@ export class TableScene extends Phaser.Scene {
     // means this slot simply stays empty).
     this.previewSlot = new CommonLabel(this, TABLE_LAYOUT.previewSlot.x, TABLE_LAYOUT.previewSlot.y, '', textStyle({
       fontSize: '12px',
-      color: getRealityPalette(this.theme_, 'title', '#9aa3b2'),
+      color: getRealityPalette(this.theme_, 'title'),
     }))
     this.previewSlot.setVisible(false)
 
@@ -689,7 +692,7 @@ export class TableScene extends Phaser.Scene {
     const card = this.game_.state.hand.find((c) => c.id === cardId)
     const effectBranches =
       card?.kind === 'player' && card.effect.kind === 'Modal' ? card.effect.branches : []
-    const branches = modalBranchViews(spec.branches, effectBranches, available, cardId)
+    const branches = resolveBranchLabels(spec.branches, effectBranches, available, cardId)
 
     this.modalChooser = new ModalChooserView(
       this,
@@ -747,17 +750,40 @@ export class TableScene extends Phaser.Scene {
     this.drawAll()
   }
 
-  private startWorldMusic(worldId: string): void {
+  private startWorldMusic(worldId: string): Promise<void> {
     this.stopWorldMusic()
 
     const music = worldMusicManifest[worldId]
-    if (music === undefined || !this.cache.audio.exists(music.key)) return
 
-    this.worldMusic = this.sound.add(music.key, {
-      loop: true,
-      volume: 0.45,
+    return new Promise((resolve, reject) => {
+      if (music === undefined) {
+        reject(new Error(`Music asset missing from cache: ${worldId}`))
+        return;
+      } 
+
+      const resolveMusic = () => {
+        this.worldMusic = this.sound.add(music.key, { loop: true, volume: 0.45, })
+        this.worldMusic.play()
+        resolve()
+      };
+
+      if (!this.cache.audio.exists(music.key)) {
+        this.load.audio(music.key, music.url)
+        this.load.once('filecomplete', (key: string) => {
+          if (key === music.key) {
+            resolveMusic()
+          }
+        })
+        this.load.once('loaderror', (file: Phaser.Loader.File) => {
+          if (file.key === music.key) {
+            reject(new Error(`Failed to load music asset: ${music.key}`))
+          }
+        })
+        this.load.start()
+      } else {
+        resolveMusic()
+      }
     })
-    this.worldMusic.play()
   }
 
   private stopWorldMusic(): void {

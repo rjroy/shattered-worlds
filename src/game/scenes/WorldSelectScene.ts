@@ -4,7 +4,7 @@ import { assetManifest } from '../data/assetManifest'
 import { worldManifest } from '../../data/worldManifest'
 import { worldDisplayManifest, type WorldDisplayData } from '../../data/worldDisplayManifest'
 import { selectTheme } from '../view/themes/themeManifest'
-import { textStyle } from '../view/presentation'
+import { textStyle, TEXT } from '../view/presentation'
 import { CANVAS_W, CANVAS_H, WORLD_SELECT_LAYOUT } from '../view/layout'
 
 const CARD_W = WORLD_SELECT_LAYOUT.cardWidth
@@ -32,7 +32,7 @@ export class WorldSelectScene extends Phaser.Scene {
 
     // subtitle only — logotype is in the image
     this.add.text(CANVAS_W / 2, SUBTITLE_Y, 'Choose your shard',
-      textStyle({ fontSize: '13px', color: '#9aa3b2' }),
+      textStyle({ fontSize: '20px', fontStyle: 'italic', color: TEXT.textWorldTag }),
     ).setOrigin(0.5, 0.5)
 
     // world cards
@@ -103,7 +103,7 @@ export class WorldSelectScene extends Phaser.Scene {
 
     // content
     const nameText = this.add.text(0, -CARD_H / 2 + WORLD_SELECT_LAYOUT.nameY, display.name,
-      textStyle({ fontSize: '17px', color: '#d4c8e0', fontStyle: 'bold', align: 'center', wordWrap: { width: CARD_W - WORLD_SELECT_LAYOUT.textPadding } }),
+      textStyle({ fontSize: '17px', color: TEXT.textWorldTitle, fontStyle: 'bold', align: 'center', wordWrap: { width: CARD_W - WORLD_SELECT_LAYOUT.textPadding } }),
     ).setOrigin(0.5, 0)
 
     const tagLineY = Math.max(
@@ -111,7 +111,7 @@ export class WorldSelectScene extends Phaser.Scene {
       nameText.y + nameText.height + WORLD_SELECT_LAYOUT.textGap,
     )
     const tagText = this.add.text(0, tagLineY, display.tagline,
-      textStyle({ fontSize: '12px', color: '#c178bc', fontStyle: 'italic', align: 'center', wordWrap: { width: CARD_W - WORLD_SELECT_LAYOUT.textPadding } }),
+      textStyle({ fontSize: '12px', color: TEXT.textWorldTag, fontStyle: 'italic', align: 'center', wordWrap: { width: CARD_W - WORLD_SELECT_LAYOUT.textPadding } }),
     ).setOrigin(0.5, 0)
 
     const storyLineY = Math.max(
@@ -119,7 +119,7 @@ export class WorldSelectScene extends Phaser.Scene {
       tagText.y + tagText.height + WORLD_SELECT_LAYOUT.textGap,
     )
     const storyText = this.add.text(0, storyLineY, display.story,
-      textStyle({ fontSize: '12px', color: '#b69fc7', align: 'center', wordWrap: { width: CARD_W - WORLD_SELECT_LAYOUT.textPadding } }),
+      textStyle({ fontSize: '12px', color: TEXT.textWorldStory, align: 'center', wordWrap: { width: CARD_W - WORLD_SELECT_LAYOUT.textPadding } }),
     ).setOrigin(0.5, 0)
 
     container.add([bg, border, nameText, tagText, storyText])

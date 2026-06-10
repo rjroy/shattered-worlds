@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'bun:test'
 import { createRng } from '../../core/engine/rng'
 import type { CardEffect, GameState, PlayerCard, WorldCard } from '../../core/index'
-import { describeEffect, previewPlay } from '../interaction/describe'
+import { describeEffect, previewPlay } from '../../core/view/describe'
 
 // ---------------------------------------------------------------------------
 // Helpers

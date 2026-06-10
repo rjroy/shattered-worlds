@@ -34,11 +34,3 @@ export interface VisualTheme {
   // theme-specific frame for world/hazard cards; falls back to 'cardfront'
   worldCardfrontKey?: string      
 }
-
-export function getRealityPalette(
-  theme: VisualTheme,
-  index: keyof VisualTheme['realityPalette'],
-  defaultColor: string
-): string {
-  return theme.realityPalette[index] ?? defaultColor
-}

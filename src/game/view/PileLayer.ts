@@ -9,7 +9,7 @@
  * every drawAll().
  */
 import Phaser from 'phaser'
-import { textStyle } from './presentation'
+import { textStyle, TEXT } from './presentation'
 import { CommonLabel } from './components'
 import { PILE_LAYOUT } from './layout'
 
@@ -69,7 +69,7 @@ export class PileLayer {
     // Show count text below the stack
     const label = new CommonLabel(scene, 0, PILE_LAYOUT.labelY, `${str}: ${count}`, textStyle({
       fontSize: '10px',
-      color: '#b6c0d1',
+      color: TEXT.textMuted,
     }))
     container.add(label)
   }
