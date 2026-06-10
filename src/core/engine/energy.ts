@@ -10,6 +10,10 @@ export interface EffectResult {
   events: GameEvent[]
 }
 
+export interface StartTurnResult extends EffectResult {
+  playerCardsDrawn: number
+}
+
 // ---------------------------------------------------------------------------
 // gainEnergy
 // ---------------------------------------------------------------------------
@@ -65,14 +69,17 @@ export function spendEnergy(state: GameState, cost: number): EffectResult {
  * Returns: { state, events } with EnergyChanged first, then all draw/shuffle
  * events, then any CardDestroyed events from pending ForceDestroy charges.
  */
-export function startTurn(state: GameState): EffectResult {
+export function startTurn(state: GameState): StartTurnResult {
   // Gain 1 energy first
   const afterGain = gainEnergy(state)
   const stateWithEnergy = afterGain.state
   const energyEvents = afterGain.events
 
+  const playerCountBeforeRefill = stateWithEnergy.hand.filter((c) => c.kind === 'player').length
+
   // Then refill the hand
   const refillResult = refillHand(stateWithEnergy)
+  const playerCountAfterRefill = refillResult.state.hand.filter((c) => c.kind === 'player').length
 
   // Finally, drain any pending ForceDestroy charges against the new hand
   const destroyResult = resolveForceDestroy(refillResult.state)
@@ -81,5 +88,6 @@ export function startTurn(state: GameState): EffectResult {
   return {
     state: destroyResult.state,
     events: [...energyEvents, ...refillResult.events, ...destroyResult.events],
+    playerCardsDrawn: Math.max(0, playerCountAfterRefill - playerCountBeforeRefill),
   }
 }

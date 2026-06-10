@@ -917,8 +917,14 @@ describe('EndTurn gains energy', () => {
 
   it('several EndTurns are monotonic +1 with no cap', () => {
     const base = createWorld(catalog, worldData, 42)
+    const [rubble, s1] = mintCard(catalog, base, 'Rubble')
+    const [explore, seeded] = mintCard(catalog, s1, 'Explore')
     let state = makeState({
-      hand: base.hand.filter((c) => c.kind === 'world'),
+      ...seeded,
+      hand: [rubble as WorldCard],
+      playerDraw: [explore as PlayerCard],
+      worldDraw: [],
+      acts: [],
       energy: 1,
     })
 
@@ -1227,19 +1233,21 @@ describe('EndTurn loss guard A with ignoreEnergy', () => {
     expect(result.events.map((e) => e.type)).toContain('WorldLost')
   })
 
-  it('world card in hand prevents loss even when hand is otherwise empty', () => {
+  it('world card in hand still avoids livelock loss when a player draw is available', () => {
     // Craft a state with:
-    // - All draw piles and acts exhausted
-    // - Only a discardable world card in hand (e.g., Rubble)
-    // Expected: status stays 'playing', because discard is a valid action
+    // - No future world cards in piles
+    // - A discardable world card in hand (Rubble)
+    // - At least one player card available to draw
+    // Expected: status stays 'playing' (not a dead state).
 
     const base = createWorld(catalog, worldData, 42)
     const [rubble, s1] = mintCard(catalog, base, 'Rubble')
+    const [explore, s2] = mintCard(catalog, s1, 'Explore')
 
     const state = makeState({
-      ...s1,
+      ...s2,
       hand: [rubble as WorldCard],
-      playerDraw: [],
+      playerDraw: [explore as PlayerCard],
       playerDiscard: [],
       worldDraw: [],
       acts: [],
@@ -1252,5 +1260,58 @@ describe('EndTurn loss guard A with ignoreEnergy', () => {
     expect(result.state.status).toBe('playing')
     // No WorldLost event
     expect(result.events.map((e) => e.type)).not.toContain('WorldLost')
+  })
+})
+
+// ---------------------------------------------------------------------------
+// 12. Draw-phase loss: if no player cards are drawn at turn start, lose
+// ---------------------------------------------------------------------------
+
+describe('EndTurn draw-phase loss', () => {
+  it('loses when hazards fill the hand and leave no room for player draws', () => {
+    const base = createWorld(catalog, worldData, 42)
+    let seeded = base
+    const hazards: WorldCard[] = []
+
+    for (let i = 0; i < 6; i++) {
+      const [rubble, next] = mintCard(catalog, seeded, 'Rubble')
+      hazards.push(rubble as WorldCard)
+      seeded = next
+    }
+
+    const state = makeState({
+      ...seeded,
+      hand: hazards,
+      playerDraw: [],
+      playerDiscard: [],
+      worldDraw: [],
+      acts: [],
+      energy: 2,
+    })
+
+    const result = reduce(catalog, state, { type: 'EndTurn' })
+
+    expect(result.state.status).toBe('lost')
+    expect(result.events.map((e) => e.type)).toContain('WorldLost')
+  })
+
+  it('loses when no player cards can be drawn from player piles', () => {
+    const base = createWorld(catalog, worldData, 42)
+    const [rubble, seeded] = mintCard(catalog, base, 'Rubble')
+
+    const state = makeState({
+      ...seeded,
+      hand: [rubble as WorldCard],
+      playerDraw: [],
+      playerDiscard: [],
+      worldDraw: [],
+      acts: [],
+      energy: 2,
+    })
+
+    const result = reduce(catalog, state, { type: 'EndTurn' })
+
+    expect(result.state.status).toBe('lost')
+    expect(result.events.map((e) => e.type)).toContain('WorldLost')
   })
 })
