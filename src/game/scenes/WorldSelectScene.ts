@@ -13,7 +13,12 @@ const CARD_GAP = WORLD_SELECT_LAYOUT.cardGap
 const CARD_Y = WORLD_SELECT_LAYOUT.cardY // card center y — over the stone-path area of the title image
 const SUBTITLE_Y = WORLD_SELECT_LAYOUT.subtitleY
 
+// Common return type for the world card background, which may be either an image or a simple colored rectangle
+type WorldCardBackground = Phaser.GameObjects.Image | Phaser.GameObjects.Rectangle
+
 export class WorldSelectScene extends Phaser.Scene {
+  cards : WorldCardBackground[]
+
   constructor() { super({ key: 'WorldSelect' }) }
 
   preload(): void {
@@ -40,6 +45,7 @@ export class WorldSelectScene extends Phaser.Scene {
     const totalW = worldIds.length * CARD_W + (worldIds.length - 1) * CARD_GAP
     const startX = (CANVAS_W - totalW) / 2 + CARD_W / 2
 
+    this.cards = []
     worldIds.forEach((worldId, i) => {
       const display = worldDisplayManifest[worldId]
       if (display === undefined) {
@@ -47,11 +53,12 @@ export class WorldSelectScene extends Phaser.Scene {
       }
       const accentColor = Phaser.Display.Color.HexStringToColor(selectTheme(worldId).intrusionHue).color
       const cardX = startX + i * (CARD_W + CARD_GAP)
-      this.createWorldCard(worldId, cardX, CARD_Y, display, accentColor)
+      const newCard = this.createWorldCard(worldId, cardX, CARD_Y, display, accentColor)
+      this.cards.push(newCard)
     })
   }
 
-  private createWorldCardBackground(worldId: string, display: WorldDisplayData): Phaser.GameObjects.Image | Phaser.GameObjects.Rectangle {
+  private createWorldCardBackground(worldId: string, display: WorldDisplayData): WorldCardBackground {
     if (display.backgroundKey) {
       const img = this.add.image(0, 0, display.backgroundKey)
 
@@ -92,7 +99,7 @@ export class WorldSelectScene extends Phaser.Scene {
     cx: number, cy: number,
     display: WorldDisplayData,
     accentColor: number,
-  ): void {
+  ): WorldCardBackground {
     const container = this.add.container(cx, cy)
 
     // background + accent border
@@ -127,8 +134,11 @@ export class WorldSelectScene extends Phaser.Scene {
     bg.on('pointerover', () => container.setScale(WORLD_SELECT_LAYOUT.hoverScale))
     bg.on('pointerout',  () => container.setScale(1.0))
     bg.on('pointerdown', () => {
+      bg.disableInteractive()
       const seed = Math.floor(Math.random() * 2 ** 32)
       this.scene.launch('Table', { worldId, seed })
+      this.cards.forEach(card => card.disableInteractive())
     })
+    return bg
   }
 }
