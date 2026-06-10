@@ -183,7 +183,7 @@ export function costRingArc(fraction: number): CostRingArc {
 // already clearly visible (base); at 1 it is at its loudest. These bound the
 // scale-up and glow alpha so even a calm board shows an obvious hover read.
 const EMPHASIS_SCALE_BASE = 1.06
-const EMPHASIS_SCALE_RANGE = 0.06 // → up to 1.12 at full intensity
+const EMPHASIS_SCALE_RANGE = 0.20 // → up to 1.26 at full intensity
 const EMPHASIS_GLOW_ALPHA_BASE = 0.45
 const EMPHASIS_GLOW_ALPHA_RANGE = 0.45 // → up to 0.9 at full intensity
 

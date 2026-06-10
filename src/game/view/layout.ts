@@ -21,6 +21,8 @@ export const TABLE_LAYOUT = {
   cardSpacing: 156,
   rowCenterX: CANVAS_W / 2,
   rowWidthPadding: 25,
+  cardDepth: 100,
+  cardHoverDepth: 200,
   connectorDepth: 500,
   selectionHint: { x: CANVAS_W / 2, y: 578 },
   previewSlot: { x: CANVAS_W / 2, y: 550 },

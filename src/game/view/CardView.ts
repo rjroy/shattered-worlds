@@ -20,7 +20,7 @@ import {
   costRingArc,
   emphasisDescriptor,
 } from './presentation'
-import { CARD_FACE } from './layout'
+import { CARD_FACE, TABLE_LAYOUT } from './layout'
 
 // ---------------------------------------------------------------------------
 // Card dimensions
@@ -35,6 +35,26 @@ const INSET_X = CARD_FACE.inset.x
 const INSET_Y = CARD_FACE.inset.y
 const INSET_W = CARD_FACE.inset.width
 const INSET_H = CARD_FACE.inset.height
+
+// ---------------------------------------------------------------------------
+// Hover-target emphasis (S9) — the loudest read on the board
+// ---------------------------------------------------------------------------
+
+// Emphasis geometry. The glow is a rounded rectangle stroked OUTSIDE the card
+// edge so it reads as a halo, not a border (the 3px target border lives on the
+// list[1] rectangle and stays untouched). Lift + glow together make the hovered
+// legal target unmistakable beyond a colour change.
+const EMPHASIS_GLOW_PAD = 7 // px the glow ring extends past the card edge
+const EMPHASIS_GLOW_LINE = 6 // glow stroke width
+const EMPHASIS_GLOW_RADIUS = 10 // rounded-corner radius
+
+function drawGlow(glow: Phaser.GameObjects.Graphics, color: number, alpha: number): void {
+  glow.clear()
+  const w = CARD_W + EMPHASIS_GLOW_PAD * 2
+  const h = CARD_H + EMPHASIS_GLOW_PAD * 2
+  glow.lineStyle(EMPHASIS_GLOW_LINE, color, alpha)
+  glow.strokeRoundedRect(-w / 2, -h / 2, w, h, EMPHASIS_GLOW_RADIUS)
+}
 
 // ---------------------------------------------------------------------------
 // Card object factory
@@ -150,6 +170,7 @@ export class CardView extends Phaser.GameObjects.Container {
     super(scene, x, y)
     scene.add.existing(this)
     this.cardId = card.id
+    this.setDepth(TABLE_LAYOUT.cardDepth)
 
     // Card frame image: world cards use the theme-specific front if available.
     const cardfrontKey = selectCardFrontKey(card, theme, resolveTheme)
@@ -308,6 +329,7 @@ export class CardView extends Phaser.GameObjects.Container {
     glow.setVisible(true)
     drawGlow(glow, glowColor, glowAlpha)
     this.emphasized = true
+    this.setDepth(TABLE_LAYOUT.cardHoverDepth)
   }
 
   /** Restore base transform: scale 1, glow hidden/cleared, emphasis off. */
@@ -318,6 +340,7 @@ export class CardView extends Phaser.GameObjects.Container {
       this.targetGlow.setVisible(false)
     }
     this.emphasized = false
+    this.setDepth(TABLE_LAYOUT.cardDepth)
   }
 
   /** Re-assert this card's base position. */
@@ -500,141 +523,4 @@ function updateRingObject(
   })
 }
 
-/** Dim a card that is not currently playable. */
-export function dimCard(container: Phaser.GameObjects.Container, dim: boolean): void {
-  if (container instanceof CardView) {
-    container.setDimmed(dim)
-    return
-  }
-  container.setAlpha(dim ? TEXT.dimAlpha : 1.0)
-}
 
-// ---------------------------------------------------------------------------
-// Hover-target emphasis (S9) — the loudest read on the board
-// ---------------------------------------------------------------------------
-
-// Emphasis geometry. The glow is a rounded rectangle stroked OUTSIDE the card
-// edge so it reads as a halo, not a border (the 3px target border lives on the
-// list[1] rectangle and stays untouched). Lift + glow together make the hovered
-// legal target unmistakable beyond a colour change.
-const EMPHASIS_GLOW_PAD = 7 // px the glow ring extends past the card edge
-const EMPHASIS_GLOW_LINE = 6 // glow stroke width
-const EMPHASIS_GLOW_RADIUS = 10 // rounded-corner radius
-
-// The scale (lift) and glow alpha magnitudes scale with intensity in
-// emphasisDescriptor (presentation.ts). The fixed glow rectangle geometry above
-// stays here because it feeds the draw call directly.
-
-// The glow Graphics is stored on the container under this key (mirrors costRing)
-// so it persists across reconcile cycles and stays inside container.list for the
-// whole life of the container. The emphasis is static today (no tween is created),
-// but keeping the glow in container.list means the destruction pass's
-// killTweensOf(container.list) would reach any FUTURE tween added to it.
-type EmphasisContainer = Phaser.GameObjects.Container & {
-  targetGlow?: Phaser.GameObjects.Graphics
-  emphasized?: boolean
-}
-
-/** Lazily create the glow child, appended AFTER all existing children. */
-function obtainGlow(
-  scene: Phaser.Scene,
-  container: EmphasisContainer,
-): Phaser.GameObjects.Graphics {
-  if (container.targetGlow !== undefined) return container.targetGlow
-  const glow = scene.add.graphics()
-  // Appended last: list[0]=cardfront and list[1]=highlight rectangle are never
-  // disturbed (applyCardHighlight's list[1] contract holds). Kept in the list
-  // for life so a FUTURE tween on it would be reachable by
-  // killTweensOf(container.list); no tween is created today.
-  container.add(glow)
-  container.targetGlow = glow
-  return glow
-}
-
-function drawGlow(glow: Phaser.GameObjects.Graphics, color: number, alpha: number): void {
-  glow.clear()
-  const w = CARD_W + EMPHASIS_GLOW_PAD * 2
-  const h = CARD_H + EMPHASIS_GLOW_PAD * 2
-  glow.lineStyle(EMPHASIS_GLOW_LINE, color, alpha)
-  glow.strokeRoundedRect(-w / 2, -h / 2, w, h, EMPHASIS_GLOW_RADIUS)
-}
-
-/**
- * Make the hovered legal target the loudest card on the board: lift it (scale
- * up) AND draw a `targetGlow` halo ring around it. Both magnitudes scale with
- * `intensity` ∈ [0,1] (completes FEEDBACK-12: S2 added the colour seam, this is
- * the intensity-scaled-emphasis half).
- *
- * Distinct from the legal-but-unhovered `target` state (a 3px border only, no
- * scale, no halo) and from the dimmed non-target state (alpha 0.35, no scale);
- * an emphasized card is both larger and ringed.
- *
- * The emphasis is static: a one-shot scale lift plus a drawn glow halo. No tween
- * is created, so nothing animates or pulses.
- *
- * Idempotent: re-calling on an already-emphasized container with the same
- * intensity is a no-op (guarded by the `emphasized` flag) so a reused container
- * repainted every cycle never re-applies the scale/glow. The glow Graphics lives
- * as a child in container.list for the container's life, so the S3 destruction
- * pass's killTweensOf(container.list) would reach any FUTURE tween added to it;
- * no Tween reference is created or retained today.
- */
-export function emphasizeCard(
-  scene: Phaser.Scene,
-  container: Phaser.GameObjects.Container,
-  glowColor: number,
-  intensity: number,
-): void {
-  if (container instanceof CardView) {
-    container.emphasize(glowColor, intensity)
-    return
-  }
-
-  const c = container as EmphasisContainer
-  if (c.emphasized === true) return // idempotent: already loud, don't re-apply
-
-  // The "how loud" decision (lift + glow alpha from intensity) is pure; this
-  // function only pushes those magnitudes onto the container and glow.
-  const { scale, glowAlpha } = emphasisDescriptor(intensity)
-
-  container.setScale(scale)
-  const glow = obtainGlow(scene, c)
-  glow.setVisible(true)
-  drawGlow(glow, glowColor, glowAlpha)
-  c.emphasized = true
-}
-
-/**
- * Restore a container's base transform: scale 1, glow hidden/cleared, emphasis
- * flag cleared. Safe to call on a never-emphasized container (no-op-ish). Owned
- * by S9 — called on pointer-out AND by the per-cycle update path when a hovered
- * card is no longer a legal target.
- */
-export function clearEmphasis(container: Phaser.GameObjects.Container): void {
-  if (container instanceof CardView) {
-    container.clearEmphasis()
-    return
-  }
-
-  const c = container as EmphasisContainer
-  container.setScale(1)
-  if (c.targetGlow !== undefined) {
-    c.targetGlow.clear()
-    c.targetGlow.setVisible(false)
-  }
-  c.emphasized = false
-}
-
-/**
- * Re-assert a card's base position. Called every drawAll() cycle for both reused
- * and freshly-created containers so a card that moved within its row lands at its
- * new slot. Position is mutable per cycle; the card face (createCardObject) is not.
- * No tween — the reconcile sets x/y directly (a later phase may animate movement).
- */
-export function positionCard(container: Phaser.GameObjects.Container, x: number, y: number): void {
-  if (container instanceof CardView) {
-    container.setCardPosition(x, y)
-    return
-  }
-  container.setPosition(x, y)
-}
