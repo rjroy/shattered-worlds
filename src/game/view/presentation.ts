@@ -42,7 +42,7 @@ export const TEXT = {
   textWorldTitle: '#d4c8e0',
   textWorldTag: '#c178bc',
   textWorldStory: '#b69fc7',
-  background: '#24221e',
+  background: '#2f2931',
 }
 
 export function getRealityPalette(
