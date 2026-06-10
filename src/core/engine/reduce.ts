@@ -159,6 +159,19 @@ function handleEndTurn(catalog: CardCatalog, state: GameState): ReduceResult {
   // gone, e.g. all destroyed by Regroup) — nothing can ever enter the hand.
   const afterRefill = turnStartResult.state
 
+  // Lose immediately if the draw phase yielded zero player cards. This covers
+  // both "no room because hazards filled the hand" and "player deck exhausted".
+  // A SkipDrawNextTurn effect is handled separately and does not trigger this.
+  if (
+    afterRefill.status === 'playing' &&
+    turnStartResult.playerCardsDrawn === 0 &&
+    !turnStartResult.events.some((e) => e.type === 'DrawSkipped')
+  ) {
+    const lostState: GameState = { ...afterRefill, status: 'lost' }
+    events.push({ type: 'WorldLost' })
+    return { state: lostState, events }
+  }
+
   if (afterRefill.status === 'playing') {
     const hasNoFutureCards =
       afterRefill.playerDraw.length === 0 &&

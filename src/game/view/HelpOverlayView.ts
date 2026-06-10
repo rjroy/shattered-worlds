@@ -257,6 +257,13 @@ export class HelpOverlayView extends Phaser.GameObjects.Container {
         addStep(page, -360, -72, '1', `Draw up to ${WORLD_CONSTS.maxHandSize} cards. World cards are hazards; player cards are tools.`)
         addStep(page, -360, 10, '2', 'Spend Energy to play player cards. Most useful plays make Progress on hazards.')
         addStep(page, -360, 92, '3', 'End the turn when you are done. Hazards still in hand fire their Each turn text.')
+        addText(page, -360, 170, 'If the next draw phase gives you no player cards, you lose immediately.', {
+          fontSize: '12px',
+          color: TEXT.textPenalty,
+          fontStyle: 'bold',
+          wordWrap: { width: 300 },
+          lineSpacing: 2,
+        })
 
         addPanel(page, 185, 50, 395, 335)
         addPill(page, 40, -98, 'Clear')
@@ -436,4 +443,3 @@ export class HelpOverlayView extends Phaser.GameObjects.Container {
     })
   }
 }
-
