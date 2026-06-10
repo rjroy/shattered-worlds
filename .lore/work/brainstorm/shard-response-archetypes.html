@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Each shard answers differently: new effects for world identity</title>
+  <meta name="date" content="2026-06-10">
+  <meta name="status" content="proposed">
+  <meta name="tags" content="world, differentiation, effects, archetype, deckbuilder, zombie-big-box, bird-building, highway-volcano">
+  <meta name="modules" content="core-engine, worlds, data">
+  <meta name="related" content=".lore/work/brainstorm/theme-mechanical-differentiation.html, .lore/reference/theme-authoring.html, .lore/reference/vision.html">
+  <style>
+    :root {
+      --bg: #0c0a10; --panel: #18141f; --panel-2: #211a2b;
+      --ink: #ece6f2; --muted: #9b8fb0; --accent: #b98aff;
+      --gold: #d6b15c; --intrude: #ff4fa3; --ember: #ff8a3c;
+      --good: #6cd08a; --refuse: #ff8a8a; --border: #2c2438; --code: #c9b8e6;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: radial-gradient(1100px 560px at 50% -8%, #241433 0%, var(--bg) 58%);
+      color: var(--ink); font: 16px/1.65 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      padding: 2.5rem 1rem 6rem; }
+    .wrap { max-width: 940px; margin: 0 auto; }
+    .hero { text-align: center; margin-bottom: 2.4rem; }
+    .kicker { letter-spacing: .28em; text-transform: uppercase; font-size: .72rem; color: var(--gold); margin-bottom: .6rem; }
+    h1 { font-size: 2.3rem; margin: 0 0 .5rem; line-height: 1.08;
+      background: linear-gradient(180deg, #fff, #c9b8e6); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+    .one-liner { font-size: 1.1rem; color: var(--ink); max-width: 720px; margin: .5rem auto 0; }
+    .badge { display: inline-block; margin-top: 1rem; background: rgba(185,138,255,.12);
+      border: 1px solid rgba(185,138,255,.35); color: var(--accent); border-radius: 999px;
+      padding: .2rem .8rem; font-size: .75rem; font-weight: 600; }
+    h2 { font-size: 1.4rem; margin: 2.8rem 0 1rem; display: flex; align-items: center; gap: .6rem;
+      border-bottom: 1px solid var(--border); padding-bottom: .5rem; }
+    h2 .mark { font-size: 1rem; }
+    h3 { font-size: 1.05rem; margin: 1.5rem 0 .4rem; color: var(--accent); }
+    p { margin: .6rem 0; }
+    .panel { background: linear-gradient(180deg, var(--panel-2), var(--panel));
+      border: 1px solid var(--border); border-radius: 16px; padding: 1.3rem 1.5rem; margin: 1.1rem 0; }
+    .panel p:first-child { margin-top: 0; } .panel p:last-child { margin-bottom: 0; }
+    .term { color: var(--gold); font-weight: 600; }
+    code { font-family: "SF Mono", ui-monospace, "Cascadia Code", Menlo, Consolas, monospace;
+      font-size: .87em; color: var(--code); background: rgba(185,138,255,.08);
+      border: 1px solid rgba(185,138,255,.16); border-radius: 5px; padding: .05rem .35rem; }
+    pre { background: rgba(185,138,255,.06); border: 1px solid rgba(185,138,255,.16); border-radius: 8px;
+      padding: .7rem .9rem; overflow-x: auto; font-size: .82rem; line-height: 1.5; }
+    pre code { background: none; border: none; padding: 0; }
+    table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: .9rem; }
+    th, td { text-align: left; padding: .55rem .7rem; border-bottom: 1px solid var(--border); vertical-align: top; }
+    th { color: var(--gold); font-size: .76rem; text-transform: uppercase; letter-spacing: .06em; }
+    .diag { border-left: 3px solid var(--gold); background: rgba(214,177,92,.06);
+      border-radius: 0 10px 10px 0; padding: .8rem 1.1rem; margin: 1rem 0; }
+    .diag .n { color: var(--gold); font-weight: 700; margin-right: .4rem; }
+    .free { border-left: 3px solid var(--good); background: rgba(108,208,138,.06);
+      border-radius: 0 10px 10px 0; padding: 1rem 1.2rem; margin: 1.2rem 0; }
+    .free .tag { color: var(--good); font-weight: 700; font-size: .78rem; text-transform: uppercase; letter-spacing: .06em; }
+    .core { border-left: 3px solid var(--ember); background: rgba(255,138,60,.07);
+      border-radius: 0 10px 10px 0; padding: .7rem 1rem; margin: .7rem 0; }
+    .wild { border-left: 3px dashed var(--intrude); background: rgba(255,79,163,.05);
+      border-radius: 0 10px 10px 0; padding: .7rem 1rem; margin: .7rem 0; }
+    .core .tag, .wild .tag { font-weight: 700; font-size: .72rem; text-transform: uppercase; letter-spacing: .06em; }
+    .core .tag { color: var(--ember); } .wild .tag { color: var(--intrude); }
+    .pill { display: inline-block; font-size: .68rem; font-weight: 700; text-transform: uppercase; letter-spacing: .05em;
+      padding: .08rem .5rem; border-radius: 999px; margin-left: .4rem; vertical-align: middle; }
+    .pill.none { background: rgba(108,208,138,.16); color: var(--good); border: 1px solid rgba(108,208,138,.35); }
+    .pill.data { background: rgba(214,177,92,.14); color: var(--gold); border: 1px solid rgba(214,177,92,.35); }
+    .pill.codez { background: rgba(255,138,60,.14); color: var(--ember); border: 1px solid rgba(255,138,60,.4); }
+    .q { border-left: 3px solid var(--accent); background: rgba(185,138,255,.06);
+      border-radius: 0 10px 10px 0; padding: .8rem 1.1rem; margin: .9rem 0; }
+    .q .qid { color: var(--accent); font-weight: 700; margin-right: .4rem; }
+    .legend { font-size: .82rem; color: var(--muted); margin: .4rem 0 0; }
+    .meta-foot { margin-top: 3.5rem; padding-top: 1rem; border-top: 1px solid var(--border);
+      color: var(--muted); font-size: .82rem; text-align: center; }
+    em.threat { color: var(--intrude); font-style: normal; font-weight: 700; }
+    .arch { color: var(--good); font-weight: 700; }
+  </style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="hero">
+    <div class="kicker">Shattered Worlds · Proposal</div>
+    <h1>Each shard <em>answers</em> differently</h1>
+    <p class="one-liner">The threat-verbs shipped — Zombie multiplies, Lava compounds, the Bird snatches. The worlds now hit you differently, but you answer them with the same three cards wearing different art. This proposal gives each shard a nameable response archetype: new player-side effects, plus data-only tweaks.</p>
+    <div class="badge">Status: proposed · 2026-06-10</div>
+    <p class="legend">Effort tags:
+      <span class="pill none">no code</span> data-only, reuses existing effects ·
+      <span class="pill data">data + tuning</span> recompose effects/composition ·
+      <span class="pill codez">core change</span> new effect kind or state shape</p>
+  </div>
+
+  <h2><span class="mark">◈</span> Where the June 7 brainstorm got us</h2>
+  <p>The <a href="theme-mechanical-differentiation.html">prior brainstorm</a> diagnosed the worlds as reskins and prescribed threat-verbs. Most of that shipped: energy exists now (<code>energy.ts</code>, cost gating in <code>handlePlayCard</code>), the Zombie's <code>onEndOfTurn</code> spawns another Zombie, Lava Flow compounds (<code>ForceDestroy</code> + Ash Fall spawn), and the Bird's "displace" verb became the <code>ForceDestroy</code> / <code>pendingForceDestroy</code> pipeline. Corpses reanimate. The <em>threat side</em> diverged.</p>
+
+  <div class="panel" style="border-color: rgba(214,177,92,.4);">
+    <p><span class="term">The remaining sameness is on the response side.</span> Read the three world files next to each other and the player-facing cards are literally identical:</p>
+  </div>
+
+  <table>
+    <tr><th>Role</th><th>Zombie big-box</th><th>Bird building</th><th>Highway volcano</th><th>Effect</th></tr>
+    <tr><td>Scout reward</td><td>Listen</td><td>Find Footing</td><td>Spot a Path</td><td><code>DealProgress 2, Hidden +2</code> — same card ×3</td></tr>
+    <tr><td>Weapon reward</td><td>Baseball Bat</td><td>Fire Axe</td><td>Floor It</td><td><code>DealProgress 1, +3</code> — same card, keyword swapped</td></tr>
+    <tr><td>Utility reward</td><td>Regroup</td><td>Steady</td><td>Ditch Gear</td><td><code>DestroyCardInHand 0–1, maxCost 2</code> — same card ×3</td></tr>
+    <tr><td>Act shape</td><td colspan="3">3 acts, 6 / 6–7 / 6 cards, Walker capstone — same template ×3</td><td></td></tr>
+  </table>
+
+  <div class="diag"><span class="n">⊘</span><strong>Why tuning can't fix this.</strong> The worlds differ in <em>which clock ticks</em> (HP vs. deck attrition vs. hand clog), but every clock is answered the same way: target the hazard, deal progress, occasionally thin a card. When the response toolkit is constant, the player's <em>decisions</em> are constant — and Principle 2 says a world ships only when it forces a different way to <em>build</em>. Threat divergence alone got us to "moderately different." Response divergence is the other half.</div>
+
+  <div class="panel">
+    <p><strong>The design move:</strong> give each world one <span class="term">signature player verb</span> that only exists there, make the world's threat-verb <em>reward</em> that verb, and rewrite the identical reward trio around it. Each archetype must pass the Principle 5 test — explainable in one sentence.</p>
+  </div>
+
+  <table>
+    <tr><th>World</th><th>Threat-verb (shipped)</th><th>Response archetype (proposed)</th><th>One-sentence synergy</th></tr>
+    <tr><td>Zombie big-box</td><td><em class="threat">multiply</em></td><td><span class="arch">Sweep &amp; noise</span></td><td>"Go loud and sweep the horde, or stay quiet and pick them off."</td></tr>
+    <tr><td>Bird building</td><td><em class="threat">snatch</em></td><td><span class="arch">Travel light</span></td><td>"Anything you carry, the sky can take — so carry less, and grip what matters."</td></tr>
+    <tr><td>Highway volcano</td><td><em class="threat">compound</em></td><td><span class="arch">Everything is fuel</span></td><td>"You can't fight the volcano, only outrun it — burn HP, gear, and whole stretches of road."</td></tr>
+  </table>
+
+  <h2><span class="mark">◈</span> Zombie big-box — sweep &amp; noise</h2>
+  <p>The Zombie spawning loop is the world's identity, but every player tool is single-target, so the horde is just a slow HP tax. Two changes make the swarm a <em>puzzle</em>: a tool that wants the horde big, and power that makes it bigger.</p>
+
+  <div class="core">
+    <span class="tag">New effect · cleave</span>
+    <p><strong><code>DealProgressAll</code></strong> — deal progress to <em>every</em> world card in hand at once.</p>
+    <pre><code>{ "kind": "DealProgressAll", "base": 1, "bonus": { "tag": "Creature", "amount": 1 } }</code></pre>
+    <p>Engine: loop <code>dealProgress</code> over a snapshot of world cards in hand; <code>TargetSpec</code> is <code>{ kind: 'none' }</code> — no targeting UI needed. Card sketch: <span class="term">Shelf Sweep</span> (2 energy, reward for clearing Strange Sounds late-act). Suddenly "let three Zombies accumulate, then sweep" is a real line — the first strategy in the game where a growing hand of hazards is something you <em>chose</em>.</p>
+  </div>
+
+  <div class="free">
+    <span class="tag">Data only · loud weapons</span>
+    <p>Big hits make noise; noise draws the horde. <span class="term">Shotgun</span> (act-2/3 find, replaces one Find Baseball Bat): <code>Sequence [ DealProgress 5, AddWorldCardToTop "Zombie" ]</code>. Every effect already exists. This is the Principle 1 card: never an auto-pick, because the answer to "is +5 progress worth +1 Zombie?" depends entirely on whether you drafted sweep.</p>
+  </div>
+
+  <div class="free">
+    <span class="tag">Data only · kill chains</span>
+    <p>Change Zombie's <code>onCleared</code> from <code>None</code> to <code>GainEnergy 1</code>. Killing fuels the next kill; the kill-or-discard decision becomes tempo (energy now) vs. health (5 damage on discard) instead of damage-vs-damage. Tuning risk flagged in open questions.</p>
+  </div>
+
+  <h2><span class="mark">◈</span> Bird building — travel light</h2>
+  <p>The Bird already eats your cards, but <code>ForceDestroy</code> is pure punishment — there is no counterplay and no way to lean in. Attrition becomes an <em>economy</em> when the player can both defend against it and exploit it.</p>
+
+  <div class="core">
+    <span class="tag">New effect · brace</span>
+    <p><strong><code>Brace</code></strong> — absorb the next N snatches before they take a card.</p>
+    <pre><code>{ "kind": "Brace", "amount": 1 }</code></pre>
+    <p>Engine: new <code>braceCharges</code> counter on <code>GameState</code>; <code>resolveForceDestroy</code> drains brace before destroying (must be a persistent counter, not a subtraction from <code>pendingForceDestroy</code>, because snatches queue at end-of-turn after the brace was played). Card sketch: rework <span class="term">Steady</span> (1 energy, Brace 1) — "lash yourself down." The first time a Talon's snatch fizzles against your rope, the world's identity clicks.</p>
+  </div>
+
+  <div class="core">
+    <span class="tag">New effect · unburdened (wave 2)</span>
+    <p><strong><code>DealProgressScaled</code></strong> — progress that scales with how light you're traveling.</p>
+    <pre><code>{ "kind": "DealProgressScaled", "base": 1, "per": "emptyHandSlot", "amount": 1 }</code></pre>
+    <p>Engine: same shape as <code>DealProgress</code> with the amount computed from state (empty hand slots = <code>maxHandSize − hand.length</code> at resolution); fully deterministic. Card sketch: <span class="term">Unburdened</span>. The world that destroys your cards becomes the world where a thin hand is a <em>build</em> — bird-building runs want exhaust cards and Regroup-style thinning from other shards' rewards, which is exactly the cross-world Destiny texture we want.</p>
+  </div>
+
+  <div class="free">
+    <span class="tag">Data only · feed the bird</span>
+    <p><span class="term">Cut It Loose</span> (replaces the Steady slot's twin): <code>Sequence [ DestroyCardInHand 1–1, DealProgress 4 ]</code> — hurl your gear to drive the Talon off. Destroy-as-cost plus compound targeting both exist (Barricade already composes a compound spec). Sacrifice on your terms vs. theft on the Bird's terms is the whole archetype in one card.</p>
+  </div>
+
+  <h2><span class="mark">◈</span> Highway volcano — everything is fuel</h2>
+  <p>Gridlock and Ash Fall make this the clog/pollution world, but the player's only response is the same generic clearing. The volcano should be the world you <em>don't fight</em>: you spend resources other worlds protect — HP, cards, and the road itself.</p>
+
+  <div class="core">
+    <span class="tag">New effect · bypass</span>
+    <p><strong><code>ExileTopWorldCards</code></strong> — remove the top N cards of the world deck from the game, unseen.</p>
+    <pre><code>{ "kind": "ExileTopWorldCards", "amount": 2 }</code></pre>
+    <p>The only verb in the game that <em>skips content instead of clearing it</em> — racing past hazards you never face. Card sketch: rework <span class="term">Floor It</span> (the Find a Vehicle reward, exhaust): exile the top 2 cards of the world deck.</p>
+    <p><strong>Exilability is a template flag.</strong> Mirroring <code>discardable</code>, <code>WorldCardTemplate</code> gains <code>canExile: boolean</code> (default <code>true</code>); <span class="term">Door</span> and <span class="term">The Walker</span> ship with <code>canExile: false</code> — the win condition can never be raced past. Resolution rule: walk from the top of the world deck, exiling exilable cards until the amount is spent; non-exilable cards are skipped in place, preserving their order. With the Walker un-exilable, the livelock guards in <code>reduce.ts</code> still need a test pass (exile must not strand a run with no world cards and no <code>AddWorldCardToTop</code> escape), but the win path itself is safe by construction.</p>
+  </div>
+
+  <div class="free">
+    <span class="tag">Data only · HP as fuel</span>
+    <p><span class="term">Push Through</span> (Tremors reward, replacing Spot a Path's clone): <code>Sequence [ DealProgress 4 (Slow +2), Damage 1 ]</code> — sprint through the heat. Zombie-world HP loss is imposed; volcano HP loss is <em>spent</em>. Same resource, opposite decision, and it's all existing effects.</p>
+  </div>
+
+  <div class="free">
+    <span class="tag">Data only · consumables</span>
+    <p>The <code>exhaust</code> flag already exists on <code>PlayerCardTemplate</code> and no world uses it. Make volcano the exhaust world: <span class="term">Nitro</span> (exhaust: <code>GainEnergy 2</code> + <code>Draw 2</code>), and rework <span class="term">Ditch Gear</span> to exhaust with <code>Sequence [ DestroyCardInHand 1–1, GainEnergy 2 ]</code> — burn gear for speed. Everything in this world is one-shot; your deck literally burns down as the run progresses, which doubles as natural thinning for the late acts.</p>
+  </div>
+
+  <h2><span class="mark">◈</span> The reward-trio rewrite (where it all lands)</h2>
+  <p>With the new effects in place, the three identical trios become nine distinct cards. This is the table to implement from:</p>
+  <table>
+    <tr><th>Slot</th><th>Zombie big-box</th><th>Bird building</th><th>Highway volcano</th></tr>
+    <tr>
+      <td>Scout reward</td>
+      <td><strong>Listen</strong> — keep as-is (<code>DealProgress 2, Hidden +2</code>); quiet scouting is on-theme here</td>
+      <td><strong>Find Footing</strong> → <code>DealProgressScaled</code> "Unburdened" shape <span class="pill codez">core change</span></td>
+      <td><strong>Spot a Path</strong> → <strong>Push Through</strong>: progress + self-damage <span class="pill none">no code</span></td>
+    </tr>
+    <tr>
+      <td>Weapon reward</td>
+      <td><strong>Baseball Bat</strong> keep; add <strong>Shotgun</strong> as the loud act-3 find <span class="pill none">no code</span></td>
+      <td><strong>Fire Axe</strong> keep (the one tool the Bird respects)</td>
+      <td><strong>Floor It</strong> → exhaust, <code>ExileTopWorldCards 2</code> <span class="pill codez">core change</span></td>
+    </tr>
+    <tr>
+      <td>Utility reward</td>
+      <td><strong>Regroup</strong> — keep destroy-thinning (quiet, methodical)</td>
+      <td><strong>Steady</strong> → <code>Brace 1</code> <span class="pill codez">core change</span>; sibling <strong>Cut It Loose</strong> <span class="pill none">no code</span></td>
+      <td><strong>Ditch Gear</strong> → exhaust, destroy-for-energy <span class="pill none">no code</span></td>
+    </tr>
+    <tr>
+      <td>Signature (new slot)</td>
+      <td><strong>Shelf Sweep</strong> — <code>DealProgressAll</code> <span class="pill codez">core change</span></td>
+      <td>—</td>
+      <td><strong>Nitro</strong> — exhaust draw/energy burst <span class="pill none">no code</span></td>
+    </tr>
+  </table>
+
+  <h2><span class="mark">◈</span> Cheap structural tweaks that compound the above <span class="pill data">data + tuning</span></h2>
+  <div class="free">
+    <span class="tag">Finish the keyword bias</span>
+    <p>The prior brainstorm's keyword-saturation table is only half-applied: volcano has exactly one <code>Slow</code> card and bird one <code>Hidden</code>+<code>Creature</code>. Push it: Gridlock and Ash Fall gain <code>Slow</code>; Shadow Overhead and Sliding Debris gain <code>Hidden</code>. The shared starter deck (Sprint keys off Slow, Explore off Hidden) then plays differently per world for free.</p>
+  </div>
+  <div class="free">
+    <span class="tag">Break the act-shape template</span>
+    <p>All three worlds use the same 6 / 6–7 / 6 three-act curve. Shape the curve to the verb: <strong>zombie</strong> escalates body count (5 / 7 / 9 cheap-but-multiplying); <strong>bird</strong> stays sparse but every act mixes in snatchers (attrition is constant, not back-loaded); <strong>volcano</strong> seeds Gridlock in <em>every</em> act so the clog never lets up and bypass always has a target.</p>
+  </div>
+  <div class="wild">
+    <span class="tag">Wild · per-world intensity weights</span>
+    <p>Still unbuilt from the prior brainstorm: <code>intensity()</code> is hardcoded 0.6 act / 0.3 hp / 0.1 held. Per-world weights would make the juice crescendo from each world's actual pressure source (volcano on time, bird on attrition, zombie on HP). Renderer-facing, zero gameplay risk.</p>
+  </div>
+
+  <h2><span class="mark">◈</span> Engine work summary</h2>
+  <table>
+    <tr><th>Effect</th><th>Wave</th><th>New state</th><th>Touches</th><th>Notes</th></tr>
+    <tr><td><code>DealProgressAll</code></td><td>1</td><td>none</td><td><code>types.ts</code>, <code>effects.ts</code>, <code>available.ts</code> (spec <code>none</code>), <code>describe.ts</code>, tests</td><td>Reuses <code>dealProgress</code> per hazard; emits one <code>ProgressDealt</code> per hazard so the renderer can stagger the sweep</td></tr>
+    <tr><td><code>Brace</code></td><td>1</td><td><code>braceCharges: number</code></td><td><code>types.ts</code>, <code>effects.ts</code>, <code>draw.ts</code> (<code>resolveForceDestroy</code>), <code>describe.ts</code>, tests</td><td>Drain brace before destroying; needs a <code>BraceConsumed</code>-style event for feedback</td></tr>
+    <tr><td><code>ExileTopWorldCards</code></td><td>1</td><td>none</td><td><code>types.ts</code>, <code>cards.ts</code> (<code>canExile</code> on <code>WorldCardTemplate</code> + <code>WorldCard</code>), <code>effects.ts</code>, <code>describe.ts</code>, world JSON (Door, Walker), tests</td><td>Skips <code>canExile: false</code> cards in place; test both livelock guards in <code>reduce.ts</code></td></tr>
+    <tr><td><code>DealProgressScaled</code></td><td>2</td><td>none</td><td><code>types.ts</code>, <code>effects.ts</code>, <code>available.ts</code>, <code>describe.ts</code>, tests</td><td>Deterministic state read; ship after wave 1 proves the archetype framing</td></tr>
+  </table>
+  <p>All four are pure, deterministic, JSON-expressible, and need no new targeting UI beyond specs that already exist. Per the core/game boundary, each lands with full core tests before any renderer work.</p>
+
+  <h2><span class="mark">◈</span> Open questions — all resolved 2026-06-10</h2>
+  <div class="q"><span class="qid">Q1</span><strong>What can exile skip?</strong> <span class="arch">Resolved:</span> exilability is a per-template flag, <code>canExile</code>, mirroring <code>discardable</code>. <span class="term">Door</span> and <span class="term">The Walker</span> are marked <code>canExile: false</code>; exile slides past them, so blind exile can still eat a Find (the owned gamble, per Principle 4) but never the win condition. Details in the volcano section above.</div>
+  <div class="q"><span class="qid">Q2</span><strong>Does kill-energy snowball?</strong> <span class="arch">Resolved:</span> ship it and see how it plays. Bounded by hand size and sweep card count in theory; Principle 6 says the verdict comes from playtest data, not pre-tuning by feel.</div>
+  <div class="q"><span class="qid">Q3</span><strong>Amend the theme-authoring recipe?</strong> <span class="arch">Resolved: yes.</span> The five-archetype recipe in <code>theme-authoring.html</code> is what produced the identical trios — it created this mess and must change with this proposal, not after it. New rule to add: every world defines one signature player verb, and no other world's recipe slot may reuse it.</div>
+
+  <h2><span class="mark">◈</span> Recommended order</h2>
+  <p>(1) <strong>Data-only batch first</strong> — Shotgun, kill-energy, Push Through, exhaust consumables, keyword saturation, act shapes. One JSON-heavy PR, immediate feel delta, zero engine risk. (2) <strong>Amend the theme-authoring recipe</strong> (Q3) in the same breath, so no new world is authored against the old template while this lands. (3) <strong>Wave-1 effects</strong> — <code>Brace</code> then <code>DealProgressAll</code> then <code>ExileTopWorldCards</code> with the <code>canExile</code> flag (rising order of design risk). (4) <strong>Trio rewrite</strong> lands with each effect as it ships. (5) <strong>Wave 2</strong> (<code>DealProgressScaled</code>) only after playtest confirms "travel light" reads as an archetype.</p>
+
+  <div class="meta-foot">Shattered Worlds · Proposal · builds on <a href="theme-mechanical-differentiation.html">theme-mechanical-differentiation</a> · related: <a href="../../reference/theme-authoring.html">theme-authoring</a>, <a href="../../reference/vision.html">vision</a></div>
+
+</div>
+</body>
+</html>
