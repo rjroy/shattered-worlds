@@ -28,6 +28,7 @@ export const TABLE_LAYOUT = {
   selectionHint: { x: CANVAS_W / 2, y: 578 },
   previewSlot: { x: CANVAS_W / 2, y: 550 },
   buttons: {
+    exit: { x: 20, y: 22 },
     endTurn: { x: 820, y: 560 },
     cancel: { x: 740, y: 570 },
     confirm: { x: 740, y: 540 },
@@ -37,7 +38,7 @@ export const TABLE_LAYOUT = {
 
 export const HUD_LAYOUT = {
   panel: {
-    x: 30,
+    x: 50,
     y: 0,
     width: 280,
     height: 45,

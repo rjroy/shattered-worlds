@@ -128,7 +128,7 @@ export class WorldSelectScene extends Phaser.Scene {
     bg.on('pointerout',  () => container.setScale(1.0))
     bg.on('pointerdown', () => {
       const seed = Math.floor(Math.random() * 2 ** 32)
-      this.scene.start('Table', { worldId, seed })
+      this.scene.launch('Table', { worldId, seed })
     })
   }
 }
