@@ -16,7 +16,6 @@ export interface EndScreenConfig {
 /** Full-screen terminal overlay (hidden by default), centered on the canvas. */
 export class EndScreenView extends Phaser.GameObjects.Container {
   bg: Phaser.GameObjects.Rectangle
-  clickable: boolean = false
 
   constructor(scene: Phaser.Scene, config: EndScreenConfig) {
     super(scene, CANVAS_W / 2, CANVAS_H / 2)
@@ -45,15 +44,9 @@ export class EndScreenView extends Phaser.GameObjects.Container {
 
   setOnClick(callback: () => void) {
     if (this.bg) {
-      this.bg.setInteractive({ useHandCursor: true })
-      this.bg.on('pointerdown', () => {
-        this.clickable = true
-      })
-      this.bg.on('pointerup', () =>  {
-        if (this.clickable) {
-          callback()
-          this.clickable = false
-        }
+      this.scene.time.delayedCall(1000, () => {
+        this.bg.setInteractive({ useHandCursor: true })
+        this.bg.once('pointerdown', callback)
       })
     }
   }
