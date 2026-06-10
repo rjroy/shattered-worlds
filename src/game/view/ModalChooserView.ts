@@ -4,9 +4,8 @@
  * onChoose / onCancel callbacks that own selection-state transitions.
  */
 import Phaser from 'phaser'
-import { getRealityPalette } from './themes/theme'
 import type { VisualTheme } from './themes/theme'
-import { textStyle, TEXT } from './presentation'
+import { textStyle, getRealityPalette } from './presentation'
 import { TABLE_LAYOUT } from './layout'
 import { BranchLabel } from '../../core/view/branchLabels'
 
@@ -29,7 +28,7 @@ export class ModalChooserView extends Phaser.GameObjects.Container {
 
     const title = scene.add.text(0, -80, 'Choose an effect:', textStyle({
       fontSize: '16px',
-      color: getRealityPalette(theme, 'title', TEXT.textLight),
+      color: getRealityPalette(theme, 'title'),
       fontStyle: 'bold',
     }))
     title.setOrigin(0.5, 0.5)
@@ -39,8 +38,8 @@ export class ModalChooserView extends Phaser.GameObjects.Container {
       const btn = scene.add.text(0, -30 + idx * 60, branch.label, textStyle({
         fontSize: '14px',
         color: branch.isLegal
-          ? getRealityPalette(theme, 'text', TEXT.textLight)
-          : getRealityPalette(theme, 'disabled', TEXT.textDisabled),
+          ? getRealityPalette(theme, 'text')
+          : getRealityPalette(theme, 'disabled'),
         fontStyle: 'bold',
       }))
       btn.setOrigin(0.5, 0.5)
@@ -53,7 +52,7 @@ export class ModalChooserView extends Phaser.GameObjects.Container {
 
     const cancelBtn = scene.add.text(0, 80, '[ Cancel ]', textStyle({
       fontSize: '13px',
-      color: getRealityPalette(theme, 'cancel', TEXT.textPenalty),
+      color: getRealityPalette(theme, 'cancel'),
     }))
     cancelBtn.setOrigin(0.5, 0.5)
     cancelBtn.setInteractive({ useHandCursor: true })

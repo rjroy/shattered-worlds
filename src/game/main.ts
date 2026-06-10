@@ -3,12 +3,13 @@ import { BootScene } from './scenes/BootScene'
 import { WorldSelectScene } from './scenes/WorldSelectScene'
 import { TableScene } from './scenes/TableScene'
 import { CANVAS_W, CANVAS_H } from './view/layout'
+import { TEXT } from './view/presentation'
 
 const game = new Phaser.Game({
   type: Phaser.AUTO,
   width: CANVAS_W,
   height: CANVAS_H,
-  backgroundColor: '#171920',
+  backgroundColor: TEXT.background,
   scale: {
     mode: Phaser.Scale.FIT,
     autoCenter: Phaser.Scale.CENTER_BOTH,

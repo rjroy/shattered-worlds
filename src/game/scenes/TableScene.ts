@@ -11,7 +11,6 @@
 import Phaser from 'phaser'
 import { assetManifest } from '../data/assetManifest'
 import { worldMusicManifest } from '../data/audioManifest'
-import { getRealityPalette } from '../view/themes/theme'
 import { selectTheme } from '../view/themes/themeManifest'
 import type { VisualTheme } from '../view/themes/theme'
 import { createGame, availableActions, CatalogError } from '../../core/index'
@@ -38,7 +37,7 @@ import { CardView } from '../view/CardView'
 import { HUDView } from '../view/HUDView'
 import { EndScreenView } from '../view/EndScreenView'
 import { HelpOverlayView } from '../view/HelpOverlayView'
-import { textStyle, TEXT } from '../view/presentation'
+import { textStyle, TEXT, getRealityPalette } from '../view/presentation'
 import { ringFraction, connectorLine, selectConnectorStyle, effectAtStep } from '../interaction/feedback'
 import type { ConnectorStyle } from '../interaction/feedback'
 import { drawConnector } from '../view/connector'
@@ -178,7 +177,7 @@ export class TableScene extends Phaser.Scene {
 
     const endTurnStyle = textStyle({
       fontSize: '16px',
-      color: getRealityPalette(this.theme_, 'text', TEXT.textKeyword),
+      color: getRealityPalette(this.theme_, 'text'),
       fontStyle: 'bold',
     })
     this.endTurnBtn = new CommonButton(
@@ -192,7 +191,7 @@ export class TableScene extends Phaser.Scene {
 
     const cancelStyle = textStyle({
       fontSize: '13px',
-      color: getRealityPalette(this.theme_, 'cancel', TEXT.textPenalty),
+      color: getRealityPalette(this.theme_, 'cancel'),
     })
     this.cancelBtn = new CommonButton(
       this,
@@ -212,7 +211,7 @@ export class TableScene extends Phaser.Scene {
     const confirmStyle = textStyle({
       fontSize: '13px',
       fontStyle: 'bold',
-      color: getRealityPalette(this.theme_, 'confirm', TEXT.textReward),
+      color: getRealityPalette(this.theme_, 'confirm'),
     })
     this.confirmBtn = new CommonButton(
       this,
@@ -262,7 +261,7 @@ export class TableScene extends Phaser.Scene {
 
     this.selectionHint = new CommonLabel(this, TABLE_LAYOUT.selectionHint.x, TABLE_LAYOUT.selectionHint.y, '', textStyle({
       fontSize: '12px',
-      color: getRealityPalette(this.theme_, 'text', TEXT.textLight),
+      color: getRealityPalette(this.theme_, 'text'),
     })).setVisible(false)
 
     // Sits in a dedicated slot directly above selectionHint. selectionHint has
@@ -272,7 +271,7 @@ export class TableScene extends Phaser.Scene {
     // means this slot simply stays empty).
     this.previewSlot = new CommonLabel(this, TABLE_LAYOUT.previewSlot.x, TABLE_LAYOUT.previewSlot.y, '', textStyle({
       fontSize: '12px',
-      color: getRealityPalette(this.theme_, 'title', TEXT.textLight),
+      color: getRealityPalette(this.theme_, 'title'),
     }))
     this.previewSlot.setVisible(false)
 

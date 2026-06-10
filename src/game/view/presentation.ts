@@ -47,10 +47,26 @@ export const TEXT = {
 
 export function getRealityPalette(
   theme: VisualTheme,
-  index: keyof VisualTheme['realityPalette'],
-  defaultColor: string
+  index: keyof VisualTheme['realityPalette']
 ): string {
-  return theme.realityPalette[index] ?? defaultColor
+  
+  const themeColor = theme.realityPalette[index] 
+  if (themeColor === undefined) {
+    switch (index) {
+      case 'title':
+        return TEXT.textLight
+      case 'disabled':
+        return TEXT.textDisabled
+      case 'confirm':
+        return TEXT.textReward
+      case 'cancel':
+        return TEXT.textPenalty
+      case 'text':
+      default:
+        return TEXT.textMuted
+    }
+  }
+  return themeColor
 }
 
 
