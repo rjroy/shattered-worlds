@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Shattered Worlds — Destiny Progression Concepts</title>
+  <style>
+    :root {
+      --bg: #101014;
+      --panel: #19191f;
+      --panel-2: #22222a;
+      --ink: #eee8dc;
+      --muted: #b8ad9c;
+      --line: #3b3540;
+      --accent: #9d6cff;
+      --accent-2: #e0b55f;
+      --danger: #d85f5f;
+      --green: #78b878;
+      --shadow: rgba(0, 0, 0, 0.45);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Georgia, 'Times New Roman', serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 20% 0%, rgba(157, 108, 255, 0.18), transparent 34rem),
+        radial-gradient(circle at 90% 10%, rgba(224, 181, 95, 0.08), transparent 28rem),
+        linear-gradient(180deg, #0c0c10 0%, var(--bg) 42%, #0b0b0e 100%);
+      line-height: 1.5;
+    }
+
+    .page {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 48px 24px 72px;
+    }
+
+    header {
+      border: 1px solid var(--line);
+      background:
+        linear-gradient(135deg, rgba(25,25,31,0.94), rgba(20,20,26,0.8)),
+        repeating-linear-gradient(115deg, rgba(255,255,255,0.03), rgba(255,255,255,0.03) 1px, transparent 1px, transparent 8px);
+      box-shadow: 0 18px 44px var(--shadow);
+      padding: 42px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    header::after {
+      content: "";
+      position: absolute;
+      inset: 12px;
+      border: 1px solid rgba(238,232,220,0.08);
+      pointer-events: none;
+    }
+
+    .eyebrow {
+      color: var(--accent-2);
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      font-size: 0.82rem;
+      margin: 0 0 10px;
+      font-family: system-ui, sans-serif;
+      font-weight: 700;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(2.4rem, 6vw, 5rem);
+      line-height: 0.95;
+      letter-spacing: -0.04em;
+      max-width: 850px;
+    }
+
+    .subtitle {
+      margin: 22px 0 0;
+      max-width: 760px;
+      color: var(--muted);
+      font-size: 1.18rem;
+    }
+
+    .tag-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 28px;
+    }
+
+    .tag {
+      border: 1px solid rgba(157,108,255,0.5);
+      color: #d8c8ff;
+      padding: 7px 11px;
+      background: rgba(157,108,255,0.1);
+      font-family: system-ui, sans-serif;
+      font-size: 0.84rem;
+      border-radius: 999px;
+    }
+
+    section { margin-top: 34px; }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 18px;
+    }
+
+    .card {
+      background:
+        linear-gradient(180deg, rgba(34,34,42,0.96), rgba(25,25,31,0.96));
+      border: 1px solid var(--line);
+      box-shadow: 0 14px 30px var(--shadow);
+      padding: 24px;
+      min-height: 100%;
+    }
+
+    .span-4 { grid-column: span 4; }
+    .span-5 { grid-column: span 5; }
+    .span-6 { grid-column: span 6; }
+    .span-7 { grid-column: span 7; }
+    .span-12 { grid-column: span 12; }
+
+    h2 {
+      margin: 0 0 16px;
+      font-size: 1.75rem;
+      letter-spacing: -0.02em;
+    }
+
+    h3 {
+      margin: 0 0 10px;
+      font-size: 1.16rem;
+      color: var(--ink);
+    }
+
+    p { margin: 0 0 14px; }
+    p:last-child { margin-bottom: 0; }
+
+    .muted { color: var(--muted); }
+    .accent { color: var(--accent-2); }
+    .purple { color: #cbb7ff; }
+
+    ul {
+      margin: 12px 0 0;
+      padding-left: 20px;
+    }
+
+    li { margin: 8px 0; }
+
+    .principle {
+      border-left: 4px solid var(--accent);
+      padding-left: 18px;
+    }
+
+    .big-rule {
+      font-size: 1.4rem;
+      color: var(--ink);
+      line-height: 1.35;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-family: system-ui, sans-serif;
+      font-size: 0.95rem;
+      overflow: hidden;
+    }
+
+    th, td {
+      border-bottom: 1px solid var(--line);
+      padding: 14px 12px;
+      vertical-align: top;
+      text-align: left;
+    }
+
+    th {
+      color: var(--accent-2);
+      font-size: 0.78rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      background: rgba(255,255,255,0.03);
+    }
+
+    tr:last-child td { border-bottom: none; }
+
+    .rating {
+      white-space: nowrap;
+      font-weight: 700;
+    }
+
+    .good { color: var(--green); }
+    .warn { color: var(--accent-2); }
+    .bad { color: var(--danger); }
+
+    .flow {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 10px;
+      font-family: system-ui, sans-serif;
+    }
+
+    .flow-step {
+      position: relative;
+      background: rgba(157,108,255,0.1);
+      border: 1px solid rgba(157,108,255,0.36);
+      padding: 16px;
+      min-height: 120px;
+    }
+
+    .flow-step strong {
+      display: block;
+      color: #dccfff;
+      margin-bottom: 8px;
+    }
+
+    .flow-step span {
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    .example-card {
+      border: 1px solid rgba(224,181,95,0.36);
+      background: rgba(224,181,95,0.08);
+      padding: 16px;
+      margin-top: 12px;
+      font-family: system-ui, sans-serif;
+    }
+
+    .example-card .name {
+      color: var(--accent-2);
+      font-weight: 800;
+      margin-bottom: 4px;
+    }
+
+    .callout {
+      border: 1px solid rgba(216,95,95,0.35);
+      background: rgba(216,95,95,0.08);
+      padding: 20px;
+    }
+
+    .footer-note {
+      margin-top: 36px;
+      color: var(--muted);
+      font-family: system-ui, sans-serif;
+      font-size: 0.9rem;
+    }
+
+    @media (max-width: 900px) {
+      .span-4, .span-5, .span-6, .span-7 { grid-column: span 12; }
+      .flow { grid-template-columns: 1fr; }
+      header { padding: 30px 24px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <header>
+      <p class="eyebrow">Shattered Worlds · Meta-Progression Design</p>
+      <h1>Destiny should widen the game, not flatten it.</h1>
+      <p class="subtitle">A practical design sheet for adding meta progression to a deck-building roguelite without making early worlds dependent on permanent power.</p>
+      <div class="tag-row">
+        <span class="tag">Starter Deck Evolution</span>
+        <span class="tag">Destiny Loadout</span>
+        <span class="tag">Door Fragments</span>
+        <span class="tag">World Unlocks</span>
+        <span class="tag">Corruption Candidate</span>
+      </div>
+    </header>
+
+    <section class="grid">
+      <div class="card span-7 principle">
+        <h2>Core constraint</h2>
+        <p class="big-rule">Every permanent unlock should create a new decision before or during a run. Avoid permanent numerical power until the base worlds are individually fair and complete.</p>
+      </div>
+      <div class="card span-5">
+        <h2>Recommended phase</h2>
+        <p><span class="accent">Phase 1:</span> unlock variety, identity, and cross-world combinations.</p>
+        <p><span class="muted">Delay:</span> permanent HP, permanent draw, permanent energy, flat damage bonuses, and grindable stat trees.</p>
+      </div>
+    </section>
+
+    <section class="grid">
+      <div class="card span-12">
+        <h2>Progression options</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>System</th>
+              <th>What it does</th>
+              <th>Why it fits</th>
+              <th>Balance risk</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Starter Deck Evolution</strong></td>
+              <td>Unlock alternate versions of core starter cards and choose one per slot before a run.</td>
+              <td>Lets the survivor begin each world with a slightly different survival posture.</td>
+              <td class="rating good">Low</td>
+            </tr>
+            <tr>
+              <td><strong>Destiny Loadout</strong></td>
+              <td>Choose a small set of permanent memories, cards, or modifiers before entering a world.</td>
+              <td>Turns meta progression into identity rather than raw power.</td>
+              <td class="rating good">Low–Medium</td>
+            </tr>
+            <tr>
+              <td><strong>Door Fragments</strong></td>
+              <td>Equip relic-like fragments earned from completed worlds.</td>
+              <td>The Door becomes the fiction layer for carrying rules between realities.</td>
+              <td class="rating warn">Medium</td>
+            </tr>
+            <tr>
+              <td><strong>World-Specific Starter Unlocks</strong></td>
+              <td>Cards earned in one world can appear in future starter loadouts.</td>
+              <td>Makes worlds feed each other without requiring strict linear power escalation.</td>
+              <td class="rating warn">Medium</td>
+            </tr>
+            <tr>
+              <td><strong>Corruption</strong></td>
+              <td>A potential future mechanic where power, speed, or reward quality comes with reality-warping cost.</td>
+              <td>Strong thematic fit, but should be deliberately introduced rather than assumed.</td>
+              <td class="rating bad">High until scoped</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="grid">
+      <div class="card span-12">
+        <h2>Destiny Deck: three viable interpretations</h2>
+        <div class="grid">
+          <div class="span-4">
+            <h3>1. Added to starter deck</h3>
+            <p class="muted">Choose 2–3 Destiny cards before a run. They are shuffled into the initial deck.</p>
+            <ul>
+              <li>Simple to teach.</li>
+              <li>Easy to implement.</li>
+              <li>Can distort early turns if cards are too strong.</li>
+            </ul>
+          </div>
+          <div class="span-4">
+            <h3>2. Side deck / memory deck</h3>
+            <p class="muted">Destiny cards sit outside the main deck and surface under specific rules.</p>
+            <ul>
+              <li>More distinct identity.</li>
+              <li>Can feel like memories intruding into a world.</li>
+              <li>Adds another deck zone to explain.</li>
+            </ul>
+          </div>
+          <div class="span-4">
+            <h3>3. Passive loadout</h3>
+            <p class="muted">Destiny cards are not drawn. They modify starter cards, reward rules, or first actions.</p>
+            <ul>
+              <li>Lowest cognitive overhead.</li>
+              <li>Best first milestone.</li>
+              <li>Less card-like unless visually presented as cards.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="grid">
+      <div class="card span-6">
+        <h2>Best first implementation</h2>
+        <p>Use a <span class="purple">Destiny Loadout</span>, not a literal second draw pile.</p>
+        <p>The player chooses three memories before a run. Each memory does one of three things: adds a card, modifies a starter card, or grants a narrow passive effect.</p>
+        <div class="example-card">
+          <div class="name">Memory of the Baseball Bat</div>
+          <div>Add <strong>Baseball Bat</strong> to your starter deck.</div>
+        </div>
+        <div class="example-card">
+          <div class="name">Memory of the Door</div>
+          <div>The first <strong>Explore</strong> each Act reveals one additional option.</div>
+        </div>
+        <div class="example-card">
+          <div class="name">Memory of Flight</div>
+          <div>The first <strong>Sprint</strong> each encounter returns to your hand.</div>
+        </div>
+      </div>
+
+      <div class="card span-6">
+        <h2>Why not raw power?</h2>
+        <p>Permanent power solves friction by reducing the need to understand the world. That is risky for Shattered Worlds because the worlds are supposed to be the content, not obstacles to grind past.</p>
+        <div class="callout">
+          <h3>Avoid for now</h3>
+          <ul>
+            <li>Permanent max HP increases.</li>
+            <li>Permanent energy or hand-size increases.</li>
+            <li>Flat card damage upgrades.</li>
+            <li>Run-start bonuses that are always correct.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="grid">
+      <div class="card span-12">
+        <h2>Suggested player loop</h2>
+        <div class="flow">
+          <div class="flow-step"><strong>1. Enter World</strong><span>Choose a world and a small Destiny loadout.</span></div>
+          <div class="flow-step"><strong>2. Adapt Deck</strong><span>Draft cards that answer that world’s pressure.</span></div>
+          <div class="flow-step"><strong>3. Survive</strong><span>Win through tactical deck use, not permanent stat advantage.</span></div>
+          <div class="flow-step"><strong>4. Remember</strong><span>Earn a memory, fragment, or starter variant.</span></div>
+          <div class="flow-step"><strong>5. Recombine</strong><span>Bring cross-world options into the next run.</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="grid">
+      <div class="card span-6">
+        <h2>Starter card evolution examples</h2>
+        <table>
+          <thead>
+            <tr><th>Slot</th><th>Variants</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Explore</td><td>Explore · Explore Carefully · Explore Recklessly</td></tr>
+            <tr><td>Sprint</td><td>Sprint · Dash Through · Save Your Breath</td></tr>
+            <tr><td>Med Kit</td><td>Med Kit · Field Dressing · Last Supplies</td></tr>
+            <tr><td>Panic</td><td>Panic · Suppress Panic · Convert Panic</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="card span-6">
+        <h2>World reward examples</h2>
+        <table>
+          <thead>
+            <tr><th>World</th><th>Unlock family</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Zombie Big Box</td><td>Baseball Bat · Listen · Regroup · Barricade</td></tr>
+            <tr><td>Highway Volcano</td><td>Heat Shield · Leap Gap · Endure · Ash Cover</td></tr>
+            <tr><td>Bird-Carried Office</td><td>Brace · Climb Debris · Signal · Hold Fast</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="grid">
+      <div class="card span-12 principle">
+        <h2>Design thesis</h2>
+        <p class="big-rule">The survivor is not becoming stronger. The survivor is carrying more of their Destiny across the shattering, one broken world to the next. Destiny progression should make each new run more expressive, not simply easier.</p>
+      </div>
+    </section>
+
+    <p class="footer-note">Generated as a one-page design artifact for Shattered Worlds. Intended as a living design reference, not a final specification.</p>
+  </main>
+</body>
+</html>
