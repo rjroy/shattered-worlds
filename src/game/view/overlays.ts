@@ -1,7 +1,6 @@
 /**
  * Full-screen overlays (win / loss / help). EndScreenView owns the small
- * terminal overlays; the help overlay remains a factory until its larger
- * tab/page state gets its own refactor.
+ * terminal overlays; HelpOverlayView owns the tabbed rules reference.
  */
 import Phaser from 'phaser'
 import { textStyle, TEXT } from './presentation'
@@ -66,24 +65,25 @@ export function createLossScreen(scene: Phaser.Scene): EndScreenView {
 // Help overlay
 // ---------------------------------------------------------------------------
 
-/**
- * Create a full-screen help overlay (hidden by default). Covers core rules,
- * keyword definitions, and world-specific mechanic notes.
- *
- * Throws if `worldId` has no entry in worldHelpManifest or worldDisplayManifest.
- */
-export function createHelpOverlay(
-  scene: Phaser.Scene,
-  worldId: string,
-  totalActs: number,
-): Phaser.GameObjects.Container {
-  const container = scene.add.container(CANVAS_W / 2, CANVAS_H / 2)
-  container.setDepth(1000)
-  container.setVisible(false)
+/** Full-screen help overlay with tab/page navigation, hidden by default. */
+export class HelpOverlayView extends Phaser.GameObjects.Container {
+  private readonly pages: Phaser.GameObjects.Container[] = []
+  private readonly tabButtons: Phaser.GameObjects.Container[] = []
+  private activePage = 0
+
+  constructor(
+    scene: Phaser.Scene,
+    worldId: string,
+    totalActs: number,
+  ) {
+    super(scene, CANVAS_W / 2, CANVAS_H / 2)
+    scene.add.existing(this)
+    this.setDepth(1000)
+    this.setVisible(false)
 
   const bg = scene.add.rectangle(0, 0, CANVAS_W, CANVAS_H, 0x080a12, 0.92)
   bg.setInteractive()
-  container.add(bg)
+  this.add(bg)
 
   const helpData = worldHelpManifest[worldId]
   if (helpData === undefined) {
@@ -101,16 +101,12 @@ export function createHelpOverlay(
     build: (page: Phaser.GameObjects.Container) => void
   }
 
-  const pages: Phaser.GameObjects.Container[] = []
-  const tabButtons: Phaser.GameObjects.Container[] = []
-  let activePage = 0
-
   const title = scene.add.text(-380, -265, 'HELP', textStyle({
     fontSize: '11px',
     color: TEXT.textKeyword,
     fontStyle: 'bold',
   }))
-  container.add(title)
+  this.add(title)
 
   function addText(
     parent: Phaser.GameObjects.Container,
@@ -292,21 +288,7 @@ export function createHelpOverlay(
     })
   }
 
-  function updatePage(nextPage: number): void {
-    activePage = Phaser.Math.Wrap(nextPage, 0, pages.length)
-    pages.forEach((page, i) => page.setVisible(i === activePage))
-    tabButtons.forEach((button, i) => {
-      const bgButton = button.list[0] as Phaser.GameObjects.Rectangle | undefined
-      const label = button.list[1] as Phaser.GameObjects.Text | undefined
-      if (bgButton === undefined || label === undefined) return
-      const selected = i === activePage
-      bgButton.setFillStyle(selected ? 0x1d314f : 0x0b101a, selected ? 1 : 0.85)
-      bgButton.setStrokeStyle(1, selected ? 0x88ccff : 0x31415d, selected ? 1 : 0.8)
-      label.setColor(selected ? TEXT.textLight : TEXT.textMuted)
-    })
-  }
-
-  function addTab(index: number, x: number, label: string): void {
+  const addTab = (index: number, x: number, label: string): void => {
     const tab = scene.add.container(x, -263)
     const bgButton = scene.add.rectangle(0, 0, 102, 25, 0x0b101a, 0.85)
     bgButton.setRounded(7)
@@ -320,9 +302,9 @@ export function createHelpOverlay(
     tab.add(bgButton)
     tab.add(txt)
     tab.setSize(102, 25)
-    bgButton.on('pointerup', () => updatePage(index))
-    tabButtons.push(tab)
-    container.add(tab)
+    bgButton.on('pointerup', () => this.updatePage(index))
+    this.tabButtons.push(tab)
+    this.add(tab)
   }
 
   const pageSpecs: PageSpec[] = [
@@ -465,8 +447,8 @@ export function createHelpOverlay(
       lineSpacing: 2,
     })
     spec.build(page)
-    pages.push(page)
-    container.add(page)
+    this.pages.push(page)
+    this.add(page)
   })
 
   // ---------------------------------------------------------------------------
@@ -478,26 +460,53 @@ export function createHelpOverlay(
     color: TEXT.textLight,
   }))
   closeBtn.setInteractive({ useHandCursor: true })
-  closeBtn.on('pointerup', () => container.setVisible(false))
-  container.add(closeBtn)
+  closeBtn.on('pointerup', () => this.setVisible(false))
+  this.add(closeBtn)
 
   const prevBtn = scene.add.text(-380, 255, '‹ Previous', textStyle({
     fontSize: '14px',
     color: TEXT.textMuted,
   }))
   prevBtn.setInteractive({ useHandCursor: true })
-  prevBtn.on('pointerup', () => updatePage(activePage - 1))
-  container.add(prevBtn)
+  prevBtn.on('pointerup', () => this.updatePage(this.activePage - 1))
+  this.add(prevBtn)
 
   const nextBtn = scene.add.text(292, 255, 'Next ›', textStyle({
     fontSize: '14px',
     color: TEXT.textMuted,
   }))
   nextBtn.setInteractive({ useHandCursor: true })
-  nextBtn.on('pointerup', () => updatePage(activePage + 1))
-  container.add(nextBtn)
+  nextBtn.on('pointerup', () => this.updatePage(this.activePage + 1))
+  this.add(nextBtn)
 
-  updatePage(0)
+    this.updatePage(0)
+  }
 
-  return container
+  private updatePage(nextPage: number): void {
+    this.activePage = Phaser.Math.Wrap(nextPage, 0, this.pages.length)
+    this.pages.forEach((page, i) => page.setVisible(i === this.activePage))
+    this.tabButtons.forEach((button, i) => {
+      const bgButton = button.list[0] as Phaser.GameObjects.Rectangle | undefined
+      const label = button.list[1] as Phaser.GameObjects.Text | undefined
+      if (bgButton === undefined || label === undefined) return
+      const selected = i === this.activePage
+      bgButton.setFillStyle(selected ? 0x1d314f : 0x0b101a, selected ? 1 : 0.85)
+      bgButton.setStrokeStyle(1, selected ? 0x88ccff : 0x31415d, selected ? 1 : 0.8)
+      label.setColor(selected ? TEXT.textLight : TEXT.textMuted)
+    })
+  }
+}
+
+/**
+ * Create a full-screen help overlay (hidden by default). Covers core rules,
+ * keyword definitions, and world-specific mechanic notes.
+ *
+ * Throws if `worldId` has no entry in worldHelpManifest or worldDisplayManifest.
+ */
+export function createHelpOverlay(
+  scene: Phaser.Scene,
+  worldId: string,
+  totalActs: number,
+): HelpOverlayView {
+  return new HelpOverlayView(scene, worldId, totalActs)
 }

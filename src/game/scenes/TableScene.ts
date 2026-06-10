@@ -38,6 +38,7 @@ import { CardView } from '../view/CardView'
 import { HUDView } from '../view/HUDView'
 import { createWinScreen, createLossScreen, createHelpOverlay } from '../view/overlays'
 import { EndScreenView } from '../view/EndScreenView'
+import { HelpOverlayView } from '../view/HelpOverlayView'
 import { textStyle, TEXT } from '../view/presentation'
 import { ringFraction, connectorLine, selectConnectorStyle, effectAtStep } from '../interaction/feedback'
 import type { ConnectorStyle } from '../interaction/feedback'
@@ -97,7 +98,7 @@ export class TableScene extends Phaser.Scene {
   private confirmBtn!: CommonButton
   private winScreen!: EndScreenView
   private lossScreen!: EndScreenView
-  private helpOverlay!: Phaser.GameObjects.Container
+  private helpOverlay!: HelpOverlayView
   private questionBtn!: CommonButton
 
   // Modal chooser UI (created/destroyed per card play)
