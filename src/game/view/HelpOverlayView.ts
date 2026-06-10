@@ -289,9 +289,9 @@ export class HelpOverlayView extends Phaser.GameObjects.Container {
       build: (page) => {
         addHelpCard(page, -235, 45, 'hazard')
         addCallout(page, -235, -22, -100, -84, 'Keyword', 'Player cards can deal bonus Progress when this matches.', TEXT.textKeyword)
-        addCallout(page, -303, 8, -100, -5, 'Each turn', 'This fires when you end the turn while holding the hazard.', TEXT.textHeld)
-        addCallout(page, -303, 77, -100, 83, 'Discard', 'This fires if you click the hazard to throw it away.', TEXT.textPenalty)
-        addCallout(page, -175, 123, -100, 172, 'Progress ring', 'When Progress reaches this number, the hazard clears.', TEXT.textCost)
+        addCallout(page, -253, 8, -100, -5, 'Each turn', 'This fires when you end the turn while holding the hazard.', TEXT.textHeld)
+        addCallout(page, -253, 77, -100, 83, 'Discard', 'This fires if you click the hazard to throw it away.', TEXT.textPenalty)
+        addCallout(page, -160, 123, -100, 172, 'Progress ring', 'When Progress reaches this number, the hazard clears.', TEXT.textCost)
 
         addPanel(page, 250, 72, 245, 245)
         addText(page, 145, -34, 'Targeting tells you what will happen', {
@@ -320,7 +320,7 @@ export class HelpOverlayView extends Phaser.GameObjects.Container {
       subtitle: 'The cost badge is Energy. The rules text tells you what target, if any, the card needs.',
       build: (page) => {
         addHelpCard(page, -245, 42, 'player')
-        addCallout(page, -185, -38, -100, -94, 'Energy cost', 'You gain 1 Energy at the start of each turn. Spend it to play stronger cards.', TEXT.textEnergy)
+        addCallout(page, -175, -38, -100, -94, 'Energy cost', 'You gain 1 Energy at the start of each turn. Spend it to play stronger cards.', TEXT.textEnergy)
         addCallout(page, -245, -20, -100, -12, 'Effect text', 'Progress cards target hazards. Draw, heal, energy, and deck cards often play immediately.', TEXT.textLight)
         addCallout(page, -245, 84, -100, 82, 'Inset art', 'Art helps you recognize a card quickly; the rules text remains the source of truth.', TEXT.textMuted)
 
@@ -350,7 +350,7 @@ export class HelpOverlayView extends Phaser.GameObjects.Container {
       subtitle: 'These are the mechanics most likely to punish guesses.',
       build: (page) => {
         const leftX = -360
-        let y = -96
+        let y = -160
         for (const note of helpData.mechanics) {
           addPanel(page, 0, y + 43, 735, 78)
           addText(page, leftX, y + 12, note.title, {
