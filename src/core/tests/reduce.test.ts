@@ -11,6 +11,7 @@ import { createWorld } from '../engine/world'
 import { mintCard } from '../model/cards'
 import { reduce } from '../engine/reduce'
 import { IllegalActionError } from '../model/errors'
+import { buildWorld } from '../../data/worldManifest'
 import type { GameState, PlayerCard, WorldCard } from '../model/types'
 import { catalog, worldData } from './testFixture'
 
@@ -788,6 +789,102 @@ describe('EndTurn onEndOfTurn', () => {
 
     expect(result.state.hp).toBe(10)
     expect(result.events.map((e) => e.type)).not.toContain('DamageDealt')
+  })
+
+  it('Door in zombie-big-box adds Zombie threat to the world deck', () => {
+    const { catalog: worldCatalog, worldData: world } = buildWorld('zombie-big-box')
+    const base = createWorld(worldCatalog, world, 42)
+    const [door, s1] = mintCard(worldCatalog, base, 'Door')
+    const [e1, s2] = mintCard(worldCatalog, s1, 'Explore')
+    const [e2, s3] = mintCard(worldCatalog, s2, 'Explore')
+    const [e3, s4] = mintCard(worldCatalog, s3, 'Explore')
+    const [e4, s5] = mintCard(worldCatalog, s4, 'Explore')
+    const [e5, s6] = mintCard(worldCatalog, s5, 'Explore')
+
+    const state: GameState = {
+      ...s6,
+      hand: [door as WorldCard],
+      worldDraw: [],
+      acts: [],
+      playerDraw: [e1 as PlayerCard, e2 as PlayerCard, e3 as PlayerCard, e4 as PlayerCard, e5 as PlayerCard],
+      playerDiscard: [],
+      progress: {},
+    }
+
+    const result = reduce(worldCatalog, state, { type: 'EndTurn' })
+    const gained = result.events.find((e) => e.type === 'CardGained')
+    expect(gained).toBeDefined()
+    if (gained?.type === 'CardGained') {
+      const spawned = [...result.state.hand, ...result.state.worldDraw].find((c) => c.id === gained.id)
+      expect(spawned).toBeDefined()
+      if (spawned?.kind === 'world') {
+        expect(spawned.name).toBe('Zombie')
+      }
+    }
+  })
+
+  it('Door in highway-volcano adds Lava Flow threat to the world deck', () => {
+    const { catalog: worldCatalog, worldData: world } = buildWorld('highway-volcano')
+    const base = createWorld(worldCatalog, world, 42)
+    const [door, s1] = mintCard(worldCatalog, base, 'Door')
+    const [e1, s2] = mintCard(worldCatalog, s1, 'Explore')
+    const [e2, s3] = mintCard(worldCatalog, s2, 'Explore')
+    const [e3, s4] = mintCard(worldCatalog, s3, 'Explore')
+    const [e4, s5] = mintCard(worldCatalog, s4, 'Explore')
+    const [e5, s6] = mintCard(worldCatalog, s5, 'Explore')
+
+    const state: GameState = {
+      ...s6,
+      hand: [door as WorldCard],
+      worldDraw: [],
+      acts: [],
+      playerDraw: [e1 as PlayerCard, e2 as PlayerCard, e3 as PlayerCard, e4 as PlayerCard, e5 as PlayerCard],
+      playerDiscard: [],
+      progress: {},
+    }
+
+    const result = reduce(worldCatalog, state, { type: 'EndTurn' })
+    const gained = result.events.find((e) => e.type === 'CardGained')
+    expect(gained).toBeDefined()
+    if (gained?.type === 'CardGained') {
+      const spawned = [...result.state.hand, ...result.state.worldDraw].find((c) => c.id === gained.id)
+      expect(spawned).toBeDefined()
+      if (spawned?.kind === 'world') {
+        expect(spawned.name).toBe('Lava Flow')
+      }
+    }
+  })
+
+  it('Door in bird-building adds Gripping Talon threat to the world deck', () => {
+    const { catalog: worldCatalog, worldData: world } = buildWorld('bird-building')
+    const base = createWorld(worldCatalog, world, 42)
+    const [door, s1] = mintCard(worldCatalog, base, 'Door')
+    const [e1, s2] = mintCard(worldCatalog, s1, 'Explore')
+    const [e2, s3] = mintCard(worldCatalog, s2, 'Explore')
+    const [e3, s4] = mintCard(worldCatalog, s3, 'Explore')
+    const [e4, s5] = mintCard(worldCatalog, s4, 'Explore')
+    const [e5, s6] = mintCard(worldCatalog, s5, 'Explore')
+
+    const state: GameState = {
+      ...s6,
+      hand: [door as WorldCard],
+      worldDraw: [],
+      acts: [],
+      playerDraw: [e1 as PlayerCard, e2 as PlayerCard, e3 as PlayerCard, e4 as PlayerCard, e5 as PlayerCard],
+      playerDiscard: [],
+      progress: {},
+    }
+
+    const result = reduce(worldCatalog, state, { type: 'EndTurn' })
+    const gained = result.events.find((e) => e.type === 'CardGained')
+    expect(gained).toBeDefined()
+    if (gained?.type === 'CardGained') {
+      const spawned = [...result.state.hand, ...result.state.worldDraw].find((c) => c.id === gained.id)
+      expect(spawned).toBeDefined()
+      if (spawned?.kind === 'world') {
+        expect(spawned.name).toBe('Gripping Talon')
+      }
+    }
   })
 })
 

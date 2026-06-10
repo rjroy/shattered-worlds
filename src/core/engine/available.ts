@@ -36,6 +36,7 @@ function structuralSpec(effect: CardEffect): TargetSpec {
     case 'Heal':
     case 'GainEnergy':
     case 'AddWorldCardToTop':
+    case 'AddThreatToWorldDeck':
     case 'AddCard':
     case 'Draw':
       return { kind: 'none' }
@@ -69,6 +70,7 @@ function isPlayable(effect: CardEffect, state: GameState, selfId: CardId): boole
     case 'Heal':
     case 'GainEnergy':
     case 'AddWorldCardToTop':
+    case 'AddThreatToWorldDeck':
     case 'AddCard':
     case 'Draw':
       return true
@@ -163,6 +165,7 @@ function computeLegalTargetsForEffect(
     case 'Heal':
     case 'GainEnergy':
     case 'AddWorldCardToTop':
+    case 'AddThreatToWorldDeck':
     case 'AddCard':
     case 'Draw':
       return []
@@ -199,6 +202,7 @@ function computeLegalTargets(
     case 'Heal':
     case 'GainEnergy':
     case 'AddWorldCardToTop':
+    case 'AddThreatToWorldDeck':
     case 'AddCard':
     case 'Draw':
     case 'ReturnWorldCards':

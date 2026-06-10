@@ -20,6 +20,7 @@ export type CardEffect =
   | { kind: 'DiscardThenDraw'; player: number }
   | { kind: 'AddCard'; template: CardTemplateId; dest: Dest }
   | { kind: 'AddWorldCardToTop'; template: CardTemplateId }
+  | { kind: 'AddThreatToWorldDeck' }
   | { kind: 'Modal'; branches: readonly CardEffect[] }
   | { kind: 'Sequence'; steps: readonly CardEffect[] }
   | { kind: 'Damage'; amount: number }

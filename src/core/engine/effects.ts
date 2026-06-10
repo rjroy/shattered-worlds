@@ -19,6 +19,12 @@ import { shuffle } from './rng'
 
 type EffectResult = { state: GameState; events: GameEvent[] }
 
+const WORLD_THREAT_BY_WORLD_ID: Record<string, CardTemplateId> = {
+  'zombie-big-box': 'Zombie',
+  'highway-volcano': 'Lava Flow',
+  'bird-building': 'Gripping Talon',
+}
+
 // ---------------------------------------------------------------------------
 // dealProgress
 // ---------------------------------------------------------------------------
@@ -318,6 +324,13 @@ export function applyEffect(
 
     case 'AddWorldCardToTop':
       return gainCard(catalog, state, effect.template, 'worldDrawTop')
+
+    case 'AddThreatToWorldDeck': {
+      const template = WORLD_THREAT_BY_WORLD_ID[state.worldId]
+      return template !== undefined
+        ? gainCard(catalog, state, template, 'worldDrawTop')
+        : { state, events: [] }
+    }
 
     case 'Modal': {
       const choice = play?.choice ?? 0
