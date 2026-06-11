@@ -42,7 +42,7 @@
       "keywords": ["Creature"],
       "discardable": true,
       "onDiscarded": { "kind": "Damage", "amount": 5 },
-      "onCleared": { "kind": "None" },
+      "onCleared": { "kind": "GainEnergy", "amount": 1 },
       "onEndOfTurn": {
         "kind": "Sequence",
         "steps": [
@@ -97,6 +97,16 @@
         ]
       }
     },
+    "Find Shotgun": {
+      "kind": "world",
+      "name": "Find Shotgun",
+      "cost": 2,
+      "keywords": ["Hidden"],
+      "discardable": true,
+      "onDiscarded": { "kind": "None" },
+      "onCleared": { "kind": "GainCard", "template": "Shotgun" },
+      "onEndOfTurn": { "kind": "None" }
+    },
     "Listen": {
       "kind": "player",
       "name": "Listen",
@@ -117,12 +127,44 @@
       "insetKey": "zombie-inset-baseball",
       "effect": { "kind": "DealProgress", "base": 1, "bonus": { "tag": "Creature", "amount": 3 } }
     },
+    "Shotgun": {
+      "kind": "player",
+      "name": "Shotgun",
+      "energyCost": 1,
+      "effect": {
+        "kind": "Sequence",
+        "steps": [
+          { "kind": "DealProgress", "base": 4, "bonus": { "tag": "Creature", "amount": 2 } },
+          { "kind": "AddWorldCardToTop", "template": "Zombie" }
+        ]
+      }
+    },
     "Regroup": {
       "kind": "player",
       "name": "Regroup",
       "insetKey": "zombie-inset-regroup",
       "energyCost": 1,
-      "effect": { "kind": "DestroyCardInHand", "min": 0, "max": 1, "maxCost": 2 }
+      "effect": { "kind": "DestroyCardInHand", "min": 0, "max": 2 }
+    },
+    "Shelf Sweep": {
+      "kind": "player",
+      "name": "Shelf Sweep",
+      "energyCost": 2,
+      "effect": {
+        "kind": "DealProgressAll",
+        "base": 1,
+        "bonus": { "tag": "Creature", "amount": 1 }
+      }
+    },
+    "Echoing Aisles": {
+      "kind": "world",
+      "name": "Echoing Aisles",
+      "cost": 2,
+      "keywords": ["Hidden"],
+      "discardable": true,
+      "onDiscarded": { "kind": "None" },
+      "onCleared": { "kind": "GainCard", "template": "Shelf Sweep" },
+      "onEndOfTurn": { "kind": "None" }
     }
   },
   "deckComposition": {
@@ -130,22 +172,24 @@
       {
         "cards": [
           { "templateId": "Strange Sounds", "count": 2 },
-          { "templateId": "Rubble", "count": 2 },
+          { "templateId": "Rubble", "count": 1 },
           { "templateId": "Screams", "count": 2 }
         ]
       },
       {
         "cards": [
           { "templateId": "Rubble", "count": 2 },
-          { "templateId": "Zombie", "count": 1 },
+          { "templateId": "Zombie", "count": 2 },
           { "templateId": "Corpse", "count": 2 },
           { "templateId": "Find Baseball Bat", "count": 1 }
         ]
       },
       {
         "cards": [
-          { "templateId": "Find Baseball Bat", "count": 1 },
+          { "templateId": "Find Shotgun", "count": 1 },
           { "templateId": "Zombie", "count": 4 },
+          { "templateId": "Corpse", "count": 1 },
+          { "templateId": "Echoing Aisles", "count": 1 },
           { "templateId": "The Walker", "count": 1 }
         ]
       }

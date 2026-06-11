@@ -213,28 +213,47 @@ export function resolveForceDestroy(
     return { state, events: [] }
   }
 
-  const playerCards = state.hand.filter((c) => c.kind === 'player')
-  const takeCount = Math.min(state.pendingForceDestroy, playerCards.length)
+  const events: GameEvent[] = []
+  let current = state
+
+  // Absorb brace charges first (D3): each charge cancels one pending snatch.
+  const absorbed = Math.min(current.braceCharges, current.pendingForceDestroy)
+  if (absorbed > 0) {
+    const remaining = current.pendingForceDestroy - absorbed
+    current = {
+      ...current,
+      braceCharges: current.braceCharges - absorbed,
+      pendingForceDestroy: remaining,
+    }
+    events.push({ type: 'BraceConsumed', absorbed, remaining })
+  }
+
+  if (current.pendingForceDestroy <= 0) {
+    return { state: current, events }
+  }
+
+  const playerCards = current.hand.filter((c) => c.kind === 'player')
+  const takeCount = Math.min(current.pendingForceDestroy, playerCards.length)
 
   if (takeCount === 0) {
     // Nothing to grab — consume the charge so it does not carry over.
-    return { state: { ...state, pendingForceDestroy: 0 }, events: [] }
+    return { state: { ...current, pendingForceDestroy: 0 }, events }
   }
 
-  const [shuffled, nextRng] = shuffle(playerCards, state.rng)
+  const [shuffled, nextRng] = shuffle(playerCards, current.rng)
   const doomedIds = new Set<CardId>(shuffled.slice(0, takeCount).map((c) => c.id))
 
-  const current: GameState = {
-    ...state,
+  const final: GameState = {
+    ...current,
     rng: nextRng,
-    hand: state.hand.filter((c) => !doomedIds.has(c.id)),
+    hand: current.hand.filter((c) => !doomedIds.has(c.id)),
     pendingForceDestroy: 0,
   }
 
-  const events: GameEvent[] = [...doomedIds].map((id) => ({
+  const destroyEvents: GameEvent[] = [...doomedIds].map((id) => ({
     type: 'CardDestroyed' as const,
     id,
   }))
 
-  return { state: current, events }
+  return { state: final, events: [...events, ...destroyEvents] }
 }

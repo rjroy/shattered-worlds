@@ -389,5 +389,50 @@ export function applyEffect(
 
     case 'None':
       return { state, events: [] }
+
+    case 'Brace': {
+      const newCharges = state.braceCharges + effect.amount
+      const current: GameState = { ...state, braceCharges: newCharges }
+      const events: GameEvent[] = [{ type: 'BraceChanged', braceCharges: newCharges }]
+      return { state: current, events }
+    }
+
+    case 'DealProgressAll': {
+      // Snapshot world cards in hand at resolution time — mid-sweep spawned
+      // cards are excluded (they land in worldDraw via AddWorldCardToTop, not hand).
+      const snapshot = state.hand.filter((c): c is WorldCard => c.kind === 'world')
+      let current = state
+      const events: GameEvent[] = []
+      for (const hazard of snapshot) {
+        const r = dealProgress(catalog, current, hazard.id, effect.base, effect.bonus)
+        current = r.state
+        events.push(...r.events)
+        if (current.status !== 'playing') break
+      }
+      return { state: current, events }
+    }
+
+    case 'ExileTopWorldCards': {
+      let remaining = effect.amount
+      const exiledIds: CardId[] = []
+      const nextDraw: WorldCard[] = []
+
+      for (const card of state.worldDraw) {
+        if (remaining > 0 && card.canExile) {
+          exiledIds.push(card.id)
+          remaining--
+        } else {
+          nextDraw.push(card)
+        }
+      }
+
+      if (exiledIds.length === 0) {
+        return { state, events: [] }
+      }
+
+      const current: GameState = { ...state, worldDraw: nextDraw }
+      const events: GameEvent[] = [{ type: 'WorldCardsExiled', ids: exiledIds }]
+      return { state: current, events }
+    }
   }
 }

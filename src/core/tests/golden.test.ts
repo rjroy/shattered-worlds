@@ -200,21 +200,21 @@ describe('replay equivalence', () => {
     const state0 = createWorld(catalog, worldData, 42)
 
     // seed 42 starting hand:
-    //   Rubble(id=12), Screams(id=15), Sprint(id=1), Panic(id=8), MedKit(id=7), Explore(id=2)
-    const rubble = state0.hand.find((c) => c.kind === 'world' && c.name === 'Rubble')!
+    //   Strange Sounds(id=11), Screams(id=14), Sprint(id=1), Panic(id=8), MedKit(id=7), Explore(id=2)
     const screams = state0.hand.find((c) => c.kind === 'world' && c.name === 'Screams')!
+    const strangeSounds = state0.hand.find((c) => c.kind === 'world' && c.name === 'Strange Sounds')!
     const explore = state0.hand.find((c) => c.kind === 'player' && c.name === 'Explore')!
     const medKit = state0.hand.find((c) => c.kind === 'player' && c.name === 'Med Kit')!
 
-    // Action 1: Play Explore on Rubble (1 progress → resolves, onCleared=None)
+    // Action 1: Play Explore on Screams (1 progress → resolves, onCleared=GainCard Regroup)
     const r1 = reduce(catalog, state0, {
       type: 'PlayCard',
       cardId: explore.id,
-      targetId: rubble.id,
+      targetId: screams.id,
     })
 
-    // Action 2: Discard Screams (onDiscarded: GainCard Panic)
-    const r2 = reduce(catalog, r1.state, { type: 'DiscardHazard', cardId: screams.id })
+    // Action 2: Discard Strange Sounds (onDiscarded: None — no damage, no card gain)
+    const r2 = reduce(catalog, r1.state, { type: 'DiscardHazard', cardId: strangeSounds.id })
 
     // Action 3: Play Med Kit (Heal 2)
     const r3 = reduce(catalog, r2.state, { type: 'PlayCard', cardId: medKit.id })
@@ -236,7 +236,7 @@ describe('replay equivalence', () => {
   it('replay state is consistent: hp, status, hand sizes match expected values', () => {
     const state = runReplay()
 
-    // Med Kit healed +2 but initial hp=10, Screams onDiscarded=GainCard (no damage), so hp unchanged
+    // Med Kit healed +2; Strange Sounds onDiscarded=None (no damage); Screams onCleared=GainCard Regroup (no hp change)
     expect(state.hp).toBe(12) // 10 + 2 from Med Kit
 
     expect(state.status).toBe('playing')

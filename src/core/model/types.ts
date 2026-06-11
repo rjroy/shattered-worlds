@@ -16,7 +16,7 @@ export type CardEffect =
   | { kind: 'Heal'; amount: number }
   | { kind: 'GainEnergy'; amount: number }
   | { kind: 'ReturnWorldCards'; min: number; max: number }
-  | { kind: 'DestroyCardInHand'; min: number; max: number; maxCost?: number }
+  | { kind: 'DestroyCardInHand'; min: number; max: number }
   | { kind: 'DiscardThenDraw'; player: number }
   | { kind: 'AddCard'; template: CardTemplateId; dest: Dest }
   | { kind: 'AddWorldCardToTop'; template: CardTemplateId }
@@ -35,6 +35,17 @@ export type CardEffect =
   // onEndOfTurn to let a card degrade into another (Corpse → Zombie).
   | { kind: 'DestroySelf' }
   | { kind: 'None' }
+  // Grants braceCharges that absorb ForceDestroy snatches before they can
+  // destroy player cards. Charges persist across turns until consumed.
+  | { kind: 'Brace'; amount: number }
+  // Applies progress to every world card currently in hand using a snapshot
+  // taken at resolution time. Cards spawned mid-sweep (via onCleared) are not
+  // included — the snapshot is frozen before the loop begins.
+  | { kind: 'DealProgressAll'; base: number; bonus?: { tag: Keyword; amount: number } }
+  // Permanently removes up to `amount` exilable cards from the top of worldDraw.
+  // Non-exilable cards (canExile: false) are skipped in place; stops gracefully
+  // when fewer exilable cards exist than amount.
+  | { kind: 'ExileTopWorldCards'; amount: number }
 
 export interface PlayerCard {
   kind: 'player'
@@ -57,6 +68,10 @@ export interface WorldCard {
   cost: number
   keywords: readonly Keyword[]
   discardable: boolean
+  // When false, ExileTopWorldCards skips this card in place. Defaults to true
+  // at mint time (template.canExile ?? true). Set to false for persistent cards
+  // like Door and The Walker that should never be permanently removed.
+  canExile: boolean
   onDiscarded: CardEffect
   onCleared: CardEffect
   onEndOfTurn: CardEffect
@@ -99,6 +114,9 @@ export interface GameState {
   // Count of random player cards to destroy from the next refilled hand.
   // Queued by the ForceDestroy effect; drained at turn start.
   pendingForceDestroy: number
+  // Charges that absorb ForceDestroy snatches before they destroy player
+  // cards. Granted by the Brace effect; consumed in resolveForceDestroy.
+  braceCharges: number
   status: 'playing' | 'won' | 'lost'
   worldId: string
   rng: RngState
@@ -140,3 +158,6 @@ export type GameEvent =
   | { type: 'TurnEnded' }
   | { type: 'WorldWon' }
   | { type: 'WorldLost' }
+  | { type: 'BraceChanged'; braceCharges: number }
+  | { type: 'BraceConsumed'; absorbed: number; remaining: number }
+  | { type: 'WorldCardsExiled'; ids: readonly CardId[] }

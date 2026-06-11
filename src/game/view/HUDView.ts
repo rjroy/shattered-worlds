@@ -6,7 +6,7 @@
 import Phaser from 'phaser'
 import type { GameState } from '../../core/index'
 import { TEXT, textStyle } from './presentation'
-import { HUD_LAYOUT } from './layout'
+import { HUD_LAYOUT, TABLE_LAYOUT } from './layout'
 
 // HUD backing panel geometry. The text-back texture is a 600×600 grunge frame:
 // a thick decorated border around a dark interior. As a nine-slice we keep the
@@ -26,6 +26,9 @@ export class HUDView extends Phaser.GameObjects.Container {
   private hpText: Phaser.GameObjects.Text
   private actText: Phaser.GameObjects.Text
   private energyText: Phaser.GameObjects.Text
+  private powerUps: Phaser.GameObjects.Container
+  private powerUpsTexts: Phaser.GameObjects.Text[] = []
+  private braceText: Phaser.GameObjects.Text | undefined
 
   constructor(scene: Phaser.Scene) {
     super(scene, 0, 0)
@@ -60,6 +63,7 @@ export class HUDView extends Phaser.GameObjects.Container {
     this.hpText = scene.add.text(HUD_LAYOUT.labels.hpX, HUD_PANEL_H / 2, 'HP: —', { ...style, color: TEXT.textHp })
     this.actText = scene.add.text(HUD_LAYOUT.labels.actX, HUD_PANEL_H / 2, 'Act 1 / 3', style)
     this.energyText = scene.add.text(HUD_LAYOUT.labels.energyX, HUD_PANEL_H / 2, '—', { ...style, color: TEXT.textEnergy })
+    this.powerUps = scene.add.container(HUD_LAYOUT.labels.powerUpX, HUD_PANEL_H / 2)
     const energyIcon = scene.add
       .image(this.energyText.x - HUD_LAYOUT.energyIconOffsetX, this.energyText.y, 'energy-icon')
       .setDisplaySize(HUD_LAYOUT.energyIconSize, HUD_LAYOUT.energyIconSize)
@@ -68,6 +72,7 @@ export class HUDView extends Phaser.GameObjects.Container {
       label.setOrigin(0, 0.5)
       this.add(label)
     }
+    this.add(this.powerUps)
     this.energyText.setAbove(energyIcon)
 
     this.setPosition(HUD_PANEL_X, HUD_PANEL_Y)
@@ -78,5 +83,34 @@ export class HUDView extends Phaser.GameObjects.Container {
     this.hpText.setText(`HP: ${state.hp}`)
     this.actText.setText(`Act ${state.actIndex + 1} / ${state.totalActs}`)
     this.energyText.setText(`${state.energy}`)
+    if (state.braceCharges > 0) {
+      if (this.braceText === undefined) {
+        this.braceText = this.addPowerUp()
+      }
+      this.braceText.setText(`Brace: ${state.braceCharges}`)
+    } else {
+      if (this.braceText !== undefined) {
+        this.powerUps.remove(this.braceText, true)
+        this.braceText.destroy()
+        this.braceText = undefined
+      }
+    }
+  }
+
+  addPowerUp(): Phaser.GameObjects.Text  {
+    const style = textStyle({ fontSize: '16px', fontStyle: 'bold', color: TEXT.textLight })
+    const newText = this.scene.add.text(0, HUD_PANEL_H / 2, '', style)
+    newText.setOrigin(0, 0.5)
+    this.powerUps.add(newText)
+
+    let x = 0
+    for (let Idx = 0; Idx < this.powerUpsTexts.length; ++Idx) {
+        x = this.powerUpsTexts[Idx]?.x ?? 0
+        x += this.powerUpsTexts[Idx]?.width ?? 0
+        x += 10
+    }
+    newText.setPosition(x, HUD_PANEL_H / 2)
+    this.powerUpsTexts.push(newText)
+    return newText
   }
 }

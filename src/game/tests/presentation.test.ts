@@ -51,6 +51,7 @@ const worldCard: WorldCard = {
   cost: 3,
   keywords: [],
   discardable: false,
+  canExile: true,
   onDiscarded: { kind: 'None' },
   onCleared: { kind: 'None' },
   onEndOfTurn: { kind: 'None' },

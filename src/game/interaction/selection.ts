@@ -9,19 +9,20 @@ import type { Action, CardId, TargetSpec } from '../../core/index'
 
 export type SelectionState =
   | { phase: 'idle' }
-  | { phase: 'selected'; cardId: CardId }
-  | { phase: 'awaiting-hazard'; cardId: CardId; targetId?: CardId; modalChoice?: number }
+  | { phase: 'selected'; cardId: CardId, idx?: number }
+  | { phase: 'awaiting-hazard'; cardId: CardId; idx?: number; targetId?: CardId; }
   | {
       phase: 'awaiting-return'
       cardId: CardId
+      idx?: number
       selected: CardId[]
       min: number
       max: number
       targetId?: CardId
     }
-  | { phase: 'awaiting-discard'; cardId: CardId; discardId?: CardId }
-  | { phase: 'awaiting-destroy'; cardId: CardId; destroyId?: CardId }
-  | { phase: 'awaiting-modal'; cardId: CardId }
+  | { phase: 'awaiting-discard'; cardId: CardId; idx?: number; discardId?: CardId }
+  | { phase: 'awaiting-destroy'; cardId: CardId; idx?: number; destroyId?: CardId }
+  | { phase: 'awaiting-modal'; cardId: CardId; idx?: number }
 
 export const IDLE: SelectionState = { phase: 'idle' }
 
@@ -45,21 +46,31 @@ export function chooseModal(
 
   switch (branch.kind) {
     case 'hazard':
-      return { phase: 'awaiting-hazard', cardId, modalChoice: choice }
+      return { phase: 'awaiting-hazard', cardId, idx: choice }
     case 'returnWorld':
       return {
         phase: 'awaiting-return',
         cardId,
+        idx: choice,
         selected: [],
         min: branch.min,
         max: branch.max,
       }
     case 'none':
       // Immediate commit — caller should call buildAction after this
-      return { phase: 'selected', cardId }
+      return { phase: 'selected', cardId, idx: choice }
     default:
-      return { phase: 'awaiting-hazard', cardId, modalChoice: choice }
+      return { phase: 'awaiting-hazard', cardId, idx: choice }
   }
+}
+
+/**
+ * From selected, transition to the appropriate next phase based on the spec.
+ */
+export function getStepIndex(sel: SelectionState): number | undefined {
+  return sel.phase === 'selected' || sel.phase === 'awaiting-hazard' || sel.phase === 'awaiting-return' || sel.phase === 'awaiting-discard' || sel.phase === 'awaiting-destroy' || sel.phase === 'awaiting-modal'
+    ? sel.idx
+    : undefined
 }
 
 /**
@@ -108,7 +119,7 @@ export function cancel(): SelectionState {
  */
 export function activeStep(sel: SelectionState): number {
   if (sel.phase === 'awaiting-return') return sel.targetId !== undefined ? 1 : 0
-  if (sel.phase === 'awaiting-hazard') return sel.modalChoice ?? 0
+  if (sel.phase === 'awaiting-hazard') return sel.idx ?? 0
   return 0
 }
 
@@ -171,7 +182,13 @@ export function buildAction(sel: SelectionState): Action | null {
       return null
 
     case 'selected':
-      return { type: 'PlayCard', cardId: sel.cardId }
+      const action: Extract<Action, { type: 'PlayCard' }> = { 
+        type: 'PlayCard', cardId: sel.cardId 
+      }
+      if (sel.idx !== undefined) {
+        return { ...action, choice: sel.idx }
+      }
+      return action
 
     case 'awaiting-hazard': {
       if (sel.targetId === undefined) return null
@@ -180,38 +197,52 @@ export function buildAction(sel: SelectionState): Action | null {
         cardId: sel.cardId,
         targetId: sel.targetId,
       }
-      if (sel.modalChoice !== undefined) {
-        return { ...action, choice: sel.modalChoice }
+      if (sel.idx !== undefined) {
+        return { ...action, choice: sel.idx }
       }
       return action
     }
 
     case 'awaiting-return': {
       if (sel.selected.length < sel.min) return null
-      const action: Extract<Action, { type: 'PlayCard' }> = {
+      let action: Extract<Action, { type: 'PlayCard' }> = {
         type: 'PlayCard',
         cardId: sel.cardId,
         returnIds: sel.selected,
       }
       if (sel.targetId !== undefined) {
-        return { ...action, targetId: sel.targetId }
+        action = { ...action, targetId: sel.targetId }
+      }
+      if (sel.idx !== undefined) {
+        action = { ...action, choice: sel.idx }
       }
       return action
     }
 
     case 'awaiting-discard': {
       if (sel.discardId === undefined) return null
-      return { type: 'PlayCard', cardId: sel.cardId, discardId: sel.discardId }
+      const action: Extract<Action, { type: 'PlayCard' }> = {
+        type: 'PlayCard',
+        cardId: sel.cardId,
+        discardId: sel.discardId
+      }
+      if (sel.idx !== undefined) {
+        return { ...action, choice: sel.idx }
+      }
+      return action
     }
 
     case 'awaiting-destroy': {
       // destroyId is optional (min 0)
-      const action: Extract<Action, { type: 'PlayCard' }> = {
+      let action: Extract<Action, { type: 'PlayCard' }> = {
         type: 'PlayCard',
         cardId: sel.cardId,
       }
+      if (sel.idx !== undefined) {
+        action = { ...action, choice: sel.idx }
+      }
       if (sel.destroyId !== undefined) {
-        return { ...action, destroyId: sel.destroyId }
+        action = { ...action, destroyId: sel.destroyId }
       }
       return action
     }

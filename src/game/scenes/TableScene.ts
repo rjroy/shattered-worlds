@@ -565,7 +565,7 @@ export class TableScene extends Phaser.Scene {
       if (entry === undefined) return // not playable
 
       const spec = entry.spec
-      this.startSelection(cardId, spec)
+      this.nextSelection(cardId, spec)
       return
     }
 
@@ -630,53 +630,58 @@ export class TableScene extends Phaser.Scene {
   }
 
   /** Begin a new selection for a playable card. */
-  private startSelection(cardId: string, spec: TargetSpec): void {
+  private nextSelection(cardId: string, spec: TargetSpec, stepIdx?: number): void {
+    let resultSel: SelectionState | undefined = undefined
     switch (spec.kind) {
       case 'none': {
         // Immediate commit — no targeting needed
         this.dispatch({ type: 'PlayCard', cardId })
         return
       }
-      case 'hazard': {
-        // Transition directly to awaiting-hazard
-        this.sel = { phase: 'awaiting-hazard', cardId }
-        this.drawAll()
-        return
-      }
       case 'modal': {
-        this.sel = { phase: 'awaiting-modal', cardId }
+        this.sel = stepIdx !== undefined
+          ? { phase: 'awaiting-modal', cardId, idx: stepIdx }
+          : { phase: 'awaiting-modal', cardId }
         this.showModalChooser(cardId, spec)
         return
       }
       case 'compound': {
-        const firstStep= spec.steps[0]
+        const firstStep = spec.steps[0]
         if (firstStep !== undefined) {
-          this.startSelection(cardId, firstStep)
+          this.nextSelection(cardId, firstStep, 0)
         }
         return
       }
+      case 'hazard': {
+        resultSel = { phase: 'awaiting-hazard', cardId }
+        break
+      }
       case 'discardPlayer': {
-        this.sel = { phase: 'awaiting-discard', cardId }
-        this.drawAll()
-        return
+        resultSel = { phase: 'awaiting-discard', cardId }
+        break
       }
       case 'destroyHand': {
-        this.sel = { phase: 'awaiting-destroy', cardId }
-        this.drawAll()
-        return
+        resultSel = { phase: 'awaiting-destroy', cardId }
+        break
       }
       case 'returnWorld': {
-        this.sel = {
+        resultSel = {
           phase: 'awaiting-return',
           cardId,
           selected: [],
           min: spec.min,
           max: spec.max,
         }
-        this.drawAll()
-        return
+        break
       }
     }
+    if (resultSel !== undefined) {
+      if (stepIdx !== undefined) {
+        resultSel = { ...resultSel, idx: stepIdx }
+      }
+      this.sel = resultSel
+      this.drawAll()
+    } 
   }
 
   private onDiscardClick(cardId: string): void {
@@ -863,7 +868,7 @@ export class TableScene extends Phaser.Scene {
     if (sel.phase !== 'awaiting-hazard') return
 
     const state = this.game_.state
-    const branchIndex = sel.modalChoice
+    const branchIndex = sel.idx
     const legal = availableActions(state).legalTargets(sel.cardId, branchIndex ?? 0)
     if (!legal.includes(targetId)) return
 

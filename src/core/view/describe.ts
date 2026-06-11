@@ -40,8 +40,7 @@ export function describeEffect(effect: CardEffect): string[] {
     case 'DestroyCardInHand':
       return [
         effect.max == 1 ? `Destroy a card in hand` : `Destroy ${effect.min}–${effect.max} cards in hand`, 
-        (effect.min == 0 && effect.max == 1) ? '(optional)' : ``,
-        effect.maxCost !== undefined ? `(cost ≤ ${effect.maxCost})` : ''
+        (effect.min == 0 && effect.max == 1) ? '(optional)' : ``
       ]
     case 'DiscardThenDraw':
       return [`Discard a card, then draw ${effect.player}`]
@@ -73,6 +72,20 @@ export function describeEffect(effect: CardEffect): string[] {
       return ['vanishes']
     case 'None':
       return []
+    case 'Brace':
+      return [
+        effect.amount === 1
+          ? 'Brace: absorb the next snatch'
+          : `Brace: absorb the next ${effect.amount} snatches`,
+      ]
+    case 'DealProgressAll': {
+      const bonus = effect.bonus ? `\n(+${effect.bonus.amount} vs ${effect.bonus.tag})` : ''
+      return [`${effect.base} Progress to every hazard${bonus}`]
+    }
+    case 'ExileTopWorldCards':
+      return [
+        `Exile the top ${effect.amount} card${effect.amount === 1 ? '' : 's'} of the world deck`,
+      ]
   }
 }
 
@@ -129,6 +142,11 @@ function dealProgressOf(
   switch (effect.kind) {
     case 'DealProgress':
       return effect
+    case 'DealProgressAll':
+      // Treat as a DealProgress-shaped payload so previewPlay shows per-hazard math.
+      return effect.bonus !== undefined
+        ? { kind: 'DealProgress', base: effect.base, bonus: effect.bonus }
+        : { kind: 'DealProgress', base: effect.base }
     case 'Modal': {
       const branch = branchIndex !== undefined ? effect.branches[branchIndex] : undefined
       return branch !== undefined ? dealProgressOf(branch) : null

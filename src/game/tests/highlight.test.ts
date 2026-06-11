@@ -16,6 +16,7 @@ function world(id: string, discardable = false): WorldCard {
     cost: 1,
     keywords: [],
     discardable,
+    canExile: true,
     onDiscarded: { kind: 'None' },
     onCleared: { kind: 'None' },
     onEndOfTurn: { kind: 'None' },

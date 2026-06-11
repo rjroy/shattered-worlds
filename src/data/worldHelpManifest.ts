@@ -32,21 +32,57 @@ export const worldHelpManifest: Record<string, WorldHelpData> = {
         title:  'The Walker and the Door',
         detail: 'The Walker (Act 3, cost 10) is the final hazard. Clearing it adds Summon Door to your hand. Play Summon Door to place the Door (a Hidden hazard, cost 4). Clear the Door to survive the world.',
       },
+      {
+        title: 'Kill energy',
+        detail: 'Clearing a Zombie grants 1 energy. Chain kills to fund bigger plays.',
+      },
+      {
+        title: 'Shelf Sweep clears the whole row',
+        detail: "Shelf Sweep deals progress to every hazard in hand at once. With Creature bonus, each Zombie takes 2 progress. Chain Shelf Sweep with kill-energy Zombies for a self-funding cleanup turn.",
+      },
     ],
   },
   'bird-building': {
     mechanics: [
       {
-        title:  'Mechanic notes coming',
-        detail: 'This world\'s mechanics are still being tuned. Notes will be added after rebalancing.',
+        title:  'Birds snatch your cards',
+        detail: 'Discarding Sliding Debris or Gripping Talon triggers ForceDestroy — a random card from your next drawn hand is destroyed. You cannot choose which one.',
+      },
+      {
+        title:  'Debris as ammunition',
+        detail: 'Cut It Loose turns a card you destroy into progress. Pair it with the snatch hazards for a tempo gain instead of a pure loss.',
+      },
+      {
+        title:  'The Walker and the Door',
+        detail: 'The Walker (Act 3, cost 10) is the final hazard. Clearing it adds Summon Door to your hand. Play Summon Door to place the Door (a Hidden hazard, cost 4). Clear the Door to survive the world.',
+      },
+      {
+        title: 'Steady absorbs a snatch',
+        detail: 'Steady gives you one Brace charge. When the next ForceDestroy would destroy a card from your hand, Brace absorbs it instead. Stack charges with multiple Steady plays.',
       },
     ],
   },
   'highway-volcano': {
     mechanics: [
       {
-        title:  'Mechanic notes coming',
-        detail: 'This world\'s mechanics are still being tuned. Notes will be added after rebalancing.',
+        title:  'Slow blocks your best cards',
+        detail: 'Gridlock and Ash Fall are Slow. Sprint and Push Through deal bonus progress against Slow hazards — keep them in hand for the clog.',
+      },
+      {
+        title:  'Exhaust consumables',
+        detail: 'Nitro and Ditch Gear are exhaust cards — they are destroyed on play, not recycled. Use them for burst tempo; you only get one shot.',
+      },
+      {
+        title:  'Lava Flow escalates',
+        detail: 'Each Lava Flow end-of-turn deals ForceDestroy and adds an Ash Fall. Kill them before they cascade.',
+      },
+      {
+        title:  'The Walker and the Door',
+        detail: 'The Walker (Act 3, cost 10) is the final hazard. Clearing it adds Summon Door to your hand. Play Summon Door to place the Door (a Hidden hazard, cost 4). Clear the Door to survive the world.',
+      },
+      {
+        title: 'Floor It skips the world deck',
+        detail: 'Floor It exiles the top two exilable cards from the world deck, removing them permanently. Use it to skip Lava Flow or Gridlock before they reach your hand — but it cannot skip The Walker or the Door.',
       },
     ],
   },

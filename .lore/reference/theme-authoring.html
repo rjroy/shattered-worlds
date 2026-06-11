@@ -2,7 +2,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Shattered Worlds — Theme Authoring Rules</title>
-  <meta name="date" content="2026-06-07">
+  <meta name="date" content="2026-06-10">
   <meta name="status" content="current">
   <meta name="tags" content="theme, world, authoring, rules, the-walker, deck, visual-theme, reference">
   <meta name="related" content=".lore/reference/visual-direction.html, .lore/reference/vision.html">
@@ -101,7 +101,7 @@
     <div class="kicker">Shattered Worlds · Reference</div>
     <h1>Theme Authoring Rules</h1>
     <p class="one-liner">How to define a world theme so it slots into the engine, tells the canon story, and reads as its own place. Derived from the shipped <span class="term">Zombie Big Box</span> theme.</p>
-    <div class="badge">Status: current · 2026-06-07</div>
+    <div class="badge">Status: current · 2026-06-10</div>
   </div>
 
   <h2><span class="mark">◈</span> What a theme is</h2>
@@ -139,7 +139,7 @@
   <div class="rule"><span class="rid">N2</span>The catastrophe is the theme's identity. Whatever the world's disaster is, it maps to the intrusion backdrop overlay, the signature threat-creature card, and the obstacle/ambient cards. Zombie swarm → airborne building → lava and ash.</div>
 
   <h2><span class="mark">◈</span> Deck structure</h2>
-  <p>Composition lives under <code>deckComposition.acts</code> and is always <strong>three acts</strong> of escalating threat, each roughly six cards.</p>
+  <p>Composition lives under <code>deckComposition.acts</code> and is always <strong>three acts</strong> whose size curve expresses the threat-verb — not a fixed six-card-per-act rule. For example: zombie-big-box uses an escalating-bodies shape (5 / 7 / 9), highway-volcano uses a clog-constant shape (equal acts, pressure front-loaded), and bird-building uses an attrition-constant shape (equal acts, resources thinned over time). Whatever the curve, the three-beat arc must read clearly.</p>
   <table>
     <tr><th>Act</th><th>Role</th><th>Contents (Zombie example)</th></tr>
     <tr><td>1 — Foreshadow</td><td>Ambient/sensory cards + minor obstacles only. No real threat yet.</td><td>Strange Sounds ×2, Rubble ×2, Screams ×2</td></tr>
@@ -147,7 +147,7 @@
     <tr><td>3 — Climax + exit</td><td>Peak threat density, ending on the fixed Walker closer.</td><td>Find Baseball Bat ×1, Zombie ×4, The Walker ×1</td></tr>
   </table>
   <div class="rule"><span class="rid">D1</span>Act 3 always ends with <code>{ "templateId": "The Walker", "count": 1 }</code>. That is the fixed closer that spawns the Door: <code>The Walker</code> discarded → adds <code>Door</code>; cleared → grants <code>Summon Door</code>; <code>Door</code> cleared → <code>SurviveWorld</code>.</div>
-  <div class="rule"><span class="rid">D2</span>The starter deck is shared, not themed. <code>starter.json</code> provides the player's <code>starterDeck</code>; theme JSON provides only <code>cardTemplates</code> and <code>deckComposition</code>. The world manifest assembles <code>[STARTER_SOURCE, THEME_SOURCE]</code>.</div>
+  <div class="rule"><span class="rid">D2</span>The starter deck is shared, not themed. <code>starter.json</code> provides the player's <code>starterDeck</code>; theme JSON provides only <code>cardTemplates</code> and <code>deckComposition</code>. The world manifest assembles <code>[STARTER_SOURCE, THEME_SOURCE]</code>. Reward player cards are where themes diverge: if two worlds grant an identical reward card, that is a rule violation, not a convenience. Every reward card must be distinct in effect, cost, or keyword interaction so that the player's deck fingerprint reflects which world they ran.</div>
 
   <h2><span class="mark">◈</span> Card archetypes</h2>
   <p>Every theme reuses the same mechanical roles, re-skinned to its fiction. This is the real recipe — map your new world's flavor onto these slots.</p>
@@ -167,6 +167,16 @@
   <h3>5 · Reaction player cards</h3>
   <p>Gained mid-run from archetypes 1–2, tuned to the threat. Zombie: <em>Listen</em> (<code>Hidden</code> bonus), <em>Regroup</em> (<code>DestroyCardInHand</code>).</p>
 
+  <h3>6 · Signature player verb <span style="color:var(--muted);font-weight:400;font-size:.85rem">(one per world, exclusive)</span></h3>
+  <p>Every world defines exactly one <span class="term">signature player verb</span> — the concise phrase that captures how the player navigates that world's threat. No other world may claim the same slot. It is not a code field; it is the design invariant that keeps worlds mechanically distinct and prevents reward-card overlap. Assign it up front, before writing any card effects.</p>
+  <table>
+    <tr><th>World</th><th>Signature verb</th><th>What it means for reward cards</th></tr>
+    <tr><td>zombie-big-box</td><td>sweep &amp; noise</td><td>Reward cards interact with <code>Creature</code>/<code>Slow</code> clusters; clearing many things at once</td></tr>
+    <tr><td>highway-volcano</td><td>travel light</td><td>Reward cards trim hand size or recycle cheap cards; efficiency over power</td></tr>
+    <tr><td>bird-building</td><td>everything is fuel</td><td>Reward cards convert discards or exhaust triggers into resources</td></tr>
+  </table>
+  <div class="rule"><span class="rid">SV1</span>The signature verb lives in design documentation, not in the JSON or engine. Enforce it at authorship time: if a new reward card's mechanical identity would fit another world's signature verb, redesign it.</div>
+
   <h3>Self-transform pattern <span style="color:var(--muted);font-weight:400;font-size:.85rem">(world card that degrades if ignored)</span></h3>
   <p>A world card that worsens when not dealt with spawns its successor and removes itself, both in <code>onEndOfTurn</code>:</p>
 <pre><code>"onEndOfTurn": {
@@ -179,11 +189,12 @@
   <p>The <code>AddWorldCardToTop</code> spawns the worse card onto the <strong>top</strong> of the world draw pile (it surfaces next turn), and <code>DestroySelf</code> removes the original from hand. The canonical example ships in zombie-big-box: a <em>Corpse</em> whose <code>onEndOfTurn</code> spawns a <em>Zombie</em> then fires <code>DestroySelf</code>.</p>
   <p><strong>Placement decision:</strong> this degrades onto the world draw pile (drawn next turn), <strong>not</strong> an in-place hand replacement. The threat resurfaces a turn later rather than persisting in front of the player.</p>
 
-  <div class="rule"><span class="rid">C1</span>Stay inside the existing effect vocabulary (<code>src/core/model/types.ts</code>): <code>DealProgress</code>, <code>Draw</code>, <code>Heal</code>, <code>ReturnWorldCards</code>, <code>DestroyCardInHand</code>, <code>DiscardThenDraw</code>, <code>AddCard</code>, <code>AddWorldCardToTop</code>, <code>AddPlayerCardToTop</code>, <code>GainCard</code>, <code>Modal</code>, <code>Sequence</code>, <code>Damage</code>, <code>SkipDrawNextTurn</code>, <code>SurviveWorld</code>, <code>DestroySelf</code>, <code>None</code>. Adding a theme should not require new effect kinds. If a flavor truly needs one, that is a core change to flag separately, not a theme edit.</div>
+  <div class="rule"><span class="rid">C1</span>Stay inside the existing effect vocabulary (<code>src/core/model/types.ts</code>): <code>DealProgress</code>, <code>Draw</code>, <code>Heal</code>, <code>ReturnWorldCards</code>, <code>DestroyCardInHand</code>, <code>DiscardThenDraw</code>, <code>AddCard</code>, <code>AddWorldCardToTop</code>, <code>AddPlayerCardToTop</code>, <code>GainCard</code>, <code>GainEnergy</code>, <code>Modal</code>, <code>Sequence</code>, <code>Damage</code>, <code>SkipDrawNextTurn</code>, <code>SurviveWorld</code>, <code>DestroySelf</code>, <code>None</code>. The following four effects are planned for shard-response phases 2–6 and are <strong>not yet available</strong> in the engine: <code>Brace</code> (absorb incoming damage this turn), <code>DealProgressAll</code> (apply progress to every world card in play), <code>ExileTopWorldCards</code> (remove the top N world cards from the run entirely), <code>DealProgressScaled</code> (deal progress proportional to a run variable, e.g. remaining hand size). Do not use these four in theme JSON until the corresponding core phase ships. Adding a theme should not require new effect kinds beyond the list above. If a flavor truly needs one, that is a core change to flag separately, not a theme edit.</div>
   <div class="rule"><span class="rid">C1a</span><code>DestroySelf</code> removes the firing card from hand. Only meaningful in a world card's <code>onEndOfTurn</code> hook, where the engine knows which card is firing (it threads the card id as <code>selfId</code>). A no-op everywhere else (a played player card has already left the hand).</div>
-  <div class="rule"><span class="rid">C2</span>Keywords are the only three: <code>Hidden</code>, <code>Creature</code>, <code>Slow</code>. Use them consistently so shared/starter cards still interact — e.g. <em>Sprint</em>'s <code>Slow</code> bonus must still hit your threat creature, so your creature should carry <code>Slow</code> like Zombie does. Don't invent keywords per theme without a core change.</div>
+  <div class="rule"><span class="rid">C2</span>Keywords are the only three: <code>Hidden</code>, <code>Creature</code>, <code>Slow</code>. Use them consistently so shared/starter cards still interact — e.g. <em>Sprint</em>'s <code>Slow</code> bonus must still hit your threat creature, so your creature should carry <code>Slow</code> like Zombie does. Don't invent keywords per theme without a core change. When reviewing a data batch for keyword saturation, expect only these three; the presence of any other string in a <code>keywords</code> array is a bug, not a new mechanic. The current data batch intentionally stays within <code>Hidden</code> / <code>Creature</code> / <code>Slow</code> — do not mistake that constraint for an invitation to add new keywords without a core change.</div>
   <div class="rule"><span class="rid">C3</span>Every world card defines all three hooks (<code>onDiscarded</code>, <code>onCleared</code>, <code>onEndOfTurn</code>), using <code>{ "kind": "None" }</code> for the ones that do nothing. Player cards define <code>effect</code>.</div>
   <div class="rule"><span class="rid">C4</span>Player cards may carry an optional <code>exhaust</code> flag. It is not an effect, it is a boolean property on the card. <code>exhaust: true</code> destroys the card when played instead of sending it to the discard pile, so it never recycles into the deck. Defaults to false.</div>
+  <div class="rule"><span class="rid">C4a</span>Player cards and world cards may carry an optional <code>canExile</code> boolean property. Default: <code>true</code>. When <code>false</code>, the card cannot be removed from the run by exile effects — it always cycles back. <code>The Walker</code> and <code>Door</code> are the canonical <code>false</code> cases: they are load-bearing narrative cards and must not be discarded permanently by meta-progression exile abilities. This is intentionally a general capability — the engine treats it uniformly. There is no world-specific special-casing in the engine; exile resistance is a per-card flag, not a per-world rule.</div>
 
   <h2><span class="mark">◈</span> Visual identity</h2>
   <p>The <code>VisualTheme</code> interface is the contract. Required: <code>worldId</code>, <code>intrusionHue</code>, <code>realityPalette</code> (title/text/disabled/confirm/cancel), <code>frameStyle</code> (9 colors), <code>backdrop</code> (realityKey/intrusionKey). Optional: <code>doorGlowTint</code>, <code>doorTint</code>, <code>worldCardfrontKey</code>.</p>
@@ -206,8 +217,8 @@
   <ol class="check">
     <li>Name it: pick <code>worldId</code> (e.g. <code>bird-building</code>, <code>highway-volcano</code>).</li>
     <li>Write the three-beat fiction: ordinary place → Walker + signature catastrophe → Door.</li>
-    <li>Fill the five card archetypes with themed names/flavor; reuse existing effects + keywords.</li>
-    <li>Lay out three escalating acts (~6 cards each); end act 3 with one <code>The Walker</code>.</li>
+    <li>Assign the signature player verb (slot 6); fill the five card archetypes with themed names/flavor; reuse existing effects + keywords.</li>
+    <li>Lay out three acts whose size curve expresses the threat-verb; end act 3 with one <code>The Walker</code>.</li>
     <li>Pick <code>intrusionHue</code>, derive a distinct palette + frame family.</li>
     <li>Produce assets in the conventional folders with namespaced inset keys.</li>
     <li>Register in all three manifests.</li>

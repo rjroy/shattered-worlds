@@ -50,6 +50,10 @@ function structuralSpec(effect: CardEffect): TargetSpec {
       return { kind: 'modal', branches: effect.branches.map(structuralSpec) }
     case 'Sequence':
       return { kind: 'compound', steps: effect.steps.map(structuralSpec) }
+    case 'Brace':
+    case 'DealProgressAll':
+    case 'ExileTopWorldCards':
+      return { kind: 'none' }
     default:
       return { kind: 'none' }
   }
@@ -73,11 +77,18 @@ function isPlayable(effect: CardEffect, state: GameState, selfId: CardId): boole
     case 'AddThreatToWorldDeck':
     case 'AddCard':
     case 'Draw':
+    case 'Brace':
       return true
 
+    case 'ExileTopWorldCards':
+      return state.worldDraw.some((c) => c.canExile)
+
+    case 'DealProgressAll':
+      return worldCardsInHand(state).length > 0
+
     case 'DestroyCardInHand':
-      // Requires at least one other card in hand to destroy, optionally with a cost filter.
-      return worldCardsInHand(state).some((c) => effect.maxCost ? c.cost <= effect.maxCost : true) || playerCardsInHand(state).length > effect.min
+      // Requires at least one other card in hand to destroy.
+      return playerCardsInHand(state).length > effect.min
 
     case 'DiscardThenDraw':
       // Requires at least one other player card in hand to discard.
@@ -147,12 +158,8 @@ function computeLegalTargetsForEffect(
         .map((c) => c.id)
 
     case 'DestroyCardInHand':
-      return state.hand
-        .filter((c) => c.id !== card.id && (
-          effect.maxCost === undefined || 
-          c.kind === 'player' || 
-          (c.kind === 'world' && c.cost <= effect.maxCost)
-        ))
+      return playerCardsInHand(state)
+        .filter((c) => c.id !== card.id)
         .map((c) => c.id)
 
     case 'ReturnWorldCards':
@@ -168,6 +175,9 @@ function computeLegalTargetsForEffect(
     case 'AddThreatToWorldDeck':
     case 'AddCard':
     case 'Draw':
+    case 'Brace':
+    case 'DealProgressAll':
+    case 'ExileTopWorldCards':
       return []
     default:
       return []
@@ -206,6 +216,9 @@ function computeLegalTargets(
     case 'AddCard':
     case 'Draw':
     case 'ReturnWorldCards':
+    case 'Brace':
+    case 'DealProgressAll':
+    case 'ExileTopWorldCards':
     default:
        // step 0: all cards in hand except self
       if (step !== 0) return []
@@ -271,9 +284,9 @@ function checkSpec(
     }
 
     case 'destroyHand': {
-      if (action.destroyId === undefined) return null // min is 0, destruction is optional
+      if (action.destroyId === undefined && spec.min === 0) return null // min is 0, destruction is optional
       const legal = available.legalTargets(cardId, step)
-      if (!legal.includes(action.destroyId)) {
+      if (action.destroyId === undefined || !legal.includes(action.destroyId)) {
         return `destroyId ${action.destroyId} is not a legal destroy target for card ${cardId}`
       }
       return null

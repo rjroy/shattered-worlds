@@ -70,6 +70,7 @@
       "cost": 10,
       "keywords": [],
       "discardable": true,
+      "canExile": false,
       "onDiscarded": { "kind": "AddWorldCardToTop", "template": "Door" },
       "onCleared": { "kind": "AddPlayerCardToTop", "template": "Summon Door" },
       "onEndOfTurn": { "kind": "None" }
@@ -88,6 +89,7 @@
       "cost": 4,
       "keywords": ["Hidden"],
       "discardable": false,
+      "canExile": false,
       "onDiscarded": { "kind": "None" },
       "onCleared": { "kind": "SurviveWorld" },
       "onEndOfTurn": { "kind": "AddThreatToWorldDeck" }

@@ -17,7 +17,7 @@ describe('activeStep', () => {
 
   it('uses the chosen modal branch for awaiting-hazard, else 0', () => {
     expect(activeStep({ phase: 'awaiting-hazard', cardId: 'p1' })).toBe(0)
-    expect(activeStep({ phase: 'awaiting-hazard', cardId: 'p1', modalChoice: 2 })).toBe(2)
+    expect(activeStep({ phase: 'awaiting-hazard', cardId: 'p1', idx: 2 })).toBe(2)
   })
 
   it('advances awaiting-return to step 1 once its hazard target is chosen', () => {

@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Implementation notes: shard-response-archetypes</title>
+  <meta name="date" content="2026-06-10">
+  <meta name="status" content="in_progress">
+  <meta name="tags" content="implementation, notes, effects, brace, exile, deal-progress-all, can-exile, deckbuilder">
+  <meta name="source" content=".lore/work/plans/shard-response-archetypes.html">
+  <meta name="modules" content="core-engine, worlds, data, theme-authoring, help">
+  <meta name="related" content=".lore/work/plans/shard-response-archetypes.html, .lore/work/brainstorm/shard-response-archetypes.html">
+  <style>
+    :root {
+      --bg: #0c0a10; --panel: #18141f; --panel-2: #211a2b;
+      --ink: #ece6f2; --muted: #9b8fb0; --accent: #b98aff;
+      --gold: #d6b15c; --ember: #ff8a3c; --good: #6cd08a;
+      --warn: #ffd066; --refuse: #ff8a8a; --border: #2c2438;
+      --code: #c9b8e6; --gate: #5ec8d8;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: radial-gradient(1100px 560px at 50% -8%, #241433 0%, var(--bg) 58%);
+      color: var(--ink); font: 16px/1.65 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      padding: 2.5rem 1rem 6rem; }
+    .wrap { max-width: 960px; margin: 0 auto; }
+    h1 { font-size: 2rem; margin: 0 0 1rem; background: linear-gradient(180deg, #fff, #c9b8e6);
+      -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+    h2 { font-size: 1.2rem; margin: 2rem 0 .8rem; border-bottom: 1px solid var(--border); padding-bottom: .4rem; }
+    .banner { border-radius: 14px; padding: 1rem 1.4rem; margin-bottom: 2rem;
+      background: var(--panel-2); border: 1px solid var(--border); }
+    .banner .label { font-size: .72rem; letter-spacing: .14em; text-transform: uppercase; color: var(--gold); margin-bottom: .3rem; }
+    .banner .status { font-size: 1.4rem; font-weight: 700; }
+    .status-in-progress { color: var(--accent); }
+    .status-complete { color: var(--good); }
+    .status-failed { color: var(--refuse); }
+    .phases { list-style: none; padding: 0; margin: 0; }
+    .phases li { display: flex; align-items: baseline; gap: .8rem; padding: .5rem .8rem; border-radius: 8px; margin: .3rem 0; }
+    .phases li:hover { background: rgba(255,255,255,.03); }
+    .chip { display: inline-block; font-size: .66rem; font-weight: 700; text-transform: uppercase; letter-spacing: .05em;
+      padding: .1rem .55rem; border-radius: 999px; white-space: nowrap; }
+    .chip.pending { background: rgba(155,143,176,.14); color: var(--muted); border: 1px solid rgba(155,143,176,.3); }
+    .chip.in-progress { background: rgba(185,138,255,.16); color: var(--accent); border: 1px solid rgba(185,138,255,.4); }
+    .chip.done { background: rgba(108,208,138,.14); color: var(--good); border: 1px solid rgba(108,208,138,.35); }
+    .chip.failed { background: rgba(255,138,138,.14); color: var(--refuse); border: 1px solid rgba(255,138,138,.35); }
+    .chip.gated { background: rgba(94,200,216,.12); color: var(--gate); border: 1px solid rgba(94,200,216,.35); }
+    .phase-name { flex: 1; font-weight: 500; }
+    .phase-note { font-size: .85rem; color: var(--muted); }
+    details { background: rgba(0,0,0,.18); border: 1px solid var(--border); border-radius: 10px;
+      padding: .2rem .9rem; margin: .7rem 0; }
+    details summary { cursor: pointer; font-weight: 600; color: var(--ink); padding: .45rem 0; font-size: .9rem; }
+    details[open] summary { color: var(--accent); border-bottom: 1px solid var(--border); margin-bottom: .6rem; }
+    .log-entry { border-left: 3px solid var(--border); padding: .4rem .8rem; margin: .4rem 0; font-size: .88rem; }
+    .log-entry.ok { border-color: var(--good); }
+    .log-entry.warn { border-color: var(--warn); }
+    .log-entry.fail { border-color: var(--refuse); }
+    .log-entry .ts { font-size: .72rem; color: var(--muted); margin-bottom: .15rem; }
+    code { font-family: "SF Mono", ui-monospace, Menlo, Consolas, monospace;
+      font-size: .85em; color: var(--code); background: rgba(185,138,255,.08);
+      border: 1px solid rgba(185,138,255,.16); border-radius: 4px; padding: .02rem .3rem; }
+    .meta-foot { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid var(--border);
+      color: var(--muted); font-size: .8rem; text-align: center; }
+    a { color: var(--accent); }
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Implementation notes: shard-response-archetypes</h1>
+
+  <div class="banner">
+    <div class="label">Overall status</div>
+    <div class="status status-in-progress">P0–P4 complete · P5 in progress</div>
+    <div style="font-size:.9rem;color:var(--muted);margin-top:.4rem;">Started 2026-06-10 · Source: <a href="../plans/shard-response-archetypes.html">plan</a></div>
+  </div>
+
+  <h2>Phase tracker</h2>
+  <ul class="phases">
+    <li><span class="chip done" id="chip-p0">done</span><span class="phase-name">P0 — Theme-authoring recipe amendment</span><span class="phase-note">docs only</span></li>
+    <li><span class="chip done" id="chip-p1">done</span><span class="phase-name">P1 — Data-only batch (zombie / volcano / bird JSON)</span><span class="phase-note">data + tuning</span></li>
+    <li><span class="chip done" id="chip-p2">done</span><span class="phase-name">P2 — Brace effect</span><span class="phase-note">core change</span></li>
+    <li><span class="chip done" id="chip-p3">done</span><span class="phase-name">P3 — DealProgressAll effect</span><span class="phase-note">core change</span></li>
+    <li><span class="chip done" id="chip-p4">done</span><span class="phase-name">P4 — ExileTopWorldCards + canExile</span><span class="phase-note">core change</span></li>
+    <li><span class="chip in-progress" id="chip-p5">in-progress</span><span class="phase-name">P5 — Help &amp; docs sync</span><span class="phase-note">docs + data</span></li>
+    <li><span class="chip gated" id="chip-p6">playtest-gated</span><span class="phase-name">P6 — DealProgressScaled</span><span class="phase-note">wave 2 · requires playtest verdict from P1/P4</span></li>
+  </ul>
+
+  <h2>Log</h2>
+
+  <details open>
+    <summary>P0 — Theme-authoring recipe amendment</summary>
+    <div class="log-entry"><div class="ts">2026-06-10 · init</div>Phase dispatched to implementation agent.</div>
+  </details>
+
+  <details>
+    <summary>P1 — Data-only batch</summary>
+    <div class="log-entry"><div class="ts">2026-06-10 · init</div>Awaiting P0 completion.</div>
+  </details>
+
+  <details>
+    <summary>P2 — Brace</summary>
+    <div class="log-entry"><div class="ts">2026-06-10 · init</div>Awaiting P1.</div>
+  </details>
+
+  <details>
+    <summary>P3 — DealProgressAll</summary>
+    <div class="log-entry"><div class="ts">2026-06-10 · init</div>Awaiting P2.</div>
+  </details>
+
+  <details>
+    <summary>P4 — ExileTopWorldCards + canExile</summary>
+    <div class="log-entry"><div class="ts">2026-06-10 · init</div>Awaiting P3.</div>
+  </details>
+
+  <details>
+    <summary>P5 — Help &amp; docs sync</summary>
+    <div class="log-entry"><div class="ts">2026-06-10 · init</div>Awaiting P2–P4.</div>
+  </details>
+
+  <details>
+    <summary>P6 — DealProgressScaled (playtest-gated)</summary>
+    <div class="log-entry warn"><div class="ts">2026-06-10 · init</div>Not starting until P1/P4 playtest impressions recorded and bird-building identity confirmed.</div>
+  </details>
+
+  <div class="meta-foot">Shattered Worlds · Implementation Notes · plan: <a href="../plans/shard-response-archetypes.html">shard-response-archetypes</a></div>
+</div>
+</body>
+</html>

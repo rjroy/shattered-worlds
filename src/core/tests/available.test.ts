@@ -265,12 +265,12 @@ describe('legalTargets Sprint (modal)', () => {
     // Construct cards directly to control keywords, independent of world data
     const slowCard: WorldCard = {
       kind: 'world', id: 'slow-1', name: 'Slow Hazard', insetKey: undefined,
-      cost: 1, keywords: ['Slow'], discardable: false,
+      cost: 1, keywords: ['Slow'], discardable: false, canExile: true,
       onDiscarded: { kind: 'None' }, onCleared: { kind: 'None' }, onEndOfTurn: { kind: 'None' },
     }
     const otherCard: WorldCard = {
       kind: 'world', id: 'other-1', name: 'Other Hazard', insetKey: undefined,
-      cost: 1, keywords: [], discardable: false,
+      cost: 1, keywords: [], discardable: false, canExile: true,
       onDiscarded: { kind: 'None' }, onCleared: { kind: 'None' }, onEndOfTurn: { kind: 'None' },
     }
     const state = { ...s1, hand: [sprint, slowCard, otherCard], energy: 1 }
@@ -318,7 +318,53 @@ describe('Adrenaline absent without other player cards to discard', () => {
 })
 
 // ---------------------------------------------------------------------------
-// 11. Energy affordability gate
+// 11. DealProgressAll playability
+// ---------------------------------------------------------------------------
+
+describe('DealProgressAll playability', () => {
+  it('DealProgressAll: not playable with zero world cards in hand', () => {
+    const s0 = makeState()
+    const [explore, s1] = mintPlayer(s0, 'Explore')
+    // Shelf Sweep uses DealProgressAll — construct it inline to avoid catalog dependency
+    const shelfSweep: PlayerCard = {
+      kind: 'player',
+      id: 'sweep-1',
+      name: 'Shelf Sweep',
+      insetKey: undefined,
+      sourceWorldId: 'zombie-big-box',
+      energyCost: 0,
+      effect: { kind: 'DealProgressAll', base: 1, bonus: { tag: 'Creature', amount: 1 } },
+    }
+    const state = { ...s1, hand: [explore, shelfSweep] }
+
+    const actions = availableActions(state)
+    const entry = actions.playable.find((p) => p.cardId === shelfSweep.id)
+    expect(entry).toBeUndefined()
+  })
+
+  it('DealProgressAll: playable with one world card in hand', () => {
+    const s0 = makeState()
+    const [zombie, s1] = mintWorld(s0, 'Zombie')
+    const shelfSweep: PlayerCard = {
+      kind: 'player',
+      id: 'sweep-2',
+      name: 'Shelf Sweep',
+      insetKey: undefined,
+      sourceWorldId: 'zombie-big-box',
+      energyCost: 0,
+      effect: { kind: 'DealProgressAll', base: 1, bonus: { tag: 'Creature', amount: 1 } },
+    }
+    const state = { ...s1, hand: [zombie, shelfSweep] }
+
+    const actions = availableActions(state)
+    const entry = actions.playable.find((p) => p.cardId === shelfSweep.id)
+    expect(entry).toBeDefined()
+    expect(entry!.spec).toEqual({ kind: 'none' })
+  })
+})
+
+// ---------------------------------------------------------------------------
+// 12. Energy affordability gate (was 11)
 // ---------------------------------------------------------------------------
 
 describe('Energy affordability gate', () => {
@@ -374,5 +420,73 @@ describe('Energy affordability gate', () => {
     const actions = availableActions(state)
     const entry = actions.playable.find((p) => p.cardId === medKit.id)
     expect(entry).toBeDefined()
+  })
+})
+
+// ---------------------------------------------------------------------------
+// 13. ExileTopWorldCards playability
+// ---------------------------------------------------------------------------
+
+/** Build a minimal exilable WorldCard directly. */
+function makeExilable(id: string): WorldCard {
+  return {
+    kind: 'world', id, name: `Card-${id}`, insetKey: undefined,
+    cost: 1, keywords: [], discardable: true, canExile: true,
+    onDiscarded: { kind: 'None' }, onCleared: { kind: 'None' }, onEndOfTurn: { kind: 'None' },
+  }
+}
+
+/** Build a non-exilable WorldCard (like Door or The Walker). */
+function makeNonExilable(id: string): WorldCard {
+  return { ...makeExilable(id), canExile: false }
+}
+
+/** Minimal PlayerCard with an ExileTopWorldCards effect for testing. */
+function makeFloorIt(id: string): PlayerCard {
+  return {
+    kind: 'player',
+    id,
+    name: 'Floor It',
+    insetKey: undefined,
+    sourceWorldId: 'highway-volcano',
+    energyCost: 0,
+    exhaust: true,
+    effect: { kind: 'ExileTopWorldCards', amount: 2 },
+  }
+}
+
+describe('ExileTopWorldCards playability', () => {
+  it('not playable when worldDraw has no exilable cards', () => {
+    const s0 = makeState()
+    const floorIt = makeFloorIt('fi-1')
+    const ne1 = makeNonExilable('ne1')
+    const ne2 = makeNonExilable('ne2')
+    const state = { ...s0, hand: [floorIt], worldDraw: [ne1, ne2] }
+
+    const actions = availableActions(state)
+    const entry = actions.playable.find((p) => p.cardId === floorIt.id)
+    expect(entry).toBeUndefined()
+  })
+
+  it('playable when worldDraw has at least one exilable card', () => {
+    const s0 = makeState()
+    const floorIt = makeFloorIt('fi-2')
+    const exilableCard = makeExilable('ex1')
+    const state = { ...s0, hand: [floorIt], worldDraw: [exilableCard] }
+
+    const actions = availableActions(state)
+    const entry = actions.playable.find((p) => p.cardId === floorIt.id)
+    expect(entry).toBeDefined()
+    expect(entry!.spec).toEqual({ kind: 'none' })
+  })
+
+  it('not playable when worldDraw is empty', () => {
+    const s0 = makeState()
+    const floorIt = makeFloorIt('fi-3')
+    const state = { ...s0, hand: [floorIt], worldDraw: [] }
+
+    const actions = availableActions(state)
+    const entry = actions.playable.find((p) => p.cardId === floorIt.id)
+    expect(entry).toBeUndefined()
   })
 })
