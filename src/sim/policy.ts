@@ -29,6 +29,16 @@ function pickSubset<T>(items: readonly T[], count: number, rng: Rng): T[] {
   return result
 }
 
+function priorityTarget(
+  targets: readonly CardId[],
+  nameById: ReadonlyMap<CardId, string>,
+): CardId | undefined {
+  return (
+    targets.find((id) => nameById.get(id) === 'Door') ??
+    targets.find((id) => nameById.get(id) === 'The Walker')
+  )
+}
+
 // ---------------------------------------------------------------------------
 // Build a complete PlayCard action from a spec entry
 // ---------------------------------------------------------------------------
@@ -38,6 +48,7 @@ type PlayCardFields = Extract<Action, { type: 'PlayCard' }>
 function buildPlayAction(
   cardId: CardId,
   spec: TargetSpec,
+  nameById: ReadonlyMap<CardId, string>,
   legalTargets: (cardId: CardId, step: number) => readonly CardId[],
   rng: Rng,
 ): PlayCardFields {
@@ -50,7 +61,7 @@ function buildPlayAction(
     case 'hazard': {
       const targets = legalTargets(cardId, 0)
       if (targets.length === 0) return base
-      return { ...base, targetId: pick(targets, rng) }
+      return { ...base, targetId: priorityTarget(targets, nameById) ?? pick(targets, rng) }
     }
 
     case 'discardPlayer': {
@@ -94,7 +105,11 @@ function buildPlayAction(
         if (branchSpec.kind === 'hazard') {
           const targets = legalTargets(cardId, branchIdx)
           if (targets.length === 0) continue
-          return { ...base, choice: branchIdx, targetId: pick(targets, rng) }
+          return {
+            ...base,
+            choice: branchIdx,
+            targetId: priorityTarget(targets, nameById) ?? pick(targets, rng),
+          }
         }
         // 'none' or any non-targeting branch
         return { ...base, choice: branchIdx }
@@ -113,7 +128,7 @@ function buildPlayAction(
         if (stepSpec.kind === 'hazard') {
           const targets = legalTargets(cardId, stepIdx)
           if (targets.length > 0) {
-            action = { ...action, targetId: pick(targets, rng) }
+            action = { ...action, targetId: priorityTarget(targets, nameById) ?? pick(targets, rng) }
           }
         } else if (stepSpec.kind === 'discardPlayer') {
           const targets = legalTargets(cardId, stepIdx)
@@ -125,8 +140,13 @@ function buildPlayAction(
           const count = Math.min(pickCount(stepSpec.min, stepSpec.max, rng), targets.length)
           const chosen = pickSubset(targets, count, rng)
           action = { ...action, returnIds: chosen }
+        } else if (stepSpec.kind === 'destroyHand') {
+          const targets = legalTargets(cardId, stepIdx)
+          if (targets.length === 0) continue
+          if (stepSpec.min === 0 && rng() < 0.5) continue
+          action = { ...action, destroyId: pick(targets, rng) }
         }
-        // 'none' / 'destroyHand' / 'modal': no supplementary fields needed or handled at top level
+        // 'none' / 'modal': no supplementary fields needed or handled at top level
       }
 
       return action
@@ -145,11 +165,12 @@ function buildPlayAction(
  */
 export function pickAction(state: GameState, rng: Rng): Action {
   const available = availableActions(state)
+  const nameById = new Map(state.hand.map((card) => [card.id, card.name]))
 
   const actions: Action[] = []
 
   for (const { cardId, spec } of available.playable) {
-    actions.push(buildPlayAction(cardId, spec, available.legalTargets, rng))
+    actions.push(buildPlayAction(cardId, spec, nameById, available.legalTargets, rng))
   }
 
   for (const cardId of available.discardable) {
@@ -164,6 +185,14 @@ export function pickAction(state: GameState, rng: Rng): Action {
     // Should not happen in a valid 'playing' state, but safe fallback.
     return { type: 'EndTurn' }
   }
+
+  const objectiveAction =
+    actions.find((action) => action.type === 'DiscardHazard' && nameById.get(action.cardId) === 'The Walker') ??
+    actions.find((action) => action.type === 'PlayCard' && nameById.get(action.targetId ?? '') === 'Door') ??
+    actions.find((action) => action.type === 'PlayCard' && nameById.get(action.cardId) === 'Summon Door') ??
+    actions.find((action) => action.type === 'PlayCard' && nameById.get(action.targetId ?? '') === 'The Walker')
+
+  if (objectiveAction !== undefined) return objectiveAction
 
   return pick(actions, rng)
 }

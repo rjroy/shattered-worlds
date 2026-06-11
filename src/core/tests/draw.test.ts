@@ -84,15 +84,19 @@ describe('refillHand draw table', () => {
 describe('refillHand with full hand', () => {
   it(`returns no events and unchanged state when hand has ${WORLD_CONSTS.maxHandSize} cards`, () => {
     const base = createWorld(catalog, worldData, 1)
-    // Move all world cards (from worldDraw + hand) into hand to get WORLD_CONSTS.maxHandSize world cards
-    const handWorld = base.hand.filter((c) => c.kind === 'world') as WorldCard[]
-    const drawnWorld = base.worldDraw.slice(0, WORLD_CONSTS.maxHandSize - handWorld.length)
-    const remainingWorldDraw = base.worldDraw.slice(WORLD_CONSTS.maxHandSize - handWorld.length)
+    // Mint enough world cards to fill the hand completely, bypassing act size constraints
+    let s = base
+    const extraWorldCards: WorldCard[] = []
+    const needed = WORLD_CONSTS.maxHandSize - base.hand.length
+    for (let i = 0; i < needed; i++) {
+      const [card, next] = mintCard(catalog, s, 'Rubble')
+      extraWorldCards.push(card as WorldCard)
+      s = next
+    }
 
     const state: GameState = {
-      ...base,
-      hand: [...handWorld, ...drawnWorld],
-      worldDraw: remainingWorldDraw,
+      ...s,
+      hand: [...base.hand, ...extraWorldCards],
     }
 
     // Sanity: hand must be exactly WORLD_CONSTS.maxHandSize
@@ -358,5 +362,112 @@ describe('resolveForceDestroy', () => {
     expect(events).toHaveLength(2)
     const ids = events.map((e) => (e as { id: string }).id)
     expect(new Set(ids).size).toBe(2) // distinct
+  })
+})
+
+// ---------------------------------------------------------------------------
+// 10. resolveForceDestroy with Brace
+// ---------------------------------------------------------------------------
+
+describe('resolveForceDestroy with Brace', () => {
+  function handOfPlayers(base: GameState, n: number): [PlayerCard[], GameState] {
+    const cards: PlayerCard[] = []
+    let state = base
+    for (let i = 0; i < n; i++) {
+      const [card, next] = mintCard(catalog, state, 'Explore')
+      cards.push(card as PlayerCard)
+      state = next
+    }
+    return [cards, state]
+  }
+
+  it('charges >= pending: all absorbed, zero cards destroyed, counter decremented', () => {
+    const base = createWorld(catalog, worldData, 1)
+    const [players, s1] = handOfPlayers(base, 3)
+    const state: GameState = {
+      ...s1,
+      hand: players,
+      pendingForceDestroy: 1,
+      braceCharges: 2,
+    }
+
+    const { state: after, events } = resolveForceDestroy(state)
+
+    // All pending absorbed — no cards destroyed
+    expect(after.hand).toHaveLength(3)
+    expect(after.pendingForceDestroy).toBe(0)
+    // One charge consumed; one remains
+    expect(after.braceCharges).toBe(1)
+    // BraceConsumed event emitted, no CardDestroyed
+    expect(events.some((e) => e.type === 'BraceConsumed')).toBe(true)
+    expect(events.some((e) => e.type === 'CardDestroyed')).toBe(false)
+    const consumed = events.find((e) => e.type === 'BraceConsumed')
+    if (consumed?.type === 'BraceConsumed') {
+      expect(consumed.absorbed).toBe(1)
+      expect(consumed.remaining).toBe(0)
+    }
+  })
+
+  it('charges < pending: partial absorption, remainder destroys cards', () => {
+    const base = createWorld(catalog, worldData, 1)
+    const [players, s1] = handOfPlayers(base, 3)
+    const state: GameState = {
+      ...s1,
+      hand: players,
+      pendingForceDestroy: 3,
+      braceCharges: 1,
+    }
+
+    const { state: after, events } = resolveForceDestroy(state)
+
+    // 1 absorbed by brace, 2 remaining → 2 cards destroyed
+    expect(after.hand).toHaveLength(1)
+    expect(after.pendingForceDestroy).toBe(0)
+    expect(after.braceCharges).toBe(0)
+    expect(events.filter((e) => e.type === 'CardDestroyed')).toHaveLength(2)
+    const consumed = events.find((e) => e.type === 'BraceConsumed')
+    if (consumed?.type === 'BraceConsumed') {
+      expect(consumed.absorbed).toBe(1)
+      expect(consumed.remaining).toBe(2)
+    }
+  })
+
+  it('zero charges: unchanged behavior (existing ForceDestroy logic)', () => {
+    const base = createWorld(catalog, worldData, 1)
+    const [players, s1] = handOfPlayers(base, 3)
+    const state: GameState = {
+      ...s1,
+      hand: players,
+      pendingForceDestroy: 2,
+      braceCharges: 0,
+    }
+
+    const { state: after, events } = resolveForceDestroy(state)
+
+    expect(after.hand).toHaveLength(1)
+    expect(after.pendingForceDestroy).toBe(0)
+    expect(after.braceCharges).toBe(0)
+    expect(events.filter((e) => e.type === 'CardDestroyed')).toHaveLength(2)
+    expect(events.some((e) => e.type === 'BraceConsumed')).toBe(false)
+  })
+
+  it('emits BraceConsumed before CardDestroyed', () => {
+    const base = createWorld(catalog, worldData, 1)
+    const [players, s1] = handOfPlayers(base, 3)
+    const state: GameState = {
+      ...s1,
+      hand: players,
+      pendingForceDestroy: 2,
+      braceCharges: 1,
+    }
+
+    const { events } = resolveForceDestroy(state)
+
+    const types = events.map((e) => e.type)
+    const braceIdx = types.indexOf('BraceConsumed')
+    const destroyIdx = types.indexOf('CardDestroyed')
+    expect(braceIdx).toBeGreaterThanOrEqual(0)
+    expect(destroyIdx).toBeGreaterThanOrEqual(0)
+    expect(braceIdx).toBeLessThan(destroyIdx)
   })
 })

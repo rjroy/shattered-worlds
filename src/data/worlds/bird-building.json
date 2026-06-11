@@ -6,7 +6,7 @@
       "name": "Shadow Overhead",
       "insetKey": "bird-inset-shadow-overhead",
       "cost": 2,
-      "keywords": [],
+      "keywords": ["Hidden"],
       "discardable": true,
       "onDiscarded": { "kind": "None" },
       "onCleared": { "kind": "GainCard", "template": "Find Footing" },
@@ -17,10 +17,10 @@
       "name": "Sliding Debris",
       "insetKey": "bird-inset-sliding-debris",
       "cost": 1,
-      "keywords": [],
+      "keywords": ["Hidden"],
       "discardable": true,
       "onDiscarded": { "kind": "ForceDestroy", "amount": 1 },
-      "onCleared": { "kind": "None" },
+      "onCleared": { "kind": "GainCard", "template": "Cut It Loose" },
       "onEndOfTurn": { "kind": "None" }
     },
     "Groaning Girders": {
@@ -74,29 +74,42 @@
       "name": "Steady",
       "insetKey": "bird-inset-steady",
       "energyCost": 1,
-      "effect": { "kind": "DestroyCardInHand", "min": 0, "max": 1, "maxCost": 2 }
+      "effect": { "kind": "Brace", "amount": 1 }
+    },
+    "Cut It Loose": {
+      "kind": "player",
+      "name": "Cut It Loose",
+      "energyCost": 0,
+      "effect": {
+        "kind": "Sequence",
+        "steps": [
+          { "kind": "DestroyCardInHand", "min": 1, "max": 1 },
+          { "kind": "DealProgress", "base": 4 }
+        ]
+      }
     }
   },
   "deckComposition": {
     "acts": [
       {
         "cards": [
-          { "templateId": "Shadow Overhead", "count": 2 },
+          { "templateId": "Shadow Overhead", "count": 5 },
           { "templateId": "Sliding Debris", "count": 2 },
-          { "templateId": "Groaning Girders", "count": 2 }
+          { "templateId": "Groaning Girders", "count": 2 },
+          { "templateId": "Gripping Talon", "count": 1 }
         ]
       },
       {
         "cards": [
-          { "templateId": "Sliding Debris", "count": 2 },
-          { "templateId": "Gripping Talon", "count": 3 },
-          { "templateId": "Find Fire Axe", "count": 1 }
+          { "templateId": "Sliding Debris", "count": 4 },
+          { "templateId": "Gripping Talon", "count": 4 },
+          { "templateId": "Find Fire Axe", "count": 2 }
         ]
       },
       {
         "cards": [
           { "templateId": "Find Fire Axe", "count": 1 },
-          { "templateId": "Gripping Talon", "count": 4 },
+          { "templateId": "Gripping Talon", "count": 8 },
           { "templateId": "The Walker", "count": 1 }
         ]
       }

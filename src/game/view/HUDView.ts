@@ -26,6 +26,11 @@ export class HUDView extends Phaser.GameObjects.Container {
   private hpText: Phaser.GameObjects.Text
   private actText: Phaser.GameObjects.Text
   private energyText: Phaser.GameObjects.Text
+  private powerUps: Phaser.GameObjects.Container
+  private powerUpsTexts: Phaser.GameObjects.Text[] = []
+  private braceText: Phaser.GameObjects.Text | undefined
+  private forceDestroyText: Phaser.GameObjects.Text | undefined
+  private powerUpPanel: Phaser.GameObjects.NineSlice
 
   constructor(scene: Phaser.Scene) {
     super(scene, 0, 0)
@@ -60,6 +65,7 @@ export class HUDView extends Phaser.GameObjects.Container {
     this.hpText = scene.add.text(HUD_LAYOUT.labels.hpX, HUD_PANEL_H / 2, 'HP: —', { ...style, color: TEXT.textHp })
     this.actText = scene.add.text(HUD_LAYOUT.labels.actX, HUD_PANEL_H / 2, 'Act 1 / 3', style)
     this.energyText = scene.add.text(HUD_LAYOUT.labels.energyX, HUD_PANEL_H / 2, '—', { ...style, color: TEXT.textEnergy })
+    this.powerUps = scene.add.container(HUD_LAYOUT.labels.powerUpX, HUD_PANEL_H / 2)
     const energyIcon = scene.add
       .image(this.energyText.x - HUD_LAYOUT.energyIconOffsetX, this.energyText.y, 'energy-icon')
       .setDisplaySize(HUD_LAYOUT.energyIconSize, HUD_LAYOUT.energyIconSize)
@@ -68,7 +74,28 @@ export class HUDView extends Phaser.GameObjects.Container {
       label.setOrigin(0, 0.5)
       this.add(label)
     }
+    this.add(this.powerUps)
     this.energyText.setAbove(energyIcon)
+
+    this.powerUpPanel = scene.add
+      .nineslice(
+        0,
+        0,
+        'text-back',
+        undefined,
+        HUD_PANEL_W,
+        HUD_PANEL_H,
+        HUD_PANEL_SIDE_INSET,
+        HUD_PANEL_SIDE_INSET,
+        HUD_PANEL_EDGE_INSET,
+        HUD_PANEL_EDGE_INSET,
+      )
+      .setOrigin(0, 0)
+      .setTint(0xBBBBBB)
+    this.powerUps.add(this.powerUpPanel)
+    this.powerUpPanel.setVisible(false) // only show the panel when we have at least one power-up to list
+    this.add(panel)
+
 
     this.setPosition(HUD_PANEL_X, HUD_PANEL_Y)
   }
@@ -78,5 +105,64 @@ export class HUDView extends Phaser.GameObjects.Container {
     this.hpText.setText(`HP: ${state.hp}`)
     this.actText.setText(`Act ${state.actIndex + 1} / ${state.totalActs}`)
     this.energyText.setText(`${state.energy}`)
+    if (state.braceCharges > 0) {
+      if (this.braceText === undefined) {
+        this.braceText = this.addPowerUp()
+      }
+      this.braceText.setVisible(true)
+      this.braceText.setText(`Brace: ${state.braceCharges}`)
+    } else {
+      if (this.braceText !== undefined) {
+        this.braceText.setVisible(false)
+      }
+    }
+    if (state.pendingForceDestroy > 0) {
+      if (this.forceDestroyText === undefined) {
+        this.forceDestroyText = this.addPowerUp()
+      }
+      this.forceDestroyText.setVisible(true)
+      this.forceDestroyText.setText(`Force Destroy: ${state.pendingForceDestroy}`)
+    } else {
+      if (this.forceDestroyText !== undefined) {
+        this.forceDestroyText.setVisible(false)
+      }
+    }
+    let minX: number | undefined = undefined
+    let maxX: number | undefined = undefined
+    let hasPowerUps: boolean = false
+    for (const powerUpText of this.powerUpsTexts) {
+      if (powerUpText.visible) {
+        hasPowerUps = true
+        if (minX === undefined || powerUpText.x < minX) {
+          minX = powerUpText.x
+        }
+        if (maxX === undefined || powerUpText.x + powerUpText.width > maxX) {
+          maxX = powerUpText.x + powerUpText.width
+        } 
+      }
+    }
+    this.powerUps.setVisible(hasPowerUps)
+    this.powerUpPanel.setVisible(hasPowerUps)
+    if (minX !== undefined && maxX !== undefined) {
+      this.powerUpPanel.setPosition(minX - 15, -HUD_PANEL_H / 2)
+      this.powerUpPanel.setSize(maxX - minX + 30, HUD_PANEL_H)
+    }
+  }
+
+  addPowerUp(): Phaser.GameObjects.Text  {
+    const style = textStyle({ fontSize: '16px', fontStyle: 'bold', color: TEXT.textLight })
+    const newText = this.scene.add.text(0, HUD_PANEL_H / 2, '', style)
+    newText.setOrigin(0, 0.5)
+    this.powerUps.add(newText)
+
+    let x = 0
+    for (let Idx = 0; Idx < this.powerUpsTexts.length; ++Idx) {
+        x = this.powerUpsTexts[Idx]?.x ?? 0
+        x += this.powerUpsTexts[Idx]?.width ?? 0
+        x += 10
+    }
+    newText.setPosition(x, 0)
+    this.powerUpsTexts.push(newText)
+    return newText
   }
 }

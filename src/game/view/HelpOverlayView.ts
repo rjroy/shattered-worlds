@@ -349,6 +349,12 @@ export class HelpOverlayView extends Phaser.GameObjects.Container {
           wordWrap: { width: 210 },
           lineSpacing: 3,
         })
+        addText(page, 150, 158, 'Exhaust cards are destroyed on play, not recycled. One use only.', {
+          fontSize: '13px',
+          color: TEXT.textPenalty,
+          wordWrap: { width: 210 },
+          lineSpacing: 3,
+        })
       },
     },
     {

@@ -37,12 +37,13 @@ export function describeEffect(effect: CardEffect): string[] {
       return [`Gain ${effect.amount} Energy`]
     case 'ReturnWorldCards':
       return [describeReturn(effect.min, effect.max)]
-    case 'DestroyCardInHand':
-      return [
-        effect.max == 1 ? `Destroy a card in hand` : `Destroy ${effect.min}–${effect.max} cards in hand`, 
-        (effect.min == 0 && effect.max == 1) ? '(optional)' : ``,
-        effect.maxCost !== undefined ? `(cost ≤ ${effect.maxCost})` : ''
+    case 'DestroyCardInHand': {
+      const lines = [
+        effect.max == 1 ? 'Destroy a card in hand' : `Destroy ${effect.min}–${effect.max} cards in hand`,
       ]
+      if (effect.min == 0 && effect.max == 1) lines.push('(optional)')
+      return lines
+    }
     case 'DiscardThenDraw':
       return [`Discard a card, then draw ${effect.player}`]
     case 'AddCard':
@@ -73,6 +74,20 @@ export function describeEffect(effect: CardEffect): string[] {
       return ['vanishes']
     case 'None':
       return []
+    case 'Brace':
+      return [
+        effect.amount === 1
+          ? 'Brace: absorb the next snatch'
+          : `Brace: absorb the next ${effect.amount} snatches`,
+      ]
+    case 'DealProgressAll': {
+      const bonus = effect.bonus ? `\n(+${effect.bonus.amount} vs ${effect.bonus.tag})` : ''
+      return [`${effect.base} Progress to every hazard${bonus}`]
+    }
+    case 'ExileTopWorldCards':
+      return [
+        `Exile the top ${effect.amount} card${effect.amount === 1 ? '' : 's'} of the world deck`,
+      ]
   }
 }
 
@@ -129,6 +144,11 @@ function dealProgressOf(
   switch (effect.kind) {
     case 'DealProgress':
       return effect
+    case 'DealProgressAll':
+      // Treat as a DealProgress-shaped payload so previewPlay shows per-hazard math.
+      return effect.bonus !== undefined
+        ? { kind: 'DealProgress', base: effect.base, bonus: effect.bonus }
+        : { kind: 'DealProgress', base: effect.base }
     case 'Modal': {
       const branch = branchIndex !== undefined ? effect.branches[branchIndex] : undefined
       return branch !== undefined ? dealProgressOf(branch) : null

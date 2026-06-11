@@ -30,6 +30,9 @@ export interface WorldCardTemplate extends BasicCardTemplate {
   cost: number
   keywords: readonly Keyword[]
   discardable: boolean
+  // When explicitly false, the minted card gets canExile: false. Omitting it
+  // defaults to true (most world cards can be exiled).
+  canExile?: boolean
   onDiscarded: CardEffect
   onCleared: CardEffect
   onEndOfTurn: CardEffect
@@ -79,6 +82,7 @@ export function mintCard(
     cost: template.cost,
     keywords: template.keywords,
     discardable: template.discardable,
+    canExile: template.canExile ?? true,
     onDiscarded: template.onDiscarded,
     onCleared: template.onCleared,
     onEndOfTurn: template.onEndOfTurn,

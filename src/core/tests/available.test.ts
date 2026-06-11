@@ -4,6 +4,7 @@ import { mintCard } from '../model/cards'
 import { createWorld } from '../engine/world'
 import type { GameState, PlayerCard, WorldCard } from '../model/types'
 import { catalog, worldData } from './testFixture'
+import { buildWorld } from '../../data/worldManifest'
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -265,12 +266,12 @@ describe('legalTargets Sprint (modal)', () => {
     // Construct cards directly to control keywords, independent of world data
     const slowCard: WorldCard = {
       kind: 'world', id: 'slow-1', name: 'Slow Hazard', insetKey: undefined,
-      cost: 1, keywords: ['Slow'], discardable: false,
+      cost: 1, keywords: ['Slow'], discardable: false, canExile: true,
       onDiscarded: { kind: 'None' }, onCleared: { kind: 'None' }, onEndOfTurn: { kind: 'None' },
     }
     const otherCard: WorldCard = {
       kind: 'world', id: 'other-1', name: 'Other Hazard', insetKey: undefined,
-      cost: 1, keywords: [], discardable: false,
+      cost: 1, keywords: [], discardable: false, canExile: true,
       onDiscarded: { kind: 'None' }, onCleared: { kind: 'None' }, onEndOfTurn: { kind: 'None' },
     }
     const state = { ...s1, hand: [sprint, slowCard, otherCard], energy: 1 }
@@ -318,7 +319,53 @@ describe('Adrenaline absent without other player cards to discard', () => {
 })
 
 // ---------------------------------------------------------------------------
-// 11. Energy affordability gate
+// 11. DealProgressAll playability
+// ---------------------------------------------------------------------------
+
+describe('DealProgressAll playability', () => {
+  it('DealProgressAll: not playable with zero world cards in hand', () => {
+    const s0 = makeState()
+    const [explore, s1] = mintPlayer(s0, 'Explore')
+    // Shelf Sweep uses DealProgressAll — construct it inline to avoid catalog dependency
+    const shelfSweep: PlayerCard = {
+      kind: 'player',
+      id: 'sweep-1',
+      name: 'Shelf Sweep',
+      insetKey: undefined,
+      sourceWorldId: 'zombie-big-box',
+      energyCost: 0,
+      effect: { kind: 'DealProgressAll', base: 1, bonus: { tag: 'Creature', amount: 1 } },
+    }
+    const state = { ...s1, hand: [explore, shelfSweep] }
+
+    const actions = availableActions(state)
+    const entry = actions.playable.find((p) => p.cardId === shelfSweep.id)
+    expect(entry).toBeUndefined()
+  })
+
+  it('DealProgressAll: playable with one world card in hand', () => {
+    const s0 = makeState()
+    const [zombie, s1] = mintWorld(s0, 'Zombie')
+    const shelfSweep: PlayerCard = {
+      kind: 'player',
+      id: 'sweep-2',
+      name: 'Shelf Sweep',
+      insetKey: undefined,
+      sourceWorldId: 'zombie-big-box',
+      energyCost: 0,
+      effect: { kind: 'DealProgressAll', base: 1, bonus: { tag: 'Creature', amount: 1 } },
+    }
+    const state = { ...s1, hand: [zombie, shelfSweep] }
+
+    const actions = availableActions(state)
+    const entry = actions.playable.find((p) => p.cardId === shelfSweep.id)
+    expect(entry).toBeDefined()
+    expect(entry!.spec).toEqual({ kind: 'none' })
+  })
+})
+
+// ---------------------------------------------------------------------------
+// 12. Energy affordability gate (was 11)
 // ---------------------------------------------------------------------------
 
 describe('Energy affordability gate', () => {
@@ -374,5 +421,178 @@ describe('Energy affordability gate', () => {
     const actions = availableActions(state)
     const entry = actions.playable.find((p) => p.cardId === medKit.id)
     expect(entry).toBeDefined()
+  })
+})
+
+// ---------------------------------------------------------------------------
+// 13. ExileTopWorldCards playability
+// ---------------------------------------------------------------------------
+
+/** Build a minimal exilable WorldCard directly. */
+function makeExilable(id: string): WorldCard {
+  return {
+    kind: 'world', id, name: `Card-${id}`, insetKey: undefined,
+    cost: 1, keywords: [], discardable: true, canExile: true,
+    onDiscarded: { kind: 'None' }, onCleared: { kind: 'None' }, onEndOfTurn: { kind: 'None' },
+  }
+}
+
+/** Build a non-exilable WorldCard (like Door or The Walker). */
+function makeNonExilable(id: string): WorldCard {
+  return { ...makeExilable(id), canExile: false }
+}
+
+/** Minimal PlayerCard with an ExileTopWorldCards effect for testing. */
+function makeFloorIt(id: string): PlayerCard {
+  return {
+    kind: 'player',
+    id,
+    name: 'Floor It',
+    insetKey: undefined,
+    sourceWorldId: 'highway-volcano',
+    energyCost: 0,
+    exhaust: true,
+    effect: { kind: 'ExileTopWorldCards', amount: 2 },
+  }
+}
+
+describe('ExileTopWorldCards playability', () => {
+  it('not playable when worldDraw has no exilable cards', () => {
+    const s0 = makeState()
+    const floorIt = makeFloorIt('fi-1')
+    const ne1 = makeNonExilable('ne1')
+    const ne2 = makeNonExilable('ne2')
+    const state = { ...s0, hand: [floorIt], worldDraw: [ne1, ne2] }
+
+    const actions = availableActions(state)
+    const entry = actions.playable.find((p) => p.cardId === floorIt.id)
+    expect(entry).toBeUndefined()
+  })
+
+  it('playable when worldDraw has at least one exilable card', () => {
+    const s0 = makeState()
+    const floorIt = makeFloorIt('fi-2')
+    const exilableCard = makeExilable('ex1')
+    const state = { ...s0, hand: [floorIt], worldDraw: [exilableCard] }
+
+    const actions = availableActions(state)
+    const entry = actions.playable.find((p) => p.cardId === floorIt.id)
+    expect(entry).toBeDefined()
+    expect(entry!.spec).toEqual({ kind: 'none' })
+  })
+
+  it('not playable when worldDraw is empty', () => {
+    const s0 = makeState()
+    const floorIt = makeFloorIt('fi-3')
+    const state = { ...s0, hand: [floorIt], worldDraw: [] }
+
+    const actions = availableActions(state)
+    const entry = actions.playable.find((p) => p.cardId === floorIt.id)
+    expect(entry).toBeUndefined()
+  })
+})
+
+// ---------------------------------------------------------------------------
+// 14. Cut It Loose (Sequence: destroyHand → hazard)
+// ---------------------------------------------------------------------------
+
+describe('Cut It Loose (Sequence: destroyHand → hazard)', () => {
+  const { catalog: birdCatalog, worldData: birdWorld } = buildWorld('bird-building')
+
+  /** Build a minimal GameState for bird-building tests. */
+  function makeBirdState(overrides: Partial<GameState> = {}): GameState {
+    const base = createWorld(birdCatalog, birdWorld, 1)
+    return {
+      ...base,
+      hand: [],
+      playerDraw: [],
+      playerDiscard: [],
+      worldDraw: [],
+      acts: [],
+      progress: {},
+      hp: 10,
+      energy: 0,
+      skipDrawNext: false,
+      status: 'playing',
+      ...overrides,
+    }
+  }
+
+  function mintBirdPlayer(state: GameState, name: Parameters<typeof mintCard>[2]): [PlayerCard, GameState] {
+    const [card, next] = mintCard(birdCatalog, state, name)
+    if (card.kind !== 'player') throw new Error(`${name} is not a player card`)
+    return [card as PlayerCard, next]
+  }
+
+  function mintBirdWorld(state: GameState, name: Parameters<typeof mintCard>[2]): [WorldCard, GameState] {
+    const [card, next] = mintCard(birdCatalog, state, name)
+    if (card.kind !== 'world') throw new Error(`${name} is not a world card`)
+    return [card as WorldCard, next]
+  }
+
+  it('appears in playable with compound spec when hand has ≥2 player cards AND ≥1 world card', () => {
+    const s0 = makeBirdState()
+    const [cutItLoose, s1] = mintBirdPlayer(s0, 'Cut It Loose')
+    const [findFooting, s2] = mintBirdPlayer(s1, 'Find Footing')
+    const [groaningGirders, s3] = mintBirdWorld(s2, 'Groaning Girders')
+    const state = { ...s3, hand: [cutItLoose, findFooting, groaningGirders] }
+
+    const actions = availableActions(state)
+    const entry = actions.playable.find((p) => p.cardId === cutItLoose.id)
+    expect(entry).toBeDefined()
+
+    const spec = entry!.spec
+    expect(spec.kind).toBe('compound')
+    if (spec.kind !== 'compound') throw new Error('not compound')
+
+    expect(spec.steps[0]).toEqual({ kind: 'destroyHand', min: 1, max: 1 })
+    expect(spec.steps[1]).toEqual({ kind: 'hazard' })
+  })
+
+  it('NOT in playable when only 1 player card in hand (self only — cannot destroy)', () => {
+    const s0 = makeBirdState()
+    const [cutItLoose, s1] = mintBirdPlayer(s0, 'Cut It Loose')
+    const [groaningGirders, s2] = mintBirdWorld(s1, 'Groaning Girders')
+    const state = { ...s2, hand: [cutItLoose, groaningGirders] }
+
+    const actions = availableActions(state)
+    const entry = actions.playable.find((p) => p.cardId === cutItLoose.id)
+    expect(entry).toBeUndefined()
+  })
+
+  it('legalTargets(cardId, 0) returns player cards excluding self', () => {
+    const s0 = makeBirdState()
+    const [cutItLoose, s1] = mintBirdPlayer(s0, 'Cut It Loose')
+    const [findFooting, s2] = mintBirdPlayer(s1, 'Find Footing')
+    const [steady, s3] = mintBirdPlayer(s2, 'Steady')
+    const [groaningGirders, s4] = mintBirdWorld(s3, 'Groaning Girders')
+    const state = { ...s4, hand: [cutItLoose, findFooting, steady, groaningGirders] }
+
+    const actions = availableActions(state)
+    const targets = actions.legalTargets(cutItLoose.id, 0)
+
+    expect(targets).toHaveLength(2)
+    expect(targets).toContain(findFooting.id)
+    expect(targets).toContain(steady.id)
+    expect(targets).not.toContain(cutItLoose.id)
+    expect(targets).not.toContain(groaningGirders.id)
+  })
+
+  it('legalTargets(cardId, 1) returns world cards in hand', () => {
+    const s0 = makeBirdState()
+    const [cutItLoose, s1] = mintBirdPlayer(s0, 'Cut It Loose')
+    const [findFooting, s2] = mintBirdPlayer(s1, 'Find Footing')
+    const [groaningGirders, s3] = mintBirdWorld(s2, 'Groaning Girders')
+    const [slidingDebris, s4] = mintBirdWorld(s3, 'Sliding Debris')
+    const state = { ...s4, hand: [cutItLoose, findFooting, groaningGirders, slidingDebris] }
+
+    const actions = availableActions(state)
+    const targets = actions.legalTargets(cutItLoose.id, 1)
+
+    expect(targets).toHaveLength(2)
+    expect(targets).toContain(groaningGirders.id)
+    expect(targets).toContain(slidingDebris.id)
+    expect(targets).not.toContain(cutItLoose.id)
+    expect(targets).not.toContain(findFooting.id)
   })
 })

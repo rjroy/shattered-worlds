@@ -200,7 +200,7 @@ describe('replay equivalence', () => {
     const state0 = createWorld(catalog, worldData, 42)
 
     // seed 42 starting hand:
-    //   Rubble(id=12), Screams(id=15), Sprint(id=1), Panic(id=8), MedKit(id=7), Explore(id=2)
+    //   Rubble(id=14), Screams(id=17), Sprint(id=1), Panic(id=8), MedKit(id=7), Explore(id=2)
     const rubble = state0.hand.find((c) => c.kind === 'world' && c.name === 'Rubble')!
     const screams = state0.hand.find((c) => c.kind === 'world' && c.name === 'Screams')!
     const explore = state0.hand.find((c) => c.kind === 'player' && c.name === 'Explore')!
@@ -213,7 +213,7 @@ describe('replay equivalence', () => {
       targetId: rubble.id,
     })
 
-    // Action 2: Discard Screams (onDiscarded: GainCard Panic)
+    // Action 2: Discard Screams (onDiscarded: GainCard Panic — no damage)
     const r2 = reduce(catalog, r1.state, { type: 'DiscardHazard', cardId: screams.id })
 
     // Action 3: Play Med Kit (Heal 2)
@@ -236,7 +236,7 @@ describe('replay equivalence', () => {
   it('replay state is consistent: hp, status, hand sizes match expected values', () => {
     const state = runReplay()
 
-    // Med Kit healed +2 but initial hp=10, Screams onDiscarded=GainCard (no damage), so hp unchanged
+    // Med Kit healed +2; Rubble onCleared=None; Screams onDiscarded=GainCard Panic (no hp change)
     expect(state.hp).toBe(12) // 10 + 2 from Med Kit
 
     expect(state.status).toBe('playing')

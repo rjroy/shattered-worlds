@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Implementation plan: generalize selection targeting</title>
+  <meta name="date" content="2026-06-10">
+  <meta name="status" content="draft">
+  <meta name="tags" content="plan, selection, targeting, sequence, compound, renderer, state-machine, cut-it-loose">
+  <meta name="modules" content="game-interaction, table-scene, highlight">
+  <meta name="related" content=".lore/work/design/targeting-interaction.html, .lore/work/plans/shard-response-archetypes.html, .lore/work/specs/player-feedback-selection-and-progress.html, .lore/work/notes/009-renderer.html, .lore/work/notes/player-feedback-selection-and-progress.html">
+  <style>
+    :root {
+      --bg: #0c0a10; --panel: #18141f; --panel-2: #211a2b;
+      --ink: #ece6f2; --muted: #9b8fb0; --accent: #b98aff;
+      --gold: #d6b15c; --ember: #ff8a3c; --good: #6cd08a;
+      --refuse: #ff8a8a; --border: #2c2438; --code: #c9b8e6; --gate: #5ec8d8;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: radial-gradient(1100px 560px at 50% -8%, #241433 0%, var(--bg) 58%);
+      color: var(--ink); font: 16px/1.65 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      padding: 2.5rem 1rem 6rem; }
+    .wrap { max-width: 960px; margin: 0 auto; }
+    .hero { text-align: center; margin-bottom: 2rem; }
+    .kicker { letter-spacing: .28em; text-transform: uppercase; font-size: .72rem; color: var(--gold); margin-bottom: .6rem; }
+    h1 { font-size: 2.1rem; margin: 0 0 .5rem; line-height: 1.08;
+      background: linear-gradient(180deg, #fff, #c9b8e6); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+    .one-liner { font-size: 1.05rem; color: var(--ink); max-width: 760px; margin: .5rem auto 0; }
+    .badge { display: inline-block; margin-top: 1rem; background: rgba(185,138,255,.12);
+      border: 1px solid rgba(185,138,255,.35); color: var(--accent); border-radius: 999px;
+      padding: .2rem .8rem; font-size: .75rem; font-weight: 600; }
+    .source-ref { background: rgba(214,177,92,.08); border: 1px solid rgba(214,177,92,.35); border-radius: 12px;
+      padding: .8rem 1.2rem; margin: 1.4rem 0; font-size: .92rem; }
+    .source-ref a { color: var(--gold); }
+    h2 { font-size: 1.35rem; margin: 2.6rem 0 1rem; display: flex; align-items: center; gap: .6rem;
+      border-bottom: 1px solid var(--border); padding-bottom: .5rem; }
+    h3 { font-size: 1.02rem; margin: 1.4rem 0 .5rem; color: var(--accent); }
+    p { margin: .6rem 0; }
+    ul { margin: .5rem 0; padding-left: 1.4rem; }
+    li { margin: .35rem 0; }
+    code { font-family: "SF Mono", ui-monospace, "Cascadia Code", Menlo, Consolas, monospace;
+      font-size: .87em; color: var(--code); background: rgba(185,138,255,.08);
+      border: 1px solid rgba(185,138,255,.16); border-radius: 5px; padding: .05rem .35rem; }
+    pre { background: rgba(185,138,255,.06); border: 1px solid rgba(185,138,255,.16); border-radius: 8px;
+      padding: .7rem .9rem; overflow-x: auto; font-size: .82rem; line-height: 1.5; }
+    pre code { background: none; border: none; padding: 0; }
+    table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: .88rem; }
+    th, td { text-align: left; padding: .5rem .65rem; border-bottom: 1px solid var(--border); vertical-align: top; }
+    th { color: var(--gold); font-size: .74rem; text-transform: uppercase; letter-spacing: .06em; }
+    a { color: var(--accent); }
+
+    /* Step rail */
+    .rail { display: flex; flex-wrap: wrap; gap: .4rem; margin: 1.2rem 0 2rem; align-items: center; justify-content: center; }
+    .rail .node { background: var(--panel); border: 1px solid var(--border); border-radius: 10px;
+      padding: .45rem .7rem; font-size: .78rem; font-weight: 600; }
+    .rail .node .ph { color: var(--gold); margin-right: .3rem; }
+    .rail .arrow { color: var(--muted); font-size: .8rem; }
+    .rail .node.gated { border-color: rgba(94,200,216,.5); }
+
+    /* Step blocks */
+    .step { background: linear-gradient(180deg, var(--panel-2), var(--panel));
+      border: 1px solid var(--border); border-radius: 16px; padding: 1.2rem 1.5rem; margin: 1.4rem 0; }
+    .step-head { display: flex; align-items: baseline; gap: .7rem; flex-wrap: wrap; }
+    .step-id { color: var(--gold); font-weight: 700; font-size: .85rem; letter-spacing: .08em; }
+    .step-title { font-size: 1.12rem; font-weight: 700; margin: 0; }
+    .dep { font-size: .74rem; color: var(--muted); margin-left: auto; }
+    .files { font-size: .8rem; color: var(--muted); margin: .4rem 0 .2rem; }
+    .files code { font-size: .92em; }
+
+    details { margin: .7rem 0 .2rem; }
+    summary { cursor: pointer; color: var(--accent); font-size: .88rem; font-weight: 600; }
+    summary:hover { color: #d6c2ff; }
+    details > div { margin-top: .6rem; }
+
+    .gate { border-left: 3px solid var(--gate); background: rgba(94,200,216,.07);
+      border-radius: 0 10px 10px 0; padding: .6rem 1rem; margin: .9rem 0 .2rem; font-size: .9rem; }
+    .gate .gate-tag { color: var(--gate); font-weight: 700; font-size: .72rem; letter-spacing: .1em;
+      text-transform: uppercase; display: block; margin-bottom: .25rem; }
+
+    .warn { border-left: 3px solid var(--ember); background: rgba(255,138,60,.07);
+      border-radius: 0 10px 10px 0; padding: .6rem 1rem; margin: .9rem 0; font-size: .9rem; }
+    .warn .warn-tag { color: var(--ember); font-weight: 700; font-size: .72rem; letter-spacing: .1em;
+      text-transform: uppercase; display: block; margin-bottom: .25rem; }
+
+    .keep { border-left: 3px solid var(--good); background: rgba(108,208,138,.06);
+      border-radius: 0 10px 10px 0; padding: .6rem 1rem; margin: .9rem 0; font-size: .9rem; }
+    .keep .keep-tag { color: var(--good); font-weight: 700; font-size: .72rem; letter-spacing: .1em;
+      text-transform: uppercase; display: block; margin-bottom: .25rem; }
+
+    .del { color: var(--refuse); }
+    .muted { color: var(--muted); }
+  </style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="hero">
+    <div class="kicker">Implementation Plan</div>
+    <h1>Generalize selection targeting</h1>
+    <p class="one-liner">Replace the per-spec-kind <code>awaiting-*</code> phases with one generic
+      <code>targeting</code> state that walks a card's <code>TargetSpec</code> steps, so any
+      <code>Sequence</code> ordering works — Barricade (hazard&nbsp;→&nbsp;return), Cut&nbsp;It&nbsp;Loose
+      (destroy&nbsp;→&nbsp;hazard), and whatever comes next — with zero per-card interaction code.</p>
+    <span class="badge">Renderer-only · core untouched</span>
+  </div>
+
+  <div class="source-ref">
+    <strong>Source artifacts.</strong> This plan restores the intent of the approved design
+    <a href=".lore/work/design/targeting-interaction.html">targeting-interaction.html</a>, which specified:
+    <em>"What differs per card is only its TargetSpec, which the renderer reads and drives generically.
+    Adding a card later adds no new interaction code if its spec is a known shape."</em>
+    The per-kind phases were a recorded shortcut (<a href=".lore/work/notes/009-renderer.html">notes/009-renderer.html</a>:
+    "compound spec (Barricade) handled inline"). The immediate trigger is Cut&nbsp;It&nbsp;Loose in
+    <code>src/data/worlds/bird-building.json</code> (<code>Sequence [DestroyCardInHand 1–1, DealProgress 4]</code>),
+    introduced by the <a href=".lore/work/plans/shard-response-archetypes.html">shard-response-archetypes plan</a>,
+    whose P1 explicitly warned: <em>"verify checkSpec compound path accepts this step pairing in a test before
+    authoring more of its shape."</em>
+  </div>
+
+  <h2>Why it fails today</h2>
+  <p>The only inter-step transition in the codebase is a literal Barricade check in
+    <code>TableScene.onCardClick</code> (~lines 584–603): after a hazard pick, "if the spec is compound and
+    <code>steps[1]</code> is <code>returnWorld</code>, hand-build <code>awaiting-return</code> with a
+    <code>targetId</code> rider." Cut&nbsp;It&nbsp;Loose's shape (destroy&nbsp;→&nbsp;hazard) has no transition:
+    playing it enters <code>awaiting-destroy</code>, the first click dispatches
+    <code>PlayCard {cardId, destroyId}</code> with no <code>targetId</code>, and the core's
+    <code>checkSpec</code> rejects it at the hazard step. Supporting tangles:</p>
+  <ul>
+    <li><code>activeStep()</code> conflates modal <em>branch</em> index with sequence <em>step</em> index
+      (<code>sel.idx ?? 0</code>), and hard-codes awaiting-return's "step 1 iff targetId set".</li>
+    <li>No general accumulator for earlier steps' picks — just the one-off <code>targetId</code> rider on
+      <code>awaiting-return</code>, merged back in <code>buildAction</code>.</li>
+    <li><code>isComplete</code>/<code>hintForSelection</code> hard-code destroyHand as min=0 / "(optional)";
+      the Confirm button shows for <code>awaiting-destroy</code>, wrong for an exact-count (min=1/max=1) step.</li>
+  </ul>
+  <p>The core needs no changes: <code>structuralSpec</code>, <code>legalTargets(cardId, step)</code>, and
+    <code>checkSpec</code>'s compound walk are already step-generic, and <code>PlayCard</code> already carries
+    one slot per step kind (<code>targetId</code>, <code>returnIds</code>, <code>destroyId</code>, <code>discardId</code>, <code>choice</code>).</p>
+
+  <h2>Target design</h2>
+  <pre><code>type StepResult =
+  | { kind: 'hazard'; targetId: CardId }
+  | { kind: 'destroyHand'; destroyId?: CardId }     // undefined = skipped optional destroy
+  | { kind: 'returnWorld'; returnIds: readonly CardId[] }
+  | { kind: 'discardPlayer'; discardId: CardId }
+
+type SelectionState =
+  | { phase: 'idle' }
+  | { phase: 'awaiting-modal'; cardId: CardId }
+  | {
+      phase: 'targeting'
+      cardId: CardId
+      choice?: number              // modal branch index, when entered through a modal
+      steps: readonly TargetSpec[] // leaf spec → [spec]; compound → its steps, ORIGINAL indices kept
+      stepIdx: number              // stepIdx === steps.length ⇒ complete, ready to build
+      done: readonly StepResult[]  // results of completed steps, in step order
+      current: readonly CardId[]   // picks accumulating for steps[stepIdx]
+    }</code></pre>
+  <table>
+    <tr><th>Behavior</th><th>Generic rule (from the approved design)</th></tr>
+    <tr><td>Auto-advance</td><td>Exact-count steps (effective min === max, e.g. hazard, discardPlayer, destroy 1–1) advance the moment <code>current.length === max</code>. No Confirm.</td></tr>
+    <tr><td>Confirm button</td><td>Variable-count steps only (min &lt; max, or min === 0): visible once <code>current.length ≥ min</code>; clicking advances the step.</td></tr>
+    <tr><td>Step legality</td><td>Always <code>availableActions(state).legalTargets(cardId, activeStep(sel))</code>; <code>activeStep = choice ?? stepIdx</code> (modal cards key legality by branch index, sequences by step index — now explicit instead of the <code>idx ?? 0</code> accident).</td></tr>
+    <tr><td><code>'none'</code> steps</td><td><strong>Never stripped from <code>steps</code></strong> — stripping would desync <code>stepIdx</code> from the core's sequence index, breaking <code>legalTargets</code> and <code>effectAtStep</code> for any sequence with a 'none' step before a targeting step. Instead, <code>advance()</code> auto-skips them (they need no picks; the core applies them on dispatch), and <code>beginTargeting</code> applies the same skip to leading 'none' steps. Indices stay 1:1 with the core's <code>Sequence.steps</code>.</td></tr>
+    <tr><td>Completion</td><td><code>stepIdx === steps.length</code> ⇒ <code>buildAction</code> folds <code>done</code> into one flat <code>PlayCard</code>.</td></tr>
+    <tr><td>Hints / preview / connector / highlight</td><td>All derived from <code>steps[stepIdx]</code> kind + min/max + counts, and from <code>done</code>/<code>current</code> — never from a phase name.</td></tr>
+  </table>
+
+  <h2>Step sequence</h2>
+  <div class="rail">
+    <span class="node gated"><span class="ph">S0</span>Core regression test (gate)</span>
+    <span class="arrow">→</span>
+    <span class="node"><span class="ph">S1</span>selection.ts rewrite</span>
+    <span class="arrow">→</span>
+    <span class="node"><span class="ph">S2</span>highlight.ts</span>
+    <span class="arrow">→</span>
+    <span class="node"><span class="ph">S3</span>TableScene rewiring</span>
+    <span class="arrow">→</span>
+    <span class="node gated"><span class="ph">S4</span>Suite + integration tests</span>
+    <span class="arrow">→</span>
+    <span class="node gated"><span class="ph">S5</span>Validation vs. design + manual</span>
+  </div>
+
+  <!-- ============================================================ S0 -->
+  <div class="step">
+    <div class="step-head">
+      <span class="step-id">S0</span>
+      <h3 class="step-title">Prove the core accepts Cut It Loose's action shape (no core changes)</h3>
+      <span class="dep">depends on: nothing</span>
+    </div>
+    <p class="files">Files: <code>src/core/tests/available.test.ts</code>, <code>src/core/tests/reduce.test.ts</code> (tests only)</p>
+    <p>Discharge the shard plan's P1 warning before building UI on top of it. Add tests for a
+      <code>Sequence [DestroyCardInHand(1,1), DealProgress]</code> player card:</p>
+    <details><summary>Test details</summary><div>
+      <ul>
+        <li><code>availableActions</code>: card is playable only with ≥ 2 player cards in hand
+          (<code>isPlayable</code> for DestroyCardInHand requires <code>playerCards.length &gt; min</code>);
+          spec reported as <code>compound [destroyHand(1,1), hazard]</code>.</li>
+        <li><code>legalTargets(cardId, 0)</code> = player cards minus self; <code>legalTargets(cardId, 1)</code> = world cards in hand.</li>
+        <li>Full dispatch of <code>PlayCard { cardId, destroyId, targetId }</code>: passes <code>checkPlayAction</code>,
+          destroys the chosen player card, deals progress to the target, emits the expected events in order.</li>
+        <li>Rejection cases: missing <code>targetId</code> rejected at the hazard step; missing <code>destroyId</code>
+          rejected at the destroyHand step (min = 1).</li>
+      </ul>
+    </div></details>
+    <div class="gate"><span class="gate-tag">Gate</span>
+      All S0 tests green with <strong>zero changes to <code>src/core/</code> source</strong>. If any fail, stop and
+      surface to the user — that is core engine work outside this plan's declared scope, and the renderer rewrite
+      must not paper over it.</div>
+  </div>
+
+  <!-- ============================================================ S1 -->
+  <div class="step">
+    <div class="step-head">
+      <span class="step-id">S1</span>
+      <h3 class="step-title">Rewrite the selection machine around the generic targeting state</h3>
+      <span class="dep">depends on: S0</span>
+    </div>
+    <p class="files">Files: <code>src/game/interaction/selection.ts</code> (rewrite), <code>src/game/tests/selection.test.ts</code> (rewrite alongside)</p>
+    <p>Replace the five per-kind phases with the <code>targeting</code> state above. All transitions stay pure
+      functions with no GameState dependency (preserved properties from notes/009).</p>
+    <details><summary>New / changed API</summary><div>
+      <ul>
+        <li><code>beginTargeting(cardId, spec, choice?)</code> — flattens a leaf spec to <code>[spec]</code>, a
+          compound to its steps <em>with original indices preserved</em> (see "'none' steps" rule above), then
+          skips past any leading <code>'none'</code> steps via the same skip logic <code>advance</code> uses.
+          A result that is already complete (spec 'none', or all steps are 'none') is dispatched immediately by the
+          caller. This single entry point also covers what the old <code>'selected'</code> phase did, so that phase
+          is <span class="del">deleted</span>.</li>
+        <li><code>chooseModal(sel, choice, spec)</code> — now just <code>beginTargeting(cardId, spec.branches[choice], choice)</code>.
+          The <code>default: awaiting-hazard</code> fallback arm is <span class="del">deleted</span> (a branch shape
+          the machine doesn't know must not silently masquerade as hazard targeting).</li>
+        <li><code>togglePick(sel, id)</code> — unifies <code>addTarget</code>/<code>removeTarget</code>: adds to
+          <code>current</code> (capped at the step's max), removes if already present.</li>
+        <li><code>advance(sel)</code> — folds <code>current</code> into a <code>StepResult</code> appended to
+          <code>done</code>, bumps <code>stepIdx</code> <em>past any trailing/interior 'none' steps</em>, resets
+          <code>current</code>. Optional destroy (min 0) confirmed with zero picks folds to
+          <code>destroyId: undefined</code>, and <code>buildAction</code> then omits the <code>destroyId</code>
+          field entirely — a direct port of the old <code>awaiting-destroy</code> case (selection.ts ~235–248),
+          keep that guard in the fold, not scattered downstream.</li>
+        <li><code>autoAdvances(sel)</code> — true when the current step is exact-count and
+          <code>current.length === max</code> (hazard and discardPlayer have implicit min = max = 1).</li>
+        <li><code>needsConfirm(sel)</code> / <code>stepSatisfied(sel)</code> — <code>needsConfirm</code> is true iff
+          the current step's effective min ≠ max (hazard and discardPlayer are implicitly 1/1);
+          <code>stepSatisfied</code> is <strong>exactly</strong> <code>current.length ≥ min</code> — never
+          "&gt; 0", or min=0 steps (Barricade's return, optional destroys) would wrongly hide Confirm. Together they
+          replace the hard-coded Confirm-visibility pair in TableScene and the per-phase <code>isComplete</code> cases.</li>
+        <li><code>isComplete(sel)</code> — <code>phase === 'targeting' &amp;&amp; stepIdx === steps.length</code>.</li>
+        <li><code>activeStep(sel)</code> — <code>sel.choice ?? sel.stepIdx</code>. <span class="del">Deletes</span> the
+          awaiting-return ternary and the branch/step conflation. Document the semantics at the function: for a
+          modal card the value is the <em>branch index</em> (the core's <code>computeLegalTargets</code> for Modal
+          dispatches on <code>branches[step]</code>); for a sequence card it is the <em>step index within the
+          card's original Sequence.steps</em> (guaranteed by the no-strip rule); a modal branch that is itself a
+          sequence has no representable step index — out of scope, matching the core.</li>
+        <li><code>buildAction(sel)</code> — only when complete: fold <code>done</code> into the flat
+          <code>PlayCard</code> slots (+ <code>choice</code> when set). Four of the five old cases
+          <span class="del">deleted</span>.</li>
+        <li><code>hintForSelection(sel)</code> — derives text from <code>steps[stepIdx]</code>:
+          hazard → "Select a Hazard target"; returnWorld → dynamic "Select N–M … (X chosen)";
+          discardPlayer → "Select a player card to discard"; destroyHand → "Select a card to destroy"
+          with "(optional)" <em>only when min === 0</em> (fixes the min=1 lie).</li>
+        <li><code>getStepIndex</code> — unused outside selection.ts; <span class="del">deleted</span>.</li>
+      </ul>
+    </div></details>
+    <details><summary>Constraints to encode as comments + tests</summary><div>
+      <ul>
+        <li>The flat <code>PlayCard</code> action admits at most one step of each kind per card. The core's
+          <code>checkSpec</code> has the same constraint; assert it in <code>beginTargeting</code> (dev-time
+          throw or console.warn) rather than discovering it as a silent overwrite in <code>buildAction</code>.</li>
+        <li>Modal branches that are themselves compound are out of scope — the core's
+          <code>computeLegalTargets</code> returns <code>[]</code> for nested Sequence under Modal, so the renderer
+          must not pretend to support it. Document at <code>chooseModal</code>.</li>
+      </ul>
+    </div></details>
+    <details><summary>selection.test.ts coverage (rewrite)</summary><div>
+      <ul>
+        <li><strong>Barricade walk</strong>: begin → hazard pick auto-advances; assert <code>done</code> is exactly
+          <code>[{kind:'hazard', targetId}]</code> (the old <code>targetId</code> rider does <em>not</em> carry
+          forward — it lives in <code>done</code> now) and <code>stepIdx === 1</code> → return step (variable 0–1:
+          <code>needsConfirm</code> true, <code>stepSatisfied</code> true at 0 picks since min=0, so Confirm is
+          available immediately — <em>unchanged</em> from today's Barricade UX) → confirm with 0 and with 1 pick →
+          buildAction emits <code>{targetId, returnIds}</code>.</li>
+        <li><strong>Cut It Loose walk</strong>: begin → destroy step is exact-count (no Confirm) → pick
+          auto-advances → hazard pick auto-advances → complete → buildAction emits
+          <code>{destroyId, targetId}</code>. <em>This is the test that fails against the old machine.</em></li>
+        <li><strong>'none'-step skipping</strong>: Panic-shape (<code>[returnWorld(1,2), none]</code>) — assert
+          <code>steps.length === 2</code> (not stripped), confirm gated until min 1, toggle add/remove, max 2 cap,
+          and <code>advance</code> after the return step skips the 'none' straight to complete. Adrenaline-shape
+          (<code>[discardPlayer, none]</code>) — discard pick auto-advances and the trailing 'none' skip lands on
+          complete in the same transition. Leading-'none' shape (<code>[none, hazard]</code>, synthetic) —
+          <code>beginTargeting</code> starts at <code>stepIdx === 1</code> and <code>activeStep === 1</code>, so
+          <code>legalTargets</code> is queried with the core-aligned index.</li>
+        <li><strong>Sprint modal</strong>: chooseModal into a 'none' branch ⇒ complete with <code>choice</code>;
+          into the hazard branch ⇒ targeting with <code>activeStep === choice</code>.</li>
+        <li><strong><code>needsConfirm</code> boundaries</strong> (the headline Cut It Loose fix gets its own unit
+          tests): <code>destroyHand(1,1)</code> ⇒ <code>needsConfirm</code> false / <code>autoAdvances</code> true at
+          one pick; <code>destroyHand(0,2)</code> ⇒ <code>needsConfirm</code> true, confirm with zero picks builds an
+          action without <code>destroyId</code>, and two picks accumulate before Confirm commits.</li>
+        <li><code>activeStep</code>, <code>hintForSelection</code> — including: <code>destroyHand(0,…)</code> hint
+          contains "(optional)", <code>destroyHand(1,1)</code> hint does <em>not</em> — cancel from every phase,
+          isComplete edges.</li>
+      </ul>
+    </div></details>
+    <div class="gate"><span class="gate-tag">Gate</span>
+      <code>bun run test</code> on <code>selection.test.ts</code> green, including the Cut It Loose walk;
+      <code>tsc</code> clean for this module (downstream TableScene errors expected until S3 and tracked, not suppressed).</div>
+  </div>
+
+  <!-- ============================================================ S2 -->
+  <div class="step">
+    <div class="step-head">
+      <span class="step-id">S2</span>
+      <h3 class="step-title">Generalize highlight classification</h3>
+      <span class="dep">depends on: S1</span>
+    </div>
+    <p class="files">Files: <code>src/game/interaction/highlight.ts</code>, <code>src/game/tests/highlight.test.ts</code></p>
+    <p>Re-derive the two phase-name-keyed marks from the generic state:</p>
+    <ul>
+      <li><strong>'selected' multi-mark</strong>: ids in <code>sel.current</code> (was: awaiting-return's <code>selected[]</code>).</li>
+      <li><strong>'committed' mark</strong> (REQ-FEEDBACK-6, "earlier picks stay lit"): any card id appearing in
+        <code>sel.done</code> results (was: only awaiting-return's <code>targetId</code>). This <em>extends</em>
+        the behavior: Cut It Loose's destroyed-card pick now stays lit during hazard targeting, same muted
+        'committed' kind — visually distinct from live-target emphasis, per the feedback notes.</li>
+      <li>Dim/idle logic keys on <code>phase !== 'idle'</code> as today; precedence order unchanged
+        (selected card → legal target → discard → committed → dim).</li>
+    </ul>
+    <p>Tests: port existing assertions to the new state shape; add a Cut It Loose case asserting the destroy
+      pick shows 'committed' while hazard targets show 'target'.</p>
+    <div class="gate"><span class="gate-tag">Gate</span> <code>highlight.test.ts</code> green; precedence table in the doc comment matches the code.</div>
+  </div>
+
+  <!-- ============================================================ S3 -->
+  <div class="step">
+    <div class="step-head">
+      <span class="step-id">S3</span>
+      <h3 class="step-title">Rewire TableScene to drive the generic machine</h3>
+      <span class="dep">depends on: S1, S2</span>
+    </div>
+    <p class="files">Files: <code>src/game/scenes/TableScene.ts</code></p>
+    <details><summary>Changes by handler</summary><div>
+      <ul>
+        <li><strong><code>onCardClick</code></strong> collapses to two branches. Idle: discard check, else
+          <code>beginTargeting</code> from the playable spec (dispatch immediately if already complete — covers
+          spec 'none'). Targeting: gate on <code>legalTargets(cardId, activeStep(sel))</code>, then
+          <code>togglePick</code>; if <code>autoAdvances</code> → <code>advance</code>; if then complete →
+          <code>buildAction</code> + dispatch, else repaint. The Barricade block (~584–603)
+          is <span class="del">deleted</span>.</li>
+        <li><strong><code>nextSelection</code></strong> shrinks to: modal → <code>awaiting-modal</code> +
+          <code>showModalChooser</code>; everything else → <code>beginTargeting</code>. The per-kind switch
+          arms are <span class="del">deleted</span>.</li>
+        <li><strong><code>onConfirmClick</code></strong>: if <code>stepSatisfied</code> → <code>advanceSelection()</code>
+          (see below). (Today it only ever dispatched — with steps after a variable step now possible, confirm means
+          "finish this step", not "finish the card".) <code>currentSpec()</code> loses its only caller here and is
+          <span class="del">deleted</span>.</li>
+        <li><strong>New private <code>advanceSelection()</code></strong> — the single scene-level step-advance path:
+          calls <code>advance(this.sel)</code>, then <code>clearConnector()</code>, then either
+          <code>buildAction</code>+dispatch (complete) or <code>drawAll()</code>. Both <code>onCardClick</code>
+          (auto-advance) and <code>onConfirmClick</code> route through it — no other call site may advance or
+          repaint after a pick.</li>
+        <li><strong>Confirm visibility</strong> in <code>drawAll</code>:
+          <code>phase === 'targeting' &amp;&amp; needsConfirm(sel) &amp;&amp; stepSatisfied(sel)</code>
+          (was: phase name pair; also fixes Confirm showing before min is met on a future min≥1 variable step).</li>
+        <li><strong><code>currentLegalTargetIds</code></strong>: gate becomes <code>phase === 'targeting' &amp;&amp; !isComplete(sel)</code>.</li>
+        <li><strong><code>showTargetPreview</code></strong>: gate on current step kind <code>=== 'hazard'</code>;
+          pass <code>sel.choice</code> as the branch index to <code>previewPlay</code> (was: <code>sel.idx</code>).</li>
+        <li><strong><code>showConnector</code></strong>: gate on current step kind ∈
+          {hazard, destroyHand, returnWorld} — the same three targeting types as today's phase set, now spec-driven.
+          <code>stepConnectorStyle</code>/<code>effectAtStep</code> keep working unchanged: they already take the
+          numeric step, which <code>activeStep</code> still supplies (REQ-FEEDBACK-2/-3 preserved).</li>
+        <li><strong><code>onModalChoose</code></strong>: <code>chooseModal</code> now returns a targeting state;
+          if complete (none branch) build + dispatch with <code>choice</code>, else repaint.</li>
+      </ul>
+    </div></details>
+    <div class="warn"><span class="warn-tag">Known bug class — honor the lesson</span>
+      The stale-connector bug (feedback implementation notes) bit exactly at step transitions that repaint without a
+      <code>pointerout</code>. <strong>Every</strong> path that calls <code>advance()</code> or dispatches must call
+      <code>clearConnector()</code> before <code>drawAll()</code>. The <code>advanceSelection()</code> helper above is
+      that single path — the <code>clearConnector()</code> lives inside it so no future step ordering can forget it.</div>
+    <div class="keep"><span class="keep-tag">Invariants from the approved design (must survive untouched)</span>
+      Selection state never enters GameState; legality is only ever read from <code>availableActions</code>, never
+      cached across dispatches; Cancel/Esc abort from any phase without dispatching; End Turn stays disabled during
+      selection; no destructive single click from idle; touch parity (no affordance depends on hover — hints and
+      highlights carry the interaction, preview/connector remain hover-only sugar).</div>
+    <div class="gate"><span class="gate-tag">Gate</span> <code>bun run lint</code> (core/game boundary intact) and full <code>tsc</code> clean. No references to the old phase names remain anywhere in <code>src/</code> (<code>grep -r "awaiting-hazard\|awaiting-return\|awaiting-discard\|awaiting-destroy" src/</code> returns nothing).</div>
+  </div>
+
+  <!-- ============================================================ S4 -->
+  <div class="step">
+    <div class="step-head">
+      <span class="step-id">S4</span>
+      <h3 class="step-title">Reconcile the full suite and close the modal-flow test gap</h3>
+      <span class="dep">depends on: S3</span>
+    </div>
+    <p class="files">Files: <code>src/game/tests/*.test.ts</code></p>
+    <ul>
+      <li>Run the full suite. Expected untouched: <code>feedback.test.ts</code>, <code>describe.test.ts</code>,
+        <code>hud.test.ts</code>, <code>presentation.test.ts</code>, <code>modal.test.ts</code> (none reference
+        phase names per the blast-radius sweep). Investigate — don't dismiss — any surprise failure.</li>
+      <li>Add the missing integration coverage found during research, in <code>selection.test.ts</code> (it
+        exercises the selection machine, not the branch-label resolver in <code>modal.test.ts</code>): a modal →
+        branch → targeting → action test (Sprint's hazard branch end-to-end through
+        <code>chooseModal</code>/<code>togglePick</code>/<code>buildAction</code>, asserting the built action carries
+        <code>choice</code> + <code>targetId</code>).</li>
+      <li>Add sequence-walk tests at the selection level for the other shard-plan sequence shapes so future cards
+        are pre-covered: Shotgun-shape (<code>[hazard, none]</code>) and Ditch-Gear-shape
+        (<code>[destroyHand, none]</code>). Build the <code>TargetSpec</code>s inline — these cards live in worlds
+        outside the test fixture's catalog, and spec-level construction keeps the tests fixture-independent.</li>
+    </ul>
+    <div class="gate"><span class="gate-tag">Gate</span> <code>bun run test</code> fully green; golden tests untouched (no core changes ⇒ no golden churn — a golden diff here means scope was violated).</div>
+  </div>
+
+  <!-- ============================================================ S5 -->
+  <div class="step">
+    <div class="step-head">
+      <span class="step-id">S5</span>
+      <h3 class="step-title">Validate against the source design and verify in the browser</h3>
+      <span class="dep">depends on: S4</span>
+    </div>
+    <p>Check the implementation against the artifacts this plan derives from, then manually verify the flows
+      automated tests can't see (hover feedback, connector clearing, button states).</p>
+    <details><summary>Design-conformance checklist (targeting-interaction.html + REQ-FEEDBACK)</summary><div>
+      <ul>
+        <li>One grammar, spec-driven; no card names in interaction code (grep <code>src/game/</code> for
+          'Barricade' / 'Cut It Loose' — only data/tests may match).</li>
+        <li>REQ-FEEDBACK-1 (hover emphasis on legal targets), -2 (connector), -3 (connector style per targeting
+          type incl. the destroy style now reachable via Cut It Loose step 0), -4 (click-to-commit, no confirm for
+          exact-count), -5 (hint vs preview on separate surfaces), -6 (earlier picks stay lit — now also the
+          destroy pick), -11 (renderer-only, zero core diffs).</li>
+      </ul>
+    </div></details>
+    <details><summary>Manual browser pass (bun run dev)</summary><div>
+      <ul>
+        <li><strong>starter</strong>: Barricade full flow (incl. confirm with 0 returns), Panic (min-gated confirm),
+          Adrenaline, Sprint both branches, cancel mid-flow at each step, End Turn disabled while targeting.</li>
+        <li><strong>bird-building</strong>: clear Sliding Debris to gain Cut It Loose; play it — destroy pick stays
+          lit ('committed'), hazard step shows correct legal targets/preview, dispatch resolves destroy + progress.
+          Verify it's unplayable as the only player card in hand.</li>
+        <li><strong>zombie-big-box</strong>: any optional-destroy (min 0) card still confirms with zero picks.</li>
+        <li>Connector: never survives a step advance, commit, or cancel (the stale-connector regression).</li>
+      </ul>
+    </div></details>
+    <div class="gate"><span class="gate-tag">Gate</span> Checklist complete; fresh-context review (sub-agent) over the final diff per house testing-review rules; implementation notes recorded to <code>.lore/work/notes/</code> with this plan as <code>source</code>.</div>
+  </div>
+
+  <h2>Risks and watch-items</h2>
+  <table>
+    <tr><th>Risk</th><th>Mitigation</th></tr>
+    <tr><td>S0 reveals the core <em>doesn't</em> accept destroyHand+hazard (the shard plan's unverified claim).</td>
+      <td>Hard gate: stop, surface to user. Core changes are explicitly out of this plan's scope.</td></tr>
+    <tr><td>UX delta on optional-destroy cards (e.g. <code>destroyHand(0,2)</code>): the old machine dispatched
+      instantly on the <em>first</em> pick — making max&gt;1 unreachable, an existing bug — while the new machine
+      accumulates picks and commits on Confirm. Barricade's flow is <em>unchanged</em> (min=0 ⇒
+      <code>stepSatisfied</code> always true ⇒ Confirm available immediately, as today).</td>
+      <td>Deliberate alignment with the approved design (and a bug fix), but it changes how an existing card plays —
+      flag it in the implementation notes and the S5 manual pass so the user sees it in play, not in a diff.</td></tr>
+    <tr><td>Hidden phase-name dependency the sweep missed (e.g. a string in a snapshot/scene test).</td>
+      <td>S3 gate greps <code>src/</code> for all old phase literals; S4 runs the full suite.</td></tr>
+    <tr><td>Two steps of the same kind in one sequence silently overwrite an action slot.</td>
+      <td>S1 asserts at <code>beginTargeting</code>; matches the core's own constraint.</td></tr>
+  </table>
+
+  <h2>Explicitly out of scope</h2>
+  <ul>
+    <li>Any change under <code>src/core/</code> (S0 is tests-only; a needed core change aborts the plan).</li>
+    <li>Modal branches containing compound specs (unsupported by the core; documented, not implemented).</li>
+    <li>New animations/feedback beyond re-mapping the existing S7–S10 behaviors to the generic state.</li>
+    <li>Authoring further sequence cards (Shotgun, Push Through, Ditch Gear) — that's the shard plan's P5/P6;
+      this plan only makes their shapes drivable.</li>
+  </ul>
+
+</div>
+</body>
+</html>

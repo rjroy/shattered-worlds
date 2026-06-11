@@ -21,6 +21,7 @@ function makeState(progress: Record<string, number> = {}): GameState {
     energy: 0,
     skipDrawNext: false,
     pendingForceDestroy: 0,
+    braceCharges: 0,
     status: 'playing',
     worldId: 'zombie-big-box',
     rng: createRng(0),
@@ -41,6 +42,7 @@ function hazard(over: Partial<WorldCard>): WorldCard {
     cost: 1,
     keywords: [],
     discardable: true,
+    canExile: true,
     onDiscarded: { kind: 'None' },
     onCleared: { kind: 'None' },
     onEndOfTurn: { kind: 'None' },
@@ -71,7 +73,6 @@ describe('describeEffect', () => {
     expect(describeEffect({ kind: 'DestroyCardInHand', min: 0, max: 1 })).toEqual([
       'Destroy a card in hand',
       '(optional)',
-      '',
     ])
     expect(describeEffect({ kind: 'DiscardThenDraw', player: 2 })).toEqual([
       'Discard a card, then draw 2',
@@ -140,6 +141,20 @@ describe('describeEffect (hazard effect kinds)', () => {
     ])
     expect(describeEffect({ kind: 'SurviveWorld' })).toEqual(['you survive the world'])
     expect(describeEffect({ kind: 'None' })).toEqual([])
+  })
+})
+
+describe('describeEffect Brace', () => {
+  it('describes a single-charge Brace with singular phrasing', () => {
+    expect(describeEffect({ kind: 'Brace', amount: 1 })).toEqual([
+      'Brace: absorb the next snatch',
+    ])
+  })
+
+  it('describes a multi-charge Brace with the count', () => {
+    expect(describeEffect({ kind: 'Brace', amount: 3 })).toEqual([
+      'Brace: absorb the next 3 snatches',
+    ])
   })
 })
 

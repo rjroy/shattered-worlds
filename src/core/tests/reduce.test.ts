@@ -43,22 +43,22 @@ function makeState(overrides: Partial<GameState>): GameState {
 // ---------------------------------------------------------------------------
 
 describe('PlayCard basic', () => {
-  it('playing Explore on Rubble (cost 1) emits CardPlayed + ProgressDealt + HazardResolved', () => {
-    // seed 42 starting hand: Rubble(id=12) + Screams(id=15) + Sprint(id=1) + Panic(id=8) + MedKit(id=7) + Explore(id=2)
+  it('playing Explore on Screams (cost 1) emits CardPlayed + ProgressDealt + HazardResolved', () => {
+    // seed 42 starting hand: Strange Sounds(id=11) + Screams(id=14) + Sprint(id=1) + Panic(id=8) + MedKit(id=7) + Explore(id=2)
     const state = createWorld(catalog, worldData, 42)
-    const rubble = state.hand.find((c): c is WorldCard => c.kind === 'world' && c.name === 'Rubble')
+    const screams = state.hand.find((c): c is WorldCard => c.kind === 'world' && c.name === 'Screams')
     const explore = state.hand.find((c): c is PlayerCard => c.kind === 'player' && c.name === 'Explore')
-    if (!rubble || !explore) throw new Error('Expected Rubble and Explore in seed 42 hand')
+    if (!screams || !explore) throw new Error('Expected Screams and Explore in seed 42 hand')
 
-    const result = reduce(catalog, state, { type: 'PlayCard', cardId: explore.id, targetId: rubble.id })
+    const result = reduce(catalog, state, { type: 'PlayCard', cardId: explore.id, targetId: screams.id })
 
     const types = result.events.map((e) => e.type)
     expect(types).toContain('CardPlayed')
     expect(types).toContain('ProgressDealt')
     expect(types).toContain('HazardResolved')
 
-    // Rubble removed from hand
-    expect(result.state.hand.some((c) => c.id === rubble.id)).toBe(false)
+    // Screams removed from hand
+    expect(result.state.hand.some((c) => c.id === screams.id)).toBe(false)
     // Explore removed from hand (played)
     expect(result.state.hand.some((c) => c.id === explore.id)).toBe(false)
     // Status still playing
@@ -376,7 +376,7 @@ describe('Sprint modal', () => {
     // Construct a Slow hazard directly — avoids dependency on which world cards carry the keyword
     const slowHazard: WorldCard = {
       kind: 'world', id: 'slow-test', name: 'Slow Hazard', insetKey: undefined,
-      cost: 1, keywords: ['Slow'], discardable: false,
+      cost: 1, keywords: ['Slow'], discardable: false, canExile: true,
       onDiscarded: { kind: 'None' }, onCleared: { kind: 'None' }, onEndOfTurn: { kind: 'None' },
     }
 
@@ -539,24 +539,24 @@ describe('Regroup destroyHand', () => {
   it('Regroup with destroyId removes the card from hand permanently', () => {
     const base = createWorld(catalog, worldData, 42)
     const [regroup, s1] = mintCard(catalog, base, 'Regroup')
-    const [rubble, s2] = mintCard(catalog, s1, 'Rubble')
+    const [explore, s2] = mintCard(catalog, s1, 'Explore')
 
     const state = makeState({
       ...s2,
-      hand: [rubble as WorldCard, regroup as PlayerCard],
+      hand: [explore as WorldCard, regroup as PlayerCard],
     })
 
     const result = reduce(catalog, state, {
       type: 'PlayCard',
       cardId: regroup.id,
-      destroyId: rubble.id,
+      destroyId: explore.id,
     })
 
     const types = result.events.map((e) => e.type)
     expect(types).toContain('CardDestroyed')
-    expect(result.state.hand.some((c) => c.id === rubble.id)).toBe(false)
+    expect(result.state.hand.some((c) => c.id === explore.id)).toBe(false)
     // Destroyed — not in discard either
-    expect(result.state.playerDiscard.some((c) => c.id === rubble.id)).toBe(false)
+    expect(result.state.playerDiscard.some((c) => c.id === explore.id)).toBe(false)
   })
 })
 
@@ -1410,5 +1410,280 @@ describe('EndTurn draw-phase loss', () => {
 
     expect(result.state.status).toBe('lost')
     expect(result.events.map((e) => e.type)).toContain('WorldLost')
+  })
+})
+
+// ---------------------------------------------------------------------------
+// 14. Brace integration: play Steady → discard Sliding Debris → EndTurn → no snatch
+// ---------------------------------------------------------------------------
+
+// ---------------------------------------------------------------------------
+// DealProgressAll integration: sweep + kill-energy
+// ---------------------------------------------------------------------------
+
+describe('DealProgressAll integration', () => {
+  it('sweep clears 3 Zombies and fires kill-energy 3 times', () => {
+    // Shelf Sweep: DealProgressAll base 1, bonus Creature +1 = 2 progress vs Creature.
+    // Zombie: cost 3, keyword Creature, onCleared GainEnergy 1.
+    // With 1 existing progress per Zombie, the sweep deals 2 more → total 3 → clears each.
+    let state = makeState({ energy: 2 })
+
+    const [shelfSweep, s1] = mintCard(catalog, state, 'Shelf Sweep')
+    const [z1, s2] = mintCard(catalog, s1, 'Zombie')
+    const [z2, s3] = mintCard(catalog, s2, 'Zombie')
+    const [z3, s4] = mintCard(catalog, s3, 'Zombie')
+    state = {
+      ...s4,
+      energy: 2,
+      hand: [shelfSweep as PlayerCard, z1 as WorldCard, z2 as WorldCard, z3 as WorldCard],
+      progress: {
+        [z1.id]: 1,
+        [z2.id]: 1,
+        [z3.id]: 1,
+      },
+    }
+
+    const result = reduce(catalog, state, { type: 'PlayCard', cardId: shelfSweep.id })
+
+    const hazardResolved = result.events.filter((e) => e.type === 'HazardResolved')
+    expect(hazardResolved).toHaveLength(3)
+
+    const energyEvents = result.events.filter((e) => e.type === 'EnergyChanged')
+    expect(energyEvents.length).toBeGreaterThanOrEqual(3)
+
+    // Each Zombie.onCleared grants 1 energy; started at 0 after cost deduction (2-2=0), gained 3 × 1
+    expect(result.state.energy).toBe(3)
+  })
+})
+
+describe('Brace integration', () => {
+  it('play Steady → discard Sliding Debris → EndTurn → next hand intact (no CardDestroyed)', () => {
+    // Steady grants Brace 1. Sliding Debris.onDiscarded fires ForceDestroy 1.
+    // With one brace charge banked the ForceDestroy should be absorbed —
+    // no CardDestroyed event should fire on the next turn start.
+    const { catalog: birdCatalog, worldData: birdWorld } = buildWorld('bird-building')
+    const base = createWorld(birdCatalog, birdWorld, 42)
+
+    const [steady, s1] = mintCard(birdCatalog, base, 'Steady')
+    const [slidingDebris, s2] = mintCard(birdCatalog, s1, 'Sliding Debris')
+
+    // Provide enough player and world cards for refillHand so the turn
+    // actually completes without losing.
+    let acc: GameState = s2
+    const playerDraw: PlayerCard[] = []
+    for (let i = 0; i < 6; i++) {
+      const [c, next] = mintCard(birdCatalog, acc, 'Find Footing')
+      playerDraw.push(c as PlayerCard)
+      acc = next
+    }
+    const worldDraw: WorldCard[] = []
+    for (let i = 0; i < 3; i++) {
+      const [c, next] = mintCard(birdCatalog, acc, 'Groaning Girders')
+      worldDraw.push(c as WorldCard)
+      acc = next
+    }
+
+    const state: GameState = {
+      ...acc,
+      hand: [steady as PlayerCard, slidingDebris as WorldCard],
+      playerDraw,
+      playerDiscard: [],
+      worldDraw,
+      acts: [],
+      progress: {},
+      energy: 1, // enough to play Steady (cost 1)
+      braceCharges: 0,
+      pendingForceDestroy: 0,
+    }
+
+    // Step 1: play Steady → braceCharges = 1
+    const afterSteady = reduce(birdCatalog, state, {
+      type: 'PlayCard',
+      cardId: (steady as PlayerCard).id,
+    })
+    expect(afterSteady.state.braceCharges).toBe(1)
+    expect(afterSteady.events.some((e) => e.type === 'BraceChanged')).toBe(true)
+
+    // Step 2: discard Sliding Debris → pendingForceDestroy = 1
+    const afterDiscard = reduce(birdCatalog, afterSteady.state, {
+      type: 'DiscardHazard',
+      cardId: (slidingDebris as WorldCard).id,
+    })
+    expect(afterDiscard.state.pendingForceDestroy).toBe(1)
+    // No CardDestroyed yet — the snatch is still pending
+    expect(afterDiscard.events.some((e) => e.type === 'CardDestroyed')).toBe(false)
+
+    // Step 3: EndTurn → hand refills → resolveForceDestroy absorbs the charge
+    const afterEnd = reduce(birdCatalog, afterDiscard.state, { type: 'EndTurn' })
+
+    expect(afterEnd.state.pendingForceDestroy).toBe(0)
+    expect(afterEnd.state.braceCharges).toBe(0)
+    // The brace absorbed the snatch — no card was destroyed
+    expect(afterEnd.events.some((e) => e.type === 'CardDestroyed')).toBe(false)
+    expect(afterEnd.events.some((e) => e.type === 'BraceConsumed')).toBe(true)
+
+    const consumed = afterEnd.events.find((e) => e.type === 'BraceConsumed')
+    if (consumed?.type === 'BraceConsumed') {
+      expect(consumed.absorbed).toBe(1)
+      expect(consumed.remaining).toBe(0)
+    }
+  })
+})
+
+// ---------------------------------------------------------------------------
+// ExileTopWorldCards: livelock guard
+// ---------------------------------------------------------------------------
+
+describe('ExileTopWorldCards: livelock guard', () => {
+  it('exile empties worldDraw while acts remain, next EndTurn advances act normally', () => {
+    // Build a state with: two exilable cards in worldDraw, one act remaining,
+    // and a Floor-It-like card in hand (ExileTopWorldCards amount=5).
+    let state = makeState({})
+    const [w1, s1] = mintCard(catalog, state, 'Rubble')
+    const [w2, s2] = mintCard(catalog, s1, 'Screams')
+    state = s2
+
+    // Craft a player card with ExileTopWorldCards effect
+    const floorIt: PlayerCard = {
+      kind: 'player',
+      id: 'floor-it-test',
+      name: 'Floor It',
+      insetKey: undefined,
+      sourceWorldId: 'highway-volcano',
+      energyCost: 0,
+      exhaust: true,
+      effect: { kind: 'ExileTopWorldCards', amount: 5 },
+    }
+
+    // One remaining act with one card
+    const [actCard, s3] = mintCard(catalog, state, 'Zombie')
+    state = s3
+
+    state = {
+      ...state,
+      hand: [floorIt],
+      worldDraw: [w1 as WorldCard, w2 as WorldCard],
+      acts: [[actCard as WorldCard]],
+      actIndex: 0,
+      totalActs: 1,
+      playerDraw: [],
+      playerDiscard: [],
+      energy: 0,
+    }
+
+    // Play Floor It: exiles both worldDraw cards, leaving worldDraw empty
+    const afterExile = reduce(catalog, state, { type: 'PlayCard', cardId: floorIt.id })
+    expect(afterExile.state.worldDraw).toHaveLength(0)
+    expect(afterExile.events.some((e) => e.type === 'WorldCardsExiled')).toBe(true)
+
+    // EndTurn should advance the act (draw from acts[0]) without livelock
+    const afterEnd = reduce(catalog, afterExile.state, { type: 'EndTurn' })
+    // The act card should have been drawn into hand
+    expect(afterEnd.state.hand.some((c) => c.id === actCard.id)).toBe(true)
+    expect(afterEnd.events.some((e) => e.type === 'ActAdvanced')).toBe(true)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// PlayCard Cut It Loose (Sequence: destroyHand → hazard)
+// ---------------------------------------------------------------------------
+
+describe('PlayCard Cut It Loose (Sequence: destroyHand → hazard)', () => {
+  const { catalog: birdCatalog, worldData: birdWorld } = buildWorld('bird-building')
+
+  /** Build a minimal state seeded from bird-building for Cut It Loose tests. */
+  function makeBirdState(overrides: Partial<GameState> = {}): GameState {
+    const base = createWorld(birdCatalog, birdWorld, 42)
+    return {
+      ...base,
+      playerDraw: [],
+      playerDiscard: [],
+      worldDraw: [],
+      acts: [],
+      progress: {},
+      energy: 0,
+      status: 'playing',
+      ...overrides,
+    }
+  }
+
+  /**
+   * Build a ready-to-play state: Cut It Loose in hand, one other player card
+   * to destroy (Find Footing), and one world card to target (Groaning Girders,
+   * cost 1 so a base-4 progress resolves it).
+   */
+  function makeCutItLooseState(): {
+    state: GameState
+    cutItLoose: PlayerCard
+    findFooting: PlayerCard
+    groaningGirders: WorldCard
+  } {
+    const base = makeBirdState()
+    const [cutItLoose, s1] = mintCard(birdCatalog, base, 'Cut It Loose')
+    const [findFooting, s2] = mintCard(birdCatalog, s1, 'Find Footing')
+    const [groaningGirders, s3] = mintCard(birdCatalog, s2, 'Groaning Girders')
+
+    const state = makeBirdState({
+      ...s3,
+      hand: [cutItLoose as PlayerCard, findFooting as PlayerCard, groaningGirders as WorldCard],
+    })
+
+    return {
+      state,
+      cutItLoose: cutItLoose as PlayerCard,
+      findFooting: findFooting as PlayerCard,
+      groaningGirders: groaningGirders as WorldCard,
+    }
+  }
+
+  it('full dispatch: destroys the player card and deals progress to the world card', () => {
+    const { state, cutItLoose, findFooting, groaningGirders } = makeCutItLooseState()
+
+    const result = reduce(birdCatalog, state, {
+      type: 'PlayCard',
+      cardId: cutItLoose.id,
+      destroyId: findFooting.id,
+      targetId: groaningGirders.id,
+    })
+
+    // Cut It Loose played successfully
+    const types = result.events.map((e) => e.type)
+    expect(types).toContain('CardPlayed')
+
+    // Destroyed player card is removed from hand and not in discard
+    expect(result.state.hand.some((c) => c.id === findFooting.id)).toBe(false)
+    expect(result.state.playerDiscard.some((c) => c.id === findFooting.id)).toBe(false)
+    expect(types).toContain('CardDestroyed')
+
+    // Progress was dealt to the world card (base 4 resolves Groaning Girders cost 1)
+    expect(types).toContain('ProgressDealt')
+    expect(types).toContain('HazardResolved')
+    expect(result.state.hand.some((c) => c.id === groaningGirders.id)).toBe(false)
+  })
+
+  it('rejection: missing destroyId throws IllegalActionError', () => {
+    const { state, cutItLoose, groaningGirders } = makeCutItLooseState()
+
+    expect(() => {
+      reduce(birdCatalog, state, {
+        type: 'PlayCard',
+        cardId: cutItLoose.id,
+        // destroyId omitted — step 0 requires it (min=1)
+        targetId: groaningGirders.id,
+      })
+    }).toThrow(IllegalActionError)
+  })
+
+  it('rejection: missing targetId throws IllegalActionError', () => {
+    const { state, cutItLoose, findFooting } = makeCutItLooseState()
+
+    expect(() => {
+      reduce(birdCatalog, state, {
+        type: 'PlayCard',
+        cardId: cutItLoose.id,
+        destroyId: findFooting.id,
+        // targetId omitted — step 1 (DealProgress) requires a world card target
+      })
+    }).toThrow(IllegalActionError)
   })
 })
