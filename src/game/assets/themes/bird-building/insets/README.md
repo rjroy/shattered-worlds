@@ -1,7 +1,8 @@
-# Bird Building Inset Regeneration Proposals
+# Bird Building Inset Art Guidance
 
-These are thumbnail-first replacement proposals for:
+Thumbnail-first inset assets:
 
+- `inset-cut-it-loose.webp`
 - `inset-find-footing.webp`
 - `inset-fire-axe-find.webp`
 - `inset-fire-axe.webp`
@@ -10,8 +11,6 @@ These are thumbnail-first replacement proposals for:
 - `inset-shadow-overhead.webp`
 - `inset-sliding-debris.webp`
 - `inset-steady.webp`
-
-The original assets in `src/game/assets/themes/bird-building/insets/` were not overwritten.
 
 ## Direction
 
@@ -44,4 +43,4 @@ Each generated image was fit to 600x600, then finished with:
 - brightness: `0.99`
 - unsharp mask: radius `1.1`, percent `80`, threshold `4`
 
-Validate against `contact-sheet-current-vs-new-100px.png` before replacing source assets.
+Validate new artwork in a 100x100 contact sheet before adding it to the asset manifest.

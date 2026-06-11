@@ -100,6 +100,7 @@
     "Find Shotgun": {
       "kind": "world",
       "name": "Find Shotgun",
+      "insetKey": "zombie-inset-find-shotgun",
       "cost": 2,
       "keywords": ["Hidden"],
       "discardable": true,
@@ -130,6 +131,7 @@
     "Shotgun": {
       "kind": "player",
       "name": "Shotgun",
+      "insetKey": "zombie-inset-shotgun",
       "energyCost": 1,
       "effect": {
         "kind": "Sequence",
@@ -149,6 +151,7 @@
     "Shelf Sweep": {
       "kind": "player",
       "name": "Shelf Sweep",
+      "insetKey": "zombie-inset-shelf-sweep",
       "energyCost": 2,
       "effect": {
         "kind": "DealProgressAll",
@@ -159,6 +162,7 @@
     "Echoing Aisles": {
       "kind": "world",
       "name": "Echoing Aisles",
+      "insetKey": "zombie-inset-echoing-aisles",
       "cost": 2,
       "keywords": ["Hidden"],
       "discardable": true,

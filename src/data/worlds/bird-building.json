@@ -79,6 +79,7 @@
     "Cut It Loose": {
       "kind": "player",
       "name": "Cut It Loose",
+      "insetKey": "bird-inset-cut-it-loose",
       "energyCost": 0,
       "effect": {
         "kind": "Sequence",

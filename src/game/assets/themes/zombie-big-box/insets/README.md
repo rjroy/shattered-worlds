@@ -1,17 +1,19 @@
-# Zombie Big Box Inset Regeneration Proposals
+# Zombie Big Box Inset Art Guidance
 
-These are thumbnail-first replacement proposals for:
+Thumbnail-first inset assets:
 
 - `inset-baseball.webp`
 - `inset-corpse.webp`
+- `inset-echoing-aisles.webp`
+- `inset-find-shotgun.webp`
 - `inset-listen.webp`
 - `inset-regroup.webp`
 - `inset-rubble.webp`
 - `inset-screams.webp`
+- `inset-shelf-sweep.webp`
+- `inset-shotgun.webp`
 - `inset-strange-sounds.webp`
 - `inset-zombie.webp`
-
-The original assets in `src/game/assets/themes/zombie-big-box/insets/` were not overwritten.
 
 ## Direction
 
@@ -45,4 +47,4 @@ Each generated image was fit to 600x600, then finished with:
 - brightness: `0.99`
 - unsharp mask: radius `1.1`, percent `80`, threshold `4`
 
-Validate against `contact-sheet-current-vs-new-100px.png` before replacing source assets.
+Validate new artwork in a 100x100 contact sheet before adding it to the asset manifest.

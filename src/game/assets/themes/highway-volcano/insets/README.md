@@ -1,17 +1,16 @@
-# Highway Volcano Inset Regeneration Proposals
+# Highway Volcano Inset Art Guidance
 
-These are thumbnail-first replacement proposals for:
+Thumbnail-first inset assets:
 
 - `inset-ash-fall.webp`
 - `inset-ditch-gear.webp`
 - `inset-floor-it.webp`
 - `inset-gridlock.webp`
 - `inset-lava-flow.webp`
+- `inset-nitro.webp`
 - `inset-spot-path.webp`
 - `inset-tremors.webp`
 - `inset-vehicle.webp`
-
-The original assets in `src/game/assets/themes/highway-volcano/insets/` were not overwritten.
 
 ## Direction
 
@@ -47,4 +46,4 @@ Each generated image was fit to 600x600, then finished with:
 - brightness: `0.99`
 - unsharp mask: radius `1.1`, percent `80`, threshold `4`
 
-Validate against `contact-sheet-current-vs-new-100px.png` before replacing source assets.
+Validate new artwork in a 100x100 contact sheet before adding it to the asset manifest.
