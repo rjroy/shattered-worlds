@@ -21,15 +21,21 @@ const HUD_PANEL_W = HUD_LAYOUT.panel.width
 const HUD_PANEL_H = HUD_LAYOUT.panel.height
 const HUD_PANEL_SIDE_INSET = HUD_LAYOUT.panel.sideInset // left/right: keep the decorated vertical frame
 const HUD_PANEL_EDGE_INSET = HUD_LAYOUT.panel.edgeInset // top/bottom: thin frayed edge, interior shows through
+const HUD_POWER_UPS = HUD_LAYOUT.powerUps
+
+interface PowerUpIndicator {
+  container: Phaser.GameObjects.Container
+  countText: Phaser.GameObjects.Text
+}
 
 export class HUDView extends Phaser.GameObjects.Container {
   private hpText: Phaser.GameObjects.Text
   private actText: Phaser.GameObjects.Text
   private energyText: Phaser.GameObjects.Text
   private powerUps: Phaser.GameObjects.Container
-  private powerUpsTexts: Phaser.GameObjects.Text[] = []
-  private braceText: Phaser.GameObjects.Text | undefined
-  private forceDestroyText: Phaser.GameObjects.Text | undefined
+  private powerUpIndicators: PowerUpIndicator[] = []
+  private braceIndicator: PowerUpIndicator | undefined
+  private forceDestroyIndicator: PowerUpIndicator | undefined
   private powerUpPanel: Phaser.GameObjects.NineSlice
 
   constructor(scene: Phaser.Scene) {
@@ -106,63 +112,73 @@ export class HUDView extends Phaser.GameObjects.Container {
     this.actText.setText(`Act ${state.actIndex + 1} / ${state.totalActs}`)
     this.energyText.setText(`${state.energy}`)
     if (state.braceCharges > 0) {
-      if (this.braceText === undefined) {
-        this.braceText = this.addPowerUp()
+      if (this.braceIndicator === undefined) {
+        this.braceIndicator = this.addPowerUp('power-brace')
       }
-      this.braceText.setVisible(true)
-      this.braceText.setText(`Brace: ${state.braceCharges}`)
+      this.setPowerUpValue(this.braceIndicator, state.braceCharges)
     } else {
-      if (this.braceText !== undefined) {
-        this.braceText.setVisible(false)
+      if (this.braceIndicator !== undefined) {
+        this.braceIndicator.container.setVisible(false)
       }
     }
     if (state.pendingForceDestroy > 0) {
-      if (this.forceDestroyText === undefined) {
-        this.forceDestroyText = this.addPowerUp()
+      if (this.forceDestroyIndicator === undefined) {
+        this.forceDestroyIndicator = this.addPowerUp('power-force-destroy')
       }
-      this.forceDestroyText.setVisible(true)
-      this.forceDestroyText.setText(`Force Destroy: ${state.pendingForceDestroy}`)
+      this.setPowerUpValue(this.forceDestroyIndicator, state.pendingForceDestroy)
     } else {
-      if (this.forceDestroyText !== undefined) {
-        this.forceDestroyText.setVisible(false)
+      if (this.forceDestroyIndicator !== undefined) {
+        this.forceDestroyIndicator.container.setVisible(false)
       }
     }
     let minX: number | undefined = undefined
     let maxX: number | undefined = undefined
     let hasPowerUps: boolean = false
-    for (const powerUpText of this.powerUpsTexts) {
-      if (powerUpText.visible) {
+    let nextX = 0
+    for (const indicator of this.powerUpIndicators) {
+      if (indicator.container.visible) {
         hasPowerUps = true
-        if (minX === undefined || powerUpText.x < minX) {
-          minX = powerUpText.x
+        indicator.container.setPosition(nextX, 0)
+        const indicatorWidth = this.powerUpWidth(indicator)
+        if (minX === undefined || indicator.container.x < minX) {
+          minX = indicator.container.x
         }
-        if (maxX === undefined || powerUpText.x + powerUpText.width > maxX) {
-          maxX = powerUpText.x + powerUpText.width
+        if (maxX === undefined || indicator.container.x + indicatorWidth > maxX) {
+          maxX = indicator.container.x + indicatorWidth
         } 
+        nextX += indicatorWidth + HUD_POWER_UPS.itemGap
       }
     }
     this.powerUps.setVisible(hasPowerUps)
     this.powerUpPanel.setVisible(hasPowerUps)
     if (minX !== undefined && maxX !== undefined) {
-      this.powerUpPanel.setPosition(minX - 15, -HUD_PANEL_H / 2)
-      this.powerUpPanel.setSize(maxX - minX + 30, HUD_PANEL_H)
+      this.powerUpPanel.setPosition(minX - HUD_POWER_UPS.panelPadX, -HUD_PANEL_H / 2)
+      this.powerUpPanel.setSize(maxX - minX + HUD_POWER_UPS.panelPadX * 2, HUD_PANEL_H)
     }
   }
 
-  addPowerUp(): Phaser.GameObjects.Text  {
+  private addPowerUp(texture: string): PowerUpIndicator {
     const style = textStyle({ fontSize: '16px', fontStyle: 'bold', color: TEXT.textLight })
-    const newText = this.scene.add.text(0, HUD_PANEL_H / 2, '', style)
-    newText.setOrigin(0, 0.5)
-    this.powerUps.add(newText)
+    const container = this.scene.add.container(0, 0)
+    const icon = this.scene.add.image(0, 0, texture).setDisplaySize(HUD_POWER_UPS.iconSize, HUD_POWER_UPS.iconSize)
+    const countText = this.scene.add.text(HUD_POWER_UPS.iconSize + HUD_POWER_UPS.countGap, 0, '', style)
 
-    let x = 0
-    for (let Idx = 0; Idx < this.powerUpsTexts.length; ++Idx) {
-        x = this.powerUpsTexts[Idx]?.x ?? 0
-        x += this.powerUpsTexts[Idx]?.width ?? 0
-        x += 10
-    }
-    newText.setPosition(x, 0)
-    this.powerUpsTexts.push(newText)
-    return newText
+    icon.setOrigin(0, 0.5)
+    countText.setOrigin(0, 0.5)
+    container.add([icon, countText])
+    this.powerUps.add(container)
+
+    const indicator = { container, countText }
+    this.powerUpIndicators.push(indicator)
+    return indicator
+  }
+
+  private setPowerUpValue(indicator: PowerUpIndicator, value: number): void {
+    indicator.container.setVisible(true)
+    indicator.countText.setText(`${value}`)
+  }
+
+  private powerUpWidth(indicator: PowerUpIndicator): number {
+    return HUD_POWER_UPS.iconSize + HUD_POWER_UPS.countGap + indicator.countText.width
   }
 }
