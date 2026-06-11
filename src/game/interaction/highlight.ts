@@ -7,16 +7,27 @@
  * the selection state it reads so the precedence rules have one home.
  */
 import type { Card } from '../../core/index'
-import type { SelectionState } from './selection'
+import type { SelectionState, StepResult } from './selection'
 
 /** Visual highlight applied to a card's overlay rectangle. */
 export type HighlightKind = 'selected' | 'target' | 'discard' | 'committed' | 'none'
 
+/** True when `id` appears in any completed step result. */
+function isCommitted(done: readonly StepResult[], id: string): boolean {
+  return done.some(
+    (r) =>
+      (r.kind === 'hazard' && r.targetId === id) ||
+      (r.kind === 'destroyHand' && r.destroyId === id) ||
+      (r.kind === 'returnWorld' && r.returnIds.includes(id)) ||
+      (r.kind === 'discardPlayer' && r.discardId === id),
+  )
+}
+
 /**
  * Classify a card's highlight + dim state. Precedence (first match wins):
  * the actively-selected card, a live legal target, a discardable hazard (idle),
- * a playable player card (idle), an already-chosen return target, the committed
- * hazard from an earlier step, then the dimmed/neutral fall-through.
+ * a playable player card (idle), a pick in progress for the current step,
+ * a card committed by an earlier completed step, then the dimmed/neutral fall-through.
  */
 export function classifyHighlight(
   sel: SelectionState,
@@ -27,7 +38,7 @@ export function classifyHighlight(
 ): { kind: HighlightKind; dim: boolean } {
   const id = card.id
 
-  // Selected card (all non-idle variants carry cardId)
+  // Selected card (awaiting-modal and targeting both carry cardId)
   if ('cardId' in sel && sel.cardId === id) return { kind: 'selected', dim: false }
 
   // Legal target during a targeting phase
@@ -41,15 +52,14 @@ export function classifyHighlight(
     return { kind: 'none', dim: false }
   }
 
-  // During awaiting-return, mark already-selected return targets
-  if (sel.phase === 'awaiting-return' && sel.selected.includes(id)) {
+  // Picks accumulating for the current step stay lit as 'selected'.
+  if (sel.phase === 'targeting' && sel.current.includes(id)) {
     return { kind: 'selected', dim: false }
   }
 
-  // During awaiting-return, keep the hazard the earlier step locked onto lit with
-  // a muted "committed" mark — it is no longer a live legal target but must not go
-  // dark. After the legal-target/selected checks so an active card always wins.
-  if (sel.phase === 'awaiting-return' && sel.targetId === id) {
+  // Cards committed by earlier completed steps stay lit with a muted 'committed'
+  // mark — they are no longer live targets but must not go dark.
+  if (sel.phase === 'targeting' && isCommitted(sel.done, id)) {
     return { kind: 'committed', dim: false }
   }
 

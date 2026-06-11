@@ -22,14 +22,18 @@ import type {
 } from '../../core/index'
 import {
   IDLE,
+  advance,
+  autoAdvances,
+  beginTargeting,
   cancel,
   chooseModal,
-  addTarget,
-  removeTarget,
   buildAction,
   isComplete,
+  needsConfirm,
   activeStep,
   hintForSelection,
+  stepSatisfied,
+  togglePick,
 } from '../interaction/selection'
 import type { SelectionState } from '../interaction/selection'
 import { classifyHighlight } from '../interaction/highlight'
@@ -380,7 +384,7 @@ export class TableScene extends Phaser.Scene {
     // Cancel / Confirm buttons
     this.cancelBtn.setVisible(selectionActive)
     const showConfirm =
-      this.sel.phase === 'awaiting-return' || this.sel.phase === 'awaiting-destroy'
+      this.sel.phase === 'targeting' && needsConfirm(this.sel) && stepSatisfied(this.sel)
     this.confirmBtn.setVisible(showConfirm)
 
     // Selection hint text
@@ -569,59 +573,15 @@ export class TableScene extends Phaser.Scene {
       return
     }
 
-    // ---- Active selection: check if this is a legal target ----
-    if (
-      this.sel.phase === 'awaiting-hazard' ||
-      this.sel.phase === 'awaiting-discard' ||
-      this.sel.phase === 'awaiting-destroy'
-    ) {
+    // ---- Active targeting: check if this is legal for the current step ----
+    if (this.sel.phase === 'targeting' && !isComplete(this.sel)) {
       const legalTargets = available.legalTargets(this.sel.cardId, activeStep(this.sel))
       if (!legalTargets.includes(cardId)) return
 
-      const newSel = addTarget(this.sel, cardId)
-
-      // For hazard that is part of a compound (Barricade): transition to return step
-      if (newSel.phase === 'awaiting-hazard' && newSel.targetId !== undefined) {
-        const selCardId = newSel.cardId
-        const entry = available.playable.find((p) => p.cardId === selCardId)
-        if (entry !== undefined && entry.spec.kind === 'compound') {
-          const returnStep = entry.spec.steps[1]
-          if (returnStep !== undefined && returnStep.kind === 'returnWorld') {
-            this.sel = {
-              phase: 'awaiting-return',
-              cardId: selCardId,
-              selected: [],
-              min: returnStep.min,
-              max: returnStep.max,
-              targetId: newSel.targetId,
-            }
-            this.clearConnector()
-            this.drawAll()
-            return
-          }
-        }
-      }
-
-      // Single-target selection: try to commit immediately
-      const action = buildAction(newSel)
-      if (action !== null) {
-        this.dispatch(action)
-      } else {
-        this.sel = newSel
-        this.drawAll()
-      }
-      return
-    }
-
-    // ---- Awaiting return multi-select ----
-    if (this.sel.phase === 'awaiting-return') {
-      const legalTargets = available.legalTargets(this.sel.cardId, activeStep(this.sel))
-      if (!legalTargets.includes(cardId)) return
-
-      if (this.sel.selected.includes(cardId)) {
-        this.sel = removeTarget(this.sel, cardId)
-      } else {
-        this.sel = addTarget(this.sel, cardId)
+      this.sel = togglePick(this.sel, cardId)
+      if (autoAdvances(this.sel)) {
+        this.advanceSelection()
+        return
       }
       this.clearConnector()
       this.drawAll()
@@ -630,58 +590,25 @@ export class TableScene extends Phaser.Scene {
   }
 
   /** Begin a new selection for a playable card. */
-  private nextSelection(cardId: string, spec: TargetSpec, stepIdx?: number): void {
-    let resultSel: SelectionState | undefined = undefined
+  private nextSelection(cardId: string, spec: TargetSpec): void {
     switch (spec.kind) {
-      case 'none': {
-        // Immediate commit — no targeting needed
-        this.dispatch({ type: 'PlayCard', cardId })
-        return
-      }
       case 'modal': {
-        this.sel = stepIdx !== undefined
-          ? { phase: 'awaiting-modal', cardId, idx: stepIdx }
-          : { phase: 'awaiting-modal', cardId }
+        this.sel = { phase: 'awaiting-modal', cardId }
         this.showModalChooser(cardId, spec)
         return
       }
-      case 'compound': {
-        const firstStep = spec.steps[0]
-        if (firstStep !== undefined) {
-          this.nextSelection(cardId, firstStep, 0)
-        }
+    }
+
+    this.sel = beginTargeting(cardId, spec)
+    if (isComplete(this.sel)) {
+      const action = buildAction(this.sel)
+      if (action !== null) {
+        this.dispatch(action)
         return
       }
-      case 'hazard': {
-        resultSel = { phase: 'awaiting-hazard', cardId }
-        break
-      }
-      case 'discardPlayer': {
-        resultSel = { phase: 'awaiting-discard', cardId }
-        break
-      }
-      case 'destroyHand': {
-        resultSel = { phase: 'awaiting-destroy', cardId }
-        break
-      }
-      case 'returnWorld': {
-        resultSel = {
-          phase: 'awaiting-return',
-          cardId,
-          selected: [],
-          min: spec.min,
-          max: spec.max,
-        }
-        break
-      }
-    }
-    if (resultSel !== undefined) {
-      if (stepIdx !== undefined) {
-        resultSel = { ...resultSel, idx: stepIdx }
-      }
-      this.sel = resultSel
+    } else {
       this.drawAll()
-    } 
+    }
   }
 
   private onDiscardClick(cardId: string): void {
@@ -697,13 +624,21 @@ export class TableScene extends Phaser.Scene {
   }
 
   private onConfirmClick(): void {
-    const spec = this.currentSpec()
-    if (spec === null) return
-    if (!isComplete(this.sel)) return
-    const action = buildAction(this.sel)
-    if (action !== null) {
-      this.dispatch(action)
+    if (!stepSatisfied(this.sel)) return
+    this.advanceSelection()
+  }
+
+  private advanceSelection(): void {
+    this.sel = advance(this.sel)
+    this.clearConnector()
+    if (isComplete(this.sel)) {
+      const action = buildAction(this.sel)
+      if (action !== null) {
+        this.dispatch(action)
+        return
+      }
     }
+    this.drawAll()
   }
 
   // ---------------------------------------------------------------------------
@@ -728,7 +663,7 @@ export class TableScene extends Phaser.Scene {
       this,
       this.theme_,
       branches,
-      (idx) => this.onModalChoose(cardId, spec, idx),
+      (idx) => this.onModalChoose(spec, idx),
       () => {
         this.sel = cancel()
         this.dismissModal()
@@ -740,7 +675,6 @@ export class TableScene extends Phaser.Scene {
 
   /** Apply a chosen modal branch: advance selection, or commit if it's a 'none' branch. */
   private onModalChoose(
-    cardId: string,
     spec: Extract<TargetSpec, { kind: 'modal' }>,
     idx: number,
   ): void {
@@ -748,11 +682,11 @@ export class TableScene extends Phaser.Scene {
     const newSel = chooseModal(this.sel, idx, spec)
     this.sel = newSel
 
-    // If the branch is 'none' after modal — build and dispatch immediately
-    if (newSel.phase === 'selected') {
-      const action = buildAction({ ...newSel, cardId })
+    // If the branch is 'none' after modal, dispatch immediately with choice.
+    if (isComplete(newSel)) {
+      const action = buildAction(newSel)
       if (action !== null) {
-        this.dispatch({ ...action, choice: idx } as Action)
+        this.dispatch(action)
         return
       }
     }
@@ -838,23 +772,10 @@ export class TableScene extends Phaser.Scene {
   private currentLegalTargetIds(
     available: import('../../core/index').AvailableActions,
   ): Set<string> {
-    if (
-      this.sel.phase !== 'awaiting-hazard' &&
-      this.sel.phase !== 'awaiting-discard' &&
-      this.sel.phase !== 'awaiting-destroy' &&
-      this.sel.phase !== 'awaiting-return'
-    ) {
+    if (this.sel.phase !== 'targeting' || isComplete(this.sel)) {
       return new Set<string>()
     }
     return new Set(available.legalTargets(this.sel.cardId, activeStep(this.sel)))
-  }
-
-  /** Return the TargetSpec for the card currently being played, or null. */
-  private currentSpec(): TargetSpec | null {
-    if (this.sel.phase === 'idle') return null
-    const cardId = this.sel.cardId
-    const entry = availableActions(this.game_.state).playable.find((p) => p.cardId === cardId)
-    return entry !== undefined ? entry.spec : null
   }
 
   /**
@@ -865,11 +786,12 @@ export class TableScene extends Phaser.Scene {
    */
   private showTargetPreview(targetId: string): void {
     const sel = this.sel
-    if (sel.phase !== 'awaiting-hazard') return
+    if (sel.phase !== 'targeting' || isComplete(sel)) return
+    if (sel.steps[sel.stepIdx]?.kind !== 'hazard') return
 
     const state = this.game_.state
-    const branchIndex = sel.idx
-    const legal = availableActions(state).legalTargets(sel.cardId, branchIndex ?? 0)
+    const branchIndex = sel.choice
+    const legal = availableActions(state).legalTargets(sel.cardId, activeStep(sel))
     if (!legal.includes(targetId)) return
 
     const card = state.hand.find((c) => c.id === sel.cardId)
@@ -903,9 +825,8 @@ export class TableScene extends Phaser.Scene {
 
   /**
    * Draw a connector from the acting card to the legal target currently under
-   * the pointer. Active for the three single-target
-   * targeting phases (awaiting-hazard, awaiting-destroy, awaiting-return); any
-   * other phase no-ops. The target must be legal for the current step, and both
+   * the pointer. Active for targeting steps that use visible card-to-card
+   * targeting; any other phase no-ops. The target must be legal for the current step, and both
    * the acting and target containers must still exist (they persist across
    * cycles since S3). Redraws from a clean slate every call so the previous
    * frame's line never lingers.
@@ -918,13 +839,15 @@ export class TableScene extends Phaser.Scene {
    */
   private showConnector(targetId: string): void {
     const sel = this.sel
-    if (
-      sel.phase !== 'awaiting-hazard' &&
-      sel.phase !== 'awaiting-destroy' &&
-      sel.phase !== 'awaiting-return'
-    ) {
+    if (sel.phase !== 'targeting' || isComplete(sel)) {
       return
     }
+    const currentStep = sel.steps[sel.stepIdx]
+    if (
+      currentStep?.kind !== 'hazard' &&
+      currentStep?.kind !== 'destroyHand' &&
+      currentStep?.kind !== 'returnWorld'
+    ) return
 
     const step = activeStep(sel)
     const legal = availableActions(this.game_.state).legalTargets(sel.cardId, step)

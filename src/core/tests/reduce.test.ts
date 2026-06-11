@@ -539,24 +539,24 @@ describe('Regroup destroyHand', () => {
   it('Regroup with destroyId removes the card from hand permanently', () => {
     const base = createWorld(catalog, worldData, 42)
     const [regroup, s1] = mintCard(catalog, base, 'Regroup')
-    const [rubble, s2] = mintCard(catalog, s1, 'Rubble')
+    const [explore, s2] = mintCard(catalog, s1, 'Explore')
 
     const state = makeState({
       ...s2,
-      hand: [rubble as WorldCard, regroup as PlayerCard],
+      hand: [explore as WorldCard, regroup as PlayerCard],
     })
 
     const result = reduce(catalog, state, {
       type: 'PlayCard',
       cardId: regroup.id,
-      destroyId: rubble.id,
+      destroyId: explore.id,
     })
 
     const types = result.events.map((e) => e.type)
     expect(types).toContain('CardDestroyed')
-    expect(result.state.hand.some((c) => c.id === rubble.id)).toBe(false)
+    expect(result.state.hand.some((c) => c.id === explore.id)).toBe(false)
     // Destroyed — not in discard either
-    expect(result.state.playerDiscard.some((c) => c.id === rubble.id)).toBe(false)
+    expect(result.state.playerDiscard.some((c) => c.id === explore.id)).toBe(false)
   })
 })
 
@@ -1581,5 +1581,109 @@ describe('ExileTopWorldCards: livelock guard', () => {
     // The act card should have been drawn into hand
     expect(afterEnd.state.hand.some((c) => c.id === actCard.id)).toBe(true)
     expect(afterEnd.events.some((e) => e.type === 'ActAdvanced')).toBe(true)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// PlayCard Cut It Loose (Sequence: destroyHand → hazard)
+// ---------------------------------------------------------------------------
+
+describe('PlayCard Cut It Loose (Sequence: destroyHand → hazard)', () => {
+  const { catalog: birdCatalog, worldData: birdWorld } = buildWorld('bird-building')
+
+  /** Build a minimal state seeded from bird-building for Cut It Loose tests. */
+  function makeBirdState(overrides: Partial<GameState> = {}): GameState {
+    const base = createWorld(birdCatalog, birdWorld, 42)
+    return {
+      ...base,
+      playerDraw: [],
+      playerDiscard: [],
+      worldDraw: [],
+      acts: [],
+      progress: {},
+      energy: 0,
+      status: 'playing',
+      ...overrides,
+    }
+  }
+
+  /**
+   * Build a ready-to-play state: Cut It Loose in hand, one other player card
+   * to destroy (Find Footing), and one world card to target (Groaning Girders,
+   * cost 1 so a base-4 progress resolves it).
+   */
+  function makeCutItLooseState(): {
+    state: GameState
+    cutItLoose: PlayerCard
+    findFooting: PlayerCard
+    groaningGirders: WorldCard
+  } {
+    const base = makeBirdState()
+    const [cutItLoose, s1] = mintCard(birdCatalog, base, 'Cut It Loose')
+    const [findFooting, s2] = mintCard(birdCatalog, s1, 'Find Footing')
+    const [groaningGirders, s3] = mintCard(birdCatalog, s2, 'Groaning Girders')
+
+    const state = makeBirdState({
+      ...s3,
+      hand: [cutItLoose as PlayerCard, findFooting as PlayerCard, groaningGirders as WorldCard],
+    })
+
+    return {
+      state,
+      cutItLoose: cutItLoose as PlayerCard,
+      findFooting: findFooting as PlayerCard,
+      groaningGirders: groaningGirders as WorldCard,
+    }
+  }
+
+  it('full dispatch: destroys the player card and deals progress to the world card', () => {
+    const { state, cutItLoose, findFooting, groaningGirders } = makeCutItLooseState()
+
+    const result = reduce(birdCatalog, state, {
+      type: 'PlayCard',
+      cardId: cutItLoose.id,
+      destroyId: findFooting.id,
+      targetId: groaningGirders.id,
+    })
+
+    // Cut It Loose played successfully
+    const types = result.events.map((e) => e.type)
+    expect(types).toContain('CardPlayed')
+
+    // Destroyed player card is removed from hand and not in discard
+    expect(result.state.hand.some((c) => c.id === findFooting.id)).toBe(false)
+    expect(result.state.playerDiscard.some((c) => c.id === findFooting.id)).toBe(false)
+    expect(types).toContain('CardDestroyed')
+
+    // Progress was dealt to the world card (base 4 resolves Groaning Girders cost 1)
+    expect(types).toContain('ProgressDealt')
+    expect(types).toContain('HazardResolved')
+    expect(result.state.hand.some((c) => c.id === groaningGirders.id)).toBe(false)
+  })
+
+  it('rejection: missing destroyId throws IllegalActionError', () => {
+    const { state, cutItLoose, groaningGirders } = makeCutItLooseState()
+
+    expect(() => {
+      reduce(birdCatalog, state, {
+        type: 'PlayCard',
+        cardId: cutItLoose.id,
+        // destroyId omitted — step 0 requires it (min=1)
+        targetId: groaningGirders.id,
+      })
+    }).toThrow(IllegalActionError)
+  })
+
+  it('rejection: missing targetId throws IllegalActionError', () => {
+    const { state, cutItLoose, findFooting } = makeCutItLooseState()
+
+    expect(() => {
+      reduce(birdCatalog, state, {
+        type: 'PlayCard',
+        cardId: cutItLoose.id,
+        destroyId: findFooting.id,
+        // targetId omitted — step 1 (DealProgress) requires a world card target
+      })
+    }).toThrow(IllegalActionError)
   })
 })

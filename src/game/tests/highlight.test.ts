@@ -36,12 +36,26 @@ function classify(sel: SelectionState, card: Card, opts: {
 
 describe('classifyHighlight', () => {
   it('marks the actively-selected card, undimmed', () => {
-    const sel: SelectionState = { phase: 'awaiting-hazard', cardId: 'p1' }
+    const sel: SelectionState = {
+      phase: 'targeting',
+      cardId: 'p1',
+      steps: [{ kind: 'hazard' }],
+      stepIdx: 0,
+      done: [],
+      current: [],
+    }
     expect(classify(sel, player('p1'))).toEqual({ kind: 'selected', dim: false })
   })
 
   it('marks a live legal target, undimmed', () => {
-    const sel: SelectionState = { phase: 'awaiting-hazard', cardId: 'p1' }
+    const sel: SelectionState = {
+      phase: 'targeting',
+      cardId: 'p1',
+      steps: [{ kind: 'hazard' }],
+      stepIdx: 0,
+      done: [],
+      current: [],
+    }
     expect(classify(sel, world('w1'), { legal: set('w1') })).toEqual({ kind: 'target', dim: false })
   })
 
@@ -52,7 +66,14 @@ describe('classifyHighlight', () => {
       dim: false,
     })
     // During a selection, a discardable hazard that is not a target is dimmed.
-    const sel: SelectionState = { phase: 'awaiting-hazard', cardId: 'p2' }
+    const sel: SelectionState = {
+      phase: 'targeting',
+      cardId: 'p2',
+      steps: [{ kind: 'hazard' }],
+      stepIdx: 0,
+      done: [],
+      current: [],
+    }
     expect(classify(sel, world('w1', true), { discardable: set('w1') })).toEqual({
       kind: 'none',
       dim: true,
@@ -74,25 +95,41 @@ describe('classifyHighlight', () => {
 
   it('marks chosen return targets selected and the committed hazard distinct', () => {
     const sel: SelectionState = {
-      phase: 'awaiting-return',
+      phase: 'targeting',
       cardId: 'p1',
-      selected: ['w2'],
-      min: 1,
-      max: 2,
-      targetId: 'w9',
+      steps: [{ kind: 'hazard' }, { kind: 'returnWorld', min: 1, max: 2 }],
+      stepIdx: 1,
+      done: [{ kind: 'hazard', targetId: 'w9' }],
+      current: ['w2'],
     }
     expect(classify(sel, world('w2'))).toEqual({ kind: 'selected', dim: false })
     expect(classify(sel, world('w9'))).toEqual({ kind: 'committed', dim: false })
   })
 
+  it('keeps a Cut It Loose destroy pick committed during hazard targeting', () => {
+    const sel: SelectionState = {
+      phase: 'targeting',
+      cardId: 'p1',
+      steps: [{ kind: 'destroyHand', min: 1, max: 1 }, { kind: 'hazard' }],
+      stepIdx: 1,
+      done: [{ kind: 'destroyHand', destroyId: 'p2' }],
+      current: [],
+    }
+    expect(classify(sel, player('p2'))).toEqual({ kind: 'committed', dim: false })
+    expect(classify(sel, world('w1'), { legal: set('w1') })).toEqual({
+      kind: 'target',
+      dim: false,
+    })
+  })
+
   it('legal-target precedence beats the committed mark', () => {
     const sel: SelectionState = {
-      phase: 'awaiting-return',
+      phase: 'targeting',
       cardId: 'p1',
-      selected: [],
-      min: 1,
-      max: 2,
-      targetId: 'w9',
+      steps: [{ kind: 'hazard' }, { kind: 'returnWorld', min: 1, max: 2 }],
+      stepIdx: 1,
+      done: [{ kind: 'hazard', targetId: 'w9' }],
+      current: [],
     }
     // If w9 is somehow still legal, the live-target highlight wins.
     expect(classify(sel, world('w9'), { legal: set('w9') })).toEqual({

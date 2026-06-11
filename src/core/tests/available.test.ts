@@ -4,6 +4,7 @@ import { mintCard } from '../model/cards'
 import { createWorld } from '../engine/world'
 import type { GameState, PlayerCard, WorldCard } from '../model/types'
 import { catalog, worldData } from './testFixture'
+import { buildWorld } from '../../data/worldManifest'
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -488,5 +489,110 @@ describe('ExileTopWorldCards playability', () => {
     const actions = availableActions(state)
     const entry = actions.playable.find((p) => p.cardId === floorIt.id)
     expect(entry).toBeUndefined()
+  })
+})
+
+// ---------------------------------------------------------------------------
+// 14. Cut It Loose (Sequence: destroyHand → hazard)
+// ---------------------------------------------------------------------------
+
+describe('Cut It Loose (Sequence: destroyHand → hazard)', () => {
+  const { catalog: birdCatalog, worldData: birdWorld } = buildWorld('bird-building')
+
+  /** Build a minimal GameState for bird-building tests. */
+  function makeBirdState(overrides: Partial<GameState> = {}): GameState {
+    const base = createWorld(birdCatalog, birdWorld, 1)
+    return {
+      ...base,
+      hand: [],
+      playerDraw: [],
+      playerDiscard: [],
+      worldDraw: [],
+      acts: [],
+      progress: {},
+      hp: 10,
+      energy: 0,
+      skipDrawNext: false,
+      status: 'playing',
+      ...overrides,
+    }
+  }
+
+  function mintBirdPlayer(state: GameState, name: Parameters<typeof mintCard>[2]): [PlayerCard, GameState] {
+    const [card, next] = mintCard(birdCatalog, state, name)
+    if (card.kind !== 'player') throw new Error(`${name} is not a player card`)
+    return [card as PlayerCard, next]
+  }
+
+  function mintBirdWorld(state: GameState, name: Parameters<typeof mintCard>[2]): [WorldCard, GameState] {
+    const [card, next] = mintCard(birdCatalog, state, name)
+    if (card.kind !== 'world') throw new Error(`${name} is not a world card`)
+    return [card as WorldCard, next]
+  }
+
+  it('appears in playable with compound spec when hand has ≥2 player cards AND ≥1 world card', () => {
+    const s0 = makeBirdState()
+    const [cutItLoose, s1] = mintBirdPlayer(s0, 'Cut It Loose')
+    const [findFooting, s2] = mintBirdPlayer(s1, 'Find Footing')
+    const [groaningGirders, s3] = mintBirdWorld(s2, 'Groaning Girders')
+    const state = { ...s3, hand: [cutItLoose, findFooting, groaningGirders] }
+
+    const actions = availableActions(state)
+    const entry = actions.playable.find((p) => p.cardId === cutItLoose.id)
+    expect(entry).toBeDefined()
+
+    const spec = entry!.spec
+    expect(spec.kind).toBe('compound')
+    if (spec.kind !== 'compound') throw new Error('not compound')
+
+    expect(spec.steps[0]).toEqual({ kind: 'destroyHand', min: 1, max: 1 })
+    expect(spec.steps[1]).toEqual({ kind: 'hazard' })
+  })
+
+  it('NOT in playable when only 1 player card in hand (self only — cannot destroy)', () => {
+    const s0 = makeBirdState()
+    const [cutItLoose, s1] = mintBirdPlayer(s0, 'Cut It Loose')
+    const [groaningGirders, s2] = mintBirdWorld(s1, 'Groaning Girders')
+    const state = { ...s2, hand: [cutItLoose, groaningGirders] }
+
+    const actions = availableActions(state)
+    const entry = actions.playable.find((p) => p.cardId === cutItLoose.id)
+    expect(entry).toBeUndefined()
+  })
+
+  it('legalTargets(cardId, 0) returns player cards excluding self', () => {
+    const s0 = makeBirdState()
+    const [cutItLoose, s1] = mintBirdPlayer(s0, 'Cut It Loose')
+    const [findFooting, s2] = mintBirdPlayer(s1, 'Find Footing')
+    const [steady, s3] = mintBirdPlayer(s2, 'Steady')
+    const [groaningGirders, s4] = mintBirdWorld(s3, 'Groaning Girders')
+    const state = { ...s4, hand: [cutItLoose, findFooting, steady, groaningGirders] }
+
+    const actions = availableActions(state)
+    const targets = actions.legalTargets(cutItLoose.id, 0)
+
+    expect(targets).toHaveLength(2)
+    expect(targets).toContain(findFooting.id)
+    expect(targets).toContain(steady.id)
+    expect(targets).not.toContain(cutItLoose.id)
+    expect(targets).not.toContain(groaningGirders.id)
+  })
+
+  it('legalTargets(cardId, 1) returns world cards in hand', () => {
+    const s0 = makeBirdState()
+    const [cutItLoose, s1] = mintBirdPlayer(s0, 'Cut It Loose')
+    const [findFooting, s2] = mintBirdPlayer(s1, 'Find Footing')
+    const [groaningGirders, s3] = mintBirdWorld(s2, 'Groaning Girders')
+    const [slidingDebris, s4] = mintBirdWorld(s3, 'Sliding Debris')
+    const state = { ...s4, hand: [cutItLoose, findFooting, groaningGirders, slidingDebris] }
+
+    const actions = availableActions(state)
+    const targets = actions.legalTargets(cutItLoose.id, 1)
+
+    expect(targets).toHaveLength(2)
+    expect(targets).toContain(groaningGirders.id)
+    expect(targets).toContain(slidingDebris.id)
+    expect(targets).not.toContain(cutItLoose.id)
+    expect(targets).not.toContain(findFooting.id)
   })
 })
