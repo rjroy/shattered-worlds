@@ -100,6 +100,7 @@
     "Nitro": {
       "kind": "player",
       "name": "Nitro",
+      "insetKey": "volcano-inset-nitro",
       "exhaust": true,
       "energyCost": 0,
       "effect": {

@@ -15,6 +15,7 @@ import zombieCardfrontUrl from '../assets/themes/zombie-big-box/zombie-cardfront
 import birdRealityUrl from '../assets/themes/bird-building/bird-building-bg.webp'
 import birdOverlayUrl from '../assets/themes/bird-building/bird-building-overlay.webp'
 import birdCardfrontUrl from '../assets/themes/bird-building/bird-building-cardfront.webp'
+import birdInsetCutItLooseUrl from '../assets/themes/bird-building/insets/inset-cut-it-loose.webp'
 import birdInsetFindFootingUrl from '../assets/themes/bird-building/insets/inset-find-footing.webp'
 import birdInsetFireAxeUrl from '../assets/themes/bird-building/insets/inset-fire-axe.webp'
 import birdInsetFireAxeFindUrl from '../assets/themes/bird-building/insets/inset-fire-axe-find.webp'
@@ -31,6 +32,7 @@ import volcanoInsetDitchGearUrl from '../assets/themes/highway-volcano/insets/in
 import volcanoInsetFloorItUrl from '../assets/themes/highway-volcano/insets/inset-floor-it.webp'
 import volcanoInsetGridlockUrl from '../assets/themes/highway-volcano/insets/inset-gridlock.webp'
 import volcanoInsetLavaFlowUrl from '../assets/themes/highway-volcano/insets/inset-lava-flow.webp'
+import volcanoInsetNitroUrl from '../assets/themes/highway-volcano/insets/inset-nitro.webp'
 import volcanoInsetSpotPathUrl from '../assets/themes/highway-volcano/insets/inset-spot-path.webp'
 import volcanoInsetTremorsUrl from '../assets/themes/highway-volcano/insets/inset-tremors.webp'
 import volcanoInsetVehicleUrl from '../assets/themes/highway-volcano/insets/inset-vehicle.webp'
@@ -44,9 +46,13 @@ import insetDoorUrl from '../assets/insets/inset-door.webp'
 import insetWalkerUrl from '../assets/insets/inset-walker.webp'
 import zombieInsetBaseballUrl from '../assets/themes/zombie-big-box/insets/inset-baseball.webp'
 import zombieInsetCorpseUrl from '../assets/themes/zombie-big-box/insets/inset-corpse.webp'
+import zombieInsetEchoingAislesUrl from '../assets/themes/zombie-big-box/insets/inset-echoing-aisles.webp'
+import zombieInsetFindShotgunUrl from '../assets/themes/zombie-big-box/insets/inset-find-shotgun.webp'
 import zombieInsetRegroupUrl from '../assets/themes/zombie-big-box/insets/inset-regroup.webp'
 import zombieInsetRubbleUrl from '../assets/themes/zombie-big-box/insets/inset-rubble.webp'
 import zombieInsetScreamsUrl from '../assets/themes/zombie-big-box/insets/inset-screams.webp'
+import zombieInsetShelfSweepUrl from '../assets/themes/zombie-big-box/insets/inset-shelf-sweep.webp'
+import zombieInsetShotgunUrl from '../assets/themes/zombie-big-box/insets/inset-shotgun.webp'
 import zombieInsetStrangeSoundsUrl from '../assets/themes/zombie-big-box/insets/inset-strange-sounds.webp'
 import zombieInsetZombieUrl from '../assets/themes/zombie-big-box/insets/inset-zombie.webp'
 import zombieInsetListenUrl from '../assets/themes/zombie-big-box/insets/inset-listen.webp'
@@ -72,6 +78,7 @@ export const assetManifest: Record<string, string> = {
   'bird-building-bg': birdRealityUrl,
   'bird-building-overlay': birdOverlayUrl,
   'bird-building-cardfront': birdCardfrontUrl,
+  'bird-inset-cut-it-loose': birdInsetCutItLooseUrl,
   'bird-inset-find-footing': birdInsetFindFootingUrl,
   'bird-inset-fire-axe': birdInsetFireAxeUrl,
   'bird-inset-fire-axe-find': birdInsetFireAxeFindUrl,
@@ -88,6 +95,7 @@ export const assetManifest: Record<string, string> = {
   'volcano-inset-floor-it': volcanoInsetFloorItUrl,
   'volcano-inset-gridlock': volcanoInsetGridlockUrl,
   'volcano-inset-lava-flow': volcanoInsetLavaFlowUrl,
+  'volcano-inset-nitro': volcanoInsetNitroUrl,
   'volcano-inset-spot-path': volcanoInsetSpotPathUrl,
   'volcano-inset-tremors': volcanoInsetTremorsUrl,
   'volcano-inset-vehicle': volcanoInsetVehicleUrl,
@@ -101,9 +109,13 @@ export const assetManifest: Record<string, string> = {
   'inset-walker': insetWalkerUrl,
   'zombie-inset-baseball': zombieInsetBaseballUrl,
   'zombie-inset-corpse': zombieInsetCorpseUrl,
+  'zombie-inset-echoing-aisles': zombieInsetEchoingAislesUrl,
+  'zombie-inset-find-shotgun': zombieInsetFindShotgunUrl,
   'zombie-inset-regroup': zombieInsetRegroupUrl,
   'zombie-inset-rubble': zombieInsetRubbleUrl,
   'zombie-inset-screams': zombieInsetScreamsUrl,
+  'zombie-inset-shelf-sweep': zombieInsetShelfSweepUrl,
+  'zombie-inset-shotgun': zombieInsetShotgunUrl,
   'zombie-inset-listen': zombieInsetListenUrl,
   'zombie-inset-strange-sounds': zombieInsetStrangeSoundsUrl,
   'zombie-inset-zombie': zombieInsetZombieUrl,
