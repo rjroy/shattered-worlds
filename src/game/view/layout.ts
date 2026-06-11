@@ -49,7 +49,7 @@ export const HUD_LAYOUT = {
     hpX: 30,
     actX: 110,
     energyX: 230,
-    powerUpX: 270,
+    powerUpX: 300,
   },
   energyIconSize: 28,
   energyIconOffsetX: 9,

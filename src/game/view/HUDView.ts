@@ -6,7 +6,7 @@
 import Phaser from 'phaser'
 import type { GameState } from '../../core/index'
 import { TEXT, textStyle } from './presentation'
-import { HUD_LAYOUT, TABLE_LAYOUT } from './layout'
+import { HUD_LAYOUT } from './layout'
 
 // HUD backing panel geometry. The text-back texture is a 600×600 grunge frame:
 // a thick decorated border around a dark interior. As a nine-slice we keep the
@@ -29,6 +29,8 @@ export class HUDView extends Phaser.GameObjects.Container {
   private powerUps: Phaser.GameObjects.Container
   private powerUpsTexts: Phaser.GameObjects.Text[] = []
   private braceText: Phaser.GameObjects.Text | undefined
+  private forceDestroyText: Phaser.GameObjects.Text | undefined
+  private powerUpPanel: Phaser.GameObjects.NineSlice
 
   constructor(scene: Phaser.Scene) {
     super(scene, 0, 0)
@@ -75,6 +77,26 @@ export class HUDView extends Phaser.GameObjects.Container {
     this.add(this.powerUps)
     this.energyText.setAbove(energyIcon)
 
+    this.powerUpPanel = scene.add
+      .nineslice(
+        0,
+        0,
+        'text-back',
+        undefined,
+        HUD_PANEL_W,
+        HUD_PANEL_H,
+        HUD_PANEL_SIDE_INSET,
+        HUD_PANEL_SIDE_INSET,
+        HUD_PANEL_EDGE_INSET,
+        HUD_PANEL_EDGE_INSET,
+      )
+      .setOrigin(0, 0)
+      .setTint(0xBBBBBB)
+    this.powerUps.add(this.powerUpPanel)
+    this.powerUpPanel.setVisible(false) // only show the panel when we have at least one power-up to list
+    this.add(panel)
+
+
     this.setPosition(HUD_PANEL_X, HUD_PANEL_Y)
   }
 
@@ -87,13 +109,43 @@ export class HUDView extends Phaser.GameObjects.Container {
       if (this.braceText === undefined) {
         this.braceText = this.addPowerUp()
       }
+      this.braceText.setVisible(true)
       this.braceText.setText(`Brace: ${state.braceCharges}`)
     } else {
       if (this.braceText !== undefined) {
-        this.powerUps.remove(this.braceText, true)
-        this.braceText.destroy()
-        this.braceText = undefined
+        this.braceText.setVisible(false)
       }
+    }
+    if (state.pendingForceDestroy > 0) {
+      if (this.forceDestroyText === undefined) {
+        this.forceDestroyText = this.addPowerUp()
+      }
+      this.forceDestroyText.setVisible(true)
+      this.forceDestroyText.setText(`Force Destroy: ${state.pendingForceDestroy}`)
+    } else {
+      if (this.forceDestroyText !== undefined) {
+        this.forceDestroyText.setVisible(false)
+      }
+    }
+    let minX: number | undefined = undefined
+    let maxX: number | undefined = undefined
+    let hasPowerUps: boolean = false
+    for (const powerUpText of this.powerUpsTexts) {
+      if (powerUpText.visible) {
+        hasPowerUps = true
+        if (minX === undefined || powerUpText.x < minX) {
+          minX = powerUpText.x
+        }
+        if (maxX === undefined || powerUpText.x + powerUpText.width > maxX) {
+          maxX = powerUpText.x + powerUpText.width
+        } 
+      }
+    }
+    this.powerUps.setVisible(hasPowerUps)
+    this.powerUpPanel.setVisible(hasPowerUps)
+    if (minX !== undefined && maxX !== undefined) {
+      this.powerUpPanel.setPosition(minX - 15, -HUD_PANEL_H / 2)
+      this.powerUpPanel.setSize(maxX - minX + 30, HUD_PANEL_H)
     }
   }
 
@@ -109,7 +161,7 @@ export class HUDView extends Phaser.GameObjects.Container {
         x += this.powerUpsTexts[Idx]?.width ?? 0
         x += 10
     }
-    newText.setPosition(x, HUD_PANEL_H / 2)
+    newText.setPosition(x, 0)
     this.powerUpsTexts.push(newText)
     return newText
   }
