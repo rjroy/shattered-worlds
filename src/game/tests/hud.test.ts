@@ -57,7 +57,7 @@ interface FakeHUDView {
   hpText: FakeText
   actText: FakeText
   energyText: FakeText
-  powerUpsTexts: FakeText[]
+  powerUpIndicators: []
   powerUps: FakeDisplayObject
   powerUpPanel: FakeDisplayObject
   update: HUDView['update']
@@ -73,7 +73,7 @@ function makeFakeHUDView(): {
     hpText: makeFakeText(),
     actText: makeFakeText(),
     energyText,
-    powerUpsTexts: [],
+    powerUpIndicators: [],
     powerUps: makeFakeDisplayObject(),
     powerUpPanel: makeFakeDisplayObject(),
   })

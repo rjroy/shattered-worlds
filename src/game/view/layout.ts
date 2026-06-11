@@ -53,6 +53,12 @@ export const HUD_LAYOUT = {
   },
   energyIconSize: 28,
   energyIconOffsetX: 9,
+  powerUps: {
+    iconSize: 32,
+    countGap: 4,
+    itemGap: 12,
+    panelPadX: 12,
+  },
 } as const
 
 export const PILE_LAYOUT = {
