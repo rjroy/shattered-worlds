@@ -116,21 +116,21 @@
       {
         "cards": [
           { "templateId": "Tremors", "count": 2 },
-          { "templateId": "Gridlock", "count": 2 },
-          { "templateId": "Ash Fall", "count": 2 }
+          { "templateId": "Gridlock", "count": 4 },
+          { "templateId": "Ash Fall", "count": 4 }
         ]
       },
       {
         "cards": [
-          { "templateId": "Gridlock", "count": 2 },
-          { "templateId": "Lava Flow", "count": 3 },
-          { "templateId": "Find a Vehicle", "count": 1 }
+          { "templateId": "Gridlock", "count": 3 },
+          { "templateId": "Lava Flow", "count": 5 },
+          { "templateId": "Find a Vehicle", "count": 2 }
         ]
       },
       {
         "cards": [
-          { "templateId": "Find a Vehicle", "count": 1 },
-          { "templateId": "Lava Flow", "count": 3 },
+          { "templateId": "Find a Vehicle", "count": 2 },
+          { "templateId": "Lava Flow", "count": 6 },
           { "templateId": "Gridlock", "count": 1 },
           { "templateId": "The Walker", "count": 1 }
         ]

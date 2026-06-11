@@ -171,25 +171,25 @@
     "acts": [
       {
         "cards": [
-          { "templateId": "Strange Sounds", "count": 2 },
-          { "templateId": "Rubble", "count": 1 },
-          { "templateId": "Screams", "count": 2 }
+          { "templateId": "Strange Sounds", "count": 3 },
+          { "templateId": "Rubble", "count": 4 },
+          { "templateId": "Screams", "count": 3 }
         ]
       },
       {
         "cards": [
           { "templateId": "Rubble", "count": 2 },
-          { "templateId": "Zombie", "count": 2 },
-          { "templateId": "Corpse", "count": 2 },
-          { "templateId": "Find Baseball Bat", "count": 1 }
+          { "templateId": "Zombie", "count": 3 },
+          { "templateId": "Corpse", "count": 3 },
+          { "templateId": "Find Baseball Bat", "count": 2 }
         ]
       },
       {
         "cards": [
           { "templateId": "Find Shotgun", "count": 1 },
           { "templateId": "Zombie", "count": 4 },
-          { "templateId": "Corpse", "count": 1 },
-          { "templateId": "Echoing Aisles", "count": 1 },
+          { "templateId": "Corpse", "count": 2 },
+          { "templateId": "Echoing Aisles", "count": 2 },
           { "templateId": "The Walker", "count": 1 }
         ]
       }

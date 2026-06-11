@@ -93,7 +93,7 @@
     "acts": [
       {
         "cards": [
-          { "templateId": "Shadow Overhead", "count": 2 },
+          { "templateId": "Shadow Overhead", "count": 5 },
           { "templateId": "Sliding Debris", "count": 2 },
           { "templateId": "Groaning Girders", "count": 2 },
           { "templateId": "Gripping Talon", "count": 1 }
@@ -101,15 +101,15 @@
       },
       {
         "cards": [
-          { "templateId": "Sliding Debris", "count": 2 },
-          { "templateId": "Gripping Talon", "count": 2 },
-          { "templateId": "Find Fire Axe", "count": 1 }
+          { "templateId": "Sliding Debris", "count": 4 },
+          { "templateId": "Gripping Talon", "count": 4 },
+          { "templateId": "Find Fire Axe", "count": 2 }
         ]
       },
       {
         "cards": [
           { "templateId": "Find Fire Axe", "count": 1 },
-          { "templateId": "Gripping Talon", "count": 4 },
+          { "templateId": "Gripping Talon", "count": 8 },
           { "templateId": "The Walker", "count": 1 }
         ]
       }
