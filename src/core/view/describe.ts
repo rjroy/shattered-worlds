@@ -37,11 +37,13 @@ export function describeEffect(effect: CardEffect): string[] {
       return [`Gain ${effect.amount} Energy`]
     case 'ReturnWorldCards':
       return [describeReturn(effect.min, effect.max)]
-    case 'DestroyCardInHand':
-      return [
-        effect.max == 1 ? `Destroy a card in hand` : `Destroy ${effect.min}–${effect.max} cards in hand`, 
-        (effect.min == 0 && effect.max == 1) ? '(optional)' : ``
+    case 'DestroyCardInHand': {
+      const lines = [
+        effect.max == 1 ? 'Destroy a card in hand' : `Destroy ${effect.min}–${effect.max} cards in hand`,
       ]
+      if (effect.min == 0 && effect.max == 1) lines.push('(optional)')
+      return lines
+    }
     case 'DiscardThenDraw':
       return [`Discard a card, then draw ${effect.player}`]
     case 'AddCard':

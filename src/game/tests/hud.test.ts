@@ -13,15 +13,43 @@ import type { GameState } from '../../core/index'
 
 interface FakeText {
   text: string
+  visible: boolean
+  x: number
+  width: number
   setText(content: string): void
+  setVisible(visible: boolean): void
 }
 
 function makeFakeText(): FakeText {
   return {
     text: '',
+    visible: true,
+    x: 0,
+    width: 0,
     setText(content: string): void {
       this.text = content
     },
+    setVisible(visible: boolean): void {
+      this.visible = visible
+    },
+  }
+}
+
+interface FakeDisplayObject {
+  visible: boolean
+  setVisible(visible: boolean): void
+  setPosition(x: number, y: number): void
+  setSize(width: number, height: number): void
+}
+
+function makeFakeDisplayObject(): FakeDisplayObject {
+  return {
+    visible: true,
+    setVisible(visible: boolean): void {
+      this.visible = visible
+    },
+    setPosition(): void {},
+    setSize(): void {},
   }
 }
 
@@ -29,6 +57,9 @@ interface FakeHUDView {
   hpText: FakeText
   actText: FakeText
   energyText: FakeText
+  powerUpsTexts: FakeText[]
+  powerUps: FakeDisplayObject
+  powerUpPanel: FakeDisplayObject
   update: HUDView['update']
 }
 
@@ -42,6 +73,9 @@ function makeFakeHUDView(): {
     hpText: makeFakeText(),
     actText: makeFakeText(),
     energyText,
+    powerUpsTexts: [],
+    powerUps: makeFakeDisplayObject(),
+    powerUpPanel: makeFakeDisplayObject(),
   })
   return { view, energyText }
 }

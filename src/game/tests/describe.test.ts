@@ -73,7 +73,6 @@ describe('describeEffect', () => {
     expect(describeEffect({ kind: 'DestroyCardInHand', min: 0, max: 1 })).toEqual([
       'Destroy a card in hand',
       '(optional)',
-      '',
     ])
     expect(describeEffect({ kind: 'DiscardThenDraw', player: 2 })).toEqual([
       'Discard a card, then draw 2',

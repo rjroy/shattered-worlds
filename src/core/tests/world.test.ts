@@ -8,20 +8,20 @@ import { catalog, worldData } from './testFixture'
 // ---------------------------------------------------------------------------
 
 describe('Act 1 composition', () => {
-  it('worldDraw + hand world cards total 5 after opening deal', () => {
+  it('worldDraw + hand world cards total 10 after opening deal', () => {
     const state = createWorld(catalog, worldData, 42)
     const handWorldCount = state.hand.filter((c) => c.kind === 'world').length
-    expect(state.worldDraw.length + handWorldCount).toBe(5)
+    expect(state.worldDraw.length + handWorldCount).toBe(10)
   })
 
-  it('worldDraw + hand world cards contain 2 Strange Sounds, 1 Rubble, 2 Screams', () => {
+  it('worldDraw + hand world cards contain 3 Strange Sounds, 4 Rubble, 3 Screams', () => {
     const state = createWorld(catalog, worldData, 42)
     const handWorldCards = state.hand.filter((c) => c.kind === 'world')
     const allAct1 = [...state.worldDraw, ...handWorldCards]
     const names = allAct1.map((c) => c.name)
-    expect(names.filter((n) => n === 'Strange Sounds')).toHaveLength(2)
-    expect(names.filter((n) => n === 'Rubble')).toHaveLength(1)
-    expect(names.filter((n) => n === 'Screams')).toHaveLength(2)
+    expect(names.filter((n) => n === 'Strange Sounds')).toHaveLength(3)
+    expect(names.filter((n) => n === 'Rubble')).toHaveLength(4)
+    expect(names.filter((n) => n === 'Screams')).toHaveLength(3)
   })
 })
 
@@ -35,30 +35,30 @@ describe('act queuing', () => {
     expect(state.acts).toHaveLength(2)
   })
 
-  it('acts[0] has 7 cards: Rubble×2, Zombie×2, Corpse×2, Find Baseball Bat×1', () => {
+  it('acts[0] has 10 cards: Rubble×2, Zombie×3, Corpse×3, Find Baseball Bat×2', () => {
     const state = createWorld(catalog, worldData, 42)
     const act2 = state.acts[0]
     if (act2 === undefined) throw new Error('acts[0] missing')
 
-    expect(act2).toHaveLength(7)
+    expect(act2).toHaveLength(10)
     const names = act2.map((c) => c.name)
     expect(names.filter((n) => n === 'Rubble')).toHaveLength(2)
-    expect(names.filter((n) => n === 'Zombie')).toHaveLength(2)
-    expect(names.filter((n) => n === 'Corpse')).toHaveLength(2)
-    expect(names.filter((n) => n === 'Find Baseball Bat')).toHaveLength(1)
+    expect(names.filter((n) => n === 'Zombie')).toHaveLength(3)
+    expect(names.filter((n) => n === 'Corpse')).toHaveLength(3)
+    expect(names.filter((n) => n === 'Find Baseball Bat')).toHaveLength(2)
   })
 
-  it('acts[1] has 8 cards: Find Shotgun×1, Zombie×4, Corpse×1, Echoing Aisles×1, The Walker×1', () => {
+  it('acts[1] has 10 cards: Find Shotgun×1, Zombie×4, Corpse×2, Echoing Aisles×2, The Walker×1', () => {
     const state = createWorld(catalog, worldData, 42)
     const act3 = state.acts[1]
     if (act3 === undefined) throw new Error('acts[1] missing')
 
-    expect(act3).toHaveLength(8)
+    expect(act3).toHaveLength(10)
     const names = act3.map((c) => c.name)
     expect(names.filter((n) => n === 'Find Shotgun')).toHaveLength(1)
     expect(names.filter((n) => n === 'Zombie')).toHaveLength(4)
-    expect(names.filter((n) => n === 'Corpse')).toHaveLength(1)
-    expect(names.filter((n) => n === 'Echoing Aisles')).toHaveLength(1)
+    expect(names.filter((n) => n === 'Corpse')).toHaveLength(2)
+    expect(names.filter((n) => n === 'Echoing Aisles')).toHaveLength(2)
     expect(names.filter((n) => n === 'The Walker')).toHaveLength(1)
   })
 })
@@ -138,7 +138,7 @@ describe('determinism', () => {
 // ---------------------------------------------------------------------------
 
 describe('unique ids', () => {
-  it('all 30 card ids across all piles and hand are unique', () => {
+  it('all 40 card ids across all piles and hand are unique', () => {
     const state = createWorld(catalog, worldData, 42)
 
     const act2 = state.acts[0] ?? []
@@ -148,9 +148,9 @@ describe('unique ids', () => {
     const allCards = [...state.hand, ...state.playerDraw, ...state.worldDraw, ...act2, ...act3]
     const ids = allCards.map((c) => c.id)
 
-    // 10 starter + 5 act1 + 7 act2 + 8 act3 = 30 total
-    expect(ids).toHaveLength(30)
-    expect(new Set(ids).size).toBe(30)
+    // 10 starter + 10 act1 + 10 act2 + 10 act3 = 40 total
+    expect(ids).toHaveLength(40)
+    expect(new Set(ids).size).toBe(40)
   })
 })
 
