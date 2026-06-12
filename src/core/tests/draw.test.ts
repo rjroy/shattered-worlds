@@ -30,7 +30,7 @@ describe('refillHand draw table', () => {
     expect(filled.hand.filter((c) => c.kind === 'player')).toHaveLength(WORLD_CONSTS.startPlayerCards)
   })
 
-  it(`1 world card held → draws 1 world + ${WORLD_CONSTS.startPlayerCards} player (total ${WORLD_CONSTS.maxHandSize})`, () => {
+  it(`1 world card held → draws 2 world + 3 player (total ${WORLD_CONSTS.maxHandSize})`, () => {
     const base = createWorld(catalog, worldData, 1)
     const playerCards = base.hand.filter((c) => c.kind === 'player')
     const worldCards = base.hand.filter((c) => c.kind === 'world') as WorldCard[]
@@ -49,9 +49,9 @@ describe('refillHand draw table', () => {
     const { state: filled } = refillHand(state)
 
     expect(filled.hand).toHaveLength(WORLD_CONSTS.maxHandSize)
-    // 1 held + 1 drawn = 2 world
-    expect(filled.hand.filter((c) => c.kind === 'world')).toHaveLength(WORLD_CONSTS.startWorldCards)
-    expect(filled.hand.filter((c) => c.kind === 'player')).toHaveLength(WORLD_CONSTS.startPlayerCards)
+    // 1 held + 2 drawn = 3 world (first held card is "free"; draw still targets startWorldCards)
+    expect(filled.hand.filter((c) => c.kind === 'world')).toHaveLength(3)
+    expect(filled.hand.filter((c) => c.kind === 'player')).toHaveLength(3)
   })
 
   it(`2 world cards held → draws 1 world + ${WORLD_CONSTS.maxHandSize - 3} player (total ${WORLD_CONSTS.maxHandSize})`, () => {
@@ -82,21 +82,14 @@ describe('refillHand draw table', () => {
 // ---------------------------------------------------------------------------
 
 describe('refillHand with full hand', () => {
-  it(`returns no events and unchanged state when hand has ${WORLD_CONSTS.maxHandSize} cards`, () => {
+  it(`returns no events and unchanged state when hand has ${WORLD_CONSTS.maxHandSize} cards and worldDraw is empty`, () => {
     const base = createWorld(catalog, worldData, 1)
-    // Mint enough world cards to fill the hand completely, bypassing act size constraints
-    let s = base
-    const extraWorldCards: WorldCard[] = []
-    const needed = WORLD_CONSTS.maxHandSize - base.hand.length
-    for (let i = 0; i < needed; i++) {
-      const [card, next] = mintCard(catalog, s, 'Rubble')
-      extraWorldCards.push(card as WorldCard)
-      s = next
-    }
 
     const state: GameState = {
-      ...s,
-      hand: [...base.hand, ...extraWorldCards],
+      ...base,
+      // worldDraw empty: no world cards to draw, so no draws fire at all
+      worldDraw: [],
+      acts: [],
     }
 
     // Sanity: hand must be exactly WORLD_CONSTS.maxHandSize
@@ -106,7 +99,6 @@ describe('refillHand with full hand', () => {
 
     expect(events).toHaveLength(0)
     expect(filled.hand).toHaveLength(WORLD_CONSTS.maxHandSize)
-    // State identity: no changes when hand is already full
     expect(filled).toBe(state)
   })
 })

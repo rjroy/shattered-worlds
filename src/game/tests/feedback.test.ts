@@ -47,6 +47,7 @@ function hazard(over: Partial<WorldCard>): WorldCard {
     onDiscarded: { kind: 'None' },
     onCleared: { kind: 'None' },
     onEndOfTurn: { kind: 'None' },
+    onPartialClear: { kind: 'None' },
     ...over,
   }
 }

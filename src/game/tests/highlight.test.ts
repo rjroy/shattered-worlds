@@ -20,6 +20,7 @@ function world(id: string, discardable = false): WorldCard {
     onDiscarded: { kind: 'None' },
     onCleared: { kind: 'None' },
     onEndOfTurn: { kind: 'None' },
+    onPartialClear: { kind: 'None' },
   }
 }
 

@@ -46,6 +46,7 @@ function hazard(over: Partial<WorldCard>): WorldCard {
     onDiscarded: { kind: 'None' },
     onCleared: { kind: 'None' },
     onEndOfTurn: { kind: 'None' },
+    onPartialClear: { kind: 'None' },
     ...over,
   }
 }
@@ -91,7 +92,7 @@ describe('describeEffect', () => {
     expect(describeEffect({ kind: 'AddCard', template: 'Listen', dest: 'playerDiscard' })).toEqual([
       'Gain a Listen card',
     ])
-    expect(describeEffect({ kind: 'AddWorldCardToTop', template: 'Door' })).toEqual([
+    expect(describeEffect({ kind: 'AddWorldCardToDeck', template: 'Door' })).toEqual([
       '+Door to world deck',
     ])
     expect(describeEffect({ kind: 'AddThreatToWorldDeck' })).toEqual([
@@ -153,10 +154,8 @@ describe('describeEffect (hazard effect kinds)', () => {
     expect(describeEffect({ kind: 'SurviveWorld' })).toEqual(['you survive the world'])
   })
 
-  it('describes None as the prune line (REQ-MALL-1 — exact pinned text)', () => {
-    // World-card hooks never reach describeEffect with None (CardView guards
-    // on the kind), so this text only appears on player card faces (Spore).
-    expect(describeEffect({ kind: 'None' })).toEqual(['play to prune (leaves the run)'])
+  it('describes None as no effect', () => {
+    expect(describeEffect({ kind: 'None' })).toEqual(['no effect'])
   })
 })
 

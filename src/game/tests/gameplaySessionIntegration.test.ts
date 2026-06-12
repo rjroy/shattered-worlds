@@ -1,0 +1,164 @@
+import { describe, expect, it } from 'bun:test'
+
+import type { WorldData } from '../../core/index'
+import { catalog, worldData } from '../../core/tests/testFixture'
+import { createGameplaySession } from '../runtime/gameplaySession'
+import type { GameplayBatch, RunStreamItem } from '../runtime/gameplayEventStream'
+
+function createGuaranteedWinWorldData(): WorldData {
+  return {
+    worldId: 'req-events-win-world',
+    starterDeck: [{ templateId: 'Explore', count: 4 }],
+    deckComposition: {
+      acts: [
+        {
+          cards: [{ templateId: 'Door', count: 2 }],
+        },
+      ],
+    },
+  }
+}
+
+describe('gameplaySession integration', () => {
+  it('delivers one dispatch batch to multiple subscribers from the same session flow', () => {
+    const session = createGameplaySession(catalog, worldData, 42, {
+      makeSessionId: () => 'renderer-session',
+      clock: () => 1_000,
+    })
+    const rendererObserved: GameplayBatch[] = []
+    const secondObserved: GameplayBatch[] = []
+
+    session.subscribe((item) => {
+      if (item.kind === 'GameplayBatch') {
+        rendererObserved.push(item)
+      }
+    })
+    session.subscribe((item) => {
+      if (item.kind === 'GameplayBatch') {
+        secondObserved.push(item)
+      }
+    })
+
+    const resolution = session.dispatch({ type: 'EndTurn' })
+
+    expect(rendererObserved).toHaveLength(1)
+    expect(secondObserved).toHaveLength(1)
+    expect(rendererObserved[0]).toEqual(secondObserved[0])
+    expect(rendererObserved[0]).toEqual({
+      kind: 'GameplayBatch',
+      sessionId: 'renderer-session',
+      timestamp: 1_000,
+      action: { type: 'EndTurn' },
+      events: resolution.events,
+      state: resolution.state,
+    })
+    expect(session.state).toEqual(resolution.state)
+  })
+
+  it('gives initial subscribers identical full history from run start through terminal outcome', () => {
+    const firstHistory: RunStreamItem[] = []
+    const secondHistory: RunStreamItem[] = []
+    const session = createGameplaySession(catalog, worldData, 17, {
+      makeSessionId: () => 'shared-history',
+      clock: () => 2_000,
+      subscribers: [
+        (item) => firstHistory.push(item),
+        (item) => secondHistory.push(item),
+      ],
+    })
+
+    for (let turn = 0; turn < 4; turn += 1) {
+      session.dispatch({ type: 'EndTurn' })
+    }
+
+    expect(firstHistory).toEqual(secondHistory)
+    expect(firstHistory.map((item) => item.kind)).toEqual([
+      'RunStarted',
+      'GameplayBatch',
+      'GameplayBatch',
+      'GameplayBatch',
+      'GameplayBatch',
+      'RunEnded',
+    ])
+    expect(firstHistory[0]).toEqual({
+      kind: 'RunStarted',
+      sessionId: 'shared-history',
+      worldId: worldData.worldId,
+      seed: 17,
+      appliedModifiers: [],
+      timestamp: 2_000,
+    })
+    expect(firstHistory.at(-1)).toEqual({
+      kind: 'RunEnded',
+      sessionId: 'shared-history',
+      outcome: 'lost',
+      finalActIndex: session.state.actIndex,
+      timestamp: 2_000,
+    })
+    expect(firstHistory.every((item) => item.sessionId === 'shared-history')).toBe(true)
+  })
+
+  it('emits one winning RunEnded with the real terminal session identity and act index', () => {
+    const items: RunStreamItem[] = []
+    const session = createGameplaySession(catalog, createGuaranteedWinWorldData(), 42, {
+      makeSessionId: () => 'winning-history',
+      clock: () => 3_000,
+      subscribers: [(item) => items.push(item)],
+    })
+    const doorId = session.state.hand.find((card) => card.kind === 'world' && card.name === 'Door')?.id
+
+    expect(doorId).toBeDefined()
+    if (doorId === undefined) {
+      throw new Error('expected Door in opening hand')
+    }
+
+    for (let plays = 0; plays < 2; plays += 1) {
+      const exploreId = session.state.hand.find((card) => card.kind === 'player' && card.name === 'Explore')?.id
+
+      expect(exploreId).toBeDefined()
+      if (exploreId === undefined) {
+        throw new Error('expected Explore in opening hand')
+      }
+
+      session.dispatch({ type: 'PlayCard', cardId: exploreId, targetId: doorId })
+    }
+
+    expect(session.state.status).toBe('won')
+    expect(items.map((item) => item.kind)).toEqual([
+      'RunStarted',
+      'GameplayBatch',
+      'GameplayBatch',
+      'RunEnded',
+    ])
+
+    const runEndedItems = items.filter((item) => item.kind === 'RunEnded')
+
+    expect(runEndedItems).toEqual([
+      {
+        kind: 'RunEnded',
+        sessionId: 'winning-history',
+        outcome: 'won',
+        finalActIndex: session.state.actIndex,
+        timestamp: 3_000,
+      },
+    ])
+    expect(session.state.actIndex).toBe(0)
+  })
+
+  it('keeps TableScene on the observed runtime seam instead of raw createGame', async () => {
+    const source = await Bun.file(new URL('../scenes/TableScene.ts', import.meta.url)).text()
+
+    expect(source).toContain('private game_!: GameplaySession')
+    expect(source).toContain('this.game_ = this.runtime_.startSession(catalog, worldData, this.seed_)')
+    // Scene shutdown closes the run stream for sessions exited mid-run.
+    expect(source).toContain('this.game_.abandon()')
+    expect(source).not.toContain('createGame(')
+  })
+
+  it('boots the app with one shared runtime injected into TableScene', async () => {
+    const source = await Bun.file(new URL('../main.ts', import.meta.url)).text()
+
+    expect(source).toContain('createGameplayRuntime({ storage: statsStorage() })')
+    expect(source).toContain('new TableScene(gameplayRuntime)')
+  })
+})

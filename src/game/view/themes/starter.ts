@@ -25,6 +25,7 @@ export const STARTER: VisualTheme = {
     connectorReturn: 0x44aaff,     // cool blue return-to-deck action
     ringAccent: 0xb98aff,          // cost-ring fill, violet family
     targetGlow: 0xd0b3ff,          // bright violet hover-target glow
+    playableGlow: 0xffe066,        // gold selection  
     committedTarget: 0x4a3a6a,     // muted deep-violet "locked here" mark
   },
   backdrop: {

@@ -149,7 +149,7 @@ export function refillHand(state: GameState): { state: GameState; events: GameEv
   const allEvents: GameEvent[] = []
 
   const heldWorld = state.hand.filter((c) => c.kind === 'world').length
-  const room = WORLD_CONSTS.maxHandSize - state.hand.length
+  const room = WORLD_CONSTS.maxHandSize - heldWorld
 
   if (room === 0) {
     return { state, events: [] }
@@ -160,7 +160,9 @@ export function refillHand(state: GameState): { state: GameState; events: GameEv
   // collapses to 0 via the min(…, worldCardsRemaining) clip.
   const totalWorldRemaining = worldCardsRemaining(state)
   const worldToDraw = Math.min(
-    Math.max(1, WORLD_CONSTS.startWorldCards - heldWorld),
+    // Try and draw `startWorldCards`
+    // Reduce by 1 for each world card held beyond the first, so the first is "free" and encourages holding onto it.
+    Math.max(1, WORLD_CONSTS.startWorldCards - Math.max(0, heldWorld - 1)),
     room,
     totalWorldRemaining,
   )

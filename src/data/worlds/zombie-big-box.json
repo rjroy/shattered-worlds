@@ -10,7 +10,8 @@
       "discardable": true,
       "onDiscarded": { "kind": "None" },
       "onCleared": { "kind": "GainCard", "template": "Listen" },
-      "onEndOfTurn": { "kind": "None" }
+      "onPartialClear": { "kind": "None" },
+      "onEndOfTurn": { "kind": "DestroySelf" }
     },
     "Rubble": {
       "kind": "world",
@@ -21,7 +22,8 @@
       "discardable": true,
       "onDiscarded": { "kind": "SkipDrawNextTurn" },
       "onCleared": { "kind": "None" },
-      "onEndOfTurn": { "kind": "None" }
+      "onPartialClear": { "kind": "None" },
+      "onEndOfTurn": { "kind": "Damage", "amount": 1 }
     },
     "Screams": {
       "kind": "world",
@@ -32,7 +34,8 @@
       "discardable": true,
       "onDiscarded": { "kind": "GainCard", "template": "Panic" },
       "onCleared": { "kind": "GainCard", "template": "Regroup" },
-      "onEndOfTurn": { "kind": "None" }
+      "onPartialClear": { "kind": "None" },
+      "onEndOfTurn": { "kind": "DestroySelf" }
     },
     "Zombie": {
       "kind": "world",
@@ -43,11 +46,12 @@
       "discardable": true,
       "onDiscarded": { "kind": "Damage", "amount": 5 },
       "onCleared": { "kind": "GainEnergy", "amount": 1 },
+      "onPartialClear": { "kind": "Damage", "amount": 2 },
       "onEndOfTurn": {
         "kind": "Sequence",
         "steps": [
           { "kind": "Damage", "amount": 1 },
-          { "kind": "AddWorldCardToTop", "template": "Zombie" }
+          { "kind": "AddWorldCardToDeck", "template": "Zombie" }
         ]
       }
     },
@@ -56,20 +60,12 @@
       "name": "Find Baseball Bat",
       "insetKey": "zombie-inset-baseball",
       "cost": 2,
-      "keywords": [
-        "Hidden"
-      ],
+      "keywords": ["Hidden"],
       "discardable": true,
-      "onDiscarded": {
-        "kind": "None"
-      },
-      "onCleared": {
-        "kind": "GainCard",
-        "template": "Baseball Bat"
-      },
-      "onEndOfTurn": {
-        "kind": "None"
-      }
+      "onDiscarded": { "kind": "None" },
+      "onCleared": { "kind": "GainCard", "template": "Baseball Bat" },
+      "onPartialClear": { "kind": "None" },
+      "onEndOfTurn": { "kind": "None" }
     },
     "Corpse": {
       "kind": "world",
@@ -78,22 +74,14 @@
       "cost": 2,
       "keywords": [],
       "discardable": false,
-      "onDiscarded": {
-        "kind": "None"
-      },
-      "onCleared": {
-        "kind": "None"
-      },
+      "onDiscarded": { "kind": "None" },
+      "onCleared": { "kind": "None" },
+      "onPartialClear": { "kind": "None" },
       "onEndOfTurn": {
         "kind": "Sequence",
         "steps": [
-          {
-            "kind": "AddWorldCardToTop",
-            "template": "Zombie"
-          },
-          {
-            "kind": "DestroySelf"
-          }
+          { "kind": "AddWorldCardToDeck", "template": "Zombie", "bTop": true },
+          { "kind": "DestroySelf" }
         ]
       }
     },
@@ -106,6 +94,7 @@
       "discardable": true,
       "onDiscarded": { "kind": "None" },
       "onCleared": { "kind": "GainCard", "template": "Shotgun" },
+      "onPartialClear": { "kind": "None" },
       "onEndOfTurn": { "kind": "None" }
     },
     "Listen": {
@@ -126,18 +115,26 @@
       "kind": "player",
       "name": "Baseball Bat",
       "insetKey": "zombie-inset-baseball",
-      "effect": { "kind": "DealProgress", "base": 1, "bonus": { "tag": "Creature", "amount": 3 } }
+      "effect": {
+        "kind": "DealProgress",
+        "base": 1,
+        "bonus": { "tag": "Creature", "amount": 3 }
+      }
     },
     "Shotgun": {
       "kind": "player",
       "name": "Shotgun",
       "insetKey": "zombie-inset-shotgun",
-      "energyCost": 1,
+      "energyCost": 2,
       "effect": {
         "kind": "Sequence",
         "steps": [
-          { "kind": "DealProgress", "base": 4, "bonus": { "tag": "Creature", "amount": 2 } },
-          { "kind": "AddWorldCardToTop", "template": "Zombie" }
+          {
+            "kind": "DealProgressAll",
+            "base": 2,
+            "bonus": { "tag": "Creature", "amount": 2 }
+          },
+          { "kind": "AddWorldCardToDeck", "template": "Zombie" }
         ]
       }
     },
@@ -168,7 +165,17 @@
       "discardable": true,
       "onDiscarded": { "kind": "None" },
       "onCleared": { "kind": "GainCard", "template": "Shelf Sweep" },
-      "onEndOfTurn": { "kind": "None" }
+      "onPartialClear": {
+        "kind": "AddWorldCardToDeck",
+        "template": "Echoing Aisles"
+      },
+      "onEndOfTurn": {
+        "kind": "Sequence",
+        "steps": [
+          { "kind": "AddWorldCardToDeck", "template": "Zombie", "bTop": true },
+          { "kind": "AddWorldCardToDeck", "template": "Echoing Aisles" }
+        ]
+      }
     }
   },
   "deckComposition": {

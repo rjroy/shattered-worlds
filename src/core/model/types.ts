@@ -8,7 +8,7 @@ export type CardTemplateId = string
 
 export type Keyword = 'Hidden' | 'Creature' | 'Slow' | 'Spore'
 
-export type Dest = 'playerDiscard' | 'playerDrawTop' | 'worldDrawTop'
+export type Dest = 'playerDiscard' | 'playerDrawTop' | 'worldDraw' | 'worldDrawTop'
 
 export type CounterSpec =
   | { kind: 'KeywordInHand'; keyword: Keyword }
@@ -23,11 +23,12 @@ export type CardEffect =
   | { kind: 'DestroyCardInHand'; min: number; max: number }
   | { kind: 'DiscardThenDraw'; player: number }
   | { kind: 'AddCard'; template: CardTemplateId; dest: Dest }
-  | { kind: 'AddWorldCardToTop'; template: CardTemplateId }
+  | { kind: 'AddWorldCardToDeck'; template: CardTemplateId, bTop?: boolean }
   | { kind: 'AddThreatToWorldDeck' }
   | { kind: 'Modal'; branches: readonly CardEffect[] }
   | { kind: 'Sequence'; steps: readonly CardEffect[] }
   | { kind: 'Damage'; amount: number }
+  | { kind: 'DamageScaled'; base: number; per: CounterSpec; amount: number }
   | { kind: 'SkipDrawNextTurn' }
   | { kind: 'GainCard'; template: CardTemplateId }
   | { kind: 'AddPlayerCardToTop'; template: CardTemplateId }
@@ -82,6 +83,7 @@ export interface WorldCard {
   onDiscarded: CardEffect
   onCleared: CardEffect
   onEndOfTurn: CardEffect
+  onPartialClear: CardEffect
 }
 
 export type Card = PlayerCard | WorldCard
@@ -150,6 +152,7 @@ export type GameEvent =
   | { type: 'CardPlayed'; cardId: CardId }
   | { type: 'ProgressDealt'; hazardId: CardId; amount: number; hazardTurnTotal: number }
   | { type: 'HazardResolved'; hazardId: CardId }
+  | { type: 'HazardPartial'; hazardId: CardId }
   | { type: 'HazardDiscarded'; cardId: CardId }
   | { type: 'DamageDealt'; amount: number }
   | { type: 'DrawSkipped' }

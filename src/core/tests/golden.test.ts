@@ -296,6 +296,7 @@ describe('replay equivalence: Spore + DealProgressScaled', () => {
         ],
       },
       onEndOfTurn: { kind: 'None' },
+      onPartialClear: { kind: 'None' },
     },
   }
 

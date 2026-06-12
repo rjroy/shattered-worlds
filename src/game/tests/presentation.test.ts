@@ -57,6 +57,7 @@ const worldCard: WorldCard = {
   onDiscarded: { kind: 'None' },
   onCleared: { kind: 'None' },
   onEndOfTurn: { kind: 'None' },
+  onPartialClear: { kind: 'None' },
 }
 
 const activeThemeWithFront: VisualTheme = {

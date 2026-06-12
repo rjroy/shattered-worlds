@@ -8,17 +8,23 @@
       "energyCost": 1,
       "exhaust": true,
       "keywords": ["Spore"],
-      "effect": { "kind": "None" }
+      "effect": { 
+        "kind": "DamageScaled", 
+        "base": 0, 
+        "per": { "kind": "KeywordInHand", "keyword": "Spore" },
+        "amount": 1 
+      }
     },
     "Burst Planter": {
       "kind": "world",
       "name": "Burst Planter",
       "insetKey": "mall-inset-burst-planter",
       "cost": 1,
-      "keywords": [],
+      "keywords": ["Spore"],
       "discardable": true,
       "onDiscarded": { "kind": "GainCard", "template": "Spore" },
       "onCleared": { "kind": "None" },
+      "onPartialClear": { "kind": "None" },
       "onEndOfTurn": { "kind": "None" }
     },
     "Pollen Haze": {
@@ -26,10 +32,11 @@
       "name": "Pollen Haze",
       "insetKey": "mall-inset-pollen-haze",
       "cost": 2,
-      "keywords": [],
-      "discardable": true,
+      "keywords": ["Spore"],
+      "discardable": false,
       "onDiscarded": { "kind": "None" },
       "onCleared": { "kind": "None" },
+      "onPartialClear": { "kind": "None" },
       "onEndOfTurn": { "kind": "GainCard", "template": "Spore" }
     },
     "Kudzu Curtain": {
@@ -37,21 +44,23 @@
       "name": "Kudzu Curtain",
       "insetKey": "mall-inset-kudzu-curtain",
       "cost": 2,
-      "keywords": ["Slow"],
+      "keywords": ["Slow", "Spore"],
       "discardable": false,
       "onDiscarded": { "kind": "None" },
       "onCleared": { "kind": "None" },
-      "onEndOfTurn": { "kind": "None" }
+      "onPartialClear": { "kind": "GainCard", "template": "Spore" },
+      "onEndOfTurn": { "kind": "GainCard", "template": "Spore" }
     },
     "Something in the Atrium": {
       "kind": "world",
       "name": "Something in the Atrium",
       "insetKey": "mall-inset-something-in-the-atrium",
       "cost": 3,
-      "keywords": ["Creature"],
+      "keywords": ["Creature", "Slow"],
       "discardable": true,
       "onDiscarded": { "kind": "Damage", "amount": 3 },
-      "onCleared": { "kind": "GainEnergy", "amount": 1 },
+      "onCleared": { "kind": "None" },
+      "onPartialClear": { "kind": "Damage", "amount": 1 },
       "onEndOfTurn": { "kind": "Damage", "amount": 1 }
     },
     "Fountain Bloom": {
@@ -59,15 +68,16 @@
       "name": "Fountain Bloom",
       "insetKey": "mall-inset-fountain-bloom",
       "cost": 3,
-      "keywords": [],
-      "discardable": true,
+      "keywords": ["Spore"],
+      "discardable": false,
       "onDiscarded": { "kind": "None" },
       "onCleared": { "kind": "None" },
+      "onPartialClear": { "kind": "GainCard", "template": "Spore" },
       "onEndOfTurn": {
         "kind": "Sequence",
         "steps": [
           { "kind": "AddPlayerCardToTop", "template": "Spore" },
-          { "kind": "AddWorldCardToTop", "template": "Burst Planter" }
+          { "kind": "AddWorldCardToDeck", "template": "Burst Planter", "bTop": true }
         ]
       }
     },
@@ -75,7 +85,7 @@
       "kind": "world",
       "name": "The Garden Center",
       "insetKey": "mall-inset-garden-center",
-      "cost": 2,
+      "cost": 6,
       "keywords": ["Hidden"],
       "discardable": true,
       "onDiscarded": { "kind": "None" },
@@ -88,6 +98,7 @@
           { "kind": "GainCard", "template": "Bloom" }
         ]
       },
+      "onPartialClear": { "kind": "None" },
       "onEndOfTurn": { "kind": "None" }
     },
     "Pruning Shears": {
@@ -108,7 +119,7 @@
       "name": "Machete",
       "insetKey": "mall-inset-machete",
       "energyCost": 1,
-      "effect": { "kind": "DealProgress", "base": 1, "bonus": { "tag": "Creature", "amount": 3 } }
+      "effect": { "kind": "DealProgress", "base": 2, "bonus": { "tag": "Creature", "amount": 2 } }
     },
     "Weed Killer": {
       "kind": "player",
@@ -122,7 +133,7 @@
       "kind": "player",
       "name": "Bloom",
       "insetKey": "mall-inset-bloom",
-      "energyCost": 1,
+      "energyCost": 0,
       "effect": {
         "kind": "DealProgressScaled",
         "base": 1,

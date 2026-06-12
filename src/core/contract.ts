@@ -4,6 +4,7 @@ export type {
   PlayerCard,
   WorldCard,
   Action,
+  GameEvent,
   GameState,
   TargetSpec,
   AvailableActions,

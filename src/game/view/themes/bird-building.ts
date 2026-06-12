@@ -25,6 +25,7 @@ export const BIRD_BUILDING_THEME: VisualTheme = {
     connectorReturn: 0xaa88ff,     // cool violet return, distinct from blue target
     ringAccent: 0x44aaff,          // cost-ring fill, blue family
     targetGlow: 0x88cfff,          // bright sky hover-target glow
+    playableGlow: 0xffe066,      
     committedTarget: 0x274a6a,     // muted deep-blue "locked here" mark
   },
   backdrop: {

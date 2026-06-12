@@ -76,6 +76,12 @@ export function dealProgress(
     current = rewardResult.state
     events.push(...rewardResult.events)
     events.push({ type: 'HazardResolved', hazardId })
+  } else {
+    // Hazard not yet resolved
+    const partialResult = applyEffect(catalog, current, hazard.onPartialClear, undefined, hazardId)
+    current = partialResult.state
+    events.push(...partialResult.events)
+    events.push({ type: 'HazardPartial', hazardId })
   }
 
   return { state: current, events }
@@ -85,6 +91,9 @@ export function resolveCounter(state: GameState, spec: CounterSpec): number {
   switch (spec.kind) {
     case 'KeywordInHand':
       return state.hand.filter((card) => card.keywords.includes(spec.keyword)).length
+      
+    default:
+      return 0
   }
 }
 
@@ -118,6 +127,15 @@ export function gainCard(
         playerDraw: [card, ...nextState.playerDraw],
       }
       break
+    case 'worldDraw': {
+      const shuffled = shuffle([card as WorldCard, ...nextState.worldDraw], nextState.rng)
+      current = {
+        ...nextState,
+        worldDraw: shuffled[0],
+        rng: shuffled[1],
+      }
+      break
+    }
     case 'worldDrawTop':
       // Only world cards belong in worldDraw; callers are responsible for
       // only routing world-template ids here.
@@ -329,14 +347,21 @@ export function applyEffect(
         playerDiscard: [discardedCard, ...state.playerDiscard],
       }
 
-      return drawPlayer(afterDiscard, effect.player)
+      const drawResult = drawPlayer(afterDiscard, effect.player)
+      return {
+        state: drawResult.state,
+        events: [
+          { type: 'CardsDiscarded', cardIds: [play.discardId] },
+          ...drawResult.events,
+        ],
+      }
     }
 
     case 'AddCard':
       return gainCard(catalog, state, effect.template, effect.dest)
 
-    case 'AddWorldCardToTop':
-      return gainCard(catalog, state, effect.template, 'worldDrawTop')
+    case 'AddWorldCardToDeck':
+      return gainCard(catalog, state, effect.template, effect.bTop ? 'worldDrawTop' : 'worldDraw')
 
     case 'AddThreatToWorldDeck': {
       const template = WORLD_THREAT_BY_WORLD_ID[state.worldId]
@@ -367,6 +392,11 @@ export function applyEffect(
 
     case 'Damage':
       return damage(state, effect.amount)
+
+    case 'DamageScaled': {
+      const amount = effect.base + effect.amount * resolveCounter(state, effect.per)
+      return damage(state, amount)
+    }
 
     case 'SkipDrawNextTurn': {
       // Idempotent — setting to true when already true is a no-op.
@@ -412,7 +442,7 @@ export function applyEffect(
 
     case 'DealProgressAll': {
       // Snapshot world cards in hand at resolution time — mid-sweep spawned
-      // cards are excluded (they land in worldDraw via AddWorldCardToTop, not hand).
+      // cards are excluded (they land in worldDraw via AddWorldCardToDeck, not hand).
       const snapshot = state.hand.filter((c): c is WorldCard => c.kind === 'world')
       let current = state
       const events: GameEvent[] = []

@@ -121,7 +121,7 @@ function handleEndTurn(catalog: CardCatalog, state: GameState): ReduceResult {
 
   // Fire onEndOfTurn for each world card in hand. The loop iterates a snapshot
   // of the world cards captured at loop entry (state.hand.filter(...)), so a
-  // card spawned during the loop (e.g. AddWorldCardToTop) is NOT re-processed
+  // card spawned during the loop (e.g. AddWorldCardToDeck) is NOT re-processed
   // this turn — this is what prevents a same-turn transform chain.
   let current = state
   for (const card of state.hand.filter((c): c is WorldCard => c.kind === 'world')) {
@@ -193,7 +193,7 @@ function handleEndTurn(catalog: CardCatalog, state: GameState): ReduceResult {
   }
 
   // Livelock guard B: world deck exhausted and no player card in any zone can
-  // introduce world cards (AddWorldCardToTop). With proper deck recycling, the
+  // introduce world cards (AddWorldCardToDeck). With proper deck recycling, the
   // player pile never empties on its own — but if there are no world cards
   // anywhere and no way to create them, the game loops forever (no hazards to
   // deal progress to, discard for damage, or win against).
@@ -201,7 +201,7 @@ function handleEndTurn(catalog: CardCatalog, state: GameState): ReduceResult {
   // The Walker in hand is a world card and keeps the check false; Summon Door
   // anywhere in the player zones is the only escape hatch.
   //
-  // REQ-13: Guard B checks for AddWorldCardToTop across zones, unaffected by energy.
+  // REQ-13: Guard B checks for AddWorldCardToDeck across zones, unaffected by energy.
   if (afterRefill.status === 'playing') {
     const noWorldAnywhere =
       afterRefill.worldDraw.length === 0 &&
@@ -215,7 +215,7 @@ function handleEndTurn(catalog: CardCatalog, state: GameState): ReduceResult {
         ...afterRefill.hand,
       ]
       const canIntroduceWorld = allPlayerCards.some(
-        (c) => c.kind === 'player' && c.effect.kind === 'AddWorldCardToTop',
+        (c) => c.kind === 'player' && c.effect.kind === 'AddWorldCardToDeck',
       )
       if (!canIntroduceWorld) {
         const lostState: GameState = { ...afterRefill, status: 'lost' }

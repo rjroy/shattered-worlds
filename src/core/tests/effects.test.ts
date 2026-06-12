@@ -534,7 +534,7 @@ describe('applyEffect DestroySelf', () => {
     const sequence = {
       kind: 'Sequence' as const,
       steps: [
-        { kind: 'AddWorldCardToTop' as const, template: 'Zombie' },
+        { kind: 'AddWorldCardToDeck' as const, template: 'Zombie', bTop: true },
         { kind: 'DestroySelf' as const },
       ],
     }
@@ -724,7 +724,7 @@ function exilable(id: string): WorldCard {
   return {
     kind: 'world', id, name: `Card-${id}`, insetKey: undefined,
     cost: 1, keywords: [], discardable: true, canExile: true,
-    onDiscarded: { kind: 'None' }, onCleared: { kind: 'None' }, onEndOfTurn: { kind: 'None' },
+    onDiscarded: { kind: 'None' }, onCleared: { kind: 'None' }, onEndOfTurn: { kind: 'None' }, onPartialClear: { kind: 'None' },
   }
 }
 

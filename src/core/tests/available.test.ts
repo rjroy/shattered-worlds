@@ -267,12 +267,12 @@ describe('legalTargets Sprint (modal)', () => {
     const slowCard: WorldCard = {
       kind: 'world', id: 'slow-1', name: 'Slow Hazard', insetKey: undefined,
       cost: 1, keywords: ['Slow'], discardable: false, canExile: true,
-      onDiscarded: { kind: 'None' }, onCleared: { kind: 'None' }, onEndOfTurn: { kind: 'None' },
+      onDiscarded: { kind: 'None' }, onCleared: { kind: 'None' }, onEndOfTurn: { kind: 'None' }, onPartialClear: { kind: 'None' },
     }
     const otherCard: WorldCard = {
       kind: 'world', id: 'other-1', name: 'Other Hazard', insetKey: undefined,
       cost: 1, keywords: [], discardable: false, canExile: true,
-      onDiscarded: { kind: 'None' }, onCleared: { kind: 'None' }, onEndOfTurn: { kind: 'None' },
+      onDiscarded: { kind: 'None' }, onCleared: { kind: 'None' }, onEndOfTurn: { kind: 'None' }, onPartialClear: { kind: 'None' },
     }
     const state = { ...s1, hand: [sprint, slowCard, otherCard], energy: 1 }
 
@@ -435,7 +435,7 @@ function makeExilable(id: string): WorldCard {
   return {
     kind: 'world', id, name: `Card-${id}`, insetKey: undefined,
     cost: 1, keywords: [], discardable: true, canExile: true,
-    onDiscarded: { kind: 'None' }, onCleared: { kind: 'None' }, onEndOfTurn: { kind: 'None' },
+    onDiscarded: { kind: 'None' }, onCleared: { kind: 'None' }, onEndOfTurn: { kind: 'None' }, onPartialClear: { kind: 'None' },
   }
 }
 

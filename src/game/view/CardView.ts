@@ -125,7 +125,8 @@ function addCardText(
 
 /**
  * Add a bottom-anchored world-card effect block (onEndOfTurn / onDiscarded /
- * onCleared), each line carrying `prefix`. Skips effects with no content.
+ * onCleared, onPartialClear), each line carrying `prefix`.
+ * Skips effects with no content.
  */
 function addEffectBlock(
   scene: Phaser.Scene,
@@ -299,7 +300,9 @@ export class CardView extends Phaser.GameObjects.Container {
       currY = onEnd.reduce((highest, text) => Math.max(highest, text.y + text.height + effectLineSpacing), currY)
       const onDiscarded = addEffectBlock(scene, this, worldCard.onDiscarded, 'If discarded: ', currY, TEXT.textPenalty)
       currY = onDiscarded.reduce((highest, text) => Math.max(highest, text.y + text.height + effectLineSpacing), currY)
-      addEffectBlock(scene, this, worldCard.onCleared, 'Clear it: ', currY, TEXT.textReward)
+      const onCleared = addEffectBlock(scene, this, worldCard.onCleared, 'Clear it: ', currY, TEXT.textReward)
+      currY = onCleared.reduce((highest, text) => Math.max(highest, text.y + text.height + effectLineSpacing), currY)
+      addEffectBlock(scene, this, worldCard.onPartialClear, 'Partial clear: ', currY, TEXT.textPenalty)
 
       // Discard indicator.
       if (worldCard.discardable) {

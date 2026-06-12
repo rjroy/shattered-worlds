@@ -39,6 +39,7 @@ export interface WorldCardTemplate extends BasicCardTemplate {
   onDiscarded: CardEffect
   onCleared: CardEffect
   onEndOfTurn: CardEffect
+  onPartialClear: CardEffect
 }
 
 export type CardTemplate = PlayerCardTemplate | WorldCardTemplate
@@ -90,6 +91,7 @@ export function mintCard(
     onDiscarded: template.onDiscarded,
     onCleared: template.onCleared,
     onEndOfTurn: template.onEndOfTurn,
+    onPartialClear: template.onPartialClear,
   }
   return [card, next]
 }

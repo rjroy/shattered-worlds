@@ -10,7 +10,8 @@
       "discardable": true,
       "onDiscarded": { "kind": "None" },
       "onCleared": { "kind": "GainCard", "template": "Push Through" },
-      "onEndOfTurn": { "kind": "None" }
+      "onPartialClear": { "kind": "None" },
+      "onEndOfTurn": { "kind": "DestroySelf" }
     },
     "Gridlock": {
       "kind": "world",
@@ -21,7 +22,8 @@
       "discardable": false,
       "onDiscarded": { "kind": "None" },
       "onCleared": { "kind": "GainCard", "template": "Nitro" },
-      "onEndOfTurn": { "kind": "AddWorldCardToTop", "template": "Gridlock" }
+      "onPartialClear": { "kind": "None" },
+      "onEndOfTurn": { "kind": "AddWorldCardToDeck", "template": "Gridlock" }
     },
     "Ash Fall": {
       "kind": "world",
@@ -32,6 +34,7 @@
       "discardable": true,
       "onDiscarded": { "kind": "None" },
       "onCleared": { "kind": "GainCard", "template": "Ditch Gear" },
+      "onPartialClear": { "kind": "None" },
       "onEndOfTurn": { "kind": "GainCard", "template": "Panic" }
     },
     "Lava Flow": {
@@ -43,11 +46,12 @@
       "discardable": true,
       "onDiscarded": { "kind": "Damage", "amount": 5 },
       "onCleared": { "kind": "None" },
+      "onPartialClear": { "kind": "None" },
       "onEndOfTurn": {
         "kind": "Sequence",
         "steps": [
           { "kind": "ForceDestroy", "amount": 1 },
-          { "kind": "AddWorldCardToTop", "template": "Ash Fall" }
+          { "kind": "AddWorldCardToDeck", "template": "Ash Fall" }
         ]
       }
     },
@@ -60,6 +64,7 @@
       "discardable": true,
       "onDiscarded": { "kind": "None" },
       "onCleared": { "kind": "GainCard", "template": "Floor It" },
+      "onPartialClear": { "kind": "None" },
       "onEndOfTurn": { "kind": "None" }
     },
     "Push Through": {

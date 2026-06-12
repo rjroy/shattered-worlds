@@ -17,7 +17,7 @@ const worldIds = Object.keys(worldManifest)
 function templateRefs(effect: CardEffect): string[] {
   switch (effect.kind) {
     case 'AddCard':
-    case 'AddWorldCardToTop':
+    case 'AddWorldCardToDeck':
     case 'AddPlayerCardToTop':
     case 'GainCard':
       return [effect.template]
@@ -104,7 +104,7 @@ describe('zombie-big-box Corpse card', () => {
 
     // The Sequence spawns a Zombie then destroys itself.
     const kinds = eot.steps.map((s) => s.kind)
-    expect(kinds).toContain('AddWorldCardToTop')
+    expect(kinds).toContain('AddWorldCardToDeck')
     expect(kinds).toContain('DestroySelf')
 
     // Every template the Sequence names resolves in the catalog (Zombie).
