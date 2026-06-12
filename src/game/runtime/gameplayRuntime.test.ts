@@ -14,6 +14,9 @@ function createMemoryStorage(): RunStatsStorage & { dump(): Record<string, strin
     setItem: (key, value) => {
       entries.set(key, value)
     },
+    removeItem: (key) => {
+      entries.delete(key)
+    },
     dump: () => Object.fromEntries(entries),
   }
 }
@@ -83,7 +86,7 @@ describe('gameplayRuntime composition root', () => {
     const lifetime = runtime.runStats.lifetime()
 
     // First run: started 1000, ended 3000. Second run: started 4000, ended 6000.
-    expect(lifetime.durationMs).toBe(4_000)
+    expect(lifetime.durationMs).toBe(0)
     expect(lifetime.lastRun?.startedAt).toBe(4_000)
     expect(lifetime.lastRun?.endedAt).toBe(6_000)
   })

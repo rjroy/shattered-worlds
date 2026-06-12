@@ -40,7 +40,7 @@ import type { SelectionState } from '../interaction/selection'
 import { classifyHighlight } from '../interaction/highlight'
 import { CardView } from '../view/CardView'
 import { HUDView } from '../view/HUDView'
-import { EndScreenView } from '../view/EndScreenView'
+import { RunSummaryView, type RunSummaryData } from '../view/RunSummaryView'
 import { HelpOverlayView } from '../view/HelpOverlayView'
 import { textStyle, TEXT, getRealityPalette } from '../view/presentation'
 import { ringFraction, connectorLine, selectConnectorStyle, effectAtStep } from '../interaction/feedback'
@@ -53,6 +53,7 @@ import { previewPlay } from '../../core/view/describe'
 import { PileLayer } from '../view/PileLayer'
 import { BackdropLayer } from '../view/backdrop'
 import { buildWorld } from '../../data/worldManifest'
+import { worldDisplayManifest } from '../../data/worldDisplayManifest'
 import { CARD_FACE, TABLE_LAYOUT } from '../view/layout'
 import { rowCardPositions } from '../view/tableLayout'
 
@@ -99,8 +100,7 @@ export class TableScene extends Phaser.Scene {
   private endTurnBtn!: CommonButton
   private cancelBtn!: CommonButton
   private confirmBtn!: CommonButton
-  private winScreen!: EndScreenView
-  private lossScreen!: EndScreenView
+  private runSummary!: RunSummaryView
   private helpOverlay!: HelpOverlayView
   private questionBtn!: CommonButton
   private exitBtn!: CommonButton
@@ -132,6 +132,7 @@ export class TableScene extends Phaser.Scene {
   private worldId_ = 'zombie-big-box'
   private seed_ = 0
   private loadError_ = false
+  private terminalSummaryShown_ = false
   private runtime_: GameplayRuntime
 
   constructor(runtime?: GameplayRuntime) {
@@ -146,6 +147,7 @@ export class TableScene extends Phaser.Scene {
     this.worldId_ = data.worldId ?? 'zombie-big-box'
     this.seed_ = data.seed ?? Math.floor(Math.random() * 2 ** 32)
     this.loadError_ = false
+    this.terminalSummaryShown_ = false
     this.cardObjects = new Map()
   }
 
@@ -238,17 +240,7 @@ export class TableScene extends Phaser.Scene {
       .on('pointerdown', () => this.onConfirmClick())
       .setVisible(false)
 
-    this.winScreen = new EndScreenView(this, {
-      title: 'YOU WIN',
-      titleColor: TEXT.textReward,
-      subtitle: 'You survived.',
-    })
-
-    this.lossScreen = new EndScreenView(this, {
-      title: 'YOU LOSE',
-      titleColor: TEXT.textPenalty,
-      subtitle: 'You did not survive meeting the Walker.',
-    })
+    this.runSummary = new RunSummaryView(this)
 
     this.helpOverlay = new HelpOverlayView(
       this,
@@ -278,7 +270,9 @@ export class TableScene extends Phaser.Scene {
       questionStyle,
     )
       .on('pointerup', () => {
-        this.scene.start('WorldSelect')
+        if (this.game_.state.status !== 'playing') return
+        this.game_.abandon()
+        this.showRunSummaryFromStats()
       })
 
 
@@ -403,29 +397,59 @@ export class TableScene extends Phaser.Scene {
     // Selection hint text
     this.updateHint()
 
-    // Win / loss screens
-    if (state.status === 'won') {
-      this.winScreen.setVisible(true)
-      this.lossScreen.setVisible(false)
-      this.winScreen.setOnClick(() => {
-        console.log('Restarting world select scene') // --- IGNORE ---
-        this.scene.start('WorldSelect')
-      })
-    } else if (state.status === 'lost') {
-      this.lossScreen.setVisible(true)
-      this.winScreen.setVisible(false)
-      this.lossScreen.setOnClick(() => {
-        console.log('Restarting world select scene') // --- IGNORE ---
-        this.scene.start('WorldSelect')
-      })
+    // Terminal summary
+    if (state.status === 'won' || state.status === 'lost') {
+      this.showRunSummaryFromStats()
     }
 
     // Cleanup the interactivity of objects at game end.
-    if (state.status !== 'playing') {
+    if (state.status !== 'playing' || this.runSummary.visible) {
       this.questionBtn.disableInteractive()
+      this.questionBtn.setVisible(false)
       this.exitBtn.disableInteractive()
       this.helpOverlay.setVisible(false)
     }
+  }
+
+  private buildRunSummaryData(): RunSummaryData | null {
+    const lifetime = this.runtime_.runStats.lifetime()
+    const lastRun = lifetime.lastRun
+    if (lastRun === undefined) return null
+
+    const display = worldDisplayManifest[lastRun.worldId]
+    const worldStats = lifetime.byWorld[lastRun.worldId]
+
+    return {
+      outcome: lastRun.outcome,
+      worldName: display?.name ?? lastRun.worldId,
+      runNumber: lifetime.runs,
+      worldWins: worldStats?.wins ?? 0,
+      activeDurationMs: lastRun.activeDurationMs,
+      turns: lastRun.turns,
+      cardsPlayed: lastRun.cardsPlayed,
+      progressDealt: lastRun.progressDealt,
+      damageTaken: lastRun.damageTaken,
+      hazardsResolved: lastRun.hazardsResolved,
+      hazardsDiscarded: lastRun.hazardsDiscarded,
+      cardsDiscarded: lastRun.cardsDiscarded,
+      records: this.runtime_.runStats.lastRunRecords(),
+    }
+  }
+
+  private showRunSummaryFromStats(): void {
+    if (this.terminalSummaryShown_) return
+
+    const data = this.buildRunSummaryData()
+    if (data === null) return
+
+    this.terminalSummaryShown_ = true
+    this.helpOverlay.setVisible(false)
+    this.questionBtn.disableInteractive()
+    this.questionBtn.setVisible(false)
+    this.exitBtn.disableInteractive()
+    this.runSummary.show(data, () => {
+      this.scene.start('WorldSelect')
+    })
   }
 
   /**

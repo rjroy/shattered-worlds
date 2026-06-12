@@ -3,8 +3,12 @@ import { createGameplayRuntime } from './runtime/gameplayRuntime'
 import { BootScene } from './scenes/BootScene'
 import { WorldSelectScene } from './scenes/WorldSelectScene'
 import { TableScene } from './scenes/TableScene'
+import { ChronicleScene } from './scenes/ChronicleScene'
 import { CANVAS_W, CANVAS_H } from './view/layout'
 import { TEXT } from './view/presentation'
+import { installDebugErrorOverlay } from './debugErrorOverlay'
+
+installDebugErrorOverlay()
 
 // localStorage access itself can throw under restrictive privacy settings;
 // fall back to in-memory-only stats rather than failing to boot.
@@ -19,7 +23,14 @@ function statsStorage(): Storage | undefined {
 // Composition root for gameplay observation: every TableScene session emits
 // into this runtime's stream, and cross-run consumers (run stats today,
 // meta progression and save policy later) subscribe here.
-const gameplayRuntime = createGameplayRuntime({ storage: statsStorage() })
+const gameplayRuntime = createGameplayRuntime({
+  storage: statsStorage(),
+  visibility: () => document.visibilityState === 'visible',
+  subscribeVisibility: (onChange) => {
+    document.addEventListener('visibilitychange', onChange)
+    return () => document.removeEventListener('visibilitychange', onChange)
+  },
+})
 
 // Scene shutdown never fires when the tab closes; close open runs as
 // abandoned so their streams end and stats persist. pagehide is the last
@@ -43,7 +54,12 @@ const game = new Phaser.Game({
   render: {
     roundPixels: true,
   },
-  scene: [new BootScene(), new WorldSelectScene(), new TableScene(gameplayRuntime)],
+  scene: [
+    new BootScene(),
+    new WorldSelectScene(gameplayRuntime.runStats),
+    new ChronicleScene(gameplayRuntime.runStats, gameplayRuntime.statsTransfer),
+    new TableScene(gameplayRuntime),
+  ],
 })
 
 // Prevent tree-shaking of the game instance in some bundler configurations

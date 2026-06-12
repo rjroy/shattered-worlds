@@ -88,6 +88,26 @@ describe('gameplaySession', () => {
     expect(items).toHaveLength(1)
   })
 
+  it('creates a default session id when crypto.randomUUID is unavailable', () => {
+    const originalCrypto = globalThis.crypto
+    Object.defineProperty(globalThis, 'crypto', {
+      configurable: true,
+      value: { getRandomValues: originalCrypto.getRandomValues.bind(originalCrypto) },
+    })
+
+    try {
+      const session = createGameplaySession(catalog, worldData, 42)
+      expect(session.sessionId).toMatch(
+        /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/,
+      )
+    } finally {
+      Object.defineProperty(globalThis, 'crypto', {
+        configurable: true,
+        value: originalCrypto,
+      })
+    }
+  })
+
   it('reports run-start subscriber failures without aborting session creation', () => {
     const items: RunStreamItem[] = []
     const reports: SubscriberFailure[] = []

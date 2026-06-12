@@ -1,4 +1,5 @@
 import type { Action, GameEvent, GameState } from '../../core/index'
+import { clonePlain } from './clone'
 
 export type SessionId = string
 
@@ -87,7 +88,7 @@ function deepFreeze(value: unknown, seen: WeakSet<object>): void {
  * a subscriber failure instead of silently corrupting other consumers.
  */
 function snapshot<T>(value: T): T {
-  const clone = structuredClone(value)
+  const clone = clonePlain(value)
   deepFreeze(clone, new WeakSet())
   return clone
 }
