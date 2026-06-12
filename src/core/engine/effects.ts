@@ -88,7 +88,13 @@ export function dealProgress(
 }
 
 export function resolveCounter(state: GameState, spec: CounterSpec): number {
-  return state.hand.filter((card) => card.keywords.includes(spec.keyword)).length
+  switch (spec.kind) {
+    case 'KeywordInHand':
+      return state.hand.filter((card) => card.keywords.includes(spec.keyword)).length
+      
+    default:
+      return 0
+  }
 }
 
 // ---------------------------------------------------------------------------

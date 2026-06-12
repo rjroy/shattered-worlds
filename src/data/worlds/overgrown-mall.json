@@ -8,14 +8,19 @@
       "energyCost": 1,
       "exhaust": true,
       "keywords": ["Spore"],
-      "effect": { "kind": "DamageScaled", "base": 0, "per": { "keyword": "Spore" }, "amount": 1 }
+      "effect": { 
+        "kind": "DamageScaled", 
+        "base": 0, 
+        "per": { "kind": "KeywordInHand", "keyword": "Spore" },
+        "amount": 1 
+      }
     },
     "Burst Planter": {
       "kind": "world",
       "name": "Burst Planter",
       "insetKey": "mall-inset-burst-planter",
       "cost": 1,
-      "keywords": [],
+      "keywords": ["Spore"],
       "discardable": true,
       "onDiscarded": { "kind": "GainCard", "template": "Spore" },
       "onCleared": { "kind": "None" },
@@ -27,7 +32,7 @@
       "name": "Pollen Haze",
       "insetKey": "mall-inset-pollen-haze",
       "cost": 2,
-      "keywords": [],
+      "keywords": ["Spore"],
       "discardable": false,
       "onDiscarded": { "kind": "None" },
       "onCleared": { "kind": "None" },
@@ -39,7 +44,7 @@
       "name": "Kudzu Curtain",
       "insetKey": "mall-inset-kudzu-curtain",
       "cost": 2,
-      "keywords": ["Slow"],
+      "keywords": ["Slow", "Spore"],
       "discardable": false,
       "onDiscarded": { "kind": "None" },
       "onCleared": { "kind": "None" },
@@ -63,7 +68,7 @@
       "name": "Fountain Bloom",
       "insetKey": "mall-inset-fountain-bloom",
       "cost": 3,
-      "keywords": [],
+      "keywords": ["Spore"],
       "discardable": false,
       "onDiscarded": { "kind": "None" },
       "onCleared": { "kind": "None" },
