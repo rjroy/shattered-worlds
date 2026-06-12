@@ -71,8 +71,9 @@
       "keywords": [],
       "discardable": true,
       "canExile": false,
-      "onDiscarded": { "kind": "AddWorldCardToTop", "template": "Door" },
+      "onDiscarded": { "kind": "AddWorldCardToDeck", "template": "Door" },
       "onCleared": { "kind": "AddPlayerCardToTop", "template": "Summon Door" },
+      "onPartialClear": { "kind": "None" },
       "onEndOfTurn": { "kind": "None" }
     },
     "Summon Door": {
@@ -80,7 +81,7 @@
       "name": "Summon Door",
       "insetKey": "inset-door",
       "energyCost": 6,
-      "effect": { "kind": "AddWorldCardToTop", "template": "Door" }
+      "effect": { "kind": "AddWorldCardToDeck", "template": "Door" }
     },
     "Door": {
       "kind": "world",
@@ -92,6 +93,7 @@
       "canExile": false,
       "onDiscarded": { "kind": "None" },
       "onCleared": { "kind": "SurviveWorld" },
+      "onPartialClear": { "kind": "None" },
       "onEndOfTurn": { "kind": "AddThreatToWorldDeck" }
     }
   },

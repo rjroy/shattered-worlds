@@ -76,6 +76,12 @@ export function dealProgress(
     current = rewardResult.state
     events.push(...rewardResult.events)
     events.push({ type: 'HazardResolved', hazardId })
+  } else {
+    // Hazard not yet resolved
+    const partialResult = applyEffect(catalog, current, hazard.onPartialClear, undefined, hazardId)
+    current = partialResult.state
+    events.push(...partialResult.events)
+    events.push({ type: 'HazardPartial', hazardId })
   }
 
   return { state: current, events }
@@ -118,6 +124,15 @@ export function gainCard(
         playerDraw: [card, ...nextState.playerDraw],
       }
       break
+    case 'worldDraw': {
+      const shuffled = shuffle([card as WorldCard, ...nextState.worldDraw], nextState.rng)
+      current = {
+        ...nextState,
+        worldDraw: shuffled[0],
+        rng: shuffled[1],
+      }
+      break
+    }
     case 'worldDrawTop':
       // Only world cards belong in worldDraw; callers are responsible for
       // only routing world-template ids here.
@@ -335,8 +350,8 @@ export function applyEffect(
     case 'AddCard':
       return gainCard(catalog, state, effect.template, effect.dest)
 
-    case 'AddWorldCardToTop':
-      return gainCard(catalog, state, effect.template, 'worldDrawTop')
+    case 'AddWorldCardToDeck':
+      return gainCard(catalog, state, effect.template, effect.bTop ? 'worldDrawTop' : 'worldDraw')
 
     case 'AddThreatToWorldDeck': {
       const template = WORLD_THREAT_BY_WORLD_ID[state.worldId]
@@ -412,7 +427,7 @@ export function applyEffect(
 
     case 'DealProgressAll': {
       // Snapshot world cards in hand at resolution time — mid-sweep spawned
-      // cards are excluded (they land in worldDraw via AddWorldCardToTop, not hand).
+      // cards are excluded (they land in worldDraw via AddWorldCardToDeck, not hand).
       const snapshot = state.hand.filter((c): c is WorldCard => c.kind === 'world')
       let current = state
       const events: GameEvent[] = []

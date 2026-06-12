@@ -53,7 +53,7 @@ export function describeEffect(effect: CardEffect): string[] {
       return [`Discard a card, then draw ${effect.player}`]
     case 'AddCard':
       return [`Gain a ${effect.template} card`]
-    case 'AddWorldCardToTop':
+    case 'AddWorldCardToDeck':
       return [`+${effect.template} to world deck`]
     case 'AddThreatToWorldDeck':
       return ['+theme threat to world deck']
@@ -78,11 +78,7 @@ export function describeEffect(effect: CardEffect): string[] {
     case 'DestroySelf':
       return ['vanishes']
     case 'None':
-      // Player-facing text for no-op exhaust cards (Spore): playing the card
-      // does nothing except remove it from the run. World-card hooks with a
-      // None effect never reach describeEffect (CardView guards on the kind),
-      // so this line only ever appears on a player card face.
-      return ['play to prune (leaves the run)']
+      return ['no effect']
     case 'Brace':
       return [
         effect.amount === 1
