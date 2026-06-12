@@ -39,7 +39,17 @@ import volcanoInsetVehicleUrl from '../assets/themes/highway-volcano/insets/inse
 import mallRealityUrl from '../assets/themes/overgrown-mall/overgrown-mall-reality.webp'
 import mallOverlayUrl from '../assets/themes/overgrown-mall/intrusion-overlay.webp'
 import mallCardfrontUrl from '../assets/themes/overgrown-mall/overgrown-mall-cardfront.webp'
-import mallInsetPlaceholderUrl from '../assets/themes/overgrown-mall/insets/inset-placeholder.webp'
+import mallInsetBloomUrl from '../assets/themes/overgrown-mall/insets/inset-bloom.webp'
+import mallInsetBurstPlanterUrl from '../assets/themes/overgrown-mall/insets/inset-burst-planter.webp'
+import mallInsetFountainBloomUrl from '../assets/themes/overgrown-mall/insets/inset-fountain-bloom.webp'
+import mallInsetGardenCenterUrl from '../assets/themes/overgrown-mall/insets/inset-garden-center.webp'
+import mallInsetKudzuCurtainUrl from '../assets/themes/overgrown-mall/insets/inset-kudzu-curtain.webp'
+import mallInsetMacheteUrl from '../assets/themes/overgrown-mall/insets/inset-machete.webp'
+import mallInsetPollenHazeUrl from '../assets/themes/overgrown-mall/insets/inset-pollen-haze.webp'
+import mallInsetPruningShearsUrl from '../assets/themes/overgrown-mall/insets/inset-pruning-shears.webp'
+import mallInsetSomethingInTheAtriumUrl from '../assets/themes/overgrown-mall/insets/inset-something-in-the-atrium.webp'
+import mallInsetSporeUrl from '../assets/themes/overgrown-mall/insets/inset-spore.webp'
+import mallInsetWeedKillerUrl from '../assets/themes/overgrown-mall/insets/inset-weed-killer.webp'
 import insetSprintUrl from '../assets/insets/inset-sprint.webp'
 import insetExploreUrl from '../assets/insets/inset-explore.webp'
 import insetBarricadeUrl from '../assets/insets/inset-barricade.webp'
@@ -107,17 +117,17 @@ export const assetManifest: Record<string, string> = {
   'overgrown-mall-bg': mallRealityUrl,
   'overgrown-mall-overlay': mallOverlayUrl,
   'overgrown-mall-cardfront': mallCardfrontUrl,
-  'mall-inset-spore': mallInsetPlaceholderUrl,
-  'mall-inset-burst-planter': mallInsetPlaceholderUrl,
-  'mall-inset-pollen-haze': mallInsetPlaceholderUrl,
-  'mall-inset-kudzu-curtain': mallInsetPlaceholderUrl,
-  'mall-inset-something-in-the-atrium': mallInsetPlaceholderUrl,
-  'mall-inset-fountain-bloom': mallInsetPlaceholderUrl,
-  'mall-inset-garden-center': mallInsetPlaceholderUrl,
-  'mall-inset-pruning-shears': mallInsetPlaceholderUrl,
-  'mall-inset-machete': mallInsetPlaceholderUrl,
-  'mall-inset-weed-killer': mallInsetPlaceholderUrl,
-  'mall-inset-bloom': mallInsetPlaceholderUrl,
+  'mall-inset-spore': mallInsetSporeUrl,
+  'mall-inset-burst-planter': mallInsetBurstPlanterUrl,
+  'mall-inset-pollen-haze': mallInsetPollenHazeUrl,
+  'mall-inset-kudzu-curtain': mallInsetKudzuCurtainUrl,
+  'mall-inset-something-in-the-atrium': mallInsetSomethingInTheAtriumUrl,
+  'mall-inset-fountain-bloom': mallInsetFountainBloomUrl,
+  'mall-inset-garden-center': mallInsetGardenCenterUrl,
+  'mall-inset-pruning-shears': mallInsetPruningShearsUrl,
+  'mall-inset-machete': mallInsetMacheteUrl,
+  'mall-inset-weed-killer': mallInsetWeedKillerUrl,
+  'mall-inset-bloom': mallInsetBloomUrl,
   'inset-sprint': insetSprintUrl,
   'inset-explore': insetExploreUrl,
   'inset-barricade': insetBarricadeUrl,
