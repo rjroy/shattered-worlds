@@ -347,7 +347,14 @@ export function applyEffect(
         playerDiscard: [discardedCard, ...state.playerDiscard],
       }
 
-      return drawPlayer(afterDiscard, effect.player)
+      const drawResult = drawPlayer(afterDiscard, effect.player)
+      return {
+        state: drawResult.state,
+        events: [
+          { type: 'CardsDiscarded', cardIds: [play.discardId] },
+          ...drawResult.events,
+        ],
+      }
     }
 
     case 'AddCard':

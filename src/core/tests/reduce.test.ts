@@ -488,6 +488,11 @@ describe('Adrenaline discardPlayer', () => {
     expect(types).toContain('CardPlayed')
     expect(types).toContain('CardsDrawn')
 
+    // The chosen discard is announced so the renderer animates it and run
+    // stats count it — and it reads discard-then-draw, in that order.
+    expect(result.events).toContainEqual({ type: 'CardsDiscarded', cardIds: [explore.id] })
+    expect(types.indexOf('CardsDiscarded')).toBeLessThan(types.indexOf('CardsDrawn'))
+
     // explore moved to playerDiscard
     expect(result.state.playerDiscard.some((c) => c.id === explore.id)).toBe(true)
     // adrenaline played, not in hand
