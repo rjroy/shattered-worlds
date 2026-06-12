@@ -8,7 +8,7 @@
       "energyCost": 1,
       "exhaust": true,
       "keywords": ["Spore"],
-      "effect": { "kind": "None" }
+      "effect": { "kind": "DamageScaled", "base": 0, "per": { "keyword": "Spore" }, "amount": 1 }
     },
     "Burst Planter": {
       "kind": "world",

@@ -65,6 +65,11 @@ export function describeEffect(effect: CardEffect): string[] {
       )
     case 'Damage':
       return [`-${effect.amount} HP`]
+    case 'DamageScaled':
+      return [
+        `-${effect.base} HP`,
+        `-${effect.amount} per ${effect.per.keyword} in hand`,
+      ]
     case 'SkipDrawNextTurn':
       return ['skip next draw']
     case 'GainCard':

@@ -88,10 +88,7 @@ export function dealProgress(
 }
 
 export function resolveCounter(state: GameState, spec: CounterSpec): number {
-  switch (spec.kind) {
-    case 'KeywordInHand':
-      return state.hand.filter((card) => card.keywords.includes(spec.keyword)).length
-  }
+  return state.hand.filter((card) => card.keywords.includes(spec.keyword)).length
 }
 
 // ---------------------------------------------------------------------------
@@ -382,6 +379,11 @@ export function applyEffect(
 
     case 'Damage':
       return damage(state, effect.amount)
+
+    case 'DamageScaled': {
+      const amount = effect.base + effect.amount * resolveCounter(state, effect.per)
+      return damage(state, amount)
+    }
 
     case 'SkipDrawNextTurn': {
       // Idempotent — setting to true when already true is a no-op.

@@ -55,9 +55,9 @@ function structuralSpec(effect: CardEffect): TargetSpec {
     case 'Brace':
     case 'DealProgressAll':
     case 'ExileTopWorldCards':
-      return { kind: 'none' }
-    // None is a deliberate no-op (Spore): the play needs no targets.
     case 'None':
+    case 'Damage':
+    case 'DamageScaled':
       return { kind: 'none' }
     default:
       return { kind: 'none' }
@@ -86,10 +86,9 @@ function isPlayable(effect: CardEffect, state: GameState, selfId: CardId): boole
     case 'Brace':
       return true
 
-    // None is a deliberate no-op (Spore): always legal to play — the point of
-    // playing it is the exhaust, not the effect. Energy gating lives in
-    // availableActions, not here.
     case 'None':
+    case 'Damage':
+    case 'DamageScaled':
       return true
 
     case 'ExileTopWorldCards':
@@ -191,6 +190,8 @@ function computeLegalTargetsForEffect(
     case 'Brace':
     case 'DealProgressAll':
     case 'ExileTopWorldCards':
+    case 'Damage':
+    case 'DamageScaled':
       return []
     default:
       return []

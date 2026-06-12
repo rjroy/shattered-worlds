@@ -11,11 +11,11 @@
 import Phaser from 'phaser'
 import { assetManifest } from '../data/assetManifest'
 import { worldMusicManifest } from '../data/audioManifest'
+import { createGameplaySession, type GameplaySession } from '../runtime/gameplaySession'
 import { selectTheme } from '../view/themes/themeManifest'
 import type { VisualTheme } from '../view/themes/theme'
-import { createGame, availableActions, CatalogError } from '../../core/index'
+import { availableActions, CatalogError } from '../../core/index'
 import type {
-  GameCore,
   Card,
   Action,
   TargetSpec,
@@ -78,7 +78,7 @@ const CONNECTOR_DEPTH = TABLE_LAYOUT.connectorDepth
 // ---------------------------------------------------------------------------
 
 export class TableScene extends Phaser.Scene {
-  private game_!: GameCore
+  private game_!: GameplaySession
   private theme_!: VisualTheme
   private sel: SelectionState = IDLE
 
@@ -170,7 +170,7 @@ export class TableScene extends Phaser.Scene {
 
     const { catalog, worldData } = buildWorld(this.worldId_)
 
-    this.game_ = createGame(catalog, worldData, this.seed_)
+    this.game_ = createGameplaySession(catalog, worldData, this.seed_)
     this.theme_ = selectTheme(this.game_.state.worldId)
     this.startWorldMusic(this.game_.state.worldId)
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => this.stopWorldMusic())
@@ -719,6 +719,10 @@ export class TableScene extends Phaser.Scene {
     this.stopWorldMusic()
 
     const music = worldMusicManifest[worldId]
+    if (music === undefined) {
+      console.warn(`[TableScene] No music asset configured for world: ${worldId}`)
+      return Promise.resolve()
+    }
 
     return new Promise((resolve, reject) => {
       if (music === undefined) {
@@ -828,7 +832,7 @@ export class TableScene extends Phaser.Scene {
     if (this.sel.phase !== 'idle') return
     const available = availableActions(this.game_.state)
     if (!available.playable.some((p) => p.cardId === cardId)) return
-    container.emphasize(this.theme_.frameStyle.targetGlow, this.game_.intensity())
+    container.emphasize(this.theme_.frameStyle.playableGlow, this.game_.intensity())
   }
 
   /**

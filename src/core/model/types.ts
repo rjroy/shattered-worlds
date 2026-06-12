@@ -28,6 +28,7 @@ export type CardEffect =
   | { kind: 'Modal'; branches: readonly CardEffect[] }
   | { kind: 'Sequence'; steps: readonly CardEffect[] }
   | { kind: 'Damage'; amount: number }
+  | { kind: 'DamageScaled'; base: number; per: CounterSpec; amount: number }
   | { kind: 'SkipDrawNextTurn' }
   | { kind: 'GainCard'; template: CardTemplateId }
   | { kind: 'AddPlayerCardToTop'; template: CardTemplateId }
