@@ -1552,6 +1552,7 @@ describe('ExileTopWorldCards: livelock guard', () => {
       sourceWorldId: 'highway-volcano',
       energyCost: 0,
       exhaust: true,
+      keywords: [],
       effect: { kind: 'ExileTopWorldCards', amount: 5 },
     }
 
@@ -1685,5 +1686,71 @@ describe('PlayCard Cut It Loose (Sequence: destroyHand → hazard)', () => {
         // targetId omitted — step 1 (DealProgress) requires a world card target
       })
     }).toThrow(IllegalActionError)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// None-effect play semantics (REQ-MALL-1 — Spore)
+// ---------------------------------------------------------------------------
+
+describe('PlayCard None effect (Spore semantics)', () => {
+  /**
+   * Mint a Spore-shaped card: cost 1, exhaust, effect None, keyword Spore.
+   * No catalog template yet — mint Explore and spread the Spore shape onto it
+   * (same pattern as exhaustExplore above).
+   */
+  function mintSpore(base: GameState): [PlayerCard, GameState] {
+    const [explore, next] = mintCard(catalog, base, 'Explore')
+    return [
+      {
+        ...(explore as PlayerCard),
+        name: 'Spore',
+        effect: { kind: 'None' },
+        energyCost: 1,
+        exhaust: true,
+        keywords: ['Spore'],
+      },
+      next,
+    ]
+  }
+
+  it('playing Spore pays 1 energy, exhausts it from every zone, and changes nothing else', () => {
+    const base = createWorld(catalog, worldData, 42)
+    const [spore, s1] = mintSpore(base)
+    const [rubble, s2] = mintCard(catalog, s1, 'Rubble')
+    const [filler, s3] = mintCard(catalog, s2, 'Explore')
+
+    const state = makeState({
+      ...s3,
+      energy: 2,
+      hand: [rubble as WorldCard, spore],
+      playerDraw: [filler as PlayerCard],
+    })
+
+    const result = reduce(catalog, state, { type: 'PlayCard', cardId: spore.id })
+
+    // Cost paid.
+    expect(result.state.energy).toBe(1)
+
+    // Exhausted: absent from hand, discard, AND draw pile.
+    expect(result.state.hand.some((c) => c.id === spore.id)).toBe(false)
+    expect(result.state.playerDiscard.some((c) => c.id === spore.id)).toBe(false)
+    expect(result.state.playerDraw.some((c) => c.id === spore.id)).toBe(false)
+
+    // Standard events, in play → spend → vanish order, and nothing else.
+    expect(result.events).toEqual([
+      { type: 'CardPlayed', cardId: spore.id },
+      { type: 'EnergyChanged', energy: 1 },
+      { type: 'CardDestroyed', id: spore.id },
+    ])
+
+    // Nothing else changed: the remaining state equals the pre-play state
+    // minus the Spore card and the energy spent.
+    const expected: GameState = {
+      ...state,
+      hand: state.hand.filter((c) => c.id !== spore.id),
+      energy: 1,
+    }
+    expect(result.state).toEqual(expected)
   })
 })

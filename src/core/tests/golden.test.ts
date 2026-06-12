@@ -15,6 +15,7 @@ import { createWorld } from '../engine/world'
 import { mintCard } from '../model/cards'
 import { reduce } from '../engine/reduce'
 import type { GameState, PlayerCard, WorldCard } from '../model/types'
+import type { CardCatalog } from '../model/catalog'
 import { catalog, worldData } from './testFixture'
 
 // ---------------------------------------------------------------------------
@@ -246,5 +247,130 @@ describe('replay equivalence', () => {
 
     // Progress cleared
     expect(state.progress).toEqual({})
+  })
+})
+
+// ---------------------------------------------------------------------------
+// Replay equivalence: Spore hook + DealProgressScaled
+//
+// A small local catalog extension stands in for the future overgrown-mall data:
+// clearing Bloom Planter puts two Spore cards on top of the player deck. The
+// replay then plays one Spore and resolves Bloom while the other Spore remains
+// in hand, proving the counter is evaluated through the reducer path.
+// ---------------------------------------------------------------------------
+
+describe('replay equivalence: Spore + DealProgressScaled', () => {
+  const mallCatalog: CardCatalog = {
+    ...catalog,
+    Spore: {
+      kind: 'player',
+      name: 'Spore',
+      energyCost: 1,
+      exhaust: true,
+      keywords: ['Spore'],
+      effect: { kind: 'None' },
+    },
+    Bloom: {
+      kind: 'player',
+      name: 'Bloom',
+      energyCost: 1,
+      effect: {
+        kind: 'DealProgressScaled',
+        base: 1,
+        per: { kind: 'KeywordInHand', keyword: 'Spore' },
+        amount: 1,
+      },
+    },
+    'Bloom Planter': {
+      kind: 'world',
+      name: 'Bloom Planter',
+      cost: 1,
+      keywords: [],
+      discardable: true,
+      onDiscarded: { kind: 'None' },
+      onCleared: {
+        kind: 'Sequence',
+        steps: [
+          { kind: 'AddPlayerCardToTop', template: 'Spore' },
+          { kind: 'AddPlayerCardToTop', template: 'Spore' },
+        ],
+      },
+      onEndOfTurn: { kind: 'None' },
+    },
+  }
+
+  function runReplay(): {
+    state: GameState
+    eventTypes: string[]
+    topDeckGains: number
+    bloomAmount: number | undefined
+  } {
+    const base = createWorld(mallCatalog, worldData, 42)
+    const [planter, s1] = mintCard(mallCatalog, base, 'Bloom Planter')
+    const [explore, s2] = mintCard(mallCatalog, s1, 'Explore')
+    const [bloom, s3] = mintCard(mallCatalog, s2, 'Bloom')
+    const [medKit, s4] = mintCard(mallCatalog, s3, 'Med Kit')
+    const [strangeSounds, s5] = mintCard(mallCatalog, s4, 'Strange Sounds')
+    const [rubble, s6] = mintCard(mallCatalog, s5, 'Rubble')
+
+    const state = makeState({
+      ...s6,
+      hand: [planter as WorldCard, explore as PlayerCard],
+      playerDraw: [bloom as PlayerCard, medKit as PlayerCard],
+      worldDraw: [strangeSounds as WorldCard, rubble as WorldCard],
+      energy: 3,
+      hp: 10,
+    })
+
+    const r1 = reduce(mallCatalog, state, {
+      type: 'PlayCard',
+      cardId: explore.id,
+      targetId: planter.id,
+    })
+    const r2 = reduce(mallCatalog, r1.state, { type: 'EndTurn' })
+
+    const spore = r2.state.hand.find((c): c is PlayerCard => c.kind === 'player' && c.name === 'Spore')
+    const drawnBloom = r2.state.hand.find((c): c is PlayerCard => c.kind === 'player' && c.name === 'Bloom')
+    const target = r2.state.hand.find((c): c is WorldCard => c.kind === 'world' && c.name === 'Strange Sounds')
+    if (spore === undefined || drawnBloom === undefined || target === undefined) {
+      throw new Error('Expected Spore, Bloom, and Strange Sounds after deterministic refill')
+    }
+
+    const r3 = reduce(mallCatalog, r2.state, { type: 'PlayCard', cardId: spore.id })
+    const r4 = reduce(mallCatalog, r3.state, {
+      type: 'PlayCard',
+      cardId: drawnBloom.id,
+      targetId: target.id,
+    })
+
+    const allEvents = [...r1.events, ...r2.events, ...r3.events, ...r4.events]
+    const eventTypes = allEvents.map((e) => e.type)
+    const bloomProgress = r4.events.find((e) => e.type === 'ProgressDealt')
+
+    return {
+      state: r4.state,
+      eventTypes,
+      topDeckGains: allEvents.filter(
+        (e) => e.type === 'CardGained' && e.dest === 'playerDrawTop',
+      ).length,
+      bloomAmount: bloomProgress?.type === 'ProgressDealt' ? bloomProgress.amount : undefined,
+    }
+  }
+
+  it('running the same Spore/Bloom sequence twice produces identical state and events', () => {
+    const first = runReplay()
+    const second = runReplay()
+
+    expect(first.state).toEqual(second.state)
+    expect(first.eventTypes).toEqual(second.eventTypes)
+  })
+
+  it('gains Spores by hook, prunes one, then Bloom counts the remaining Spore', () => {
+    const result = runReplay()
+
+    expect(result.topDeckGains).toBe(2)
+    expect(result.eventTypes).toContain('CardDestroyed')
+    expect(result.bloomAmount).toBe(2)
+    expect(result.state.hand.some((card) => card.name === 'Strange Sounds')).toBe(false)
   })
 })

@@ -25,6 +25,11 @@ export function describeEffect(effect: CardEffect): string[] {
       const bonus = effect.bonus ? `\n(+${effect.bonus.amount} vs ${effect.bonus.tag})` : ''
       return [`Add ${effect.base} Progress${bonus}`]
     }
+    case 'DealProgressScaled':
+      return [
+        `Add ${effect.base} Progress`,
+        `+${effect.amount} per ${effect.per.keyword} in hand`,
+      ]
     case 'Draw': {
       const parts: string[] = []
       if (effect.player !== undefined && effect.player > 0) parts.push(`Draw ${effect.player}`)
@@ -73,7 +78,11 @@ export function describeEffect(effect: CardEffect): string[] {
     case 'DestroySelf':
       return ['vanishes']
     case 'None':
-      return []
+      // Player-facing text for no-op exhaust cards (Spore): playing the card
+      // does nothing except remove it from the run. World-card hooks with a
+      // None effect never reach describeEffect (CardView guards on the kind),
+      // so this line only ever appears on a player card face.
+      return ['play to prune (leaves the run)']
     case 'Brace':
       return [
         effect.amount === 1

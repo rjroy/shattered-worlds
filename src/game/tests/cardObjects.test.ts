@@ -1,6 +1,10 @@
 import { describe, it, expect } from 'bun:test'
 import { CardView } from '../view/CardView'
 import { selectTheme } from '../view/themes/themeManifest'
+import { CARD_FACE } from '../view/layout'
+import { mintCard } from '../../core/model/cards'
+import { createRng } from '../../core/engine/rng'
+import type { CardCatalog, GameState, PlayerCard } from '../../core/index'
 
 // ---------------------------------------------------------------------------
 // updateCostRing — fill/drain animation (S5)
@@ -497,5 +501,203 @@ describe('CardView surface methods', () => {
     view.setCardPosition(123, 456)
     expect(view.x).toBe(123)
     expect(view.y).toBe(456)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// CardView player-card keyword line (REQ-MALL-21)
+//
+// Unlike the surface-method tests above (which fake the CardView itself),
+// these run the REAL constructor end-to-end with real minted player cards.
+// The scene stub records every text object created (position, content, font
+// size) so the tests can pin the keyword line to the exact offset and format
+// the world face uses, and prove a keywordless card's layout is untouched.
+// ---------------------------------------------------------------------------
+
+/** A created text object as the scene stub tracked it. */
+interface TrackedText {
+  x: number
+  y: number
+  content: string
+  fontSize: string
+}
+
+/**
+ * Minimal protocol a fake child must speak so the REAL Container.add
+ * (addHandler) accepts it: a DESTROY listener hook plus display-list moves.
+ */
+const childProtocol = {
+  parentContainer: null as unknown,
+  once(): void {},
+  off(): void {},
+  removeFromDisplayList(): void {},
+  addedToScene(): void {},
+}
+
+function makeFakeText(
+  x: number,
+  y: number,
+  style: { fontSize?: string },
+  sink: TrackedText[],
+): unknown {
+  const tracked: TrackedText = { x, y, content: '', fontSize: style.fontSize ?? '' }
+  sink.push(tracked)
+  const text = {
+    ...childProtocol,
+    x,
+    y,
+    width: 40,
+    height: 12,
+    setOrigin: (): unknown => text,
+    setText(s: string): unknown {
+      tracked.content = s
+      return text
+    },
+    // The real implementation wraps via canvas measurement; splitting on
+    // explicit newlines is enough here because every string under test is
+    // shorter than the wrap width.
+    getWrappedText: (s: string): string[] => s.split('\n'),
+    setAbove: (): unknown => text,
+  }
+  return text
+}
+
+function makeFakeRect(x: number, y: number): unknown {
+  const rect = {
+    ...childProtocol,
+    x,
+    y,
+    setOrigin: (): unknown => rect,
+    setRounded: (): unknown => rect,
+    setAlpha: (): unknown => rect,
+    setStrokeStyle: (): unknown => rect,
+    setFillStyle: (): unknown => rect,
+  }
+  return rect
+}
+
+function makeFakeImage(x: number, y: number): unknown {
+  const img = {
+    ...childProtocol,
+    x,
+    y,
+    width: 10,
+    height: 10,
+    setOrigin: (): unknown => img,
+    setDisplaySize: (): unknown => img,
+  }
+  return img
+}
+
+/** Scene stub satisfying the full CardView constructor for player cards. */
+function makeRenderScene(): { scene: unknown; texts: TrackedText[] } {
+  const texts: TrackedText[] = []
+  const scene = {
+    sys: {
+      queueDepthSort(): void {},
+      events: { once(): void {}, off(): void {} },
+    },
+    add: {
+      existing(): void {},
+      image: (x: number, y: number): unknown => makeFakeImage(x, y),
+      rectangle: (x: number, y: number): unknown => makeFakeRect(x, y),
+      text: (x: number, y: number, _s: string, style: { fontSize?: string }): unknown =>
+        makeFakeText(x, y, style, texts),
+    },
+  }
+  return { scene, texts }
+}
+
+function makeMintState(): GameState {
+  return {
+    playerDraw: [],
+    hand: [],
+    playerDiscard: [],
+    worldDraw: [],
+    acts: [],
+    actIndex: 0,
+    totalActs: 3,
+    progress: {},
+    hp: 10,
+    energy: 0,
+    skipDrawNext: false,
+    pendingForceDestroy: 0,
+    braceCharges: 0,
+    status: 'playing',
+    worldId: 'zombie-big-box',
+    rng: createRng(0),
+    nextId: 0,
+  }
+}
+
+const keywordCatalog: CardCatalog = {
+  'Spore Cloud': {
+    kind: 'player',
+    name: 'Spore Cloud',
+    effect: { kind: 'DealProgress', base: 1 },
+    keywords: ['Spore'],
+  },
+  'Creeping Bloom': {
+    kind: 'player',
+    name: 'Creeping Bloom',
+    effect: { kind: 'DealProgress', base: 1 },
+    keywords: ['Spore', 'Slow'],
+  },
+  'Plain Strike': {
+    kind: 'player',
+    name: 'Plain Strike',
+    effect: { kind: 'DealProgress', base: 1 },
+  },
+}
+
+function mintPlayer(templateId: string): PlayerCard {
+  const [card] = mintCard(keywordCatalog, makeMintState(), templateId)
+  if (card.kind !== 'player') throw new Error(`expected ${templateId} to mint a player card`)
+  return card
+}
+
+function renderTexts(card: PlayerCard): TrackedText[] {
+  const { scene, texts } = makeRenderScene()
+  const theme = selectTheme('zombie-big-box')
+  new CardView(scene as never, card, 0, 0, theme, () => theme)
+  return texts
+}
+
+describe('CardView player-card keyword line (REQ-MALL-21)', () => {
+  // The world face renders keywords at this offset/size; the player face must
+  // match it exactly (CardView.ts world branch).
+  const KEYWORD_Y = -CARD_FACE.height / 2 + 23
+  const EFFECT_Y_DEFAULT = -CARD_FACE.height / 2 + 28
+  const EFFECT_Y_WITH_KEYWORDS = -CARD_FACE.height / 2 + 36
+
+  it('renders a minted Spore card with a keyword line at the world-face offset and size', () => {
+    const texts = renderTexts(mintPlayer('Spore Cloud'))
+    const kw = texts.find((t) => t.content === 'Spore')
+    expect(kw).toBeDefined()
+    expect(kw!.y).toBe(KEYWORD_Y)
+    expect(kw!.fontSize).toBe('9px')
+  })
+
+  it("joins multiple keywords with ' · ' exactly like the world face", () => {
+    const texts = renderTexts(mintPlayer('Creeping Bloom'))
+    expect(texts.some((t) => t.content === 'Spore · Slow')).toBe(true)
+  })
+
+  it('shifts the effect block down to the world-face effect offset when keywords are present', () => {
+    const texts = renderTexts(mintPlayer('Spore Cloud'))
+    const effect = texts.find((t) => t.content === 'Add 1 Progress')
+    expect(effect).toBeDefined()
+    expect(effect!.y).toBe(EFFECT_Y_WITH_KEYWORDS)
+  })
+
+  it('renders a keywordless card unchanged: no keyword line, effect at the original offset', () => {
+    const texts = renderTexts(mintPlayer('Plain Strike'))
+    // No keyword line at all — nothing renders at the keyword slot and no
+    // 9px text exists on the face (name is 13px, effect 11px; no Exhaust).
+    expect(texts.some((t) => t.y === KEYWORD_Y)).toBe(false)
+    expect(texts.some((t) => t.fontSize === '9px')).toBe(false)
+    const effect = texts.find((t) => t.content === 'Add 1 Progress')
+    expect(effect).toBeDefined()
+    expect(effect!.y).toBe(EFFECT_Y_DEFAULT)
   })
 })

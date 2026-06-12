@@ -33,6 +33,8 @@ function structuralSpec(effect: CardEffect): TargetSpec {
       const tag = effect.bonus?.tag
       return tag !== undefined ? { kind: 'hazard', tag } : { kind: 'hazard' }
     }
+    case 'DealProgressScaled':
+      return { kind: 'hazard' }
     case 'Heal':
     case 'GainEnergy':
     case 'AddWorldCardToTop':
@@ -54,6 +56,9 @@ function structuralSpec(effect: CardEffect): TargetSpec {
     case 'DealProgressAll':
     case 'ExileTopWorldCards':
       return { kind: 'none' }
+    // None is a deliberate no-op (Spore): the play needs no targets.
+    case 'None':
+      return { kind: 'none' }
     default:
       return { kind: 'none' }
   }
@@ -68,6 +73,7 @@ function structuralSpec(effect: CardEffect): TargetSpec {
 function isPlayable(effect: CardEffect, state: GameState, selfId: CardId): boolean {
   switch (effect.kind) {
     case 'DealProgress':
+    case 'DealProgressScaled':
       // Requires at least one world card in hand as a target.
       return worldCardsInHand(state).length > 0
 
@@ -78,6 +84,12 @@ function isPlayable(effect: CardEffect, state: GameState, selfId: CardId): boole
     case 'AddCard':
     case 'Draw':
     case 'Brace':
+      return true
+
+    // None is a deliberate no-op (Spore): always legal to play — the point of
+    // playing it is the exhaust, not the effect. Energy gating lives in
+    // availableActions, not here.
+    case 'None':
       return true
 
     case 'ExileTopWorldCards':
@@ -141,8 +153,9 @@ function computeLegalTargetsForEffect(
 
   switch (effect.kind) {
     case 'DealProgress':
+    case 'DealProgressScaled':
       if (effect.base === 0) {
-        const tag = effect.bonus?.tag
+        const tag = effect.kind === 'DealProgress' ? effect.bonus?.tag : undefined
         if (tag !== undefined) {
           // Filter to world cards that have the matching keyword
           return worldCardsInHand(state)
@@ -207,6 +220,7 @@ function computeLegalTargets(
     }
 
     case 'DealProgress':
+    case 'DealProgressScaled':
     case 'DiscardThenDraw':
     case 'DestroyCardInHand':
     case 'Heal':

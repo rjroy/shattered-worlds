@@ -334,6 +334,7 @@ describe('DealProgressAll playability', () => {
       insetKey: undefined,
       sourceWorldId: 'zombie-big-box',
       energyCost: 0,
+      keywords: [],
       effect: { kind: 'DealProgressAll', base: 1, bonus: { tag: 'Creature', amount: 1 } },
     }
     const state = { ...s1, hand: [explore, shelfSweep] }
@@ -353,6 +354,7 @@ describe('DealProgressAll playability', () => {
       insetKey: undefined,
       sourceWorldId: 'zombie-big-box',
       energyCost: 0,
+      keywords: [],
       effect: { kind: 'DealProgressAll', base: 1, bonus: { tag: 'Creature', amount: 1 } },
     }
     const state = { ...s1, hand: [zombie, shelfSweep] }
@@ -452,6 +454,7 @@ function makeFloorIt(id: string): PlayerCard {
     sourceWorldId: 'highway-volcano',
     energyCost: 0,
     exhaust: true,
+    keywords: [],
     effect: { kind: 'ExileTopWorldCards', amount: 2 },
   }
 }
@@ -594,5 +597,103 @@ describe('Cut It Loose (Sequence: destroyHand → hazard)', () => {
     expect(targets).toContain(slidingDebris.id)
     expect(targets).not.toContain(cutItLoose.id)
     expect(targets).not.toContain(findFooting.id)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// None-effect playability (REQ-MALL-1 — Spore)
+// ---------------------------------------------------------------------------
+
+describe('None-effect playability (Spore)', () => {
+  /**
+   * Mint a Spore-shaped card: a paid no-op exhaust. There is no catalog
+   * template yet, so mint any player card and spread the Spore shape onto it
+   * (same pattern as the exhaust overrides in reduce.test.ts).
+   */
+  function mintSpore(state: GameState): [PlayerCard, GameState] {
+    const [base, next] = mintPlayer(state, 'Explore')
+    return [
+      { ...base, name: 'Spore', effect: { kind: 'None' }, energyCost: 1, exhaust: true, keywords: ['Spore'] },
+      next,
+    ]
+  }
+
+  it('appears in playable with spec {kind:"none"} when energy >= 1', () => {
+    const s0 = makeState({ energy: 1 })
+    const [spore, s1] = mintSpore(s0)
+    const state = { ...s1, hand: [spore] }
+
+    const actions = availableActions(state)
+    const entry = actions.playable.find((p) => p.cardId === spore.id)
+    expect(entry).toBeDefined()
+    expect(entry!.spec).toEqual({ kind: 'none' })
+  })
+
+  it('is absent from playable when energy is 0', () => {
+    const s0 = makeState({ energy: 0 })
+    const [spore, s1] = mintSpore(s0)
+    const state = { ...s1, hand: [spore] }
+
+    const actions = availableActions(state)
+    const entry = actions.playable.find((p) => p.cardId === spore.id)
+    expect(entry).toBeUndefined()
+  })
+})
+
+// ---------------------------------------------------------------------------
+// DealProgressScaled playability (REQ-MALL-5 — Bloom)
+// ---------------------------------------------------------------------------
+
+describe('DealProgressScaled playability', () => {
+  function makeBloom(id: string): PlayerCard {
+    return {
+      kind: 'player',
+      id,
+      name: 'Bloom',
+      insetKey: undefined,
+      sourceWorldId: 'overgrown-mall',
+      effect: {
+        kind: 'DealProgressScaled',
+        base: 1,
+        per: { kind: 'KeywordInHand', keyword: 'Spore' },
+        amount: 1,
+      },
+      energyCost: 1,
+      exhaust: false,
+      keywords: [],
+    }
+  }
+
+  it('is absent from playable when no world card is in hand', () => {
+    const state = makeState({ hand: [makeBloom('bloom-1')], energy: 1 })
+
+    const actions = availableActions(state)
+    const entry = actions.playable.find((p) => p.cardId === 'bloom-1')
+    expect(entry).toBeUndefined()
+  })
+
+  it('appears in playable with hazard spec and legal world targets', () => {
+    const s0 = makeState({ energy: 1 })
+    const bloom = makeBloom('bloom-2')
+    const [zombie, s1] = mintWorld(s0, 'Zombie')
+    const [rubble, s2] = mintWorld(s1, 'Rubble')
+    const state = { ...s2, hand: [bloom, zombie, rubble], energy: 1 }
+
+    const actions = availableActions(state)
+    const entry = actions.playable.find((p) => p.cardId === bloom.id)
+    expect(entry).toBeDefined()
+    expect(entry!.spec).toEqual({ kind: 'hazard' })
+    expect(actions.legalTargets(bloom.id, 0)).toEqual([zombie.id, rubble.id])
+  })
+
+  it('is absent from playable when energy is too low', () => {
+    const s0 = makeState({ energy: 0 })
+    const bloom = makeBloom('bloom-3')
+    const [zombie, s1] = mintWorld(s0, 'Zombie')
+    const state = { ...s1, hand: [bloom, zombie], energy: 0 }
+
+    const actions = availableActions(state)
+    const entry = actions.playable.find((p) => p.cardId === bloom.id)
+    expect(entry).toBeUndefined()
   })
 })

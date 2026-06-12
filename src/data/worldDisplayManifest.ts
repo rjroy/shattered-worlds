@@ -30,4 +30,10 @@ export const worldDisplayManifest: Record<string, WorldDisplayData> = {
     story:   'The highway is packed with cars, but no one is honking. The rumbling starts as a low vibration, but quickly escalates into a deafening roar. The ground splits open.',
     backgroundKey: 'highway-volcano-bg',
   },
+  'overgrown-mall': {
+    name:    'Overgrown Mall',
+    tagline: 'The garden level kept growing.',
+    story:   'The skylight gave way before the alarms did. Vines move through the concourse faster than evacuation signs can point, turning kiosks and planters into a damp green maze. Somewhere past the food court, the emergency doors are already buried.',
+    backgroundKey: 'overgrown-mall-bg',
+  },
 }

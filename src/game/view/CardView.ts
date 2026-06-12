@@ -212,9 +212,22 @@ export class CardView extends Phaser.GameObjects.Container {
     })
 
     if (card.kind === 'player') {
+      // Keywords — same 9px line the world face uses, at the same offset, so a
+      // Spore card is identifiable in hand (REQ-MALL-21).
+      const hasKeywords = card.keywords.length > 0
+      if (hasKeywords) {
+        addCardText(scene, this, 0, -CARD_H / 2 + 23, card.keywords.join(' · '), {
+          fontSize: '9px',
+          color: TEXT.textKeyword,
+          originY: 0,
+        })
+      }
+
       // Full effect description — the whole face is self-explanatory. Modal and
       // Sequence cards render every branch / step, so nothing reads as "Choose...".
-      addCardText(scene, this, 0, -CARD_H / 2 + 28, describeEffect(card.effect).join('\n'), {
+      // A keyword line pushes the block down to the world face's effect offset
+      // so the two never collide; keywordless cards keep the original layout.
+      addCardText(scene, this, 0, -CARD_H / 2 + (hasKeywords ? 36 : 28), describeEffect(card.effect).join('\n'), {
         fontSize: '11px',
         color: TEXT.textLight,
         originY: 0,

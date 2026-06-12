@@ -36,6 +36,10 @@ import volcanoInsetNitroUrl from '../assets/themes/highway-volcano/insets/inset-
 import volcanoInsetSpotPathUrl from '../assets/themes/highway-volcano/insets/inset-spot-path.webp'
 import volcanoInsetTremorsUrl from '../assets/themes/highway-volcano/insets/inset-tremors.webp'
 import volcanoInsetVehicleUrl from '../assets/themes/highway-volcano/insets/inset-vehicle.webp'
+import mallRealityUrl from '../assets/themes/overgrown-mall/overgrown-mall-reality.webp'
+import mallOverlayUrl from '../assets/themes/overgrown-mall/intrusion-overlay.webp'
+import mallCardfrontUrl from '../assets/themes/overgrown-mall/overgrown-mall-cardfront.webp'
+import mallInsetPlaceholderUrl from '../assets/themes/overgrown-mall/insets/inset-placeholder.webp'
 import insetSprintUrl from '../assets/insets/inset-sprint.webp'
 import insetExploreUrl from '../assets/insets/inset-explore.webp'
 import insetBarricadeUrl from '../assets/insets/inset-barricade.webp'
@@ -60,6 +64,7 @@ import starterJsonUrl from '../../data/worlds/starter.json?url'
 import zombieJsonUrl from '../../data/worlds/zombie-big-box.json?url'
 import birdJsonUrl from '../../data/worlds/bird-building.json?url'
 import volcanoJsonUrl from '../../data/worlds/highway-volcano.json?url'
+import mallJsonUrl from '../../data/worlds/overgrown-mall.json?url'
 
 export const assetManifest: Record<string, string> = {
   cardback: cardbackUrl,
@@ -99,6 +104,20 @@ export const assetManifest: Record<string, string> = {
   'volcano-inset-spot-path': volcanoInsetSpotPathUrl,
   'volcano-inset-tremors': volcanoInsetTremorsUrl,
   'volcano-inset-vehicle': volcanoInsetVehicleUrl,
+  'overgrown-mall-bg': mallRealityUrl,
+  'overgrown-mall-overlay': mallOverlayUrl,
+  'overgrown-mall-cardfront': mallCardfrontUrl,
+  'mall-inset-spore': mallInsetPlaceholderUrl,
+  'mall-inset-burst-planter': mallInsetPlaceholderUrl,
+  'mall-inset-pollen-haze': mallInsetPlaceholderUrl,
+  'mall-inset-kudzu-curtain': mallInsetPlaceholderUrl,
+  'mall-inset-something-in-the-atrium': mallInsetPlaceholderUrl,
+  'mall-inset-fountain-bloom': mallInsetPlaceholderUrl,
+  'mall-inset-garden-center': mallInsetPlaceholderUrl,
+  'mall-inset-pruning-shears': mallInsetPlaceholderUrl,
+  'mall-inset-machete': mallInsetPlaceholderUrl,
+  'mall-inset-weed-killer': mallInsetPlaceholderUrl,
+  'mall-inset-bloom': mallInsetPlaceholderUrl,
   'inset-sprint': insetSprintUrl,
   'inset-explore': insetExploreUrl,
   'inset-barricade': insetBarricadeUrl,
@@ -124,4 +143,5 @@ export const assetManifest: Record<string, string> = {
   'world-zombie-big-box': zombieJsonUrl,
   'world-bird-building': birdJsonUrl,
   'world-highway-volcano': volcanoJsonUrl,
+  'world-overgrown-mall': mallJsonUrl,
 }
