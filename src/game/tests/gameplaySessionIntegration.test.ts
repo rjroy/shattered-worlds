@@ -138,12 +138,20 @@ describe('gameplaySession integration', () => {
     expect(session.state.actIndex).toBe(0)
   })
 
-  it('keeps TableScene on the observed session seam instead of raw createGame', async () => {
+  it('keeps TableScene on the observed runtime seam instead of raw createGame', async () => {
     const source = await Bun.file(new URL('../scenes/TableScene.ts', import.meta.url)).text()
 
-    expect(source).toContain('createGameplaySession')
     expect(source).toContain('private game_!: GameplaySession')
-    expect(source).toContain('this.game_ = createGameplaySession(catalog, worldData, this.seed_)')
+    expect(source).toContain('this.game_ = this.runtime_.startSession(catalog, worldData, this.seed_)')
+    // Scene shutdown closes the run stream for sessions exited mid-run.
+    expect(source).toContain('this.game_.abandon()')
     expect(source).not.toContain('createGame(')
+  })
+
+  it('boots the app with one shared runtime injected into TableScene', async () => {
+    const source = await Bun.file(new URL('../main.ts', import.meta.url)).text()
+
+    expect(source).toContain('createGameplayRuntime({ storage: statsStorage() })')
+    expect(source).toContain('new TableScene(gameplayRuntime)')
   })
 })

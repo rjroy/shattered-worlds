@@ -104,9 +104,10 @@ describe('progress reset on EndTurn', () => {
 describe('EndTurn hold vs discard', () => {
   it('world cards remain in hand; player cards move to playerDiscard', () => {
     // Use a large playerDraw so refillHand does not recycle the discarded card
-    // back into hand immediately.
+    // back into hand immediately. Use Find Baseball Bat (onEndOfTurn: None) so
+    // the world card stays in hand instead of self-destructing.
     const base = createWorld(catalog, worldData, 42)
-    const [screams, s1] = mintCard(catalog, base, 'Screams')
+    const [findBat, s1] = mintCard(catalog, base, 'Find Baseball Bat')
     const [explore, s2] = mintCard(catalog, s1, 'Explore')
 
     // Seed enough player draws so the discard is not re-drawn this turn
@@ -118,15 +119,15 @@ describe('EndTurn hold vs discard', () => {
 
     const state = makeState({
       ...finalState,
-      hand: [screams as WorldCard, explore as PlayerCard],
+      hand: [findBat as WorldCard, explore as PlayerCard],
       playerDraw: [e2 as PlayerCard, e3 as PlayerCard, e4 as PlayerCard, e5 as PlayerCard, e6 as PlayerCard],
       playerDiscard: [],
     })
 
     const result = reduce(catalog, state, { type: 'EndTurn' })
 
-    // Screams (world) should still be in hand
-    expect(result.state.hand.some((c) => c.id === screams.id)).toBe(true)
+    // Find Baseball Bat (world) should still be in hand
+    expect(result.state.hand.some((c) => c.id === findBat.id)).toBe(true)
     // Explore (player) should be in playerDiscard (it was discarded, not re-drawn)
     expect(result.state.playerDiscard.some((c) => c.id === explore.id)).toBe(true)
     // Explore should NOT be in hand (unless refillHand pulled it from discard,
@@ -782,8 +783,8 @@ describe('EndTurn onEndOfTurn', () => {
 
   it('world cards with onEndOfTurn=None deal no damage', () => {
     const base = createWorld(catalog, worldData, 42)
-    const [rubble, _s1] = mintCard(catalog, base, 'Rubble')
-    const state = makeEndTurnState(rubble as WorldCard, 10)
+    const [findBat, _s1] = mintCard(catalog, base, 'Find Baseball Bat')
+    const state = makeEndTurnState(findBat as WorldCard, 10)
 
     const result = reduce(catalog, state, { type: 'EndTurn' })
 

@@ -14,21 +14,8 @@ import {
   type GameplayBatch,
   type RunStarted,
   type RunStreamItem,
+  type SubscriberFailure,
 } from './gameplayEventStream'
-
-type MutableGameplayBatchSnapshot = {
-  action: {
-    type: string
-    cardId?: string
-    returnIds?: string[]
-  }
-  events: Array<Record<string, unknown>>
-  state: {
-    hand: unknown[]
-    rng: { a: number }
-    nextId: number
-  }
-}
 
 describe('gameplayEventStream contract', () => {
   const createObservedBatch = () =>
@@ -140,6 +127,29 @@ describe('gameplayEventStream contract', () => {
     })
   })
 
+  it('supports an abandoned outcome distinct from won and lost', () => {
+    const item = createRunEnded({
+      sessionId: 'session-quit',
+      outcome: 'abandoned',
+      finalActIndex: 1,
+    })
+
+    expect(item.outcome).toBe('abandoned')
+    expect(item.outcome).not.toBe('won')
+    expect(item.outcome).not.toBe('lost')
+  })
+
+  it('deep-freezes constructed stream items', () => {
+    const batch = createObservedBatch()
+
+    expect(Object.isFrozen(batch)).toBe(true)
+    expect(Object.isFrozen(batch.action)).toBe(true)
+    expect(Object.isFrozen(batch.events)).toBe(true)
+    expect(Object.isFrozen(batch.events[0])).toBe(true)
+    expect(Object.isFrozen(batch.state)).toBe(true)
+    expect(Object.isFrozen(batch.state.hand)).toBe(true)
+  })
+
   it('discriminates the stream without flattening gameplay events to top-level items', () => {
     const state = createGame(catalog, worldData, 7).state
 
@@ -206,13 +216,19 @@ describe('gameplayEventStream contract', () => {
   })
 
   it('stays renderer-free and imports no Phaser runtime', () => {
-    const source = readFileSync(join(import.meta.dir, 'gameplayEventStream.ts'), 'utf8')
-    const sessionSource = readFileSync(join(import.meta.dir, 'gameplaySession.ts'), 'utf8')
+    const runtimeModules = [
+      'gameplayEventStream.ts',
+      'gameplaySession.ts',
+      'gameplayRuntime.ts',
+      'runStats.ts',
+    ]
 
-    expect(source.includes('phaser')).toBe(false)
-    expect(source.includes('Phaser')).toBe(false)
-    expect(sessionSource.includes('phaser')).toBe(false)
-    expect(sessionSource.includes('Phaser')).toBe(false)
+    for (const module of runtimeModules) {
+      const source = readFileSync(join(import.meta.dir, module), 'utf8')
+
+      expect(source).not.toMatch(/from\s+['"]phaser['"]/i)
+      expect(source).not.toMatch(/import\s*\(\s*['"]phaser['"]\s*\)/i)
+    }
   })
 
   it('uses the public core surface for GameEvent and GameState types', () => {
@@ -249,8 +265,9 @@ describe('gameplayEventStream contract', () => {
     expect(calls).toEqual(['first:GameplayBatch', 'second:GameplayBatch'])
   })
 
-  it('isolates subscriber mutations from later listeners and retained gameplay batches', () => {
-    const stream = createGameplayEventStream()
+  it('surfaces subscriber mutation attempts as failures and keeps later listeners intact', () => {
+    const failures: SubscriberFailure[] = []
+    const stream = createGameplayEventStream((failure) => failures.push(failure))
     const batch = createGameplayBatch('session-isolated', {
       type: 'PlayCard',
       cardId: 'play-1',
@@ -261,20 +278,13 @@ describe('gameplayEventStream contract', () => {
     })
     const authoritativeHandSize = batch.state.hand.length
     const authoritativeNextId = batch.state.nextId
-    const authoritativeRngA = batch.state.rng.a
     let laterObservedBatch: GameplayBatch | undefined
 
     stream.subscribe((item) => {
       if (item.kind !== 'GameplayBatch') return
 
-      const mutable = item as unknown as MutableGameplayBatchSnapshot
+      const mutable = item as unknown as { action: { cardId: string } }
       mutable.action.cardId = 'mutated-card'
-      mutable.action.returnIds?.push('hazard-2')
-      mutable.events.push({ type: 'TurnEnded' })
-      mutable.events[0]!.ids = ['changed']
-      mutable.state.hand.length = 0
-      mutable.state.rng.a = 123456
-      mutable.state.nextId = 654321
     })
     stream.subscribe((item) => {
       if (item.kind === 'GameplayBatch') {
@@ -284,15 +294,12 @@ describe('gameplayEventStream contract', () => {
 
     stream.emit(batch)
 
-    expect(laterObservedBatch).toEqual(batch)
-    expect(laterObservedBatch).not.toBe(batch)
-    expect(laterObservedBatch?.action).not.toBe(batch.action)
-    expect(laterObservedBatch?.events).not.toBe(batch.events)
-    expect(laterObservedBatch?.state).not.toBe(batch.state)
+    expect(failures).toHaveLength(1)
+    expect(failures[0]?.error).toBeInstanceOf(TypeError)
+    expect(laterObservedBatch).toBe(batch)
     expect(batch.action).toEqual({ type: 'PlayCard', cardId: 'play-1', returnIds: ['hazard-1'] })
     expect(batch.events).toEqual([{ type: 'WorldCardsReturned', ids: ['hazard-1'] }])
     expect(batch.state.hand).toHaveLength(authoritativeHandSize)
-    expect(batch.state.rng.a).toBe(authoritativeRngA)
     expect(batch.state.nextId).toBe(authoritativeNextId)
   })
 
@@ -331,11 +338,13 @@ describe('gameplayEventStream contract', () => {
     expect(calls).toEqual(['first', 'third'])
   })
 
-  it('finishes the snapshot when subscribers throw, then rethrows the first error', () => {
-    const stream = createGameplayEventStream()
+  it('reports every subscriber failure without throwing back into the emitter', () => {
+    const failures: SubscriberFailure[] = []
+    const stream = createGameplayEventStream((failure) => failures.push(failure))
     const calls: string[] = []
     const firstError = new Error('first listener failed')
     const secondError = new Error('second listener failed')
+    const batch = createObservedBatch()
 
     stream.subscribe(() => {
       calls.push('first')
@@ -349,7 +358,26 @@ describe('gameplayEventStream contract', () => {
       calls.push('third')
     })
 
-    expect(() => stream.emit(createObservedBatch())).toThrow(firstError)
+    expect(() => stream.emit(batch)).not.toThrow()
     expect(calls).toEqual(['first', 'second', 'third'])
+    expect(failures.map((failure) => failure.error)).toEqual([firstError, secondError])
+    expect(failures.every((failure) => failure.item === batch)).toBe(true)
+  })
+
+  it('keeps delivering when the failure handler itself throws', () => {
+    const stream = createGameplayEventStream(() => {
+      throw new Error('handler failed')
+    })
+    const calls: string[] = []
+
+    stream.subscribe(() => {
+      throw new Error('subscriber failed')
+    })
+    stream.subscribe(() => {
+      calls.push('second')
+    })
+
+    expect(() => stream.emit(createObservedBatch())).not.toThrow()
+    expect(calls).toEqual(['second'])
   })
 })

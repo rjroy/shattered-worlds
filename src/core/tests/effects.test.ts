@@ -534,7 +534,7 @@ describe('applyEffect DestroySelf', () => {
     const sequence = {
       kind: 'Sequence' as const,
       steps: [
-        { kind: 'AddWorldCardToTop' as const, template: 'Zombie' },
+        { kind: 'AddWorldCardToDeck' as const, template: 'Zombie', bTop: true },
         { kind: 'DestroySelf' as const },
       ],
     }

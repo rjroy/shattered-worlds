@@ -11,7 +11,8 @@
 import Phaser from 'phaser'
 import { assetManifest } from '../data/assetManifest'
 import { worldMusicManifest } from '../data/audioManifest'
-import { createGameplaySession, type GameplaySession } from '../runtime/gameplaySession'
+import { createGameplayRuntime, type GameplayRuntime } from '../runtime/gameplayRuntime'
+import type { GameplaySession } from '../runtime/gameplaySession'
 import { selectTheme } from '../view/themes/themeManifest'
 import type { VisualTheme } from '../view/themes/theme'
 import { availableActions, CatalogError } from '../../core/index'
@@ -131,9 +132,14 @@ export class TableScene extends Phaser.Scene {
   private worldId_ = 'zombie-big-box'
   private seed_ = 0
   private loadError_ = false
+  private runtime_: GameplayRuntime
 
-  constructor() {
+  constructor(runtime?: GameplayRuntime) {
     super({ key: 'Table' })
+    // The app composition root (main.ts) injects the shared runtime so
+    // cross-run consumers observe every session; a private fallback keeps the
+    // scene constructible without one (tests, Phaser default instantiation).
+    this.runtime_ = runtime ?? createGameplayRuntime()
   }
 
   init(data: { worldId?: string; seed?: number }): void {
@@ -170,10 +176,17 @@ export class TableScene extends Phaser.Scene {
 
     const { catalog, worldData } = buildWorld(this.worldId_)
 
-    this.game_ = createGameplaySession(catalog, worldData, this.seed_)
+    this.game_ = this.runtime_.startSession(catalog, worldData, this.seed_)
+    // Registered before any other create() work can throw, so a session that
+    // emitted RunStarted always gets its closing RunEnded on shutdown. Closes
+    // the run as 'abandoned' when the player exits mid-run; no-op if the run
+    // already ended in a win or loss.
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+      this.stopWorldMusic()
+      this.game_.abandon()
+    })
     this.theme_ = selectTheme(this.game_.state.worldId)
     this.startWorldMusic(this.game_.state.worldId)
-    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => this.stopWorldMusic())
 
     this.hudView = new HUDView(this)
 
@@ -725,11 +738,6 @@ export class TableScene extends Phaser.Scene {
     }
 
     return new Promise((resolve, reject) => {
-      if (music === undefined) {
-        reject(new Error(`Music asset missing from cache: ${worldId}`))
-        return;
-      } 
-
       const resolveMusic = () => {
         this.worldMusic = this.sound.add(music.key, { loop: true, volume: 0.45, })
         this.worldMusic.play()

@@ -6,27 +6,38 @@ import {
   createGameplayEventStream,
   createRunEnded,
   createRunStarted,
-  type RunStreamItem,
+  type GameplayEventStream,
+  type RunOutcome,
   type RunStreamSubscriber,
   type RunTerminalOutcome,
   type SessionId,
   type SetupModifier,
+  type SubscriberFailureHandler,
 } from './gameplayEventStream'
 
 export interface GameplaySession extends GameCore {
   readonly sessionId: SessionId
+  /** Session-scoped observation: delivers only this session's stream items. */
   subscribe(subscriber: RunStreamSubscriber): () => void
-}
-
-export interface GameplaySessionSubscriberError {
-  readonly error: unknown
-  readonly item: RunStreamItem
+  /**
+   * Closes the run with outcome 'abandoned' if no terminal outcome was
+   * reached. No-op once the run has ended; call on scene shutdown so every
+   * session closes its stream exactly once.
+   */
+  abandon(): void
 }
 
 export interface GameplaySessionOptions {
   readonly appliedModifiers?: readonly SetupModifier[]
   readonly makeSessionId?: () => SessionId
-  readonly onSubscriberError?: (report: GameplaySessionSubscriberError) => void
+  /**
+   * Failure handling for the session's privately created stream. Ignored when
+   * `stream` is provided: a shared stream keeps the handler it was created
+   * with at the composition root.
+   */
+  readonly onSubscriberFailure?: SubscriberFailureHandler
+  /** Shared long-lived stream to emit into (see createGameplayRuntime). */
+  readonly stream?: GameplayEventStream
   readonly subscribers?: readonly RunStreamSubscriber[]
 }
 
@@ -34,44 +45,15 @@ function defaultMakeSessionId(): SessionId {
   return crypto.randomUUID()
 }
 
-function isTerminalOutcome(status: GameplaySession['state']['status']): status is RunTerminalOutcome {
+function isTerminalOutcome(status: GameCore['state']['status']): status is RunTerminalOutcome {
   return status === 'won' || status === 'lost'
 }
 
-function reportSubscriberError(
-  item: RunStreamItem,
-  error: unknown,
-  onSubscriberError?: (report: GameplaySessionSubscriberError) => void,
-): void {
-  const report = {
-    error,
-    item: structuredClone(item),
-  } satisfies GameplaySessionSubscriberError
-
-  if (onSubscriberError === undefined) {
-    console.error(`[gameplaySession] subscriber failed while emitting ${item.kind}`, report)
-    return
-  }
-
-  try {
-    onSubscriberError(report)
-  } catch (reporterError) {
-    console.error('[gameplaySession] subscriber error reporter failed', {
-      report,
-      reporterError,
-    })
-  }
-}
-
-function emitFromSession(
-  stream: ReturnType<typeof createGameplayEventStream>,
-  item: RunStreamItem,
-  onSubscriberError?: (report: GameplaySessionSubscriberError) => void,
-): void {
-  try {
-    stream.emit(item)
-  } catch (error) {
-    reportSubscriberError(item, error, onSubscriberError)
+function onlySession(sessionId: SessionId, subscriber: RunStreamSubscriber): RunStreamSubscriber {
+  return (item) => {
+    if (item.sessionId === sessionId) {
+      return subscriber(item)
+    }
   }
 }
 
@@ -81,25 +63,52 @@ export function createGameplaySession(
   seed: number,
   options: GameplaySessionOptions = {},
 ): GameplaySession {
-  const stream = createGameplayEventStream()
-
-  for (const subscriber of options.subscribers ?? []) {
-    stream.subscribe(subscriber)
-  }
-
-  const core = createGame(catalog, world, seed)
+  const stream = options.stream ?? createGameplayEventStream(options.onSubscriberFailure)
   const sessionId = (options.makeSessionId ?? defaultMakeSessionId)()
+  const core = createGame(catalog, world, seed)
+
+  // Session-scoped subscriptions are released when the run closes: after
+  // RunEnded this session emits nothing more, and a shared stream must not
+  // accumulate dead filters across runs.
+  const sessionUnsubscribes: (() => void)[] = []
   let runEnded = false
 
-  emitFromSession(
-    stream,
+  function subscribeForSession(subscriber: RunStreamSubscriber): () => void {
+    const releaseFromStream = stream.subscribe(onlySession(sessionId, subscriber))
+    const unsubscribe = () => {
+      releaseFromStream()
+
+      const index = sessionUnsubscribes.indexOf(unsubscribe)
+      if (index >= 0) {
+        sessionUnsubscribes.splice(index, 1)
+      }
+    }
+
+    sessionUnsubscribes.push(unsubscribe)
+    return unsubscribe
+  }
+
+  function closeRun(outcome: RunOutcome, finalActIndex: number): void {
+    runEnded = true
+    stream.emit(createRunEnded({ sessionId, outcome, finalActIndex }))
+
+    // Each unsubscribe removes itself from the list; iterate over a copy.
+    for (const unsubscribe of [...sessionUnsubscribes]) {
+      unsubscribe()
+    }
+  }
+
+  for (const subscriber of options.subscribers ?? []) {
+    subscribeForSession(subscriber)
+  }
+
+  stream.emit(
     createRunStarted({
       sessionId,
       worldId: core.state.worldId,
       seed,
       appliedModifiers: options.appliedModifiers ?? [],
     }),
-    options.onSubscriberError,
   )
 
   return {
@@ -110,25 +119,27 @@ export function createGameplaySession(
     },
 
     dispatch(action: Action) {
+      // After abandon the core may still be 'playing'; refusing here keeps the
+      // close-exactly-once invariant (no batches after RunEnded, no second
+      // outcome). Post-win/loss dispatch already throws inside the core.
+      if (runEnded) {
+        throw new Error(`[gameplaySession] dispatch after run closed (session ${sessionId})`)
+      }
+
       const resolution = core.dispatch(action)
 
-      emitFromSession(stream, createGameplayBatch(sessionId, action, resolution), options.onSubscriberError)
+      stream.emit(createGameplayBatch(sessionId, action, resolution))
 
       if (!runEnded && isTerminalOutcome(resolution.state.status)) {
-        runEnded = true
-
-        emitFromSession(
-            stream,
-            createRunEnded({
-              sessionId,
-              outcome: resolution.state.status,
-              finalActIndex: resolution.state.actIndex,
-            }),
-            options.onSubscriberError,
-        )
+        closeRun(resolution.state.status, resolution.state.actIndex)
       }
 
       return resolution
+    },
+
+    abandon() {
+      if (runEnded) return
+      closeRun('abandoned', core.state.actIndex)
     },
 
     availableActions() {
@@ -140,7 +151,8 @@ export function createGameplaySession(
     },
 
     subscribe(subscriber) {
-      return stream.subscribe(subscriber)
+      if (runEnded) return () => {}
+      return subscribeForSession(subscriber)
     },
   }
 }

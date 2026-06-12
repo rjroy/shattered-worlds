@@ -4,8 +4,13 @@ import { createGame } from '../../core/index'
 import type { Action, WorldData } from '../../core/index'
 import { catalog, worldData } from '../../core/tests/testFixture'
 
-import { createGameplaySession, type GameplaySessionSubscriberError } from './gameplaySession'
-import type { GameplayBatch, RunStreamItem } from './gameplayEventStream'
+import { createGameplaySession } from './gameplaySession'
+import {
+  createGameplayEventStream,
+  type GameplayBatch,
+  type RunStreamItem,
+  type SubscriberFailure,
+} from './gameplayEventStream'
 
 function requireHandCardId(
   session: Pick<ReturnType<typeof createGame>, 'state'>,
@@ -83,7 +88,7 @@ describe('gameplaySession', () => {
 
   it('reports run-start subscriber failures without aborting session creation', () => {
     const items: RunStreamItem[] = []
-    const reports: GameplaySessionSubscriberError[] = []
+    const reports: SubscriberFailure[] = []
     const failure = new Error('run start subscriber failed')
 
     const session = createGameplaySession(catalog, worldData, 42, {
@@ -94,7 +99,7 @@ describe('gameplaySession', () => {
         },
         (item) => items.push(item),
       ],
-      onSubscriberError: (report) => reports.push(report),
+      onSubscriberFailure: (report) => reports.push(report),
     })
 
     expect(session.sessionId).toBe('session-run-start-error')
@@ -182,7 +187,7 @@ describe('gameplaySession', () => {
   })
 
   it('keeps core output identical for the same seed and actions after subscribers are added', () => {
-    const reports: GameplaySessionSubscriberError[] = []
+    const reports: SubscriberFailure[] = []
     const observedItems: RunStreamItem[] = []
     const baselineSession = createGameplaySession(catalog, worldData, 42, {
       makeSessionId: () => 'session-baseline',
@@ -193,14 +198,10 @@ describe('gameplaySession', () => {
         (item) => {
           if (item.kind !== 'GameplayBatch') return
 
-          const mutable = item as unknown as {
-            action: { type: string }
-            events: Array<{ type: string }>
-            state: { hp: number }
-          }
+          // Mutation attempts throw on the frozen item and surface as
+          // reported failures; they must not affect gameplay resolution.
+          const mutable = item as unknown as { action: { type: string } }
           mutable.action.type = 'Mutated'
-          mutable.events.reverse()
-          mutable.state.hp = -999
         },
         (item) => {
           observedItems.push(item)
@@ -209,7 +210,7 @@ describe('gameplaySession', () => {
           }
         },
       ],
-      onSubscriberError: (report) => reports.push(report),
+      onSubscriberFailure: (report) => reports.push(report),
     })
     const core = createGame(catalog, worldData, 42)
     const playExploreOnScreams: Action = {
@@ -231,7 +232,15 @@ describe('gameplaySession', () => {
     expect(observedSession.state).toEqual(baselineSession.state)
     expect(observedSession.state).toEqual(core.state)
     expect(observedItems.map((item) => item.kind)).toEqual(['RunStarted', 'GameplayBatch', 'GameplayBatch'])
-    expect(reports.map((report) => report.item.kind)).toEqual(['GameplayBatch', 'GameplayBatch'])
+    // Each dispatch reports two failures: the frozen-item mutation attempt,
+    // then the throwing listener.
+    expect(reports.map((report) => report.item.kind)).toEqual([
+      'GameplayBatch',
+      'GameplayBatch',
+      'GameplayBatch',
+      'GameplayBatch',
+    ])
+    expect(reports.filter((report) => report.error instanceof TypeError)).toHaveLength(2)
   })
 
   it('emits one run-end envelope exactly once when dispatch reaches a terminal state', () => {
@@ -258,7 +267,7 @@ describe('gameplaySession', () => {
 
   it('reports subscriber failures without changing accepted dispatch or terminal emission', () => {
     const items: RunStreamItem[] = []
-    const reports: GameplaySessionSubscriberError[] = []
+    const reports: SubscriberFailure[] = []
     const failure = new Error('dispatch subscriber failed')
     const session = createGameplaySession(catalog, worldData, 17, {
       makeSessionId: () => 'session-dispatch-error',
@@ -270,7 +279,7 @@ describe('gameplaySession', () => {
         },
         (item) => items.push(item),
       ],
-      onSubscriberError: (report) => reports.push(report),
+      onSubscriberFailure: (report) => reports.push(report),
     })
     const core = createGame(catalog, worldData, 17)
     let sessionResult = undefined as ReturnType<typeof session.dispatch> | undefined
@@ -327,8 +336,10 @@ describe('gameplaySession', () => {
   })
 
   it('supports optional subscribers and keeps emitted batches isolated from listener mutation', () => {
+    const reports: SubscriberFailure[] = []
     const session = createGameplaySession(catalog, worldData, 42, {
       makeSessionId: () => 'session-optional',
+      onSubscriberFailure: (report) => reports.push(report),
     })
 
     expect(() => session.dispatch({ type: 'EndTurn' })).not.toThrow()
@@ -337,14 +348,8 @@ describe('gameplaySession', () => {
     session.subscribe((item) => {
       if (item.kind !== 'GameplayBatch') return
 
-      const mutable = item as unknown as {
-        action: { type: string }
-        events: Array<{ type: string }>
-        state: { hp: number }
-      }
+      const mutable = item as unknown as { action: { type: string } }
       mutable.action.type = 'Mutated'
-      mutable.events.push({ type: 'MutatedEvent' })
-      mutable.state.hp = -1
     })
     session.subscribe((item) => {
       if (item.kind === 'GameplayBatch') {
@@ -360,6 +365,117 @@ describe('gameplaySession', () => {
     expect(batch?.events).toEqual(resolution.events)
     expect(batch?.state).toEqual(resolution.state)
     expect(session.state.hp).toBe(resolution.state.hp)
+    expect(reports).toHaveLength(1)
+    expect(reports[0]?.error).toBeInstanceOf(TypeError)
+  })
+
+  it('emits an abandoned run-end exactly once when the session is abandoned mid-run', () => {
+    const items: RunStreamItem[] = []
+    const session = createGameplaySession(catalog, worldData, 42, {
+      makeSessionId: () => 'session-abandoned',
+      subscribers: [(item) => items.push(item)],
+    })
+
+    session.dispatch({ type: 'EndTurn' })
+    expect(session.state.status).toBe('playing')
+
+    session.abandon()
+    session.abandon()
+
+    expect(items.filter((item) => item.kind === 'RunEnded')).toEqual([
+      {
+        kind: 'RunEnded',
+        sessionId: 'session-abandoned',
+        outcome: 'abandoned',
+        finalActIndex: session.state.actIndex,
+      },
+    ])
+  })
+
+  it('refuses dispatch after abandon so nothing follows the closing RunEnded', () => {
+    const items: RunStreamItem[] = []
+    const session = createGameplaySession(catalog, worldData, 42, {
+      makeSessionId: () => 'session-dispatch-after-abandon',
+      subscribers: [(item) => items.push(item)],
+    })
+
+    session.dispatch({ type: 'EndTurn' })
+    session.abandon()
+
+    const closedHistory = items.slice()
+
+    expect(() => session.dispatch({ type: 'EndTurn' })).toThrow(/run closed/)
+    expect(items).toEqual(closedHistory)
+    expect(items.at(-1)?.kind).toBe('RunEnded')
+  })
+
+  it('treats abandon after a terminal outcome as a no-op', () => {
+    const items: RunStreamItem[] = []
+    const session = createGameplaySession(catalog, worldData, 17, {
+      makeSessionId: () => 'session-abandon-after-loss',
+      subscribers: [(item) => items.push(item)],
+    })
+
+    for (let turn = 0; turn < 4; turn += 1) {
+      session.dispatch({ type: 'EndTurn' })
+    }
+
+    expect(session.state.status).toBe('lost')
+    session.abandon()
+
+    const runEndedItems = items.filter((item) => item.kind === 'RunEnded')
+    expect(runEndedItems).toHaveLength(1)
+    expect(runEndedItems[0]).toMatchObject({ outcome: 'lost' })
+  })
+
+  it('emits into an injected shared stream and scopes session.subscribe to its own items', () => {
+    const sharedItems: RunStreamItem[] = []
+    const stream = createGameplayEventStream()
+    stream.subscribe((item) => sharedItems.push(item))
+
+    const firstSession = createGameplaySession(catalog, worldData, 42, {
+      makeSessionId: () => 'shared-first',
+      stream,
+    })
+    const firstScoped: RunStreamItem[] = []
+    firstSession.subscribe((item) => firstScoped.push(item))
+    firstSession.dispatch({ type: 'EndTurn' })
+    firstSession.abandon()
+
+    const secondSession = createGameplaySession(catalog, worldData, 7, {
+      makeSessionId: () => 'shared-second',
+      stream,
+    })
+    secondSession.dispatch({ type: 'EndTurn' })
+    secondSession.abandon()
+
+    // The shared stream sees both sessions' full histories, correlated by id.
+    expect(sharedItems.map((item) => `${item.sessionId}:${item.kind}`)).toEqual([
+      'shared-first:RunStarted',
+      'shared-first:GameplayBatch',
+      'shared-first:RunEnded',
+      'shared-second:RunStarted',
+      'shared-second:GameplayBatch',
+      'shared-second:RunEnded',
+    ])
+
+    // Session-scoped observation never leaks the other session's items.
+    expect(firstScoped.every((item) => item.sessionId === 'shared-first')).toBe(true)
+    expect(firstScoped.map((item) => item.kind)).toEqual(['GameplayBatch', 'RunEnded'])
+  })
+
+  it('releases session-scoped subscriptions when the run closes', () => {
+    const stream = createGameplayEventStream()
+    const session = createGameplaySession(catalog, worldData, 42, {
+      makeSessionId: () => 'session-release',
+      stream,
+    })
+    const unsubscribe = session.subscribe(() => {})
+
+    session.abandon()
+
+    expect(() => unsubscribe()).not.toThrow()
+    expect(session.subscribe(() => {})).toBeInstanceOf(Function)
   })
 
   it('emits actual runtime payloads with semantic headless shapes only', () => {
@@ -462,9 +578,9 @@ describe('gameplaySession', () => {
     expect(session.intensity()).toBe(core.intensity())
   })
 
-  it('silently consumes a throwing onSubscriberError reporter without aborting dispatch', () => {
-    // Exercises the double-catch in reportSubscriberError: subscriber throws, reporter
-    // also throws, and dispatch still returns a valid result.
+  it('keeps dispatching when the onSubscriberFailure handler itself throws', () => {
+    // Subscriber throws, the failure handler also throws, and dispatch still
+    // returns a valid result (the stream falls back to console.error).
     const items: RunStreamItem[] = []
     const session = createGameplaySession(catalog, worldData, 42, {
       makeSessionId: () => 'session-reporter-throw',
@@ -474,7 +590,7 @@ describe('gameplaySession', () => {
         },
         (item) => items.push(item),
       ],
-      onSubscriberError: () => {
+      onSubscriberFailure: () => {
         throw new Error('reporter also failed')
       },
     })
