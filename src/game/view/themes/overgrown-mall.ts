@@ -23,6 +23,7 @@ export const OVERGROWN_MALL_THEME: VisualTheme = {
     connectorReturn: 0x8a88ff,
     ringAccent: 0x35e0a0,
     targetGlow: 0x8affc7,
+    playableGlow: 0x8affc7,
     committedTarget: 0x1f5c48,
   },
   backdrop: {

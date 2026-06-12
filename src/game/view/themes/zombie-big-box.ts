@@ -25,6 +25,7 @@ export const ZOMBIE_BIG_BOX_THEME: VisualTheme = {
     connectorReturn: 0x4a9ad0,     // cool blue return-to-deck action
     ringAccent: 0x6ad04a,          // cost-ring fill, toxic-green family
     targetGlow: 0x9bff6a,          // bright toxic hover-target glow
+    playableGlow: 0x9bff6a,          // bright toxic hover-target glow
     committedTarget: 0x2a5a1a,     // muted dark-moss "locked here" mark
   },
   backdrop: {

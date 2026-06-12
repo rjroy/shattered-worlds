@@ -7,6 +7,7 @@ export interface FrameStyle {
   connectorReturn: number    // cool/blue, for return-to-deck actions
   ringAccent: number         // cost-ring fill color (targetBorder green family)
   targetGlow: number         // hover-target emphasis tint/glow
+  playableGlow: number         // hover-target emphasis tint/glow
   committedTarget: number    // muted "already locked here" mark
 }
 

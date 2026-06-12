@@ -25,6 +25,7 @@ export const HIGHWAY_VOLCANO_THEME: VisualTheme = {
     connectorReturn: 0x44aaff,     // cool blue return, pops off the warm field
     ringAccent: 0xff7a3c,          // cost-ring fill, ember family
     targetGlow: 0xffb38a,          // hot hover-target glow
+    playableGlow: 0xffb38a,          // hot hover-target glow
     committedTarget: 0x7a3a2a,     // muted dark-ember "locked here" mark
   },
   backdrop: {
