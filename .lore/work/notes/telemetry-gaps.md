@@ -15,6 +15,19 @@ The gaps below are about *what* the stream carries, not how it's delivered.
   runStats undercounted `cardsDiscarded`, and the renderer's animation script never
   saw the discard. Fixed on this branch: the effect now emits
   `CardsDiscarded { cardIds: [discardId] }` before the draw events.
+- **Timestamps.** Every stream item now carries `timestamp` (epoch ms) from an
+  injectable `Clock` owned by the runtime composition root (core stays
+  deterministic; tests inject fakes). `RunRecord` gained `startedAt`/`endedAt`,
+  and `LifetimeStats` gained a `durationMs` total (clamped per run so a backwards
+  clock jump can't subtract play time). Side effects: stored payloads from before
+  this change fail validation (missing `durationMs`, `lastRun` timestamps) and are
+  discarded — acceptable pre-release; and the loader now validates `lastRun`
+  shape, not just counters.
+- **`appliedModifiers` dropped at the collector.** `RunRecord` now carries the
+  `appliedModifiers` from `RunStarted`, so `lastRun` records what setup produced
+  the result (per session, ready for meta-progression modifiers). The loader
+  validates them as kind-tagged objects; pre-change stored payloads are
+  discarded, same as the timestamp change.
 
 ## Open — semantic caveats on counters that fire today
 
@@ -36,24 +49,16 @@ The gaps below are about *what* the stream carries, not how it's delivered.
 
 Listed roughly by "hardest to reconstruct later":
 
-1. **Timestamps.** Neither `RunStarted` nor `RunEnded` carries one, so `lastRun`
-   can't say *when* and run duration is unknowable. Inject a clock at the
-   runtime layer (game side) to keep core deterministic. **Cannot be backfilled**
-   — decide before stats accumulate.
-2. **`appliedModifiers` dropped at the collector.** `RunStarted` carries them but
-   `RunRecord` doesn't keep them, so once meta-progression modifiers exist (the
-   stated future consumer of this stream), `lastRun` won't know what setup
-   produced the result. Also cannot be backfilled.
-3. **Hazards removed by other means.** `hazardsResolved + hazardsDiscarded`
+1. **Hazards removed by other means.** `hazardsResolved + hazardsDiscarded`
    misses hazards leaving play via `CardDestroyed`, `WorldCardsExiled`, or
    `WorldCardsReturned`. Undercounts "hazards dealt with" on worlds using those
    mechanics.
-4. **Heals are invisible.** `heal()` emits only `HpChanged` (absolute value), no
+3. **Heals are invisible.** `heal()` emits only `HpChanged` (absolute value), no
    amount-bearing event. A future `healingReceived` counter would need fragile
    state diffing. Clean fix: a `HealReceived { amount }` event in core.
-5. **Bird-world losses untracked.** `BraceConsumed.absorbed` and `CardDestroyed`
+4. **Bird-world losses untracked.** `BraceConsumed.absorbed` and `CardDestroyed`
    from `ForceDestroy` aren't tallied. "Cards lost to the bird / saves by
    bracing" is a natural per-world stat; the events already exist, only the
    tally is missing.
-6. **`HazardPartial` and energy spent untallied.** Derivable later from the same
+5. **`HazardPartial` and energy spent untallied.** Derivable later from the same
    stream; nothing lost by deferring.

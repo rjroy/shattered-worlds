@@ -5,6 +5,7 @@ import type {
   RunStarted,
   RunStreamSubscriber,
   SessionId,
+  SetupModifier,
 } from './gameplayEventStream'
 
 /** localStorage-compatible seam so persistence stays injectable and testable. */
@@ -17,8 +18,13 @@ export interface RunRecord {
   readonly sessionId: SessionId
   readonly worldId: string
   readonly seed: number
+  /** Setup that produced this result, copied from RunStarted (e.g. future meta-progression modifiers). */
+  readonly appliedModifiers: readonly SetupModifier[]
   readonly outcome: RunOutcome
   readonly finalActIndex: number
+  /** Epoch ms, copied from the RunStarted / RunEnded stream timestamps. */
+  readonly startedAt: number
+  readonly endedAt: number
   readonly turns: number
   readonly cardsPlayed: number
   readonly progressDealt: number
@@ -48,6 +54,8 @@ export interface LifetimeStats {
   readonly hazardsResolved: number
   readonly hazardsDiscarded: number
   readonly cardsDiscarded: number
+  /** Total wall-clock time across all recorded runs, in milliseconds. */
+  readonly durationMs: number
   readonly byWorld: Readonly<Record<string, WorldStats>>
   readonly lastRun?: RunRecord
 }
@@ -66,6 +74,8 @@ export const RUN_STATS_STORAGE_KEY = 'shattered-worlds/run-stats/v1'
 type RunAccumulator = {
   worldId: string
   seed: number
+  appliedModifiers: readonly SetupModifier[]
+  startedAt: number
   turns: number
   cardsPlayed: number
   progressDealt: number
@@ -80,6 +90,21 @@ const LIFETIME_COUNTER_KEYS = [
   'wins',
   'losses',
   'abandoned',
+  'turns',
+  'cardsPlayed',
+  'progressDealt',
+  'damageTaken',
+  'hazardsResolved',
+  'hazardsDiscarded',
+  'cardsDiscarded',
+  'durationMs',
+] as const
+
+const RUN_RECORD_NUMBER_KEYS = [
+  'seed',
+  'finalActIndex',
+  'startedAt',
+  'endedAt',
   'turns',
   'cardsPlayed',
   'progressDealt',
@@ -103,6 +128,7 @@ function emptyLifetime(): LifetimeStats {
     hazardsResolved: 0,
     hazardsDiscarded: 0,
     cardsDiscarded: 0,
+    durationMs: 0,
     byWorld: {},
   }
 }
@@ -113,6 +139,28 @@ function isWorldStats(value: unknown): value is WorldStats {
   const world = value as Record<string, unknown>
   return (['runs', 'wins', 'losses', 'abandoned'] as const).every(
     (key) => typeof world[key] === 'number' && Number.isFinite(world[key]),
+  )
+}
+
+function isSetupModifier(value: unknown): value is SetupModifier {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    typeof (value as Record<string, unknown>).kind === 'string'
+  )
+}
+
+function isRunRecord(value: unknown): value is RunRecord {
+  if (typeof value !== 'object' || value === null) return false
+
+  const run = value as Record<string, unknown>
+  return (
+    typeof run.sessionId === 'string' &&
+    typeof run.worldId === 'string' &&
+    Array.isArray(run.appliedModifiers) &&
+    run.appliedModifiers.every(isSetupModifier) &&
+    (run.outcome === 'won' || run.outcome === 'lost' || run.outcome === 'abandoned') &&
+    RUN_RECORD_NUMBER_KEYS.every((key) => typeof run[key] === 'number' && Number.isFinite(run[key]))
   )
 }
 
@@ -128,7 +176,8 @@ function isLifetimeStats(value: unknown): value is LifetimeStats {
     LIFETIME_COUNTER_KEYS.every((key) => typeof stats[key] === 'number' && Number.isFinite(stats[key])) &&
     typeof stats.byWorld === 'object' &&
     stats.byWorld !== null &&
-    Object.values(stats.byWorld).every(isWorldStats)
+    Object.values(stats.byWorld).every(isWorldStats) &&
+    (stats.lastRun === undefined || isRunRecord(stats.lastRun))
   )
 }
 
@@ -197,8 +246,11 @@ function finalizeRun(accumulator: RunAccumulator, ended: RunEnded): RunRecord {
     sessionId: ended.sessionId,
     worldId: accumulator.worldId,
     seed: accumulator.seed,
+    appliedModifiers: accumulator.appliedModifiers,
     outcome: ended.outcome,
     finalActIndex: ended.finalActIndex,
+    startedAt: accumulator.startedAt,
+    endedAt: ended.timestamp,
     turns: accumulator.turns,
     cardsPlayed: accumulator.cardsPlayed,
     progressDealt: accumulator.progressDealt,
@@ -225,6 +277,9 @@ function foldIntoLifetime(lifetime: LifetimeStats, run: RunRecord): LifetimeStat
     hazardsResolved: lifetime.hazardsResolved + run.hazardsResolved,
     hazardsDiscarded: lifetime.hazardsDiscarded + run.hazardsDiscarded,
     cardsDiscarded: lifetime.cardsDiscarded + run.cardsDiscarded,
+    // Clamped: a system clock that jumps backwards mid-run must not subtract
+    // play time from the lifetime total.
+    durationMs: lifetime.durationMs + Math.max(0, run.endedAt - run.startedAt),
     byWorld: {
       ...lifetime.byWorld,
       [run.worldId]: {
@@ -254,6 +309,8 @@ export function createRunStatsCollector(
     activeRuns.set(item.sessionId, {
       worldId: item.worldId,
       seed: item.seed,
+      appliedModifiers: item.appliedModifiers,
+      startedAt: item.timestamp,
       turns: 0,
       cardsPlayed: 0,
       progressDealt: 0,

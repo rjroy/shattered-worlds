@@ -23,6 +23,7 @@ describe('gameplaySession integration', () => {
   it('delivers one dispatch batch to multiple subscribers from the same session flow', () => {
     const session = createGameplaySession(catalog, worldData, 42, {
       makeSessionId: () => 'renderer-session',
+      clock: () => 1_000,
     })
     const rendererObserved: GameplayBatch[] = []
     const secondObserved: GameplayBatch[] = []
@@ -46,6 +47,7 @@ describe('gameplaySession integration', () => {
     expect(rendererObserved[0]).toEqual({
       kind: 'GameplayBatch',
       sessionId: 'renderer-session',
+      timestamp: 1_000,
       action: { type: 'EndTurn' },
       events: resolution.events,
       state: resolution.state,
@@ -58,6 +60,7 @@ describe('gameplaySession integration', () => {
     const secondHistory: RunStreamItem[] = []
     const session = createGameplaySession(catalog, worldData, 17, {
       makeSessionId: () => 'shared-history',
+      clock: () => 2_000,
       subscribers: [
         (item) => firstHistory.push(item),
         (item) => secondHistory.push(item),
@@ -83,12 +86,14 @@ describe('gameplaySession integration', () => {
       worldId: worldData.worldId,
       seed: 17,
       appliedModifiers: [],
+      timestamp: 2_000,
     })
     expect(firstHistory.at(-1)).toEqual({
       kind: 'RunEnded',
       sessionId: 'shared-history',
       outcome: 'lost',
       finalActIndex: session.state.actIndex,
+      timestamp: 2_000,
     })
     expect(firstHistory.every((item) => item.sessionId === 'shared-history')).toBe(true)
   })
@@ -97,6 +102,7 @@ describe('gameplaySession integration', () => {
     const items: RunStreamItem[] = []
     const session = createGameplaySession(catalog, createGuaranteedWinWorldData(), 42, {
       makeSessionId: () => 'winning-history',
+      clock: () => 3_000,
       subscribers: [(item) => items.push(item)],
     })
     const doorId = session.state.hand.find((card) => card.kind === 'world' && card.name === 'Door')?.id
@@ -133,6 +139,7 @@ describe('gameplaySession integration', () => {
         sessionId: 'winning-history',
         outcome: 'won',
         finalActIndex: session.state.actIndex,
+        timestamp: 3_000,
       },
     ])
     expect(session.state.actIndex).toBe(0)

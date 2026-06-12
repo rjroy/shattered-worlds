@@ -6,6 +6,7 @@ import {
   createGameplayEventStream,
   createRunEnded,
   createRunStarted,
+  type Clock,
   type GameplayEventStream,
   type RunOutcome,
   type RunStreamSubscriber,
@@ -29,6 +30,8 @@ export interface GameplaySession extends GameCore {
 
 export interface GameplaySessionOptions {
   readonly appliedModifiers?: readonly SetupModifier[]
+  /** Stamps every stream item this session emits. Defaults to Date.now. */
+  readonly clock?: Clock | undefined
   readonly makeSessionId?: () => SessionId
   /**
    * Failure handling for the session's privately created stream. Ignored when
@@ -65,6 +68,7 @@ export function createGameplaySession(
 ): GameplaySession {
   const stream = options.stream ?? createGameplayEventStream(options.onSubscriberFailure)
   const sessionId = (options.makeSessionId ?? defaultMakeSessionId)()
+  const clock = options.clock ?? (() => Date.now())
   const core = createGame(catalog, world, seed)
 
   // Session-scoped subscriptions are released when the run closes: after
@@ -90,7 +94,7 @@ export function createGameplaySession(
 
   function closeRun(outcome: RunOutcome, finalActIndex: number): void {
     runEnded = true
-    stream.emit(createRunEnded({ sessionId, outcome, finalActIndex }))
+    stream.emit(createRunEnded({ sessionId, outcome, finalActIndex, timestamp: clock() }))
 
     // Each unsubscribe removes itself from the list; iterate over a copy.
     for (const unsubscribe of [...sessionUnsubscribes]) {
@@ -108,6 +112,7 @@ export function createGameplaySession(
       worldId: core.state.worldId,
       seed,
       appliedModifiers: options.appliedModifiers ?? [],
+      timestamp: clock(),
     }),
   )
 
@@ -128,7 +133,7 @@ export function createGameplaySession(
 
       const resolution = core.dispatch(action)
 
-      stream.emit(createGameplayBatch(sessionId, action, resolution))
+      stream.emit(createGameplayBatch(sessionId, action, resolution, clock()))
 
       if (!runEnded && isTerminalOutcome(resolution.state.status)) {
         closeRun(resolution.state.status, resolution.state.actIndex)

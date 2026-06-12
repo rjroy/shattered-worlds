@@ -2,6 +2,7 @@ import type { CardCatalog, WorldData } from '../../core/index'
 
 import {
   createGameplayEventStream,
+  type Clock,
   type GameplayEventStream,
   type RunStreamSubscriber,
   type SubscriberFailureHandler,
@@ -9,7 +10,10 @@ import {
 import { createGameplaySession, type GameplaySession, type GameplaySessionOptions } from './gameplaySession'
 import { createRunStatsCollector, type RunStatsReader, type RunStatsStorage } from './runStats'
 
-type RuntimeSessionOptions = Omit<GameplaySessionOptions, 'stream' | 'onSubscriberFailure'>
+// The runtime owns the stream, failure handling, and the clock — sessions it
+// starts must not override them, or cross-run consumers would see
+// inconsistently sourced items.
+type RuntimeSessionOptions = Omit<GameplaySessionOptions, 'stream' | 'onSubscriberFailure' | 'clock'>
 
 /**
  * Composition root for gameplay observation. Owns the one long-lived stream
@@ -40,6 +44,8 @@ export interface GameplayRuntimeOptions {
   /** Omit for in-memory-only stats (tests, headless). */
   readonly storage?: RunStatsStorage | undefined
   readonly onSubscriberFailure?: SubscriberFailureHandler | undefined
+  /** Stamps all sessions' stream items. Defaults to Date.now; inject in tests. */
+  readonly clock?: Clock | undefined
 }
 
 export function createGameplayRuntime(options: GameplayRuntimeOptions = {}): GameplayRuntime {
@@ -63,7 +69,11 @@ export function createGameplayRuntime(options: GameplayRuntimeOptions = {}): Gam
     },
 
     startSession(catalog, world, seed, sessionOptions = {}) {
-      const session = createGameplaySession(catalog, world, seed, { ...sessionOptions, stream })
+      const session = createGameplaySession(catalog, world, seed, {
+        ...sessionOptions,
+        stream,
+        clock: options.clock,
+      })
       openSessions.set(session.sessionId, session)
       return session
     },

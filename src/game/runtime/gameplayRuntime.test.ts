@@ -67,6 +67,27 @@ describe('gameplayRuntime composition root', () => {
     expect(persisted).toEqual(lifetime)
   })
 
+  it('stamps every session from the runtime clock so run stats can track durations', () => {
+    // Clock reads per session: RunStarted, one batch, RunEnded → +3 per run.
+    let now = 0
+    const runtime = createGameplayRuntime({ clock: () => (now += 1_000) })
+
+    const first = runtime.startSession(catalog, worldData, 42, { makeSessionId: () => 'timed-1' })
+    first.dispatch({ type: 'EndTurn' })
+    first.abandon()
+
+    const second = runtime.startSession(catalog, worldData, 42, { makeSessionId: () => 'timed-2' })
+    second.dispatch({ type: 'EndTurn' })
+    second.abandon()
+
+    const lifetime = runtime.runStats.lifetime()
+
+    // First run: started 1000, ended 3000. Second run: started 4000, ended 6000.
+    expect(lifetime.durationMs).toBe(4_000)
+    expect(lifetime.lastRun?.startedAt).toBe(4_000)
+    expect(lifetime.lastRun?.endedAt).toBe(6_000)
+  })
+
   it('counts abandoned sessions so exits mid-run still close the stream', () => {
     const runtime = createGameplayRuntime()
 

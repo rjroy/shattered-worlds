@@ -2,6 +2,13 @@ import type { Action, GameEvent, GameState } from '../../core/index'
 
 export type SessionId = string
 
+/**
+ * Epoch-millisecond clock seam. Stream items are stamped at the runtime layer
+ * (never inside the deterministic core); inject a fake clock in tests so
+ * timestamps stay deterministic.
+ */
+export type Clock = () => number
+
 export type RunTerminalOutcome = Extract<GameState['status'], 'won' | 'lost'>
 
 // 'abandoned' closes a session that ends without reaching a gameplay-terminal
@@ -19,6 +26,8 @@ export interface RunStarted {
   readonly worldId: GameState['worldId']
   readonly seed: number
   readonly appliedModifiers: readonly SetupModifier[]
+  /** Epoch ms from the session's {@link Clock}. */
+  readonly timestamp: number
 }
 
 export interface GameplayDispatchResolution {
@@ -29,6 +38,7 @@ export interface GameplayDispatchResolution {
 export interface GameplayBatch {
   readonly kind: 'GameplayBatch'
   readonly sessionId: SessionId
+  readonly timestamp: number
   readonly action: Action
   readonly events: readonly GameEvent[]
   readonly state: GameState
@@ -39,6 +49,7 @@ export interface RunEnded {
   readonly sessionId: SessionId
   readonly outcome: RunOutcome
   readonly finalActIndex: GameState['actIndex']
+  readonly timestamp: number
 }
 
 export type RunStreamItem = RunStarted | GameplayBatch | RunEnded
@@ -92,10 +103,12 @@ export function createGameplayBatch(
   sessionId: SessionId,
   action: Action,
   resolution: GameplayDispatchResolution,
+  timestamp: number,
 ): GameplayBatch {
   return snapshot({
     kind: 'GameplayBatch',
     sessionId,
+    timestamp,
     action,
     events: resolution.events,
     state: resolution.state,

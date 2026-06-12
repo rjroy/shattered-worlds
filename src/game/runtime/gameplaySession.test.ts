@@ -68,6 +68,7 @@ describe('gameplaySession', () => {
     const session = createGameplaySession(catalog, worldData, 42, {
       makeSessionId: () => 'session-42',
       appliedModifiers: [{ kind: 'hard-mode' }],
+      clock: () => 1_000,
       subscribers: [(item) => items.push(item)],
     })
 
@@ -79,6 +80,7 @@ describe('gameplaySession', () => {
         worldId: worldData.worldId,
         seed: 42,
         appliedModifiers: [{ kind: 'hard-mode' }],
+        timestamp: 1_000,
       },
     ])
 
@@ -93,6 +95,7 @@ describe('gameplaySession', () => {
 
     const session = createGameplaySession(catalog, worldData, 42, {
       makeSessionId: () => 'session-run-start-error',
+      clock: () => 1_000,
       subscribers: [
         () => {
           throw failure
@@ -110,6 +113,7 @@ describe('gameplaySession', () => {
         worldId: worldData.worldId,
         seed: 42,
         appliedModifiers: [],
+        timestamp: 1_000,
       },
     ])
     expect(reports).toHaveLength(1)
@@ -247,6 +251,7 @@ describe('gameplaySession', () => {
     const items: RunStreamItem[] = []
     const session = createGameplaySession(catalog, worldData, 17, {
       makeSessionId: () => 'session-terminal',
+      clock: () => 5_000,
       subscribers: [(item) => items.push(item)],
     })
 
@@ -260,6 +265,7 @@ describe('gameplaySession', () => {
       sessionId: 'session-terminal',
       outcome: 'lost',
       finalActIndex: session.state.actIndex,
+      timestamp: 5_000,
     })
     expect(items.filter((item) => item.kind === 'RunEnded')).toHaveLength(1)
     expect(items.filter((item) => item.kind === 'GameplayBatch')).toHaveLength(4)
@@ -271,6 +277,7 @@ describe('gameplaySession', () => {
     const failure = new Error('dispatch subscriber failed')
     const session = createGameplaySession(catalog, worldData, 17, {
       makeSessionId: () => 'session-dispatch-error',
+      clock: () => 7_000,
       subscribers: [
         (item) => {
           if (item.kind !== 'RunStarted') {
@@ -298,6 +305,7 @@ describe('gameplaySession', () => {
       worldId: worldData.worldId,
       seed: 17,
       appliedModifiers: [],
+      timestamp: 7_000,
     })
     expect(items.filter((item) => item.kind === 'GameplayBatch')).toHaveLength(4)
     expect(items.at(-1)).toEqual({
@@ -305,6 +313,7 @@ describe('gameplaySession', () => {
       sessionId: 'session-dispatch-error',
       outcome: 'lost',
       finalActIndex: session.state.actIndex,
+      timestamp: 7_000,
     })
     expect(items.filter((item) => item.kind === 'RunEnded')).toHaveLength(1)
     expect(reports).toHaveLength(5)
@@ -373,6 +382,7 @@ describe('gameplaySession', () => {
     const items: RunStreamItem[] = []
     const session = createGameplaySession(catalog, worldData, 42, {
       makeSessionId: () => 'session-abandoned',
+      clock: () => 9_000,
       subscribers: [(item) => items.push(item)],
     })
 
@@ -388,6 +398,7 @@ describe('gameplaySession', () => {
         sessionId: 'session-abandoned',
         outcome: 'abandoned',
         finalActIndex: session.state.actIndex,
+        timestamp: 9_000,
       },
     ])
   })
@@ -480,8 +491,12 @@ describe('gameplaySession', () => {
 
   it('emits actual runtime payloads with semantic headless shapes only', () => {
     const items: RunStreamItem[] = []
+    // Each emission reads the clock once: RunStarted 1000, batches 1001/1002,
+    // RunEnded 1003 — exact values below also prove stamping order.
+    let now = 1_000
     const session = createGameplaySession(catalog, createGuaranteedWinWorldData(), 42, {
       makeSessionId: () => 'session-headless-shapes',
+      clock: () => now++,
       subscribers: [(item) => items.push(item)],
     })
 
@@ -508,13 +523,14 @@ describe('gameplaySession', () => {
     const [runStarted, firstBatch, secondBatch, runEnded] = items
 
     expect(runStarted?.kind).toBe('RunStarted')
-    expectOwnKeys(runStarted!, ['kind', 'sessionId', 'worldId', 'seed', 'appliedModifiers'])
+    expectOwnKeys(runStarted!, ['kind', 'sessionId', 'worldId', 'seed', 'appliedModifiers', 'timestamp'])
     expect(runStarted).toEqual({
       kind: 'RunStarted',
       sessionId: 'session-headless-shapes',
       worldId: 'req-events-win-world',
       seed: 42,
       appliedModifiers: [],
+      timestamp: 1_000,
     })
 
     expect(firstBatch?.kind).toBe('GameplayBatch')
@@ -522,7 +538,8 @@ describe('gameplaySession', () => {
       throw new Error('expected first emitted batch')
     }
 
-    expectOwnKeys(firstBatch, ['kind', 'sessionId', 'action', 'events', 'state'])
+    expectOwnKeys(firstBatch, ['kind', 'sessionId', 'timestamp', 'action', 'events', 'state'])
+    expect(firstBatch.timestamp).toBe(1_001)
     expectOwnKeys(firstBatch.action, ['type', 'cardId', 'targetId'])
     expect(firstBatch.events.map((event) => event.type)).toEqual([
       'CardPlayed',
@@ -538,7 +555,8 @@ describe('gameplaySession', () => {
       throw new Error('expected second emitted batch')
     }
 
-    expectOwnKeys(secondBatch, ['kind', 'sessionId', 'action', 'events', 'state'])
+    expectOwnKeys(secondBatch, ['kind', 'sessionId', 'timestamp', 'action', 'events', 'state'])
+    expect(secondBatch.timestamp).toBe(1_002)
     expectOwnKeys(secondBatch.action, ['type', 'cardId', 'targetId'])
     expect(secondBatch.events.map((event) => event.type)).toEqual([
       'CardPlayed',
@@ -552,12 +570,13 @@ describe('gameplaySession', () => {
     expectOwnKeys(secondBatch.events[3]!, ['type', 'hazardId'])
 
     expect(runEnded?.kind).toBe('RunEnded')
-    expectOwnKeys(runEnded!, ['kind', 'sessionId', 'outcome', 'finalActIndex'])
+    expectOwnKeys(runEnded!, ['kind', 'sessionId', 'outcome', 'finalActIndex', 'timestamp'])
     expect(runEnded).toEqual({
       kind: 'RunEnded',
       sessionId: 'session-headless-shapes',
       outcome: 'won',
       finalActIndex: 0,
+      timestamp: 1_003,
     })
   })
 

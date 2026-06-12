@@ -22,14 +22,15 @@ describe('gameplayEventStream contract', () => {
     createGameplayBatch('session-observed', { type: 'EndTurn' }, {
       state: createGame(catalog, worldData, 11).state,
       events: [{ type: 'TurnEnded' }],
-    })
+    }, 1_100)
 
-  it('defines a run-start envelope with session identity and setup modifiers', () => {
+  it('defines a run-start envelope with session identity, setup modifiers, and a timestamp', () => {
     const item = createRunStarted({
       sessionId: 'session-1',
       worldId: 'zombie-big-box',
       seed: 42,
       appliedModifiers: [{ kind: 'bonus-card', templateId: 'Listen' }, { kind: 'hard-mode' }],
+      timestamp: 1_000,
     }) satisfies RunStarted
 
     expect(item).toEqual({
@@ -38,6 +39,7 @@ describe('gameplayEventStream contract', () => {
       worldId: 'zombie-big-box',
       seed: 42,
       appliedModifiers: [{ kind: 'bonus-card', templateId: 'Listen' }, { kind: 'hard-mode' }],
+      timestamp: 1_000,
     })
   })
 
@@ -57,10 +59,11 @@ describe('gameplayEventStream contract', () => {
       { type: 'ActAdvanced', act: 1 },
     ]
 
-    const batch = createGameplayBatch('session-1', action, { state, events }) satisfies GameplayBatch
+    const batch = createGameplayBatch('session-1', action, { state, events }, 1_100) satisfies GameplayBatch
 
     expect(batch.kind).toBe('GameplayBatch')
     expect(batch.sessionId).toBe('session-1')
+    expect(batch.timestamp).toBe(1_100)
     expect(batch.action).toEqual(action)
     expect(batch.events).toEqual(events)
     expect(batch.events.map((event) => event.type)).toEqual([
@@ -79,7 +82,7 @@ describe('gameplayEventStream contract', () => {
     const state = createGame(catalog, worldData, 13).state
     const action: Action = { type: 'PlayCard', cardId: 'play-1', returnIds: ['hazard-1'] }
     const events: readonly GameEvent[] = [{ type: 'WorldCardsReturned', ids: ['hazard-1'] }]
-    const batch = createGameplayBatch('session-13', action, { state, events })
+    const batch = createGameplayBatch('session-13', action, { state, events }, 1_100)
     const mutableAction = action as unknown as { cardId: string; returnIds: string[] }
     const mutableEvents = events as unknown as Array<{ ids: string[] }>
     const mutableState = state as unknown as { nextId: number; rng: { a: number } }
@@ -103,6 +106,7 @@ describe('gameplayEventStream contract', () => {
       worldId: 'zombie-big-box',
       seed: 5,
       appliedModifiers: modifiers,
+      timestamp: 1_000,
     })
 
     modifiers.push({ kind: 'bonus-card', level: 2 })
@@ -112,11 +116,12 @@ describe('gameplayEventStream contract', () => {
     expect(item.appliedModifiers[0]).toEqual({ kind: 'hard-mode', level: 1 })
   })
 
-  it('defines a terminal run envelope with outcome and final act index', () => {
+  it('defines a terminal run envelope with outcome, final act index, and a timestamp', () => {
     const item = createRunEnded({
       sessionId: 'session-1',
       outcome: 'won',
       finalActIndex: 2,
+      timestamp: 1_200,
     })
 
     expect(item).toEqual({
@@ -124,6 +129,7 @@ describe('gameplayEventStream contract', () => {
       sessionId: 'session-1',
       outcome: 'won',
       finalActIndex: 2,
+      timestamp: 1_200,
     })
   })
 
@@ -132,6 +138,7 @@ describe('gameplayEventStream contract', () => {
       sessionId: 'session-quit',
       outcome: 'abandoned',
       finalActIndex: 1,
+      timestamp: 1_200,
     })
 
     expect(item.outcome).toBe('abandoned')
@@ -159,9 +166,10 @@ describe('gameplayEventStream contract', () => {
         worldId: state.worldId,
         seed: 7,
         appliedModifiers: [],
+        timestamp: 1_000,
       }),
-      createGameplayBatch('session-7', { type: 'EndTurn' }, { state, events: [{ type: 'TurnEnded' }] }),
-      createRunEnded({ sessionId: 'session-7', outcome: 'lost', finalActIndex: state.actIndex }),
+      createGameplayBatch('session-7', { type: 'EndTurn' }, { state, events: [{ type: 'TurnEnded' }] }, 1_100),
+      createRunEnded({ sessionId: 'session-7', outcome: 'lost', finalActIndex: state.actIndex, timestamp: 1_200 }),
     ]
 
     expect(stream.map((item) => item.kind)).toEqual(['RunStarted', 'GameplayBatch', 'RunEnded'])
@@ -179,6 +187,7 @@ describe('gameplayEventStream contract', () => {
         worldId: state.worldId,
         seed: 7,
         appliedModifiers: [{ kind: 'hard-mode' }],
+        timestamp: 1_000,
       }),
       createGameplayBatch('session-7', { type: 'PlayCard', cardId: 'play-1', targetId: 'hazard-1' }, {
         state,
@@ -189,18 +198,20 @@ describe('gameplayEventStream contract', () => {
           { type: 'CardDestroyed', id: 'spent-1' },
           { type: 'ActAdvanced', act: 1 },
         ],
-      }),
+      }, 1_100),
       createRunEnded({
         sessionId: 'session-7',
         outcome: 'won',
         finalActIndex: 1,
+        timestamp: 1_200,
       }),
     ]
 
-    expect(Object.keys(stream[0] ?? {})).toEqual(['kind', 'sessionId', 'worldId', 'seed', 'appliedModifiers'])
+    expect(Object.keys(stream[0] ?? {})).toEqual(['kind', 'sessionId', 'worldId', 'seed', 'appliedModifiers', 'timestamp'])
     expect(stream[1]).toEqual({
       kind: 'GameplayBatch',
       sessionId: 'session-7',
+      timestamp: 1_100,
       action: { type: 'PlayCard', cardId: 'play-1', targetId: 'hazard-1' },
       events: [
         { type: 'CardPlayed', cardId: 'play-1' },
@@ -211,7 +222,7 @@ describe('gameplayEventStream contract', () => {
       ],
       state,
     })
-    expect(Object.keys(stream[2] ?? {})).toEqual(['kind', 'sessionId', 'outcome', 'finalActIndex'])
+    expect(Object.keys(stream[2] ?? {})).toEqual(['kind', 'sessionId', 'outcome', 'finalActIndex', 'timestamp'])
     expect(() => structuredClone(stream)).not.toThrow()
   })
 
@@ -235,7 +246,7 @@ describe('gameplayEventStream contract', () => {
     const item = createGameplayBatch('session-2', { type: 'EndTurn' }, {
       state: createGame(catalog, worldData, 2).state,
       events: [{ type: 'TurnEnded' }],
-    })
+    }, 1_100)
 
     const state: GameState = item.state
 
@@ -275,7 +286,7 @@ describe('gameplayEventStream contract', () => {
     }, {
       state: createGame(catalog, worldData, 17).state,
       events: [{ type: 'WorldCardsReturned', ids: ['hazard-1'] }],
-    })
+    }, 1_100)
     const authoritativeHandSize = batch.state.hand.length
     const authoritativeNextId = batch.state.nextId
     let laterObservedBatch: GameplayBatch | undefined
@@ -310,6 +321,7 @@ describe('gameplayEventStream contract', () => {
       sessionId: 'session-observed',
       outcome: 'lost',
       finalActIndex: firstItem.state.actIndex,
+      timestamp: 1_200,
     })
     const calls: string[] = []
     let addedLateSubscriber = false
