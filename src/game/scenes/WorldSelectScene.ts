@@ -3,9 +3,11 @@ import worldSelectBgUrl from '../assets/world-select.webp'
 import { assetManifest } from '../data/assetManifest'
 import { worldManifest } from '../../data/worldManifest'
 import { worldDisplayManifest, type WorldDisplayData } from '../../data/worldDisplayManifest'
+import type { RunStatsReader } from '../runtime/runStats'
 import { selectTheme } from '../view/themes/themeManifest'
 import { textStyle, TEXT } from '../view/presentation'
 import { CANVAS_W, CANVAS_H, WORLD_SELECT_LAYOUT } from '../view/layout'
+import { worldBadgeLabel } from '../view/worldBadge'
 
 const CARD_W = WORLD_SELECT_LAYOUT.cardWidth
 const CARD_H = WORLD_SELECT_LAYOUT.cardHeight
@@ -35,8 +37,12 @@ export class WorldSelectScene extends Phaser.Scene {
   private visibleStartIndex = 0
   private leftArrow?: WorldSelectArrow
   private rightArrow?: WorldSelectArrow
+  private readonly runStats: RunStatsReader | undefined
 
-  constructor() { super({ key: 'WorldSelect' }) }
+  constructor(runStats?: RunStatsReader) {
+    super({ key: 'WorldSelect' })
+    this.runStats = runStats
+  }
 
   preload(): void {
     for (const display of Object.values(worldDisplayManifest)) {
@@ -59,8 +65,26 @@ export class WorldSelectScene extends Phaser.Scene {
 
     this.worldIds = Object.keys(worldManifest)
     this.visibleStartIndex = 0
+    this.createChronicleButton()
     this.createArrows()
     this.renderVisibleWorlds()
+  }
+
+  private createChronicleButton(): void {
+    const button = this.add.container(CANVAS_W - 88, 34)
+    const bg = this.add.rectangle(0, 0, 132, 34, 0x0f0b15, 0.82)
+    bg.setStrokeStyle(1, 0xd6b15c, 0.9)
+    bg.setRounded(6)
+    bg.setInteractive({ useHandCursor: true })
+    const label = this.add.text(0, -8, 'Chronicle', textStyle({
+      fontSize: '15px',
+      color: '#d6b15c',
+      fontStyle: 'bold',
+    })).setOrigin(0.5, 0)
+    button.add([bg, label])
+    bg.on('pointerover', () => button.setScale(1.05))
+    bg.on('pointerout', () => button.setScale(1))
+    bg.on('pointerdown', () => this.scene.start('Chronicle'))
   }
 
   private renderVisibleWorlds(): void {
@@ -231,7 +255,21 @@ export class WorldSelectScene extends Phaser.Scene {
       textStyle({ fontSize: '12px', color: TEXT.textWorldStory, align: 'center', wordWrap: { width: CARD_W - WORLD_SELECT_LAYOUT.textPadding } }),
     ).setOrigin(0.5, 0)
 
-    container.add([bg, border, nameText, tagText, storyText])
+    const contents: Phaser.GameObjects.GameObject[] = [bg, border, nameText, tagText, storyText]
+    const badge = worldBadgeLabel(this.runStats?.lifetime().byWorld[worldId])
+    if (badge !== null) {
+      const badgeBg = this.add.rectangle(CARD_W / 2 - 48, CARD_H / 2 - 28, 70, 26, 0x0b0710, 0.88)
+      badgeBg.setStrokeStyle(1, accentColor, 0.8)
+      badgeBg.setRounded(8)
+      const badgeText = this.add.text(CARD_W / 2 - 48, CARD_H / 2 - 36, badge, textStyle({
+        fontSize: '13px',
+        color: TEXT.textLight,
+        fontStyle: 'bold',
+      })).setOrigin(0.5, 0)
+      contents.push(badgeBg, badgeText)
+    }
+
+    container.add(contents)
 
     bg.on('pointerover', () => container.setScale(WORLD_SELECT_LAYOUT.hoverScale))
     bg.on('pointerout',  () => container.setScale(1.0))
