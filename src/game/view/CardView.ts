@@ -136,7 +136,6 @@ function addEffectBlock(
   y: number,
   color: string,
 ): Phaser.GameObjects.Text[] {
-  console.log('addEffectBlock', effect)
   if (effect.kind === 'None') return []
   const effectLines = describeEffect(effect)
   if (effectLines.length === 0) return []
@@ -297,7 +296,6 @@ export class CardView extends Phaser.GameObjects.Container {
       // onEndOfTurn, onDiscarded, onCleared — full sentences.
       const effectLineSpacing = 4
       let currY = -CARD_H / 2 + 36
-      console.log('title', card.name)
       const onEnd = addEffectBlock(scene, this, worldCard.onEndOfTurn, 'Each turn: ', currY, TEXT.textHeld)
       currY = onEnd.reduce((highest, text) => Math.max(highest, text.y + text.height + effectLineSpacing), currY)
       const onDiscarded = addEffectBlock(scene, this, worldCard.onDiscarded, 'If discarded: ', currY, TEXT.textPenalty)
