@@ -64,7 +64,19 @@ export class WorldSelectScene extends Phaser.Scene {
   }
 
   private renderVisibleWorlds(): void {
-    this.cards.forEach(card => card.container.destroy(true))
+    this.cards.forEach(card => {
+      const disappearTween = this.tweens.add({
+        targets: card.container,
+        alpha: { from: 1, to: 0 },
+        scale: { from: 1, to: 0 },
+        duration: 300,
+        ease: 'Cubic.easeIn',
+      })
+      disappearTween.on('complete', () => {
+        card.container.destroy(true)
+        this.tweens.remove(disappearTween)
+      })
+  })
     this.cards = []
 
     const visibleWorldIds = this.worldIds.slice(
@@ -83,6 +95,14 @@ export class WorldSelectScene extends Phaser.Scene {
       const cardX = startX + i * (CARD_W + CARD_GAP)
       const newCard = this.createWorldCard(worldId, cardX, CARD_Y, display, accentColor)
       this.cards.push(newCard)
+      const appearTween = this.tweens.add({
+        targets: newCard.container,
+        alpha: { from: 0, to: 1 },
+        scale: { from: 0.8, to: 1 },
+        duration: 300,
+        ease: 'Cubic.easeOut',
+      })
+      appearTween.on('complete', () => this.tweens.remove(appearTween))
     })
 
     this.updateArrowState()
