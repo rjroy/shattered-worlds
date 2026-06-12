@@ -511,6 +511,7 @@ export class TableScene extends Phaser.Scene {
       // gets lifted + ringed. Player cards are never legal targets, so this
       // gate keeps emphasis off them. Magnitude scales with intensity().
       this.emphasizeIfLegalTarget(id, container)
+      this.emphasizeIfPlayable(id, container)
     })
     container.on('pointerout', () => {
       // Seam case (a): pointer-out clears the stored hovered id AND restores
@@ -820,6 +821,13 @@ export class TableScene extends Phaser.Scene {
   ): void {
     const available = availableActions(this.game_.state)
     if (!this.currentLegalTargetIds(available).has(cardId)) return
+    container.emphasize(this.theme_.frameStyle.targetGlow, this.game_.intensity())
+  }
+
+  private emphasizeIfPlayable(cardId: string, container: CardView): void {
+    if (this.sel.phase !== 'idle') return
+    const available = availableActions(this.game_.state)
+    if (!available.playable.some((p) => p.cardId === cardId)) return
     container.emphasize(this.theme_.frameStyle.targetGlow, this.game_.intensity())
   }
 
