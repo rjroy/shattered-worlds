@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Stats persistence and player-facing views</title>
+  <meta name="date" content="2026-06-12">
+  <meta name="status" content="resolved">
+  <meta name="tags" content="persistence, stats, run-history, save-resume, ui, run-summary, localstorage">
+  <meta name="modules" content="game-runtime, game-scenes">
+  <meta name="related" content=".lore/work/brainstorm/shattered-worlds-meta-progression.html, .lore/work/brainstorm/player-feedback-selection-and-progress.html">
+  <style>
+    :root {
+      --bg: #14121a;
+      --panel: #1e1b28;
+      --panel-2: #262134;
+      --ink: #ddd6ee;
+      --dim: #9a90b5;
+      --accent: #c9a86a;
+      --question: #6ab0c9;
+      --dead: #c96a6a;
+      --fact: #7ec97e;
+    }
+    body {
+      background: var(--bg);
+      color: var(--ink);
+      font-family: Georgia, 'Times New Roman', serif;
+      line-height: 1.55;
+      max-width: 920px;
+      margin: 2rem auto;
+      padding: 0 1.5rem;
+    }
+    h1 { color: var(--accent); font-size: 1.7rem; }
+    h2 { color: var(--accent); border-bottom: 1px solid #3a3350; padding-bottom: .3rem; margin-top: 2.5rem; }
+    h3 { color: var(--ink); margin-bottom: .3rem; }
+    code { background: var(--panel-2); padding: .1em .35em; border-radius: 3px; font-size: .9em; }
+    .fact {
+      background: var(--panel);
+      border-left: 4px solid var(--fact);
+      padding: .8rem 1rem;
+      margin: 1rem 0;
+      border-radius: 0 6px 6px 0;
+    }
+    .fact::before { content: "GROUNDED FACT — "; color: var(--fact); font-weight: bold; font-size: .8rem; letter-spacing: .05em; }
+    .question {
+      background: var(--panel);
+      border-left: 4px solid var(--question);
+      padding: .8rem 1rem;
+      margin: 1rem 0;
+      border-radius: 0 6px 6px 0;
+    }
+    .question::before { content: "OPEN QUESTION — "; color: var(--question); font-weight: bold; font-size: .8rem; letter-spacing: .05em; }
+    .decision {
+      background: var(--panel);
+      border-left: 4px solid var(--accent);
+      padding: .8rem 1rem;
+      margin: 1rem 0;
+      border-radius: 0 6px 6px 0;
+    }
+    .decision::before { content: "DECIDED 2026-06-12 — "; color: var(--accent); font-weight: bold; font-size: .8rem; letter-spacing: .05em; }
+    .dead {
+      background: var(--panel);
+      border-left: 4px solid var(--dead);
+      padding: .8rem 1rem;
+      margin: 1rem 0;
+      border-radius: 0 6px 6px 0;
+      opacity: .85;
+    }
+    .dead::before { content: "PROBABLY NOT (and why) — "; color: var(--dead); font-weight: bold; font-size: .8rem; letter-spacing: .05em; }
+    .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1rem; margin: 1rem 0; }
+    .card {
+      background: var(--panel);
+      border: 1px solid #3a3350;
+      border-radius: 8px;
+      padding: 1rem 1.1rem;
+    }
+    .card h3 { margin-top: 0; }
+    .card .cost { color: var(--dim); font-size: .85rem; font-style: italic; }
+    details { margin: 1rem 0; background: var(--panel); border-radius: 6px; padding: .6rem 1rem; border: 1px solid #3a3350; }
+    summary { cursor: pointer; color: var(--accent); font-weight: bold; }
+    table { border-collapse: collapse; width: 100%; margin: 1rem 0; }
+    th, td { border: 1px solid #3a3350; padding: .5rem .7rem; text-align: left; }
+    th { background: var(--panel-2); color: var(--accent); }
+    .dim { color: var(--dim); }
+  </style>
+</head>
+<body>
+  <h1>Stats persistence and player-facing views</h1>
+
+  <p class="dim">Prompt: "we've been adding run data and lifetime data. The next steps are to
+  persist the data and to setup a way for the player to view this." This brainstorm unpacks what
+  each half could mean, because the first half means less than it sounds and the second half means
+  more.</p>
+
+  <h2>Where we actually are (read before ideating)</h2>
+
+  <div class="fact">
+    Lifetime stats persistence <strong>already exists and is wired</strong>.
+    <code>runStats.ts</code> writes a versioned, validated payload to
+    <code>localStorage</code> under <code>shattered-worlds/run-stats/v1</code> on every
+    <code>RunEnded</code>; <code>main.ts</code> injects <code>window.localStorage</code> with a
+    privacy-settings guard; <code>pagehide → abandonAll()</code> closes open runs so app-level
+    exits still get recorded.
+  </div>
+
+  <div class="fact">
+    <code>RunEnded</code> is emitted <em>synchronously inside dispatch</em> the moment
+    <code>status</code> goes terminal (<code>gameplaySession.ts:138</code>). By the time
+    <code>TableScene</code> shows the win/loss overlay, <code>runStats.lifetime().lastRun</code>
+    already holds the finished run. An end-of-run summary screen needs <strong>zero new
+    persistence work</strong> — the data is sitting there waiting for a consumer.
+  </div>
+
+  <div class="fact">
+    What is <strong>not</strong> persisted today: run history (only <code>lastRun</code> survives;
+    every earlier run is folded into aggregates and gone), and in-progress runs (closing the tab
+    mid-run records the run as <code>abandoned</code> — the player loses the run).
+  </div>
+
+  <div class="fact">
+    What has <strong>no surface</strong> today: everything. The win/loss screens are bare
+    click-to-continue overlays. Scenes are Boot → WorldSelect → Table. <code>RunStatsReader</code>
+    exists as a read-only seam with exactly zero consumers.
+  </div>
+
+  <p>So "persist the data" decomposes into <em>persist more kinds of data</em>, and "a way to view
+  this" is a green field. The two halves constrain each other: most views richer than a totals
+  table need run history, which doesn't exist yet.</p>
+
+  <h2>Half one: what "persist" could mean now</h2>
+
+  <div class="cards">
+    <div class="card">
+      <h3>A. Run history (ring buffer)</h3>
+      <p>Keep the last N <code>RunRecord</code>s, not just <code>lastRun</code>. A record is a few
+      hundred bytes; 100 runs is ~30KB against localStorage's ~5MB. Unlocks: run history browser,
+      records/bests computed on the fly, win streaks (which need ordering).</p>
+      <p class="cost">Cost: small. Either bump the payload to v2 or give history its own key +
+      collector subscribing to the same stream — the runtime docstring already names "future meta
+      progression and save policy" as sibling subscribers, so one-collector-per-concern is the
+      established shape.</p>
+    </div>
+    <div class="card">
+      <h3>B. Suspended-run save (the sleeper)</h3>
+      <p>The core is deterministic and seedable: <code>{worldId, seed, actionLog}</code> replayed
+      through dispatch reconstructs the run byte-for-byte. A mid-run save is a tiny JSON blob, not
+      a state snapshot. <code>pagehide</code> would save-and-suspend instead of abandon; WorldSelect
+      offers "continue run".</p>
+      <p class="cost">Cost: the biggest item here, and the biggest payoff. The same artifact is a
+      replay file, a bug-repro attachment, and a golden-master test fixture. Portfolio-grade.</p>
+    </div>
+    <div class="card">
+      <h3>C. Export / import</h3>
+      <p>A "download my data" / "restore" JSON file. Cheap insurance against the real durability
+      problem (see below), a debugging gift, and data portability is on-brand for this user's
+      projects.</p>
+      <p class="cost">Cost: trivial once a save shape exists. Could ship with any view screen as a
+      button.</p>
+    </div>
+    <div class="card">
+      <h3>D. Save-architecture consolidation</h3>
+      <p>Destiny meta-progression is coming (<a href="shattered-worlds-meta-progression.html">existing
+      brainstorm</a>). Stats, Destiny, settings, suspended-run: four bespoke
+      localStorage keys each hand-rolling load/validate/version/persist is how save corruption
+      stories start. The load/validate pattern in <code>runStats.ts</code> is already the template —
+      extract it into a small <code>versionedStorage</code> helper when the <em>second</em> customer
+      arrives, not before.</p>
+      <p class="cost">Cost: near-zero if done as extraction-on-second-use. High if done as an
+      up-front save framework with one customer. Don't do the second thing.</p>
+    </div>
+  </div>
+
+  <h3>The durability problem nobody asked about</h3>
+  <p>Safari's ITP caps script-writable storage (localStorage included) at <strong>7 days of
+  non-interaction</strong> for some configurations; browsers can evict under storage pressure
+  generally. For a game whose whole pitch is "a persistent Destiny outlives the run," the Destiny
+  silently evaporating is a vision-level failure, not a technical footnote. Options, cheapest
+  first: export/import (C) as a manual backstop; <code>navigator.storage.persist()</code> to
+  request durable storage; IndexedDB/OPFS migration if it ever matters. The first two are nearly
+  free and probably enough for a GitHub Pages portfolio game.</p>
+
+  <div class="decision">
+    <strong>Migration policy: flip at the first schema change.</strong> Discarding malformed
+    payloads stays correct, but the first shape change (v2) must ship with a v1→v2 migration
+    rather than a discard. Per the per-world-bests decision below, that v2 is already on the
+    horizon — it is the migration pattern's first customer.
+  </div>
+
+  <div class="decision">
+    <strong>Suspended runs invalidate honestly on content mismatch.</strong> Saves carry a
+    content-version stamp; on mismatch, tell the player the world shifted and record the run as
+    abandoned. No replay-and-hope, no pinned content data. Patches cost in-flight runs, which
+    fits the shattering fiction. (The feature itself remains item 4 — own design pass.)
+  </div>
+
+  <div class="decision">
+    <strong>Duration means active time.</strong> Pause the run clock while the tab is hidden
+    (visibility API). The runtime's clock is already injectable, which is the seam for this.
+    Wall-clock <code>endedAt − startedAt</code> stays in the record as timestamps, but "time
+    played" anywhere on screen is active time.
+  </div>
+
+  <div class="dead">
+    Cloud sync, accounts, server telemetry. No backend exists, GitHub Pages hosting, and the
+    vision's anti-goals lean away from infrastructure. Local-first with export/import covers the
+    actual need.
+  </div>
+  <div class="dead">
+    Multiple local profiles. Real games have them; this one has one player per browser profile,
+    which is the same thing for free. Revisit only if a real request appears.
+  </div>
+
+  <h2>Half two: what "a way to view this" could mean</h2>
+
+  <table>
+    <tr><th>View</th><th>Needs new persistence?</th><th>Emotional job</th></tr>
+    <tr><td>1. End-of-run summary</td><td><strong>No</strong> — <code>lastRun</code> is live</td><td>The ritual. Cement the run that just happened.</td></tr>
+    <tr><td>2. Carousel badges (per-world W/L)</td><td><strong>No</strong> — <code>byWorld</code> is live</td><td>Ambient goading. "Fog Beach: 0 wins in 4 tries."</td></tr>
+    <tr><td>3. Chronicle screen (lifetime hub)</td><td>No for totals; A for anything ranked</td><td>The mirror. Who has this Destiny been?</td></tr>
+    <tr><td>4. Records / bests</td><td>A (or new v2 fields)</td><td>The hooks. Fastest win, fewest turns, streak.</td></tr>
+    <tr><td>5. Run history browser</td><td>A</td><td>The archive. Probably premature — see below.</td></tr>
+  </table>
+
+  <h3>1. End-of-run summary — the obvious first move</h3>
+  <p>Replace the bare win/loss overlay with the just-finalized <code>RunRecord</code>: outcome,
+  turns, duration, cards played, progress dealt, damage taken, hazards resolved/discarded. Balatro
+  and Slay the Spire treat the recap as part of the run's emotional arc, not an afterthought — the
+  numbers are the cooldown. One screen, one existing data source (<code>RunStatsReader</code>
+  handed to the scene), and it makes every run feel <em>recorded</em>, which is the whole fantasy
+  of a Destiny that remembers.</p>
+  <p>Cheap multiplier: show one lifetime number alongside the run numbers ("3rd win on this
+  world", "Run 27"). That single line is what makes the persistence <em>felt</em> rather than
+  merely present.</p>
+
+  <div class="decision">
+    <strong>Abandons get the full summary, same as win/loss.</strong> Every terminal outcome gets
+    the same recap screen — abandonment feels recorded, not erased. Applies to the explicit exit
+    button; a tab-close abandon can't show a screen, so the Chronicle remains the only witness
+    for those.
+  </div>
+
+  <h3>2. Carousel badges — highest feel-per-effort</h3>
+  <p>Each world card on WorldSelect shows wins/attempts. Zero navigation, zero new data, and it
+  converts the <code>byWorld</code> table from dead weight into motivation. This is roguelite
+  convention for a reason (StS character select win counts). Needs the theme-authoring rules
+  consulted so badges don't fight the inset art.</p>
+
+  <h3>3. Chronicle screen — and the framing question that matters</h3>
+  <p>A stats hub reachable from WorldSelect: lifetime totals, per-world table, last run. The
+  interesting decision isn't layout, it's <em>identity</em>. Two framings:</p>
+  <div class="cards">
+    <div class="card">
+      <h3>Numbers-forward</h3>
+      <p>A clean stats screen. Honest, legible, shows the data engineering (portfolio value).
+      Risk: feels bolted on in a game whose every surface is themed.</p>
+    </div>
+    <div class="card">
+      <h3>The Destiny's memory</h3>
+      <p>The same data framed as what survives the shattering — the meta-progression brainstorm's
+      "knowledge persists" answer, made literal. Here's the move: <strong>this screen and the
+      future Destiny hub are the same surface.</strong> Ship it as stats now; when meta-progression
+      lands, it grows into the Destiny screen instead of competing with one. That dissolves the
+      "build a stats screen now or wait for Destiny?" tension entirely.</p>
+    </div>
+  </div>
+
+  <div class="decision">
+    <strong>Dedicated <code>ChronicleScene</code>,</strong> reachable from WorldSelect with
+    back/escape navigation from day one. Built as the proto-Destiny surface — when
+    meta-progression lands it grows into the Destiny hub rather than competing with one. This
+    also settles the framing tension above in favor of "the Destiny's memory."
+  </div>
+
+  <div class="decision">
+    <strong>Per-world bests are persisted in a v2 <code>byWorld</code> shape</strong> (fastest
+    win, fewest-turns win, etc.), updated at fold time — not derived from a history buffer.
+    Records are permanent regardless of any buffer window. Each new record type is a schema
+    bump, which is acceptable because this v2 is also where the migrate-don't-discard pattern
+    gets built (see migration decision above). Run history (A) is still worth recording, but its
+    job narrows to the future history browser and streaks, not records.
+  </div>
+
+  <div class="dead">
+    Run history browser as an early deliverable. A run is currently eleven counters — a list of
+    eleven-counter rows is a spreadsheet, not a feature. It earns its place once runs have
+    texture (deck composition at end, modifiers, Destiny choices). Persist history early (A is
+    cheap and you can't backfill what you didn't record); <em>browse</em> it later.
+  </div>
+
+  <details>
+    <summary>Wilder ideas parked here on purpose</summary>
+    <p><strong>Seed sharing / daily run.</strong> Determinism makes "play my exact shuffle" a URL:
+    <code>?world=X&amp;seed=Y</code>. A daily seed is the same trick with a date-derived seed.
+    Nearly free mechanically; the cost is all in framing and the records screen wanting a
+    "seeded runs don't count" rule.</p>
+    <p><strong>Replay-as-spectator.</strong> The suspended-run save format (B) replayed at watch
+    speed is a replay viewer. Useful for bug reports tomorrow, share-your-win someday.</p>
+    <p><strong>Ghost pacing.</strong> On a repeat world+seed, show your previous run's progress
+    pace as a ghost marker. Racing yourself. Expensive, very deckbuilder-unusual, noted and
+    shelved.</p>
+    <p><strong>Memory cards.</strong> Past runs rendered as literal cards you flip through —
+    stats as a deck. Thematically perfect, cost way ahead of value right now.</p>
+  </details>
+
+  <h2>Gravity, not a plan</h2>
+  <p>If the ideas above have a natural pull order, it's this — recorded as gravity, not
+  commitment:</p>
+  <ol>
+    <li><strong>End-of-run summary (all outcomes, per the abandon decision) + carousel
+    badges.</strong> Both consume data that already persists. Pure view work, immediate felt
+    payoff, exercises <code>RunStatsReader</code> for the first time. The active-time clock
+    decision wants to land alongside, before any screen shows a duration.</li>
+    <li><strong>v2 schema: per-world bests + the v1→v2 migration.</strong> The two decisions that
+    interlock — the first schema change carries the first migration. Run-history ring buffer can
+    ride along (cheap to record, impossible to backfill) even though records no longer depend on
+    it.</li>
+    <li><strong><code>ChronicleScene</code></strong>, built as the proto-Destiny surface, showing
+    lifetime totals, per-world table with bests, last run. Export/import button rides along.</li>
+    <li><strong>Suspended-run save.</strong> Separate track, biggest engineering, changes abandon
+    semantics — wants its own design pass. Stale-save policy is already decided (invalidate
+    honestly via content-version stamp), which removes the scariest unknown.</li>
+  </ol>
+
+  <p class="dim">Items 1–2 are roughly "the next PR or two." Item 4 is a feature with a design
+  doc's worth of remaining questions. The word "persist" in the prompt most likely meant item 2
+  plus the durability/migration posture — the lifetime aggregates were already done.</p>
+
+</body>
+</html>

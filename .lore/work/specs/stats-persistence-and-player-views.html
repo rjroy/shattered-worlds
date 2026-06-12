@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Stats persistence and player-facing views</title>
+  <meta name="date" content="2026-06-12">
+  <meta name="status" content="draft">
+  <meta name="tags" content="stats, persistence, run-summary, chronicle, world-select, migration, localstorage, export-import">
+  <meta name="modules" content="game-runtime, game-scenes, game-view">
+  <meta name="related" content=".lore/work/brainstorm/stats-persistence-and-player-views.html, .lore/work/specs/gameplay-event-stream.md, .lore/work/specs/world-select.html, .lore/work/specs/help-screen.html, .lore/work/notes/telemetry-gaps.md, .lore/work/brainstorm/shattered-worlds-meta-progression.html">
+  <meta name="req-prefix" content="STATS">
+  <style>
+    :root {
+      --bg: #14121a;
+      --panel: #1e1b28;
+      --panel-2: #262134;
+      --ink: #ddd6ee;
+      --dim: #9a90b5;
+      --accent: #c9a86a;
+      --core: #7ec97e;
+      --view: #6ab0c9;
+      --schema: #c98a6a;
+      --quality: #b06ac9;
+    }
+    body {
+      background: var(--bg);
+      color: var(--ink);
+      font-family: Georgia, 'Times New Roman', serif;
+      line-height: 1.55;
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 0 1.5rem 4rem;
+    }
+    .sticky-head {
+      position: sticky;
+      top: 0;
+      background: var(--bg);
+      border-bottom: 2px solid var(--accent);
+      padding: .7rem 0;
+      z-index: 10;
+      display: flex;
+      gap: 1rem;
+      align-items: baseline;
+      flex-wrap: wrap;
+    }
+    .sticky-head .pill {
+      background: var(--panel-2);
+      color: var(--accent);
+      border-radius: 999px;
+      padding: .15em .8em;
+      font-size: .8rem;
+      letter-spacing: .05em;
+    }
+    h1 { color: var(--accent); font-size: 1.6rem; margin: 1.2rem 0 .4rem; }
+    h2 { color: var(--accent); border-bottom: 1px solid #3a3350; padding-bottom: .3rem; margin-top: 2.4rem; }
+    code { background: var(--panel-2); padding: .1em .35em; border-radius: 3px; font-size: .9em; }
+    .req {
+      background: var(--panel);
+      border: 1px solid #3a3350;
+      border-left-width: 5px;
+      border-radius: 6px;
+      padding: .8rem 1.1rem;
+      margin: .9rem 0;
+    }
+    .req[data-cat="schema"] { border-left-color: var(--schema); }
+    .req[data-cat="view"] { border-left-color: var(--view); }
+    .req[data-cat="quality"] { border-left-color: var(--quality); }
+    .req .id {
+      font-weight: bold;
+      color: var(--accent);
+      font-size: .95rem;
+      letter-spacing: .03em;
+    }
+    .req .id a { color: inherit; text-decoration: none; }
+    .req .id a:hover { text-decoration: underline; }
+    .req .body { margin-top: .35rem; }
+    .why { color: var(--dim); font-size: .88rem; margin-top: .4rem; font-style: italic; }
+    .callout {
+      background: var(--panel);
+      border-left: 4px solid var(--core);
+      padding: .8rem 1rem;
+      margin: 1rem 0;
+      border-radius: 0 6px 6px 0;
+    }
+    .validation {
+      background: linear-gradient(180deg, var(--panel-2), var(--panel));
+      border: 2px solid var(--accent);
+      border-radius: 10px;
+      padding: 1rem 1.4rem;
+      margin: 1.5rem 0;
+    }
+    .validation h2 { margin-top: .4rem; border-bottom: none; }
+    table { border-collapse: collapse; width: 100%; margin: 1rem 0; font-size: .92rem; }
+    th, td { border: 1px solid #3a3350; padding: .45rem .7rem; text-align: left; }
+    th { background: var(--panel-2); color: var(--accent); }
+    .dim { color: var(--dim); }
+    details { margin: .8rem 0; background: var(--panel); border-radius: 6px; padding: .5rem 1rem; border: 1px solid #3a3350; }
+    summary { cursor: pointer; color: var(--accent); }
+    ul.tight li { margin: .25rem 0; }
+  </style>
+</head>
+<body>
+
+  <div class="sticky-head">
+    <span class="pill">SPEC · draft</span>
+    <span class="pill">req-prefix: STATS</span>
+    <span class="pill">REQ-STATS-1 … REQ-STATS-21</span>
+  </div>
+
+  <h1>Stats persistence and player-facing views</h1>
+
+  <p>Run and lifetime statistics already accumulate from the gameplay event stream and persist to
+  localStorage (<code>src/game/runtime/runStats.ts</code>, v1). This spec defines the next layer:
+  the <strong>v2 stats schema</strong> (per-world bests, abandon semantics, active-time duration,
+  run history, migration), and the <strong>first player-facing views</strong> of that data — an
+  end-of-run summary, per-world badges on the world-select carousel, and a Chronicle scene with
+  export/import.</p>
+
+  <div class="callout">
+    <strong>Lineage.</strong> This spec claims the <code>[STUB: run-stats-collection]</code> exit
+    point of the gameplay event stream spec; REQ-EVENTS-12 explicitly delegates aggregation
+    formulas, storage schema, and migration strategy here. It also claims the world-select spec's
+    deferred item "win/loss screen returning to WorldSelectScene." All decisions trace to the
+    resolved brainstorm
+    <a href="../brainstorm/stats-persistence-and-player-views.html">stats-persistence-and-player-views</a>.
+    Outcome vocabulary (<code>won | lost | abandoned</code>), single-source-of-truth, and
+    subscriber-determinism rules are owned by REQ-EVENTS-8/10 and are referenced, not restated.
+  </div>
+
+  <div class="callout">
+    <strong>Stance cutover.</strong> Twice before, incompatible stored payloads were deliberately
+    discarded as acceptable pre-release behavior (see telemetry-gaps note). That precedent ends
+    with this spec: from v2 onward, any <em>valid</em> older-version payload must migrate forward.
+    Discard remains correct only for malformed or unrecognized data.
+  </div>
+
+  <h2>Out of scope</h2>
+  <ul class="tight">
+    <li>Suspended-run save/resume — own design pass (stale-save policy pre-decided: invalidate on content-version mismatch).</li>
+    <li>Run-history browser UI, win streaks, fastest-win best — history is recorded (REQ-STATS-7) but nothing reads it yet.</li>
+    <li>New event types (heals, hazard destroy/exile tallies, energy spent — see telemetry-gaps); bests are defined against currently recorded values as-is.</li>
+    <li>Destiny unlock mechanics — the Chronicle is the proto-Destiny <em>surface</em> only; it grants nothing mechanical (vision anti-goal: no grind-past-the-ceiling).</li>
+    <li>Cloud sync, accounts, multiple profiles, seed sharing.</li>
+  </ul>
+
+  <h2>Schema and persistence (v2)</h2>
+
+  <div class="req" data-cat="schema" id="REQ-STATS-1">
+    <span class="id"><a href="#REQ-STATS-1">REQ-STATS-1</a> — v2 lifetime shape with per-world bests</span>
+    <div class="body"><code>LifetimeStats</code> version 2 retains all v1 lifetime counters and
+    extends each <code>byWorld</code> entry with two optional bests, absent until earned:
+    <code>fewestTurnsWin</code> (lowest <code>turns</code> among <strong>won</strong> runs on that
+    world) and <code>mostProgressInRun</code> (highest <code>progressDealt</code> in a single
+    <strong>completed</strong> run on that world; see the completed-run definition in
+    REQ-STATS-2). Bests update at fold time when a qualifying run beats or first sets the
+    record.</div>
+    <div class="why">Persisted-bests decision (brainstorm Q5). Known caveats accepted: turns
+    undercount a final partial turn; progress includes overkill. Both apply uniformly, so
+    comparisons stay fair.</div>
+  </div>
+
+  <div class="req" data-cat="schema" id="REQ-STATS-2">
+    <span class="id"><a href="#REQ-STATS-2">REQ-STATS-2</a> — abandons count outcomes only</span>
+    <div class="body"><strong>Definition used throughout this spec: a "completed run" is one with
+    outcome <code>won</code> or <code>lost</code>; <code>abandoned</code> runs are not
+    completed.</strong> From v2 onward, an <code>abandoned</code> run increments outcome tallies
+    (lifetime and per-world <code>runs</code>/<code>abandoned</code>) but does <strong>not</strong>
+    fold into activity counters (<code>turns</code>, <code>cardsPlayed</code>,
+    <code>progressDealt</code>, <code>damageTaken</code>, hazards, discards) or play-time totals.
+    Abandoned runs never set bests. <code>lastRun</code> and run history (REQ-STATS-7) still
+    record abandoned runs in full.</div>
+    <div class="why">Resolves the dilution issue flagged in the telemetry-gaps audit: lifetime
+    activity totals and any future averages mean "per completed run."</div>
+  </div>
+
+  <div class="req" data-cat="schema" id="REQ-STATS-3">
+    <span class="id"><a href="#REQ-STATS-3">REQ-STATS-3</a> — v1→v2 migration, lossless</span>
+    <div class="body">Loading a payload that validates as v1 migrates it to v2 with no data loss:
+    all counters and <code>byWorld</code> outcome tallies carry over, bests start absent,
+    <code>durationMs</code> carries over as-is (it is historical wall-clock; see REQ-STATS-4),
+    <code>lastRun</code> carries over. Key strategy: v2 persists under a new key
+    (<code>shattered-worlds/run-stats/v2</code>); the exported <code>RUN_STATS_STORAGE_KEY</code>
+    constant moves to the v2 value; after the first successful v2 persist, the v1 key is removed
+    (the <code>RunStatsStorage</code> seam gains <code>removeItem</code>). Migrated activity
+    counters may include pre-v2 abandoned-run activity that was folded under v1 rules; this is
+    accepted as historical noise — the per-completed-run interpretation in REQ-STATS-2 applies
+    only to counters accumulated under v2. Payloads that are malformed or claim an unknown
+    version are still discarded with a console warning (unchanged v1 behavior).</div>
+    <div class="why">Migration-at-first-schema-change decision (brainstorm Q1). This v2 is the
+    migrate-don't-discard pattern's first customer. Key naming, old-key removal, and the
+    legacy-noise stance are pinned so three implementers can't make three different data-loss
+    choices.</div>
+  </div>
+
+  <div class="req" data-cat="schema" id="REQ-STATS-4">
+    <span class="id"><a href="#REQ-STATS-4">REQ-STATS-4</a> — duration means active time</span>
+    <div class="body">From v2 onward, recorded run duration is <strong>active time</strong>: the
+    duration clock pauses while the document is hidden and resumes when visible.
+    <code>RunRecord</code> gains <code>activeDurationMs</code>; lifetime play time accumulates
+    <code>activeDurationMs</code> for completed runs. Wall-clock <code>startedAt</code>/<code>endedAt</code>
+    timestamps remain on the record unchanged. Visibility is injected as an optional
+    <code>visibility?: () =&gt; boolean</code> (true when the document is visible) plus a
+    subscribe seam for change events on <code>GameplayRuntimeOptions</code>, parallel to
+    <code>clock</code>, defaulting to the document visibility API in <code>main.ts</code> — tests
+    never depend on real page visibility. The per-run clamp against backwards clock jumps is
+    preserved.</div>
+    <div class="why">Active-time decision (brainstorm Q2). Any screen labeled "time played" must
+    be honest; a backgrounded tab must not accrue play time.</div>
+  </div>
+
+  <div class="req" data-cat="schema" id="REQ-STATS-5">
+    <span class="id"><a href="#REQ-STATS-5">REQ-STATS-5</a> — abandon recording still works app-wide</span>
+    <div class="body">The existing guarantees are preserved under v2: scene shutdown and
+    <code>pagehide</code> still close open runs as <code>abandoned</code> exactly once, and those
+    runs are recorded per REQ-STATS-2. Partial runs (collector attached mid-run) are still
+    ignored rather than recorded understated.</div>
+    <div class="why">Regression guard — the fold change must not disturb the close-exactly-once
+    invariant from REQ-EVENTS-8.</div>
+  </div>
+
+  <div class="req" data-cat="schema" id="REQ-STATS-6">
+    <span class="id"><a href="#REQ-STATS-6">REQ-STATS-6</a> — persistence seams and failure posture unchanged</span>
+    <div class="body">All v2 persistence goes through the injected <code>RunStatsStorage</code>
+    seam. Load failures and write failures remain non-fatal (warn, keep the in-memory copy).
+    Validation of the v2 shape is as strict as v1's: a payload that does not fully check out is
+    rejected wholesale, never partially folded.</div>
+    <div class="why">The v1 hardening (garbage counters poisoning every future run) must survive
+    the schema change.</div>
+  </div>
+
+  <div class="req" data-cat="schema" id="REQ-STATS-7">
+    <span class="id"><a href="#REQ-STATS-7">REQ-STATS-7</a> — run history ring buffer</span>
+    <div class="body">The most recent <strong>100</strong> <code>RunRecord</code>s (all outcomes,
+    including abandoned) persist across reloads, ordered most-recent-first, oldest evicted at the
+    cap. History persists under its own key (<code>shattered-worlds/run-history/v1</code>),
+    distinct from lifetime stats — that key separation is the isolation mechanism: a corrupted
+    history payload is discarded with a warning while lifetime stats load normally, and vice
+    versa. History load follows the same validate-or-discard posture as lifetime stats. No UI
+    consumes history in this spec.</div>
+    <div class="why">Can't backfill what wasn't recorded; this feeds the future history browser,
+    streaks, and the Destiny brainstorm's Survivor's Journal / Feats lanes without a v3
+    rewrite.</div>
+  </div>
+
+  <h2>End-of-run summary</h2>
+
+  <div class="req" data-cat="view" id="REQ-STATS-8">
+    <span class="id"><a href="#REQ-STATS-8">REQ-STATS-8</a> — summary on every terminal outcome</span>
+    <div class="body">When a run ends — won, lost, or abandoned via the in-game exit button — the
+    bare win/loss overlays are replaced by a run summary showing: outcome, world name, turns,
+    active duration, cards played, progress dealt, damage taken, hazards resolved, hazards
+    discarded, and cards discarded. The exit affordance is the <strong>existing</strong>
+    <code>X</code> button in <code>TableScene</code>; its behavior changes from jumping straight
+    to WorldSelect to abandoning the run and showing the abandon summary first (dismiss then
+    returns to WorldSelect per REQ-STATS-11). Tab-close abandons show nothing (no UI is possible
+    at <code>pagehide</code>); they appear only in the Chronicle.</div>
+    <div class="why">Full-recap-for-abandons decision (brainstorm Q3). The recap is the run's
+    cooldown ritual. Naming the trigger matters: today the X button bypasses any end-of-run
+    surface entirely.</div>
+  </div>
+
+  <div class="req" data-cat="view" id="REQ-STATS-9">
+    <span class="id"><a href="#REQ-STATS-9">REQ-STATS-9</a> — lifetime context and record callouts</span>
+    <div class="body">The summary always shows the overall run number ("Run N" — well-defined
+    from the very first run, where N = 1), and additionally shows the win count on this world
+    when it is at least 1. If the run just set or beat a per-world best (REQ-STATS-1), the
+    summary calls the new record out explicitly.</div>
+    <div class="why">The single line that makes persistence <em>felt</em>; the record callout is
+    the payoff for persisting bests at all.</div>
+  </div>
+
+  <div class="req" data-cat="view" id="REQ-STATS-10">
+    <span class="id"><a href="#REQ-STATS-10">REQ-STATS-10</a> — summary reads through RunStatsReader only</span>
+    <div class="body">The summary sources its data from <code>RunStatsReader</code>
+    (<code>lifetime().lastRun</code> plus lifetime/per-world fields). Views never write stats and
+    never scrape renderer state. (Viable because <code>RunEnded</code> is emitted synchronously
+    inside dispatch — <code>lastRun</code> is current before the overlay renders.)</div>
+    <div class="why">Single source of truth per REQ-EVENTS-5/12; keeps the read seam the only
+    coupling between stats and views.</div>
+  </div>
+
+  <div class="req" data-cat="view" id="REQ-STATS-11">
+    <span class="id"><a href="#REQ-STATS-11">REQ-STATS-11</a> — summary integrates with overlay conventions</span>
+    <div class="body">The summary follows the established overlay conventions from the help-screen
+    spec: centered container at overlay depth, full-canvas interactive background swallowing board
+    input, hidden by default, the <code>?</code> button hidden while shown. Dismissing the summary
+    returns to <code>WorldSelectScene</code> — this closes the world-select spec's deferred
+    "win/loss returns to WorldSelect" item. Its visual chrome uses the gold occult-cartography
+    register (the Door/Destiny language per visual direction), not flat-design panels.</div>
+    <div class="why">Amends existing conventions instead of inventing competing ones; the deferral
+    chain from REQ-WS "Not in scope" closes here.</div>
+  </div>
+
+  <h2>World-select badges</h2>
+
+  <div class="req" data-cat="view" id="REQ-STATS-12">
+    <span class="id"><a href="#REQ-STATS-12">REQ-STATS-12</a> — per-world wins/attempts badge</span>
+    <div class="body">Each world card on the world-select carousel shows that world's wins and
+    attempts from <code>byWorld</code> (e.g., "2 / 7"). Worlds with zero recorded runs show no
+    badge. Data arrives via <code>RunStatsReader</code>; the authored
+    <code>worldDisplayManifest</code> is not involved (badges are live data, not authored
+    text).</div>
+    <div class="why">Converts the byWorld table into ambient motivation at zero navigation
+    cost.</div>
+  </div>
+
+  <div class="req" data-cat="view" id="REQ-STATS-13">
+    <span class="id"><a href="#REQ-STATS-13">REQ-STATS-13</a> — badges respect the carousel and the color ration</span>
+    <div class="body">Badges target the shipped shift-by-one carousel (not the superseded 3-card
+    layout in the world-select spec): legible on the focused card, and on partial-opacity peek
+    cards either legible or omitted entirely — never half-readable, defaulting to
+    <strong>omit on peek cards</strong> when in doubt. Styling stays within the
+    visual-direction color ration: at most the world's <code>intrusionHue</code> as a scarce
+    accent, no new saturated chrome.</div>
+    <div class="why">The carousel decision was never specced (new-world-concepts brainstorm);
+    badges must not fight inset art per theme-authoring rules.</div>
+  </div>
+
+  <h2>Chronicle scene</h2>
+
+  <div class="req" data-cat="view" id="REQ-STATS-14">
+    <span class="id"><a href="#REQ-STATS-14">REQ-STATS-14</a> — dedicated scene with real navigation</span>
+    <div class="body">A new <code>ChronicleScene</code> is reachable from a visible affordance on
+    <code>WorldSelectScene</code>. Back navigation (on-screen control and Escape) returns to
+    WorldSelect. Entering and leaving the Chronicle never disturbs run state or stats.</div>
+    <div class="why">Dedicated-scene decision (brainstorm Q4): this is the surface that grows into
+    the Destiny hub. Navigation between views is an implicit requirement from day one.</div>
+  </div>
+
+  <div class="req" data-cat="view" id="REQ-STATS-15">
+    <span class="id"><a href="#REQ-STATS-15">REQ-STATS-15</a> — Chronicle content</span>
+    <div class="body">The Chronicle displays, read-only via <code>RunStatsReader</code>:
+    lifetime totals (runs, wins, losses, abandons, turns, cards played, progress dealt, damage
+    taken, hazards, play time as active time), a per-world breakdown (attempts, wins, losses,
+    abandons, and earned bests from REQ-STATS-1), and the last run showing the same fields as the
+    end-of-run summary (REQ-STATS-8 list; <code>seed</code>, <code>appliedModifiers</code>, and
+    <code>finalActIndex</code> are not displayed). Durations render human-readable (no raw
+    milliseconds).</div>
+    <div class="why">The mirror: who has this Destiny been. Per-world bests are the rows that make
+    it worth opening twice.</div>
+  </div>
+
+  <div class="req" data-cat="view" id="REQ-STATS-16">
+    <span class="id"><a href="#REQ-STATS-16">REQ-STATS-16</a> — honest empty state</span>
+    <div class="body">With zero recorded runs the Chronicle renders a deliberate empty state in
+    the Destiny voice — no zero-spam, no NaN, no empty table skeletons.</div>
+    <div class="why">The first thing a new player who taps the shiny button sees; it must read as
+    "nothing written yet," not "broken."</div>
+  </div>
+
+  <div class="req" data-cat="view" id="REQ-STATS-17">
+    <span class="id"><a href="#REQ-STATS-17">REQ-STATS-17</a> — Destiny register, zero mechanical surface</span>
+    <div class="body">The Chronicle uses the gold occult-cartography linework register (visual
+    direction Look 4) and is framed as the Destiny's memory. It grants, sells, and unlocks
+    nothing; nothing in it reads as purchasable power. It is built so future Destiny content
+    (journal, feats) can extend it without restructuring.</div>
+    <div class="why">Vision anti-goals: no grind-past-the-ceiling, no clean flat-design UI.
+    Proto-Destiny framing per brainstorm Q4 and the meta-progression brainstorm's "story
+    persists" lane.</div>
+  </div>
+
+  <div class="req" data-cat="view" id="REQ-STATS-18">
+    <span class="id"><a href="#REQ-STATS-18">REQ-STATS-18</a> — export</span>
+    <div class="body">From the Chronicle, the player can export their complete stored stats
+    (lifetime v2 + run history) as a downloaded JSON file, exactly what import accepts.</div>
+    <div class="why">Cheap durability backstop against script-writable storage eviction
+    (Safari ITP); a debugging gift.</div>
+  </div>
+
+  <div class="req" data-cat="view" id="REQ-STATS-19">
+    <span class="id"><a href="#REQ-STATS-19">REQ-STATS-19</a> — import with full validation and confirm</span>
+    <div class="body">From the Chronicle, the player can import a previously exported file. The
+    file is validated with the same strictness as a storage load (including migration of
+    older-version exports); an invalid file is rejected with a visible message and existing data
+    is untouched. A valid import replaces stored stats wholesale only after an explicit in-UI
+    confirmation that states current data will be overwritten; when the file is an older-version
+    export, the confirmation additionally notes it will be upgraded to the current format.
+    Migration happens only after confirmation, never before.</div>
+    <div class="why">The only operation in this feature that can destroy data — it gets the only
+    confirmation dialog.</div>
+  </div>
+
+  <h2>Boundaries and quality gates</h2>
+
+  <div class="req" data-cat="quality" id="REQ-STATS-20">
+    <span class="id"><a href="#REQ-STATS-20">REQ-STATS-20</a> — core untouched, logic Phaser-free</span>
+    <div class="body">This feature changes nothing in <code>src/core/</code>. All schema,
+    migration, fold, bests, active-time, history, and export/import logic lives in
+    <code>src/game/</code> as pure TypeScript with no Phaser imports, unit-testable headless.
+    Stats subscribers must not affect core determinism (REQ-EVENTS-10) and stats never feed back
+    into game rules (consistent with REQ-VIS-1's renderer-only posture).</div>
+    <div class="why">The lint-enforced core/game boundary; the deterministic core is the
+    project's load-bearing invariant.</div>
+  </div>
+
+  <div class="req" data-cat="quality" id="REQ-STATS-21">
+    <span class="id"><a href="#REQ-STATS-21">REQ-STATS-21</a> — tests ship with the implementation</span>
+    <div class="body">Unit tests cover, at minimum: v1→v2 migration from a stored-v1 fixture
+    (lossless carry, bests absent); malformed and unknown-version discard; abandon fold exclusion
+    (outcome counts increment, activity counters do not, bests unset); bests set/beat/not-beaten
+    transitions for both record types; ring buffer cap, ordering, and eviction at 100; history
+    failure isolated from lifetime load; active-time clock under fake visibility transitions
+    (hidden time excluded, backwards-clock clamp held); export/import round-trip; import
+    rejection leaving stored data untouched. View wiring is covered by scene-level tests using
+    the real collector (never mocked core), consistent with existing test conventions.</div>
+    <div class="why">Tests alongside implementation, not after; migration and fold changes are
+    exactly the kind of silent-corruption surface tests exist for.</div>
+  </div>
+
+  <div class="validation">
+    <h2>AI Validation</h2>
+    <p>How the AI verifies this spec is done. All commands from repo root.</p>
+
+    <h3>Automated</h3>
+    <ul class="tight">
+      <li><code>bun test</code> passes, including every test enumerated in REQ-STATS-21 (verify
+      each scenario exists by name/assertion, not just that the suite is green).</li>
+      <li><code>bun run lint</code> passes — confirms the core/game boundary (REQ-STATS-20) and
+      that no Phaser import appears in the new runtime logic modules.</li>
+      <li>Grep checks: no scene or view module imports <code>RunStatsCollector</code> or calls
+      fold/persist functions directly — scenes touch stats only through
+      <code>RunStatsReader</code>-typed access (indirect writes via <code>session.abandon()</code>
+      firing the subscriber are the designed path and are fine) (REQ-STATS-10); no
+      <code>worldDisplayManifest</code> import in badge logic (REQ-STATS-12); no file under
+      <code>src/core/</code> imports anything from <code>src/game/</code> — stats never feed back
+      into game rules (REQ-STATS-20).</li>
+      <li>Migration proof: a unit test loads a verbatim v1 payload fixture (captured from the
+      current shipped shape) and asserts the v2 result field-by-field (REQ-STATS-3).</li>
+    </ul>
+
+    <h3>Manual browser checks (required — visual requirements are not test-provable)</h3>
+    <ul class="tight">
+      <li>Win a run, lose a run, and exit a run: all three show the summary with the REQ-STATS-8
+      fields, a lifetime context line, and dismiss to WorldSelect. The <code>?</code> button is
+      hidden while the summary is up (REQ-STATS-11).</li>
+      <li>Set a record (first win on a fresh world) and confirm the new-record callout
+      (REQ-STATS-9).</li>
+      <li>WorldSelect: badge shows wins/attempts on played worlds, absent on unplayed worlds, and
+      is legible-or-omitted on carousel peek cards (REQ-STATS-12/13).</li>
+      <li>Chronicle: reachable from WorldSelect, Escape and back control both return, totals and
+      per-world bests render with human-readable durations, fresh profile shows the empty state
+      (REQ-STATS-14/15/16).</li>
+      <li>Pre-load localStorage with the v1 fixture under the v1 key, boot the app, play one run:
+      stats appear intact, the v2 key now holds the migrated payload, and the v1 key is gone
+      (REQ-STATS-3 in situ).</li>
+      <li>Export a file; wipe storage; import the file (confirming the overwrite prompt); stats
+      restored. Then attempt importing a corrupted copy: visible rejection, data untouched
+      (REQ-STATS-18/19).</li>
+      <li>Background the tab mid-run for ~a minute, finish the run, confirm the summary's
+      duration excludes the hidden time (REQ-STATS-4).</li>
+    </ul>
+  </div>
+
+  <h2>Decision traceability</h2>
+  <table>
+    <tr><th>Decision (brainstorm, resolved 2026-06-12)</th><th>Requirements</th></tr>
+    <tr><td>Migrate at first schema change</td><td><a href="#REQ-STATS-3">3</a></td></tr>
+    <tr><td>Duration = active time</td><td><a href="#REQ-STATS-4">4</a></td></tr>
+    <tr><td>Full recap for abandons (explicit exit)</td><td><a href="#REQ-STATS-8">8</a></td></tr>
+    <tr><td>Dedicated ChronicleScene, proto-Destiny surface</td><td><a href="#REQ-STATS-14">14</a>, <a href="#REQ-STATS-17">17</a></td></tr>
+    <tr><td>Persisted per-world bests (v2 byWorld)</td><td><a href="#REQ-STATS-1">1</a>, <a href="#REQ-STATS-9">9</a></td></tr>
+    <tr><td>Stale-save invalidation (suspended runs)</td><td class="dim">out of scope — future design pass</td></tr>
+    <tr><td>Bests = fewest-turns win + most progress (spec session)</td><td><a href="#REQ-STATS-1">1</a></td></tr>
+    <tr><td>Abandons count outcomes only (spec session)</td><td><a href="#REQ-STATS-2">2</a></td></tr>
+    <tr><td>Run history N=100 (spec session)</td><td><a href="#REQ-STATS-7">7</a></td></tr>
+    <tr><td>Export and import both, import confirmed (spec session)</td><td><a href="#REQ-STATS-18">18</a>, <a href="#REQ-STATS-19">19</a></td></tr>
+  </table>
+
+</body>
+</html>
