@@ -31,6 +31,7 @@ const playerCardZombie: PlayerCard = {
   sourceWorldId: 'zombie-big-box',
   effect: { kind: 'Draw', player: 1 },
   energyCost: 0,
+  keywords: [],
 }
 
 const playerCardUnknown: PlayerCard = {
@@ -41,6 +42,7 @@ const playerCardUnknown: PlayerCard = {
   sourceWorldId: 'unknown-world',
   effect: { kind: 'Draw', player: 1 },
   energyCost: 0,
+  keywords: [],
 }
 
 const worldCard: WorldCard = {

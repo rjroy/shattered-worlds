@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'bun:test'
 import type { CardTemplateId, GameState } from '../model/types'
+import type { CardCatalog } from '../model/catalog'
 import { mintCard } from '../model/cards'
 import { UnknownTemplateError } from '../model/errors'
 import { createRng } from '../engine/rng'
@@ -267,5 +268,40 @@ describe('energy cost', () => {
     const [card] = mintCard(catalog, state, 'Explore')
     if (card.kind !== 'player') throw new Error('expected player card')
     expect(card.energyCost).toBe(0)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// 9. Player card keywords
+// ---------------------------------------------------------------------------
+
+describe('player card keywords', () => {
+  it('a player template with keywords stamps them onto the minted card', () => {
+    const sporeCatalog: CardCatalog = {
+      'Spore Burst': {
+        kind: 'player',
+        name: 'Spore Burst',
+        effect: { kind: 'DealProgress', base: 1 },
+        keywords: ['Spore'],
+      },
+    }
+    const [card] = mintCard(sporeCatalog, makeEmptyState(), 'Spore Burst')
+    if (card.kind !== 'player') throw new Error('expected player card')
+    expect(card.keywords).toEqual(['Spore'])
+  })
+
+  it('a player template without keywords mints with keywords: []', () => {
+    // No template in the zombie-big-box catalog declares keywords
+    const [card] = mintCard(catalog, makeEmptyState(), 'Sprint')
+    if (card.kind !== 'player') throw new Error('expected player card')
+    expect(card.keywords).toEqual([])
+  })
+
+  it('every player card minted from the existing world catalog carries an empty keywords array', () => {
+    for (const id of ALL_TEMPLATE_IDS) {
+      const [card] = mintCard(catalog, makeEmptyState(), id)
+      if (card.kind !== 'player') continue
+      expect(card.keywords).toEqual([])
+    }
   })
 })

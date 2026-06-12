@@ -6,12 +6,16 @@ export type CardId = string
 // 'Zombie' | 'Find Baseball Bat' | 'The Walker' | 'Door'
 export type CardTemplateId = string
 
-export type Keyword = 'Hidden' | 'Creature' | 'Slow'
+export type Keyword = 'Hidden' | 'Creature' | 'Slow' | 'Spore'
 
 export type Dest = 'playerDiscard' | 'playerDrawTop' | 'worldDrawTop'
 
+export type CounterSpec =
+  | { kind: 'KeywordInHand'; keyword: Keyword }
+
 export type CardEffect =
   | { kind: 'DealProgress'; base: number; bonus?: { tag: Keyword; amount: number } }
+  | { kind: 'DealProgressScaled'; base: number; per: CounterSpec; amount: number }
   | { kind: 'Draw'; player?: number; world?: number }
   | { kind: 'Heal'; amount: number }
   | { kind: 'GainEnergy'; amount: number }
@@ -58,6 +62,9 @@ export interface PlayerCard {
   // When true, the card is destroyed (sent to no zone) on play instead of
   // recycling to playerDiscard.
   exhaust?: boolean
+  // Always present on minted cards (empty when the template omits keywords),
+  // matching WorldCard so consumers never need undefined checks.
+  keywords: readonly Keyword[]
 }
 
 export interface WorldCard {

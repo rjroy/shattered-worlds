@@ -30,7 +30,7 @@ function makeState(progress: Record<string, number> = {}): GameState {
 }
 
 function player(effect: CardEffect): PlayerCard {
-  return { kind: 'player', id: 'p1', name: 'Test', insetKey: undefined, sourceWorldId: 'test', effect, energyCost: 0 }
+  return { kind: 'player', id: 'p1', name: 'Test', insetKey: undefined, sourceWorldId: 'test', effect, energyCost: 0, keywords: [] }
 }
 
 function hazard(over: Partial<WorldCard>): WorldCard {
@@ -60,6 +60,17 @@ describe('describeEffect', () => {
     expect(
       describeEffect({ kind: 'DealProgress', base: 1, bonus: { tag: 'Hidden', amount: 2 } }),
     ).toEqual(['Add 1 Progress\n(+2 vs Hidden)'])
+  })
+
+  it('describes DealProgressScaled as static rule text', () => {
+    expect(
+      describeEffect({
+        kind: 'DealProgressScaled',
+        base: 1,
+        per: { kind: 'KeywordInHand', keyword: 'Spore' },
+        amount: 1,
+      }),
+    ).toEqual(['Add 1 Progress', '+1 per Spore in hand'])
   })
 
   it('describes Draw with player and/or world counts', () => {
@@ -140,7 +151,12 @@ describe('describeEffect (hazard effect kinds)', () => {
       '+Summon Door to your deck',
     ])
     expect(describeEffect({ kind: 'SurviveWorld' })).toEqual(['you survive the world'])
-    expect(describeEffect({ kind: 'None' })).toEqual([])
+  })
+
+  it('describes None as the prune line (REQ-MALL-1 — exact pinned text)', () => {
+    // World-card hooks never reach describeEffect with None (CardView guards
+    // on the kind), so this text only appears on player card faces (Spore).
+    expect(describeEffect({ kind: 'None' })).toEqual(['play to prune (leaves the run)'])
   })
 })
 

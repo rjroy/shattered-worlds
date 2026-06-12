@@ -23,6 +23,9 @@ export interface PlayerCardTemplate extends BasicCardTemplate {
   effect: CardEffect
   energyCost?: number
   exhaust?: boolean
+  // Optional in templates so existing JSON catalogs load unchanged; minted
+  // cards always carry a concrete (possibly empty) keywords array.
+  keywords?: readonly Keyword[]
 }
 
 export interface WorldCardTemplate extends BasicCardTemplate {
@@ -70,6 +73,7 @@ export function mintCard(
       effect: template.effect,
       energyCost: template.energyCost ?? 0,
       exhaust: template.exhaust ?? false,
+      keywords: template.keywords ?? [],
     }
     return [card, next]
   }

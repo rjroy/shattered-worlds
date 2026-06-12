@@ -12,12 +12,29 @@ const CARD_H = WORLD_SELECT_LAYOUT.cardHeight
 const CARD_GAP = WORLD_SELECT_LAYOUT.cardGap
 const CARD_Y = WORLD_SELECT_LAYOUT.cardY // card center y — over the stone-path area of the title image
 const SUBTITLE_Y = WORLD_SELECT_LAYOUT.subtitleY
+const VISIBLE_WORLD_COUNT = WORLD_SELECT_LAYOUT.visibleWorldCount
+const ARROW_Y = CARD_Y
+const ARROW_W = WORLD_SELECT_LAYOUT.arrowWidth
+const ARROW_H = WORLD_SELECT_LAYOUT.arrowHeight
+const ARROW_GAP = WORLD_SELECT_LAYOUT.arrowGap
 
 // Common return type for the world card background, which may be either an image or a simple colored rectangle
 type WorldCardBackground = Phaser.GameObjects.Image | Phaser.GameObjects.Rectangle
+type WorldCardView = {
+  container: Phaser.GameObjects.Container
+  background: WorldCardBackground
+}
+type WorldSelectArrow = {
+  container: Phaser.GameObjects.Container
+  hitArea: Phaser.GameObjects.Rectangle
+}
 
 export class WorldSelectScene extends Phaser.Scene {
-  cards : WorldCardBackground[] = []
+  cards: WorldCardView[] = []
+  private worldIds: string[] = []
+  private visibleStartIndex = 0
+  private leftArrow?: WorldSelectArrow
+  private rightArrow?: WorldSelectArrow
 
   constructor() { super({ key: 'WorldSelect' }) }
 
@@ -40,13 +57,24 @@ export class WorldSelectScene extends Phaser.Scene {
       textStyle({ fontSize: '20px', fontStyle: 'italic', color: TEXT.textWorldTag }),
     ).setOrigin(0.5, 0.5)
 
-    // world cards
-    const worldIds = Object.keys(worldManifest)
-    const totalW = worldIds.length * CARD_W + (worldIds.length - 1) * CARD_GAP
+    this.worldIds = Object.keys(worldManifest)
+    this.visibleStartIndex = 0
+    this.createArrows()
+    this.renderVisibleWorlds()
+  }
+
+  private renderVisibleWorlds(): void {
+    this.cards.forEach(card => card.container.destroy(true))
+    this.cards = []
+
+    const visibleWorldIds = this.worldIds.slice(
+      this.visibleStartIndex,
+      this.visibleStartIndex + VISIBLE_WORLD_COUNT,
+    )
+    const totalW = visibleWorldIds.length * CARD_W + (visibleWorldIds.length - 1) * CARD_GAP
     const startX = (CANVAS_W - totalW) / 2 + CARD_W / 2
 
-    this.cards = []
-    worldIds.forEach((worldId, i) => {
+    visibleWorldIds.forEach((worldId, i) => {
       const display = worldDisplayManifest[worldId]
       if (display === undefined) {
         throw new Error(`WorldSelectScene: no display entry for worldId "${worldId}"`)
@@ -56,6 +84,60 @@ export class WorldSelectScene extends Phaser.Scene {
       const newCard = this.createWorldCard(worldId, cardX, CARD_Y, display, accentColor)
       this.cards.push(newCard)
     })
+
+    this.updateArrowState()
+  }
+
+  private createArrows(): void {
+    const visibleW = VISIBLE_WORLD_COUNT * CARD_W + (VISIBLE_WORLD_COUNT - 1) * CARD_GAP
+    const rowLeft = (CANVAS_W - visibleW) / 2
+    const rowRight = rowLeft + visibleW
+
+    this.leftArrow = this.createArrow(rowLeft - ARROW_GAP, ARROW_Y, '<', () => {
+      if (this.visibleStartIndex <= 0) return
+      this.visibleStartIndex -= 1
+      this.renderVisibleWorlds()
+    })
+    this.rightArrow = this.createArrow(rowRight + ARROW_GAP, ARROW_Y, '>', () => {
+      if (this.visibleStartIndex + VISIBLE_WORLD_COUNT >= this.worldIds.length) return
+      this.visibleStartIndex += 1
+      this.renderVisibleWorlds()
+    })
+  }
+
+  private createArrow(x: number, y: number, label: string, onClick: () => void): WorldSelectArrow {
+    const container = this.add.container(x, y)
+    const hitArea = this.add.rectangle(0, 0, ARROW_W, ARROW_H, 0x160f1f, 0.66)
+    hitArea.setStrokeStyle(2, 0xc178bc, 0.9)
+    const text = this.add.text(0, -3, label,
+      textStyle({ fontSize: '46px', color: TEXT.textWorldTitle, fontStyle: 'bold' }),
+    ).setOrigin(0.5, 0.5)
+
+    container.add([hitArea, text])
+    hitArea.setInteractive({ useHandCursor: true })
+    hitArea.on('pointerover', () => container.setScale(1.08))
+    hitArea.on('pointerout', () => container.setScale(1.0))
+    hitArea.on('pointerdown', onClick)
+
+    return { container, hitArea }
+  }
+
+  private updateArrowState(): void {
+    this.setArrowEnabled(this.leftArrow, this.visibleStartIndex > 0)
+    this.setArrowEnabled(
+      this.rightArrow,
+      this.visibleStartIndex + VISIBLE_WORLD_COUNT < this.worldIds.length,
+    )
+  }
+
+  private setArrowEnabled(arrow: WorldSelectArrow | undefined, enabled: boolean): void {
+    if (arrow === undefined) return
+    arrow.container.setAlpha(enabled ? 1 : TEXT.dimAlpha)
+    arrow.hitArea.setInteractive({ useHandCursor: enabled })
+    if (!enabled) {
+      arrow.hitArea.disableInteractive()
+      arrow.container.setScale(1.0)
+    }
   }
 
   private createWorldCardBackground(worldId: string, display: WorldDisplayData): WorldCardBackground {
@@ -99,7 +181,7 @@ export class WorldSelectScene extends Phaser.Scene {
     cx: number, cy: number,
     display: WorldDisplayData,
     accentColor: number,
-  ): WorldCardBackground {
+  ): WorldCardView {
     const container = this.add.container(cx, cy)
 
     // background + accent border
@@ -135,10 +217,16 @@ export class WorldSelectScene extends Phaser.Scene {
     bg.on('pointerout',  () => container.setScale(1.0))
     bg.on('pointerdown', () => {
       bg.disableInteractive()
+      this.disableCarouselInteractions()
       const seed = Math.floor(Math.random() * 2 ** 32)
       this.scene.launch('Table', { worldId, seed })
-      this.cards.forEach(card => card.disableInteractive())
     })
-    return bg
+    return { container, background: bg }
+  }
+
+  private disableCarouselInteractions(): void {
+    this.cards.forEach(card => card.background.disableInteractive())
+    this.leftArrow?.hitArea.disableInteractive()
+    this.rightArrow?.hitArea.disableInteractive()
   }
 }

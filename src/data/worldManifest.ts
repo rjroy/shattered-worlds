@@ -11,6 +11,7 @@ import starterJson from './worlds/starter.json'
 import zombieJson from './worlds/zombie-big-box.json'
 import birdJson from './worlds/bird-building.json'
 import volcanoJson from './worlds/highway-volcano.json'
+import mallJson from './worlds/overgrown-mall.json'
 
 
 /**
@@ -28,6 +29,7 @@ const STARTER_SOURCE = starterJson as unknown as RawCardSource
 const ZOMBIE_SOURCE = zombieJson as unknown as RawCardSource
 const BIRD_SOURCE = birdJson as unknown as RawCardSource
 const VOLCANO_SOURCE = volcanoJson as unknown as RawCardSource
+const MALL_SOURCE = mallJson as unknown as RawCardSource
 
 /**
  * Build a world by merging the shared starter source with one world-specific
@@ -65,6 +67,7 @@ export const worldManifest: Record<string, () => AssembledWorld> = {
   [ZOMBIE_SOURCE.worldId]: makeWorldBuilder(ZOMBIE_SOURCE),
   [BIRD_SOURCE.worldId]: makeWorldBuilder(BIRD_SOURCE),
   [VOLCANO_SOURCE.worldId]: makeWorldBuilder(VOLCANO_SOURCE),
+  [MALL_SOURCE.worldId]: makeWorldBuilder(MALL_SOURCE),
 }
 
 export function buildWorld(worldId: string): AssembledWorld {

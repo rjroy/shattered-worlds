@@ -5,11 +5,12 @@ import {
   dealProgress,
   destroyInHand,
   gainCard,
+  resolveCounter,
   returnToActiveWorldDeck,
 } from '../engine/effects'
 import { mintCard } from '../model/cards'
 import { createWorld } from '../engine/world'
-import type { GameState, WorldCard } from '../model/types'
+import type { GameState, PlayerCard, WorldCard } from '../model/types'
 import { catalog, worldData } from './testFixture'
 
 // ---------------------------------------------------------------------------
@@ -807,5 +808,119 @@ describe('ExileTopWorldCards', () => {
 
     expect(after.worldDraw).toHaveLength(2)
     expect(events).toHaveLength(0)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// 16. DealProgressScaled
+// ---------------------------------------------------------------------------
+
+function playerCarrier(id: string, keywords: PlayerCard['keywords'] = ['Spore']): PlayerCard {
+  return {
+    kind: 'player',
+    id,
+    name: id,
+    insetKey: undefined,
+    sourceWorldId: 'test',
+    effect: { kind: 'None' },
+    energyCost: 0,
+    keywords,
+  }
+}
+
+describe('DealProgressScaled', () => {
+  it('resolveCounter counts matching player and world cards in hand', () => {
+    const sporeWorld = { ...exilable('w-spore'), keywords: ['Spore'] as const }
+    const creatureWorld = { ...exilable('w-creature'), keywords: ['Creature'] as const }
+    const state = makeState({
+      hand: [
+        playerCarrier('p-spore-a'),
+        playerCarrier('p-spore-b'),
+        playerCarrier('p-empty', []),
+        sporeWorld,
+        creatureWorld,
+      ],
+    })
+
+    expect(resolveCounter(state, { kind: 'KeywordInHand', keyword: 'Spore' })).toBe(3)
+    expect(resolveCounter(state, { kind: 'KeywordInHand', keyword: 'Hidden' })).toBe(0)
+  })
+
+  it('applies base plus amount per Spore in hand at resolution time', () => {
+    let state = makeState()
+    const [hazard, s1] = mintWorld(state, 'Strange Sounds')
+    state = {
+      ...s1,
+      hand: [hazard, playerCarrier('spore-1'), playerCarrier('spore-2')],
+    }
+
+    const { state: after, events } = applyEffect(
+      catalog,
+      state,
+      {
+        kind: 'DealProgressScaled',
+        base: 1,
+        per: { kind: 'KeywordInHand', keyword: 'Spore' },
+        amount: 1,
+      },
+      { type: 'PlayCard', cardId: 'bloom', targetId: hazard.id },
+    )
+
+    const progress = events.find((e) => e.type === 'ProgressDealt')
+    expect(progress).toBeDefined()
+    if (progress?.type === 'ProgressDealt') {
+      expect(progress.amount).toBe(3)
+      expect(progress.hazardTurnTotal).toBe(3)
+    }
+    expect(after.progress[hazard.id]).toBe(3)
+  })
+
+  it('recounts the current hand when the effect resolves', () => {
+    let state = makeState()
+    const [hazard, s1] = mintWorld(state, 'Strange Sounds')
+    state = {
+      ...s1,
+      hand: [hazard, playerCarrier('spore-1'), playerCarrier('spore-2'), playerCarrier('spore-3')],
+    }
+
+    const beforePlay = { ...state, hand: [hazard, playerCarrier('spore-1')] }
+    const { events } = applyEffect(
+      catalog,
+      beforePlay,
+      {
+        kind: 'DealProgressScaled',
+        base: 1,
+        per: { kind: 'KeywordInHand', keyword: 'Spore' },
+        amount: 1,
+      },
+      { type: 'PlayCard', cardId: 'bloom', targetId: hazard.id },
+    )
+
+    const progress = events.find((e) => e.type === 'ProgressDealt')
+    expect(progress).toBeDefined()
+    if (progress?.type === 'ProgressDealt') {
+      expect(progress.amount).toBe(2)
+    }
+  })
+
+  it('uses normal dealProgress clear detection and onCleared hooks', () => {
+    let state = makeState()
+    const [zombie, s1] = mintWorld(state, 'Zombie')
+    state = { ...s1, hand: [zombie] }
+
+    const { state: after, events } = applyEffect(
+      catalog,
+      state,
+      {
+        kind: 'DealProgressScaled',
+        base: 3,
+        per: { kind: 'KeywordInHand', keyword: 'Spore' },
+        amount: 1,
+      },
+      { type: 'PlayCard', cardId: 'bloom', targetId: zombie.id },
+    )
+
+    expect(after.hand.find((card) => card.id === zombie.id)).toBeUndefined()
+    expect(events.some((event) => event.type === 'HazardResolved')).toBe(true)
   })
 })

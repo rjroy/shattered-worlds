@@ -4,6 +4,10 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Shattered Worlds — Destiny Progression Concepts</title>
+  <meta name="date" content="2026-06-11" />
+  <meta name="status" content="open" />
+  <meta name="tags" content="meta-progression, destiny, unlocks, retention, memories, door-fragments, corruption" />
+  <meta name="related" content=".lore/reference/vision.html, .lore/work/brainstorm/shard-response-archetypes.html" />
   <style>
     :root {
       --bg: #101014;
@@ -246,6 +250,55 @@
       font-size: 0.9rem;
     }
 
+    .question-box {
+      border: 1px solid rgba(157,108,255,0.4);
+      background: rgba(157,108,255,0.08);
+      padding: 20px;
+    }
+
+    details.thread {
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,0.02);
+      margin-top: 12px;
+    }
+
+    details.thread summary {
+      cursor: pointer;
+      padding: 14px 16px;
+      font-family: system-ui, sans-serif;
+      font-weight: 700;
+      color: #dccfff;
+      list-style-position: inside;
+    }
+
+    details.thread summary:hover { background: rgba(157,108,255,0.08); }
+
+    details.thread .thread-body { padding: 2px 18px 18px; }
+
+    .grave {
+      border: 1px dashed rgba(216,95,95,0.5);
+      background: rgba(216,95,95,0.05);
+      padding: 16px;
+      margin-top: 12px;
+      font-family: system-ui, sans-serif;
+    }
+
+    .grave .name {
+      color: var(--danger);
+      font-weight: 800;
+      margin-bottom: 4px;
+    }
+
+    .dependency-note {
+      margin-top: 14px;
+      padding: 12px 14px;
+      border-left: 3px solid var(--accent-2);
+      background: rgba(224,181,95,0.06);
+      color: var(--muted);
+      font-family: system-ui, sans-serif;
+      font-size: 0.9rem;
+    }
+
     @media (max-width: 900px) {
       .span-4, .span-5, .span-6, .span-7 { grid-column: span 12; }
       .flow { grid-template-columns: 1fr; }
@@ -265,6 +318,10 @@
         <span class="tag">Door Fragments</span>
         <span class="tag">World Unlocks</span>
         <span class="tag">Corruption Candidate</span>
+        <span class="tag">Witness Knowledge</span>
+        <span class="tag">Feats of Survival</span>
+        <span class="tag">The Ascent</span>
+        <span class="tag">Echo of the Last Run</span>
       </div>
     </header>
 
@@ -440,6 +497,357 @@
       </div>
     </section>
 
+    <!-- ===== Expansion · 2026-06-11 ===== -->
+
+    <section class="grid">
+      <div class="card span-12 principle">
+        <h2>What survives the shattering?</h2>
+        <p class="big-rule">Every meta-progression form is an answer to one question: what is allowed to persist when a world ends? The five systems above mostly answer "options." There are at least six other answers — and one we leave empty on purpose.</p>
+        <p class="muted" style="margin-top:14px">The empty one is <strong>power</strong> — numbers that persist. That's the "Why not raw power?" card above, and Principle 3's hard edge. Everything below persists something other than numbers.</p>
+      </div>
+    </section>
+
+    <section class="grid">
+      <div class="card span-4">
+        <h3>Options persist</h3>
+        <p class="muted">More choices before and during a run. Home of everything in the original table, plus <strong>Shard Depths</strong> and the <strong>Destiny Constellation</strong>.</p>
+      </div>
+      <div class="card span-4">
+        <h3>Knowledge persists</h3>
+        <p class="muted">The player's information state carries over. Home of <strong>Witness Knowledge</strong>: threats you have died to become legible.</p>
+      </div>
+      <div class="card span-4">
+        <h3>People persist</h3>
+        <p class="muted">Relationships accumulate. Home of <strong>The Waystation</strong>: survivors you rescue wait behind the Door.</p>
+      </div>
+      <div class="card span-4">
+        <h3>The world persists</h3>
+        <p class="muted">Consequences outlive the run. Home of <strong>Scarred Worlds</strong> and <strong>Echo of the Last Run</strong>.</p>
+      </div>
+      <div class="card span-4">
+        <h3>Story persists</h3>
+        <p class="muted">Meaning accumulates with zero balance surface. Home of the <strong>Survivor's Journal</strong> and <strong>Feats of Survival</strong>.</p>
+      </div>
+      <div class="card span-4">
+        <h3>The challenge persists</h3>
+        <p class="muted">Difficulty itself is the unlock. Home of <strong>The Ascent</strong>: earned harshness, earned rewards.</p>
+      </div>
+    </section>
+
+    <section class="grid">
+      <div class="card span-12">
+        <h2>New forms</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>System</th>
+              <th>What it does</th>
+              <th>Why it fits</th>
+              <th>Balance risk</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Witness Knowledge</strong></td>
+              <td>Threats you have encountered (or died to) become legible in future runs: full rules face-up, spawn forecasts, a codex entry.</td>
+              <td>Mastery transfer without power transfer. "The survivor remembers" made literal — even death earns something.</td>
+              <td class="rating good">Low</td>
+            </tr>
+            <tr>
+              <td><strong>Feats of Survival</strong></td>
+              <td>Unlocks gated behind doing, not spending. "Clear a Zombie act without playing a 3-cost card" unlocks the quiet-build variant.</td>
+              <td>Earning is the tutorial: each feat teaches the play pattern its unlock then rewards.</td>
+              <td class="rating good">Low</td>
+            </tr>
+            <tr>
+              <td><strong>Shard Depths &amp; Route Control</strong></td>
+              <td>Unlock world variants, remixed act layouts, and the right to see or pick the next world in the gauntlet.</td>
+              <td>Content and agency unlocks — the safest kind. Principle 4: more ways to choose into the chaos.</td>
+              <td class="rating good">Low</td>
+            </tr>
+            <tr>
+              <td><strong>Survivor's Journal</strong></td>
+              <td>Lore pages, world epilogues, card art restoration — earned by play, granting nothing mechanical.</td>
+              <td>Pure retention with no balance surface, and portfolio-visible craft.</td>
+              <td class="rating good">Low</td>
+            </tr>
+            <tr>
+              <td><strong>The Ascent</strong></td>
+              <td>Unlock self-imposed Burdens at the Door — harsher rules with better earnings, heat-style.</td>
+              <td>Progression for players the base game stops challenging. Mechanically protects the summit Principle 3 defends editorially.</td>
+              <td class="rating good">Low</td>
+            </tr>
+            <tr>
+              <td><strong>Destiny Constellation</strong></td>
+              <td>A star chart where lighting one star dims its neighbors; free respec between runs.</td>
+              <td>Spending becomes identity choice, not accumulation. No "finished the tree" end-state.</td>
+              <td class="rating good">Low–Medium</td>
+            </tr>
+            <tr>
+              <td><strong>Echo of the Last Run</strong></td>
+              <td>One card from your death deck appears in the next run's first reward offer.</td>
+              <td>Failure feeds forward. Run-to-run, not permanent — it decays unless re-earned.</td>
+              <td class="rating warn">Medium</td>
+            </tr>
+            <tr>
+              <td><strong>The Waystation</strong></td>
+              <td>Survivors rescued mid-run populate the space behind the Door and staff pre-run services.</td>
+              <td>Gives progression faces and a place — warmth the loadout screens can't carry alone.</td>
+              <td class="rating warn">Medium</td>
+            </tr>
+            <tr>
+              <td><strong>Pocket Stash</strong></td>
+              <td>Bank one small consumable across runs — what fits in your pockets through the Door.</td>
+              <td>The smallest honest power carry, if we ever want one. Bounded by the fiction.</td>
+              <td class="rating warn">Medium</td>
+            </tr>
+            <tr>
+              <td><strong>Scarred Worlds</strong></td>
+              <td>Worlds remember runs: the barricade you built persists, hordes thin where you cleared, the Bird learns your tricks.</td>
+              <td>The shattering becomes a history the player wrote, not a backdrop.</td>
+              <td class="rating bad">High until scoped</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="grid">
+      <div class="card span-6">
+        <h2>Witness Knowledge, sketched</h2>
+        <p>Nothing gets stronger; the dark gets smaller. Each threat has a witness state that upgrades on contact.</p>
+        <div class="example-card">
+          <div class="name">First Witness: the Walker</div>
+          <div>Die to the Walker once → its act-capstone rules are face-up from run start, forever.</div>
+        </div>
+        <div class="example-card">
+          <div class="name">Heard It Before</div>
+          <div>Encounter Strange Sounds three times → future runs show a forecast pip the turn before it spawns.</div>
+        </div>
+        <div class="example-card">
+          <div class="name">Codex of the Shattering</div>
+          <div>Every witnessed threat gets a Journal page. The codex is the bridge between this system and the Survivor's Journal.</div>
+        </div>
+        <p class="muted">This is the only form where dying is a clean, guilt-free earn. That matters for the feel of early losses.</p>
+      </div>
+      <div class="card span-6">
+        <h2>Feats of Survival, sketched</h2>
+        <p>The feat names the play pattern; the unlock rewards it. Spending currency never gates these.</p>
+        <div class="example-card">
+          <div class="name">Quiet Clear</div>
+          <div>Finish a Zombie Big Box act without playing a card costing 3+ → unlocks <strong>Suppress Panic</strong> starter variant.</div>
+        </div>
+        <div class="example-card">
+          <div class="name">Empty-Handed</div>
+          <div>Survive a Bird act with 3 or fewer non-starter cards in deck → unlocks <strong>Memory of Grip</strong>.</div>
+        </div>
+        <div class="example-card">
+          <div class="name">Outran It</div>
+          <div>Clear Highway Volcano without healing → unlocks <strong>Memory of Worn Boots</strong>.</div>
+        </div>
+        <p class="muted">Feats also solve the "what earns Starter Deck Evolution?" question better than play-count grinds — see the graveyard below.</p>
+      </div>
+    </section>
+
+    <section class="grid">
+      <div class="card span-6">
+        <h2>Echo of the Last Run, sketched</h2>
+        <ul>
+          <li><strong>Offered, never forced.</strong> The echo appears in the first reward offer; skipping it costs nothing.</li>
+          <li><strong>One-run lifespan.</strong> The echo isn't permanent — take it again or lose it.</li>
+          <li><strong>Arrives cracked.</strong> Slightly weakened, or exhausts on use, to stop best-card snowballing.</li>
+          <li><strong>Never echoes starters.</strong> Only cards the dead run earned.</li>
+        </ul>
+        <p class="muted">The fiction is free: the survivor carried one thing through the Door before it slammed.</p>
+      </div>
+      <div class="card span-6">
+        <h2>The Ascent: Burdens at the Door</h2>
+        <p>Each Burden is a named, equippable harshness with an earnings multiplier. Stacking is allowed; the multipliers are the bragging rights.</p>
+        <div class="example-card">
+          <div class="name">Heavier Door</div>
+          <div>One fewer option in each reward offer. <strong>+25% earnings.</strong></div>
+        </div>
+        <div class="example-card">
+          <div class="name">Hungrier Worlds</div>
+          <div>Threat density +1 in every act. <strong>+40% earnings.</strong></div>
+        </div>
+        <div class="example-card">
+          <div class="name">No Memories</div>
+          <div>Empty Destiny loadout. <strong>+50% earnings.</strong> The purist's run.</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="grid">
+      <div class="card span-12">
+        <h2>More instances of the existing forms</h2>
+        <p class="muted">The original table named the forms; this section stocks them. Everything here is a sketch against current or proposed effect kinds, not a balance pass.</p>
+      </div>
+    </section>
+
+    <section class="grid">
+      <div class="card span-6">
+        <h2>More memories (Destiny Loadout)</h2>
+        <p class="muted">Grouped by the world whose lesson they encode. Each is "the first X each act," which keeps memories narrow by construction.</p>
+        <div class="example-card">
+          <div class="name">Memory of the Quiet Aisles · Zombie</div>
+          <div>The first Zombie that spawns each act arrives with 1 progress already dealt.</div>
+        </div>
+        <div class="example-card">
+          <div class="name">Memory of the Intercom · Zombie</div>
+          <div>Once per act, look at the top 3 cards of the world deck.</div>
+        </div>
+        <div class="example-card">
+          <div class="name">Memory of Grip · Bird</div>
+          <div>Start each act braced: the first snatch takes nothing.</div>
+        </div>
+        <div class="example-card">
+          <div class="name">Memory of the Window Seat · Bird</div>
+          <div>The first card snatched each act returns at the end of that act.</div>
+        </div>
+        <div class="example-card">
+          <div class="name">Memory of Worn Boots · Volcano</div>
+          <div>The first Sprint each act costs 0 energy.</div>
+        </div>
+        <div class="example-card">
+          <div class="name">Memory of the Hard Shoulder · Volcano</div>
+          <div>Once per act, a compounding Lava Flow forgets to compound.</div>
+        </div>
+        <div class="example-card">
+          <div class="name">Memory of the Last Door · any world</div>
+          <div>The first reward offer each world shows one extra option.</div>
+        </div>
+        <div class="dependency-note">Grip and Window Seat assume the snatch-counterplay effects (Brace) proposed in <em>shard-response-archetypes</em>. If that proposal changes, these change with it.</div>
+      </div>
+
+      <div class="card span-6">
+        <h2>Door Fragment instances</h2>
+        <p class="muted">Fragments bend rules — information, rerolls, sequencing. They never add stats. Cap equipped slots at 1–2: each fragment is a permanent rules patch, and patches compound.</p>
+        <div class="example-card">
+          <div class="name">Peephole Glass</div>
+          <div>The top card of the world deck is always visible.</div>
+        </div>
+        <div class="example-card">
+          <div class="name">Worn Doorknob</div>
+          <div>Once per act, reroll a reward offer.</div>
+        </div>
+        <div class="example-card">
+          <div class="name">Welcome Mat</div>
+          <div>Hidden cards in the first act of each world are revealed.</div>
+        </div>
+        <div class="example-card">
+          <div class="name">Splintered Frame</div>
+          <div>When a world ends, carry one non-starter card into the next world's draft pool.</div>
+        </div>
+        <div class="example-card">
+          <div class="name">Deadbolt</div>
+          <div>Once per run, the Door holds: cancel one end-of-turn threat effect.</div>
+        </div>
+        <div class="dependency-note">Deadbolt is the scary one — a once-per-run "no" can invalidate a world's capstone moment. Prototype last, if at all.</div>
+      </div>
+    </section>
+
+    <section class="grid">
+      <div class="card span-12">
+        <h2>Starter variants with mechanics</h2>
+        <p class="muted">The original table named the variants; here is what they might actually do, sketched against existing effect kinds. The interesting pattern: each slot's variants should map onto the three response archetypes, so loadout choice telegraphs which world you're building for.</p>
+        <table>
+          <thead>
+            <tr><th>Slot</th><th>Variant</th><th>Sketch</th><th>Leans toward</th></tr>
+          </thead>
+          <tbody>
+            <tr><td rowspan="2"><strong>Explore</strong></td><td>Explore Carefully</td><td>DealProgress 1 and reveal a Hidden card.</td><td>Players who hate the dark</td></tr>
+            <tr><td>Explore Recklessly</td><td>DealProgress 3, then AddWorldCardToTop.</td><td>Sweep &amp; noise (Zombie)</td></tr>
+            <tr><td rowspan="2"><strong>Sprint</strong></td><td>Dash Through</td><td>Sprint effect, then draw 1 / discard 1.</td><td>Everything is fuel (Volcano)</td></tr>
+            <tr><td>Save Your Breath</td><td>Skip the move; GainEnergy 1 next turn.</td><td>Tempo builds</td></tr>
+            <tr><td rowspan="2"><strong>Med Kit</strong></td><td>Field Dressing</td><td>Heal less, now, at lower cost.</td><td>Aggressive lines</td></tr>
+            <tr><td>Last Supplies</td><td>Heal big; exile after use.</td><td>Travel light (Bird)</td></tr>
+            <tr><td rowspan="2"><strong>Panic</strong></td><td>Suppress Panic</td><td>Panic does nothing this turn — but it stays in your deck. You didn't deal with it.</td><td>Control builds</td></tr>
+            <tr><td>Convert Panic</td><td>When drawn: GainEnergy 1; the penalty still applies.</td><td>Everything is fuel (Volcano)</td></tr>
+          </tbody>
+        </table>
+        <div class="dependency-note">A possible fifth slot — <strong>Pockets</strong>, a consumable slot unlocked via Waystation or feat — would be the bridge to Pocket Stash if we ever open the power axis.</div>
+      </div>
+    </section>
+
+    <section class="grid">
+      <div class="card span-12">
+        <h2>Corruption: three doors it could go through</h2>
+        <p class="muted">The original table parked Corruption at "high risk until scoped." Here are three scopes. They are not compatible with each other — picking one is the scoping decision.</p>
+
+        <details class="thread">
+          <summary>Door 1 — Corruption as cost-on-the-card</summary>
+          <div class="thread-body">
+            <p>Corrupted Destiny options are strictly stronger versions of clean ones, but equipping any shuffles a <strong>Corrupted Memory</strong> — a dead or actively harmful card — into every world's deck that run.</p>
+            <p class="muted">Cleanest to build (it's just cards), easiest to explain, and the cost lives where the game lives: in the deck. Weakness: deck pollution is a familiar genre cost, low on wonder.</p>
+          </div>
+        </details>
+
+        <details class="thread">
+          <summary>Door 2 — Corruption as the world's response</summary>
+          <div class="thread-body">
+            <p>A meter, not a card. The more Destiny power the player equips, the harsher worlds spawn — threat density and clock speed scale with loadout weight.</p>
+            <p class="muted">This makes Principle 3 self-enforcing: the game mechanically refuses to let permanent power trivialize worlds, instead of the design team refusing editorially. Weakness: punishing players for using unlocks can read as the game resenting its own progression.</p>
+          </div>
+        </details>
+
+        <details class="thread">
+          <summary>Door 3 — Corruption buys rule-breaking</summary>
+          <div class="thread-body">
+            <p>Corruption is the currency for breaking roguelite law itself: continue a dead run, reroll the world order, re-enter a failed world. Every use permanently warps something in your Destiny.</p>
+            <p class="muted">The most thematically loaded version — the Door charges for what it should never allow. Also the most dangerous: "runs are disposable" is load-bearing in the vision, and a continue button, however priced, erodes it. Possibly a beautiful dead end.</p>
+          </div>
+        </details>
+      </div>
+    </section>
+
+    <section class="grid">
+      <div class="card span-6">
+        <h2>Graveyard</h2>
+        <p class="muted">Considered and rejected. Kept here so we don't re-litigate them by accident.</p>
+        <div class="grave">
+          <div class="name">Banked gold across runs</div>
+          <div>Collapses the run economy — every run becomes farming for the next, and the current run stops mattering.</div>
+        </div>
+        <div class="grave">
+          <div class="name">Play-count card mastery</div>
+          <div>"Play Sprint 50 times to unlock Dash Through" rewards time, not play. Feats earn the same unlocks while teaching something.</div>
+        </div>
+        <div class="grave">
+          <div class="name">Prestige reset of the Destiny tree</div>
+          <div>Manufactures grind out of nothing. The vision says the possibility space grows; prestige shrinks it on a schedule.</div>
+        </div>
+        <div class="grave">
+          <div class="name">Permanent stat tracks</div>
+          <div>HP / energy / draw ladders — already in the avoid list above, restated here as a corpse so it stays dead.</div>
+        </div>
+      </div>
+
+      <div class="card span-6 question-box">
+        <h2>Open questions</h2>
+        <ul>
+          <li><strong>What are "winnings," actually?</strong> The vision says spend your winnings — earned per world cleared? Per act? Per feat? One currency or one per axis?</li>
+          <li><strong>Does the loadout itself grow?</strong> Going from 3 memory slots to 4 is the juiciest single unlock in the game. Which system grants it, and how late?</li>
+          <li><strong>Seeds and scars.</strong> Persistent world state must be an input to run setup or "same seed + same actions = same run" breaks. Meta state as a seed ingredient is fine; mutating world definitions between runs is not. Scarred Worlds lives or dies on this.</li>
+          <li><strong>Where does Witness state live?</strong> It's player profile data the renderer reads, not core run state — probably the cheapest system here precisely because it never touches the simulation.</li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="grid">
+      <div class="card span-12">
+        <h2>A coherent first stack</h2>
+        <p>If the question is "what ships together," one answer hangs together unusually well:</p>
+        <ul>
+          <li><strong>Destiny Loadout</strong> stays the spine (already the chosen first implementation above).</li>
+          <li><strong>Feats of Survival</strong> are the earn mechanism — memories and starter variants are unlocked by doing, not buying.</li>
+          <li><strong>Witness Knowledge</strong> comes free with dying, so the first ten losses all pay out something.</li>
+          <li><strong>The Survivor's Journal</strong> wraps all three: feats, witnessed threats, and collected memories are pages in one book.</li>
+        </ul>
+        <p class="muted">That stack needs no currency design at all — which defers the hardest open question instead of answering it badly. The Ascent and Shard Depths slot in later without reworking any of it.</p>
+      </div>
+    </section>
+
     <section class="grid">
       <div class="card span-12 principle">
         <h2>Design thesis</h2>
@@ -447,7 +855,7 @@
       </div>
     </section>
 
-    <p class="footer-note">Generated as a one-page design artifact for Shattered Worlds. Intended as a living design reference, not a final specification.</p>
+    <p class="footer-note">Generated as a one-page design artifact for Shattered Worlds. Intended as a living design reference, not a final specification. Expanded 2026-06-11 with the "what survives the shattering?" map, ten new forms, instance sketches for the original five, three Corruption scopes, a graveyard, and a proposed first stack.</p>
   </main>
 </body>
 </html>

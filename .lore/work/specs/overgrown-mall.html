@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Overgrown Mall world: infest / prune &amp; profit</title>
+  <meta name="date" content="2026-06-11">
+  <meta name="status" content="draft">
+  <meta name="tags" content="world-design, overgrown-mall, infest, spore, deal-progress-scaled, player-keywords, core-effect">
+  <meta name="modules" content="core-engine, world-data, game-view, themes">
+  <meta name="related" content=".lore/work/brainstorm/overgrown-mall-world.html, .lore/work/brainstorm/shard-response-archetypes.html, .lore/work/plans/shard-response-archetypes.html, .lore/reference/theme-authoring.html, .lore/reference/visual-direction.html">
+  <meta name="req-prefix" content="MALL">
+  <style>
+    :root {
+      --bg: #0a100c; --panel: #131c15; --panel-2: #1a261c;
+      --ink: #e8f0e9; --muted: #93ab98; --accent: #7fd49a;
+      --gold: #d6b15c; --danger: #ff8a8a; --border: #25342a; --code: #b8e6c4;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: radial-gradient(1100px 560px at 50% -8%, #16291a 0%, var(--bg) 58%);
+      color: var(--ink); font: 16px/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      padding: 0 1rem 6rem; }
+    .wrap { max-width: 960px; margin: 0 auto; }
+    .sticky { position: sticky; top: 0; z-index: 10; background: rgba(10,16,12,.92); backdrop-filter: blur(6px);
+      border-bottom: 1px solid var(--border); padding: .6rem 0; margin-bottom: 2rem;
+      display: flex; gap: .8rem; align-items: center; font-size: .8rem; }
+    .sticky .chip { background: rgba(127,212,154,.12); border: 1px solid rgba(127,212,154,.35);
+      color: var(--accent); border-radius: 999px; padding: .15rem .7rem; font-weight: 600; }
+    .sticky .chip.draft { background: rgba(214,177,92,.12); border-color: rgba(214,177,92,.4); color: var(--gold); }
+    h1 { font-size: 2rem; margin: 1.6rem 0 .4rem; line-height: 1.1;
+      background: linear-gradient(180deg, #fff, #b8e6c4); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+    .one-liner { color: var(--muted); max-width: 760px; }
+    h2 { font-size: 1.3rem; margin: 2.6rem 0 .9rem; border-bottom: 1px solid var(--border); padding-bottom: .45rem; }
+    h2 .count { color: var(--muted); font-size: .8rem; font-weight: 400; }
+    p { margin: .6rem 0; }
+    code { font-family: ui-monospace, "Cascadia Code", Menlo, Consolas, monospace;
+      font-size: .87em; color: var(--code); background: rgba(127,212,154,.08);
+      border: 1px solid rgba(127,212,154,.16); border-radius: 5px; padding: .05rem .35rem; }
+    pre { background: rgba(127,212,154,.06); border: 1px solid rgba(127,212,154,.16); border-radius: 8px;
+      padding: .7rem .9rem; overflow-x: auto; font-size: .82rem; line-height: 1.5; }
+    pre code { background: none; border: none; padding: 0; }
+    .req { border: 1px solid var(--border); border-left: 3px solid var(--accent); border-radius: 0 10px 10px 0;
+      background: var(--panel); padding: .7rem 1rem; margin: .7rem 0; scroll-margin-top: 4rem; }
+    .req .rid { font-weight: 700; color: var(--accent); margin-right: .5rem; font-size: .85rem; }
+    .req .rid a { color: inherit; text-decoration: none; }
+    .req .rid a:hover { text-decoration: underline; }
+    .req p { margin: .35rem 0 0; font-size: .93rem; }
+    .req.core { border-left-color: var(--gold); }
+    .req.core .rid { color: var(--gold); }
+    .note { border-left: 3px dashed var(--muted); background: rgba(147,171,152,.07);
+      border-radius: 0 10px 10px 0; padding: .6rem 1rem; margin: .8rem 0; font-size: .88rem; color: var(--muted); }
+    .validation { border: 1px solid rgba(214,177,92,.5); background: rgba(214,177,92,.07);
+      border-radius: 14px; padding: 1.2rem 1.4rem; margin: 1.4rem 0; }
+    .validation h2 { border: none; margin-top: 0; color: var(--gold); }
+    table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: .88rem; }
+    th, td { text-align: left; padding: .5rem .65rem; border-bottom: 1px solid var(--border); vertical-align: top; }
+    th { color: var(--gold); font-size: .74rem; text-transform: uppercase; letter-spacing: .06em; }
+    details { margin: .5rem 0; }
+    summary { cursor: pointer; color: var(--accent); font-weight: 600; font-size: .9rem; }
+    .meta-foot { margin-top: 3.5rem; padding-top: 1rem; border-top: 1px solid var(--border);
+      color: var(--muted); font-size: .82rem; text-align: center; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="sticky">
+      <span class="chip draft">draft</span>
+      <span class="chip">REQ-MALL</span>
+      <span style="color: var(--muted);">Overgrown Mall · fourth world · spec covers full identity, no phasing</span>
+    </div>
+
+    <h1>Overgrown Mall world: infest / prune &amp; profit</h1>
+    <p class="one-liner">"The rot gets into your deck — prune it, or grow with it." The fourth world. Threat-verb <strong>infest</strong>: world cards inject Spore cards into the player deck. Response archetype <strong>prune &amp; profit</strong>, with a symbiosis line (Bloom) for the player who refuses to prune. Clock: player-deck pollution. All decisions resolved in the <a href="../brainstorm/overgrown-mall-world.html">brainstorm</a>; this spec covers everything — core effects, world data, visuals, manifests, docs, and tests ship as one identity.</p>
+
+    <h2>1 · Core engine — new capabilities <span class="count">(REQ-MALL-1 … 7)</span></h2>
+    <p>Effect kinds and template fields the Mall needs that core does not have today. <code>{ kind: 'None' }</code> already exists in the effect union (<code>types.ts:37</code>); the work is playability and coverage, not a new kind.</p>
+
+    <div class="req core" id="REQ-MALL-1"><span class="rid"><a href="#REQ-MALL-1">REQ-MALL-1</a></span> No-op player cards are playable.
+      <p>A player card whose effect is <code>{ kind: 'None' }</code> is playable whenever its energy cost is payable (playability rule: always playable, energy permitting). Playing it pays the cost, applies <code>exhaust</code> if set, emits the standard card-played events, and changes no other state. Target spec is <code>{ kind: 'none' }</code> — no targeting UI.</p></div>
+
+    <div class="req core" id="REQ-MALL-2"><span class="rid"><a href="#REQ-MALL-2">REQ-MALL-2</a></span> Player card templates support keywords.
+      <p><code>PlayerCardTemplate</code> gains an optional <code>keywords: readonly Keyword[]</code> (default <code>[]</code>), typed with the same <code>Keyword</code> union world cards use — <strong>implement REQ-MALL-3 (extend the union) first</strong> so player templates never fall back to loose <code>string[]</code>. Existing world JSON loads unchanged. Keywords on player cards are visible to the renderer the same way world card keywords are.</p></div>
+
+    <div class="req core" id="REQ-MALL-3"><span class="rid"><a href="#REQ-MALL-3">REQ-MALL-3</a></span> <code>Spore</code> joins the keyword vocabulary.
+      <p>The valid keyword set (currently <code>Hidden</code> / <code>Creature</code> / <code>Slow</code>, theme-authoring rule C2) is extended with <code>Spore</code>. Any validation or display logic that enumerates keywords handles it.</p></div>
+
+    <div class="req core" id="REQ-MALL-4"><span class="rid"><a href="#REQ-MALL-4">REQ-MALL-4</a></span> <code>DealProgressScaled</code> effect with a counter spec.
+      <p>New effect kind:</p>
+      <pre><code>{ "kind": "DealProgressScaled", "base": 1,
+  "per": { "kind": "KeywordInHand", "keyword": "Spore" }, "amount": 1 }</code></pre>
+      <p>Resolved amount = <code>base + amount × counter(state)</code>, computed at resolution time from current state — deterministic, no new randomness. <code>per</code> is a discriminated-union <strong>counter spec</strong>; <code>KeywordInHand</code> (count of hand cards, player or world, carrying the keyword) is the only member this spec requires. The union exists so future counters (e.g. the bird brainstorm's empty-hand-slot) are additive, but implementing them is out of scope here.</p></div>
+
+    <div class="req core" id="REQ-MALL-5"><span class="rid"><a href="#REQ-MALL-5">REQ-MALL-5</a></span> <code>DealProgressScaled</code> targets and plays like <code>DealProgress</code>.
+      <p>Target spec is <code>{ kind: 'hazard' }</code> (single world card in hand); playable only when at least one world card is in hand. Progress application, clear detection, and emitted events match <code>DealProgress</code> semantics. <strong>Explicit cases required in <code>available.ts</code></strong>: <code>structuralSpec</code> must return <code>{ kind: 'hazard' }</code> and <code>isPlayable</code> must return <code>worldCardsInHand(state).length &gt; 0</code> — both switches have <code>default</code> fallbacks (<code>{ kind: 'none' }</code> / <code>false</code>), so a missing case is a silent bug the compile trip-wire in REQ-MALL-6 does <em>not</em> catch.</p></div>
+
+    <div class="req core" id="REQ-MALL-6"><span class="rid"><a href="#REQ-MALL-6">REQ-MALL-6</a></span> Display text covers the new kinds.
+      <p><code>describeEffect</code> produces player-readable text for <code>None</code> on player cards — currently it returns <code>[]</code> (<code>describe.ts</code>) and must change; pinned text: <strong>"play to prune (leaves the run)"</strong> — and for <code>DealProgressScaled</code> (e.g. "deal 1 progress, +1 per Spore in hand"). The switch has no default — compile breakage is the trip-wire (ForceDestroy retro), but it only protects this function, not <code>available.ts</code> (see REQ-MALL-5).</p></div>
+
+    <div class="req core" id="REQ-MALL-7"><span class="rid"><a href="#REQ-MALL-7">REQ-MALL-7</a></span> Determinism preserved.
+      <p>No new effect or field introduces non-seeded randomness or renderer feedback into core. Same seed + same actions remains byte-identical, including runs that play Spores and Bloom.</p></div>
+
+    <h2>2 · The Spore card <span class="count">(REQ-MALL-8 … 10)</span></h2>
+
+    <div class="req" id="REQ-MALL-8"><span class="rid"><a href="#REQ-MALL-8">REQ-MALL-8</a></span> Spore template (design B, locked).
+      <p><code>energyCost: 1, exhaust: true, effect: { kind: 'None' }, keywords: ["Spore"]</code>. Playing a Spore <em>is</em> pruning it: one energy, one card play, gone for the rest of the run. It is never in the starter deck — it enters play only via world card hooks.</p></div>
+
+    <div class="req" id="REQ-MALL-9"><span class="rid"><a href="#REQ-MALL-9">REQ-MALL-9</a></span> Infest delivery uses existing pathways.
+      <p>Spores are injected via <code>GainCard</code> (→ player discard, surfaces on reshuffle — accepted timing, brainstorm Q2) and <code>AddPlayerCardToTop</code> (→ top of draw pile, drawn next turn). No new injection mechanism.</p></div>
+
+    <div class="req" id="REQ-MALL-10"><span class="rid"><a href="#REQ-MALL-10">REQ-MALL-10</a></span> One pollution identity: no Panic.
+      <p>The Mall's world JSON references no <code>Panic</code> template in any hook or reward. Spore is the world's only junk card (brainstorm Q5).</p></div>
+
+    <h2>3 · World data <span class="count">(REQ-MALL-11 … 17)</span></h2>
+    <div class="note">Card costs, counts, and act distribution below are <strong>initial tuning values</strong> (brainstorm Q4) — freely adjustable in JSON without spec revision. Structure and hooks are requirements; numbers are not.</div>
+
+    <div class="req" id="REQ-MALL-11"><span class="rid"><a href="#REQ-MALL-11">REQ-MALL-11</a></span> World identity.
+      <p><code>worldId: "overgrown-mall"</code> at <code>src/data/worlds/overgrown-mall.json</code>, using <code>deckComposition.acts</code> (three acts) like the other themed worlds. The same kebab-case id is the join key everywhere (theme-authoring RULE 0).</p></div>
+
+    <div class="req" id="REQ-MALL-12"><span class="rid"><a href="#REQ-MALL-12">REQ-MALL-12</a></span> Threat roster.
+      <p>World cards, with every card defining all three hooks (C3):</p>
+      <table>
+        <tr><th>Card</th><th>Act</th><th>Identity hook</th></tr>
+        <tr><td>Burst Planter</td><td>1</td><td><code>onDiscarded: GainCard Spore</code> — dodging it dirties you</td></tr>
+        <tr><td>Pollen Haze</td><td>1–2</td><td><code>onEndOfTurn: GainCard Spore</code> — the drip</td></tr>
+        <tr><td>Kudzu Curtain</td><td>2</td><td><code>discardable: false</code> — pure obstruction</td></tr>
+        <tr><td>Something in the Atrium</td><td>2–3</td><td><code>Creature</code> keyword — cross-world weapons stay relevant</td></tr>
+        <tr><td>Fountain Bloom</td><td>3</td><td><code>onEndOfTurn: Sequence [AddPlayerCardToTop Spore, AddWorldCardToTop Burst Planter]</code> — intentional: the injected Burst Planter bypasses act gating and surfaces via world draw after injection (brainstorm-approved; flagged "tune carefully")</td></tr>
+        <tr><td>The Garden Center</td><td>find, <code>Hidden</code></td><td><code>onCleared</code> grants prune rewards</td></tr>
+      </table></div>
+
+    <div class="req" id="REQ-MALL-13"><span class="rid"><a href="#REQ-MALL-13">REQ-MALL-13</a></span> Acts escalate by delivery mechanism.
+      <p>Act 1 infests on avoidance (<code>onDiscarded</code>), act 2 on a timer (<code>onEndOfTurn: GainCard</code>), act 3 guarantees next-turn draws (<code>onEndOfTurn: AddPlayerCardToTop</code>). The escalation is the mechanism switch, not just counts.</p></div>
+
+    <div class="req" id="REQ-MALL-14"><span class="rid"><a href="#REQ-MALL-14">REQ-MALL-14</a></span> Walker capstone, untouched canon.
+      <p>Act 3 contains exactly one <code>The Walker</code>; <code>The Walker</code> and <code>Door</code> are referenced from the shared starter source, never redefined (N1).</p></div>
+
+    <div class="req" id="REQ-MALL-15"><span class="rid"><a href="#REQ-MALL-15">REQ-MALL-15</a></span> Reward roster — distinct cards, two lines.
+      <p>Garden Center / clear rewards (D2: no card identical to another world's reward):</p>
+      <table>
+        <tr><th>Card</th><th>Effect</th><th>Line</th></tr>
+        <tr><td>Pruning Shears</td><td><code>Sequence [DestroyCardInHand { min: 1, max: 1 }, GainEnergy 1]</code></td><td>prune &amp; profit</td></tr>
+        <tr><td>Machete</td><td><code>DealProgress 1, bonus Creature +3</code></td><td>weapon slot</td></tr>
+        <tr><td>Weed Killer</td><td><code>exhaust, DealProgressAll base 1</code></td><td>answer to the green wall (Q6 resolved: keep — one exhaust copy doesn't dilute zombie's repeatable sweep)</td></tr>
+        <tr><td>Bloom</td><td><code>DealProgressScaled base 1, per KeywordInHand "Spore", amount 1</code></td><td>symbiosis — grow with it</td></tr>
+      </table></div>
+
+    <div class="req" id="REQ-MALL-16"><span class="rid"><a href="#REQ-MALL-16">REQ-MALL-16</a></span> Signature verb claim (SV1).
+      <p>The Mall's exclusive verbs are the self-pruning no-op Spore and <code>DealProgressScaled</code> (Bloom). No other world's data may use <code>DealProgressScaled</code> until a future proposal claims a counter for it.</p></div>
+
+    <div class="req" id="REQ-MALL-17"><span class="rid"><a href="#REQ-MALL-17">REQ-MALL-17</a></span> Both strategic lines are live.
+      <p>The shipped composition must make both lines playable: prune-and-tempo (Spores exhausted early, Shears/Weed Killer value) and symbiosis (Spores hoarded, Bloom scaling). Neither line may be strictly dominant at initial tuning — verified by playtest, tuned in JSON.</p></div>
+
+    <h2>4 · Visual &amp; theme <span class="count">(REQ-MALL-18 … 21)</span></h2>
+
+    <div class="req" id="REQ-MALL-18"><span class="rid"><a href="#REQ-MALL-18">REQ-MALL-18</a></span> Five artifacts, three registrations.
+      <p>Per theme-authoring W3: world JSON, <code>src/game/view/themes/overgrown-mall.ts</code> (<code>VisualTheme</code>), assets under <code>src/game/assets/themes/overgrown-mall/</code> (+ <code>insets/</code>), and entries in <code>assetManifest.ts</code>, <code>worldManifest.ts</code> (following the existing <code>makeWorldBuilder(…_SOURCE)</code> pattern — do not invent a per-world builder function), and <code>themeManifest.ts</code>. A missing registration is a spec failure, not a polish gap.</p></div>
+
+    <div class="req" id="REQ-MALL-19"><span class="rid"><a href="#REQ-MALL-19">REQ-MALL-19</a></span> Asset minimum, precedent art bar.
+      <p>Required: <code>overgrown-mall-reality.webp</code> backdrop (Walker present, distant), <code>intrusion-overlay.webp</code>, <code>overgrown-mall-cardfront.webp</code>, and one inset key per themed card (<code>mall-inset-…</code> namespace, every key registered). Card insets may ship as placeholders, matching bird-building and highway-volcano precedent.</p></div>
+
+    <div class="req" id="REQ-MALL-20"><span class="rid"><a href="#REQ-MALL-20">REQ-MALL-20</a></span> Visual identity fights the other retail interior.
+      <p>Intrusion hue is overgrowth-green and must read as distinct from zombie-big-box's palette at a glance (the brainstorm's stated risk: second retail interior). Direction: green light through a broken skylight, planters gone feral, act-3 forest. All visual-direction pass tests apply: ink-and-ash linework, desaturated reality with intrusion as the only true color, localized apocalypse radius, violet Door.</p></div>
+
+    <div class="req" id="REQ-MALL-21"><span class="rid"><a href="#REQ-MALL-21">REQ-MALL-21</a></span> Renderer shows the new information.
+      <p>Spore cards are visually identifiable in hand (keyword visible per REQ-MALL-2's display path), and Bloom's scaled value is comprehensible at the moment of play (current scaled amount surfaced via existing card text/describe path at minimum).</p></div>
+
+    <h2>5 · Manifests &amp; help <span class="count">(REQ-MALL-22 … 23)</span></h2>
+
+    <div class="req" id="REQ-MALL-22"><span class="rid"><a href="#REQ-MALL-22">REQ-MALL-22</a></span> World select entry.
+      <p><code>worldDisplayManifest.ts</code> gains an <code>overgrown-mall</code> entry (name, fiction blurb consistent with "nature rapidly reclaiming civilization; the decline, rushed").</p></div>
+
+    <div class="req" id="REQ-MALL-23"><span class="rid"><a href="#REQ-MALL-23">REQ-MALL-23</a></span> Help entry within budget.
+      <p><code>worldHelpManifest.ts</code> gains an <code>overgrown-mall</code> entry: at most 6 notes (REQ-HELP-13), and at minimum a Spore note (what it is, that playing it removes it) and a Bloom note (scales per Spore in hand).</p></div>
+
+    <h2>6 · Documentation <span class="count">(REQ-MALL-24 … 25)</span></h2>
+
+    <div class="req" id="REQ-MALL-24"><span class="rid"><a href="#REQ-MALL-24">REQ-MALL-24</a></span> Theme-authoring doc amended with the proposal, not after.
+      <p><code>.lore/reference/theme-authoring.html</code> updates: C1 effect vocabulary adds <code>DealProgressScaled</code> (and clears the stale "not yet available" marks on <code>Brace</code>/<code>DealProgressAll</code>/<code>ExileTopWorldCards</code>, which shipped); C2 keyword list adds <code>Spore</code> and documents keywords on player templates; SV1 table gains the Mall row — verbatim: <em>overgrown-mall · prune &amp; profit · self-pruning no-op Spore; Bloom scales per Spore in hand; <code>DealProgressScaled</code> exclusive to this world</em>. Also swap the transposed bird/volcano rows per REQ-MALL-25 in the same edit.</p></div>
+
+    <div class="req" id="REQ-MALL-25"><span class="rid"><a href="#REQ-MALL-25">REQ-MALL-25</a></span> Fix the transposed SV1 rows.
+      <p>The signature-verb table currently swaps bird-building and highway-volcano ("travel light" / "everything is fuel"). Correct to match the archetype brainstorm: bird = travel light, volcano = everything is fuel.</p></div>
+
+    <h2>7 · Tests <span class="count">(REQ-MALL-26 … 28)</span></h2>
+
+    <div class="req" id="REQ-MALL-26"><span class="rid"><a href="#REQ-MALL-26">REQ-MALL-26</a></span> Core coverage for every new behavior.
+      <p>Unit tests, written alongside: None-effect playability and play resolution (cost paid, exhaust applied, nothing else changes); player-template keywords parse and default; <code>KeywordInHand</code> counting (0, mixed player/world keyword carriers, full hand); <code>DealProgressScaled</code> resolution math, clear detection, and unplayability with no world card in hand; determinism (seeded run including Spore and Bloom plays replays identically, using the same comparison the existing determinism tests use — state snapshot and event sequence — rather than inventing a new methodology).</p></div>
+
+    <div class="req" id="REQ-MALL-27"><span class="rid"><a href="#REQ-MALL-27">REQ-MALL-27</a></span> Catalog and manifest tests cover the new world.
+      <p><code>worldManifest.test.ts</code> catalog-build covers <code>overgrown-mall</code> (every referenced template resolves — the safety net for the unchecked JSON cast); help-manifest completeness test covers the new entry.</p></div>
+
+    <div class="req" id="REQ-MALL-28"><span class="rid"><a href="#REQ-MALL-28">REQ-MALL-28</a></span> Golden tests stay green or are knowingly regenerated.
+      <p>Existing worlds' golden runs are unaffected. If shared code paths shift event ordering, regeneration is a deliberate, explained step — not a silent update.</p></div>
+
+    <h2>Not in scope</h2>
+    <div class="note">
+      <p>· Other counter-spec members (<code>EmptyHandSlot</code> etc.) — the union is built extensible, members land with the worlds that claim them (bird wave 2).<br>
+      · Profit-per-prune scaling state ("gain X per card destroyed this turn") — parked in the brainstorm.<br>
+      · Discard-pile-reading effects, time-based card mutation, world-deck Spores — recorded dead ends.<br>
+      · Fog Beach Party and Whiteout Parking Garage — separate specs.<br>
+      · Final inset art — placeholder precedent applies (REQ-MALL-19).</p>
+    </div>
+
+    <div class="validation">
+      <h2>AI Validation</h2>
+      <p>How the AI verifies this spec is done. All commands from repo root.</p>
+      <table>
+        <tr><th>Check</th><th>Method</th><th>Covers</th></tr>
+        <tr><td>Full suite green</td><td><code>bun test</code> exits 0; new test names match REQ-MALL-26/27 behaviors</td><td>1–10, 26–28</td></tr>
+        <tr><td>Core purity</td><td><code>bun run lint</code> exits 0 (no Phaser in <code>src/core/</code>)</td><td>7</td></tr>
+        <tr><td>Build works</td><td><code>bun run build</code> exits 0</td><td>all</td></tr>
+        <tr><td>Spore semantics</td><td>Core test: dispatch a Spore play from a seeded state — assert energy −1, card exhausted (absent from deck/discard), hand otherwise unchanged, state hash otherwise equal</td><td>1, 8</td></tr>
+        <tr><td>Bloom math</td><td>Core test: hand with N player cards keyworded <code>Spore</code>, M world cards keyworded <code>Spore</code>, K cards without — progress dealt = 1 + N + M (both card kinds count, non-carriers don't)</td><td>4, 5</td></tr>
+        <tr><td>Playability coverage</td><td>Grep <code>DealProgressScaled</code> in <code>available.ts</code>: explicit cases in both <code>isPlayable</code> and <code>structuralSpec</code> (both have <code>default</code> fallbacks that hide a missing case from <code>tsc</code>)</td><td>5</td></tr>
+        <tr><td>Describe coverage</td><td><code>describeEffect</code> returns non-empty text for <code>None</code> (player) and <code>DealProgressScaled</code>; <code>tsc</code> compiles (no-default switch trip-wire — covers this function only)</td><td>6</td></tr>
+        <tr><td>World JSON shape</td><td>Inspect <code>overgrown-mall.json</code>: 3 acts; act 3 has exactly one <code>The Walker</code>; no <code>Panic</code> reference; every world card has all three hooks; delivery mechanisms match act per REQ-MALL-13; Spore template is exactly <code>energyCost: 1, exhaust: true, effect: {kind: 'None'}, keywords: ["Spore"]</code></td><td>8, 10–14</td></tr>
+        <tr><td>Distinct rewards</td><td>Diff reward templates against the other three worlds' JSON — no identical effect+cost pair</td><td>15</td></tr>
+        <tr><td>Registrations</td><td>Grep <code>overgrown-mall</code> in <code>assetManifest.ts</code>, <code>worldManifest.ts</code>, <code>themeManifest.ts</code>, <code>worldDisplayManifest.ts</code>, <code>worldHelpManifest.ts</code> — all five hit; every <code>mall-inset-*</code> key referenced in JSON exists in the asset manifest</td><td>18, 19, 22, 23</td></tr>
+        <tr><td>Help budget</td><td><code>overgrown-mall</code> help entry has ≤ 6 notes including a Spore note and a Bloom note</td><td>23</td></tr>
+        <tr><td>Docs amended</td><td>theme-authoring.html: C1 lists <code>DealProgressScaled</code> with no stale "not yet available" rows; C2 includes <code>Spore</code> + player-keyword note; SV1 has the Mall row and corrected bird/volcano rows</td><td>24, 25</td></tr>
+        <tr><td>Runtime smoke</td><td>Launch the game, select Overgrown Mall, play one run: backdrop/cardfront/insets load (no missing-texture magenta), a Spore arrives in discard after triggering a hook, playing it removes it, Bloom is offered and resolves. Confirms reachability only, not line viability — see the REQ-MALL-17 playtest note</td><td>17, 20, 21 (manual / browser-driven)</td></tr>
+      </table>
+      <p><strong>Both-lines check (REQ-MALL-17):</strong> not AI-verifiable beyond existence (both Bloom and prune rewards reachable in data); dominance balance is explicit human playtest territory.</p>
+    </div>
+
+    <div class="meta-foot">Spec · REQ-MALL · draft 2026-06-11 · source decisions: .lore/work/brainstorm/overgrown-mall-world.html</div>
+  </div>
+</body>
+</html>

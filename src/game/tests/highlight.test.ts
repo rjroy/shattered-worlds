@@ -4,7 +4,7 @@ import type { SelectionState } from '../interaction/selection'
 import { classifyHighlight } from '../interaction/highlight'
 
 function player(id: string): PlayerCard {
-  return { kind: 'player', id, name: 'P', insetKey: undefined, sourceWorldId: 'test', effect: { kind: 'Draw', player: 1 }, energyCost: 0 }
+  return { kind: 'player', id, name: 'P', insetKey: undefined, sourceWorldId: 'test', effect: { kind: 'Draw', player: 1 }, energyCost: 0, keywords: [] }
 }
 
 function world(id: string, discardable = false): WorldCard {

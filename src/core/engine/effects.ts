@@ -3,6 +3,7 @@ import type {
   CardEffect,
   CardId,
   CardTemplateId,
+  CounterSpec,
   Dest,
   GameEvent,
   GameState,
@@ -78,6 +79,13 @@ export function dealProgress(
   }
 
   return { state: current, events }
+}
+
+export function resolveCounter(state: GameState, spec: CounterSpec): number {
+  switch (spec.kind) {
+    case 'KeywordInHand':
+      return state.hand.filter((card) => card.keywords.includes(spec.keyword)).length
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -271,6 +279,11 @@ export function applyEffect(
   switch (effect.kind) {
     case 'DealProgress':
       return dealProgress(catalog, state, play?.targetId ?? '', effect.base, effect.bonus)
+
+    case 'DealProgressScaled': {
+      const amount = effect.base + effect.amount * resolveCounter(state, effect.per)
+      return dealProgress(catalog, state, play?.targetId ?? '', amount)
+    }
 
     case 'Draw': {
       const playerCount = effect.player ?? 0

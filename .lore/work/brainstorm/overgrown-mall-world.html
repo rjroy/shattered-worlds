@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Overgrown Mall: the infest world</title>
+  <meta name="date" content="2026-06-11">
+  <meta name="status" content="resolved">
+  <meta name="tags" content="world-design, overgrown-mall, infest, spore, deck-pollution, prune-and-profit">
+  <meta name="modules" content="core-engine, world-data">
+  <meta name="related" content=".lore/work/brainstorm/shard-response-archetypes.html, .lore/work/brainstorm/theme-mechanical-differentiation.html">
+  <style>
+    :root {
+      --bg: #0a100c; --panel: #131c15; --panel-2: #1a261c;
+      --ink: #e8f0e9; --muted: #93ab98; --accent: #7fd49a;
+      --gold: #d6b15c; --spore: #c9de6a; --danger: #ff8a8a;
+      --dead: #6b7a6e; --border: #25342a; --code: #b8e6c4;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: radial-gradient(1100px 560px at 50% -8%, #16291a 0%, var(--bg) 58%);
+      color: var(--ink); font: 16px/1.65 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      padding: 2.5rem 1rem 6rem; }
+    .wrap { max-width: 940px; margin: 0 auto; }
+    .hero { text-align: center; margin-bottom: 2.4rem; }
+    .kicker { letter-spacing: .28em; text-transform: uppercase; font-size: .72rem; color: var(--gold); margin-bottom: .6rem; }
+    h1 { font-size: 2.3rem; margin: 0 0 .5rem; line-height: 1.08;
+      background: linear-gradient(180deg, #fff, #b8e6c4); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+    .one-liner { font-size: 1.1rem; max-width: 720px; margin: .5rem auto 0; }
+    .badge { display: inline-block; margin-top: 1rem; background: rgba(127,212,154,.12);
+      border: 1px solid rgba(127,212,154,.35); color: var(--accent); border-radius: 999px;
+      padding: .2rem .8rem; font-size: .75rem; font-weight: 600; }
+    h2 { font-size: 1.4rem; margin: 2.8rem 0 1rem; border-bottom: 1px solid var(--border); padding-bottom: .5rem; }
+    h3 { font-size: 1.05rem; margin: 1.5rem 0 .4rem; color: var(--accent); }
+    p { margin: .6rem 0; }
+    .panel { background: linear-gradient(180deg, var(--panel-2), var(--panel));
+      border: 1px solid var(--border); border-radius: 16px; padding: 1.3rem 1.5rem; margin: 1.1rem 0; }
+    .panel p:first-child { margin-top: 0; } .panel p:last-child { margin-bottom: 0; }
+    .term { color: var(--gold); font-weight: 600; }
+    code { font-family: ui-monospace, "Cascadia Code", Menlo, Consolas, monospace;
+      font-size: .87em; color: var(--code); background: rgba(127,212,154,.08);
+      border: 1px solid rgba(127,212,154,.16); border-radius: 5px; padding: .05rem .35rem; }
+    pre { background: rgba(127,212,154,.06); border: 1px solid rgba(127,212,154,.16); border-radius: 8px;
+      padding: .7rem .9rem; overflow-x: auto; font-size: .82rem; line-height: 1.5; }
+    pre code { background: none; border: none; padding: 0; }
+    table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: .9rem; }
+    th, td { text-align: left; padding: .55rem .7rem; border-bottom: 1px solid var(--border); vertical-align: top; }
+    th { color: var(--gold); font-size: .76rem; text-transform: uppercase; letter-spacing: .06em; }
+    .fact { border-left: 3px solid var(--gold); background: rgba(214,177,92,.06);
+      border-radius: 0 10px 10px 0; padding: .8rem 1.1rem; margin: 1rem 0; }
+    .fact .tag { color: var(--gold); font-weight: 700; font-size: .72rem; text-transform: uppercase; letter-spacing: .06em; }
+    .cards { display: grid; grid-template-columns: 1fr 1fr; gap: .9rem; margin: 1rem 0; }
+    @media (max-width: 700px) { .cards { grid-template-columns: 1fr; } }
+    .card { border: 1px solid var(--border); border-radius: 12px; padding: 1rem 1.1rem;
+      background: var(--panel); }
+    .card.picked { border-color: rgba(127,212,154,.5); background: rgba(127,212,154,.07); }
+    .card.dead { opacity: .65; border-style: dashed; }
+    .card h4 { margin: 0 0 .4rem; font-size: .95rem; }
+    .card h4 .lbl { display: inline-block; font-size: .66rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: .05em; padding: .08rem .5rem; border-radius: 999px; margin-right: .45rem; vertical-align: middle; }
+    .lbl.pick { background: rgba(127,212,154,.18); color: var(--accent); border: 1px solid rgba(127,212,154,.4); }
+    .lbl.maybe { background: rgba(214,177,92,.14); color: var(--gold); border: 1px solid rgba(214,177,92,.35); }
+    .lbl.no { background: rgba(107,122,110,.18); color: var(--dead); border: 1px solid rgba(107,122,110,.4); }
+    .card p { font-size: .88rem; margin: .35rem 0; }
+    .deadend { border-left: 3px dashed var(--dead); background: rgba(107,122,110,.08);
+      border-radius: 0 10px 10px 0; padding: .7rem 1rem; margin: .7rem 0; color: var(--muted); }
+    .deadend .tag { color: var(--dead); font-weight: 700; font-size: .72rem; text-transform: uppercase; letter-spacing: .06em; }
+    .q { border-left: 3px solid var(--accent); background: rgba(127,212,154,.06);
+      border-radius: 0 10px 10px 0; padding: .8rem 1.1rem; margin: .9rem 0; }
+    .q .qid { color: var(--accent); font-weight: 700; margin-right: .4rem; }
+    .meta-foot { margin-top: 3.5rem; padding-top: 1rem; border-top: 1px solid var(--border);
+      color: var(--muted); font-size: .82rem; text-align: center; }
+    details { margin: .6rem 0; }
+    summary { cursor: pointer; color: var(--accent); font-weight: 600; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="hero">
+      <div class="kicker">Shattered Worlds · Brainstorm</div>
+      <h1>Overgrown Mall: the infest world</h1>
+      <p class="one-liner">"The rot gets into your deck — prune it, or grow with it." Nature rapidly and dangerously reclaiming civilization; American malls were already dying on a forty-year clock, the disaster just compresses it.</p>
+      <div class="badge">Status: open · 2026-06-11 · fourth world candidate</div>
+    </div>
+
+    <h2>Where it sits in the shard map</h2>
+    <div class="panel">
+      <p>The <a href="shard-response-archetypes.html">response-archetype proposal</a> gave the shipped trio their identities. The Mall claims the first unclaimed clock: <span class="term">your own deck's purity</span>.</p>
+      <table>
+        <tr><th>World</th><th>Threat-verb</th><th>Response archetype</th><th>Clock</th></tr>
+        <tr><td>Zombie big-box</td><td>multiply</td><td>sweep &amp; noise</td><td>HP</td></tr>
+        <tr><td>Bird building</td><td>snatch</td><td>travel light</td><td>card attrition</td></tr>
+        <tr><td>Highway volcano</td><td>compound/clog</td><td>everything is fuel</td><td>deck race / hand clog</td></tr>
+        <tr><td><strong>Overgrown Mall</strong></td><td><strong>infest</strong></td><td><strong>prune &amp; profit</strong></td><td><strong>player-deck pollution</strong></td></tr>
+      </table>
+      <p><strong>Theme rule (named 2026-06-11):</strong> the place and the disaster argue with each other, and what's happening shouldn't quite make sense. Visual flag: this is the second retail interior after zombie-big-box — the overgrowth must fight for identity. Zombie big-box is fluorescent and dead; the Mall is green light through a broken skylight, planters gone feral, act 3 a forest.</p>
+    </div>
+
+    <h2>Engine ground truth</h2>
+    <div class="fact">
+      <span class="tag">Verified in core</span>
+      <p><code>GainCard</code> resolves to <code>gainCard(…, 'playerDiscard')</code> (<code>effects.ts:365</code>) — gained cards enter the <strong>player discard</strong> and arrive via reshuffle. <code>AddPlayerCardToTop</code> resolves to <code>'playerDrawTop'</code> — straight onto the draw pile, drawn next turn guaranteed. The hand always refills to <code>WORLD_CONSTS.maxHandSize</code> split between world and player cards, so <strong>every Spore drawn displaces a useful player card that turn</strong>. The clog is automatic; the engine already enforces the clock.</p>
+    </div>
+
+    <h2>The central question: what is a Spore?</h2>
+    <p>Four competing designs. <strong>Decided 2026-06-11: B is the Spore, D is the reward for refusing to prune</strong> — giving the world two legitimate lines, mirroring zombie-world's quiet/loud fork.</p>
+    <div class="cards">
+      <div class="card dead">
+        <h4><span class="lbl no">Rejected</span>A · Pure dead weight</h4>
+        <p>No effect, unplayable, just clogs. Honest but decision-free — Principle 1 wants every card to ask a question. Keep only if playtesting says the world needs simplifying.</p>
+      </div>
+      <div class="card picked">
+        <h4><span class="lbl pick">Decided</span>B · Self-pruning exhaust</h4>
+        <p><code>energyCost: 1, exhaust: true, effect: None, keywords: ["Spore"]</code>. Playing a Spore <em>is</em> pruning it — costs a card play and an energy, then leaves the run forever. Resolves "dead weight vs. playable-at-a-cost" by making the cost <strong>tempo itself</strong>. Every Spore in hand asks: prune now, or hold the dead slot? If core rejects a no-op player effect, add the allowance — the design is locked regardless (Q1 resolution).</p>
+      </div>
+      <div class="card dead">
+        <h4><span class="lbl no">Rejected</span>C · Playable with teeth</h4>
+        <p>Real but unpleasant effect, e.g. <code>Sequence [Damage 1, Draw 1]</code> ("inhale"). Worry: converges on Panic, which already exists as the shared junk card (Screams, Ash Fall). Spore should be a slow choke, not chaos. One pollution identity per world.</p>
+      </div>
+      <div class="card picked">
+        <h4><span class="lbl maybe">Wave 2</span>D · Symbiosis — grow with it</h4>
+        <p><strong>Bloom</strong>: <code>DealProgressScaled, per: { kind: "KeywordInHand", keyword: "Spore" }</code>. Per the Q3 resolution, the counter is a <em>spec</em>, keyword-based — extensible to other spore types without touching the effect, and the bird brainstorm's <code>emptyHandSlot</code> becomes just another counter kind in the same spec. Requires <code>keywords</code> on player card templates (decided: good idea independently). The Annihilation move: stop fighting the overgrowth, become it. A deck full of Spores becomes a build.</p>
+      </div>
+    </div>
+
+    <h2>Infest delivery — three speeds, one per act</h2>
+    <div class="panel">
+      <p>Acts escalate by switching <em>delivery mechanism</em>, not just counts:</p>
+      <table>
+        <tr><th>Speed</th><th>Hook</th><th>Feel</th><th>Act</th></tr>
+        <tr><td>Punish avoidance</td><td><code>onDiscarded: GainCard Spore</code></td><td>"You brushed past the planter"</td><td>1</td></tr>
+        <tr><td>The drip</td><td><code>onEndOfTurn: GainCard Spore</code></td><td>Pollen on a timer; arrives via reshuffle</td><td>1–2</td></tr>
+        <tr><td>The cruelty</td><td><code>onEndOfTurn: AddPlayerCardToTop Spore</code></td><td>You <em>will</em> draw it next turn</td><td>3</td></tr>
+      </table>
+    </div>
+
+    <h2>Threat sketches (mall flavor)</h2>
+    <div class="panel">
+      <table>
+        <tr><th>Card</th><th>Act</th><th>Sketch</th></tr>
+        <tr><td>Burst Planter</td><td>1</td><td>cost 1, <code>onDiscarded: GainCard Spore</code> — the Rubble-equivalent, but dodging it dirties you</td></tr>
+        <tr><td>Pollen Haze</td><td>1–2</td><td>cost 2, <code>onEndOfTurn: GainCard Spore</code> — the clock</td></tr>
+        <tr><td>Kudzu Curtain</td><td>2</td><td>cost 2, <code>discardable: false</code> — a wall of green, pure obstruction</td></tr>
+        <tr><td>Something in the Atrium</td><td>2–3</td><td><code>Creature</code> keyword — the fauna that moved in; keeps cross-world weapons (Bat, Axe) relevant</td></tr>
+        <tr><td>Fountain Bloom</td><td>3</td><td><code>onEndOfTurn: Sequence [AddPlayerCardToTop Spore, AddWorldCardToTop Burst Planter]</code> — spreads on <em>both</em> sides of the table. Possibly too mean; tune carefully</td></tr>
+        <tr><td>The Garden Center</td><td>find, Hidden</td><td><code>onCleared</code>: the prune rewards. The mall contains its own cure — good irony</td></tr>
+      </table>
+      <p>Capstone stays <strong>The Walker</strong> per the shared template.</p>
+    </div>
+
+    <h2>Prune &amp; profit rewards (garden center loot)</h2>
+    <div class="panel">
+      <table>
+        <tr><th>Card</th><th>Sketch</th><th>Effort</th></tr>
+        <tr><td>Pruning Shears</td><td><code>Sequence [DestroyCardInHand 1–1, GainEnergy 1]</code></td><td>data-only</td></tr>
+        <tr><td>Machete</td><td><code>DealProgress 1, bonus Creature +3</code> — the weapon slot</td><td>data-only</td></tr>
+        <tr><td>Weed Killer</td><td><code>exhaust, DealProgressAll base 1</code> — borrows zombie's cleave for the green wall (see Q6)</td><td>data-only</td></tr>
+        <tr><td>Bloom</td><td><code>DealProgressScaled per sporeInHand</code> — the symbiosis payoff</td><td>core (shared with bird wave 2)</td></tr>
+      </table>
+      <p>The profit-per-prune dream card ("gain X <em>per</em> card destroyed") needs new scaling state — <strong>parked</strong>. Sequence-based destroy-then-payoff gets 90% of the feel free; Cut It Loose already proved the pattern.</p>
+    </div>
+
+    <h2>Cross-world texture</h2>
+    <div class="panel">
+      <p>Zombie-world's <strong>Regroup</strong> (<code>DestroyCardInHand 0–2</code>) is mediocre at home and <em>premium</em> in the Mall. First concrete case of Destiny meta-progression mattering: a card's value depends on which shard you carry it into. If meta-progression lets cards cross worlds, the Mall retroactively makes old rewards interesting. Bird-building's travel-light tools double as Mall prune tools — the two worlds want the same thin-deck Destiny.</p>
+    </div>
+
+    <h2>Dead ends, kept on purpose</h2>
+    <div class="deadend"><span class="tag">Dead end</span> Spores that <em>transform</em> into worse cards over time — no mechanism for time-based card mutation, and act-based delivery escalation gets the same feeling cheaper.</div>
+    <div class="deadend"><span class="tag">Dead end</span> Spores in the <em>world</em> deck too — muddies whose pollution it is; the volcano already owns world-deck clog.</div>
+    <div class="deadend"><span class="tag">Dead end</span> Reading the discard pile for "compost" payoffs — no effect reads the discard today. Cool, expensive, later.</div>
+
+    <h2>Decisions (resolved 2026-06-11)</h2>
+    <div class="fact"><span class="tag">Q1 · resolved</span> <p>Design B is locked regardless of whether core currently permits a no-op player effect. If it doesn't, add the allowance — the legality question is an implementation detail, not a design input.</p></div>
+    <div class="fact"><span class="tag">Q2 · resolved</span> <p>The existing reshuffle timing is acceptable: a Spore gained into the discard can surface the same run via reshuffle. No special-casing.</p></div>
+    <div class="fact"><span class="tag">Q3 · resolved</span> <p><strong>Keywords, not template names.</strong> The scaling counter is <code>{ kind: "KeywordInHand", keyword: "Spore" }</code> — extensible to other spore variants without touching the effect. This requires <code>keywords</code> on player card templates, which is a good idea independently (player-side tags unlock conditional effects across all worlds). The bird's <code>emptyHandSlot</code> becomes another counter kind in the same spec.</p></div>
+    <div class="fact"><span class="tag">Q4 · resolved</span> <p>Spore-per-act counts are pure tuning — easily human-tweakable in the world JSON. Don't over-engineer the budget math up front.</p></div>
+    <div class="fact"><span class="tag">Q5 · resolved</span> <p><strong>No Panic in the Mall.</strong> One pollution identity per world; Spore is strictly the Mall's junk card.</p></div>
+
+    <h2>Still open</h2>
+    <div class="fact"><span class="tag">Q6 · resolved (during specify, 2026-06-11)</span> <p><strong>Keep Weed Killer.</strong> A single exhaust copy of <code>DealProgressAll</code> doesn't dilute zombie-world's repeatable sweep build; the green wall needs an answer and reusing a shipped effect is free. Specced in <code>.lore/work/specs/overgrown-mall.html</code> REQ-MALL-15.</p></div>
+    <p>No questions remain open; the spec is the live document.</p>
+
+    <div class="meta-foot">Brainstorm · Overgrown Mall · fourth world · companions approved same session: Fog Beach Party (conceal), Whiteout Parking Garage (freeze)</div>
+  </div>
+</body>
+</html>
