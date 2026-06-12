@@ -724,7 +724,7 @@ function exilable(id: string): WorldCard {
   return {
     kind: 'world', id, name: `Card-${id}`, insetKey: undefined,
     cost: 1, keywords: [], discardable: true, canExile: true,
-    onDiscarded: { kind: 'None' }, onCleared: { kind: 'None' }, onEndOfTurn: { kind: 'None' },
+    onDiscarded: { kind: 'None' }, onCleared: { kind: 'None' }, onEndOfTurn: { kind: 'None' }, onPartialClear: { kind: 'None' },
   }
 }
 

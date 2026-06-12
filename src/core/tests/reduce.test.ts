@@ -378,7 +378,7 @@ describe('Sprint modal', () => {
     const slowHazard: WorldCard = {
       kind: 'world', id: 'slow-test', name: 'Slow Hazard', insetKey: undefined,
       cost: 1, keywords: ['Slow'], discardable: false, canExile: true,
-      onDiscarded: { kind: 'None' }, onCleared: { kind: 'None' }, onEndOfTurn: { kind: 'None' },
+      onDiscarded: { kind: 'None' }, onCleared: { kind: 'None' }, onEndOfTurn: { kind: 'None' }, onPartialClear: { kind: 'None' },
     }
 
     const state = makeState({
