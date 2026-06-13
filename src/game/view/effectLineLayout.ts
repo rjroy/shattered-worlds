@@ -175,10 +175,12 @@ export function valueTokenStyle(
   switch (emphasis) {
     case "progress":
       return { color: baseColor, glowColor: hexToInt(TEXT.textCost) };
+    case "brace":
+      return { color: baseColor, glowColor: hexToInt(TEXT.textBuff) };
     case "reward":
-      return { color: TEXT.textReward };
+      return { color: TEXT.textReward, glowColor: hexToInt(TEXT.textReward) };
     case "penalty":
-      return { color: TEXT.textPenalty };
+      return { color: TEXT.textPenalty, glowColor: hexToInt(TEXT.textPenalty) };
     case undefined:
       return { color: baseColor };
   }

@@ -13,11 +13,11 @@
  * you ever need a Phaser VALUE here, it belongs in `render.ts`, not this file —
  * one value import re-introduces the DOM tax for every test in the path.
  */
-import type Phaser from 'phaser'
-import type { Card } from '../../core/index'
-import type { FrameStyle, VisualTheme } from './themes/theme'
-import type { HighlightKind } from '../interaction/highlight'
-export { CANVAS_W, CANVAS_H } from './layout'
+import type Phaser from "phaser";
+import type { Card } from "../../core/index";
+import type { FrameStyle, VisualTheme } from "./themes/theme";
+import type { HighlightKind } from "../interaction/highlight";
+export { CANVAS_W, CANVAS_H } from "./layout";
 
 // ---------------------------------------------------------------------------
 // Text palette
@@ -26,49 +26,48 @@ export { CANVAS_W, CANVAS_H } from './layout'
 // Text colors are theme-independent — all pass WCAG AA against the frame
 // backgrounds used by every current theme.
 export const TEXT = {
-  textLight: '#e8eaf0',
-  textMuted: '#b6c0d1',
-  textCost: '#ffcc44',
-  textKeyword: '#88ccff',
-  textDisabled: '#555577',
-  textPenalty: '#ff8888',
-  textReward: '#88ee88',
-  textHeld: '#ffaa66',
-  textDiscard: '#ffaa44',
-  textEnergy: '#ffeebb',
+  textLight: "#e8eaf0",
+  textMuted: "#b6c0d1",
+  textCost: "#ffcc44",
+  textKeyword: "#88ccff",
+  textBuff: "#88ccff",
+  textDisabled: "#555577",
+  textPenalty: "#ff8888",
+  textReward: "#88ee88",
+  textHeld: "#ffaa66",
+  textDiscard: "#ffaa44",
+  textEnergy: "#ffeebb",
   bgEnergy: 0x002244,
-  textHp: '#ff8888',
+  textHp: "#ff8888",
   dimAlpha: 0.35,
-  textWorldTitle: '#d4c8e0',
-  textWorldTag: '#c178bc',
-  textWorldStory: '#b69fc7',
-  background: '#2f2931',
-}
+  textWorldTitle: "#d4c8e0",
+  textWorldTag: "#c178bc",
+  textWorldStory: "#b69fc7",
+  background: "#2f2931",
+};
 
 export function getRealityPalette(
   theme: VisualTheme,
-  index: keyof VisualTheme['realityPalette']
+  index: keyof VisualTheme["realityPalette"],
 ): string {
-  
-  const themeColor = theme.realityPalette[index] 
+  const themeColor = theme.realityPalette[index];
   if (themeColor === undefined) {
     switch (index) {
-      case 'title':
-        return TEXT.textLight
-      case 'disabled':
-        return TEXT.textDisabled
-      case 'confirm':
-        return TEXT.textReward
-      case 'cancel':
-        return TEXT.textPenalty
-      case 'text':
+      case "title":
+        return TEXT.textLight;
+      case "disabled":
+        return TEXT.textDisabled;
+      case "confirm":
+        return TEXT.textReward;
+      case "cancel":
+        return TEXT.textPenalty;
+      case "text":
       default:
-        return TEXT.textMuted
+        return TEXT.textMuted;
     }
   }
-  return themeColor
+  return themeColor;
 }
-
 
 // ---------------------------------------------------------------------------
 // Card texture selection
@@ -87,14 +86,14 @@ export function selectCardFrontKey(
   activeTheme: VisualTheme,
   resolveTheme: (worldId: string) => VisualTheme,
 ): string {
-  if (card.kind === 'world') {
-    return activeTheme.worldCardfrontKey ?? 'cardfront'
+  if (card.kind === "world") {
+    return activeTheme.worldCardfrontKey ?? "cardfront";
   }
   // Player card: resolve theme by sourceWorldId. worldCardfrontKey is the
   // world CARD front, not the player card front. Player cards use 'cardfront'
   // (generic) until per-player-world art ships.
-  const theme = resolveTheme(card.sourceWorldId) // seam: use result when per-player-world art is defined
-  return theme.worldCardfrontKey ?? 'cardfront'
+  const theme = resolveTheme(card.sourceWorldId); // seam: use result when per-player-world art is defined
+  return theme.worldCardfrontKey ?? "cardfront";
 }
 
 // ---------------------------------------------------------------------------
@@ -110,7 +109,7 @@ export function selectCardFrontKey(
  * Guarded so the module stays usable in non-DOM test environments.
  */
 function textResolution(): number {
-  return typeof window !== 'undefined' ? window.devicePixelRatio || 1 : 1
+  return typeof window !== "undefined" ? window.devicePixelRatio || 1 : 1;
 }
 
 /**
@@ -122,7 +121,7 @@ function textResolution(): number {
 export function textStyle(
   style: Phaser.Types.GameObjects.Text.TextStyle,
 ): Phaser.Types.GameObjects.Text.TextStyle {
-  return { ...style, resolution: textResolution() }
+  return { ...style, resolution: textResolution() };
 }
 
 // ---------------------------------------------------------------------------
@@ -135,10 +134,10 @@ export function textStyle(
  * rectangle; nothing else interprets them.
  */
 export interface HighlightStyle {
-  strokeWidth: number
-  strokeColor: number
-  fillColor: number
-  fillAlpha: number
+  strokeWidth: number;
+  strokeColor: number;
+  fillColor: number;
+  fillAlpha: number;
 }
 
 /**
@@ -151,28 +150,25 @@ export interface HighlightStyle {
  * legal target. It uses the dark `committedTarget` colour (distinct from the
  * bright `targetBorder`) so the card reads as marked-but-settled.
  */
-export function highlightDescriptor(
-  kind: HighlightKind,
-  frameStyle: FrameStyle,
-): HighlightStyle {
-  const transparentFill = { fillColor: 0x000000, fillAlpha: 0 }
+export function highlightDescriptor(kind: HighlightKind, frameStyle: FrameStyle): HighlightStyle {
+  const transparentFill = { fillColor: 0x000000, fillAlpha: 0 };
   switch (kind) {
-    case 'selected':
-      return { strokeWidth: 3, strokeColor: frameStyle.selectedBorder, ...transparentFill }
-    case 'target':
-      return { strokeWidth: 3, strokeColor: frameStyle.targetBorder, ...transparentFill }
-    case 'discard':
-      return { strokeWidth: 3, strokeColor: frameStyle.discardBorder, ...transparentFill }
-    case 'committed':
+    case "selected":
+      return { strokeWidth: 3, strokeColor: frameStyle.selectedBorder, ...transparentFill };
+    case "target":
+      return { strokeWidth: 3, strokeColor: frameStyle.targetBorder, ...transparentFill };
+    case "discard":
+      return { strokeWidth: 3, strokeColor: frameStyle.discardBorder, ...transparentFill };
+    case "committed":
       return {
         strokeWidth: 2,
         strokeColor: frameStyle.committedTarget,
         fillColor: frameStyle.committedTarget,
         fillAlpha: 0.18,
-      }
-    case 'none':
+      };
+    case "none":
       // Width 0 means no stroke is drawn, so the stroke colour is irrelevant.
-      return { strokeWidth: 0, strokeColor: 0, ...transparentFill }
+      return { strokeWidth: 0, strokeColor: 0, ...transparentFill };
   }
 }
 
@@ -187,9 +183,9 @@ export function highlightDescriptor(
  * stroke/tween stay with the engine.
  */
 export interface CostRingArc {
-  clamped: number
-  start: number
-  end: number
+  clamped: number;
+  start: number;
+  end: number;
 }
 
 /**
@@ -200,10 +196,10 @@ export interface CostRingArc {
  * caller skips stroking the arc in that case.
  */
 export function costRingArc(fraction: number): CostRingArc {
-  const clamped = clampUnit(fraction)
-  const start = -Math.PI / 2
-  const end = start + clamped * Math.PI * 2
-  return { clamped, start, end }
+  const clamped = clampUnit(fraction);
+  const start = -Math.PI / 2;
+  const end = start + clamped * Math.PI * 2;
+  return { clamped, start, end };
 }
 
 // ---------------------------------------------------------------------------
@@ -213,10 +209,10 @@ export function costRingArc(fraction: number): CostRingArc {
 // Magnitude scales with intensity ∈ [0,1]. At intensity 0 the emphasis is
 // already clearly visible (base); at 1 it is at its loudest. These bound the
 // scale-up and glow alpha so even a calm board shows an obvious hover read.
-const EMPHASIS_SCALE_BASE = 1.06
-const EMPHASIS_SCALE_RANGE = 1.50 - EMPHASIS_SCALE_BASE // → scale-up at full intensity
-const EMPHASIS_GLOW_ALPHA_BASE = 0.45
-const EMPHASIS_GLOW_ALPHA_RANGE = 0.45 // → up to 0.9 at full intensity
+const EMPHASIS_SCALE_BASE = 1.06;
+const EMPHASIS_SCALE_RANGE = 1.5 - EMPHASIS_SCALE_BASE; // → scale-up at full intensity
+const EMPHASIS_GLOW_ALPHA_BASE = 0.45;
+const EMPHASIS_GLOW_ALPHA_RANGE = 0.45; // → up to 0.9 at full intensity
 
 /**
  * How loud a hovered legal target should be: the container scale (lift) and the
@@ -225,17 +221,17 @@ const EMPHASIS_GLOW_ALPHA_RANGE = 0.45 // → up to 0.9 at full intensity
  * stroke; the glow's fixed rectangle geometry stays with the draw call.
  */
 export interface EmphasisStyle {
-  scale: number
-  glowAlpha: number
+  scale: number;
+  glowAlpha: number;
 }
 
 /** Compute the lift + glow magnitude for a given hover intensity. */
 export function emphasisDescriptor(intensity: number): EmphasisStyle {
-  const t = clampUnit(intensity)
+  const t = clampUnit(intensity);
   return {
     scale: EMPHASIS_SCALE_BASE + EMPHASIS_SCALE_RANGE * t,
     glowAlpha: EMPHASIS_GLOW_ALPHA_BASE + EMPHASIS_GLOW_ALPHA_RANGE * t,
-  }
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -244,5 +240,5 @@ export function emphasisDescriptor(intensity: number): EmphasisStyle {
 
 /** Clamp a number to the unit interval [0, 1]. */
 export function clampUnit(n: number): number {
-  return Math.max(0, Math.min(1, n))
+  return Math.max(0, Math.min(1, n));
 }

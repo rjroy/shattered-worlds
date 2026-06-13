@@ -42,7 +42,7 @@ export type IconId =
   | "onPartialClear";
 
 /** How a value token should be visually weighted by the renderer. */
-export type ValueEmphasis = "progress" | "reward" | "penalty";
+export type ValueEmphasis = "progress" | "brace" | "reward" | "penalty";
 
 export type EffectToken =
   | { kind: "icon"; icon: IconId }
@@ -146,11 +146,11 @@ function compile(effect: CardEffect, ctx: CompileContext, worldId: string): Effe
     case "Draw": {
       const tokens: EffectToken[] = [];
       if (effect.player !== undefined && effect.player > 0) {
-        tokens.push(icon("draw"), value(`${effect.player}`));
+        tokens.push(icon("draw"), value(`${effect.player}`, "reward"));
       }
       if (effect.world !== undefined && effect.world > 0) {
         if (tokens.length > 0) tokens.push(text("·"));
-        tokens.push(icon("worldDraw"), value(`+${effect.world}`));
+        tokens.push(icon("worldDraw"), value(`${effect.world}`, "penalty"));
       }
       return [main(tokens.length > 0 ? tokens : [text("draw nothing")])];
     }
@@ -166,10 +166,10 @@ function compile(effect: CardEffect, ctx: CompileContext, worldId: string): Effe
     case "GainEnergy":
       return [main([value(`+${effect.amount}`, "reward"), icon("energy")])];
     case "ReturnWorldCards":
-      return [main([icon("return"), value(rangeText(effect.min, effect.max))])];
+      return [main([icon("return"), value(rangeText(effect.min, effect.max), "reward")])];
     case "DestroyCardInHand": {
       const count = effect.max === 1 ? "1" : rangeText(effect.min, effect.max);
-      const lines = [main([icon("destroy"), value(count), text("in hand")])];
+      const lines = [main([icon("destroy"), value(count, "penalty"), text("in hand")])];
       if (effect.min === 0 && effect.max === 1) lines.push(rider([text("(optional)")]));
       return lines;
     }
@@ -180,18 +180,21 @@ function compile(effect: CardEffect, ctx: CompileContext, worldId: string): Effe
     case "ExileTopWorldCards":
       return [main([icon("exile"), text("top"), value(`${effect.amount}`)])];
     case "Brace":
-      return [main([value(`+${effect.amount}`), icon("brace")])];
+      return [main([value(`+${effect.amount}`, "brace"), icon("brace")])];
     case "AddCard":
     case "GainCard":
-      return [main([icon("addCard"), text(effect.template)])];
+      return [main([icon("addCard"), value(effect.template, "reward")])];
     case "AddPlayerCardToTop":
-      return [main([icon("addCard"), text(effect.template)]), rider([text("top of deck")])];
+      return [
+        main([icon("addCard"), value(effect.template, "reward")]),
+        rider([text("top of deck")]),
+      ];
     case "AddWorldCardToDeck":
-      return [main([icon("addCard"), text(effect.template)])];
+      return [main([icon("addCard"), value(effect.template, "penalty")])];
     case "AddThreatToWorldDeck":
-      return [main([icon("addCard"), text(worldThreatByWorldId(worldId))])];
+      return [main([icon("addCard"), value(worldThreatByWorldId(worldId), "penalty")])];
     case "SurviveWorld":
-      return [main([icon("survive"), text("survive")])];
+      return [main([icon("survive"), text("SURVIVE!")])];
     case "ForceDestroy":
       // The amount is dropped, matching describeEffect's prose for this kind.
       return [main([icon("destroy"), text("random, next hand")])];

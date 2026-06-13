@@ -212,9 +212,9 @@ export class CardView extends Phaser.GameObjects.Container {
       // cards keep the original layout. The block container's (0, 0) is its
       // top centre; both offsets are whole pixels (CARD_H is even).
       const effectBlock = addEffectLines(scene, compileEffect(card.effect, this.worldId), {
-        maxWidth: CARD_W - 16,
+        maxWidth: CARD_W - 18,
         baseColor: TEXT.textLight,
-        background: { color: 0x000000 },
+        background: { color: 0x000000, alpha: 0.8 },
         warnLabel: card.name,
       });
       effectBlock.container.setPosition(0, -CARD_H / 2 + (hasKeywords ? 36 : 28));
