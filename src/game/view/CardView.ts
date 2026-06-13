@@ -10,7 +10,8 @@
 import Phaser from 'phaser'
 import type { Card, CardEffect, WorldCard } from '../../core/index'
 import type { FrameStyle, VisualTheme } from './themes/theme'
-import { describeEffect } from '../../core/view/describe'
+import { compileEffect, type IconId } from '../../core/view/effectGlyphs'
+import { addEffectLines } from './effectLineView'
 import type { HighlightKind } from '../interaction/highlight'
 import {
   TEXT,
@@ -26,9 +27,10 @@ import { CARD_FACE, TABLE_LAYOUT } from './layout'
 // Card dimensions
 // ---------------------------------------------------------------------------
 
-// Cards are sized to carry their full rules text on the face: the player face
-// shows the whole describeEffect block (Modal/Sequence included), the Hazard
-// face shows full onDiscarded/onCleared sentences. Six fit the 900px table.
+// Cards were sized to carry their full prose rules text on the face; the
+// effect blocks now render as compact token rows (compileEffect +
+// addEffectLines), but the dimensions are unchanged — the proportion pass is
+// a deliberate follow-up (token-IR design §Risks). Six fit the 900px table.
 const CARD_W = CARD_FACE.width
 const CARD_H = CARD_FACE.height
 const INSET_X = CARD_FACE.inset.x
@@ -62,14 +64,11 @@ function drawGlow(glow: Phaser.GameObjects.Graphics, color: number, alpha: numbe
 
 interface CardTextOpts {
   fontSize: string
-  font?: string
   color: string
   originY: number      // 0 = top-anchored, 1 = bottom-anchored
   bold?: boolean
   wrapWidth?: number   // when set, the text wraps at this width and centers
-  lineSpacing?: number
   background?: number
-  backgroundAlpha?: number
 }
 
 /** Add a horizontally-centered text line to a card container; returns it. */
@@ -85,9 +84,7 @@ function addCardText(
     fontSize: opts.fontSize,
     color: opts.color,
   }
-  if (opts.font !== undefined) style.fontFamily = opts.font
   if (opts.bold === true) style.fontStyle = 'bold'
-  if (opts.lineSpacing !== undefined) style.lineSpacing = opts.lineSpacing
   if (opts.wrapWidth !== undefined) {
     style.wordWrap = { width: opts.wrapWidth }
     style.align = 'center'
@@ -101,15 +98,11 @@ function addCardText(
     const lineText = i == 0 ? text : scene.add.text(x, currY, '', textStyle(style))
     lineText.setText(line)
     lineText.setOrigin(0.5, opts.originY)
-    currY += lineText.height + (opts.lineSpacing ?? 0)  
-    if (line.includes('Progress')) {
-      const textCostInt = Phaser.Display.Color.HexStringToColor(TEXT.textCost).color32
-      lineText.preFX?.addGlow(textCostInt, 0.8, 0.8)
-    }
+    currY += lineText.height
     if (opts.background !== undefined) {
       const bg = scene.add.rectangle(
         lineText.x, lineText.y, lineText.width + 6, lineText.height + 2,
-        opts.background, opts.backgroundAlpha ?? 0.5
+        opts.background, 0.5
       )
         .setOrigin(0.5, opts.originY)
         .setRounded(4)
@@ -120,34 +113,6 @@ function addCardText(
       container.add(lineText)
     }
     return lineText
-  })
-}
-
-/**
- * Add a bottom-anchored world-card effect block (onEndOfTurn / onDiscarded /
- * onCleared, onPartialClear), each line carrying `prefix`.
- * Skips effects with no content.
- */
-function addEffectBlock(
-  scene: Phaser.Scene,
-  container: Phaser.GameObjects.Container,
-  effect: CardEffect,
-  prefix: string,
-  y: number,
-  color: string,
-): Phaser.GameObjects.Text[] {
-  if (effect.kind === 'None') return []
-  const effectLines = describeEffect(effect)
-  if (effectLines.length === 0) return []
-  // apply prefix to the first line only.
-  const lines = [prefix + effectLines[0], ...effectLines.slice(1)].join('\n')
-  return addCardText(scene, container, 0, y, lines, {
-    fontSize: '10px',
-    color,
-    originY: 0,
-    wrapWidth: CARD_W - 18,
-    background: 0x000000,
-    backgroundAlpha: 0.8,
   })
 }
 
@@ -224,18 +189,20 @@ export class CardView extends Phaser.GameObjects.Container {
         })
       }
 
-      // Full effect description — the whole face is self-explanatory. Modal and
-      // Sequence cards render every branch / step, so nothing reads as "Choose...".
-      // A keyword line pushes the block down to the world face's effect offset
-      // so the two never collide; keywordless cards keep the original layout.
-      addCardText(scene, this, 0, -CARD_H / 2 + (hasKeywords ? 36 : 28), describeEffect(card.effect).join('\n'), {
-        fontSize: '11px',
-        color: TEXT.textLight,
-        originY: 0,
-        wrapWidth: CARD_W - 16,
-        lineSpacing: 2,
-        background: 0x000000,
+      // Compact token rules (compileEffect + addEffectLines) — the whole face
+      // is still self-explanatory: Modal and Sequence cards render every
+      // branch / step as token rows. A keyword line pushes the block down to
+      // the world face's effect offset so the two never collide; keywordless
+      // cards keep the original layout. The block container's (0, 0) is its
+      // top centre; both offsets are whole pixels (CARD_H is even).
+      const effectBlock = addEffectLines(scene, compileEffect(card.effect), {
+        maxWidth: CARD_W - 16,
+        baseColor: TEXT.textLight,
+        background: { color: 0x000000 },
+        warnLabel: card.name,
       })
+      effectBlock.container.setPosition(0, -CARD_H / 2 + (hasKeywords ? 36 : 28))
+      this.add(effectBlock.container)
 
       // Energy cost badge: only for cards with energyCost > 0.
       if (card.energyCost > 0) {
@@ -252,7 +219,7 @@ export class CardView extends Phaser.GameObjects.Container {
       }
 
       // Exhaust badge: the flag lives on the card (not the effect), so it cannot
-      // come through describeEffect.
+      // come through compileEffect.
       if (card.exhaust === true) {
         addCardText(scene, this, 0, CARD_H / 2 - 8, 'Exhaust', {
           fontSize: '9px',
@@ -293,16 +260,38 @@ export class CardView extends Phaser.GameObjects.Container {
         })
       }
 
-      // onEndOfTurn, onDiscarded, onCleared — full sentences.
+      // onEndOfTurn, onDiscarded, onCleared, onPartialClear — compact token
+      // blocks, each led by its trigger icon; text is tinted per block, while
+      // the icon discs keep their own placeholder hues (effectLineLayout) until
+      // real art lands (token-IR design §4). A `None` effect compiles to no
+      // lines (height 0):
+      // its empty container is dropped and contributes no spacing. currY stays
+      // whole-pixel: it starts integral and `height` is contractually integral.
       const effectLineSpacing = 4
       let currY = -CARD_H / 2 + 36
-      const onEnd = addEffectBlock(scene, this, worldCard.onEndOfTurn, 'Each turn: ', currY, TEXT.textHeld)
-      currY = onEnd.reduce((highest, text) => Math.max(highest, text.y + text.height + effectLineSpacing), currY)
-      const onDiscarded = addEffectBlock(scene, this, worldCard.onDiscarded, 'If discarded: ', currY, TEXT.textPenalty)
-      currY = onDiscarded.reduce((highest, text) => Math.max(highest, text.y + text.height + effectLineSpacing), currY)
-      const onCleared = addEffectBlock(scene, this, worldCard.onCleared, 'Clear it: ', currY, TEXT.textReward)
-      currY = onCleared.reduce((highest, text) => Math.max(highest, text.y + text.height + effectLineSpacing), currY)
-      addEffectBlock(scene, this, worldCard.onPartialClear, 'Partial clear: ', currY, TEXT.textPenalty)
+      const triggerBlocks: { leadIcon: IconId; effect: CardEffect; color: string }[] = [
+        { leadIcon: 'eachTurn', effect: worldCard.onEndOfTurn, color: TEXT.textHeld },
+        { leadIcon: 'onDiscard', effect: worldCard.onDiscarded, color: TEXT.textPenalty },
+        { leadIcon: 'onClear', effect: worldCard.onCleared, color: TEXT.textReward },
+        { leadIcon: 'onPartialClear', effect: worldCard.onPartialClear, color: TEXT.textPenalty },
+      ]
+      for (const block of triggerBlocks) {
+        const { container, height } = addEffectLines(scene, compileEffect(block.effect), {
+          maxWidth: CARD_W - 18,
+          baseColor: block.color,
+          fontSize: 10,
+          leadIcon: block.leadIcon,
+          background: { color: 0x000000, alpha: 0.8 },
+          warnLabel: card.name,
+        })
+        if (height === 0) {
+          container.destroy()
+          continue
+        }
+        container.setPosition(0, currY)
+        this.add(container)
+        currY += height + effectLineSpacing
+      }
 
       // Discard indicator.
       if (worldCard.discardable) {

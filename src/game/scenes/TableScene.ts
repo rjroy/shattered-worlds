@@ -39,6 +39,7 @@ import {
 import type { SelectionState } from '../interaction/selection'
 import { classifyHighlight } from '../interaction/highlight'
 import { CardView } from '../view/CardView'
+import { ensureEffectIconTextures } from '../view/effectLineView'
 import { HUDView } from '../view/HUDView'
 import { RunSummaryView, type RunSummaryData } from '../view/RunSummaryView'
 import { HelpOverlayView } from '../view/HelpOverlayView'
@@ -175,6 +176,10 @@ export class TableScene extends Phaser.Scene {
       console.error('[TableScene] A JSON asset failed to load — cannot assemble catalog.')
       throw new CatalogError('JSON asset failed to load')
     }
+
+    // Effect-icon placeholder textures are generated (not loaded), so they
+    // register here rather than in preload — before any CardView renders.
+    ensureEffectIconTextures(this)
 
     const { catalog, worldData } = buildWorld(this.worldId_)
 

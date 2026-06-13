@@ -15,6 +15,17 @@ export const CARD_FACE = {
   },
 } as const
 
+// Token-row effect lines: the compiled icon+text card rules (effectLineView.ts).
+export const EFFECT_ROW = {
+  fontSize: 11, // main/branch text px (player face default); callers may override
+  branchIndent: 10, // px shift right for Modal 'branch' lines
+  hangIndent: 12, // px shift for lines hanging under a leading trigger icon
+  tokenGap: 4, // px between adjacent tokens in a row
+  lineSpacing: 2, // px between stacked rows
+  iconOnlyHeightFactor: 1.4, // line height (in font-size units) when a line has no text to measure
+  iconTextureSize: 32, // px of the generated placeholder icon textures
+} as const
+
 export const TABLE_LAYOUT = {
   worldRowY: 140,
   handRowY: 420,

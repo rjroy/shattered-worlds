@@ -150,11 +150,14 @@ empty compile encodes that rule once instead of leaving it to every caller.
 `describeEffect` does, with the output shape fixed as follows:
 
 - *Sequence of simple effects* (e.g. Barricade: DealProgress then
-  ReturnWorldCards) — one or two steps join onto one line with `then` text
-  tokens; three or more steps emit one line per step, continuation lines led
-  by `then`. The split is a pure step-count heuristic: `compileEffect` cannot
-  measure pixels, so the budget is structural. (Concrete driver: Garden
-  Center's 4-step `onCleared` Sequence would otherwise overflow every render.)
+  ReturnWorldCards) — steps join onto one line with `then` text tokens only
+  while the joined line stays within a structural budget: at most two steps
+  AND at most two icon tokens total. Otherwise the sequence emits one line
+  per step, continuation lines led by `then`. The budget is structural
+  because `compileEffect` cannot measure pixels. (Concrete drivers: Garden
+  Center's 4-step `onCleared` fails the step budget; Adrenaline —
+  DiscardThenDraw then GainEnergy, two steps but three actions — fails the
+  icon budget and overflowed every render before the icon rule existed.)
 - *Modal of simple/sequence branches* (e.g. Sprint: Draw or DealProgress) — a
   `Choose:` header line, then one `role: 'branch'` line per branch. A branch
   that is itself a Sequence joins its steps with `then` inside the single
