@@ -377,28 +377,25 @@ describe("needsConfirm boundaries", () => {
     expect(stepSatisfied(sel)).toBe(true);
   });
 
-  it("destroyHand(0,2): advance with 0 picks → buildAction omits destroyIds", () => {
+  it("destroyHand(0,2): advance with 0 picks → buildAction emits empty destroyIds", () => {
     const spec: TargetSpec = { kind: "destroyHand", min: 0, max: 2 };
     let sel = beginTargeting("p1", spec);
     sel = advance(sel);
     expect(isComplete(sel)).toBe(true);
     const action = buildAction(sel);
     expect(action).not.toBeNull();
-    expect(action).not.toHaveProperty("destroyIds");
-    expect(action).toEqual({ type: "PlayCard", cardId: "p1" });
+    expect(action).toEqual({ type: "PlayCard", cardId: "p1", destroyIds: [] });
   });
 
-  it("destroyHand(0,2): advance with 2 picks → destroyIds set (first pick used)", () => {
+  it("destroyHand(0,2): advance with 2 picks → destroyIds preserves both picks", () => {
     const spec: TargetSpec = { kind: "destroyHand", min: 0, max: 2 };
     let sel = beginTargeting("p1", spec);
     sel = togglePick(sel, "p2");
     sel = togglePick(sel, "p3");
     sel = advance(sel);
-    // destroyHand max is 2 but buildAction uses done[0].destroyIds which is p2
     const action = buildAction(sel);
     expect(action).not.toBeNull();
-    // We only store current[0] as destroyIds per the spec
-    expect((action as Record<string, unknown>).destroyIds).toBe(["p2"]);
+    expect((action as Record<string, unknown>).destroyIds).toEqual(["p2", "p3"]);
   });
 });
 
