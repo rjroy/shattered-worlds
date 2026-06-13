@@ -142,7 +142,7 @@ export class HelpOverlayView extends Phaser.GameObjects.Container {
         };
         const block = addEffectLines(
           scene,
-          compileEffect(effect),
+          compileEffect(effect, "zombie-big-box"),
           leadIcon === undefined ? effectOpts : { ...effectOpts, leadIcon },
         );
         if (block.height === 0) {
