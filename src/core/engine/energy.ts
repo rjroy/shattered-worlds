@@ -1,14 +1,15 @@
-import type { GameEvent, GameState } from '../model/types'
+import type { GameState } from '../model/types'
 import { refillHand, resolveForceDestroy } from './draw'
+import type { EffectResult } from '../effects/EffectContext'
 
 // ---------------------------------------------------------------------------
 // EffectResult type (used consistently across energy, draw, effects)
 // ---------------------------------------------------------------------------
 
-export interface EffectResult {
-  state: GameState
-  events: GameEvent[]
-}
+// The canonical `EffectResult` now lives in `../effects/EffectContext`. It is
+// re-exported here so existing importers of `EffectResult` from `energy.ts`
+// keep compiling.
+export type { EffectResult }
 
 export interface StartTurnResult extends EffectResult {
   playerCardsDrawn: number

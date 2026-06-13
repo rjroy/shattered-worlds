@@ -8,6 +8,7 @@
  * and is unit-tested headless.
  */
 import type { CardEffect, GameState, PlayerCard, WorldCard } from "../../core/index";
+import { EFFECTS } from "../effects/registry";
 
 // ---------------------------------------------------------------------------
 // Effects
@@ -20,91 +21,8 @@ import type { CardEffect, GameState, PlayerCard, WorldCard } from "../../core/in
  * an opaque "Choose…" / "Multi-step".
  */
 export function describeEffect(effect: CardEffect): string[] {
-  switch (effect.kind) {
-    case "DealProgress": {
-      const bonus = effect.bonus ? `\n(+${effect.bonus.amount} vs ${effect.bonus.tag})` : "";
-      return [`Add ${effect.base} Progress${bonus}`];
-    }
-    case "DealProgressScaled":
-      return [`Add ${effect.base} Progress`, `+${effect.amount} per ${effect.per.keyword} in hand`];
-    case "Draw": {
-      const parts: string[] = [];
-      if (effect.player !== undefined && effect.player > 0) parts.push(`Draw ${effect.player}`);
-      if (effect.world !== undefined && effect.world > 0) parts.push(`+${effect.world} world`);
-      return [parts.length > 0 ? parts.join(", ") : "Draw nothing"];
-    }
-    case "Heal":
-      return [`Heal ${effect.amount} HP`];
-    case "GainEnergy":
-      return [`Gain ${effect.amount} Energy`];
-    case "ReturnWorldCards":
-      return [describeReturn(effect.min, effect.max)];
-    case "DestroyCardInHand": {
-      const lines = [
-        effect.max == 1
-          ? "Destroy a card in hand"
-          : `Destroy ${effect.min}–${effect.max} cards in hand`,
-      ];
-      if (effect.min == 0 && effect.max == 1) lines.push("(optional)");
-      return lines;
-    }
-    case "DiscardThenDraw":
-      return [`Discard a card, then draw ${effect.player}`];
-    case "AddCard":
-      return [`Gain a ${effect.template} card`];
-    case "AddWorldCardToDeck":
-      return [`+${effect.template} to world deck`];
-    case "AddThreatToWorldDeck":
-      return ["+theme threat to world deck"];
-    case "Modal":
-      return ["Choose one:", ...effect.branches.map((b) => `• ${describeEffect(b).join(", ")}`)];
-    case "Sequence":
-      return effect.steps.flatMap((step, i) =>
-        describeEffect(step).map((line, j) =>
-          i > 0 && j === 0 ? `then ${lowerFirst(line)}` : line,
-        ),
-      );
-    case "Damage":
-      return [`-${effect.amount} HP`];
-    case "DamageScaled":
-      return [`-${effect.base} HP`, `-${effect.amount} per ${effect.per.keyword} in hand`];
-    case "GainCard":
-      return [`gain ${effect.template}`];
-    case "AddPlayerCardToTop":
-      return [`+${effect.template} to your deck`];
-    case "SurviveWorld":
-      return ["you survive the world"];
-    case "ForceDestroy":
-      return ["destroy a random card from your next hand"];
-    case "DestroySelf":
-      return ["vanishes"];
-    case "None":
-      return ["no effect"];
-    case "Brace":
-      return [
-        effect.amount === 1
-          ? "Brace: absorb the next snatch"
-          : `Brace: absorb the next ${effect.amount} snatches`,
-      ];
-    case "DealProgressAll": {
-      const bonus = effect.bonus ? `\n(+${effect.bonus.amount} vs ${effect.bonus.tag})` : "";
-      return [`${effect.base} Progress to every hazard${bonus}`];
-    }
-    case "ExileTopWorldCards":
-      return [
-        `Exile the top ${effect.amount} card${effect.amount === 1 ? "" : "s"} of the world deck`,
-      ];
-  }
-}
-
-function describeReturn(min: number, max: number): string {
-  const count = min === max ? `${min}` : `${min}–${max}`;
-  const noun = max === 1 ? "world card" : "world cards";
-  return `Return ${count} ${noun} to the deck`;
-}
-
-function lowerFirst(s: string): string {
-  return s.length > 0 ? s[0]!.toLowerCase() + s.slice(1) : s;
+  const h = EFFECTS[effect.kind];
+  return h.describe(effect as never);
 }
 
 // ---------------------------------------------------------------------------
@@ -166,7 +84,27 @@ function dealProgressOf(
       }
       return null;
     }
-    default:
+    // Non-progress effects: nothing to preview as Progress math.
+    case "DealProgressScaled":
+    case "Draw":
+    case "Heal":
+    case "GainEnergy":
+    case "ReturnWorldCards":
+    case "DestroyCardInHand":
+    case "DiscardThenDraw":
+    case "AddCard":
+    case "AddWorldCardToDeck":
+    case "AddThreatToWorldDeck":
+    case "Damage":
+    case "DamageScaled":
+    case "GainCard":
+    case "AddPlayerCardToTop":
+    case "SurviveWorld":
+    case "ForceDestroy":
+    case "DestroySelf":
+    case "None":
+    case "Brace":
+    case "ExileTopWorldCards":
       return null;
   }
 }

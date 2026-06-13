@@ -42,10 +42,10 @@ import { textStyle, TEXT, getRealityPalette } from "../view/presentation";
 import {
   ringFraction,
   connectorLine,
-  selectConnectorStyle,
-  effectAtStep,
 } from "../interaction/feedback";
 import type { ConnectorStyle } from "../interaction/feedback";
+import { effectAtStep } from "../../core/effects/composite";
+import { connectorStyleOf } from "../../core/effects/registry";
 import { drawConnector } from "../view/connector";
 import { resolveBranchLabels } from "../../core/view/branchLabels";
 import { ModalChooserView } from "../view/ModalChooserView";
@@ -901,7 +901,6 @@ export class TableScene extends Phaser.Scene {
 
     const { from, to } = connectorLine(source, target);
     // Resolve the style from the acting card's effect for THIS step, then render.
-    // selectConnectorStyle is the single source of truth (S1, unit-tested).
     const style = this.stepConnectorStyle(sel.cardId, step);
     this.connectorGfx.clear();
     drawConnector(
@@ -924,7 +923,7 @@ export class TableScene extends Phaser.Scene {
     const card = this.game_.state.hand.find((c) => c.id === cardId);
     if (card === undefined || card.kind !== "player") return null;
     const effect = effectAtStep(card.effect, step);
-    return effect !== null ? selectConnectorStyle(effect) : null;
+    return effect !== null ? connectorStyleOf(effect) : null;
   }
 
   /** Remove any drawn connector. Safe to call when nothing is drawn. */

@@ -4,9 +4,7 @@ import type { CardEffect, GameState, PlayerCard, WorldCard } from "../../core/in
 import { previewPlay } from "../../core/view/describe";
 import {
   ringFraction,
-  selectConnectorStyle,
   connectorLine,
-  effectAtStep,
 } from "../interaction/feedback";
 
 // ---------------------------------------------------------------------------
@@ -100,72 +98,6 @@ describe("ringFraction", () => {
 });
 
 // ---------------------------------------------------------------------------
-// selectConnectorStyle
-// ---------------------------------------------------------------------------
-
-describe("selectConnectorStyle", () => {
-  it("maps DealProgress -> progress", () => {
-    expect(selectConnectorStyle({ kind: "DealProgress", base: 1 })).toBe("progress");
-  });
-
-  it("maps DestroyCardInHand -> destroy", () => {
-    expect(selectConnectorStyle({ kind: "DestroyCardInHand", min: 0, max: 1 })).toBe("destroy");
-  });
-
-  it("maps ReturnWorldCards -> return", () => {
-    expect(selectConnectorStyle({ kind: "ReturnWorldCards", min: 0, max: 2 })).toBe("return");
-  });
-
-  it("resolves through a Modal branch (Sprint hit branch)", () => {
-    const sprint: CardEffect = {
-      kind: "Modal",
-      branches: [
-        { kind: "Draw", player: 2, world: 1 },
-        { kind: "DealProgress", base: 1, bonus: { tag: "Slow", amount: 1 } },
-      ],
-    };
-    expect(selectConnectorStyle(sprint)).toBe("progress");
-  });
-
-  it("resolves through a Sequence step (Barricade returns world cards)", () => {
-    const barricade: CardEffect = {
-      kind: "Sequence",
-      steps: [
-        { kind: "DealProgress", base: 1 },
-        { kind: "ReturnWorldCards", min: 0, max: 2 },
-      ],
-    };
-    // First matching step wins; DealProgress comes first here.
-    expect(selectConnectorStyle(barricade)).toBe("progress");
-  });
-
-  it("resolves a Sequence to return when no earlier kind matches", () => {
-    const seq: CardEffect = {
-      kind: "Sequence",
-      steps: [
-        { kind: "Heal", amount: 2 },
-        { kind: "ReturnWorldCards", min: 1, max: 1 },
-      ],
-    };
-    expect(selectConnectorStyle(seq)).toBe("return");
-  });
-
-  it("returns null for an effect with none of the three kinds", () => {
-    expect(selectConnectorStyle({ kind: "Heal", amount: 2 })).toBeNull();
-    expect(selectConnectorStyle({ kind: "None" })).toBeNull();
-    expect(
-      selectConnectorStyle({
-        kind: "Modal",
-        branches: [
-          { kind: "Draw", player: 1 },
-          { kind: "Heal", amount: 1 },
-        ],
-      }),
-    ).toBeNull();
-  });
-});
-
-// ---------------------------------------------------------------------------
 // Agreement test (FEEDBACK-10): ringFraction reaches 1.0 exactly when
 // previewPlay reports a clear, for the same numbers. We sample three points
 // around the cost threshold using a real card + target + progress triple.
@@ -243,34 +175,5 @@ describe("connectorLine", () => {
     const line = connectorLine({ x: 50, y: 50 }, { x: 50, y: 50 });
     expect(line.from).toEqual({ x: 50, y: 50 });
     expect(line.to).toEqual({ x: 50, y: 50 });
-  });
-});
-
-// ---------------------------------------------------------------------------
-// effectAtStep — resolve the per-step effect through Sequence / Modal
-// ---------------------------------------------------------------------------
-
-describe("effectAtStep", () => {
-  const deal: CardEffect = { kind: "DealProgress", base: 1 };
-  const ret: CardEffect = { kind: "ReturnWorldCards", min: 1, max: 2 };
-
-  it("returns a single effect regardless of step", () => {
-    expect(effectAtStep(deal, 0)).toEqual(deal);
-    expect(effectAtStep(deal, 5)).toEqual(deal);
-  });
-
-  it("indexes Sequence steps and Modal branches by step", () => {
-    const seq: CardEffect = { kind: "Sequence", steps: [deal, ret] };
-    expect(effectAtStep(seq, 0)).toEqual(deal);
-    expect(effectAtStep(seq, 1)).toEqual(ret);
-
-    const modal: CardEffect = { kind: "Modal", branches: [deal, ret] };
-    expect(effectAtStep(modal, 0)).toEqual(deal);
-    expect(effectAtStep(modal, 1)).toEqual(ret);
-  });
-
-  it("returns null for an out-of-range step/branch", () => {
-    expect(effectAtStep({ kind: "Sequence", steps: [deal] }, 3)).toBeNull();
-    expect(effectAtStep({ kind: "Modal", branches: [deal] }, 3)).toBeNull();
   });
 });

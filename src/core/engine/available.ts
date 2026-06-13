@@ -8,18 +8,12 @@ import type {
   TargetSpec,
   WorldCard,
 } from "../model/types";
+import { EFFECTS } from "../effects/registry";
+import { effectAtStep } from "../effects/composite";
 
 // ---------------------------------------------------------------------------
 // Internal helpers
 // ---------------------------------------------------------------------------
-
-function worldCardsInHand(state: GameState): WorldCard[] {
-  return state.hand.filter((c): c is WorldCard => c.kind === "world");
-}
-
-function playerCardsInHand(state: GameState): PlayerCard[] {
-  return state.hand.filter((c): c is PlayerCard => c.kind === "player");
-}
 
 /**
  * Derive the structural TargetSpec for an Effect — the shape the UI needs to
@@ -28,40 +22,8 @@ function playerCardsInHand(state: GameState): PlayerCard[] {
  * regardless of current hand state.
  */
 function structuralSpec(effect: CardEffect): TargetSpec {
-  switch (effect.kind) {
-    case "DealProgress": {
-      const tag = effect.bonus?.tag;
-      return tag !== undefined ? { kind: "hazard", tag } : { kind: "hazard" };
-    }
-    case "DealProgressScaled":
-      return { kind: "hazard" };
-    case "Heal":
-    case "GainEnergy":
-    case "AddWorldCardToDeck":
-    case "AddThreatToWorldDeck":
-    case "AddCard":
-    case "Draw":
-      return { kind: "none" };
-    case "ReturnWorldCards":
-      return { kind: "returnWorld", min: effect.min, max: effect.max };
-    case "DestroyCardInHand":
-      return { kind: "destroyHand", min: effect.min, max: effect.max };
-    case "DiscardThenDraw":
-      return { kind: "discardPlayer" };
-    case "Modal":
-      return { kind: "modal", branches: effect.branches.map(structuralSpec) };
-    case "Sequence":
-      return { kind: "compound", steps: effect.steps.map(structuralSpec) };
-    case "Brace":
-    case "DealProgressAll":
-    case "ExileTopWorldCards":
-    case "None":
-    case "Damage":
-    case "DamageScaled":
-      return { kind: "none" };
-    default:
-      return { kind: "none" };
-  }
+  const h = EFFECTS[effect.kind];
+  return h.structuralSpec(effect as never);
 }
 
 /**
@@ -75,58 +37,16 @@ function isPlayable(
   state: GameState,
   selfId: CardId,
 ): boolean {
-  switch (effect.kind) {
-    case "DealProgress":
-    case "DealProgressScaled":
-      // Requires at least one world card in hand as a target.
-      return worldCardsInHand(state).length > 0;
+  const h = EFFECTS[effect.kind];
+  return h.isPlayable(effect as never, state, selfId);
+}
 
-    case "Heal":
-    case "GainEnergy":
-    case "AddWorldCardToDeck":
-    case "AddThreatToWorldDeck":
-    case "AddCard":
-    case "Draw":
-    case "Brace":
-      return true;
+export function structuralSpecOf(effect: CardEffect): TargetSpec {
+  return structuralSpec(effect)
+}
 
-    case "None":
-    case "Damage":
-    case "DamageScaled":
-      return true;
-
-    case "ExileTopWorldCards":
-      return state.worldDraw.some((c) => c.canExile);
-
-    case "DealProgressAll":
-      return worldCardsInHand(state).length > 0;
-
-    case "DestroyCardInHand":
-      // Requires at least one other card in hand to destroy.
-      return playerCardsInHand(state).length > effect.min;
-
-    case "DiscardThenDraw":
-      // Requires at least one other player card in hand to discard.
-      return playerCardsInHand(state).some((c) => c.id !== selfId);
-
-    case "ReturnWorldCards":
-      // When min >= 1, the player must return that many world cards — requires
-      // at least `min` world cards in hand.
-      return !(effect.min > 0 && worldCardsInHand(state).length < effect.min);
-
-    case "Modal":
-      // Playable as long as at least one branch is viable.
-      return effect.branches.some((branch) =>
-        isPlayable(branch, state, selfId),
-      );
-
-    case "Sequence":
-      // The first step determines whether the whole sequence is playable.
-      return isPlayable(effect.steps[0]!, state, selfId);
-
-    default:
-      return false;
-  }
+export function isPlayableOf(effect: CardEffect, state: GameState, selfId: CardId): boolean {
+  return isPlayable(effect, state, selfId)
 }
 
 /**
@@ -155,53 +75,8 @@ function computeLegalTargetsForEffect(
   effect: CardEffect,
   state: GameState,
 ): readonly CardId[] {
-  switch (effect.kind) {
-    case "DealProgress":
-    case "DealProgressScaled":
-      if (effect.base === 0) {
-        const tag =
-          effect.kind === "DealProgress" ? effect.bonus?.tag : undefined;
-        if (tag !== undefined) {
-          // Filter to world cards that have the matching keyword
-          return worldCardsInHand(state)
-            .filter((c) => c.keywords.includes(tag))
-            .map((c) => c.id);
-        }
-      }
-      return worldCardsInHand(state).map((c) => c.id);
-
-    case "DiscardThenDraw":
-      return playerCardsInHand(state)
-        .filter((c) => c.id !== card.id)
-        .map((c) => c.id);
-
-    case "DestroyCardInHand":
-      return playerCardsInHand(state)
-        .filter((c) => c.id !== card.id)
-        .map((c) => c.id);
-
-    case "ReturnWorldCards":
-      return worldCardsInHand(state).map((c) => c.id);
-
-    case "Modal":
-    case "Sequence":
-      return []; // legalTargets is computed at the branch/step level for these
-
-    case "Heal":
-    case "GainEnergy":
-    case "AddWorldCardToDeck":
-    case "AddThreatToWorldDeck":
-    case "AddCard":
-    case "Draw":
-    case "Brace":
-    case "DealProgressAll":
-    case "ExileTopWorldCards":
-    case "Damage":
-    case "DamageScaled":
-      return [];
-    default:
-      return [];
-  }
+  const h = EFFECTS[effect.kind];
+  return h.legalTargets(effect as never, card.id, state);
 }
 
 function computeLegalTargets(
@@ -210,40 +85,13 @@ function computeLegalTargets(
   state: GameState,
 ): readonly CardId[] {
   const effect = card.effect;
-
-  switch (effect.kind) {
-    case "Modal": {
-      // step = branch index
-      const branch = effect.branches[step];
-      if (branch === undefined) return [];
-      return computeLegalTargetsForEffect(card, branch, state);
-    }
-
-    case "Sequence": {
-      const stepEffect = effect.steps[step];
-      if (stepEffect === undefined) return [];
-      return computeLegalTargetsForEffect(card, stepEffect, state);
-    }
-
-    case "DealProgress":
-    case "DealProgressScaled":
-    case "DiscardThenDraw":
-    case "DestroyCardInHand":
-    case "Heal":
-    case "GainEnergy":
-    case "AddWorldCardToDeck":
-    case "AddThreatToWorldDeck":
-    case "AddCard":
-    case "Draw":
-    case "ReturnWorldCards":
-    case "Brace":
-    case "DealProgressAll":
-    case "ExileTopWorldCards":
-    default:
-      // step 0: all cards in hand except self
-      if (step !== 0) return [];
-      return computeLegalTargetsForEffect(card, effect, state);
-  }
+  const stepEffect =
+    effect.kind === "Modal" || effect.kind === "Sequence"
+      ? effectAtStep(effect, step)
+      : step === 0
+        ? effect
+        : null;
+  return stepEffect === null ? [] : computeLegalTargetsForEffect(card, stepEffect, state);
 }
 
 // ---------------------------------------------------------------------------

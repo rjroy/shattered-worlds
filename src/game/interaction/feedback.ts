@@ -2,17 +2,15 @@
  * Ring/connector feedback math for the table renderer.
  *
  * This is the headless, pure side of the live-play feedback: how full the
- * progress ring should be, and which visual connector a card-to-target line
- * should use. It imports core *types* only (no Phaser, no DOM, no core runtime
- * values), so it stays on the pure side of the renderer boundary and is
- * unit-tested headless — the same boundary `describe.ts` keeps.
+ * progress ring should be and how connector endpoints are formed. Connector
+ * style selection now lives in core handlers, beside the effect behavior.
  *
  * `describe.ts` owns the English strings; this module owns the numbers and the
  * style enum. They format the *same* (card, target, progress) data, so the
  * agreement test in `feedback.test.ts` pins `ringFraction` reaching 1.0 to
  * `previewPlay` reporting a clear.
  */
-import type { CardEffect } from '../../core/index'
+import type { ConnectorStyle } from '../../core/effects/EffectContext'
 
 /**
  * Fraction of a hazard's cost that `progress` covers, in [0, 1].
@@ -45,54 +43,8 @@ export function connectorLine(source: Point, target: Point): { from: Point; to: 
 }
 
 /**
- * The CardEffect that runs at `step`, looking through a Sequence (steps line up
- * 1:1 with the compound targeting steps) or a Modal (step is the chosen branch
- * index). For a single effect, `step` is ignored and the effect is returned.
- * Returns null when the step/branch index is out of range.
+ * The visual connector style a card's play draws toward its target. The type
+ * lives in core (`src/core/effects/EffectContext`) so the effect-handler base
+ * can carry a `connectorStyle` method; re-exported here for renderer modules.
  */
-export function effectAtStep(effect: CardEffect, step: number): CardEffect | null {
-  if (effect.kind === 'Sequence') return effect.steps[step] ?? null
-  if (effect.kind === 'Modal') return effect.branches[step] ?? null
-  return effect
-}
-
-/** The visual connector style a card's play draws toward its target. */
-export type ConnectorStyle = 'progress' | 'destroy' | 'return'
-
-/**
- * Pick the connector style for an effect, looking through `Modal`/`Sequence`
- * wrappers. A reachable `DealProgress` maps to 'progress', `DestroyCardInHand`
- * to 'destroy', and `ReturnWorldCards` to 'return'. Anything else (or an effect
- * that wraps none of these) yields null.
- *
- * Unlike `dealProgressOf` in `describe.ts`, this resolver has no chosen-branch
- * context — it answers "which connector could this card draw, pre-selection" —
- * so for a `Modal` it scans all branches and returns the first matching style
- * rather than resolving only the chosen `branchIndex`.
- */
-export function selectConnectorStyle(effect: CardEffect): ConnectorStyle | null {
-  switch (effect.kind) {
-    case 'DealProgress':
-      return 'progress'
-    case 'DestroyCardInHand':
-      return 'destroy'
-    case 'ReturnWorldCards':
-      return 'return'
-    case 'Modal': {
-      for (const branch of effect.branches) {
-        const style = selectConnectorStyle(branch)
-        if (style !== null) return style
-      }
-      return null
-    }
-    case 'Sequence': {
-      for (const step of effect.steps) {
-        const style = selectConnectorStyle(step)
-        if (style !== null) return style
-      }
-      return null
-    }
-    default:
-      return null
-  }
-}
+export type { ConnectorStyle }
