@@ -48,7 +48,7 @@ export type ValueEmphasis = "progress" | "reward" | "penalty";
 export type EffectToken =
   | { kind: "icon"; icon: IconId }
   | { kind: "value"; text: string; emphasis?: ValueEmphasis }
-  | { kind: "text"; text: string }; // connectives ('then', 'vs', 'per', '·') and keyword names
+  | { kind: "text"; text: string }; // connectives ('→', 'vs', 'per', '·') and keyword names
 
 export interface EffectLine {
   tokens: EffectToken[];
@@ -115,8 +115,8 @@ function rangeText(min: number, max: number): string {
 /**
  * Compile a card effect into compact token lines. Recurses into `Modal`
  * (a "Choose:" header plus a `branch` line per branch) and `Sequence`
- * (1–2 steps join onto one line with `then` connectives; 3+ steps emit one
- * line per step, continuation lines led by `then`), so nothing collapses
+ * (1–2 steps join onto one line with `→` connectives; 3+ steps emit one
+ * line per step, continuation lines led by `→`), so nothing collapses
  * to an opaque "Choose…" / "Multi-step". Riders produced inside composites
  * keep their `rider` role; deeper nesting compiles at a single indent level
  * (`branch` does not stack).
@@ -206,7 +206,7 @@ function compile(effect: CardEffect, ctx: CompileContext): EffectLine[] {
         main([
           icon("discard"),
           value("1"),
-          text("then"),
+          text("→"),
           icon("draw"),
           value(`${effect.player}`),
         ]),
@@ -257,26 +257,26 @@ function compile(effect: CardEffect, ctx: CompileContext): EffectLine[] {
         .map((step) => compile(step, ctx))
         .filter((compiled) => compiled.length > 0);
       if (ctx.compactSequences || compiledSteps.length <= 2) {
-        // Step main lines join onto one line with 'then' connectives; any
+        // Step main lines join onto one line with '→' connectives; any
         // rider/branch lines the steps produced follow after, roles preserved.
         const joined: EffectToken[] = [];
         const trailing: EffectLine[] = [];
         for (const [first, ...rest] of compiledSteps) {
           if (first === undefined) continue;
-          if (joined.length > 0) joined.push(text("then"));
+          if (joined.length > 0) joined.push(text("→"));
           joined.push(...first.tokens);
           trailing.push(...rest);
         }
         return joined.length > 0 ? [main(joined), ...trailing] : trailing;
       }
       // 3+ steps would overflow a single line, so each step gets its own line,
-      // continuation lines led by 'then'. Each step's rider/branch lines
+      // continuation lines led by '→'. Each step's rider/branch lines
       // immediately follow that step's line, keeping riders bound to their
       // owner (see design §2 rider binding).
       return compiledSteps.flatMap(([first, ...rest], index) => {
         if (first === undefined) return [];
         const tokens =
-          index === 0 ? first.tokens : [text("then"), ...first.tokens];
+          index === 0 ? first.tokens : [text("→"), ...first.tokens];
         return [{ ...first, tokens }, ...rest];
       });
     }

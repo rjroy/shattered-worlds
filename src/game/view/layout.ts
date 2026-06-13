@@ -1,8 +1,8 @@
 // Shared geometry for the Phaser renderer. Keep stable canvas, card, row, HUD,
 // pile, and scene-selection measurements here so layout changes have one home.
 
-export const CANVAS_W = 900
-export const CANVAS_H = 600
+export const CANVAS_W = 900;
+export const CANVAS_H = 600;
 
 export const CARD_FACE = {
   width: 150,
@@ -13,18 +13,18 @@ export const CARD_FACE = {
     width: 120,
     height: 70,
   },
-} as const
+} as const;
 
 // Token-row effect lines: the compiled icon+text card rules (effectLineView.ts).
 export const EFFECT_ROW = {
-  fontSize: 11, // main/branch text px (player face default); callers may override
+  fontSize: 14, // main/branch text px (player face default); callers may override
   branchIndent: 10, // px shift right for Modal 'branch' lines
   hangIndent: 12, // px shift for lines hanging under a leading trigger icon
   tokenGap: 4, // px between adjacent tokens in a row
   lineSpacing: 2, // px between stacked rows
   iconOnlyHeightFactor: 1.4, // line height (in font-size units) when a line has no text to measure
   iconTextureSize: 32, // px of the generated placeholder icon textures
-} as const
+} as const;
 
 export const TABLE_LAYOUT = {
   worldRowY: 140,
@@ -45,7 +45,7 @@ export const TABLE_LAYOUT = {
     confirm: { x: 740, y: 540 },
     help: { x: 860, y: 22 },
   },
-} as const
+} as const;
 
 export const HUD_LAYOUT = {
   panel: {
@@ -70,7 +70,7 @@ export const HUD_LAYOUT = {
     itemGap: 12,
     panelPadX: 12,
   },
-} as const
+} as const;
 
 export const PILE_LAYOUT = {
   cardWidth: 50,
@@ -81,7 +81,7 @@ export const PILE_LAYOUT = {
   world: { x: 820, y: 440 },
   discard: { x: 80, y: 560 },
   labelY: 20,
-} as const
+} as const;
 
 export const WORLD_SELECT_LAYOUT = {
   cardWidth: 240,
@@ -99,4 +99,4 @@ export const WORLD_SELECT_LAYOUT = {
   storyMinY: 90,
   textGap: 10,
   textPadding: 24,
-} as const
+} as const;
