@@ -9,6 +9,24 @@ import insetFrameUrl from '../assets/inset-frame.webp'
 import energyIconUrl from '../assets/energy.webp'
 import powerBraceUrl from '../assets/power-brace.png'
 import powerForceDestroyUrl from '../assets/power-force-destroy.png'
+import effectIconProgressUrl from '../assets/effect-icons/effect-icon-progress.png'
+import effectIconProgressAllUrl from '../assets/effect-icons/effect-icon-progress-all.png'
+import effectIconDrawUrl from '../assets/effect-icons/effect-icon-draw.png'
+import effectIconWorldDrawUrl from '../assets/effect-icons/effect-icon-world-draw.png'
+import effectIconHpUrl from '../assets/effect-icons/effect-icon-hp.png'
+import effectIconDiscardUrl from '../assets/effect-icons/effect-icon-discard.png'
+import effectIconDestroyUrl from '../assets/effect-icons/effect-icon-destroy.png'
+import effectIconExileUrl from '../assets/effect-icons/effect-icon-exile.png'
+import effectIconReturnUrl from '../assets/effect-icons/effect-icon-return.png'
+import effectIconAddCardUrl from '../assets/effect-icons/effect-icon-add-card.png'
+import effectIconThreatUrl from '../assets/effect-icons/effect-icon-threat.png'
+import effectIconSkipDrawUrl from '../assets/effect-icons/effect-icon-skip-draw.png'
+import effectIconSurviveUrl from '../assets/effect-icons/effect-icon-survive.png'
+import effectIconVanishUrl from '../assets/effect-icons/effect-icon-vanish.png'
+import effectIconEachTurnUrl from '../assets/effect-icons/effect-icon-each-turn.png'
+import effectIconOnDiscardUrl from '../assets/effect-icons/effect-icon-on-discard.png'
+import effectIconOnClearUrl from '../assets/effect-icons/effect-icon-on-clear.png'
+import effectIconOnPartialClearUrl from '../assets/effect-icons/effect-icon-on-partial-clear.png'
 import bigboxRealityUrl from '../assets/themes/zombie-big-box/bigbox-reality.webp'
 import zombieIntrusionUrl from '../assets/themes/zombie-big-box/intrusion-overlay.webp'
 import zombieCardfrontUrl from '../assets/themes/zombie-big-box/zombie-cardfront.webp'
@@ -87,6 +105,24 @@ export const assetManifest: Record<string, string> = {
   'energy-icon': energyIconUrl,
   'power-brace': powerBraceUrl,
   'power-force-destroy': powerForceDestroyUrl,
+  'effect-icon-progress': effectIconProgressUrl,
+  'effect-icon-progress-all': effectIconProgressAllUrl,
+  'effect-icon-draw': effectIconDrawUrl,
+  'effect-icon-world-draw': effectIconWorldDrawUrl,
+  'effect-icon-hp': effectIconHpUrl,
+  'effect-icon-discard': effectIconDiscardUrl,
+  'effect-icon-destroy': effectIconDestroyUrl,
+  'effect-icon-exile': effectIconExileUrl,
+  'effect-icon-return': effectIconReturnUrl,
+  'effect-icon-add-card': effectIconAddCardUrl,
+  'effect-icon-threat': effectIconThreatUrl,
+  'effect-icon-skip-draw': effectIconSkipDrawUrl,
+  'effect-icon-survive': effectIconSurviveUrl,
+  'effect-icon-vanish': effectIconVanishUrl,
+  'effect-icon-each-turn': effectIconEachTurnUrl,
+  'effect-icon-on-discard': effectIconOnDiscardUrl,
+  'effect-icon-on-clear': effectIconOnClearUrl,
+  'effect-icon-on-partial-clear': effectIconOnPartialClearUrl,
   'bigbox-reality': bigboxRealityUrl,
   'zombie-intrusion': zombieIntrusionUrl,
   'zombie-cardfront': zombieCardfrontUrl,
