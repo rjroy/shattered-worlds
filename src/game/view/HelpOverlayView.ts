@@ -796,15 +796,6 @@ export class HelpOverlayView extends Phaser.GameObjects.Container {
             "Send world cards back into the world deck.",
             colWrap,
           );
-          addIconRow(
-            page,
-            rightX,
-            60,
-            "threat",
-            "Threat",
-            "Add the main themed hazard to the world deck.",
-            colWrap,
-          );
 
           // World-trigger icons lead the colored blocks on a hazard face, so their
           // names echo those tints here. Laid as a full-width strip below the columns.

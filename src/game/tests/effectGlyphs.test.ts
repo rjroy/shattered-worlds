@@ -149,13 +149,13 @@ describe("compileEffect", () => {
       line([i("addCard"), t("Summon Door")]),
       line([t("top of deck")], "rider"),
     ]);
-    expect(compileEffect({ kind: "AddWorldCardToDeck", template: "Door" })).toStrictEqual([
-      line([i("threat"), t("Door")]),
+    expect(
+      compileEffect({ kind: "AddWorldCardToDeck", template: "Door" }, "zombie-big-box"),
+    ).toStrictEqual([line([i("addCard"), t("Door")])]);
+    expect(compileEffect({ kind: "AddThreatToWorldDeck" }, "zombie-big-box")).toStrictEqual([
+      line([i("addCard"), v("Zombie")]),
     ]);
-    expect(compileEffect({ kind: "AddThreatToWorldDeck" })).toStrictEqual([
-      line([i("threat"), v("+1")]),
-    ]);
-    expect(compileEffect({ kind: "SurviveWorld" })).toStrictEqual([
+    expect(compileEffect({ kind: "SurviveWorld" }, "zombie-big-box")).toStrictEqual([
       line([i("survive"), t("survive")]),
     ]);
     expect(compileEffect({ kind: "ForceDestroy", amount: 1 })).toStrictEqual([

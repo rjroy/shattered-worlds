@@ -24,7 +24,12 @@ const WORLD_THREAT_BY_WORLD_ID: Record<string, CardTemplateId> = {
   "zombie-big-box": "Zombie",
   "highway-volcano": "Lava Flow",
   "bird-building": "Gripping Talon",
+  "overgrown-mall": "Something in the Atrium",
 };
+
+export function worldThreatByWorldId(worldId: string): string {
+  return WORLD_THREAT_BY_WORLD_ID[worldId] ?? "<Unknown>";
+}
 
 // ---------------------------------------------------------------------------
 // dealProgress

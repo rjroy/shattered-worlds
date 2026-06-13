@@ -41,7 +41,6 @@ const ALL_ICON_IDS: IconId[] = [
   "exile",
   "return",
   "addCard",
-  "threat",
   "brace",
   "survive",
   "vanish",

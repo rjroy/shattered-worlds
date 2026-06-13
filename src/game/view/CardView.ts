@@ -124,6 +124,7 @@ function addCardText(
 /** Create a Phaser Container representing a single card (player or world). */
 export class CardView extends Phaser.GameObjects.Container {
   readonly cardId: string;
+  readonly worldId: string;
 
   private highlightRect: Phaser.GameObjects.Rectangle;
   private costRing?: CostRing;
@@ -141,6 +142,7 @@ export class CardView extends Phaser.GameObjects.Container {
     super(scene, x, y);
     scene.add.existing(this);
     this.cardId = card.id;
+    this.worldId = theme.worldId;
     this.setDepth(TABLE_LAYOUT.cardDepth);
 
     // Card frame image: world cards use the theme-specific front if available.
@@ -209,7 +211,7 @@ export class CardView extends Phaser.GameObjects.Container {
       // the world face's effect offset so the two never collide; keywordless
       // cards keep the original layout. The block container's (0, 0) is its
       // top centre; both offsets are whole pixels (CARD_H is even).
-      const effectBlock = addEffectLines(scene, compileEffect(card.effect), {
+      const effectBlock = addEffectLines(scene, compileEffect(card.effect, this.worldId), {
         maxWidth: CARD_W - 16,
         baseColor: TEXT.textLight,
         background: { color: 0x000000 },
@@ -310,14 +312,18 @@ export class CardView extends Phaser.GameObjects.Container {
         },
       ];
       for (const block of triggerBlocks) {
-        const { container, height } = addEffectLines(scene, compileEffect(block.effect), {
-          maxWidth: CARD_W - 18,
-          baseColor: TEXT.textLight,
-          fontSize: 12,
-          leadIcon: block.leadIcon,
-          background: { color: 0x000000, alpha: 0.8 },
-          warnLabel: card.name,
-        });
+        const { container, height } = addEffectLines(
+          scene,
+          compileEffect(block.effect, this.worldId),
+          {
+            maxWidth: CARD_W - 18,
+            baseColor: TEXT.textLight,
+            fontSize: 12,
+            leadIcon: block.leadIcon,
+            background: { color: 0x000000, alpha: 0.8 },
+            warnLabel: card.name,
+          },
+        );
         if (height === 0) {
           container.destroy();
           continue;

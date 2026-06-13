@@ -981,7 +981,7 @@ describe("CardView world-card trigger blocks", () => {
     const tints = blocks.map((block) => rowTextColors(rowsOf(block)[0]!));
     expect(tints).toEqual([
       ["#ffaa66", "#ffaa66"], // eachTurn: colon + Brace '2' → textHeld
-      ["#ff8888", "#ff8888"], // onDiscard: colon + threat '+1' → textPenalty
+      ["#ff8888", "#ff8888"], // onDiscard: colon + threat 'Zombie' → textPenalty
       ["#88ee88", "#88ee88", "#88ee88"], // onClear: colon + exile 'top', '1' → textReward
       ["#ff8888", "#ff8888"], // onPartialClear: colon + 'next turn' → textPenalty
     ]);
