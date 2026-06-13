@@ -62,9 +62,14 @@ describe("EFFECT_ICON_TEXTURES", () => {
     expect(Object.keys(EFFECT_ICON_TEXTURES).sort()).toEqual([...ALL_ICON_IDS].sort());
   });
 
-  it("uses a unique texture key per icon", () => {
-    const keys = Object.values(EFFECT_ICON_TEXTURES);
-    expect(new Set(keys).size).toBe(keys.length);
+  it("only reuses the discard texture for discard-trigger icons", () => {
+    const seen = new Map<string, IconId[]>();
+    for (const id of ALL_ICON_IDS) {
+      const key = EFFECT_ICON_TEXTURES[id];
+      seen.set(key, [...(seen.get(key) ?? []), id]);
+    }
+    const duplicates = [...seen.values()].filter((ids) => ids.length > 1);
+    expect(duplicates).toEqual([["discard", "onDiscard"]]);
   });
 });
 
@@ -198,11 +203,17 @@ describe("valueTokenStyle", () => {
   });
 
   it("tints reward values", () => {
-    expect(valueTokenStyle("reward", BASE)).toEqual({ color: TEXT.textReward });
+    expect(valueTokenStyle("reward", BASE)).toEqual({
+      color: TEXT.textReward,
+      glowColor: 0x88ee88,
+    });
   });
 
   it("tints penalty values", () => {
-    expect(valueTokenStyle("penalty", BASE)).toEqual({ color: TEXT.textPenalty });
+    expect(valueTokenStyle("penalty", BASE)).toEqual({
+      color: TEXT.textPenalty,
+      glowColor: 0xff8888,
+    });
   });
 
   it("renders unemphasised values in the base colour with no glow", () => {

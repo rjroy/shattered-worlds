@@ -30,7 +30,7 @@ function line(tokens: EffectToken[], role?: "main" | "branch" | "rider"): Effect
 describe("compileEffect", () => {
   it("compiles DealProgress to an icon + emphasized value", () => {
     expect(compileEffect({ kind: "DealProgress", base: 3 }, "zombie-big-box")).toStrictEqual([
-      line([t("+"), i("progress"), v("3", "progress")]),
+      line([t("+"), v("3", "progress"), i("progress")]),
     ]);
   });
 
@@ -41,8 +41,8 @@ describe("compileEffect", () => {
         "zombie-big-box",
       ),
     ).toStrictEqual([
-      line([t("+"), i("progress"), v("3", "progress")]),
-      line([v("+2"), t("vs"), t("Spore")], "rider"),
+      line([t("+"), v("3", "progress"), i("progress")]),
+      line([v("+2", "progress"), t("vs"), t("Spore")], "rider"),
     ]);
   });
 
@@ -58,14 +58,14 @@ describe("compileEffect", () => {
         "zombie-big-box",
       ),
     ).toStrictEqual([
-      line([t("+"), i("progress"), v("1", "progress")]),
+      line([t("+"), v("1", "progress"), i("progress")]),
       line([v("+1"), t("per"), t("Spore"), t("in hand")], "rider"),
     ]);
   });
 
   it('compiles DealProgressAll with an "all" marker and the same bonus rider as DealProgress', () => {
     expect(compileEffect({ kind: "DealProgressAll", base: 2 }, "zombie-big-box")).toStrictEqual([
-      line([t("+"), i("progressAll"), v("2", "progress"), t("all")]),
+      line([t("+"), v("2", "progress"), t("all"), i("progressAll")]),
     ]);
     expect(
       compileEffect(
@@ -73,20 +73,20 @@ describe("compileEffect", () => {
         "zombie-big-box",
       ),
     ).toStrictEqual([
-      line([t("+"), i("progressAll"), v("2", "progress"), t("all")]),
-      line([v("+2"), t("vs"), t("Spore")], "rider"),
+      line([t("+"), v("2", "progress"), t("all"), i("progressAll")]),
+      line([v("+2", "progress"), t("vs"), t("Spore")], "rider"),
     ]);
   });
 
   it("compiles all four Draw variants", () => {
     expect(compileEffect({ kind: "Draw", player: 2, world: 1 }, "zombie-big-box")).toStrictEqual([
-      line([i("draw"), v("2"), t("·"), i("worldDraw"), v("+1")]),
+      line([i("draw"), v("2", "reward"), t("·"), i("worldDraw"), v("1", "penalty")]),
     ]);
     expect(compileEffect({ kind: "Draw", player: 2 }, "zombie-big-box")).toStrictEqual([
-      line([i("draw"), v("2")]),
+      line([i("draw"), v("2", "reward")]),
     ]);
     expect(compileEffect({ kind: "Draw", world: 1 }, "zombie-big-box")).toStrictEqual([
-      line([i("worldDraw"), v("+1")]),
+      line([i("worldDraw"), v("1", "penalty")]),
     ]);
     expect(compileEffect({ kind: "Draw" }, "zombie-big-box")).toStrictEqual([
       line([t("draw nothing")]),
@@ -95,13 +95,13 @@ describe("compileEffect", () => {
 
   it("compiles HP and energy changes with reward/penalty emphasis", () => {
     expect(compileEffect({ kind: "Heal", amount: 2 }, "zombie-big-box")).toStrictEqual([
-      line([i("hp"), v("+2", "reward")]),
+      line([v("+2", "reward"), i("hp")]),
     ]);
     expect(compileEffect({ kind: "Damage", amount: 2 }, "zombie-big-box")).toStrictEqual([
-      line([i("hp"), v("−2", "penalty")]),
+      line([v("−2", "penalty"), i("hp")]),
     ]);
     expect(compileEffect({ kind: "GainEnergy", amount: 1 }, "zombie-big-box")).toStrictEqual([
-      line([i("energy"), v("+1", "reward")]),
+      line([v("+1", "reward"), i("energy")]),
     ]);
   });
 
@@ -117,7 +117,7 @@ describe("compileEffect", () => {
         "zombie-big-box",
       ),
     ).toStrictEqual([
-      line([i("hp"), v("−1", "penalty")]),
+      line([v("−1", "penalty"), i("hp")]),
       line([v("−1"), t("per"), t("Spore"), t("in hand")], "rider"),
     ]);
   });
@@ -125,22 +125,25 @@ describe("compileEffect", () => {
   it("compiles ReturnWorldCards as a range or a fixed count", () => {
     expect(
       compileEffect({ kind: "ReturnWorldCards", min: 1, max: 2 }, "zombie-big-box"),
-    ).toStrictEqual([line([i("return"), v("1–2")])]);
+    ).toStrictEqual([line([i("return"), v("1–2", "reward")])]);
     expect(
       compileEffect({ kind: "ReturnWorldCards", min: 1, max: 1 }, "zombie-big-box"),
-    ).toStrictEqual([line([i("return"), v("1")])]);
+    ).toStrictEqual([line([i("return"), v("1", "reward")])]);
   });
 
   it("compiles DestroyCardInHand singular, optional, and ranged forms", () => {
     expect(
       compileEffect({ kind: "DestroyCardInHand", min: 1, max: 1 }, "zombie-big-box"),
-    ).toStrictEqual([line([i("destroy"), v("1"), t("in hand")])]);
+    ).toStrictEqual([line([i("destroy"), v("1", "penalty"), t("in hand")])]);
     expect(
       compileEffect({ kind: "DestroyCardInHand", min: 0, max: 1 }, "zombie-big-box"),
-    ).toStrictEqual([line([i("destroy"), v("1"), t("in hand")]), line([t("(optional)")], "rider")]);
+    ).toStrictEqual([
+      line([i("destroy"), v("1", "penalty"), t("in hand")]),
+      line([t("(optional)")], "rider"),
+    ]);
     expect(
       compileEffect({ kind: "DestroyCardInHand", min: 2, max: 4 }, "zombie-big-box"),
-    ).toStrictEqual([line([i("destroy"), v("2–4"), t("in hand")])]);
+    ).toStrictEqual([line([i("destroy"), v("2–4", "penalty"), t("in hand")])]);
   });
 
   it("compiles the remaining simple player effects", () => {
@@ -151,31 +154,34 @@ describe("compileEffect", () => {
       compileEffect({ kind: "ExileTopWorldCards", amount: 2 }, "zombie-big-box"),
     ).toStrictEqual([line([i("exile"), t("top"), v("2")])]);
     expect(compileEffect({ kind: "Brace", amount: 1 }, "zombie-big-box")).toStrictEqual([
-      line([i("brace"), v("1")]),
+      line([v("+1", "brace"), i("brace")]),
     ]);
     expect(
       compileEffect(
         { kind: "AddCard", template: "Listen", dest: "playerDiscard" },
         "zombie-big-box",
       ),
-    ).toStrictEqual([line([i("addCard"), t("Listen")])]);
+    ).toStrictEqual([line([i("addCard"), v("Listen", "reward")])]);
   });
 
   it("compiles the hazard effect kinds", () => {
     expect(compileEffect({ kind: "GainCard", template: "Panic" }, "zombie-big-box")).toStrictEqual([
-      line([i("addCard"), t("Panic")]),
+      line([i("addCard"), v("Panic", "reward")]),
     ]);
     expect(
       compileEffect({ kind: "AddPlayerCardToTop", template: "Summon Door" }, "zombie-big-box"),
-    ).toStrictEqual([line([i("addCard"), t("Summon Door")]), line([t("top of deck")], "rider")]);
+    ).toStrictEqual([
+      line([i("addCard"), v("Summon Door", "reward")]),
+      line([t("top of deck")], "rider"),
+    ]);
     expect(
       compileEffect({ kind: "AddWorldCardToDeck", template: "Door" }, "zombie-big-box"),
-    ).toStrictEqual([line([i("addCard"), t("Door")])]);
+    ).toStrictEqual([line([i("addCard"), v("Door", "penalty")])]);
     expect(compileEffect({ kind: "AddThreatToWorldDeck" }, "zombie-big-box")).toStrictEqual([
-      line([i("addCard"), v("Zombie")]),
+      line([i("addCard"), v("Zombie", "penalty")]),
     ]);
     expect(compileEffect({ kind: "SurviveWorld" }, "zombie-big-box")).toStrictEqual([
-      line([i("survive"), t("survive")]),
+      line([i("survive"), t("SURVIVE!")]),
     ]);
     expect(compileEffect({ kind: "ForceDestroy", amount: 1 }, "zombie-big-box")).toStrictEqual([
       line([i("destroy"), t("random, next hand")]),
@@ -205,8 +211,8 @@ describe("compileEffect (composites)", () => {
     };
     expect(compileEffect(modal, "zombie-big-box")).toStrictEqual([
       line([t("Choose:")]),
-      line([i("hp"), v("+1", "reward")], "branch"),
-      line([i("draw"), v("2")], "branch"),
+      line([v("+1", "reward"), i("hp")], "branch"),
+      line([i("draw"), v("2", "reward")], "branch"),
     ]);
   });
 
@@ -219,7 +225,7 @@ describe("compileEffect (composites)", () => {
       ],
     };
     expect(compileEffect(sequence, "zombie-big-box")).toStrictEqual([
-      line([t("+"), i("progress"), v("1", "progress"), t("→"), i("draw"), v("1")]),
+      line([t("+"), v("1", "progress"), i("progress"), t("→"), i("draw"), v("1", "reward")]),
     ]);
   });
 
@@ -234,16 +240,16 @@ describe("compileEffect (composites)", () => {
     expect(compileEffect(sequence, "zombie-big-box")).toStrictEqual([
       line([
         t("+"),
-        i("progress"),
         v("2", "progress"),
+        i("progress"),
         t("→"),
         i("draw"),
-        v("1"),
+        v("1", "reward"),
         t("·"),
         i("worldDraw"),
-        v("+1"),
+        v("1", "penalty"),
       ]),
-      line([v("+2"), t("vs"), t("Spore")], "rider"),
+      line([v("+2", "progress"), t("vs"), t("Spore")], "rider"),
     ]);
   });
 
@@ -257,9 +263,9 @@ describe("compileEffect (composites)", () => {
       ],
     };
     expect(compileEffect(sequence, "zombie-big-box")).toStrictEqual([
-      line([t("+"), i("progress"), v("1", "progress")]),
-      line([t("→"), i("draw"), v("1")]),
-      line([t("→"), i("hp"), v("+1", "reward")]),
+      line([t("+"), v("1", "progress"), i("progress")]),
+      line([t("→"), i("draw"), v("1", "reward")]),
+      line([t("→"), v("+1", "reward"), i("hp")]),
     ]);
   });
 
@@ -273,10 +279,10 @@ describe("compileEffect (composites)", () => {
       ],
     };
     expect(compileEffect(sequence, "zombie-big-box")).toStrictEqual([
-      line([t("+"), i("progress"), v("2", "progress")]),
-      line([v("+2"), t("vs"), t("Spore")], "rider"),
-      line([t("→"), i("draw"), v("1")]),
-      line([t("→"), i("hp"), v("+1", "reward")]),
+      line([t("+"), v("2", "progress"), i("progress")]),
+      line([v("+2", "progress"), t("vs"), t("Spore")], "rider"),
+      line([t("→"), i("draw"), v("1", "reward")]),
+      line([t("→"), v("+1", "reward"), i("hp")]),
     ]);
   });
 
@@ -286,7 +292,7 @@ describe("compileEffect (composites)", () => {
       steps: [{ kind: "None" }, { kind: "Heal", amount: 1 }],
     };
     expect(compileEffect(sequence, "zombie-big-box")).toStrictEqual([
-      line([i("hp"), v("+1", "reward")]),
+      line([v("+1", "reward"), i("hp")]),
     ]);
   });
 
@@ -306,8 +312,11 @@ describe("compileEffect (composites)", () => {
     };
     expect(compileEffect(modal, "zombie-big-box")).toStrictEqual([
       line([t("Choose:")]),
-      line([i("hp"), v("+1", "reward")], "branch"),
-      line([t("+"), i("progress"), v("1", "progress"), t("→"), i("draw"), v("1")], "branch"),
+      line([v("+1", "reward"), i("hp")], "branch"),
+      line(
+        [t("+"), v("1", "progress"), i("progress"), t("→"), i("draw"), v("1", "reward")],
+        "branch",
+      ),
     ]);
   });
 
@@ -328,18 +337,18 @@ describe("compileEffect (composites)", () => {
     };
     expect(compileEffect(modal, "zombie-big-box")).toStrictEqual([
       line([t("Choose:")]),
-      line([i("hp"), v("+1", "reward")], "branch"),
+      line([v("+1", "reward"), i("hp")], "branch"),
       line(
         [
           t("+"),
-          i("progress"),
           v("1", "progress"),
+          i("progress"),
           t("→"),
           i("draw"),
-          v("1"),
+          v("1", "reward"),
           t("→"),
-          i("energy"),
           v("+1", "reward"),
+          i("energy"),
         ],
         "branch",
       ),
@@ -362,10 +371,10 @@ describe("compileEffect (composites)", () => {
     };
     expect(compileEffect(nested, "zombie-big-box")).toStrictEqual([
       line([t("Choose:")]),
-      line([i("draw"), v("1")], "branch"),
+      line([i("draw"), v("1", "reward")], "branch"),
       line([t("Choose:")], "branch"),
-      line([i("hp"), v("+1", "reward")], "branch"),
-      line([i("hp"), v("−1", "penalty")], "branch"),
+      line([v("+1", "reward"), i("hp")], "branch"),
+      line([v("−1", "penalty"), i("hp")], "branch"),
     ]);
   });
 
@@ -384,9 +393,9 @@ describe("compileEffect (composites)", () => {
       ],
     };
     expect(compileEffect(sequence, "zombie-big-box")).toStrictEqual([
-      line([t("+"), i("progress"), v("1", "progress"), t("→"), t("Choose:")]),
-      line([i("hp"), v("+1", "reward")], "branch"),
-      line([i("draw"), v("1")], "branch"),
+      line([t("+"), v("1", "progress"), i("progress"), t("→"), t("Choose:")]),
+      line([v("+1", "reward"), i("hp")], "branch"),
+      line([i("draw"), v("1", "reward")], "branch"),
     ]);
   });
 });
@@ -406,9 +415,9 @@ describe("compileEffect (catalog composites)", () => {
     };
     expect(compileEffect(sprint, "zombie-big-box")).toStrictEqual([
       line([t("Choose:")]),
-      line([i("draw"), v("3"), t("·"), i("worldDraw"), v("+1")], "branch"),
-      line([t("+"), i("progress"), v("0", "progress")], "branch"),
-      line([v("+3"), t("vs"), t("Slow")], "rider"),
+      line([i("draw"), v("3", "reward"), t("·"), i("worldDraw"), v("1", "penalty")], "branch"),
+      line([t("+"), v("0", "progress"), i("progress")], "branch"),
+      line([v("+3", "progress"), t("vs"), t("Slow")], "rider"),
     ]);
   });
 
@@ -424,10 +433,10 @@ describe("compileEffect (catalog composites)", () => {
       ],
     };
     expect(compileEffect(onCleared, "zombie-big-box")).toStrictEqual([
-      line([i("addCard"), t("Pruning Shears")]),
-      line([t("→"), i("addCard"), t("Machete")]),
-      line([t("→"), i("addCard"), t("Weed Killer")]),
-      line([t("→"), i("addCard"), t("Bloom")]),
+      line([i("addCard"), v("Pruning Shears", "reward")]),
+      line([t("→"), i("addCard"), v("Machete", "reward")]),
+      line([t("→"), i("addCard"), v("Weed Killer", "reward")]),
+      line([t("→"), i("addCard"), v("Bloom", "reward")]),
     ]);
   });
 
@@ -440,7 +449,7 @@ describe("compileEffect (catalog composites)", () => {
       ],
     };
     expect(compileEffect(barricade, "zombie-big-box")).toStrictEqual([
-      line([t("+"), i("progress"), v("1", "progress"), t("→"), i("return"), v("0–1")]),
+      line([t("+"), v("1", "progress"), i("progress"), t("→"), i("return"), v("0–1", "reward")]),
     ]);
   });
 });

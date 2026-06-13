@@ -631,6 +631,11 @@ function makeFakeImage(x: number, y: number, textureKey: string): unknown {
       img.displayHeight = h;
       return img;
     },
+    setScale(s: number): unknown {
+      img.displayWidth = img.width * s;
+      img.displayHeight = img.height * s;
+      return img;
+    },
   };
   return img;
 }
@@ -891,10 +896,8 @@ describe("CardView world-card trigger blocks", () => {
       onCleared: { kind: "GainEnergy", amount: 1 },
       onPartialClear: { kind: "None" },
     },
-    // All four triggers non-None, each compiling to UNEMPHASISED tokens (no
-    // reward/penalty value emphasis) so every text token takes the block's
-    // baseColor — the tint assertions below read the triggerBlocks table, not
-    // valueTokenStyle's emphasis overrides.
+    // All four triggers non-None so the order assertions can pin the visual
+    // stack CardView uses.
     "Patient Zero": {
       kind: "world",
       name: "Patient Zero",
@@ -904,7 +907,7 @@ describe("CardView world-card trigger blocks", () => {
       onEndOfTurn: { kind: "Brace", amount: 2 },
       onDiscarded: { kind: "AddThreatToWorldDeck" },
       onCleared: { kind: "ExileTopWorldCards", amount: 1 },
-      onPartialClear: { kind: "None" },
+      onPartialClear: { kind: "ForceDestroy", amount: 1 },
     },
   };
 
@@ -937,14 +940,14 @@ describe("CardView world-card trigger blocks", () => {
 
   it("leads each block with its trigger icon, then the compiled effect tokens", () => {
     const rendered = renderCard(mintWorld("Shambler"));
-    const [eachTurn, onClear] = effectBlocks(rendered);
-    expect(rowTokens(rowsOf(eachTurn!)[0]!)).toEqual({
-      iconKeys: ["effect-icon-each-turn", "effect-icon-hp"],
-      textContents: [":", "-1"], // core's true minus, normalized for the card font
-    });
+    const [onClear, eachTurn] = effectBlocks(rendered);
     expect(rowTokens(rowsOf(onClear!)[0]!)).toEqual({
       iconKeys: ["effect-icon-on-clear", "energy-icon"],
       textContents: [":", "+1"],
+    });
+    expect(rowTokens(rowsOf(eachTurn!)[0]!)).toEqual({
+      iconKeys: ["effect-icon-each-turn", "effect-icon-hp"],
+      textContents: [":", "-1"], // core's true minus, normalized for the card font
     });
     // No trigger icon for the None blocks appears anywhere.
     const allKeys = rendered.containers.flatMap((c) => rowTokens(c).iconKeys);
@@ -952,38 +955,36 @@ describe("CardView world-card trigger blocks", () => {
     expect(allKeys).not.toContain("effect-icon-on-partial-clear");
   });
 
-  it("renders trigger-block token text at the world-face 10px size", () => {
+  it("renders trigger-block token text at the world-face 12px size", () => {
     const { texts } = renderCard(mintWorld("Shambler"));
     const damage = texts.find((t) => t.content === "-1");
     expect(damage).toBeDefined();
-    expect(damage!.fontSize).toBe("10px");
+    expect(damage!.fontSize).toBe("12px");
   });
 
-  it("renders all four triggers in design order, each text pinned to its block tint", () => {
+  it("renders all four triggers in CardView's visual order with value emphasis tints", () => {
     const rendered = renderCard(mintWorld("Patient Zero"));
     const blocks = effectBlocks(rendered);
     expect(blocks.length).toBe(4);
 
-    // Design order (token-IR design §4): eachTurn, onDiscard, onClear,
-    // onPartialClear — pinned by each block's lead trigger icon.
+    // Visual stack order: rewards/partial outcomes first, then discard,
+    // then each-turn pressure.
     const leadIcons = blocks.map((block) => rowTokens(rowsOf(block)[0]!).iconKeys[0]);
     expect(leadIcons).toEqual([
-      "effect-icon-each-turn",
-      "effect-icon-discard",
       "effect-icon-on-clear",
       "effect-icon-on-partial-clear",
+      "effect-icon-discard",
+      "effect-icon-each-turn",
     ]);
 
-    // Hand-written tints (TEXT.textHeld / textPenalty / textReward /
-    // textPenalty by value): swapping any two rows of CardView's triggerBlocks
-    // table fails this. Every token here is unemphasised, so the colour IS the
-    // block baseColor.
+    // CardView supplies light base text for trigger blocks; emphasized values
+    // keep their semantic reward/penalty/brace tints.
     const tints = blocks.map((block) => rowTextColors(rowsOf(block)[0]!));
     expect(tints).toEqual([
-      ["#ffaa66", "#ffaa66"], // eachTurn: colon + Brace '2' → textHeld
-      ["#ff8888", "#ff8888"], // onDiscard: colon + threat 'Zombie' → textPenalty
-      ["#88ee88", "#88ee88", "#88ee88"], // onClear: colon + exile 'top', '1' → textReward
-      ["#ff8888", "#ff8888"], // onPartialClear: colon + 'next turn' → textPenalty
+      ["#e8eaf0", "#e8eaf0", "#e8eaf0"], // onClear: colon + exile 'top', '1'
+      ["#e8eaf0", "#e8eaf0"], // onPartialClear: colon + force-destroy text
+      ["#e8eaf0", "#ff8888"], // onDiscard: colon + threat 'Zombie'
+      ["#e8eaf0", "#e8eaf0"], // eachTurn: colon + Brace '+2'
     ]);
   });
 });

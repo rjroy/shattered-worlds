@@ -131,19 +131,19 @@ describe("world card properties", () => {
     expect(card.discardable).toBe(false);
   });
 
-  it("all other world cards are discardable:true", () => {
-    const worldTemplateIds: CardTemplateId[] = [
-      "Strange Sounds",
-      "Rubble",
-      "Screams",
-      "Zombie",
-      "Find Baseball Bat",
-      "The Walker",
-    ];
-    for (const id of worldTemplateIds) {
+  it("starter/zombie world cards mint with their configured discardability", () => {
+    const expected: Partial<Record<CardTemplateId, boolean>> = {
+      "Strange Sounds": true,
+      Rubble: false,
+      Screams: true,
+      Zombie: true,
+      "Find Baseball Bat": true,
+      "The Walker": true,
+    };
+    for (const [id, discardable] of Object.entries(expected) as [CardTemplateId, boolean][]) {
       const [card] = mintCard(catalog, makeEmptyState(), id);
       if (card.kind !== "world") throw new Error(`expected world card for ${id}`);
-      expect(card.discardable).toBe(true);
+      expect(card.discardable).toBe(discardable);
     }
   });
 
