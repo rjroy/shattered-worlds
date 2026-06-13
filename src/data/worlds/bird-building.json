@@ -22,7 +22,11 @@
       "discardable": true,
       "onDiscarded": { "kind": "ForceDestroy", "amount": 1 },
       "onCleared": { "kind": "GainCard", "template": "Cut It Loose" },
-      "onPartialClear": { "kind": "AddWorldCardToDeck", "template": "Sliding Debris", "bTop": true },
+      "onPartialClear": {
+        "kind": "AddWorldCardToDeck",
+        "template": "Sliding Debris",
+        "bTop": true
+      },
       "onEndOfTurn": { "kind": "None" }
     },
     "Groaning Girders": {
@@ -31,7 +35,7 @@
       "insetKey": "bird-inset-groaning-girders",
       "cost": 1,
       "keywords": [],
-      "discardable": false,
+      "discardable": true,
       "onDiscarded": { "kind": "GainCard", "template": "Panic" },
       "onCleared": { "kind": "GainCard", "template": "Steady" },
       "onPartialClear": { "kind": "None" },

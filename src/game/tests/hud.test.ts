@@ -1,6 +1,6 @@
-import { describe, it, expect } from 'bun:test'
-import { HUDView } from '../view/HUDView'
-import type { GameState } from '../../core/index'
+import { describe, it, expect } from "bun:test";
+import { HUDView } from "../view/HUDView";
+import type { GameState } from "../../core/index";
 
 // ---------------------------------------------------------------------------
 // Fakes
@@ -12,63 +12,63 @@ import type { GameState } from '../../core/index'
 // ---------------------------------------------------------------------------
 
 interface FakeText {
-  text: string
-  visible: boolean
-  x: number
-  width: number
-  setText(content: string): void
-  setVisible(visible: boolean): void
+  text: string;
+  visible: boolean;
+  x: number;
+  width: number;
+  setText(content: string): void;
+  setVisible(visible: boolean): void;
 }
 
 function makeFakeText(): FakeText {
   return {
-    text: '',
+    text: "",
     visible: true,
     x: 0,
     width: 0,
     setText(content: string): void {
-      this.text = content
+      this.text = content;
     },
     setVisible(visible: boolean): void {
-      this.visible = visible
+      this.visible = visible;
     },
-  }
+  };
 }
 
 interface FakeDisplayObject {
-  visible: boolean
-  setVisible(visible: boolean): void
-  setPosition(x: number, y: number): void
-  setSize(width: number, height: number): void
+  visible: boolean;
+  setVisible(visible: boolean): void;
+  setPosition(x: number, y: number): void;
+  setSize(width: number, height: number): void;
 }
 
 function makeFakeDisplayObject(): FakeDisplayObject {
   return {
     visible: true,
     setVisible(visible: boolean): void {
-      this.visible = visible
+      this.visible = visible;
     },
     setPosition(): void {},
     setSize(): void {},
-  }
+  };
 }
 
 interface FakeHUDView {
-  hpText: FakeText
-  actText: FakeText
-  energyText: FakeText
-  powerUpIndicators: []
-  powerUps: FakeDisplayObject
-  powerUpPanel: FakeDisplayObject
-  update: HUDView['update']
+  hpText: FakeText;
+  actText: FakeText;
+  energyText: FakeText;
+  powerUpIndicators: [];
+  powerUps: FakeDisplayObject;
+  powerUpPanel: FakeDisplayObject;
+  update: HUDView["update"];
 }
 
 function makeFakeHUDView(): {
-  view: FakeHUDView
-  energyText: FakeText
+  view: FakeHUDView;
+  energyText: FakeText;
 } {
-  const energyText = makeFakeText()
-  const view = Object.create(HUDView.prototype) as FakeHUDView
+  const energyText = makeFakeText();
+  const view = Object.create(HUDView.prototype) as FakeHUDView;
   Object.assign(view, {
     hpText: makeFakeText(),
     actText: makeFakeText(),
@@ -76,17 +76,17 @@ function makeFakeHUDView(): {
     powerUpIndicators: [],
     powerUps: makeFakeDisplayObject(),
     powerUpPanel: makeFakeDisplayObject(),
-  })
-  return { view, energyText }
+  });
+  return { view, energyText };
 }
 
 // ---------------------------------------------------------------------------
 // Tests
 // ---------------------------------------------------------------------------
 
-describe('HUDView.update', () => {
-  it('sets energyText to the current energy value', () => {
-    const { view, energyText } = makeFakeHUDView()
+describe("HUDView.update", () => {
+  it("sets energyText to the current energy value", () => {
+    const { view, energyText } = makeFakeHUDView();
     const state: GameState = {
       playerDraw: [],
       hand: [],
@@ -98,22 +98,21 @@ describe('HUDView.update', () => {
       progress: {},
       hp: 20,
       energy: 5,
-      skipDrawNext: false,
       pendingForceDestroy: 0,
       braceCharges: 0,
-      status: 'playing',
-      worldId: 'test-world',
+      status: "playing",
+      worldId: "test-world",
       rng: { a: 1, b: 2, c: 3, d: 4 },
       nextId: 1,
-    }
+    };
 
-    view.update(state)
+    view.update(state);
 
-    expect(energyText.text).toBe('5')
-  })
+    expect(energyText.text).toBe("5");
+  });
 
-  it('formats energy correctly with different values', () => {
-    const { view, energyText } = makeFakeHUDView()
+  it("formats energy correctly with different values", () => {
+    const { view, energyText } = makeFakeHUDView();
     const state: GameState = {
       playerDraw: [],
       hand: [],
@@ -125,25 +124,24 @@ describe('HUDView.update', () => {
       progress: {},
       hp: 20,
       energy: 0,
-      skipDrawNext: false,
       pendingForceDestroy: 0,
       braceCharges: 0,
-      status: 'playing',
-      worldId: 'test-world',
+      status: "playing",
+      worldId: "test-world",
       rng: { a: 1, b: 2, c: 3, d: 4 },
       nextId: 1,
-    }
+    };
 
-    view.update(state)
-    expect(energyText.text).toBe('0')
+    view.update(state);
+    expect(energyText.text).toBe("0");
 
-    state.energy = 10
-    view.update(state)
-    expect(energyText.text).toBe('10')
-  })
+    state.energy = 10;
+    view.update(state);
+    expect(energyText.text).toBe("10");
+  });
 
-  it('updates HP and act text alongside energy', () => {
-    const { view } = makeFakeHUDView()
+  it("updates HP and act text alongside energy", () => {
+    const { view } = makeFakeHUDView();
     const state: GameState = {
       playerDraw: [],
       hand: [],
@@ -155,19 +153,18 @@ describe('HUDView.update', () => {
       progress: {},
       hp: 15,
       energy: 3,
-      skipDrawNext: false,
       pendingForceDestroy: 0,
       braceCharges: 0,
-      status: 'playing',
-      worldId: 'test-world',
+      status: "playing",
+      worldId: "test-world",
       rng: { a: 1, b: 2, c: 3, d: 4 },
       nextId: 1,
-    }
+    };
 
-    view.update(state)
+    view.update(state);
 
-    expect(view.hpText.text).toBe('HP: 15')
-    expect(view.actText.text).toBe('Act 2 / 3')
-    expect(view.energyText.text).toBe('3')
-  })
-})
+    expect(view.hpText.text).toBe("HP: 15");
+    expect(view.actText.text).toBe("Act 2 / 3");
+    expect(view.energyText.text).toBe("3");
+  });
+});

@@ -8,19 +8,14 @@
  *  - Dispatch completed Actions to GameCore and repaint
  *  - Show win / loss screens when the game ends
  */
-import Phaser from 'phaser'
-import { assetManifest } from '../data/assetManifest'
-import { worldMusicManifest } from '../data/audioManifest'
-import { createGameplayRuntime, type GameplayRuntime } from '../runtime/gameplayRuntime'
-import type { GameplaySession } from '../runtime/gameplaySession'
-import { selectTheme } from '../view/themes/themeManifest'
-import type { VisualTheme } from '../view/themes/theme'
-import { availableActions, CatalogError } from '../../core/index'
-import type {
-  Card,
-  Action,
-  TargetSpec,
-} from '../../core/index'
+import Phaser from "phaser";
+import { worldMusicManifest } from "../data/audioManifest";
+import { createGameplayRuntime, type GameplayRuntime } from "../runtime/gameplayRuntime";
+import type { GameplaySession } from "../runtime/gameplaySession";
+import { selectTheme } from "../view/themes/themeManifest";
+import type { VisualTheme } from "../view/themes/theme";
+import { availableActions } from "../../core/index";
+import type { Card, Action, TargetSpec } from "../../core/index";
 import {
   IDLE,
   advance,
@@ -35,44 +30,49 @@ import {
   hintForSelection,
   stepSatisfied,
   togglePick,
-} from '../interaction/selection'
-import type { SelectionState } from '../interaction/selection'
-import { classifyHighlight } from '../interaction/highlight'
-import { CardView } from '../view/CardView'
-import { ensureEffectIconTextures } from '../view/effectLineView'
-import { HUDView } from '../view/HUDView'
-import { RunSummaryView, type RunSummaryData } from '../view/RunSummaryView'
-import { HelpOverlayView } from '../view/HelpOverlayView'
-import { textStyle, TEXT, getRealityPalette } from '../view/presentation'
-import { ringFraction, connectorLine, selectConnectorStyle, effectAtStep } from '../interaction/feedback'
-import type { ConnectorStyle } from '../interaction/feedback'
-import { drawConnector } from '../view/connector'
-import { resolveBranchLabels } from '../../core/view/branchLabels'
-import { ModalChooserView } from '../view/ModalChooserView'
-import { CommonLabel, CommonButton } from '../view/components'
-import { previewPlay } from '../../core/view/describe'
-import { PileLayer } from '../view/PileLayer'
-import { BackdropLayer } from '../view/backdrop'
-import { buildWorld } from '../../data/worldManifest'
-import { worldDisplayManifest } from '../../data/worldDisplayManifest'
-import { CARD_FACE, TABLE_LAYOUT } from '../view/layout'
-import { rowCardPositions } from '../view/tableLayout'
+} from "../interaction/selection";
+import type { SelectionState } from "../interaction/selection";
+import { classifyHighlight } from "../interaction/highlight";
+import { CardView } from "../view/CardView";
+import { ensureEffectIconTextures } from "../view/effectLineView";
+import { HUDView } from "../view/HUDView";
+import { RunSummaryView, type RunSummaryData } from "../view/RunSummaryView";
+import { HelpOverlayView } from "../view/HelpOverlayView";
+import { textStyle, TEXT, getRealityPalette } from "../view/presentation";
+import {
+  ringFraction,
+  connectorLine,
+  selectConnectorStyle,
+  effectAtStep,
+} from "../interaction/feedback";
+import type { ConnectorStyle } from "../interaction/feedback";
+import { drawConnector } from "../view/connector";
+import { resolveBranchLabels } from "../../core/view/branchLabels";
+import { ModalChooserView } from "../view/ModalChooserView";
+import { CommonLabel, CommonButton } from "../view/components";
+import { previewPlay } from "../../core/view/describe";
+import { PileLayer } from "../view/PileLayer";
+import { BackdropLayer } from "../view/backdrop";
+import { buildWorld } from "../../data/worldManifest";
+import { worldDisplayManifest } from "../../data/worldDisplayManifest";
+import { CARD_FACE, TABLE_LAYOUT } from "../view/layout";
+import { rowCardPositions } from "../view/tableLayout";
 
 // ---------------------------------------------------------------------------
 // Layout constants
 // ---------------------------------------------------------------------------
 
 /** Vertical centre of the world cards (hazard) row. */
-const WORLD_ROW_Y = TABLE_LAYOUT.worldRowY
+const WORLD_ROW_Y = TABLE_LAYOUT.worldRowY;
 /** Vertical centre of the player hand row. */
-const HAND_ROW_Y = TABLE_LAYOUT.handRowY
+const HAND_ROW_Y = TABLE_LAYOUT.handRowY;
 /**
  * Depth for the targeting connector. Cards live at the default depth 0 and the
  * win/loss overlays at 1000; 500 draws the connector over the (possibly dimmed)
  * cards while staying below the end-game screens. The connector is decorative
  * and never interactive, so this depth only affects draw order, not input.
  */
-const CONNECTOR_DEPTH = TABLE_LAYOUT.connectorDepth
+const CONNECTOR_DEPTH = TABLE_LAYOUT.connectorDepth;
 // ROW_LEFT reserved for future fixed-layout mode
 // const ROW_LEFT = 80
 
@@ -81,12 +81,12 @@ const CONNECTOR_DEPTH = TABLE_LAYOUT.connectorDepth
 // ---------------------------------------------------------------------------
 
 export class TableScene extends Phaser.Scene {
-  private game_!: GameplaySession
-  private theme_!: VisualTheme
-  private sel: SelectionState = IDLE
+  private game_!: GameplaySession;
+  private theme_!: VisualTheme;
+  private sel: SelectionState = IDLE;
 
   /** All live card containers, keyed by card id. */
-  private cardObjects: Map<string, CardView> = new Map()
+  private cardObjects: Map<string, CardView> = new Map();
 
   /**
    * Id of the card currently under the pointer, or null. Maintained by the
@@ -94,223 +94,201 @@ export class TableScene extends Phaser.Scene {
    * transform on every non-hovered card without re-reading the pointer. No
    * emphasis behavior is attached to it yet; it is wired and kept accurate now.
    */
-  private hoveredCardId: string | null = null
+  private hoveredCardId: string | null = null;
 
   // Persistent HUD objects (created once, updated on drawAll)
-  private hudView!: HUDView
-  private endTurnBtn!: CommonButton
-  private cancelBtn!: CommonButton
-  private confirmBtn!: CommonButton
-  private runSummary!: RunSummaryView
-  private helpOverlay!: HelpOverlayView
-  private questionBtn!: CommonButton
-  private exitBtn!: CommonButton
+  private hudView!: HUDView;
+  private endTurnBtn!: CommonButton;
+  private cancelBtn!: CommonButton;
+  private confirmBtn!: CommonButton;
+  private runSummary!: RunSummaryView;
+  private helpOverlay!: HelpOverlayView;
+  private questionBtn!: CommonButton;
+  private exitBtn!: CommonButton;
 
   // Modal chooser UI (created/destroyed per card play)
-  private modalChooser: ModalChooserView | null = null
-  private worldMusic: Phaser.Sound.BaseSound | null = null
+  private modalChooser: ModalChooserView | null = null;
+  private worldMusic: Phaser.Sound.BaseSound | null = null;
 
   // Pile layer — persistent containers for player draw and world draw stacks
-  private pileLayer!: PileLayer
+  private pileLayer!: PileLayer;
 
   // Backdrop: reality image + intensity-driven intrusion overlay
-  private backdropLayer!: BackdropLayer
+  private backdropLayer!: BackdropLayer;
 
   // Phase-instruction text ("Select a Hazard target", etc.)
-  private selectionHint!: CommonLabel
+  private selectionHint!: CommonLabel;
 
   // Live target preview ("Deals 3 → clears …"), a separate surface from the
   // instruction so the two never overwrite each other.
-  private previewSlot!: CommonLabel
+  private previewSlot!: CommonLabel;
 
   // Targeting connector: a single persistent Graphics that draws a line from the
   // acting card to the hovered legal target. Created once, redrawn on hover,
   // cleared on hover-out / commit / cancel. It is NEVER made interactive — it
   // draws only and must not hit-test (the open clicking bug forbids any new
   // pointer-eating object over the cards).
-  private connectorGfx!: Phaser.GameObjects.Graphics
+  private connectorGfx!: Phaser.GameObjects.Graphics;
 
-  private worldId_ = 'zombie-big-box'
-  private seed_ = 0
-  private loadError_ = false
-  private terminalSummaryShown_ = false
-  private runtime_: GameplayRuntime
+  private worldId_ = "zombie-big-box";
+  private seed_ = 0;
+  private terminalSummaryShown_ = false;
+  private runtime_: GameplayRuntime;
 
   constructor(runtime?: GameplayRuntime) {
-    super({ key: 'Table' })
+    super({ key: "Table" });
     // The app composition root (main.ts) injects the shared runtime so
     // cross-run consumers observe every session; a private fallback keeps the
     // scene constructible without one (tests, Phaser default instantiation).
-    this.runtime_ = runtime ?? createGameplayRuntime()
+    this.runtime_ = runtime ?? createGameplayRuntime();
   }
 
   init(data: { worldId?: string; seed?: number }): void {
-    this.worldId_ = data.worldId ?? 'zombie-big-box'
-    this.seed_ = data.seed ?? Math.floor(Math.random() * 2 ** 32)
-    this.loadError_ = false
-    this.terminalSummaryShown_ = false
-    this.cardObjects = new Map()
-  }
-
-  preload(): void {
-    for (const [key, url] of Object.entries(assetManifest)) {
-      if (url !== undefined) {
-        if (url.endsWith('.json')) {
-          this.load.json(key, url)
-        } else {
-          this.load.image(key, url)
-        }
-      }
-    }
-
-    this.load.on('loaderror', (file: Phaser.Loader.File) => {
-      if (file.type === 'json') this.loadError_ = true
-      if (file.type === 'audio') {
-        console.warn(`[TableScene] Music asset failed to load: ${file.key}`)
-      }
-    })
+    this.worldId_ = data.worldId ?? "zombie-big-box";
+    this.seed_ = data.seed ?? Math.floor(Math.random() * 2 ** 32);
+    this.terminalSummaryShown_ = false;
+    this.cardObjects = new Map();
   }
 
   create(): void {
-    if (this.loadError_) {
-      console.error('[TableScene] A JSON asset failed to load — cannot assemble catalog.')
-      throw new CatalogError('JSON asset failed to load')
-    }
-
     // Effect-icon placeholder textures are generated (not loaded), so they
     // register here rather than in preload — before any CardView renders.
-    ensureEffectIconTextures(this)
+    ensureEffectIconTextures(this);
 
-    const { catalog, worldData } = buildWorld(this.worldId_)
+    const { catalog, worldData } = buildWorld(this.worldId_);
 
-    this.game_ = this.runtime_.startSession(catalog, worldData, this.seed_)
+    this.game_ = this.runtime_.startSession(catalog, worldData, this.seed_);
     // Registered before any other create() work can throw, so a session that
     // emitted RunStarted always gets its closing RunEnded on shutdown. Closes
     // the run as 'abandoned' when the player exits mid-run; no-op if the run
     // already ended in a win or loss.
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
-      this.stopWorldMusic()
-      this.game_.abandon()
-    })
-    this.theme_ = selectTheme(this.game_.state.worldId)
-    this.startWorldMusic(this.game_.state.worldId)
+      this.stopWorldMusic();
+      this.game_.abandon();
+    });
+    this.theme_ = selectTheme(this.game_.state.worldId);
+    this.startWorldMusic(this.game_.state.worldId);
 
-    this.hudView = new HUDView(this)
+    this.hudView = new HUDView(this);
 
     const endTurnStyle = textStyle({
-      fontSize: '16px',
-      color: getRealityPalette(this.theme_, 'text'),
-      fontStyle: 'bold',
-    })
+      fontSize: "16px",
+      color: getRealityPalette(this.theme_, "text"),
+      fontStyle: "bold",
+    });
     this.endTurnBtn = new CommonButton(
       this,
       TABLE_LAYOUT.buttons.endTurn.x,
       TABLE_LAYOUT.buttons.endTurn.y,
-      '[ End Turn ]',
+      "[ End Turn ]",
       endTurnStyle,
-    )
-      .on('pointerdown', () => this.onEndTurnClick())
+    ).on("pointerdown", () => this.onEndTurnClick());
 
     const cancelStyle = textStyle({
-      fontSize: '13px',
-      color: getRealityPalette(this.theme_, 'cancel'),
-    })
+      fontSize: "13px",
+      color: getRealityPalette(this.theme_, "cancel"),
+    });
     this.cancelBtn = new CommonButton(
       this,
       TABLE_LAYOUT.buttons.cancel.x,
       TABLE_LAYOUT.buttons.cancel.y,
-      '[ Cancel ]',
+      "[ Cancel ]",
       cancelStyle,
     )
-      .on('pointerdown', () => {
-        this.sel = cancel()
-        this.dismissModal()
-        this.clearConnector()
-        this.drawAll()
+      .on("pointerdown", () => {
+        this.sel = cancel();
+        this.dismissModal();
+        this.clearConnector();
+        this.drawAll();
       })
-      .setVisible(false)
+      .setVisible(false);
 
     const confirmStyle = textStyle({
-      fontSize: '13px',
-      fontStyle: 'bold',
-      color: getRealityPalette(this.theme_, 'confirm'),
-    })
+      fontSize: "13px",
+      fontStyle: "bold",
+      color: getRealityPalette(this.theme_, "confirm"),
+    });
     this.confirmBtn = new CommonButton(
       this,
       TABLE_LAYOUT.buttons.confirm.x,
       TABLE_LAYOUT.buttons.confirm.y,
-      '[ Confirm ]',
+      "[ Confirm ]",
       confirmStyle,
     )
-      .on('pointerdown', () => this.onConfirmClick())
-      .setVisible(false)
+      .on("pointerdown", () => this.onConfirmClick())
+      .setVisible(false);
 
-    this.runSummary = new RunSummaryView(this)
+    this.runSummary = new RunSummaryView(this);
 
-    this.helpOverlay = new HelpOverlayView(
-      this,
-      this.worldId_,
-      this.game_.state.totalActs,
-    )
+    this.helpOverlay = new HelpOverlayView(this, this.worldId_, this.game_.state.totalActs);
 
     const questionStyle = textStyle({
-      fontSize: '16px',
-      fontStyle: 'bold',
+      fontSize: "16px",
+      fontStyle: "bold",
       color: TEXT.textLight,
-    })
+    });
     this.questionBtn = new CommonButton(
       this,
       TABLE_LAYOUT.buttons.help.x,
       TABLE_LAYOUT.buttons.help.y,
-      '?',
+      "?",
       questionStyle,
-    )
-      .on('pointerup', () => this.helpOverlay.setVisible(true))
+    ).on("pointerup", () => this.helpOverlay.setVisible(true));
 
     this.exitBtn = new CommonButton(
       this,
       TABLE_LAYOUT.buttons.exit.x,
       TABLE_LAYOUT.buttons.exit.y,
-      'X',
+      "X",
       questionStyle,
-    )
-      .on('pointerup', () => {
-        if (this.game_.state.status !== 'playing') return
-        this.game_.abandon()
-        this.showRunSummaryFromStats()
-      })
+    ).on("pointerup", () => {
+      if (this.game_.state.status !== "playing") return;
+      this.game_.abandon();
+      this.showRunSummaryFromStats();
+    });
 
+    this.input.keyboard?.on("keydown-ESC", () => {
+      if (this.helpOverlay.visible) this.helpOverlay.setVisible(false);
+    });
 
-    this.input.keyboard?.on('keydown-ESC', () => {
-      if (this.helpOverlay.visible) this.helpOverlay.setVisible(false)
-    })
-
-    this.selectionHint = new CommonLabel(this, TABLE_LAYOUT.selectionHint.x, TABLE_LAYOUT.selectionHint.y, '', textStyle({
-      fontSize: '12px',
-      color: getRealityPalette(this.theme_, 'text'),
-    })).setVisible(false)
+    this.selectionHint = new CommonLabel(
+      this,
+      TABLE_LAYOUT.selectionHint.x,
+      TABLE_LAYOUT.selectionHint.y,
+      "",
+      textStyle({
+        fontSize: "12px",
+        color: getRealityPalette(this.theme_, "text"),
+      }),
+    ).setVisible(false);
 
     // Sits in a dedicated slot directly above selectionHint. selectionHint has
     // origin (0.5, 1) at y=568, so with 12px text + 2px vertical padding it
     // tops out around y=552; anchoring previewSlot's bottom edge at y=550 keeps
     // the two surfaces from ever overlapping. Degrades fine on touch (no hover
     // means this slot simply stays empty).
-    this.previewSlot = new CommonLabel(this, TABLE_LAYOUT.previewSlot.x, TABLE_LAYOUT.previewSlot.y, '', textStyle({
-      fontSize: '12px',
-      color: getRealityPalette(this.theme_, 'title'),
-    }))
-    this.previewSlot.setVisible(false)
+    this.previewSlot = new CommonLabel(
+      this,
+      TABLE_LAYOUT.previewSlot.x,
+      TABLE_LAYOUT.previewSlot.y,
+      "",
+      textStyle({
+        fontSize: "12px",
+        color: getRealityPalette(this.theme_, "title"),
+      }),
+    );
+    this.previewSlot.setVisible(false);
 
     // Persistent connector graphic. setDepth controls draw order only; we never
     // call setInteractive on it, so Phaser keeps it out of the input hit-test
     // list and it cannot intercept clicks meant for the cards beneath it.
-    this.connectorGfx = this.add.graphics()
-    this.connectorGfx.setDepth(CONNECTOR_DEPTH)
+    this.connectorGfx = this.add.graphics();
+    this.connectorGfx.setDepth(CONNECTOR_DEPTH);
 
-    this.pileLayer = new PileLayer(this)
-    this.backdropLayer = new BackdropLayer(this, selectTheme(this.game_.state.worldId))
+    this.pileLayer = new PileLayer(this);
+    this.backdropLayer = new BackdropLayer(this, selectTheme(this.game_.state.worldId));
 
-    this.drawAll()
+    this.drawAll();
   }
 
   // ---------------------------------------------------------------------------
@@ -331,18 +309,18 @@ export class TableScene extends Phaser.Scene {
    * affects highlights.
    */
   private drawAll(): void {
-    const state = this.game_.state
+    const state = this.game_.state;
 
     // Update backdrop intensity before reconciling cards
-    this.backdropLayer.update(state, this.game_.intensity())
+    this.backdropLayer.update(state, this.game_.intensity());
 
-    const available = availableActions(state)
+    const available = availableActions(state);
 
     // Determine sets for highlight computation
-    const playableIds = new Set(available.playable.map((p) => p.cardId))
-    const discardableIds = new Set(available.discardable)
+    const playableIds = new Set(available.playable.map((p) => p.cardId));
+    const discardableIds = new Set(available.discardable);
 
-    const legalTargetIds = this.currentLegalTargetIds(available)
+    const legalTargetIds = this.currentLegalTargetIds(available);
 
     // Seam case (b): if a hovered card is no longer a legal target after this
     // repaint (e.g. drawAll fired mid-hover and the phase/legal set changed),
@@ -350,79 +328,100 @@ export class TableScene extends Phaser.Scene {
     // container's base transform. (Case (a) hover-out and case (c) card-left-hand
     // are handled in the pointerout handler and the destruction pass below.)
     if (this.hoveredCardId !== null && !legalTargetIds.has(this.hoveredCardId)) {
-      const stale = this.cardObjects.get(this.hoveredCardId)
-      if (stale !== undefined) stale.clearEmphasis()
-      this.hoveredCardId = null
+      const stale = this.cardObjects.get(this.hoveredCardId);
+      if (stale !== undefined) stale.clearEmphasis();
+      this.hoveredCardId = null;
     }
 
     // Split hand into world row and player row for layout. The hand order is the
     // desired order; row filtering preserves it, so the per-row layout below
     // reproduces exactly the positions the old destroy-and-recreate produced.
-    const worldCards = state.hand.filter((c): c is import('../../core/index').WorldCard => c.kind === 'world')
-    const playerCards = state.hand.filter((c) => c.kind === 'player')
+    const worldCards = state.hand.filter(
+      (c): c is import("../../core/index").WorldCard => c.kind === "world",
+    );
+    const playerCards = state.hand.filter((c) => c.kind === "player");
 
     // Reconcile each row in place; collect the ids that should still exist after
     // this cycle so anything no longer desired can be destroyed afterward.
-    const desiredIds = new Set<string>()
-    this.layoutRow(worldCards, WORLD_ROW_Y, playableIds, discardableIds, legalTargetIds, desiredIds)
-    this.layoutRow(playerCards, HAND_ROW_Y, playableIds, discardableIds, legalTargetIds, desiredIds)
+    const desiredIds = new Set<string>();
+    this.layoutRow(
+      worldCards,
+      WORLD_ROW_Y,
+      playableIds,
+      discardableIds,
+      legalTargetIds,
+      desiredIds,
+    );
+    this.layoutRow(
+      playerCards,
+      HAND_ROW_Y,
+      playableIds,
+      discardableIds,
+      legalTargetIds,
+      desiredIds,
+    );
 
     // Destroy containers whose card left the hand. Never touches a card still in
     // state.hand — only ids absent from desiredIds. Kill any tweens on the
     // container first so a recycled Tween can never retarget a live object.
     for (const [id, container] of this.cardObjects) {
-      if (desiredIds.has(id)) continue
-      this.tweens.killTweensOf(container)
-      this.tweens.killTweensOf(container.list)
-      if (this.hoveredCardId === id) this.hoveredCardId = null
-      container.destroy()
-      this.cardObjects.delete(id)
+      if (desiredIds.has(id)) continue;
+      this.tweens.killTweensOf(container);
+      this.tweens.killTweensOf(container.list);
+      if (this.hoveredCardId === id) this.hoveredCardId = null;
+      container.destroy();
+      this.cardObjects.delete(id);
     }
 
     // HUD
-    this.hudView.update(state)
+    this.hudView.update(state);
 
     // Pile stacks (player draw + world draw)
-    this.pileLayer.update(this, state.playerDraw.length, state.worldDraw.length, state.playerDiscard.length)
+    this.pileLayer.update(
+      this,
+      state.playerDraw.length,
+      state.worldDraw.length,
+      state.playerDiscard.length,
+    );
 
     // End Turn button
-    const selectionActive = this.sel.phase !== 'idle'
-    this.endTurnBtn.setAlpha(selectionActive ? 0.35 : 1.0)
-    this.endTurnBtn.disableInteractive()
+    const selectionActive = this.sel.phase !== "idle";
+    this.endTurnBtn.setAlpha(selectionActive ? 0.35 : 1.0);
+    this.endTurnBtn.disableInteractive();
     if (!selectionActive && available.canEndTurn) {
-      this.endTurnBtn.setInteractive({ useHandCursor: true })
+      this.endTurnBtn.setInteractive({ useHandCursor: true });
     }
 
     // Cancel / Confirm buttons
-    this.cancelBtn.setVisible(selectionActive)
+    this.cancelBtn.setVisible(selectionActive);
     const showConfirm =
-      this.sel.phase === 'targeting' && needsConfirm(this.sel) && stepSatisfied(this.sel)
-    this.confirmBtn.setVisible(showConfirm)
+      this.sel.phase === "targeting" && needsConfirm(this.sel) && stepSatisfied(this.sel);
+    this.confirmBtn.setVisible(showConfirm);
 
     // Selection hint text
-    this.updateHint()
+    this.updateHint();
 
     // Terminal summary
-    if (state.status === 'won' || state.status === 'lost') {
-      this.showRunSummaryFromStats()
+    if (state.status === "won" || state.status === "lost") {
+      this.showRunSummaryFromStats();
     }
 
     // Cleanup the interactivity of objects at game end.
-    if (state.status !== 'playing' || this.runSummary.visible) {
-      this.questionBtn.disableInteractive()
-      this.questionBtn.setVisible(false)
-      this.exitBtn.disableInteractive()
-      this.helpOverlay.setVisible(false)
+    if (state.status !== "playing" || this.runSummary.visible) {
+      this.questionBtn.disableInteractive();
+      this.questionBtn.setVisible(false);
+      this.exitBtn.disableInteractive();
+      this.helpOverlay.setVisible(false);
     }
   }
 
   private buildRunSummaryData(): RunSummaryData | null {
-    const lifetime = this.runtime_.runStats.lifetime()
-    const lastRun = lifetime.lastRun
-    if (lastRun === undefined) return null
+    const lifetime = this.runtime_.runStats.lifetime();
+    const lastRun = lifetime.lastRun;
+    if (lastRun === undefined) return null;
 
-    const display = worldDisplayManifest[lastRun.worldId]
-    const worldStats = lifetime.byWorld[lastRun.worldId]
+    const display = worldDisplayManifest[lastRun.worldId];
+    const worldStats = lifetime.byWorld[lastRun.worldId];
 
     return {
       outcome: lastRun.outcome,
@@ -438,23 +437,23 @@ export class TableScene extends Phaser.Scene {
       hazardsDiscarded: lastRun.hazardsDiscarded,
       cardsDiscarded: lastRun.cardsDiscarded,
       records: this.runtime_.runStats.lastRunRecords(),
-    }
+    };
   }
 
   private showRunSummaryFromStats(): void {
-    if (this.terminalSummaryShown_) return
+    if (this.terminalSummaryShown_) return;
 
-    const data = this.buildRunSummaryData()
-    if (data === null) return
+    const data = this.buildRunSummaryData();
+    if (data === null) return;
 
-    this.terminalSummaryShown_ = true
-    this.helpOverlay.setVisible(false)
-    this.questionBtn.disableInteractive()
-    this.questionBtn.setVisible(false)
-    this.exitBtn.disableInteractive()
+    this.terminalSummaryShown_ = true;
+    this.helpOverlay.setVisible(false);
+    this.questionBtn.disableInteractive();
+    this.questionBtn.setVisible(false);
+    this.exitBtn.disableInteractive();
     this.runSummary.show(data, () => {
-      this.scene.start('WorldSelect')
-    })
+      this.scene.start("WorldSelect");
+    });
   }
 
   /**
@@ -471,20 +470,19 @@ export class TableScene extends Phaser.Scene {
     legalTargetIds: Set<string>,
     desiredIds: Set<string>,
   ): void {
-
-    const positions = rowCardPositions(cards.length, rowY)
+    const positions = rowCardPositions(cards.length, rowY);
 
     cards.forEach((card, i) => {
-      const { x, y } = positions[i]!
-      const container = this.obtainCardContainer(card)
-      desiredIds.add(card.id)
+      const { x, y } = positions[i]!;
+      const container = this.obtainCardContainer(card);
+      desiredIds.add(card.id);
 
       // Position is mutable per cycle (a card may shift slots as the hand
       // changes). The static face was set once, at creation.
-      container.setCardPosition(x, y)
+      container.setCardPosition(x, y);
 
       // Re-apply mutable visual state every cycle, reused or freshly created.
-      this.applyHighlight(container, card, playableIds, discardableIds, legalTargetIds)
+      this.applyHighlight(container, card, playableIds, discardableIds, legalTargetIds);
 
       // Emphasis re-assert (S9): a reused container must never keep stale
       // emphasis. Re-assert the BASE transform (scale 1, glow off) on every card
@@ -495,9 +493,9 @@ export class TableScene extends Phaser.Scene {
       // here with hoveredCardId === card.id means the card is still a legal
       // target.
       if (this.hoveredCardId === card.id) {
-        container.emphasize(this.theme_.frameStyle.targetGlow, this.game_.intensity())
+        container.emphasize(this.theme_.frameStyle.targetGlow, this.game_.intensity());
       } else {
-        container.clearEmphasis()
+        container.clearEmphasis();
       }
 
       // World cards carry a progress ring around the cost digit. Animate it
@@ -507,12 +505,12 @@ export class TableScene extends Phaser.Scene {
       // clock. Player cards have no ring; updateCostRing no-ops on them, but
       // only world cards reach here with a costRing so guard by kind to keep
       // intent explicit.
-      if (card.kind === 'world') {
-        const progress = this.game_.state.progress[card.id] ?? 0
-        const fraction = ringFraction(progress, card.cost)
-        container.updateCostRing(fraction, this.theme_.frameStyle.ringAccent)
+      if (card.kind === "world") {
+        const progress = this.game_.state.progress[card.id] ?? 0;
+        const fraction = ringFraction(progress, card.cost);
+        container.updateCostRing(fraction, this.theme_.frameStyle.ringAccent);
       }
-    })
+    });
   }
 
   /**
@@ -524,51 +522,51 @@ export class TableScene extends Phaser.Scene {
    * accumulates duplicate listeners — the suspected input bug from the rollout).
    */
   private obtainCardContainer(card: Card): CardView {
-    const existing = this.cardObjects.get(card.id)
-    if (existing !== undefined) return existing
+    const existing = this.cardObjects.get(card.id);
+    if (existing !== undefined) return existing;
 
-    const container = new CardView(this, card, 0, 0, this.theme_, selectTheme)
-    this.cardObjects.set(card.id, container)
+    const container = new CardView(this, card, 0, 0, this.theme_, selectTheme);
+    this.cardObjects.set(card.id, container);
 
     // Make card interactive
-    container.setSize(CARD_FACE.width, CARD_FACE.height)
-    container.setInteractive({ useHandCursor: true })
+    container.setSize(CARD_FACE.width, CARD_FACE.height);
+    container.setInteractive({ useHandCursor: true });
 
-    const id = card.id
+    const id = card.id;
 
     // Main card click — player and world cards both route through onCardClick,
     // which decides play / target / discard from availableActions live.
-    container.on('pointerdown', () => this.onCardClick(id))
+    container.on("pointerdown", () => this.onCardClick(id));
 
     // Hovering a legal Hazard target during targeting shows the live preview
     // (Progress dealt, and whether it clears the Hazard). Track the hovered id
     // so a later phase can re-assert base transform on non-hovered cards.
-    container.on('pointerover', () => {
-      this.hoveredCardId = id
-      this.showTargetPreview(id)
+    container.on("pointerover", () => {
+      this.hoveredCardId = id;
+      this.showTargetPreview(id);
       // Connector generalizes across all three targeting phases (the preview
       // text is hazard-only). showConnector gates on phase + legal target.
-      this.showConnector(id)
+      this.showConnector(id);
       // Loud hover emphasis (S9): only a card that is a legal target RIGHT NOW
       // gets lifted + ringed. Player cards are never legal targets, so this
       // gate keeps emphasis off them. Magnitude scales with intensity().
-      this.emphasizeIfLegalTarget(id, container)
-      this.emphasizeIfPlayable(id, container)
-    })
-    container.on('pointerout', () => {
+      this.emphasizeIfLegalTarget(id, container);
+      this.emphasizeIfPlayable(id, container);
+    });
+    container.on("pointerout", () => {
       // Seam case (a): pointer-out clears the stored hovered id AND restores
       // this container's base transform (scale 1, glow off).
-      if (this.hoveredCardId === id) this.hoveredCardId = null
-      container.clearEmphasis()
+      if (this.hoveredCardId === id) this.hoveredCardId = null;
+      container.clearEmphasis();
       // Instruction stays stable in its own slot; clear only the preview slot.
-      this.updateHint()
-      this.previewSlot.setText('')
-      this.previewSlot.setVisible(false)
+      this.updateHint();
+      this.previewSlot.setText("");
+      this.previewSlot.setVisible(false);
       // No stale line may survive hover-out.
-      this.clearConnector()
-    })
+      this.clearConnector();
+    });
 
-    return container
+    return container;
   }
 
   /** Apply the correct highlight and alpha to a card container. */
@@ -585,9 +583,9 @@ export class TableScene extends Phaser.Scene {
       playableIds,
       discardableIds,
       legalTargetIds,
-    )
-    container.applyHighlight(kind, this.theme_.frameStyle)
-    container.setDimmed(dim)
+    );
+    container.applyHighlight(kind, this.theme_.frameStyle);
+    container.setDimmed(dim);
   }
 
   // ---------------------------------------------------------------------------
@@ -595,112 +593,109 @@ export class TableScene extends Phaser.Scene {
   // ---------------------------------------------------------------------------
 
   private onCardClick(cardId: string): void {
-    const state = this.game_.state
-    if (state.status !== 'playing') return
+    const state = this.game_.state;
+    if (state.status !== "playing") return;
 
-    const available = availableActions(state)
+    const available = availableActions(state);
 
     // ---- Idle: check what this card can do ----
-    if (this.sel.phase === 'idle') {
+    if (this.sel.phase === "idle") {
       // Check if it's a discardable world card
       if (available.discardable.includes(cardId)) {
-        this.onDiscardClick(cardId)
-        return
+        this.onDiscardClick(cardId);
+        return;
       }
 
-      const entry = available.playable.find((p) => p.cardId === cardId)
-      if (entry === undefined) return // not playable
+      const entry = available.playable.find((p) => p.cardId === cardId);
+      if (entry === undefined) return; // not playable
 
-      const spec = entry.spec
-      this.nextSelection(cardId, spec)
-      return
+      const spec = entry.spec;
+      this.nextSelection(cardId, spec);
+      return;
     }
 
     // ---- Active targeting: check if this is legal for the current step ----
-    if (this.sel.phase === 'targeting' && !isComplete(this.sel)) {
-      const legalTargets = available.legalTargets(this.sel.cardId, activeStep(this.sel))
-      if (!legalTargets.includes(cardId)) return
+    if (this.sel.phase === "targeting" && !isComplete(this.sel)) {
+      const legalTargets = available.legalTargets(this.sel.cardId, activeStep(this.sel));
+      if (!legalTargets.includes(cardId)) return;
 
-      this.sel = togglePick(this.sel, cardId)
+      this.sel = togglePick(this.sel, cardId);
       if (autoAdvances(this.sel)) {
-        this.advanceSelection()
-        return
+        this.advanceSelection();
+        return;
       }
-      this.clearConnector()
-      this.drawAll()
-      return
+      this.clearConnector();
+      this.drawAll();
+      return;
     }
   }
 
   /** Begin a new selection for a playable card. */
   private nextSelection(cardId: string, spec: TargetSpec): void {
     switch (spec.kind) {
-      case 'modal': {
-        this.sel = { phase: 'awaiting-modal', cardId }
-        this.showModalChooser(cardId, spec)
-        return
+      case "modal": {
+        this.sel = { phase: "awaiting-modal", cardId };
+        this.showModalChooser(cardId, spec);
+        return;
       }
     }
 
-    this.sel = beginTargeting(cardId, spec)
+    this.sel = beginTargeting(cardId, spec);
     if (isComplete(this.sel)) {
-      const action = buildAction(this.sel)
+      const action = buildAction(this.sel);
       if (action !== null) {
-        this.dispatch(action)
-        return
+        this.dispatch(action);
+        return;
       }
     } else {
-      this.drawAll()
+      this.drawAll();
     }
   }
 
   private onDiscardClick(cardId: string): void {
-    const available = availableActions(this.game_.state)
+    const available = availableActions(this.game_.state);
     if (available.discardable.includes(cardId)) {
-      this.dispatch({ type: 'DiscardHazard', cardId })
+      this.dispatch({ type: "DiscardHazard", cardId });
     }
   }
 
   private onEndTurnClick(): void {
-    if (this.sel.phase !== 'idle') return
-    this.dispatch({ type: 'EndTurn' })
+    if (this.sel.phase !== "idle") return;
+    this.dispatch({ type: "EndTurn" });
   }
 
   private onConfirmClick(): void {
-    if (!stepSatisfied(this.sel)) return
-    this.advanceSelection()
+    if (!stepSatisfied(this.sel)) return;
+    this.advanceSelection();
   }
 
   private advanceSelection(): void {
-    this.sel = advance(this.sel)
-    this.clearConnector()
+    this.sel = advance(this.sel);
+    this.clearConnector();
     if (isComplete(this.sel)) {
-      const action = buildAction(this.sel)
+      const action = buildAction(this.sel);
       if (action !== null) {
-        this.dispatch(action)
-        return
+        this.dispatch(action);
+        return;
       }
     }
-    this.drawAll()
+    this.drawAll();
   }
 
   // ---------------------------------------------------------------------------
   // Modal chooser
   // ---------------------------------------------------------------------------
 
-  private showModalChooser(
-    cardId: string,
-    spec: Extract<TargetSpec, { kind: 'modal' }>,
-  ): void {
-    this.dismissModal()
+  private showModalChooser(cardId: string, spec: Extract<TargetSpec, { kind: "modal" }>): void {
+    this.dismissModal();
 
-    const available = availableActions(this.game_.state)
+    const available = availableActions(this.game_.state);
     // Label each branch from the card's actual Modal effect, so the chooser can
     // never drift from what the card does.
-    const card = this.game_.state.hand.find((c) => c.id === cardId)
+    const card = this.game_.state.hand.find((c) => c.id === cardId);
     const effectBranches =
-      card?.kind === 'player' && card.effect.kind === 'Modal' ? card.effect.branches : []
-    const branches = resolveBranchLabels(spec.branches, effectBranches, available, cardId)
+      card?.kind === "player" && card.effect.kind === "Modal" ? card.effect.branches : [];
+    const branches = resolveBranchLabels(spec.branches, effectBranches, available, cardId);
 
     this.modalChooser = new ModalChooserView(
       this,
@@ -708,39 +703,36 @@ export class TableScene extends Phaser.Scene {
       branches,
       (idx) => this.onModalChoose(spec, idx),
       () => {
-        this.sel = cancel()
-        this.dismissModal()
-        this.clearConnector()
-        this.drawAll()
+        this.sel = cancel();
+        this.dismissModal();
+        this.clearConnector();
+        this.drawAll();
       },
-    )
+    );
   }
 
   /** Apply a chosen modal branch: advance selection, or commit if it's a 'none' branch. */
-  private onModalChoose(
-    spec: Extract<TargetSpec, { kind: 'modal' }>,
-    idx: number,
-  ): void {
-    this.dismissModal()
-    const newSel = chooseModal(this.sel, idx, spec)
-    this.sel = newSel
+  private onModalChoose(spec: Extract<TargetSpec, { kind: "modal" }>, idx: number): void {
+    this.dismissModal();
+    const newSel = chooseModal(this.sel, idx, spec);
+    this.sel = newSel;
 
     // If the branch is 'none' after modal, dispatch immediately with choice.
     if (isComplete(newSel)) {
-      const action = buildAction(newSel)
+      const action = buildAction(newSel);
       if (action !== null) {
-        this.dispatch(action)
-        return
+        this.dispatch(action);
+        return;
       }
     }
 
-    this.drawAll()
+    this.drawAll();
   }
 
   private dismissModal(): void {
     if (this.modalChooser !== null) {
-      this.modalChooser.destroy()
-      this.modalChooser = null
+      this.modalChooser.destroy();
+      this.modalChooser = null;
     }
   }
 
@@ -749,54 +741,57 @@ export class TableScene extends Phaser.Scene {
   // ---------------------------------------------------------------------------
 
   private dispatch(action: Action): void {
-    this.game_.dispatch(action)
-    this.sel = IDLE
-    this.dismissModal()
+    this.game_.dispatch(action);
+    this.sel = IDLE;
+    this.dismissModal();
     // Commit ends targeting; drop the connector so no line survives the action.
-    this.clearConnector()
-    this.drawAll()
+    this.clearConnector();
+    this.drawAll();
   }
 
   private startWorldMusic(worldId: string): Promise<void> {
-    this.stopWorldMusic()
+    this.stopWorldMusic();
 
-    const music = worldMusicManifest[worldId]
+    const music = worldMusicManifest[worldId];
     if (music === undefined) {
-      console.warn(`[TableScene] No music asset configured for world: ${worldId}`)
-      return Promise.resolve()
+      console.warn(`[TableScene] No music asset configured for world: ${worldId}`);
+      return Promise.resolve();
     }
 
     return new Promise((resolve, reject) => {
       const resolveMusic = () => {
-        this.worldMusic = this.sound.add(music.key, { loop: true, volume: 0.45, })
-        this.worldMusic.play()
-        resolve()
+        this.worldMusic = this.sound.add(music.key, {
+          loop: true,
+          volume: 0.45,
+        });
+        this.worldMusic.play();
+        resolve();
       };
 
       if (!this.cache.audio.exists(music.key)) {
-        this.load.audio(music.key, music.url)
-        this.load.once('filecomplete', (key: string) => {
+        this.load.audio(music.key, music.url);
+        this.load.once("filecomplete", (key: string) => {
           if (key === music.key) {
-            resolveMusic()
+            resolveMusic();
           }
-        })
-        this.load.once('loaderror', (file: Phaser.Loader.File) => {
+        });
+        this.load.once("loaderror", (file: Phaser.Loader.File) => {
           if (file.key === music.key) {
-            reject(new Error(`Failed to load music asset: ${music.key}`))
+            reject(new Error(`Failed to load music asset: ${music.key}`));
           }
-        })
-        this.load.start()
+        });
+        this.load.start();
       } else {
-        resolveMusic()
+        resolveMusic();
       }
-    })
+    });
   }
 
   private stopWorldMusic(): void {
-    if (this.worldMusic === null) return
-    this.worldMusic.stop()
-    this.worldMusic.destroy()
-    this.worldMusic = null
+    if (this.worldMusic === null) return;
+    this.worldMusic.stop();
+    this.worldMusic.destroy();
+    this.worldMusic = null;
   }
 
   // ---------------------------------------------------------------------------
@@ -812,12 +807,12 @@ export class TableScene extends Phaser.Scene {
    * matches the click-gating in onCardClick and showConnector).
    */
   private currentLegalTargetIds(
-    available: import('../../core/index').AvailableActions,
+    available: import("../../core/index").AvailableActions,
   ): Set<string> {
-    if (this.sel.phase !== 'targeting' || isComplete(this.sel)) {
-      return new Set<string>()
+    if (this.sel.phase !== "targeting" || isComplete(this.sel)) {
+      return new Set<string>();
     }
-    return new Set(available.legalTargets(this.sel.cardId, activeStep(this.sel)))
+    return new Set(available.legalTargets(this.sel.cardId, activeStep(this.sel)));
   }
 
   /**
@@ -827,25 +822,25 @@ export class TableScene extends Phaser.Scene {
    * untouched. No-ops unless this card is a legal target right now.
    */
   private showTargetPreview(targetId: string): void {
-    const sel = this.sel
-    if (sel.phase !== 'targeting' || isComplete(sel)) return
-    if (sel.steps[sel.stepIdx]?.kind !== 'hazard') return
+    const sel = this.sel;
+    if (sel.phase !== "targeting" || isComplete(sel)) return;
+    if (sel.steps[sel.stepIdx]?.kind !== "hazard") return;
 
-    const state = this.game_.state
-    const branchIndex = sel.choice
-    const legal = availableActions(state).legalTargets(sel.cardId, activeStep(sel))
-    if (!legal.includes(targetId)) return
+    const state = this.game_.state;
+    const branchIndex = sel.choice;
+    const legal = availableActions(state).legalTargets(sel.cardId, activeStep(sel));
+    if (!legal.includes(targetId)) return;
 
-    const card = state.hand.find((c) => c.id === sel.cardId)
-    const target = state.hand.find((c) => c.id === targetId)
-    if (card?.kind !== 'player' || target?.kind !== 'world') return
+    const card = state.hand.find((c) => c.id === sel.cardId);
+    const target = state.hand.find((c) => c.id === targetId);
+    if (card?.kind !== "player" || target?.kind !== "world") return;
 
-    const preview = previewPlay(card, target, state, branchIndex)
+    const preview = previewPlay(card, target, state, branchIndex);
     if (preview !== null) {
-      this.previewSlot.setText(preview)
-      this.previewSlot.setVisible(true)
+      this.previewSlot.setText(preview);
+      this.previewSlot.setVisible(true);
     } else {
-      this.previewSlot.setVisible(false)
+      this.previewSlot.setVisible(false);
     }
   }
 
@@ -856,20 +851,17 @@ export class TableScene extends Phaser.Scene {
    * hover read matches exactly which cards show the `target` border. Magnitude
    * scales with this.game_.intensity() (FEEDBACK-12 emphasis half).
    */
-  private emphasizeIfLegalTarget(
-    cardId: string,
-    container: CardView,
-  ): void {
-    const available = availableActions(this.game_.state)
-    if (!this.currentLegalTargetIds(available).has(cardId)) return
-    container.emphasize(this.theme_.frameStyle.targetGlow, this.game_.intensity())
+  private emphasizeIfLegalTarget(cardId: string, container: CardView): void {
+    const available = availableActions(this.game_.state);
+    if (!this.currentLegalTargetIds(available).has(cardId)) return;
+    container.emphasize(this.theme_.frameStyle.targetGlow, this.game_.intensity());
   }
 
   private emphasizeIfPlayable(cardId: string, container: CardView): void {
-    if (this.sel.phase !== 'idle') return
-    const available = availableActions(this.game_.state)
-    if (!available.playable.some((p) => p.cardId === cardId)) return
-    container.emphasize(this.theme_.frameStyle.playableGlow, this.game_.intensity())
+    if (this.sel.phase !== "idle") return;
+    const available = availableActions(this.game_.state);
+    if (!available.playable.some((p) => p.cardId === cardId)) return;
+    container.emphasize(this.theme_.frameStyle.playableGlow, this.game_.intensity());
   }
 
   /**
@@ -887,30 +879,31 @@ export class TableScene extends Phaser.Scene {
    * card as a whole. See stepConnectorStyle() for the per-step style lookup.
    */
   private showConnector(targetId: string): void {
-    const sel = this.sel
-    if (sel.phase !== 'targeting' || isComplete(sel)) {
-      return
+    const sel = this.sel;
+    if (sel.phase !== "targeting" || isComplete(sel)) {
+      return;
     }
-    const currentStep = sel.steps[sel.stepIdx]
+    const currentStep = sel.steps[sel.stepIdx];
     if (
-      currentStep?.kind !== 'hazard' &&
-      currentStep?.kind !== 'destroyHand' &&
-      currentStep?.kind !== 'returnWorld'
-    ) return
+      currentStep?.kind !== "hazard" &&
+      currentStep?.kind !== "destroyHand" &&
+      currentStep?.kind !== "returnWorld"
+    )
+      return;
 
-    const step = activeStep(sel)
-    const legal = availableActions(this.game_.state).legalTargets(sel.cardId, step)
-    if (!legal.includes(targetId)) return
+    const step = activeStep(sel);
+    const legal = availableActions(this.game_.state).legalTargets(sel.cardId, step);
+    if (!legal.includes(targetId)) return;
 
-    const source = this.cardObjects.get(sel.cardId)
-    const target = this.cardObjects.get(targetId)
-    if (source === undefined || target === undefined) return
+    const source = this.cardObjects.get(sel.cardId);
+    const target = this.cardObjects.get(targetId);
+    if (source === undefined || target === undefined) return;
 
-    const { from, to } = connectorLine(source, target)
+    const { from, to } = connectorLine(source, target);
     // Resolve the style from the acting card's effect for THIS step, then render.
     // selectConnectorStyle is the single source of truth (S1, unit-tested).
-    const style = this.stepConnectorStyle(sel.cardId, step)
-    this.connectorGfx.clear()
+    const style = this.stepConnectorStyle(sel.cardId, step);
+    this.connectorGfx.clear();
     drawConnector(
       this.connectorGfx,
       style,
@@ -918,7 +911,7 @@ export class TableScene extends Phaser.Scene {
       to,
       this.pileLayer.worldPileCenter(),
       this.theme_.frameStyle,
-    )
+    );
   }
 
   /**
@@ -928,20 +921,20 @@ export class TableScene extends Phaser.Scene {
    * drawConnector then falls back to the plain accent line.
    */
   private stepConnectorStyle(cardId: string, step: number): ConnectorStyle | null {
-    const card = this.game_.state.hand.find((c) => c.id === cardId)
-    if (card === undefined || card.kind !== 'player') return null
-    const effect = effectAtStep(card.effect, step)
-    return effect !== null ? selectConnectorStyle(effect) : null
+    const card = this.game_.state.hand.find((c) => c.id === cardId);
+    if (card === undefined || card.kind !== "player") return null;
+    const effect = effectAtStep(card.effect, step);
+    return effect !== null ? selectConnectorStyle(effect) : null;
   }
 
   /** Remove any drawn connector. Safe to call when nothing is drawn. */
   private clearConnector(): void {
-    this.connectorGfx.clear()
+    this.connectorGfx.clear();
   }
 
   private updateHint(): void {
-    const { text, visible } = hintForSelection(this.sel)
-    this.selectionHint.setText(text)
-    this.selectionHint.setVisible(visible)
+    const { text, visible } = hintForSelection(this.sel);
+    this.selectionHint.setText(text);
+    this.selectionHint.setVisible(visible);
   }
 }

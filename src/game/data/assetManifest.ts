@@ -19,12 +19,9 @@ import effectIconDestroyUrl from "../assets/effect-icons/effect-icon-destroy.png
 import effectIconExileUrl from "../assets/effect-icons/effect-icon-exile.png";
 import effectIconReturnUrl from "../assets/effect-icons/effect-icon-return.png";
 import effectIconAddCardUrl from "../assets/effect-icons/effect-icon-add-card.png";
-import effectIconThreatUrl from "../assets/effect-icons/effect-icon-threat.png";
-import effectIconSkipDrawUrl from "../assets/effect-icons/effect-icon-skip-draw.png";
 import effectIconSurviveUrl from "../assets/effect-icons/effect-icon-survive.png";
 import effectIconVanishUrl from "../assets/effect-icons/effect-icon-vanish.png";
 import effectIconEachTurnUrl from "../assets/effect-icons/effect-icon-each-turn.png";
-import effectIconOnDiscardUrl from "../assets/effect-icons/effect-icon-on-discard.png";
 import effectIconOnClearUrl from "../assets/effect-icons/effect-icon-on-clear.png";
 import effectIconOnPartialClearUrl from "../assets/effect-icons/effect-icon-on-partial-clear.png";
 import bigboxRealityUrl from "../assets/themes/zombie-big-box/bigbox-reality.webp";
@@ -93,6 +90,7 @@ import zombieJsonUrl from "../../data/worlds/zombie-big-box.json?url";
 import birdJsonUrl from "../../data/worlds/bird-building.json?url";
 import volcanoJsonUrl from "../../data/worlds/highway-volcano.json?url";
 import mallJsonUrl from "../../data/worlds/overgrown-mall.json?url";
+import worldSelectBgUrl from "../assets/world-select.webp";
 
 export const assetManifest: Record<string, string> = {
   cardback: cardbackUrl,
@@ -115,12 +113,9 @@ export const assetManifest: Record<string, string> = {
   "effect-icon-exile": effectIconExileUrl,
   "effect-icon-return": effectIconReturnUrl,
   "effect-icon-add-card": effectIconAddCardUrl,
-  "effect-icon-threat": effectIconThreatUrl,
-  "effect-icon-skip-draw": effectIconSkipDrawUrl,
   "effect-icon-survive": effectIconSurviveUrl,
   "effect-icon-vanish": effectIconVanishUrl,
   "effect-icon-each-turn": effectIconEachTurnUrl,
-  "effect-icon-on-discard": effectIconOnDiscardUrl,
   "effect-icon-on-clear": effectIconOnClearUrl,
   "effect-icon-on-partial-clear": effectIconOnPartialClearUrl,
   "bigbox-reality": bigboxRealityUrl,
@@ -184,6 +179,7 @@ export const assetManifest: Record<string, string> = {
   "zombie-inset-listen": zombieInsetListenUrl,
   "zombie-inset-strange-sounds": zombieInsetStrangeSoundsUrl,
   "zombie-inset-zombie": zombieInsetZombieUrl,
+  "world-select-bg": worldSelectBgUrl,
   // JSON files are loaded as URLs so Phaser can load them asynchronously.
   "world-starter": starterJsonUrl,
   "world-zombie-big-box": zombieJsonUrl,
@@ -191,3 +187,19 @@ export const assetManifest: Record<string, string> = {
   "world-highway-volcano": volcanoJsonUrl,
   "world-overgrown-mall": mallJsonUrl,
 };
+
+export function loadAssets(scene: Phaser.Scene) {
+  for (const [key, url] of Object.entries(assetManifest)) {
+    if (url !== undefined) {
+      if (url.endsWith(".json")) {
+        scene.load.json(key, url);
+      } else {
+        scene.load.image(key, url);
+      }
+    }
+  }
+
+  scene.load.on("loaderror", (file: Phaser.Loader.File) => {
+    console.warn(`Asset failed to load: ${file.key}`);
+  });
+}

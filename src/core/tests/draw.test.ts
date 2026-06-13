@@ -1,10 +1,5 @@
 import { describe, expect, it } from "bun:test";
-import {
-  drawPlayer,
-  drawWorld,
-  refillHand,
-  resolveForceDestroy,
-} from "../engine/draw";
+import { drawPlayer, drawWorld, refillHand, resolveForceDestroy } from "../engine/draw";
 import { createWorld, WORLD_CONSTS } from "../engine/world";
 import type { GameState, PlayerCard, WorldCard } from "../model/types";
 import { mintCard } from "../model/cards";
@@ -20,9 +15,7 @@ describe("refillHand draw table", () => {
     const base = createWorld(catalog, worldData, 1);
     // Move all hand cards back to their piles so hand is empty
     const playerCards = base.hand.filter((c) => c.kind === "player");
-    const worldCards = base.hand.filter(
-      (c) => c.kind === "world",
-    ) as WorldCard[];
+    const worldCards = base.hand.filter((c) => c.kind === "world") as WorldCard[];
     const state: GameState = {
       ...base,
       hand: [],
@@ -44,9 +37,7 @@ describe("refillHand draw table", () => {
   it(`1 world card held → draws 2 world + 3 player (total ${WORLD_CONSTS.maxHandSize})`, () => {
     const base = createWorld(catalog, worldData, 1);
     const playerCards = base.hand.filter((c) => c.kind === "player");
-    const worldCards = base.hand.filter(
-      (c) => c.kind === "world",
-    ) as WorldCard[];
+    const worldCards = base.hand.filter((c) => c.kind === "world") as WorldCard[];
 
     // Hold 1 world card, return the rest
     const [heldWorld, ...returnedWorld] = worldCards;
@@ -72,9 +63,7 @@ describe("refillHand draw table", () => {
     const playerCards = base.hand.filter((c) => c.kind === "player");
 
     // Keep both world cards in hand (they came from createWorld)
-    const worldCards = base.hand.filter(
-      (c) => c.kind === "world",
-    ) as WorldCard[];
+    const worldCards = base.hand.filter((c) => c.kind === "world") as WorldCard[];
     expect(worldCards).toHaveLength(2); // sanity
 
     const state: GameState = {
@@ -117,41 +106,6 @@ describe("refillHand with full hand", () => {
     expect(events).toHaveLength(0);
     expect(filled.hand).toHaveLength(WORLD_CONSTS.maxHandSize);
     expect(filled).toBe(state);
-  });
-});
-
-// ---------------------------------------------------------------------------
-// 3. Skip-draw suppresses player draws, emits DrawSkipped
-// ---------------------------------------------------------------------------
-
-describe("refillHand skip-draw", () => {
-  it("suppresses player draws, still draws world cards, emits DrawSkipped", () => {
-    const base = createWorld(catalog, worldData, 1);
-    const worldCards = base.hand.filter(
-      (c) => c.kind === "world",
-    ) as WorldCard[];
-    const playerCards = base.hand.filter((c) => c.kind === "player");
-
-    const state: GameState = {
-      ...base,
-      hand: [],
-      playerDraw: [...playerCards, ...base.playerDraw],
-      worldDraw: [...worldCards, ...base.worldDraw],
-      skipDrawNext: true,
-    };
-
-    const { state: filled, events } = refillHand(state);
-
-    // World cards still drawn (minimum 1)
-    expect(
-      filled.hand.filter((c) => c.kind === "world").length,
-    ).toBeGreaterThanOrEqual(1);
-    // No player cards drawn
-    expect(filled.hand.filter((c) => c.kind === "player")).toHaveLength(0);
-    // DrawSkipped event emitted
-    expect(events.some((e) => e.type === "DrawSkipped")).toBe(true);
-    // Flag consumed
-    expect(filled.skipDrawNext).toBe(false);
   });
 });
 
@@ -254,9 +208,7 @@ describe("createWorld opening deal", () => {
 
   it(`hand has exactly ${WORLD_CONSTS.startWorldCards} world cards`, () => {
     const state = createWorld(catalog, worldData, 42);
-    expect(state.hand.filter((c) => c.kind === "world")).toHaveLength(
-      WORLD_CONSTS.startWorldCards,
-    );
+    expect(state.hand.filter((c) => c.kind === "world")).toHaveLength(WORLD_CONSTS.startWorldCards);
   });
 
   it(`hand has exactly ${WORLD_CONSTS.startPlayerCards} player cards`, () => {
@@ -294,10 +246,7 @@ describe("determinism", () => {
 
 describe("resolveForceDestroy", () => {
   /** Build a hand of n player cards (minted from the Explore template). */
-  function handOfPlayers(
-    base: GameState,
-    n: number,
-  ): [PlayerCard[], GameState] {
+  function handOfPlayers(base: GameState, n: number): [PlayerCard[], GameState] {
     const cards: PlayerCard[] = [];
     let state = base;
     for (let i = 0; i < n; i++) {
@@ -389,10 +338,7 @@ describe("resolveForceDestroy", () => {
 // ---------------------------------------------------------------------------
 
 describe("resolveForceDestroy with Brace", () => {
-  function handOfPlayers(
-    base: GameState,
-    n: number,
-  ): [PlayerCard[], GameState] {
+  function handOfPlayers(base: GameState, n: number): [PlayerCard[], GameState] {
     const cards: PlayerCard[] = [];
     let state = base;
     for (let i = 0; i < n; i++) {

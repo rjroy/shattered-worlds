@@ -34,11 +34,7 @@ function handlePlayCard(
   // Find the card object in hand to get its effect
   const card = state.hand.find((c) => c.id === cardId);
   if (card === undefined || card.kind !== "player") {
-    throw new IllegalActionError(
-      action,
-      state,
-      `Card ${cardId} not found in hand`,
-    );
+    throw new IllegalActionError(action, state, `Card ${cardId} not found in hand`);
   }
 
   // Remove the card from hand. A normal card recycles to playerDiscard; an
@@ -47,9 +43,7 @@ function handlePlayCard(
   const stateAfterPlay: GameState = {
     ...state,
     hand: state.hand.filter((c) => c.id !== cardId),
-    playerDiscard: exhaust
-      ? state.playerDiscard
-      : [card, ...state.playerDiscard],
+    playerDiscard: exhaust ? state.playerDiscard : [card, ...state.playerDiscard],
   };
 
   const events: GameEvent[] = [{ type: "CardPlayed", cardId }];
@@ -61,12 +55,7 @@ function handlePlayCard(
   events.push(...spendResult.events);
 
   // Apply the card's effect (on the post-spend state)
-  const effectResult = applyEffect(
-    catalog,
-    stateAfterSpend,
-    card.effect,
-    action,
-  );
+  const effectResult = applyEffect(catalog, stateAfterSpend, card.effect, action);
   events.push(...effectResult.events);
 
   // CardDestroyed comes AFTER the effect events so the play reads as
@@ -113,16 +102,9 @@ function handleDiscardHazard(
   const handAfterDiscard = state.hand.filter((c) => c.id !== cardId);
   const stateAfterRemove: GameState = { ...state, hand: handAfterDiscard };
 
-  const penaltyResult = applyEffect(
-    catalog,
-    stateAfterRemove,
-    (card as WorldCard).onDiscarded,
-  );
+  const penaltyResult = applyEffect(catalog, stateAfterRemove, (card as WorldCard).onDiscarded);
 
-  const events: GameEvent[] = [
-    { type: "HazardDiscarded", cardId },
-    ...penaltyResult.events,
-  ];
+  const events: GameEvent[] = [{ type: "HazardDiscarded", cardId }, ...penaltyResult.events];
 
   return { state: penaltyResult.state, events };
 }
@@ -139,18 +121,10 @@ function handleEndTurn(catalog: CardCatalog, state: GameState): ReduceResult {
   // card spawned during the loop (e.g. AddWorldCardToDeck) is NOT re-processed
   // this turn — this is what prevents a same-turn transform chain.
   let current = state;
-  for (const card of state.hand.filter(
-    (c): c is WorldCard => c.kind === "world",
-  )) {
+  for (const card of state.hand.filter((c): c is WorldCard => c.kind === "world")) {
     // Pass card.id as selfId so self-referential hooks (DestroySelf) know which
     // card fired them.
-    const r = applyEffect(
-      catalog,
-      current,
-      card.onEndOfTurn,
-      undefined,
-      card.id,
-    );
+    const r = applyEffect(catalog, current, card.onEndOfTurn, undefined, card.id);
     current = r.state;
     events.push(...r.events);
     if (current.status !== "playing") {
@@ -174,7 +148,7 @@ function handleEndTurn(catalog: CardCatalog, state: GameState): ReduceResult {
     events.push({ type: "CardsDiscarded", cardIds: discardedIds });
   }
 
-  // Start turn: gain +1 energy, then refill hand (handles skipDrawNext internally)
+  // Start turn: gain +1 energy, then refill hand
   const turnStartResult = startTurn(stateAfterDiscard);
   events.push(...turnStartResult.events);
 
@@ -184,12 +158,7 @@ function handleEndTurn(catalog: CardCatalog, state: GameState): ReduceResult {
 
   // Lose immediately if the draw phase yielded zero player cards. This covers
   // both "no room because hazards filled the hand" and "player deck exhausted".
-  // A SkipDrawNextTurn effect is handled separately and does not trigger this.
-  if (
-    afterRefill.status === "playing" &&
-    turnStartResult.playerCardsDrawn === 0 &&
-    !turnStartResult.events.some((e) => e.type === "DrawSkipped")
-  ) {
+  if (afterRefill.status === "playing" && turnStartResult.playerCardsDrawn === 0) {
     const lostState: GameState = { ...afterRefill, status: "lost" };
     events.push({ type: "WorldLost" });
     return { state: lostState, events };
@@ -206,8 +175,7 @@ function handleEndTurn(catalog: CardCatalog, state: GameState): ReduceResult {
       // REQ-13: Check if ANY structural play exists, ignoring energy. Unaffordable
       // cards count as future progress (they will become affordable when energy rises).
       const avail = availableActions(afterRefill, { ignoreEnergy: true });
-      const noProgressPossible =
-        avail.playable.length === 0 && avail.discardable.length === 0;
+      const noProgressPossible = avail.playable.length === 0 && avail.discardable.length === 0;
       if (noProgressPossible) {
         const lostState: GameState = { ...afterRefill, status: "lost" };
         events.push({ type: "WorldLost" });
@@ -262,11 +230,7 @@ function handleEndTurn(catalog: CardCatalog, state: GameState): ReduceResult {
  *
  * Throws IllegalActionError for any illegal or malformed action.
  */
-export function reduce(
-  catalog: CardCatalog,
-  state: GameState,
-  action: Action,
-): ReduceResult {
+export function reduce(catalog: CardCatalog, state: GameState, action: Action): ReduceResult {
   if (state.status !== "playing") {
     throw new IllegalActionError(
       action,

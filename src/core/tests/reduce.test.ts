@@ -52,8 +52,7 @@ describe("PlayCard basic", () => {
     const explore = state.hand.find(
       (c): c is PlayerCard => c.kind === "player" && c.name === "Explore",
     );
-    if (!screams || !explore)
-      throw new Error("Expected Screams and Explore in seed 42 hand");
+    if (!screams || !explore) throw new Error("Expected Screams and Explore in seed 42 hand");
 
     const result = reduce(catalog, state, {
       type: "PlayCard",
@@ -144,9 +143,7 @@ describe("EndTurn hold vs discard", () => {
     // Find Baseball Bat (world) should still be in hand
     expect(result.state.hand.some((c) => c.id === findBat.id)).toBe(true);
     // Explore (player) should be in playerDiscard (it was discarded, not re-drawn)
-    expect(result.state.playerDiscard.some((c) => c.id === explore.id)).toBe(
-      true,
-    );
+    expect(result.state.playerDiscard.some((c) => c.id === explore.id)).toBe(true);
     // Explore should NOT be in hand (unless refillHand pulled it from discard,
     // which won't happen here because playerDraw has 5 cards to fill from)
     const handIds = result.state.hand.map((c) => c.id);
@@ -165,18 +162,11 @@ describe("EndTurn hold vs discard", () => {
     const state = makeState({
       ...finalState,
       hand: [screams as WorldCard, explore as PlayerCard],
-      playerDraw: [
-        e2 as PlayerCard,
-        e3 as PlayerCard,
-        e4 as PlayerCard,
-        e5 as PlayerCard,
-      ],
+      playerDraw: [e2 as PlayerCard, e3 as PlayerCard, e4 as PlayerCard, e5 as PlayerCard],
     });
 
     const result = reduce(catalog, state, { type: "EndTurn" });
-    const discardedEvent = result.events.find(
-      (e) => e.type === "CardsDiscarded",
-    );
+    const discardedEvent = result.events.find((e) => e.type === "CardsDiscarded");
     expect(discardedEvent).toBeDefined();
     if (discardedEvent?.type === "CardsDiscarded") {
       expect(discardedEvent.cardIds).toContain(explore.id);
@@ -295,13 +285,9 @@ describe("ForceDestroy onDiscarded", () => {
     // The destroyed card is gone from the new hand.
     const destroyed = afterEnd.events.find((e) => e.type === "CardDestroyed");
     const destroyedIds = (destroyed as { ids: readonly string[] }).ids;
-    expect(afterEnd.state.hand.some((c) => destroyedIds.includes(c.id))).toBe(
-      false,
-    );
+    expect(afterEnd.state.hand.some((c) => destroyedIds.includes(c.id))).toBe(false);
     // One player card fewer than a full refill would have produced.
-    expect(afterEnd.state.hand.filter((c) => c.kind === "player")).toHaveLength(
-      3,
-    );
+    expect(afterEnd.state.hand.filter((c) => c.kind === "player")).toHaveLength(3);
   });
 });
 
@@ -341,12 +327,10 @@ describe("post-terminal throws", () => {
       status: "lost",
     });
 
-    expect(() => reduce(catalog, lostState, { type: "EndTurn" })).toThrow(
+    expect(() => reduce(catalog, lostState, { type: "EndTurn" })).toThrow(IllegalActionError);
+    expect(() => reduce(catalog, lostState, { type: "DiscardHazard", cardId: zombie.id })).toThrow(
       IllegalActionError,
     );
-    expect(() =>
-      reduce(catalog, lostState, { type: "DiscardHazard", cardId: zombie.id }),
-    ).toThrow(IllegalActionError);
   });
 
   it("any action after WorldWon throws IllegalActionError", () => {
@@ -359,9 +343,7 @@ describe("post-terminal throws", () => {
       status: "won",
     });
 
-    expect(() => reduce(catalog, wonState, { type: "EndTurn" })).toThrow(
-      IllegalActionError,
-    );
+    expect(() => reduce(catalog, wonState, { type: "EndTurn" })).toThrow(IllegalActionError);
   });
 });
 
@@ -405,9 +387,7 @@ describe("Sprint modal", () => {
   it("Sprint choice=0 draws player and world cards", () => {
     // seed 42 hand contains Sprint (id=1); worldDraw has 4 remaining world cards
     const state = createWorld(catalog, worldData, 42);
-    const sprint = state.hand.find(
-      (c) => c.kind === "player" && c.name === "Sprint",
-    );
+    const sprint = state.hand.find((c) => c.kind === "player" && c.name === "Sprint");
     if (!sprint) throw new Error("Sprint not found in seed 42 hand");
 
     const result = reduce(catalog, state, {
@@ -485,9 +465,7 @@ describe("Sprint modal", () => {
 
   it("Sprint throws when choice is out of range", () => {
     const state = createWorld(catalog, worldData, 42);
-    const sprint = state.hand.find(
-      (c) => c.kind === "player" && c.name === "Sprint",
-    );
+    const sprint = state.hand.find((c) => c.kind === "player" && c.name === "Sprint");
     if (!sprint) throw new Error("Sprint not found in seed 42 hand");
 
     expect(() => {
@@ -545,11 +523,7 @@ describe("Adrenaline discardPlayer", () => {
 
     const state = makeState({
       ...s5,
-      hand: [
-        rubble as WorldCard,
-        adrenaline as PlayerCard,
-        explore as PlayerCard,
-      ],
+      hand: [rubble as WorldCard, adrenaline as PlayerCard, explore as PlayerCard],
       playerDraw: [e1 as PlayerCard, e2 as PlayerCard],
     });
 
@@ -569,14 +543,10 @@ describe("Adrenaline discardPlayer", () => {
       type: "CardsDiscarded",
       cardIds: [explore.id],
     });
-    expect(types.indexOf("CardsDiscarded")).toBeLessThan(
-      types.indexOf("CardsDrawn"),
-    );
+    expect(types.indexOf("CardsDiscarded")).toBeLessThan(types.indexOf("CardsDrawn"));
 
     // explore moved to playerDiscard
-    expect(result.state.playerDiscard.some((c) => c.id === explore.id)).toBe(
-      true,
-    );
+    expect(result.state.playerDiscard.some((c) => c.id === explore.id)).toBe(true);
     // adrenaline played, not in hand
     expect(result.state.hand.some((c) => c.id === adrenaline.id)).toBe(false);
   });
@@ -589,11 +559,7 @@ describe("Adrenaline discardPlayer", () => {
 
     const state = makeState({
       ...s3,
-      hand: [
-        rubble as WorldCard,
-        adrenaline as PlayerCard,
-        explore as PlayerCard,
-      ],
+      hand: [rubble as WorldCard, adrenaline as PlayerCard, explore as PlayerCard],
     });
 
     expect(() => {
@@ -651,9 +617,7 @@ describe("Regroup destroyHand", () => {
     expect(types).toContain("CardDestroyed");
     expect(result.state.hand.some((c) => c.id === explore.id)).toBe(false);
     // Destroyed — not in discard either
-    expect(result.state.playerDiscard.some((c) => c.id === explore.id)).toBe(
-      false,
-    );
+    expect(result.state.playerDiscard.some((c) => c.id === explore.id)).toBe(false);
   });
 });
 
@@ -695,9 +659,7 @@ describe("PlayCard exhaust", () => {
     });
 
     expect(result.state.hand.some((c) => c.id === exhaustCard.id)).toBe(false);
-    expect(
-      result.state.playerDiscard.some((c) => c.id === exhaustCard.id),
-    ).toBe(false);
+    expect(result.state.playerDiscard.some((c) => c.id === exhaustCard.id)).toBe(false);
   });
 
   it("playing an exhaust card emits CardDestroyed with the card id alongside CardPlayed", () => {
@@ -753,9 +715,7 @@ describe("PlayCard exhaust", () => {
     expect(result.state.hp).toBe(7);
     expect(result.events.map((e) => e.type)).toContain("CardDestroyed");
     // Destroyed, not recycled.
-    expect(result.state.playerDiscard.some((c) => c.id === medKit.id)).toBe(
-      false,
-    );
+    expect(result.state.playerDiscard.some((c) => c.id === medKit.id)).toBe(false);
   });
 
   it("control: a non-exhaust card lands in playerDiscard and emits NO CardDestroyed", () => {
@@ -774,9 +734,7 @@ describe("PlayCard exhaust", () => {
       targetId: rubble.id,
     });
 
-    expect(result.state.playerDiscard.some((c) => c.id === explore.id)).toBe(
-      true,
-    );
+    expect(result.state.playerDiscard.some((c) => c.id === explore.id)).toBe(true);
     expect(result.events.map((e) => e.type)).not.toContain("CardDestroyed");
   });
 
@@ -866,12 +824,7 @@ describe("EndTurn onEndOfTurn", () => {
       ...finalState,
       hp: 10,
       hand: [zombie as WorldCard, explore as PlayerCard],
-      playerDraw: [
-        e2 as PlayerCard,
-        e3 as PlayerCard,
-        e4 as PlayerCard,
-        e5 as PlayerCard,
-      ],
+      playerDraw: [e2 as PlayerCard, e3 as PlayerCard, e4 as PlayerCard, e5 as PlayerCard],
     });
 
     const result = reduce(catalog, state, { type: "EndTurn" });
@@ -909,8 +862,7 @@ describe("EndTurn onEndOfTurn", () => {
   });
 
   it("Door in zombie-big-box adds Zombie threat to the world deck", () => {
-    const { catalog: worldCatalog, worldData: world } =
-      buildWorld("zombie-big-box");
+    const { catalog: worldCatalog, worldData: world } = buildWorld("zombie-big-box");
     const base = createWorld(worldCatalog, world, 42);
     const [door, s1] = mintCard(worldCatalog, base, "Door");
     const [e1, s2] = mintCard(worldCatalog, s1, "Explore");
@@ -950,8 +902,7 @@ describe("EndTurn onEndOfTurn", () => {
   });
 
   it("Door in highway-volcano adds Lava Flow threat to the world deck", () => {
-    const { catalog: worldCatalog, worldData: world } =
-      buildWorld("highway-volcano");
+    const { catalog: worldCatalog, worldData: world } = buildWorld("highway-volcano");
     const base = createWorld(worldCatalog, world, 42);
     const [door, s1] = mintCard(worldCatalog, base, "Door");
     const [e1, s2] = mintCard(worldCatalog, s1, "Explore");
@@ -991,8 +942,7 @@ describe("EndTurn onEndOfTurn", () => {
   });
 
   it("Door in bird-building adds Gripping Talon threat to the world deck", () => {
-    const { catalog: worldCatalog, worldData: world } =
-      buildWorld("bird-building");
+    const { catalog: worldCatalog, worldData: world } = buildWorld("bird-building");
     const base = createWorld(worldCatalog, world, 42);
     const [door, s1] = mintCard(worldCatalog, base, "Door");
     const [e1, s2] = mintCard(worldCatalog, s1, "Explore");
@@ -1086,14 +1036,11 @@ describe("EndTurn Corpse self-transform", () => {
     const corpseGone = !result.state.hand.some((c) => c.id === corpse.id);
     expect(corpseGone).toBe(true);
     const worldCardsAfter =
-      result.state.worldDraw.length +
-      result.state.hand.filter((c) => c.kind === "world").length;
+      result.state.worldDraw.length + result.state.hand.filter((c) => c.kind === "world").length;
     expect(worldCardsAfter).toBe(beforeWorldDraw + 1);
 
     // The spawned world card is a Zombie (it was drawn into the refilled hand).
-    const spawnedZombie = result.state.hand.find(
-      (c) => c.kind === "world" && c.name === "Zombie",
-    );
+    const spawnedZombie = result.state.hand.find((c) => c.kind === "world" && c.name === "Zombie");
     expect(spawnedZombie).toBeDefined();
   });
 
@@ -1177,21 +1124,6 @@ describe("EndTurn gains energy", () => {
     }
 
     expect(state.energy).toBe(6);
-  });
-
-  it("skipDrawNext does not prevent energy gain", () => {
-    const base = createWorld(catalog, worldData, 42);
-    const state = makeState({
-      hand: base.hand.filter((c) => c.kind === "world"),
-      energy: 1,
-      skipDrawNext: true,
-    });
-
-    const result = reduce(catalog, state, { type: "EndTurn" });
-
-    expect(result.state.energy).toBe(2);
-    expect(result.state.skipDrawNext).toBe(false);
-    expect(result.events.map((e) => e.type)).toContain("DrawSkipped");
   });
 
   it("EnergyChanged event appears during turn start (after TurnEnded)", () => {
@@ -1400,9 +1332,7 @@ describe("PlayCard deducts energy cost (Step 5)", () => {
     expect(result.state.energy).toBe(1);
 
     // Exactly one EnergyChanged event should be present
-    const energyChangedEvents = result.events.filter(
-      (e) => e.type === "EnergyChanged",
-    );
+    const energyChangedEvents = result.events.filter((e) => e.type === "EnergyChanged");
     expect(energyChangedEvents).toHaveLength(1);
     expect(energyChangedEvents[0]).toBeDefined();
     if (energyChangedEvents[0]?.type === "EnergyChanged") {
@@ -1581,12 +1511,7 @@ describe("DealProgressAll integration", () => {
     state = {
       ...s4,
       energy: 2,
-      hand: [
-        shelfSweep as PlayerCard,
-        z1 as WorldCard,
-        z2 as WorldCard,
-        z3 as WorldCard,
-      ],
+      hand: [shelfSweep as PlayerCard, z1 as WorldCard, z2 as WorldCard, z3 as WorldCard],
       progress: {
         [z1.id]: 1,
         [z2.id]: 1,
@@ -1599,14 +1524,10 @@ describe("DealProgressAll integration", () => {
       cardId: shelfSweep.id,
     });
 
-    const hazardResolved = result.events.filter(
-      (e) => e.type === "HazardResolved",
-    );
+    const hazardResolved = result.events.filter((e) => e.type === "HazardResolved");
     expect(hazardResolved).toHaveLength(3);
 
-    const energyEvents = result.events.filter(
-      (e) => e.type === "EnergyChanged",
-    );
+    const energyEvents = result.events.filter((e) => e.type === "EnergyChanged");
     expect(energyEvents.length).toBeGreaterThanOrEqual(3);
 
     // Each Zombie.onCleared grants 1 energy; started at 0 after cost deduction (2-2=0), gained 3 × 1
@@ -1619,8 +1540,7 @@ describe("Brace integration", () => {
     // Steady grants Brace 1. Sliding Debris.onDiscarded fires ForceDestroy 1.
     // With one brace charge banked the ForceDestroy should be absorbed —
     // no CardDestroyed event should fire on the next turn start.
-    const { catalog: birdCatalog, worldData: birdWorld } =
-      buildWorld("bird-building");
+    const { catalog: birdCatalog, worldData: birdWorld } = buildWorld("bird-building");
     const base = createWorld(birdCatalog, birdWorld, 42);
 
     const [steady, s1] = mintCard(birdCatalog, base, "Steady");
@@ -1661,9 +1581,7 @@ describe("Brace integration", () => {
       cardId: (steady as PlayerCard).id,
     });
     expect(afterSteady.state.braceCharges).toBe(1);
-    expect(afterSteady.events.some((e) => e.type === "BraceChanged")).toBe(
-      true,
-    );
+    expect(afterSteady.events.some((e) => e.type === "BraceChanged")).toBe(true);
 
     // Step 2: discard Sliding Debris → pendingForceDestroy = 1
     const afterDiscard = reduce(birdCatalog, afterSteady.state, {
@@ -1672,9 +1590,7 @@ describe("Brace integration", () => {
     });
     expect(afterDiscard.state.pendingForceDestroy).toBe(1);
     // No CardDestroyed yet — the snatch is still pending
-    expect(afterDiscard.events.some((e) => e.type === "CardDestroyed")).toBe(
-      false,
-    );
+    expect(afterDiscard.events.some((e) => e.type === "CardDestroyed")).toBe(false);
 
     // Step 3: EndTurn → hand refills → resolveForceDestroy absorbs the charge
     const afterEnd = reduce(birdCatalog, afterDiscard.state, {
@@ -1743,9 +1659,7 @@ describe("ExileTopWorldCards: livelock guard", () => {
       cardId: floorIt.id,
     });
     expect(afterExile.state.worldDraw).toHaveLength(0);
-    expect(afterExile.events.some((e) => e.type === "WorldCardsExiled")).toBe(
-      true,
-    );
+    expect(afterExile.events.some((e) => e.type === "WorldCardsExiled")).toBe(true);
 
     // EndTurn should advance the act (draw from acts[0]) without livelock
     const afterEnd = reduce(catalog, afterExile.state, { type: "EndTurn" });
@@ -1760,8 +1674,7 @@ describe("ExileTopWorldCards: livelock guard", () => {
 // ---------------------------------------------------------------------------
 
 describe("PlayCard Cut It Loose (Sequence: destroyHand → hazard)", () => {
-  const { catalog: birdCatalog, worldData: birdWorld } =
-    buildWorld("bird-building");
+  const { catalog: birdCatalog, worldData: birdWorld } = buildWorld("bird-building");
 
   /** Build a minimal state seeded from bird-building for Cut It Loose tests. */
   function makeBirdState(overrides: Partial<GameState> = {}): GameState {
@@ -1797,11 +1710,7 @@ describe("PlayCard Cut It Loose (Sequence: destroyHand → hazard)", () => {
 
     const state = makeBirdState({
       ...s3,
-      hand: [
-        cutItLoose as PlayerCard,
-        findFooting as PlayerCard,
-        groaningGirders as WorldCard,
-      ],
+      hand: [cutItLoose as PlayerCard, findFooting as PlayerCard, groaningGirders as WorldCard],
     });
 
     return {
@@ -1813,8 +1722,7 @@ describe("PlayCard Cut It Loose (Sequence: destroyHand → hazard)", () => {
   }
 
   it("full dispatch: destroys the player card and deals progress to the world card", () => {
-    const { state, cutItLoose, findFooting, groaningGirders } =
-      makeCutItLooseState();
+    const { state, cutItLoose, findFooting, groaningGirders } = makeCutItLooseState();
 
     const result = reduce(birdCatalog, state, {
       type: "PlayCard",
@@ -1829,17 +1737,13 @@ describe("PlayCard Cut It Loose (Sequence: destroyHand → hazard)", () => {
 
     // Destroyed player card is removed from hand and not in discard
     expect(result.state.hand.some((c) => c.id === findFooting.id)).toBe(false);
-    expect(
-      result.state.playerDiscard.some((c) => c.id === findFooting.id),
-    ).toBe(false);
+    expect(result.state.playerDiscard.some((c) => c.id === findFooting.id)).toBe(false);
     expect(types).toContain("CardDestroyed");
 
     // Progress was dealt to the world card (base 4 resolves Groaning Girders cost 1)
     expect(types).toContain("ProgressDealt");
     expect(types).toContain("HazardResolved");
-    expect(result.state.hand.some((c) => c.id === groaningGirders.id)).toBe(
-      false,
-    );
+    expect(result.state.hand.some((c) => c.id === groaningGirders.id)).toBe(false);
   });
 
   it("rejection: missing destroyIds throws IllegalActionError", () => {
@@ -1917,9 +1821,7 @@ describe("PlayCard None effect (Spore semantics)", () => {
 
     // Exhausted: absent from hand, discard, AND draw pile.
     expect(result.state.hand.some((c) => c.id === spore.id)).toBe(false);
-    expect(result.state.playerDiscard.some((c) => c.id === spore.id)).toBe(
-      false,
-    );
+    expect(result.state.playerDiscard.some((c) => c.id === spore.id)).toBe(false);
     expect(result.state.playerDraw.some((c) => c.id === spore.id)).toBe(false);
 
     // Standard events, in play → spend → vanish order, and nothing else.

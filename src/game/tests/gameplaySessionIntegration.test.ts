@@ -174,7 +174,7 @@ describe('gameplaySession integration', () => {
     const source = await Bun.file(new URL('../scenes/WorldSelectScene.ts', import.meta.url)).text()
 
     expect(source).toContain('worldBadgeLabel')
-    expect(source).toContain("this.scene.start('Chronicle')")
+    expect(source).toContain('this.scene.start("Chronicle")')
     expect(source).toContain('private readonly runStats: RunStatsReader | undefined')
   })
 
