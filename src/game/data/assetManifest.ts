@@ -23,7 +23,6 @@ import effectIconThreatUrl from "../assets/effect-icons/effect-icon-threat.png";
 import effectIconSurviveUrl from "../assets/effect-icons/effect-icon-survive.png";
 import effectIconVanishUrl from "../assets/effect-icons/effect-icon-vanish.png";
 import effectIconEachTurnUrl from "../assets/effect-icons/effect-icon-each-turn.png";
-import effectIconOnDiscardUrl from "../assets/effect-icons/effect-icon-on-discard.png";
 import effectIconOnClearUrl from "../assets/effect-icons/effect-icon-on-clear.png";
 import effectIconOnPartialClearUrl from "../assets/effect-icons/effect-icon-on-partial-clear.png";
 import bigboxRealityUrl from "../assets/themes/zombie-big-box/bigbox-reality.webp";
@@ -119,7 +118,6 @@ export const assetManifest: Record<string, string> = {
   "effect-icon-survive": effectIconSurviveUrl,
   "effect-icon-vanish": effectIconVanishUrl,
   "effect-icon-each-turn": effectIconEachTurnUrl,
-  "effect-icon-on-discard": effectIconOnDiscardUrl,
   "effect-icon-on-clear": effectIconOnClearUrl,
   "effect-icon-on-partial-clear": effectIconOnPartialClearUrl,
   "bigbox-reality": bigboxRealityUrl,

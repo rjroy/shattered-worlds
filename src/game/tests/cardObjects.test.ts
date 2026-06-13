@@ -948,7 +948,7 @@ describe("CardView world-card trigger blocks", () => {
     });
     // No trigger icon for the None blocks appears anywhere.
     const allKeys = rendered.containers.flatMap((c) => rowTokens(c).iconKeys);
-    expect(allKeys).not.toContain("effect-icon-on-discard");
+    expect(allKeys).not.toContain("effect-icon-discard");
     expect(allKeys).not.toContain("effect-icon-on-partial-clear");
   });
 
@@ -969,7 +969,7 @@ describe("CardView world-card trigger blocks", () => {
     const leadIcons = blocks.map((block) => rowTokens(rowsOf(block)[0]!).iconKeys[0]);
     expect(leadIcons).toEqual([
       "effect-icon-each-turn",
-      "effect-icon-on-discard",
+      "effect-icon-discard",
       "effect-icon-on-clear",
       "effect-icon-on-partial-clear",
     ]);

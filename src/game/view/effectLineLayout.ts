@@ -43,7 +43,7 @@ export const EFFECT_ICON_TEXTURES: Record<IconId, string> = {
   survive: "effect-icon-survive",
   vanish: "effect-icon-vanish",
   eachTurn: "effect-icon-each-turn",
-  onDiscard: "effect-icon-on-discard",
+  onDiscard: "effect-icon-discard",
   onClear: "effect-icon-on-clear",
   onPartialClear: "effect-icon-on-partial-clear",
 };

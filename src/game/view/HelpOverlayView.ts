@@ -352,7 +352,7 @@ export class HelpOverlayView extends Phaser.GameObjects.Container {
       nameColor = TEXT.textLight,
     ): void {
       const img = scene.add.image(x, y, EFFECT_ICON_TEXTURES[iconId]);
-      img.setDisplaySize(22, 22);
+      img.setScale(22 / Math.max(img.width, img.height));
       img.setOrigin(0.5, 0.5);
       parent.add(img);
       addText(parent, x + 20, y - 11, name, {

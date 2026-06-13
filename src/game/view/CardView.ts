@@ -50,11 +50,7 @@ const EMPHASIS_GLOW_PAD = 7; // px the glow ring extends past the card edge
 const EMPHASIS_GLOW_LINE = 6; // glow stroke width
 const EMPHASIS_GLOW_RADIUS = 10; // rounded-corner radius
 
-function drawGlow(
-  glow: Phaser.GameObjects.Graphics,
-  color: number,
-  alpha: number,
-): void {
+function drawGlow(glow: Phaser.GameObjects.Graphics, color: number, alpha: number): void {
   glow.clear();
   const w = CARD_W + EMPHASIS_GLOW_PAD * 2;
   const h = CARD_H + EMPHASIS_GLOW_PAD * 2;
@@ -99,8 +95,7 @@ function addCardText(
   container.add(text);
   let currY = y;
   return wrapped.map((line, i) => {
-    const lineText =
-      i == 0 ? text : scene.add.text(x, currY, "", textStyle(style));
+    const lineText = i == 0 ? text : scene.add.text(x, currY, "", textStyle(style));
     lineText.setText(line);
     lineText.setOrigin(0.5, opts.originY);
     currY += lineText.height;
@@ -166,13 +161,8 @@ export class CardView extends Phaser.GameObjects.Container {
     // corresponding image on top of the cardfront. This is used for player
     // cards' unique artwork, and world cards don't have insets at all.
     if ("insetKey" in card && card.insetKey && card.insetKey !== "") {
-      const insetImg = scene.add
-        .image(INSET_X, INSET_Y, card.insetKey)
-        .setOrigin(0.5, 1);
-      const ratio = Math.max(
-        INSET_W / insetImg.width,
-        INSET_H / insetImg.height,
-      );
+      const insetImg = scene.add.image(INSET_X, INSET_Y, card.insetKey).setOrigin(0.5, 1);
+      const ratio = Math.max(INSET_W / insetImg.width, INSET_H / insetImg.height);
       insetImg.setDisplaySize(insetImg.width * ratio, insetImg.height * ratio);
       this.add(insetImg);
       const frame = scene.add
@@ -206,18 +196,11 @@ export class CardView extends Phaser.GameObjects.Container {
       // Spore card is identifiable in hand (REQ-MALL-21).
       const hasKeywords = card.keywords.length > 0;
       if (hasKeywords) {
-        addCardText(
-          scene,
-          this,
-          0,
-          -CARD_H / 2 + 23,
-          card.keywords.join(" · "),
-          {
-            fontSize: "9px",
-            color: TEXT.textKeyword,
-            originY: 0,
-          },
-        );
+        addCardText(scene, this, 0, -CARD_H / 2 + 23, card.keywords.join(" · "), {
+          fontSize: "9px",
+          color: TEXT.textKeyword,
+          originY: 0,
+        });
       }
 
       // Compact token rules (compileEffect + addEffectLines) — the whole face
@@ -232,35 +215,21 @@ export class CardView extends Phaser.GameObjects.Container {
         background: { color: 0x000000 },
         warnLabel: card.name,
       });
-      effectBlock.container.setPosition(
-        0,
-        -CARD_H / 2 + (hasKeywords ? 36 : 28),
-      );
+      effectBlock.container.setPosition(0, -CARD_H / 2 + (hasKeywords ? 36 : 28));
       this.add(effectBlock.container);
 
       // Energy cost badge: only for cards with energyCost > 0.
       if (card.energyCost > 0) {
-        const badgeBg = scene.add.image(
-          CARD_W / 2 - 16,
-          -CARD_H / 2 + 16,
-          "energy-icon",
-        );
+        const badgeBg = scene.add.image(CARD_W / 2 - 16, -CARD_H / 2 + 16, "energy-icon");
         badgeBg.setDisplaySize(28, 28);
         this.add(badgeBg);
 
-        addCardText(
-          scene,
-          this,
-          CARD_W / 2 - 16,
-          -CARD_H / 2 + 16,
-          String(card.energyCost),
-          {
-            fontSize: "16px",
-            color: TEXT.textEnergy,
-            bold: true,
-            originY: 0.5,
-          },
-        );
+        addCardText(scene, this, CARD_W / 2 - 16, -CARD_H / 2 + 16, String(card.energyCost), {
+          fontSize: "16px",
+          color: TEXT.textEnergy,
+          bold: true,
+          originY: 0.5,
+        });
       }
 
       // Exhaust badge: the flag lives on the card (not the effect), so it cannot
@@ -284,19 +253,12 @@ export class CardView extends Phaser.GameObjects.Container {
       this.add(costRing);
 
       // Cost label + value (cost is the Progress needed to clear the Hazard).
-      addCardText(
-        scene,
-        this,
-        CARD_W / 2 - 21,
-        CARD_H / 2 - 21,
-        String(worldCard.cost),
-        {
-          fontSize: "30px",
-          color: TEXT.textCost,
-          bold: true,
-          originY: 0.5,
-        },
-      );
+      addCardText(scene, this, CARD_W / 2 - 21, CARD_H / 2 - 21, String(worldCard.cost), {
+        fontSize: "30px",
+        color: TEXT.textCost,
+        bold: true,
+        originY: 0.5,
+      });
       addCardText(scene, this, CARD_W / 2 - 21, CARD_H / 2 - 3, "to clear", {
         fontSize: "8px",
         color: TEXT.textMuted,
@@ -305,18 +267,11 @@ export class CardView extends Phaser.GameObjects.Container {
 
       // Keywords.
       if (worldCard.keywords.length > 0) {
-        addCardText(
-          scene,
-          this,
-          0,
-          -CARD_H / 2 + 23,
-          worldCard.keywords.join(" · "),
-          {
-            fontSize: "9px",
-            color: TEXT.textKeyword,
-            originY: 0,
-          },
-        );
+        addCardText(scene, this, 0, -CARD_H / 2 + 23, worldCard.keywords.join(" · "), {
+          fontSize: "9px",
+          color: TEXT.textKeyword,
+          originY: 0,
+        });
       }
 
       // onEndOfTurn, onDiscarded, onCleared, onPartialClear — compact token
@@ -334,16 +289,6 @@ export class CardView extends Phaser.GameObjects.Container {
         color: string;
       }[] = [
         {
-          leadIcon: "eachTurn",
-          effect: worldCard.onEndOfTurn,
-          color: TEXT.textHeld,
-        },
-        {
-          leadIcon: "onDiscard",
-          effect: worldCard.onDiscarded,
-          color: TEXT.textPenalty,
-        },
-        {
           leadIcon: "onClear",
           effect: worldCard.onCleared,
           color: TEXT.textReward,
@@ -353,20 +298,26 @@ export class CardView extends Phaser.GameObjects.Container {
           effect: worldCard.onPartialClear,
           color: TEXT.textPenalty,
         },
+        {
+          leadIcon: "onDiscard",
+          effect: worldCard.onDiscarded,
+          color: TEXT.textPenalty,
+        },
+        {
+          leadIcon: "eachTurn",
+          effect: worldCard.onEndOfTurn,
+          color: TEXT.textHeld,
+        },
       ];
       for (const block of triggerBlocks) {
-        const { container, height } = addEffectLines(
-          scene,
-          compileEffect(block.effect),
-          {
-            maxWidth: CARD_W - 18,
-            baseColor: block.color,
-            fontSize: 10,
-            leadIcon: block.leadIcon,
-            background: { color: 0x000000, alpha: 0.8 },
-            warnLabel: card.name,
-          },
-        );
+        const { container, height } = addEffectLines(scene, compileEffect(block.effect), {
+          maxWidth: CARD_W - 18,
+          baseColor: TEXT.textLight,
+          fontSize: 12,
+          leadIcon: block.leadIcon,
+          background: { color: 0x000000, alpha: 0.8 },
+          warnLabel: card.name,
+        });
         if (height === 0) {
           container.destroy();
           continue;
@@ -391,8 +342,10 @@ export class CardView extends Phaser.GameObjects.Container {
 
   /** Apply a coloured stroke to communicate this card's selection state. */
   applyHighlight(kind: HighlightKind, frameStyle: FrameStyle): void {
-    const { strokeWidth, strokeColor, fillColor, fillAlpha } =
-      highlightDescriptor(kind, frameStyle);
+    const { strokeWidth, strokeColor, fillColor, fillAlpha } = highlightDescriptor(
+      kind,
+      frameStyle,
+    );
     this.highlightRect.setFillStyle(fillColor, fillAlpha);
     this.highlightRect.setStrokeStyle(strokeWidth, strokeColor);
   }
@@ -480,8 +433,7 @@ export function applyCardHighlight(
   // The highlight rectangle is list[1] (list[0] is the cardfront image)
   const bg = container.list[1] as Phaser.GameObjects.Rectangle | undefined;
   if (bg === undefined) return;
-  const { strokeWidth, strokeColor, fillColor, fillAlpha } =
-    highlightDescriptor(kind, frameStyle);
+  const { strokeWidth, strokeColor, fillColor, fillAlpha } = highlightDescriptor(kind, frameStyle);
   bg.setFillStyle(fillColor, fillAlpha);
   bg.setStrokeStyle(strokeWidth, strokeColor);
 }
@@ -572,9 +524,7 @@ export function updateCostRing(
     return;
   }
 
-  const ring = (
-    container as Phaser.GameObjects.Container & { costRing?: CostRing }
-  ).costRing;
+  const ring = (container as Phaser.GameObjects.Container & { costRing?: CostRing }).costRing;
   if (ring === undefined) return;
   updateRingObject(scene, ring, fraction, ringAccent);
 }

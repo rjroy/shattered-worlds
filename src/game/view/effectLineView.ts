@@ -17,10 +17,10 @@
  * CENTRE of the block; the caller positions it and advances its cursor by
  * `height + spacing`, replacing the old measure-the-Text-objects dance.
  */
-import Phaser from 'phaser'
-import type { EffectLine, IconId } from '../../core/view/effectGlyphs'
-import { textStyle } from './presentation'
-import { EFFECT_ROW } from './layout'
+import Phaser from "phaser";
+import type { EffectLine, IconId } from "../../core/view/effectGlyphs";
+import { textStyle } from "./presentation";
+import { EFFECT_ROW } from "./layout";
 import {
   EFFECT_ICON_PLACEHOLDERS,
   EFFECT_ICON_TEXTURES,
@@ -36,7 +36,7 @@ import {
   stackLines,
   valueTokenStyle,
   withLeadIcon,
-} from './effectLineLayout'
+} from "./effectLineLayout";
 
 // ---------------------------------------------------------------------------
 // Placeholder icon textures
@@ -56,38 +56,34 @@ import {
  * before preload() runs, so generation would work there too.
  */
 export function ensureEffectIconTextures(scene: Phaser.Scene): void {
-  const size = EFFECT_ROW.iconTextureSize
+  const size = EFFECT_ROW.iconTextureSize;
   for (const iconId of Object.keys(EFFECT_ICON_TEXTURES) as IconId[]) {
-    const key = EFFECT_ICON_TEXTURES[iconId]
-    if (scene.textures.exists(key)) continue
-    const texture = scene.textures.createCanvas(key, size, size)
+    const key = EFFECT_ICON_TEXTURES[iconId];
+    if (scene.textures.exists(key)) continue;
+    const texture = scene.textures.createCanvas(key, size, size);
     // Defensive, unreachable guard: createCanvas returns null only on a key
     // collision, and the exists() check above just ruled that out (Phaser is
     // single-threaded, so the key cannot appear between the two calls).
-    if (texture === null) continue
-    drawPlaceholderIcon(texture.getContext(), iconId, size)
-    texture.refresh()
+    if (texture === null) continue;
+    drawPlaceholderIcon(texture.getContext(), iconId, size);
+    texture.refresh();
   }
 }
 
-function drawPlaceholderIcon(
-  ctx: CanvasRenderingContext2D,
-  iconId: IconId,
-  size: number,
-): void {
-  const { letter, color } = EFFECT_ICON_PLACEHOLDERS[iconId]
-  const half = size / 2
-  ctx.clearRect(0, 0, size, size)
-  ctx.fillStyle = color
-  ctx.beginPath()
-  ctx.arc(half, half, half - 1, 0, Math.PI * 2)
-  ctx.fill()
+function drawPlaceholderIcon(ctx: CanvasRenderingContext2D, iconId: IconId, size: number): void {
+  const { letter, color } = EFFECT_ICON_PLACEHOLDERS[iconId];
+  const half = size / 2;
+  ctx.clearRect(0, 0, size, size);
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.arc(half, half, half - 1, 0, Math.PI * 2);
+  ctx.fill();
   // Dark letter on the coloured disc — readable on every hue in the palette.
-  ctx.fillStyle = '#10131a'
-  ctx.font = `bold ${Math.round(size * 0.6)}px sans-serif`
-  ctx.textAlign = 'center'
-  ctx.textBaseline = 'middle'
-  ctx.fillText(letter, half, half + 1)
+  ctx.fillStyle = "#10131a";
+  ctx.font = `bold ${Math.round(size * 0.6)}px sans-serif`;
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText(letter, half, half + 1);
 }
 
 // ---------------------------------------------------------------------------
@@ -96,23 +92,23 @@ function drawPlaceholderIcon(
 
 export interface EffectLinesOptions {
   /** Available block width; an over-wide row scales down to fit and warns. */
-  maxWidth: number
+  maxWidth: number;
   /** Colour for text tokens and unemphasised values, e.g. TEXT.textLight. */
-  baseColor: string
+  baseColor: string;
   /** Token text px for main/branch lines (riders render smaller). Default EFFECT_ROW.fontSize. */
-  fontSize?: number
+  fontSize?: number;
   /** World-block trigger icon: leads the first line, later lines hang indented under it. */
-  leadIcon?: IconId
+  leadIcon?: IconId;
   /** Per-row backing rectangle (the effect block's black backing on busy art). */
-  background?: { color: number; alpha?: number }
+  background?: { color: number; alpha?: number };
   /** Name used in the overflow warning — pass the card name. */
-  warnLabel?: string
+  warnLabel?: string;
 }
 
 export interface EffectLinesResult {
-  container: Phaser.GameObjects.Container
+  container: Phaser.GameObjects.Container;
   /** Total block height, always a whole pixel; the caller advances its stacking cursor by this. */
-  height: number
+  height: number;
 }
 
 /**
@@ -139,65 +135,65 @@ export function addEffectLines(
   lines: readonly EffectLine[],
   opts: EffectLinesOptions,
 ): EffectLinesResult {
-  ensureEffectIconTextures(scene)
+  ensureEffectIconTextures(scene);
 
   const effectiveLines =
-    opts.leadIcon === undefined ? [...lines] : withLeadIcon(lines, opts.leadIcon)
-  const container = scene.add.container(0, 0)
-  if (effectiveLines.length === 0) return { container, height: 0 }
+    opts.leadIcon === undefined ? [...lines] : withLeadIcon(lines, opts.leadIcon);
+  const container = scene.add.container(0, 0);
+  if (effectiveLines.length === 0) return { container, height: 0 };
 
-  const baseFontSize = opts.fontSize ?? EFFECT_ROW.fontSize
+  const baseFontSize = opts.fontSize ?? EFFECT_ROW.fontSize;
   const styles = effectLineStyles(effectiveLines, {
     baseFontSize,
     riderFontSize: riderFontSize(baseFontSize),
     branchIndent: EFFECT_ROW.branchIndent,
     hangIndent: opts.leadIcon === undefined ? 0 : EFFECT_ROW.hangIndent,
-  })
+  });
 
   // Build every row first; the measured line heights then drive the pure
   // vertical stack (per-row centres + total block height) in one computation.
   const builtRows = effectiveLines.map((line, index) => {
     // The ?? arm is unreachable: styles is index-aligned with lines.
-    const style = styles[index] ?? { fontSize: baseFontSize, indent: 0 }
-    return { line, style, ...buildRow(scene, line, style.fontSize, opts) }
-  })
+    const style = styles[index] ?? { fontSize: baseFontSize, indent: 0 };
+    return { line, style, ...buildRow(scene, line, style.fontSize, opts) };
+  });
   const stack = stackLines(
     builtRows.map((built) => built.lineHeight),
     EFFECT_ROW.lineSpacing,
-  )
+  );
 
   builtRows.forEach(({ line, style, row, rowWidth }, index) => {
     // The row's children centre on its origin, so place that origin at the
     // line's vertical centre — an overflow scale then shrinks the row toward
     // its own centre instead of dragging it upward.
-    const centerY = stack.centers[index] ?? 0 // unreachable ??: centers is index-aligned with rows
-    row.setPosition(Math.round(style.indent), Math.round(centerY))
+    const centerY = stack.centers[index] ?? 0; // unreachable ??: centers is index-aligned with rows
+    row.setPosition(Math.round(style.indent), Math.round(centerY));
 
-    const available = availableWidthFor(style, opts.maxWidth)
-    const scale = fitRowScale(rowWidth, available)
+    const available = availableWidthFor(style, opts.maxWidth);
+    const scale = fitRowScale(rowWidth, available);
     if (scale < 1) {
-      row.setScale(scale)
+      row.setScale(scale);
       console.warn(
-        `[effectLineView] effect line wider than ${available}px on ${opts.warnLabel ?? 'card'}: ` +
+        `[effectLineView] effect line wider than ${available}px on ${opts.warnLabel ?? "card"}: ` +
           `"${lineWarningText(line)}" (${Math.ceil(rowWidth)}px) — scaled to fit`,
-      )
+      );
     }
 
-    container.add(row)
-  })
+    container.add(row);
+  });
 
   // Whole-pixel contract: ceil so the caller's stacking cursor stays integral.
-  return { container, height: Math.ceil(stack.height) }
+  return { container, height: Math.ceil(stack.height) };
 }
 
 interface RowBuild {
-  row: Phaser.GameObjects.Container
-  rowWidth: number
-  lineHeight: number
+  row: Phaser.GameObjects.Container;
+  rowWidth: number;
+  lineHeight: number;
 }
 
 /** A token object slot: texts are built first (they set the line height). */
-type TokenSlot = { kind: 'text'; text: Phaser.GameObjects.Text } | { kind: 'icon'; icon: IconId }
+type TokenSlot = { kind: "text"; text: Phaser.GameObjects.Text } | { kind: "icon"; icon: IconId };
 
 /**
  * Build one row container with its children centred on (0, 0). Two passes:
@@ -212,50 +208,53 @@ function buildRow(
   fontSize: number,
   opts: EffectLinesOptions,
 ): RowBuild {
-  const slots: TokenSlot[] = []
-  let textHeight = 0
+  const slots: TokenSlot[] = [];
+  let textHeight = 0;
   for (const token of line.tokens) {
-    if (token.kind === 'icon') {
-      slots.push({ kind: 'icon', icon: token.icon })
-      continue
+    if (token.kind === "icon") {
+      slots.push({ kind: "icon", icon: token.icon });
+      continue;
     }
     const style =
-      token.kind === 'value'
+      token.kind === "value"
         ? valueTokenStyle(token.emphasis, opts.baseColor)
-        : { color: opts.baseColor, glowColor: undefined }
+        : { color: opts.baseColor, glowColor: undefined };
     const text = scene.add.text(
       0,
       0,
       normalizeTokenText(token.text),
       textStyle({ fontSize: `${fontSize}px`, color: style.color }),
-    )
-    text.setOrigin(0.5, 0.5)
+    );
+    text.setOrigin(0.5, 0.5);
     if (style.glowColor !== undefined) {
       // The 'progress' emphasis glow — same treatment CardView applied per
       // line via string-sniffing, now driven by the emphasis field.
-      text.preFX?.addGlow(style.glowColor, EFFECT_VALUE_GLOW.outer, EFFECT_VALUE_GLOW.inner)
+      text.preFX?.addGlow(style.glowColor, EFFECT_VALUE_GLOW.outer, EFFECT_VALUE_GLOW.inner);
     }
-    textHeight = Math.max(textHeight, text.height)
-    slots.push({ kind: 'text', text })
+    textHeight = Math.max(textHeight, text.height);
+    slots.push({ kind: "text", text });
   }
 
-  const lineHeight = lineHeightOf(textHeight, fontSize)
+  const lineHeight = lineHeightOf(textHeight, fontSize);
 
   // Second pass: icons sized to the line height, in original token order.
   const objects = slots.map((slot) =>
-    slot.kind === 'text'
+    slot.kind === "text"
       ? slot.text
-      : scene.add
-          .image(0, 0, EFFECT_ICON_TEXTURES[slot.icon])
-          .setDisplaySize(lineHeight, lineHeight),
-  )
+      : (function () {
+          const img = scene.add.image(0, 0, EFFECT_ICON_TEXTURES[slot.icon]);
+          const scale = lineHeight / Math.max(img.width, img.height);
+          img.setScale(scale);
+          return img;
+        })(),
+  );
 
   const { rowWidth, centers } = layoutRowTokens(
     objects.map((obj) => obj.displayWidth),
     EFFECT_ROW.tokenGap,
-  )
+  );
 
-  const row = scene.add.container(0, 0)
+  const row = scene.add.container(0, 0);
   if (opts.background !== undefined && rowWidth > 0) {
     const bg = scene.add.rectangle(
       0,
@@ -264,16 +263,16 @@ function buildRow(
       lineHeight + 2,
       opts.background.color,
       opts.background.alpha ?? 0.5,
-    )
-    bg.setRounded(4)
-    row.add(bg)
+    );
+    bg.setRounded(4);
+    row.add(bg);
   }
   objects.forEach((obj, index) => {
-    const center = centers[index]
-    if (center === undefined) return // unreachable: centers is index-aligned with objects
-    obj.setPosition(Math.round(-rowWidth / 2 + center), 0)
-    row.add(obj)
-  })
+    const center = centers[index];
+    if (center === undefined) return; // unreachable: centers is index-aligned with objects
+    obj.setPosition(Math.round(-rowWidth / 2 + center), 0);
+    row.add(obj);
+  });
 
-  return { row, rowWidth, lineHeight }
+  return { row, rowWidth, lineHeight };
 }

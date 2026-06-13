@@ -83,8 +83,8 @@ function rider(tokens: EffectToken[]): EffectLine {
 }
 
 /** Rider for a keyword bonus: `+2 vs Spore`. The keyword stays plain text. */
-function bonusRider(bonus: { tag: Keyword; amount: number }): EffectLine {
-  return rider([value(`+${bonus.amount}`), text("vs"), text(bonus.tag)]);
+function bonusRider(bonus: { tag: Keyword; amount: number }, emphasis?: ValueEmphasis): EffectLine {
+  return rider([value(`+${bonus.amount}`, emphasis), text("vs"), text(bonus.tag)]);
 }
 
 /** Rider for a scaled effect: `+1 per Spore in hand` / `−1 per Spore in hand`. */
@@ -127,8 +127,8 @@ interface CompileContext {
 function compile(effect: CardEffect, ctx: CompileContext): EffectLine[] {
   switch (effect.kind) {
     case "DealProgress": {
-      const lines = [main([text("+"), icon("progress"), value(`${effect.base}`, "progress")])];
-      if (effect.bonus) lines.push(bonusRider(effect.bonus));
+      const lines = [main([text("+"), value(`${effect.base}`, "progress"), icon("progress")])];
+      if (effect.bonus) lines.push(bonusRider(effect.bonus, "progress"));
       return lines;
     }
     case "DealProgressScaled":
@@ -140,7 +140,7 @@ function compile(effect: CardEffect, ctx: CompileContext): EffectLine[] {
       const lines = [
         main([text("+"), icon("progressAll"), value(`${effect.base}`, "progress"), text("all")]),
       ];
-      if (effect.bonus) lines.push(bonusRider(effect.bonus));
+      if (effect.bonus) lines.push(bonusRider(effect.bonus, "progress"));
       return lines;
     }
     case "Draw": {
