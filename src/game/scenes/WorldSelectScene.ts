@@ -124,7 +124,7 @@ export class WorldSelectScene extends Phaser.Scene {
       )
       .setOrigin(0.5, 0);
     button.add([bg, label]);
-    bg.on("pointerover", () => button.setScale(1.05));
+    bg.on("pointerover", () => button.setScale(1.08));
     bg.on("pointerout", () => button.setScale(1));
     bg.on("pointerdown", () => this.showHelpOverlay());
   }

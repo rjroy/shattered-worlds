@@ -332,7 +332,7 @@ export class HelpOverlayView extends Phaser.GameObjects.Container {
       addText(parent, x + 28, y - 17, text, {
         fontSize: "13px",
         color: TEXT.textMuted,
-        wordWrap: { width: 275 },
+        wordWrap: { width: 270 },
         lineSpacing: 2,
       });
     }
@@ -375,7 +375,7 @@ export class HelpOverlayView extends Phaser.GameObjects.Container {
       label: string,
     ): void {
       addText(parent, x, y, label, {
-        fontSize: "13px",
+        fontSize: "14px",
         color: TEXT.textKeyword,
         fontStyle: "bold",
       });
@@ -556,7 +556,8 @@ export class HelpOverlayView extends Phaser.GameObjects.Container {
             page,
             145,
             0,
-            "When you select a player card and hover a legal hazard, the preview compares the card text against the hazard cost and keywords.",
+            "When you select a player card and hover a legal hazard, " +
+              "the preview compares the card text against the hazard cost and keywords.",
             {
               fontSize: "13px",
               color: TEXT.textMuted,
@@ -567,8 +568,8 @@ export class HelpOverlayView extends Phaser.GameObjects.Container {
           addText(
             page,
             145,
-            94,
-            "Example: Explore adds 2 Progress, or 4 Progress against Hidden.",
+            102,
+            "Example: Explore adds 1 Progress, or 1 Progress against Hidden.",
             {
               fontSize: "13px",
               color: TEXT.textKeyword,
@@ -602,7 +603,8 @@ export class HelpOverlayView extends Phaser.GameObjects.Container {
             -100,
             -12,
             "Effect text",
-            "Progress cards target hazards. Draw, heal, energy, and deck cards often play immediately.",
+            "Progress cards target hazards. " +
+              "Draw, heal, energy, and deck cards often play immediately.",
             TEXT.textLight,
           );
           addCallout(
@@ -626,7 +628,8 @@ export class HelpOverlayView extends Phaser.GameObjects.Container {
             page,
             150,
             6,
-            "If a player card says it gets a bonus against Hidden, Creature, or Slow, look for that keyword on the hazard row before spending it.",
+            "If a player card says it gets a bonus against Hidden, Creature, or Slow, " +
+              "look for that keyword on the hazard row before spending it.",
             {
               fontSize: "13px",
               color: TEXT.textMuted,
@@ -634,22 +637,16 @@ export class HelpOverlayView extends Phaser.GameObjects.Container {
               lineSpacing: 3,
             },
           );
+          addText(page, 150, 110, "Some cards will allow you to choose effects.", {
+            fontSize: "13px",
+            color: TEXT.textKeyword,
+            wordWrap: { width: 210 },
+            lineSpacing: 3,
+          });
           addText(
             page,
             150,
-            106,
-            "Modal cards ask you to choose a branch. The chooser labels come from the card rules.",
-            {
-              fontSize: "13px",
-              color: TEXT.textKeyword,
-              wordWrap: { width: 210 },
-              lineSpacing: 3,
-            },
-          );
-          addText(
-            page,
-            150,
-            158,
+            142,
             "Exhaust cards are destroyed on play, not recycled. One use only.",
             {
               fontSize: "13px",
@@ -672,7 +669,7 @@ export class HelpOverlayView extends Phaser.GameObjects.Container {
           const rightX = 40;
           const colWrap = 300;
 
-          addIconSectionHeader(page, leftX, -171, "Make Progress");
+          addIconSectionHeader(page, leftX, -173, "Make Progress");
           addIconRow(
             page,
             leftX,
@@ -701,7 +698,7 @@ export class HelpOverlayView extends Phaser.GameObjects.Container {
             colWrap,
           );
 
-          addIconSectionHeader(page, leftX, -55, "Resources");
+          addIconSectionHeader(page, leftX, -57, "Resources");
           addIconRow(
             page,
             leftX,
@@ -730,7 +727,7 @@ export class HelpOverlayView extends Phaser.GameObjects.Container {
             colWrap,
           );
 
-          addIconSectionHeader(page, leftX, 61, "Either Deck");
+          addIconSectionHeader(page, leftX, 59, "Either Deck");
           addIconRow(
             page,
             leftX,
@@ -750,7 +747,7 @@ export class HelpOverlayView extends Phaser.GameObjects.Container {
             colWrap,
           );
 
-          addIconSectionHeader(page, rightX, -171, "Player Deck");
+          addIconSectionHeader(page, rightX, -173, "Player Deck");
           addIconRow(page, rightX, -146, "draw", "Draw", "Draw cards from player deck.", colWrap);
           addIconRow(
             page,
@@ -771,7 +768,7 @@ export class HelpOverlayView extends Phaser.GameObjects.Container {
             colWrap,
           );
 
-          addIconSectionHeader(page, rightX, -55, "World Deck");
+          addIconSectionHeader(page, rightX, -57, "World Deck");
           addIconRow(
             page,
             rightX,
@@ -812,12 +809,12 @@ export class HelpOverlayView extends Phaser.GameObjects.Container {
           // World-trigger icons lead the colored blocks on a hazard face, so their
           // names echo those tints here. Laid as a full-width strip below the columns.
           addPanel(page, 0, 188, 745, 70);
-          addIconSectionHeader(page, leftX, 159, "Hazard triggers");
+          addIconSectionHeader(page, leftX, 159, "Hazard Triggers");
           const trigWrap = 150;
           addIconRow(
             page,
             leftX,
-            192,
+            191,
             "eachTurn",
             "Each turn",
             "Fires each turn it stays in hand.",
@@ -826,8 +823,8 @@ export class HelpOverlayView extends Phaser.GameObjects.Container {
           );
           addIconRow(
             page,
-            -177,
-            192,
+            -178,
+            191,
             "onDiscard",
             "If discarded",
             "Fires if you discard the hazard.",
@@ -836,8 +833,8 @@ export class HelpOverlayView extends Phaser.GameObjects.Container {
           );
           addIconRow(
             page,
-            21,
-            192,
+            19,
+            191,
             "onClear",
             "Clear it",
             "Fires when you fully clear it.",
@@ -846,8 +843,8 @@ export class HelpOverlayView extends Phaser.GameObjects.Container {
           );
           addIconRow(
             page,
-            209,
-            192,
+            206,
+            191,
             "onPartialClear",
             "Partial clear",
             "Fires on some, but not enough, Progress.",
