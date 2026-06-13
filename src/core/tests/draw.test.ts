@@ -328,13 +328,12 @@ describe("resolveForceDestroy", () => {
 
     expect(after.hand).toHaveLength(2);
     expect(after.pendingForceDestroy).toBe(0);
-    expect(events).toEqual([
-      { type: "CardDestroyed", ids: expect.any(String) },
-    ]);
+    expect(events.length).toBe(1);
+    expect((events[0] as { type: string }).type).toEqual("CardDestroyed");
     // The destroyed id is one that was in the original hand.
-    const destroyedId = (events[0] as { id: string }).id;
-    expect(players.some((c) => c.id === destroyedId)).toBe(true);
-    expect(after.hand.some((c) => c.id === destroyedId)).toBe(false);
+    const destroyedIds = (events[0] as { ids: readonly string[] }).ids;
+    expect(players.some((c) => destroyedIds.includes(c.id))).toBe(true);
+    expect(after.hand.some((c) => destroyedIds.includes(c.id))).toBe(false);
   });
 
   it("spares world cards — only player cards are eligible", () => {
@@ -379,8 +378,8 @@ describe("resolveForceDestroy", () => {
     const { state: after, events } = resolveForceDestroy(state);
 
     expect(after.hand).toHaveLength(1);
-    expect(events).toHaveLength(2);
-    const ids = events.map((e) => (e as { id: string }).id);
+    expect(events).toHaveLength(1);
+    const ids = events.flatMap((e) => (e as { ids: readonly string[] }).ids);
     expect(new Set(ids).size).toBe(2); // distinct
   });
 });
@@ -443,11 +442,16 @@ describe("resolveForceDestroy with Brace", () => {
 
     const { state: after, events } = resolveForceDestroy(state);
 
-    // 1 absorbed by brace, 2 remaining → 2 cards destroyed
+    // 1 absorbed by brace, 2 remaining → 1 card destroyed event (2 cards)
     expect(after.hand).toHaveLength(1);
     expect(after.pendingForceDestroy).toBe(0);
     expect(after.braceCharges).toBe(0);
-    expect(events.filter((e) => e.type === "CardDestroyed")).toHaveLength(2);
+    expect(events.filter((e) => e.type === "CardDestroyed")).toHaveLength(1);
+    expect(
+      events
+        .filter((e) => e.type === "CardDestroyed")
+        .reduce((total, e) => total + e.ids.length, 0),
+    ).toBe(2);
     const consumed = events.find((e) => e.type === "BraceConsumed");
     if (consumed?.type === "BraceConsumed") {
       expect(consumed.absorbed).toBe(1);
@@ -470,7 +474,12 @@ describe("resolveForceDestroy with Brace", () => {
     expect(after.hand).toHaveLength(1);
     expect(after.pendingForceDestroy).toBe(0);
     expect(after.braceCharges).toBe(0);
-    expect(events.filter((e) => e.type === "CardDestroyed")).toHaveLength(2);
+    expect(events.filter((e) => e.type === "CardDestroyed")).toHaveLength(1);
+    expect(
+      events
+        .filter((e) => e.type === "CardDestroyed")
+        .reduce((total, e) => total + e.ids.length, 0),
+    ).toBe(2);
     expect(events.some((e) => e.type === "BraceConsumed")).toBe(false);
   });
 

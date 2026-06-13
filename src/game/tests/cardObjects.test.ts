@@ -926,8 +926,8 @@ describe('CardView world-card trigger blocks', () => {
       textContents: [':', '-1'], // core's true minus, normalized for the card font
     })
     expect(rowTokens(rowsOf(onClear!)[0]!)).toEqual({
-      iconKeys: ['effect-icon-on-clear', 'effect-icon-energy'],
-      textContents: ['+1'],
+      iconKeys: ['effect-icon-on-clear', 'energy-icon'],
+      textContents: [':', '+1'],
     })
     // No trigger icon for the None blocks appears anywhere.
     const allKeys = rendered.containers.flatMap((c) => rowTokens(c).iconKeys)
