@@ -13,6 +13,7 @@
  */
 import type { CardEffect, CardId, GameEvent, GameState } from '../model/types'
 import type { CardCatalog } from '../model/catalog'
+import type { EffectLine } from '../view/effectGlyphs'
 
 // ---------------------------------------------------------------------------
 // EffectResult — the canonical { state, events } shape
@@ -77,6 +78,15 @@ export interface EffectContext {
 export interface CompileContext {
   worldId: string
   compactSequences: boolean
+  /**
+   * Recursion seam for composite handlers (Modal / Sequence) — the compile-time
+   * mirror of `EffectContext.apply`. Bound to the dispatcher so composite
+   * handlers compile their child branches/steps without importing `registry.ts`
+   * (which would form a `composite.ts -> registry.ts -> composite.ts` cycle).
+   * A composite recurses with `ctx.compile(child, { ...ctx, compactSequences })`,
+   * choosing the child's `compactSequences` per its own composition rules.
+   */
+  compile(effect: CardEffect, ctx: CompileContext): EffectLine[]
 }
 
 // ---------------------------------------------------------------------------

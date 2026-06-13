@@ -36,7 +36,7 @@ Branch: `effect-handler-registry` (off `master`).
 
 - ☑ **Step 1** (Phase 0) — make silent switches fail closed (delete 6 `default:`, enumerate cases)
 - ☑ **Step 2** (Phase 1) — scaffold EffectHandler base + EffectContext + EffectResult
-- ☐ **Step 3** (Phase 1) — composite handlers (Modal/Sequence) + recursion seam
+- ☑ **Step 3** (Phase 1) — composite handlers (Modal/Sequence) + recursion seam
 - ☐ **Step 4** (Phase 1) — DealProgress handlers + HazardTargetingHandler
 - ☐ **Step 5** (Phase 1) — registry + dispatcher wiring (GO/NO-GO gate)
 - ☐ **Step 6** (Phase 2) — migrate remaining leaf kinds, grouped by file
@@ -79,4 +79,30 @@ Branch: `effect-handler-registry` (off `master`).
   assert Phaser-freeness. Not a behavior change; no test files edited.
 - Reviewer confirmed: helpers verbatim, no `any`/`as never`/casts, base defaults exact,
   HazardTargetingHandler stays abstract. Gate green: typecheck, 616 pass / 0 fail, lint.
-- Commit pending below.
+- Commit `7ae6ba7`.
+
+### Step 3 — composite handlers + recursion seam (complete)
+- New `src/core/effects/composite.ts`: `ModalHandler`, `SequenceHandler`, relocated `effectAtStep`.
+  All six concerns ported verbatim from the Modal/Sequence cases. `effectAtStep` re-export stub
+  left in feedback.ts (TableScene import swap deferred to Step 8).
+- **Recursion seam shape:** `apply` recurses via `ctx.apply`; `compile` via a new `ctx.compile`
+  callback added to `CompileContext` (symmetric with `EffectContext.apply`). Modal forces
+  `compactSequences:true`; Sequence threads inherited value. Sequence threads only `state` into
+  children (`{...ctx, state}`), leaving targeting/selfId intact — matches master.
+- **Cycle decision (KEY, validated by reviewer):** `apply`/`compile` are cycle-free (composite
+  imports neither registry nor applyEffect). `describe`/`structuralSpec`/`isPlayable` recurse via
+  direct imports of the public dispatchers (`describeEffect`; new `structuralSpecOf`/`isPlayableOf`
+  wrappers exported from available.ts). After Step 5 this forms `registry→composite→{describe,
+  available}→registry` paper cycles. **Verdict: BENIGN** — every cross-module call is call-time
+  only, handlers have no fields/constructor, registry only allocates singletons. Safe under ESM
+  live-bindings. **Gate-5 trigger (c) NOT tripped** (it concerns the apply→registry cycle, broken
+  by ctx.apply). Step 5 must keep describe.ts/available.ts using EFFECTS call-time only.
+- structuralSpec discriminants copied verbatim: Modal→`{kind:'modal'}`, Sequence→`{kind:'compound'}`.
+- Two private token helpers (`text`/`main`) duplicated into composite.ts (module-private in
+  effectGlyphs.ts). Reviewer: accept the dup — pure 2-line constructors, no logic to drift;
+  importing them back re-adds the `composite→effectGlyphs` edge the seam avoids. Promote to a
+  shared `effects/tokens.ts` only if a third user appears.
+- Two verbatim-ported `!` non-null assertions (`steps[0]!`, `s[0]!`); `s[0]!` is guard-safe,
+  `steps[0]!` carries master's "empty Sequence invalid by construction" assumption — add a comment
+  when next touched.
+- Gate green: typecheck, 617 pass / 0 fail (+1 = composite.ts boundary case), lint, build.

@@ -46,16 +46,14 @@ export function connectorLine(source: Point, target: Point): { from: Point; to: 
 }
 
 /**
- * The CardEffect that runs at `step`, looking through a Sequence (steps line up
- * 1:1 with the compound targeting steps) or a Modal (step is the chosen branch
- * index). For a single effect, `step` is ignored and the effect is returned.
- * Returns null when the step/branch index is out of range.
+ * `effectAtStep` answers a composite-structure question ("which child effect
+ * runs at step N of a Sequence/Modal"), so it now lives in core beside the
+ * composite handlers (`src/core/effects/composite`). Re-exported here so its
+ * existing importers (`TableScene`, the feedback tests) keep working unchanged
+ * until Step 8 switches them to the core import. This stub is a deliberate
+ * migration seam, not dead code.
  */
-export function effectAtStep(effect: CardEffect, step: number): CardEffect | null {
-  if (effect.kind === 'Sequence') return effect.steps[step] ?? null
-  if (effect.kind === 'Modal') return effect.branches[step] ?? null
-  return effect
-}
+export { effectAtStep } from '../../core/effects/composite'
 
 /**
  * The visual connector style a card's play draws toward its target. The type
