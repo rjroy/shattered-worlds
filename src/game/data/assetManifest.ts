@@ -27,6 +27,26 @@ import effectIconEachTurnUrl from '../assets/effect-icons/effect-icon-each-turn.
 import effectIconOnDiscardUrl from '../assets/effect-icons/effect-icon-on-discard.png'
 import effectIconOnClearUrl from '../assets/effect-icons/effect-icon-on-clear.png'
 import effectIconOnPartialClearUrl from '../assets/effect-icons/effect-icon-on-partial-clear.png'
+import effectIconProgress128Url from '../assets/effect-icons/128/effect-icon-progress.png'
+import effectIconProgressAll128Url from '../assets/effect-icons/128/effect-icon-progress-all.png'
+import effectIconDraw128Url from '../assets/effect-icons/128/effect-icon-draw.png'
+import effectIconWorldDraw128Url from '../assets/effect-icons/128/effect-icon-world-draw.png'
+import effectIconHp128Url from '../assets/effect-icons/128/effect-icon-hp.png'
+import effectIconDiscard128Url from '../assets/effect-icons/128/effect-icon-discard.png'
+import effectIconDestroy128Url from '../assets/effect-icons/128/effect-icon-destroy.png'
+import effectIconExile128Url from '../assets/effect-icons/128/effect-icon-exile.png'
+import effectIconReturn128Url from '../assets/effect-icons/128/effect-icon-return.png'
+import effectIconAddCard128Url from '../assets/effect-icons/128/effect-icon-add-card.png'
+import effectIconThreat128Url from '../assets/effect-icons/128/effect-icon-threat.png'
+import effectIconBrace128Url from '../assets/effect-icons/128/effect-icon-brace.png'
+import effectIconEnergy128Url from '../assets/effect-icons/128/effect-icon-energy.png'
+import effectIconSkipDraw128Url from '../assets/effect-icons/128/effect-icon-skip-draw.png'
+import effectIconSurvive128Url from '../assets/effect-icons/128/effect-icon-survive.png'
+import effectIconVanish128Url from '../assets/effect-icons/128/effect-icon-vanish.png'
+import effectIconEachTurn128Url from '../assets/effect-icons/128/effect-icon-each-turn.png'
+import effectIconOnDiscard128Url from '../assets/effect-icons/128/effect-icon-on-discard.png'
+import effectIconOnClear128Url from '../assets/effect-icons/128/effect-icon-on-clear.png'
+import effectIconOnPartialClear128Url from '../assets/effect-icons/128/effect-icon-on-partial-clear.png'
 import bigboxRealityUrl from '../assets/themes/zombie-big-box/bigbox-reality.webp'
 import zombieIntrusionUrl from '../assets/themes/zombie-big-box/intrusion-overlay.webp'
 import zombieCardfrontUrl from '../assets/themes/zombie-big-box/zombie-cardfront.webp'
@@ -123,6 +143,26 @@ export const assetManifest: Record<string, string> = {
   'effect-icon-on-discard': effectIconOnDiscardUrl,
   'effect-icon-on-clear': effectIconOnClearUrl,
   'effect-icon-on-partial-clear': effectIconOnPartialClearUrl,
+  'effect-icon-progress-128': effectIconProgress128Url,
+  'effect-icon-progress-all-128': effectIconProgressAll128Url,
+  'effect-icon-draw-128': effectIconDraw128Url,
+  'effect-icon-world-draw-128': effectIconWorldDraw128Url,
+  'effect-icon-hp-128': effectIconHp128Url,
+  'effect-icon-discard-128': effectIconDiscard128Url,
+  'effect-icon-destroy-128': effectIconDestroy128Url,
+  'effect-icon-exile-128': effectIconExile128Url,
+  'effect-icon-return-128': effectIconReturn128Url,
+  'effect-icon-add-card-128': effectIconAddCard128Url,
+  'effect-icon-threat-128': effectIconThreat128Url,
+  'effect-icon-brace-128': effectIconBrace128Url,
+  'effect-icon-energy-128': effectIconEnergy128Url,
+  'effect-icon-skip-draw-128': effectIconSkipDraw128Url,
+  'effect-icon-survive-128': effectIconSurvive128Url,
+  'effect-icon-vanish-128': effectIconVanish128Url,
+  'effect-icon-each-turn-128': effectIconEachTurn128Url,
+  'effect-icon-on-discard-128': effectIconOnDiscard128Url,
+  'effect-icon-on-clear-128': effectIconOnClear128Url,
+  'effect-icon-on-partial-clear-128': effectIconOnPartialClear128Url,
   'bigbox-reality': bigboxRealityUrl,
   'zombie-intrusion': zombieIntrusionUrl,
   'zombie-cardfront': zombieCardfrontUrl,
