@@ -35,7 +35,7 @@ Branch: `effect-handler-registry` (off `master`).
 <!-- Status: ☐ pending · ◐ in progress · ☑ done -->
 
 - ☑ **Step 1** (Phase 0) — make silent switches fail closed (delete 6 `default:`, enumerate cases)
-- ☐ **Step 2** (Phase 1) — scaffold EffectHandler base + EffectContext + EffectResult
+- ☑ **Step 2** (Phase 1) — scaffold EffectHandler base + EffectContext + EffectResult
 - ☐ **Step 3** (Phase 1) — composite handlers (Modal/Sequence) + recursion seam
 - ☐ **Step 4** (Phase 1) — DealProgress handlers + HazardTargetingHandler
 - ☐ **Step 5** (Phase 1) — registry + dispatcher wiring (GO/NO-GO gate)
@@ -63,3 +63,20 @@ Branch: `effect-handler-registry` (off `master`).
   → non-null in `dealProgressOf` but `null` in `selectConnectorStyle` (matches master).
 - Gate green both runs: typecheck clean, 613 pass / 0 fail, lint clean.
 - Commit: per-step on feature branch (recoverability across the 9-step refactor).
+- Commit `fa72ee4`.
+
+### Step 2 — scaffold base + context (complete)
+- New: `src/core/effects/{EffectContext.ts, EffectHandler.ts, handState.ts}`.
+  EffectContext.ts holds canonical `EffectResult` (moved from energy.ts), `EffectContext`
+  (pinned shape w/ `apply` recursion seam), `CompileContext {worldId:string; compactSequences:boolean}`,
+  and `ConnectorStyle = 'progress'|'destroy'|'return'`.
+- **ConnectorStyle defined in core, not type-imported from game.** eslint `no-restricted-imports`
+  blocks even `import type` from `**/game/**` into core (no `allowTypeImports` on the base rule).
+  So core defines it; `feedback.ts` imports+re-exports. Pre-stages Step 8.
+- `compile` returns `EffectLine` (exported from `view/effectGlyphs.ts:52`).
+- **Test count 613→616 explained:** `structural.test.ts` is data-driven — one boundary-check
+  case per file under `src/core/`. The 3 new core files add 3 passing cases that themselves
+  assert Phaser-freeness. Not a behavior change; no test files edited.
+- Reviewer confirmed: helpers verbatim, no `any`/`as never`/casts, base defaults exact,
+  HazardTargetingHandler stays abstract. Gate green: typecheck, 616 pass / 0 fail, lint.
+- Commit pending below.

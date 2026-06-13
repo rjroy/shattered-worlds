@@ -13,6 +13,7 @@
  * `previewPlay` reporting a clear.
  */
 import type { CardEffect } from '../../core/index'
+import type { ConnectorStyle } from '../../core/effects/EffectContext'
 
 /**
  * Fraction of a hazard's cost that `progress` covers, in [0, 1].
@@ -56,8 +57,14 @@ export function effectAtStep(effect: CardEffect, step: number): CardEffect | nul
   return effect
 }
 
-/** The visual connector style a card's play draws toward its target. */
-export type ConnectorStyle = 'progress' | 'destroy' | 'return'
+/**
+ * The visual connector style a card's play draws toward its target. The type
+ * now lives in core (`src/core/effects/EffectContext`) so the effect-handler
+ * base can carry a `connectorStyle` method; imported above and re-exported here
+ * so the renderer (`connector.ts`, `TableScene.ts`) keeps importing it from
+ * this module.
+ */
+export type { ConnectorStyle }
 
 /**
  * Pick the connector style for an effect, looking through `Modal`/`Sequence`

@@ -13,12 +13,7 @@ import type { CardCatalog } from "../model/catalog";
 import { mintCard } from "../model/cards";
 import { drawPlayer, drawWorld } from "./draw";
 import { shuffle } from "./rng";
-
-// ---------------------------------------------------------------------------
-// Result type
-// ---------------------------------------------------------------------------
-
-type EffectResult = { state: GameState; events: GameEvent[] };
+import type { EffectResult } from "../effects/EffectContext";
 
 const WORLD_THREAT_BY_WORLD_ID: Record<string, CardTemplateId> = {
   "zombie-big-box": "Zombie",

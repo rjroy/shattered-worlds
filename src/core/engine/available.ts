@@ -8,18 +8,15 @@ import type {
   TargetSpec,
   WorldCard,
 } from "../model/types";
+import { playerCardsInHand, worldCardsInHand } from "../effects/handState";
 
 // ---------------------------------------------------------------------------
 // Internal helpers
 // ---------------------------------------------------------------------------
 
-function worldCardsInHand(state: GameState): WorldCard[] {
-  return state.hand.filter((c): c is WorldCard => c.kind === "world");
-}
-
-function playerCardsInHand(state: GameState): PlayerCard[] {
-  return state.hand.filter((c): c is PlayerCard => c.kind === "player");
-}
+// `worldCardsInHand` / `playerCardsInHand` now live in
+// `../effects/handState` so the handler base (HazardTargetingHandler) and these
+// switches share one definition. Imported above; re-imported, not duplicated.
 
 /**
  * Derive the structural TargetSpec for an Effect — the shape the UI needs to
