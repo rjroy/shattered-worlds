@@ -61,11 +61,11 @@ export abstract class EffectHandler<E extends CardEffect> {
 
 /**
  * Intermediate base for the hazard-targeting kinds (`DealProgress`,
- * `DealProgressScaled`). They all target a world card in hand, are playable
- * only when one exists, and draw the `progress` connector. Collapsing these
- * into one base removes the parallel re-listing the four scattered switches
- * carried today. Stays abstract: `apply` / `describe` / `compile` differ per
- * kind.
+ * `DealProgressScaled`). They all target a world card in hand and are playable
+ * only when one exists, so `structuralSpec`, `isPlayable`, and `legalTargets`
+ * live here once. Connector style and the `base === 0` keyword filter are
+ * `DealProgress`-only specifics and stay on `DealProgressHandler`, not here.
+ * Stays abstract: `apply` / `describe` / `compile` differ per kind.
  */
 export abstract class HazardTargetingHandler<E extends CardEffect> extends EffectHandler<E> {
   override structuralSpec(_effect: E): TargetSpec {
@@ -78,9 +78,5 @@ export abstract class HazardTargetingHandler<E extends CardEffect> extends Effec
 
   override legalTargets(_effect: E, _selfId: CardId, state: GameState): readonly CardId[] {
     return worldCardsInHand(state).map((c) => c.id)
-  }
-
-  override connectorStyle(_effect: E): ConnectorStyle {
-    return 'progress'
   }
 }

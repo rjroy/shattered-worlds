@@ -37,7 +37,7 @@ Branch: `effect-handler-registry` (off `master`).
 - ☑ **Step 1** (Phase 0) — make silent switches fail closed (delete 6 `default:`, enumerate cases)
 - ☑ **Step 2** (Phase 1) — scaffold EffectHandler base + EffectContext + EffectResult
 - ☑ **Step 3** (Phase 1) — composite handlers (Modal/Sequence) + recursion seam
-- ☐ **Step 4** (Phase 1) — DealProgress handlers + HazardTargetingHandler
+- ☑ **Step 4** (Phase 1) — DealProgress handlers + HazardTargetingHandler
 - ☐ **Step 5** (Phase 1) — registry + dispatcher wiring (GO/NO-GO gate)
 - ☐ **Step 6** (Phase 2) — migrate remaining leaf kinds, grouped by file
 - ☐ **Step 7** (Phase 2) — remove transitional fallback; exhaustive map
@@ -106,3 +106,28 @@ Branch: `effect-handler-registry` (off `master`).
   `steps[0]!` carries master's "empty Sequence invalid by construction" assumption — add a comment
   when next touched.
 - Gate green: typecheck, 617 pass / 0 fail (+1 = composite.ts boundary case), lint, build.
+- Commit `b1b9e55`.
+
+### Step 4 — DealProgress family (complete, with a correction)
+- New `src/core/effects/dealProgress.ts`: relocated `dealProgress()`/`resolveCounter()` (facade
+  re-exports them from effects.ts, keeping effects.test.ts unedited) + three handlers.
+- **Three-way split (the crux):** DealProgressHandler & DealProgressScaledHandler extend
+  HazardTargetingHandler; DealProgressAllHandler extends the BASE directly (it has no player
+  target — extending the hazard base would silently regress structuralSpec/legalTargets/
+  connectorStyle). Verified against actual available.ts/feedback.ts lines.
+- **Reviewer caught two latent divergences** in HazardTargetingHandler (not regressions yet —
+  handlers undispatched — but would break when wired). I verified both against master source:
+  1. `connectorStyle 'progress'` is **DealProgress-only** in master (`DealProgressScaled`→null).
+     The hazard base wrongly gave both 'progress'. **Activates Step 8.**
+  2. `legalTargets` master filters DealProgress to tag-matching hazards when `base===0` &&
+     `bonus.tag`; the hazard base returned all ids. **Activates Step 5** (computeLegalTargetsForEffect
+     is wired there) — would have failed available.test.ts.
+- **Fix:** removed `connectorStyle` from HazardTargetingHandler (→ base null); added
+  `connectorStyle→'progress'` and the `base===0` tag-filter `legalTargets` override to
+  DealProgressHandler ONLY. DealProgressScaled stays pure inherit (master ternary yields undefined
+  tag for Scaled → always all ids, matches base). Hazard base now holds exactly the 3 genuinely
+  shared behaviors. This is cleaner than the design's assumption (which wrongly treated both as shared).
+- dealProgress keeps `(catalog, state,...)` signature, fires onCleared/onPartialClear via public
+  `applyEffect` (recursion pin). dealProgress.ts↔effects.ts facade loop is call-time-safe.
+- Gate green: typecheck, 618 pass / 0 fail (+1 dealProgress.ts boundary case), lint. Zero test edits.
+- Commit pending below.

@@ -3,7 +3,6 @@ import type {
   CardEffect,
   CardId,
   CardTemplateId,
-  CounterSpec,
   Dest,
   GameEvent,
   GameState,
@@ -27,71 +26,17 @@ export function worldThreatByWorldId(worldId: string): string {
 }
 
 // ---------------------------------------------------------------------------
-// dealProgress
+// dealProgress / resolveCounter facade
 // ---------------------------------------------------------------------------
 
-/**
- * Apply progress toward a hazard in hand. Auto-resolves the hazard (removes it
- * from hand and fires its onCleared effect) if accumulated progress meets or exceeds the
- * hazard's cost.
- */
-export function dealProgress(
-  catalog: CardCatalog,
-  state: GameState,
-  hazardId: CardId,
-  base: number,
-  bonus?: { tag: string; amount: number },
-): EffectResult {
-  const hazard = state.hand.find((c): c is WorldCard => c.kind === "world" && c.id === hazardId);
-  if (hazard === undefined) return { state, events: [] };
-
-  const bonusAmount =
-    bonus !== undefined && hazard.keywords.includes(bonus.tag as WorldCard["keywords"][number])
-      ? bonus.amount
-      : 0;
-  const amount = base + bonusAmount;
-
-  const newProgress = {
-    ...state.progress,
-    [hazardId]: (state.progress[hazardId] ?? 0) + amount,
-  };
-  const hazardTurnTotal = newProgress[hazardId]!;
-
-  const events: GameEvent[] = [{ type: "ProgressDealt", hazardId, amount, hazardTurnTotal }];
-
-  let current: GameState = { ...state, progress: newProgress };
-
-  if (hazardTurnTotal >= hazard.cost) {
-    // Remove hazard from hand (excess progress is wasted — do NOT touch progress)
-    current = {
-      ...current,
-      hand: current.hand.filter((c) => c.id !== hazardId),
-    };
-
-    const rewardResult = applyEffect(catalog, current, hazard.onCleared);
-    current = rewardResult.state;
-    events.push(...rewardResult.events);
-    events.push({ type: "HazardResolved", hazardId });
-  } else {
-    // Hazard not yet resolved
-    const partialResult = applyEffect(catalog, current, hazard.onPartialClear, undefined, hazardId);
-    current = partialResult.state;
-    events.push(...partialResult.events);
-    events.push({ type: "HazardPartial", hazardId });
-  }
-
-  return { state: current, events };
-}
-
-export function resolveCounter(state: GameState, spec: CounterSpec): number {
-  switch (spec.kind) {
-    case "KeywordInHand":
-      return state.hand.filter((card) => card.keywords.includes(spec.keyword)).length;
-
-    default:
-      return 0;
-  }
-}
+// `dealProgress` and `resolveCounter` now live in `../effects/dealProgress`
+// (beside the DealProgress handler family). They are re-exported here so the
+// existing `effects.test.ts` imports keep resolving unedited, and so callers
+// in this file (the legacy switch below) keep their single import surface.
+// dealProgress imports `applyEffect` from this module; that import is used only
+// at call time inside its body, so no top-level evaluation cycle forms.
+import { dealProgress, resolveCounter } from "../effects/dealProgress";
+export { dealProgress, resolveCounter };
 
 // ---------------------------------------------------------------------------
 // gainCard
