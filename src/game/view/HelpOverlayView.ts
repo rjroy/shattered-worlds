@@ -4,8 +4,10 @@ import { CANVAS_W, CANVAS_H } from "./layout";
 import { WORLD_CONSTS } from "../../core/engine/world";
 import { worldDisplayManifest } from "../../data/worldDisplayManifest";
 import { worldHelpManifest } from "../../data/worldHelpManifest";
-import type { IconId } from "../../core/view/effectGlyphs";
+import type { CardEffect } from "../../core/index";
+import { compileEffect, type IconId } from "../../core/view/effectGlyphs";
 import { EFFECT_ICON_TEXTURES } from "./effectLineLayout";
+import { addEffectLines } from "./effectLineView";
 
 /** Full-screen help overlay with tab/page navigation, hidden by default. */
 export class HelpOverlayView extends Phaser.GameObjects.Container {
@@ -80,34 +82,6 @@ export class HelpOverlayView extends Phaser.GameObjects.Container {
       return panel;
     }
 
-    function addPill(
-      parent: Phaser.GameObjects.Container,
-      x: number,
-      y: number,
-      label: string,
-      color = TEXT.textKeyword,
-    ): void {
-      const txt = addText(
-        parent,
-        x,
-        y,
-        label,
-        {
-          fontSize: "11px",
-          color,
-          fontStyle: "bold",
-        },
-        0.5,
-        0.5,
-      );
-      const pill = scene.add.rectangle(x, y, txt.width + 18, txt.height + 8, 0x05070d, 0.9);
-      pill.setStrokeStyle(1, Phaser.Display.Color.HexStringToColor(color).color, 0.75);
-      pill.setRounded(10);
-      parent.add(pill);
-      parent.add(txt);
-      txt.setAbove(pill);
-    }
-
     function addCallout(
       parent: Phaser.GameObjects.Container,
       fromX: number,
@@ -152,6 +126,34 @@ export class HelpOverlayView extends Phaser.GameObjects.Container {
       card.setRounded(12);
       parent.add(card);
 
+      function addEffectBlock(
+        effect: CardEffect,
+        blockX: number,
+        blockY: number,
+        color: string,
+        leadIcon?: IconId,
+      ): number {
+        const effectOpts = {
+          maxWidth: cardW - 22,
+          baseColor: color,
+          fontSize: 10,
+          background: { color: 0x000000, alpha: 0.72 },
+          warnLabel: `help ${kind}`,
+        };
+        const block = addEffectLines(
+          scene,
+          compileEffect(effect),
+          leadIcon === undefined ? effectOpts : { ...effectOpts, leadIcon },
+        );
+        if (block.height === 0) {
+          block.container.destroy();
+          return 0;
+        }
+        block.container.setPosition(blockX, blockY);
+        parent.add(block.container);
+        return block.height;
+      }
+
       addText(
         parent,
         x,
@@ -169,6 +171,14 @@ export class HelpOverlayView extends Phaser.GameObjects.Container {
       );
 
       if (kind === "hazard") {
+        const zombieEachTurn: CardEffect = {
+          kind: "Sequence",
+          steps: [
+            { kind: "Damage", amount: 1 },
+            { kind: "AddWorldCardToDeck", template: "Zombie" },
+          ],
+        };
+
         addText(
           parent,
           x,
@@ -181,24 +191,33 @@ export class HelpOverlayView extends Phaser.GameObjects.Container {
           0.5,
           0,
         );
-        addText(parent, x - 68, y - 36, "Each turn:\n-1 HP\n+Zombie to world deck", {
-          fontSize: "11px",
-          color: TEXT.textHeld,
-          wordWrap: { width: 132 },
-          lineSpacing: 2,
-        });
-        addText(parent, x - 68, y + 32, "If discarded:\n-5 HP", {
-          fontSize: "11px",
-          color: TEXT.textPenalty,
-          wordWrap: { width: 132 },
-          lineSpacing: 2,
-        });
-        addText(parent, x - 68, y + 74, "Clear it:\ngain Listen", {
-          fontSize: "11px",
-          color: TEXT.textReward,
-          wordWrap: { width: 132 },
-          lineSpacing: 2,
-        });
+
+        let currY = y - 34;
+        currY += addEffectBlock(zombieEachTurn, x - 6, currY, TEXT.textHeld, "eachTurn") + 5;
+        currY +=
+          addEffectBlock(
+            { kind: "Damage", amount: 5 },
+            x - 6,
+            currY,
+            TEXT.textPenalty,
+            "onDiscard",
+          ) + 5;
+        currY +=
+          addEffectBlock(
+            { kind: "GainEnergy", amount: 1 },
+            x - 6,
+            currY,
+            TEXT.textReward,
+            "onClear",
+          ) + 5;
+        addEffectBlock(
+          { kind: "Damage", amount: 2 },
+          x - 6,
+          currY,
+          TEXT.textPenalty,
+          "onPartialClear",
+        );
+
         const ring = scene.add.circle(x + 60, y + 78, 22, 0x000000, 0.25);
         ring.setStrokeStyle(4, 0xffcc44, 0.9);
         parent.add(ring);
@@ -227,14 +246,31 @@ export class HelpOverlayView extends Phaser.GameObjects.Container {
           0.5,
           0,
         );
+        addText(
+          parent,
+          x,
+          y + 94,
+          "click to discard",
+          {
+            fontSize: "9px",
+            color: TEXT.textDiscard,
+            fontStyle: "bold",
+            backgroundColor: "#000000",
+          },
+          0.5,
+          0,
+        );
       } else {
-        addText(parent, x - 68, y - 62, "Add 2 Progress\n(+2 vs Hidden)", {
-          fontSize: "13px",
-          color: TEXT.textLight,
-          wordWrap: { width: 136 },
-          align: "center",
-          lineSpacing: 3,
-        });
+        addEffectBlock(
+          {
+            kind: "DealProgress",
+            base: 1,
+            bonus: { tag: "Hidden", amount: 1 },
+          },
+          x,
+          y - 62,
+          TEXT.textLight,
+        );
         const inset = scene.add.rectangle(x, y + 42, 132, 78, 0x27364f, 1);
         inset.setStrokeStyle(1, 0x88ccff, 0.65);
         inset.setRounded(5);
@@ -251,13 +287,13 @@ export class HelpOverlayView extends Phaser.GameObjects.Container {
           0.5,
           0,
         );
-        const energy = scene.add.circle(x + 60, y - 80, 15, 0x1f4a6d, 1);
-        energy.setStrokeStyle(2, 0xffeebb, 0.8);
+        const energy = scene.add.image(x + 60, y - 80, "energy-icon");
+        energy.setDisplaySize(30, 30);
         parent.add(energy);
         addText(
           parent,
           x + 60,
-          y - 93,
+          y - 89,
           "1",
           {
             fontSize: "16px",
@@ -412,44 +448,63 @@ export class HelpOverlayView extends Phaser.GameObjects.Container {
           );
 
           addPanel(page, 185, 50, 395, 335);
-          addPill(page, 40, -98, "Clear");
+          addText(page, 40, -112, "Hazard reactions use icons", {
+            fontSize: "14px",
+            color: TEXT.textLight,
+            fontStyle: "bold",
+            wordWrap: { width: 315 },
+          });
           addText(
             page,
             40,
-            -74,
-            "Fill the yellow ring with Progress. The green Clear it text fires, then the hazard leaves your hand.",
+            -84,
+            "A hazard row starts with the icon for the moment that can make it fire.",
             {
               fontSize: "13px",
-              color: TEXT.textLight,
+              color: TEXT.textMuted,
               wordWrap: { width: 315 },
               lineSpacing: 2,
             },
           );
-          addPill(page, 40, 10, "Discard", TEXT.textPenalty);
-          addText(
+          addIconRow(
+            page,
+            40,
+            -28,
+            "eachTurn",
+            "Ignore",
+            "Fires when you end the turn with this hazard still in hand.",
+            270,
+            TEXT.textHeld,
+          );
+          addIconRow(
             page,
             40,
             34,
-            "Clicking a discardable hazard removes it immediately, but the red If discarded text fires.",
-            {
-              fontSize: "13px",
-              color: TEXT.textLight,
-              wordWrap: { width: 315 },
-              lineSpacing: 2,
-            },
+            "onDiscard",
+            "Discard",
+            "Fires if you click a discardable hazard to throw it away.",
+            270,
+            TEXT.textPenalty,
           );
-          addPill(page, 40, 116, "Endure", TEXT.textHeld);
-          addText(
+          addIconRow(
             page,
             40,
-            140,
-            "Leaving a hazard in hand saves actions now. Its orange Each turn text usually makes the next turn worse.",
-            {
-              fontSize: "13px",
-              color: TEXT.textLight,
-              wordWrap: { width: 315 },
-              lineSpacing: 2,
-            },
+            96,
+            "onClear",
+            "Clear",
+            "Fires when Progress reaches the number in the ring.",
+            270,
+            TEXT.textReward,
+          );
+          addIconRow(
+            page,
+            40,
+            158,
+            "onPartialClear",
+            "Partial clear",
+            "Fires on some Progress, but not enough to clear.",
+            270,
+            TEXT.textDiscard,
           );
         },
       },
@@ -461,8 +516,8 @@ export class HelpOverlayView extends Phaser.GameObjects.Container {
           addHelpCard(page, -235, 45, "hazard");
           addCallout(
             page,
-            -235,
-            -22,
+            -203,
+            -19,
             -100,
             -84,
             "Keyword",
@@ -471,23 +526,13 @@ export class HelpOverlayView extends Phaser.GameObjects.Container {
           );
           addCallout(
             page,
-            -253,
-            8,
+            -190,
+            30,
             -100,
-            -5,
-            "Each turn",
-            "This fires when you end the turn while holding the hazard.",
-            TEXT.textHeld,
-          );
-          addCallout(
-            page,
-            -253,
-            77,
-            -100,
-            83,
-            "Discard",
-            "This fires if you click the hazard to throw it away.",
-            TEXT.textPenalty,
+            -10,
+            "Reactions",
+            "These rows show how the hazard responds when you discard it, clear it, ignore it, or partially clear it.",
+            TEXT.textLight,
           );
           addCallout(
             page,
@@ -543,7 +588,7 @@ export class HelpOverlayView extends Phaser.GameObjects.Container {
           addCallout(
             page,
             -175,
-            -38,
+            -40,
             -100,
             -94,
             "Energy cost",
@@ -552,8 +597,8 @@ export class HelpOverlayView extends Phaser.GameObjects.Container {
           );
           addCallout(
             page,
-            -245,
-            -20,
+            -220,
+            -10,
             -100,
             -12,
             "Effect text",
