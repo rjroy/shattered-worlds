@@ -93,6 +93,7 @@ import zombieJsonUrl from "../../data/worlds/zombie-big-box.json?url";
 import birdJsonUrl from "../../data/worlds/bird-building.json?url";
 import volcanoJsonUrl from "../../data/worlds/highway-volcano.json?url";
 import mallJsonUrl from "../../data/worlds/overgrown-mall.json?url";
+import worldSelectBgUrl from "../assets/world-select.webp";
 
 export const assetManifest: Record<string, string> = {
   cardback: cardbackUrl,
@@ -184,6 +185,7 @@ export const assetManifest: Record<string, string> = {
   "zombie-inset-listen": zombieInsetListenUrl,
   "zombie-inset-strange-sounds": zombieInsetStrangeSoundsUrl,
   "zombie-inset-zombie": zombieInsetZombieUrl,
+  "world-select-bg": worldSelectBgUrl,
   // JSON files are loaded as URLs so Phaser can load them asynchronously.
   "world-starter": starterJsonUrl,
   "world-zombie-big-box": zombieJsonUrl,
@@ -191,3 +193,19 @@ export const assetManifest: Record<string, string> = {
   "world-highway-volcano": volcanoJsonUrl,
   "world-overgrown-mall": mallJsonUrl,
 };
+
+export function loadAssets(scene: Phaser.Scene) {
+  for (const [key, url] of Object.entries(assetManifest)) {
+    if (url !== undefined) {
+      if (url.endsWith(".json")) {
+        scene.load.json(key, url);
+      } else {
+        scene.load.image(key, url);
+      }
+    }
+  }
+
+  scene.load.on("loaderror", (file: Phaser.Loader.File) => {
+    console.warn(`Asset failed to load: ${file.key}`);
+  });
+}
