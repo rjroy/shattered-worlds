@@ -4,7 +4,7 @@ import { selectTheme } from '../view/themes/themeManifest'
 import { CARD_FACE } from '../view/layout'
 import { mintCard } from '../../core/model/cards'
 import { createRng } from '../../core/engine/rng'
-import type { CardCatalog, GameState, PlayerCard } from '../../core/index'
+import type { Card, CardCatalog, GameState, PlayerCard, WorldCard } from '../../core/index'
 
 // ---------------------------------------------------------------------------
 // updateCostRing — fill/drain animation (S5)
@@ -520,11 +520,14 @@ interface TrackedText {
   y: number
   content: string
   fontSize: string
+  color: string
 }
 
 /**
  * Minimal protocol a fake child must speak so the REAL Container.add
  * (addHandler) accepts it: a DESTROY listener hook plus display-list moves.
+ * addHandler also stamps `parentContainer` on the child — the tests use that
+ * stamp to find the effect-block containers CardView adopted.
  */
 const childProtocol = {
   parentContainer: null as unknown,
@@ -537,10 +540,11 @@ const childProtocol = {
 function makeFakeText(
   x: number,
   y: number,
-  style: { fontSize?: string },
+  content: string,
+  style: { fontSize?: string; color?: string },
   sink: TrackedText[],
 ): unknown {
-  const tracked: TrackedText = { x, y, content: '', fontSize: style.fontSize ?? '' }
+  const tracked: TrackedText = { x, y, content, fontSize: style.fontSize ?? '', color: style.color ?? '' }
   sink.push(tracked)
   const text = {
     ...childProtocol,
@@ -548,7 +552,23 @@ function makeFakeText(
     y,
     width: 40,
     height: 12,
+    displayWidth: 40,
+    // Mirror the tracked content and colour so token assertions can read them
+    // off the object a row container holds (addEffectLines never calls setText).
+    get content(): string {
+      return tracked.content
+    },
+    get color(): string {
+      return tracked.color
+    },
     setOrigin: (): unknown => text,
+    setPosition(px: number, py: number): unknown {
+      text.x = px
+      text.y = py
+      tracked.x = px
+      tracked.y = py
+      return text
+    },
     setText(s: string): unknown {
       tracked.content = s
       return text
@@ -576,36 +596,114 @@ function makeFakeRect(x: number, y: number): unknown {
   return rect
 }
 
-function makeFakeImage(x: number, y: number): unknown {
+function makeFakeImage(x: number, y: number, textureKey: string): unknown {
   const img = {
     ...childProtocol,
     x,
     y,
     width: 10,
     height: 10,
+    displayWidth: 10,
+    displayHeight: 10,
+    textureKey,
     setOrigin: (): unknown => img,
-    setDisplaySize: (): unknown => img,
+    setPosition(px: number, py: number): unknown {
+      img.x = px
+      img.y = py
+      return img
+    },
+    setDisplaySize(w: number, h: number): unknown {
+      img.displayWidth = w
+      img.displayHeight = h
+      return img
+    },
   }
   return img
 }
 
-/** Scene stub satisfying the full CardView constructor for player cards. */
-function makeRenderScene(): { scene: unknown; texts: TrackedText[] } {
+/** A cost-ring Graphics stub: CardView only positions it during construction. */
+function makeFakeGraphics(): unknown {
+  const g = {
+    ...childProtocol,
+    setPosition: (): unknown => g,
+  }
+  return g
+}
+
+/**
+ * A container the scene stub created — addEffectLines makes one per effect
+ * block plus one per token row. The object IS its own tracking record: the
+ * tests read position, children, and the destroyed flag straight off it.
+ */
+interface FakeContainer {
+  parentContainer: unknown
+  x: number
+  y: number
+  scale: number
+  children: unknown[]
+  destroyed: boolean
+  once(): void
+  off(): void
+  removeFromDisplayList(): void
+  addedToScene(): void
+  setPosition(x: number, y: number): unknown
+  setScale(s: number): unknown
+  add(child: unknown): unknown
+  destroy(): void
+}
+
+function makeFakeContainer(sink: FakeContainer[]): FakeContainer {
+  const container: FakeContainer = {
+    ...childProtocol,
+    x: 0,
+    y: 0,
+    scale: 1,
+    children: [],
+    destroyed: false,
+    setPosition(x: number, y: number): unknown {
+      container.x = x
+      container.y = y
+      return container
+    },
+    setScale(s: number): unknown {
+      container.scale = s
+      return container
+    },
+    add(child: unknown): unknown {
+      container.children.push(child)
+      return container
+    },
+    destroy(): void {
+      container.destroyed = true
+    },
+  }
+  sink.push(container)
+  return container
+}
+
+/** Scene stub satisfying the full CardView constructor (player and world cards). */
+function makeRenderScene(): { scene: unknown; texts: TrackedText[]; containers: FakeContainer[] } {
   const texts: TrackedText[] = []
+  const containers: FakeContainer[] = []
   const scene = {
     sys: {
       queueDepthSort(): void {},
       events: { once(): void {}, off(): void {} },
     },
+    // addEffectLines lazily ensures the icon placeholder textures; claiming
+    // every key exists skips canvas texture generation (a browser concern).
+    textures: { exists: (): boolean => true },
     add: {
       existing(): void {},
-      image: (x: number, y: number): unknown => makeFakeImage(x, y),
+      image: (x: number, y: number, key: string): unknown => makeFakeImage(x, y, key),
       rectangle: (x: number, y: number): unknown => makeFakeRect(x, y),
-      text: (x: number, y: number, _s: string, style: { fontSize?: string }): unknown =>
-        makeFakeText(x, y, style, texts),
+      graphics: (): unknown => makeFakeGraphics(),
+      container: (): unknown => makeFakeContainer(containers),
+      text: (x: number, y: number, content: string, style: { fontSize?: string; color?: string }): unknown =>
+        makeFakeText(x, y, content, style, texts),
     },
   }
-  return { scene, texts }
+  return { scene, texts, containers }
 }
 
 function makeMintState(): GameState {
@@ -656,11 +754,53 @@ function mintPlayer(templateId: string): PlayerCard {
   return card
 }
 
-function renderTexts(card: PlayerCard): TrackedText[] {
-  const { scene, texts } = makeRenderScene()
+interface RenderedCard {
+  view: CardView
+  texts: TrackedText[]
+  containers: FakeContainer[]
+}
+
+function renderCard(card: Card): RenderedCard {
+  const { scene, texts, containers } = makeRenderScene()
   const theme = selectTheme('zombie-big-box')
-  new CardView(scene as never, card, 0, 0, theme, () => theme)
-  return texts
+  const view = new CardView(scene as never, card, 0, 0, theme, () => theme)
+  return { view, texts, containers }
+}
+
+/**
+ * The effect-block containers CardView adopted, in creation (stacking) order.
+ * The REAL Container.add stamped `parentContainer` on them; token-row
+ * containers live one level deeper (added by the fake block container) and a
+ * dropped `None` block is never adopted at all, so neither matches.
+ */
+function effectBlocks(rendered: RenderedCard): FakeContainer[] {
+  return rendered.containers.filter((c) => c.parentContainer === rendered.view)
+}
+
+/** Token rows of one effect block, in stacking order. */
+function rowsOf(block: FakeContainer): FakeContainer[] {
+  // An effect block's only children are its row containers.
+  return block.children as FakeContainer[]
+}
+
+/** Icon texture keys and text contents of one row, each in token order. */
+function rowTokens(row: FakeContainer): { iconKeys: string[]; textContents: string[] } {
+  const iconKeys: string[] = []
+  const textContents: string[] = []
+  for (const child of row.children) {
+    const c = child as { textureKey?: string; content?: string }
+    if (typeof c.textureKey === 'string') iconKeys.push(c.textureKey)
+    if (typeof c.content === 'string') textContents.push(c.content)
+  }
+  return { iconKeys, textContents }
+}
+
+/** Colours of one row's text tokens, in token order. */
+function rowTextColors(row: FakeContainer): string[] {
+  return row.children
+    .map((child) => child as { content?: string; color?: string })
+    .filter((c) => typeof c.content === 'string')
+    .map((c) => c.color ?? '')
 }
 
 describe('CardView player-card keyword line (REQ-MALL-21)', () => {
@@ -671,7 +811,7 @@ describe('CardView player-card keyword line (REQ-MALL-21)', () => {
   const EFFECT_Y_WITH_KEYWORDS = -CARD_FACE.height / 2 + 36
 
   it('renders a minted Spore card with a keyword line at the world-face offset and size', () => {
-    const texts = renderTexts(mintPlayer('Spore Cloud'))
+    const { texts } = renderCard(mintPlayer('Spore Cloud'))
     const kw = texts.find((t) => t.content === 'Spore')
     expect(kw).toBeDefined()
     expect(kw!.y).toBe(KEYWORD_Y)
@@ -679,25 +819,154 @@ describe('CardView player-card keyword line (REQ-MALL-21)', () => {
   })
 
   it("joins multiple keywords with ' · ' exactly like the world face", () => {
-    const texts = renderTexts(mintPlayer('Creeping Bloom'))
+    const { texts } = renderCard(mintPlayer('Creeping Bloom'))
     expect(texts.some((t) => t.content === 'Spore · Slow')).toBe(true)
   })
 
-  it('shifts the effect block down to the world-face effect offset when keywords are present', () => {
-    const texts = renderTexts(mintPlayer('Spore Cloud'))
-    const effect = texts.find((t) => t.content === 'Add 1 Progress')
-    expect(effect).toBeDefined()
-    expect(effect!.y).toBe(EFFECT_Y_WITH_KEYWORDS)
+  it('shifts the token effect block down to the world-face effect offset when keywords are present', () => {
+    const rendered = renderCard(mintPlayer('Spore Cloud'))
+    const [block, ...extra] = effectBlocks(rendered)
+    expect(block).toBeDefined()
+    expect(extra).toEqual([]) // a player card carries exactly one effect block
+    expect(block!.x).toBe(0)
+    expect(block!.y).toBe(EFFECT_Y_WITH_KEYWORDS)
+    // DealProgress base 1 compiles to a single `[progress] 1` row.
+    const rows = rowsOf(block!)
+    expect(rows.length).toBe(1)
+    expect(rowTokens(rows[0]!)).toEqual({
+      iconKeys: ['effect-icon-progress'],
+      textContents: ['+', '1'],
+    })
   })
 
-  it('renders a keywordless card unchanged: no keyword line, effect at the original offset', () => {
-    const texts = renderTexts(mintPlayer('Plain Strike'))
+  it('renders a keywordless card unchanged: no keyword line, effect block at the original offset', () => {
+    const rendered = renderCard(mintPlayer('Plain Strike'))
     // No keyword line at all — nothing renders at the keyword slot and no
-    // 9px text exists on the face (name is 13px, effect 11px; no Exhaust).
-    expect(texts.some((t) => t.y === KEYWORD_Y)).toBe(false)
-    expect(texts.some((t) => t.fontSize === '9px')).toBe(false)
-    const effect = texts.find((t) => t.content === 'Add 1 Progress')
-    expect(effect).toBeDefined()
-    expect(effect!.y).toBe(EFFECT_Y_DEFAULT)
+    // 9px text exists on the face (name is 13px, effect tokens 11px; no Exhaust).
+    expect(rendered.texts.some((t) => t.y === KEYWORD_Y)).toBe(false)
+    expect(rendered.texts.some((t) => t.fontSize === '9px')).toBe(false)
+    const [block] = effectBlocks(rendered)
+    expect(block).toBeDefined()
+    expect(block!.y).toBe(EFFECT_Y_DEFAULT)
+    expect(rowTokens(rowsOf(block!)[0]!).textContents).toEqual(['+', '1'])
+  })
+})
+
+// ---------------------------------------------------------------------------
+// CardView world-card trigger blocks (token IR, design §4)
+//
+// Same real-constructor approach as the keyword tests: a minted world card
+// renders through the actual CardView + addEffectLines pipeline against the
+// scene stub. Pins the trigger-icon lead, the height+spacing stacking, and the
+// rule that a `None` effect contributes neither a block nor spacing.
+// ---------------------------------------------------------------------------
+
+describe('CardView world-card trigger blocks', () => {
+  const worldCatalog: CardCatalog = {
+    Shambler: {
+      kind: 'world',
+      name: 'Shambler',
+      cost: 3,
+      keywords: [],
+      discardable: false,
+      onEndOfTurn: { kind: 'Damage', amount: 1 },
+      onDiscarded: { kind: 'None' },
+      onCleared: { kind: 'GainEnergy', amount: 1 },
+      onPartialClear: { kind: 'None' },
+    },
+    // All four triggers non-None, each compiling to UNEMPHASISED tokens (no
+    // reward/penalty value emphasis) so every text token takes the block's
+    // baseColor — the tint assertions below read the triggerBlocks table, not
+    // valueTokenStyle's emphasis overrides.
+    'Patient Zero': {
+      kind: 'world',
+      name: 'Patient Zero',
+      cost: 5,
+      keywords: [],
+      discardable: false,
+      onEndOfTurn: { kind: 'Brace', amount: 2 },
+      onDiscarded: { kind: 'AddThreatToWorldDeck' },
+      onCleared: { kind: 'ExileTopWorldCards', amount: 1 },
+      onPartialClear: { kind: 'SkipDrawNextTurn' },
+    },
+  }
+
+  function mintWorld(templateId: string): WorldCard {
+    const [card] = mintCard(worldCatalog, makeMintState(), templateId)
+    if (card.kind !== 'world') throw new Error(`expected ${templateId} to mint a world card`)
+    return card
+  }
+
+  const FIRST_BLOCK_Y = -CARD_FACE.height / 2 + 36
+  // Every fake text measures 12px high, so a one-line block is 12px tall.
+  const FAKE_LINE_HEIGHT = 12
+  const BLOCK_SPACING = 4
+
+  it('stacks one trigger block per non-None effect by height + spacing, skipping None entirely', () => {
+    const rendered = renderCard(mintWorld('Shambler'))
+    const blocks = effectBlocks(rendered)
+    // onDiscarded and onPartialClear are None: no block, no spacing gap.
+    expect(blocks.length).toBe(2)
+    const [eachTurn, onClear] = blocks
+    expect(eachTurn!.y).toBe(FIRST_BLOCK_Y)
+    expect(onClear!.y).toBe(FIRST_BLOCK_Y + FAKE_LINE_HEIGHT + BLOCK_SPACING)
+    // The None blocks' empty containers were destroyed, not left on the scene.
+    const adopted = new Set(blocks)
+    const strays = rendered.containers.filter(
+      (c) => !adopted.has(c) && c.parentContainer === null && c.children.length === 0,
+    )
+    expect(strays.every((c) => c.destroyed)).toBe(true)
+  })
+
+  it('leads each block with its trigger icon, then the compiled effect tokens', () => {
+    const rendered = renderCard(mintWorld('Shambler'))
+    const [eachTurn, onClear] = effectBlocks(rendered)
+    expect(rowTokens(rowsOf(eachTurn!)[0]!)).toEqual({
+      iconKeys: ['effect-icon-each-turn', 'effect-icon-hp'],
+      textContents: [':', '-1'], // core's true minus, normalized for the card font
+    })
+    expect(rowTokens(rowsOf(onClear!)[0]!)).toEqual({
+      iconKeys: ['effect-icon-on-clear', 'energy-icon'],
+      textContents: [':', '+1'],
+    })
+    // No trigger icon for the None blocks appears anywhere.
+    const allKeys = rendered.containers.flatMap((c) => rowTokens(c).iconKeys)
+    expect(allKeys).not.toContain('effect-icon-on-discard')
+    expect(allKeys).not.toContain('effect-icon-on-partial-clear')
+  })
+
+  it('renders trigger-block token text at the world-face 10px size', () => {
+    const { texts } = renderCard(mintWorld('Shambler'))
+    const damage = texts.find((t) => t.content === '-1')
+    expect(damage).toBeDefined()
+    expect(damage!.fontSize).toBe('10px')
+  })
+
+  it('renders all four triggers in design order, each text pinned to its block tint', () => {
+    const rendered = renderCard(mintWorld('Patient Zero'))
+    const blocks = effectBlocks(rendered)
+    expect(blocks.length).toBe(4)
+
+    // Design order (token-IR design §4): eachTurn, onDiscard, onClear,
+    // onPartialClear — pinned by each block's lead trigger icon.
+    const leadIcons = blocks.map((block) => rowTokens(rowsOf(block)[0]!).iconKeys[0])
+    expect(leadIcons).toEqual([
+      'effect-icon-each-turn',
+      'effect-icon-on-discard',
+      'effect-icon-on-clear',
+      'effect-icon-on-partial-clear',
+    ])
+
+    // Hand-written tints (TEXT.textHeld / textPenalty / textReward /
+    // textPenalty by value): swapping any two rows of CardView's triggerBlocks
+    // table fails this. Every token here is unemphasised, so the colour IS the
+    // block baseColor.
+    const tints = blocks.map((block) => rowTextColors(rowsOf(block)[0]!))
+    expect(tints).toEqual([
+      ['#ffaa66', '#ffaa66'], // eachTurn: colon + Brace '2' → textHeld
+      ['#ff8888', '#ff8888'], // onDiscard: colon + threat '+1' → textPenalty
+      ['#88ee88', '#88ee88', '#88ee88'], // onClear: colon + exile 'top', '1' → textReward
+      ['#ff8888', '#ff8888'], // onPartialClear: colon + 'next turn' → textPenalty
+    ])
   })
 })

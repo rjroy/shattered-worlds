@@ -7,11 +7,12 @@
  * GameCore. The exported functions at the bottom are compatibility wrappers
  * for older call sites and tests.
  */
-import Phaser from 'phaser'
-import type { Card, CardEffect, WorldCard } from '../../core/index'
-import type { FrameStyle, VisualTheme } from './themes/theme'
-import { describeEffect } from '../../core/view/describe'
-import type { HighlightKind } from '../interaction/highlight'
+import Phaser from "phaser";
+import type { Card, CardEffect, WorldCard } from "../../core/index";
+import type { FrameStyle, VisualTheme } from "./themes/theme";
+import { compileEffect, type IconId } from "../../core/view/effectGlyphs";
+import { addEffectLines } from "./effectLineView";
+import type { HighlightKind } from "../interaction/highlight";
 import {
   TEXT,
   textStyle,
@@ -19,22 +20,23 @@ import {
   highlightDescriptor,
   costRingArc,
   emphasisDescriptor,
-} from './presentation'
-import { CARD_FACE, TABLE_LAYOUT } from './layout'
+} from "./presentation";
+import { CARD_FACE, TABLE_LAYOUT } from "./layout";
 
 // ---------------------------------------------------------------------------
 // Card dimensions
 // ---------------------------------------------------------------------------
 
-// Cards are sized to carry their full rules text on the face: the player face
-// shows the whole describeEffect block (Modal/Sequence included), the Hazard
-// face shows full onDiscarded/onCleared sentences. Six fit the 900px table.
-const CARD_W = CARD_FACE.width
-const CARD_H = CARD_FACE.height
-const INSET_X = CARD_FACE.inset.x
-const INSET_Y = CARD_FACE.inset.y
-const INSET_W = CARD_FACE.inset.width
-const INSET_H = CARD_FACE.inset.height
+// Cards were sized to carry their full prose rules text on the face; the
+// effect blocks now render as compact token rows (compileEffect +
+// addEffectLines), but the dimensions are unchanged — the proportion pass is
+// a deliberate follow-up (token-IR design §Risks). Six fit the 900px table.
+const CARD_W = CARD_FACE.width;
+const CARD_H = CARD_FACE.height;
+const INSET_X = CARD_FACE.inset.x;
+const INSET_Y = CARD_FACE.inset.y;
+const INSET_W = CARD_FACE.inset.width;
+const INSET_H = CARD_FACE.inset.height;
 
 // ---------------------------------------------------------------------------
 // Hover-target emphasis (S9) — the loudest read on the board
@@ -44,16 +46,20 @@ const INSET_H = CARD_FACE.inset.height
 // edge so it reads as a halo, not a border (the 3px target border lives on the
 // list[1] rectangle and stays untouched). Lift + glow together make the hovered
 // legal target unmistakable beyond a colour change.
-const EMPHASIS_GLOW_PAD = 7 // px the glow ring extends past the card edge
-const EMPHASIS_GLOW_LINE = 6 // glow stroke width
-const EMPHASIS_GLOW_RADIUS = 10 // rounded-corner radius
+const EMPHASIS_GLOW_PAD = 7; // px the glow ring extends past the card edge
+const EMPHASIS_GLOW_LINE = 6; // glow stroke width
+const EMPHASIS_GLOW_RADIUS = 10; // rounded-corner radius
 
-function drawGlow(glow: Phaser.GameObjects.Graphics, color: number, alpha: number): void {
-  glow.clear()
-  const w = CARD_W + EMPHASIS_GLOW_PAD * 2
-  const h = CARD_H + EMPHASIS_GLOW_PAD * 2
-  glow.lineStyle(EMPHASIS_GLOW_LINE, color, alpha)
-  glow.strokeRoundedRect(-w / 2, -h / 2, w, h, EMPHASIS_GLOW_RADIUS)
+function drawGlow(
+  glow: Phaser.GameObjects.Graphics,
+  color: number,
+  alpha: number,
+): void {
+  glow.clear();
+  const w = CARD_W + EMPHASIS_GLOW_PAD * 2;
+  const h = CARD_H + EMPHASIS_GLOW_PAD * 2;
+  glow.lineStyle(EMPHASIS_GLOW_LINE, color, alpha);
+  glow.strokeRoundedRect(-w / 2, -h / 2, w, h, EMPHASIS_GLOW_RADIUS);
 }
 
 // ---------------------------------------------------------------------------
@@ -61,15 +67,12 @@ function drawGlow(glow: Phaser.GameObjects.Graphics, color: number, alpha: numbe
 // ---------------------------------------------------------------------------
 
 interface CardTextOpts {
-  fontSize: string
-  font?: string
-  color: string
-  originY: number      // 0 = top-anchored, 1 = bottom-anchored
-  bold?: boolean
-  wrapWidth?: number   // when set, the text wraps at this width and centers
-  lineSpacing?: number
-  background?: number
-  backgroundAlpha?: number
+  fontSize: string;
+  color: string;
+  originY: number; // 0 = top-anchored, 1 = bottom-anchored
+  bold?: boolean;
+  wrapWidth?: number; // when set, the text wraps at this width and centers
+  background?: number;
 }
 
 /** Add a horizontally-centered text line to a card container; returns it. */
@@ -84,81 +87,53 @@ function addCardText(
   const style: Phaser.Types.GameObjects.Text.TextStyle = {
     fontSize: opts.fontSize,
     color: opts.color,
-  }
-  if (opts.font !== undefined) style.fontFamily = opts.font
-  if (opts.bold === true) style.fontStyle = 'bold'
-  if (opts.lineSpacing !== undefined) style.lineSpacing = opts.lineSpacing
+  };
+  if (opts.bold === true) style.fontStyle = "bold";
   if (opts.wrapWidth !== undefined) {
-    style.wordWrap = { width: opts.wrapWidth }
-    style.align = 'center'
+    style.wordWrap = { width: opts.wrapWidth };
+    style.align = "center";
   }
-  const text = scene.add.text(x, y, '', textStyle(style))
-  text.setOrigin(0.5, opts.originY)
-  const wrapped = text.getWrappedText(str)
-  container.add(text)
-  let currY = y
+  const text = scene.add.text(x, y, "", textStyle(style));
+  text.setOrigin(0.5, opts.originY);
+  const wrapped = text.getWrappedText(str);
+  container.add(text);
+  let currY = y;
   return wrapped.map((line, i) => {
-    const lineText = i == 0 ? text : scene.add.text(x, currY, '', textStyle(style))
-    lineText.setText(line)
-    lineText.setOrigin(0.5, opts.originY)
-    currY += lineText.height + (opts.lineSpacing ?? 0)  
-    if (line.includes('Progress')) {
-      const textCostInt = Phaser.Display.Color.HexStringToColor(TEXT.textCost).color32
-      lineText.preFX?.addGlow(textCostInt, 0.8, 0.8)
-    }
+    const lineText =
+      i == 0 ? text : scene.add.text(x, currY, "", textStyle(style));
+    lineText.setText(line);
+    lineText.setOrigin(0.5, opts.originY);
+    currY += lineText.height;
     if (opts.background !== undefined) {
-      const bg = scene.add.rectangle(
-        lineText.x, lineText.y, lineText.width + 6, lineText.height + 2,
-        opts.background, opts.backgroundAlpha ?? 0.5
-      )
+      const bg = scene.add
+        .rectangle(
+          lineText.x,
+          lineText.y,
+          lineText.width + 6,
+          lineText.height + 2,
+          opts.background,
+          0.5,
+        )
         .setOrigin(0.5, opts.originY)
-        .setRounded(4)
-      container.add(bg)
-      container.add(lineText)
-      lineText.setAbove(bg)
+        .setRounded(4);
+      container.add(bg);
+      container.add(lineText);
+      lineText.setAbove(bg);
     } else {
-      container.add(lineText)
+      container.add(lineText);
     }
-    return lineText
-  })
-}
-
-/**
- * Add a bottom-anchored world-card effect block (onEndOfTurn / onDiscarded /
- * onCleared, onPartialClear), each line carrying `prefix`.
- * Skips effects with no content.
- */
-function addEffectBlock(
-  scene: Phaser.Scene,
-  container: Phaser.GameObjects.Container,
-  effect: CardEffect,
-  prefix: string,
-  y: number,
-  color: string,
-): Phaser.GameObjects.Text[] {
-  if (effect.kind === 'None') return []
-  const effectLines = describeEffect(effect)
-  if (effectLines.length === 0) return []
-  // apply prefix to the first line only.
-  const lines = [prefix + effectLines[0], ...effectLines.slice(1)].join('\n')
-  return addCardText(scene, container, 0, y, lines, {
-    fontSize: '10px',
-    color,
-    originY: 0,
-    wrapWidth: CARD_W - 18,
-    background: 0x000000,
-    backgroundAlpha: 0.8,
-  })
+    return lineText;
+  });
 }
 
 /** Create a Phaser Container representing a single card (player or world). */
 export class CardView extends Phaser.GameObjects.Container {
-  readonly cardId: string
+  readonly cardId: string;
 
-  private highlightRect: Phaser.GameObjects.Rectangle
-  private costRing?: CostRing
-  private targetGlow?: Phaser.GameObjects.Graphics
-  private emphasized = false
+  private highlightRect: Phaser.GameObjects.Rectangle;
+  private costRing?: CostRing;
+  private targetGlow?: Phaser.GameObjects.Graphics;
+  private emphasized = false;
 
   constructor(
     scene: Phaser.Scene,
@@ -168,208 +143,306 @@ export class CardView extends Phaser.GameObjects.Container {
     theme: VisualTheme,
     resolveTheme: (worldId: string) => VisualTheme,
   ) {
-    super(scene, x, y)
-    scene.add.existing(this)
-    this.cardId = card.id
-    this.setDepth(TABLE_LAYOUT.cardDepth)
+    super(scene, x, y);
+    scene.add.existing(this);
+    this.cardId = card.id;
+    this.setDepth(TABLE_LAYOUT.cardDepth);
 
     // Card frame image: world cards use the theme-specific front if available.
-    const cardfrontKey = selectCardFrontKey(card, theme, resolveTheme)
-    const cardImg = scene.add.image(0, 0, cardfrontKey)
-    cardImg.setDisplaySize(CARD_W, CARD_H)
-    this.add(cardImg)
+    const cardfrontKey = selectCardFrontKey(card, theme, resolveTheme);
+    const cardImg = scene.add.image(0, 0, cardfrontKey);
+    cardImg.setDisplaySize(CARD_W, CARD_H);
+    this.add(cardImg);
 
     // Transparent overlay rectangle used only for selection highlight strokes.
-    const bg = scene.add.rectangle(1, 1, CARD_W - 2, CARD_H - 2, 0x000000, 0)
-    bg.setStrokeStyle(0)
-    bg.setRounded(10)
-    bg.setAlpha(0.4)
-    this.highlightRect = bg
-    this.add(bg)
+    const bg = scene.add.rectangle(1, 1, CARD_W - 2, CARD_H - 2, 0x000000, 0);
+    bg.setStrokeStyle(0);
+    bg.setRounded(10);
+    bg.setAlpha(0.4);
+    this.highlightRect = bg;
+    this.add(bg);
 
     // Card inset image: if the template defines an insetKey, render the
     // corresponding image on top of the cardfront. This is used for player
     // cards' unique artwork, and world cards don't have insets at all.
-    if ('insetKey' in card && card.insetKey && card.insetKey !== '') {
-      const insetImg = scene.add.image(INSET_X, INSET_Y, card.insetKey)
-        .setOrigin(0.5, 1)
-      const ratio = Math.max(INSET_W / insetImg.width, INSET_H / insetImg.height)
-      insetImg.setDisplaySize(insetImg.width * ratio, insetImg.height * ratio)
-      this.add(insetImg)
-      const frame = scene.add.nineslice(INSET_X, INSET_Y, 'inset-frame', undefined,
-        insetImg.width * ratio + 8, insetImg.height * ratio + 8,
-        4, 4, 4, 4,
-      ).setOrigin(0.5, 1)
-      this.add(frame)
+    if ("insetKey" in card && card.insetKey && card.insetKey !== "") {
+      const insetImg = scene.add
+        .image(INSET_X, INSET_Y, card.insetKey)
+        .setOrigin(0.5, 1);
+      const ratio = Math.max(
+        INSET_W / insetImg.width,
+        INSET_H / insetImg.height,
+      );
+      insetImg.setDisplaySize(insetImg.width * ratio, insetImg.height * ratio);
+      this.add(insetImg);
+      const frame = scene.add
+        .nineslice(
+          INSET_X,
+          INSET_Y,
+          "inset-frame",
+          undefined,
+          insetImg.width * ratio + 8,
+          insetImg.height * ratio + 8,
+          4,
+          4,
+          4,
+          4,
+        )
+        .setOrigin(0.5, 1);
+      this.add(frame);
     }
 
     // Name at top — identical for player and world cards.
     addCardText(scene, this, 0, -CARD_H / 2 + 8, card.name, {
-      fontSize: '13px',
+      fontSize: "16px",
       color: TEXT.textLight,
       bold: true,
       wrapWidth: CARD_W - 12,
       originY: 0,
-    })
+    });
 
-    if (card.kind === 'player') {
+    if (card.kind === "player") {
       // Keywords — same 9px line the world face uses, at the same offset, so a
       // Spore card is identifiable in hand (REQ-MALL-21).
-      const hasKeywords = card.keywords.length > 0
+      const hasKeywords = card.keywords.length > 0;
       if (hasKeywords) {
-        addCardText(scene, this, 0, -CARD_H / 2 + 23, card.keywords.join(' · '), {
-          fontSize: '9px',
-          color: TEXT.textKeyword,
-          originY: 0,
-        })
+        addCardText(
+          scene,
+          this,
+          0,
+          -CARD_H / 2 + 23,
+          card.keywords.join(" · "),
+          {
+            fontSize: "9px",
+            color: TEXT.textKeyword,
+            originY: 0,
+          },
+        );
       }
 
-      // Full effect description — the whole face is self-explanatory. Modal and
-      // Sequence cards render every branch / step, so nothing reads as "Choose...".
-      // A keyword line pushes the block down to the world face's effect offset
-      // so the two never collide; keywordless cards keep the original layout.
-      addCardText(scene, this, 0, -CARD_H / 2 + (hasKeywords ? 36 : 28), describeEffect(card.effect).join('\n'), {
-        fontSize: '11px',
-        color: TEXT.textLight,
-        originY: 0,
-        wrapWidth: CARD_W - 16,
-        lineSpacing: 2,
-        background: 0x000000,
-      })
+      // Compact token rules (compileEffect + addEffectLines) — the whole face
+      // is still self-explanatory: Modal and Sequence cards render every
+      // branch / step as token rows. A keyword line pushes the block down to
+      // the world face's effect offset so the two never collide; keywordless
+      // cards keep the original layout. The block container's (0, 0) is its
+      // top centre; both offsets are whole pixels (CARD_H is even).
+      const effectBlock = addEffectLines(scene, compileEffect(card.effect), {
+        maxWidth: CARD_W - 16,
+        baseColor: TEXT.textLight,
+        background: { color: 0x000000 },
+        warnLabel: card.name,
+      });
+      effectBlock.container.setPosition(
+        0,
+        -CARD_H / 2 + (hasKeywords ? 36 : 28),
+      );
+      this.add(effectBlock.container);
 
       // Energy cost badge: only for cards with energyCost > 0.
       if (card.energyCost > 0) {
-        const badgeBg = scene.add.image(CARD_W / 2 - 16, -CARD_H / 2 + 16, 'energy-icon')
-        badgeBg.setDisplaySize(28, 28)
-        this.add(badgeBg)
+        const badgeBg = scene.add.image(
+          CARD_W / 2 - 16,
+          -CARD_H / 2 + 16,
+          "energy-icon",
+        );
+        badgeBg.setDisplaySize(28, 28);
+        this.add(badgeBg);
 
-        addCardText(scene, this, CARD_W / 2 - 16, -CARD_H / 2 + 16, String(card.energyCost), {
-          fontSize: '16px',
-          color: TEXT.textEnergy,
-          bold: true,
-          originY: 0.5,
-        })
+        addCardText(
+          scene,
+          this,
+          CARD_W / 2 - 16,
+          -CARD_H / 2 + 16,
+          String(card.energyCost),
+          {
+            fontSize: "16px",
+            color: TEXT.textEnergy,
+            bold: true,
+            originY: 0.5,
+          },
+        );
       }
 
       // Exhaust badge: the flag lives on the card (not the effect), so it cannot
-      // come through describeEffect.
+      // come through compileEffect.
       if (card.exhaust === true) {
-        addCardText(scene, this, 0, CARD_H / 2 - 8, 'Exhaust', {
-          fontSize: '9px',
+        addCardText(scene, this, 0, CARD_H / 2 - 8, "Exhaust", {
+          fontSize: "9px",
           color: TEXT.textKeyword,
           bold: true,
           originY: 1,
           background: 0x000000,
-        })
+        });
       }
     } else {
-      const worldCard = card as WorldCard
+      const worldCard = card as WorldCard;
 
       // Progress ring backing the cost digit.
-      const costRing = scene.add.graphics() as CostRing
-      costRing.setPosition(CARD_W / 2 - 21, CARD_H / 2 - 21)
-      this.costRing = costRing
-      this.add(costRing)
+      const costRing = scene.add.graphics() as CostRing;
+      costRing.setPosition(CARD_W / 2 - 21, CARD_H / 2 - 21);
+      this.costRing = costRing;
+      this.add(costRing);
 
       // Cost label + value (cost is the Progress needed to clear the Hazard).
-      addCardText(scene, this, CARD_W / 2 - 21, CARD_H / 2 - 21, String(worldCard.cost), {
-        fontSize: '30px',
-        color: TEXT.textCost,
-        bold: true,
-        originY: 0.5,
-      })
-      addCardText(scene, this, CARD_W / 2 - 21, CARD_H / 2 - 3, 'to clear', {
-        fontSize: '8px',
+      addCardText(
+        scene,
+        this,
+        CARD_W / 2 - 21,
+        CARD_H / 2 - 21,
+        String(worldCard.cost),
+        {
+          fontSize: "30px",
+          color: TEXT.textCost,
+          bold: true,
+          originY: 0.5,
+        },
+      );
+      addCardText(scene, this, CARD_W / 2 - 21, CARD_H / 2 - 3, "to clear", {
+        fontSize: "8px",
         color: TEXT.textMuted,
         originY: 1,
-      })
+      });
 
       // Keywords.
       if (worldCard.keywords.length > 0) {
-        addCardText(scene, this, 0, -CARD_H / 2 + 23, worldCard.keywords.join(' · '), {
-          fontSize: '9px',
-          color: TEXT.textKeyword,
-          originY: 0,
-        })
+        addCardText(
+          scene,
+          this,
+          0,
+          -CARD_H / 2 + 23,
+          worldCard.keywords.join(" · "),
+          {
+            fontSize: "9px",
+            color: TEXT.textKeyword,
+            originY: 0,
+          },
+        );
       }
 
-      // onEndOfTurn, onDiscarded, onCleared — full sentences.
-      const effectLineSpacing = 4
-      let currY = -CARD_H / 2 + 36
-      const onEnd = addEffectBlock(scene, this, worldCard.onEndOfTurn, 'Each turn: ', currY, TEXT.textHeld)
-      currY = onEnd.reduce((highest, text) => Math.max(highest, text.y + text.height + effectLineSpacing), currY)
-      const onDiscarded = addEffectBlock(scene, this, worldCard.onDiscarded, 'If discarded: ', currY, TEXT.textPenalty)
-      currY = onDiscarded.reduce((highest, text) => Math.max(highest, text.y + text.height + effectLineSpacing), currY)
-      const onCleared = addEffectBlock(scene, this, worldCard.onCleared, 'Clear it: ', currY, TEXT.textReward)
-      currY = onCleared.reduce((highest, text) => Math.max(highest, text.y + text.height + effectLineSpacing), currY)
-      addEffectBlock(scene, this, worldCard.onPartialClear, 'Partial clear: ', currY, TEXT.textPenalty)
+      // onEndOfTurn, onDiscarded, onCleared, onPartialClear — compact token
+      // blocks, each led by its trigger icon; text is tinted per block, while
+      // the icon discs keep their own placeholder hues (effectLineLayout) until
+      // real art lands (token-IR design §4). A `None` effect compiles to no
+      // lines (height 0):
+      // its empty container is dropped and contributes no spacing. currY stays
+      // whole-pixel: it starts integral and `height` is contractually integral.
+      const effectLineSpacing = 4;
+      let currY = -CARD_H / 2 + 36;
+      const triggerBlocks: {
+        leadIcon: IconId;
+        effect: CardEffect;
+        color: string;
+      }[] = [
+        {
+          leadIcon: "eachTurn",
+          effect: worldCard.onEndOfTurn,
+          color: TEXT.textHeld,
+        },
+        {
+          leadIcon: "onDiscard",
+          effect: worldCard.onDiscarded,
+          color: TEXT.textPenalty,
+        },
+        {
+          leadIcon: "onClear",
+          effect: worldCard.onCleared,
+          color: TEXT.textReward,
+        },
+        {
+          leadIcon: "onPartialClear",
+          effect: worldCard.onPartialClear,
+          color: TEXT.textPenalty,
+        },
+      ];
+      for (const block of triggerBlocks) {
+        const { container, height } = addEffectLines(
+          scene,
+          compileEffect(block.effect),
+          {
+            maxWidth: CARD_W - 18,
+            baseColor: block.color,
+            fontSize: 10,
+            leadIcon: block.leadIcon,
+            background: { color: 0x000000, alpha: 0.8 },
+            warnLabel: card.name,
+          },
+        );
+        if (height === 0) {
+          container.destroy();
+          continue;
+        }
+        container.setPosition(0, currY);
+        this.add(container);
+        currY += height + effectLineSpacing;
+      }
 
       // Discard indicator.
       if (worldCard.discardable) {
-        addCardText(scene, this, 0, CARD_H / 2 - 22, 'click to discard', {
-          fontSize: '9px',
+        addCardText(scene, this, 0, CARD_H / 2 - 22, "click to discard", {
+          fontSize: "9px",
           color: TEXT.textDiscard,
           bold: true,
           originY: 0,
           background: 0x000000,
-        })
+        });
       }
     }
   }
 
   /** Apply a coloured stroke to communicate this card's selection state. */
   applyHighlight(kind: HighlightKind, frameStyle: FrameStyle): void {
-    const { strokeWidth, strokeColor, fillColor, fillAlpha } = highlightDescriptor(kind, frameStyle)
-    this.highlightRect.setFillStyle(fillColor, fillAlpha)
-    this.highlightRect.setStrokeStyle(strokeWidth, strokeColor)
+    const { strokeWidth, strokeColor, fillColor, fillAlpha } =
+      highlightDescriptor(kind, frameStyle);
+    this.highlightRect.setFillStyle(fillColor, fillAlpha);
+    this.highlightRect.setStrokeStyle(strokeWidth, strokeColor);
   }
 
   /** Dim a card that is not currently playable. */
   setDimmed(dim: boolean): void {
-    this.setAlpha(dim ? TEXT.dimAlpha : 1.0)
+    this.setAlpha(dim ? TEXT.dimAlpha : 1.0);
   }
 
   /** Animate a world card's progress ring toward `fraction` of a full circle. */
   updateCostRing(fraction: number, ringAccent: number): void {
-    if (this.costRing === undefined) return
-    updateRingObject(this.scene, this.costRing, fraction, ringAccent)
+    if (this.costRing === undefined) return;
+    updateRingObject(this.scene, this.costRing, fraction, ringAccent);
   }
 
   /** Make this hovered legal target the loudest card on the board. */
   emphasize(glowColor: number, intensity: number): void {
-    if (this.emphasized) return
+    if (this.emphasized) return;
 
-    const { scale, glowAlpha } = emphasisDescriptor(intensity)
-    this.setScale(scale)
-    const glow = this.obtainGlow()
-    glow.setVisible(true)
-    drawGlow(glow, glowColor, glowAlpha)
-    this.emphasized = true
-    this.setDepth(TABLE_LAYOUT.cardHoverDepth)
+    const { scale, glowAlpha } = emphasisDescriptor(intensity);
+    this.setScale(scale);
+    const glow = this.obtainGlow();
+    glow.setVisible(true);
+    drawGlow(glow, glowColor, glowAlpha);
+    this.emphasized = true;
+    this.setDepth(TABLE_LAYOUT.cardHoverDepth);
   }
 
   /** Restore base transform: scale 1, glow hidden/cleared, emphasis off. */
   clearEmphasis(): void {
-    this.setScale(1)
+    this.setScale(1);
     if (this.targetGlow !== undefined) {
-      this.targetGlow.clear()
-      this.targetGlow.setVisible(false)
+      this.targetGlow.clear();
+      this.targetGlow.setVisible(false);
     }
-    this.emphasized = false
-    this.setDepth(TABLE_LAYOUT.cardDepth)
+    this.emphasized = false;
+    this.setDepth(TABLE_LAYOUT.cardDepth);
   }
 
   /** Re-assert this card's base position. */
   setCardPosition(x: number, y: number): void {
-    this.setPosition(x, y)
+    this.setPosition(x, y);
   }
 
   private obtainGlow(): Phaser.GameObjects.Graphics {
-    if (this.targetGlow !== undefined) return this.targetGlow
-    const glow = this.scene.add.graphics()
-    this.add(glow)
-    this.targetGlow = glow
-    return glow
+    if (this.targetGlow !== undefined) return this.targetGlow;
+    const glow = this.scene.add.graphics();
+    this.add(glow);
+    this.targetGlow = glow;
+    return glow;
   }
 }
 
@@ -382,7 +455,7 @@ export function createCardObject(
   theme: VisualTheme,
   resolveTheme: (worldId: string) => VisualTheme,
 ): Phaser.GameObjects.Container {
-  return new CardView(scene, card, x, y, theme, resolveTheme)
+  return new CardView(scene, card, x, y, theme, resolveTheme);
 }
 
 // ---------------------------------------------------------------------------
@@ -400,16 +473,17 @@ export function applyCardHighlight(
   frameStyle: FrameStyle,
 ): void {
   if (container instanceof CardView) {
-    container.applyHighlight(kind, frameStyle)
-    return
+    container.applyHighlight(kind, frameStyle);
+    return;
   }
 
   // The highlight rectangle is list[1] (list[0] is the cardfront image)
-  const bg = container.list[1] as Phaser.GameObjects.Rectangle | undefined
-  if (bg === undefined) return
-  const { strokeWidth, strokeColor, fillColor, fillAlpha } = highlightDescriptor(kind, frameStyle)
-  bg.setFillStyle(fillColor, fillAlpha)
-  bg.setStrokeStyle(strokeWidth, strokeColor)
+  const bg = container.list[1] as Phaser.GameObjects.Rectangle | undefined;
+  if (bg === undefined) return;
+  const { strokeWidth, strokeColor, fillColor, fillAlpha } =
+    highlightDescriptor(kind, frameStyle);
+  bg.setFillStyle(fillColor, fillAlpha);
+  bg.setStrokeStyle(strokeWidth, strokeColor);
 }
 
 // ---------------------------------------------------------------------------
@@ -418,43 +492,47 @@ export function applyCardHighlight(
 
 // Ring geometry — shared by the snap path and the tween onUpdate so a tweened
 // frame is drawn byte-for-byte the same as a snapped one.
-const RING_RADIUS = 18
-const RING_LINE_WIDTH = 3
+const RING_RADIUS = 18;
+const RING_LINE_WIDTH = 3;
 
 // Fill/drain share one duration and easing so banking and the end-of-turn
 // reset read as a single clock moving in opposite directions (FEEDBACK-8).
-const RING_TWEEN_DURATION = 300
-const RING_TWEEN_EASE = 'Sine.easeInOut'
+const RING_TWEEN_DURATION = 300;
+const RING_TWEEN_EASE = "Sine.easeInOut";
 
 // Below this delta, target and displayed fraction are treated as equal: the
 // call is a no-op (no tween restart, no jitter) so calling updateCostRing every
 // reconcile cycle with the same target is idempotent.
-const RING_FRACTION_EPSILON = 0.001
+const RING_FRACTION_EPSILON = 0.001;
 
 // The ring Graphics also carries the fraction it is currently DISPLAYING (the
 // tweened value, not the target). Stored on the object so it survives across
 // reconcile cycles and a fresh tween can interpolate from wherever the last one
 // left off (banking up, then draining back to 0, are the same clock).
-type CostRing = Phaser.GameObjects.Graphics & { displayedFraction?: number }
+type CostRing = Phaser.GameObjects.Graphics & { displayedFraction?: number };
 
 /** Draw the ring arc for an exact fraction. Pure given (ring, fraction). */
-function drawCostRing(ring: Phaser.GameObjects.Graphics, fraction: number, ringAccent: number): void {
-  ring.clear()
+function drawCostRing(
+  ring: Phaser.GameObjects.Graphics,
+  fraction: number,
+  ringAccent: number,
+): void {
+  ring.clear();
 
   // Faint full-circle track so the ring reads even at low progress.
-  ring.lineStyle(RING_LINE_WIDTH, ringAccent, 0.18)
-  ring.strokeCircle(0, 0, RING_RADIUS)
-  ring.fillStyle(ringAccent, 0.08)
-  ring.fillCircle(0, 0, RING_RADIUS - RING_LINE_WIDTH / 2)
+  ring.lineStyle(RING_LINE_WIDTH, ringAccent, 0.18);
+  ring.strokeCircle(0, 0, RING_RADIUS);
+  ring.fillStyle(ringAccent, 0.08);
+  ring.fillCircle(0, 0, RING_RADIUS - RING_LINE_WIDTH / 2);
 
   // Angle math (clamp + clockwise sweep from the top) lives in costRingArc.
-  const { clamped, start, end } = costRingArc(fraction)
-  if (clamped <= 0) return
+  const { clamped, start, end } = costRingArc(fraction);
+  if (clamped <= 0) return;
 
-  ring.lineStyle(RING_LINE_WIDTH, ringAccent, 1)
-  ring.beginPath()
-  ring.arc(0, 0, RING_RADIUS, start, end, false)
-  ring.strokePath()
+  ring.lineStyle(RING_LINE_WIDTH, ringAccent, 1);
+  ring.beginPath();
+  ring.arc(0, 0, RING_RADIUS, start, end, false);
+  ring.strokePath();
 }
 
 /**
@@ -490,13 +568,15 @@ export function updateCostRing(
   ringAccent: number,
 ): void {
   if (container instanceof CardView) {
-    container.updateCostRing(fraction, ringAccent)
-    return
+    container.updateCostRing(fraction, ringAccent);
+    return;
   }
 
-  const ring = (container as Phaser.GameObjects.Container & { costRing?: CostRing }).costRing
-  if (ring === undefined) return
-  updateRingObject(scene, ring, fraction, ringAccent)
+  const ring = (
+    container as Phaser.GameObjects.Container & { costRing?: CostRing }
+  ).costRing;
+  if (ring === undefined) return;
+  updateRingObject(scene, ring, fraction, ringAccent);
 }
 
 function updateRingObject(
@@ -505,38 +585,36 @@ function updateRingObject(
   fraction: number,
   ringAccent: number,
 ): void {
-  const target = Math.min(1, Math.max(0, fraction))
-  const displayed = ring.displayedFraction
+  const target = Math.min(1, Math.max(0, fraction));
+  const displayed = ring.displayedFraction;
 
   // First render for this ring: snap, record, no animation.
   if (displayed === undefined) {
-    ring.displayedFraction = target
-    drawCostRing(ring, target, ringAccent)
-    return
+    ring.displayedFraction = target;
+    drawCostRing(ring, target, ringAccent);
+    return;
   }
 
   // Idempotent: unchanged target must not restart the tween or jitter.
-  if (Math.abs(target - displayed) < RING_FRACTION_EPSILON) return
+  if (Math.abs(target - displayed) < RING_FRACTION_EPSILON) return;
 
   // Kill any in-flight ring tween before starting a new one. Targeting the ring
   // object (not a retained Tween, not a free proxy) keeps the S3 destruction
   // pass able to cancel this tween, and lets the new tween start from wherever
   // the last one left off.
-  scene.tweens.killTweensOf(ring)
+  scene.tweens.killTweensOf(ring);
   scene.tweens.add({
     targets: ring,
     displayedFraction: target,
     duration: RING_TWEEN_DURATION,
     ease: RING_TWEEN_EASE,
     onUpdate: () => {
-      drawCostRing(ring, ring.displayedFraction ?? target, ringAccent)
+      drawCostRing(ring, ring.displayedFraction ?? target, ringAccent);
     },
     onComplete: () => {
       // Settle exactly on target so float drift never leaves a partial arc.
-      ring.displayedFraction = target
-      drawCostRing(ring, target, ringAccent)
+      ring.displayedFraction = target;
+      drawCostRing(ring, target, ringAccent);
     },
-  })
+  });
 }
-
-
