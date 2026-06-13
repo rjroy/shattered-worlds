@@ -4,6 +4,8 @@ import { CANVAS_W, CANVAS_H } from './layout'
 import { WORLD_CONSTS } from '../../core/engine/world'
 import { worldDisplayManifest } from '../../data/worldDisplayManifest'
 import { worldHelpManifest } from '../../data/worldHelpManifest'
+import type { IconId } from '../../core/view/effectGlyphs'
+import { EFFECT_ICON_TEXTURES } from './effectLineLayout'
 
 /** Full-screen help overlay with tab/page navigation, hidden by default. */
 export class HelpOverlayView extends Phaser.GameObjects.Container {
@@ -228,6 +230,50 @@ export class HelpOverlayView extends Phaser.GameObjects.Container {
     })
   }
 
+  // One reference entry on the Icons page: the real icon texture (the same
+  // key the card face renders), the effect's short name, and a one-line gloss
+  // of what it does. nameColor lets the world-trigger icons echo their card
+  // tint (orange Each turn, pink If discarded, green Clear it).
+  function addIconRow(
+    parent: Phaser.GameObjects.Container,
+    x: number,
+    y: number,
+    iconId: IconId,
+    name: string,
+    gloss: string,
+    wrapWidth = 320,
+    nameColor = TEXT.textLight,
+  ): void {
+    const img = scene.add.image(x, y, EFFECT_ICON_TEXTURES[iconId])
+    img.setDisplaySize(22, 22)
+    img.setOrigin(0.5, 0.5)
+    parent.add(img)
+    addText(parent, x + 20, y - 11, name, {
+      fontSize: '12px',
+      color: nameColor,
+      fontStyle: 'bold',
+    })
+    addText(parent, x + 20, y + 2, gloss, {
+      fontSize: '11px',
+      color: TEXT.textMuted,
+      wordWrap: { width: wrapWidth },
+      lineSpacing: 1,
+    })
+  }
+
+  function addIconSectionHeader(
+    parent: Phaser.GameObjects.Container,
+    x: number,
+    y: number,
+    label: string,
+  ): void {
+    addText(parent, x, y, label, {
+      fontSize: '12px',
+      color: TEXT.textKeyword,
+      fontStyle: 'bold',
+    })
+  }
+
   const addTab = (index: number, x: number, label: string): void => {
     const tab = scene.add.container(x, -263)
     const bgButton = scene.add.rectangle(0, 0, 102, 25, 0x0b101a, 0.85)
@@ -355,6 +401,55 @@ export class HelpOverlayView extends Phaser.GameObjects.Container {
           wordWrap: { width: 210 },
           lineSpacing: 3,
         })
+      },
+    },
+    {
+      tab: 'Icons',
+      title: 'What the card icons mean',
+      subtitle: 'Cards compress their effects into icons. Here is every icon you will see, grouped by what it does.',
+      build: (page) => {
+        // Two reference columns. Left edge of each column holds the icon; the
+        // name and gloss hang to its right. Column gutter is wide enough that
+        // the left glosses (wrap 300) never reach the right column at x=40.
+        const leftX = -360
+        const rightX = 40
+        const colWrap = 300
+
+        addIconSectionHeader(page, leftX, -168, 'Make Progress')
+        addIconRow(page, leftX, -146, 'progress', 'Progress', 'Add Progress to the hazard you target.', colWrap)
+        addIconRow(page, leftX, -116, 'progressAll', 'Progress · all', 'Add Progress to every hazard at once.', colWrap)
+
+        addIconSectionHeader(page, leftX, -82, 'Resources')
+        addIconRow(page, leftX, -60, 'energy', 'Energy', 'Gain Energy to spend on more cards.', colWrap)
+        addIconRow(page, leftX, -30, 'hp', 'HP', 'Heal (+) or take damage (−) to your HP.', colWrap)
+
+        addIconSectionHeader(page, leftX, 4, 'Cards & deck')
+        addIconRow(page, leftX, 26, 'draw', 'Draw', 'Draw cards from your deck.', colWrap)
+        addIconRow(page, leftX, 56, 'worldDraw', 'World draw', 'Draw extra world cards — more hazards.', colWrap)
+        addIconRow(page, leftX, 86, 'discard', 'Discard', 'Discard a card from your hand.', colWrap)
+        addIconRow(page, leftX, 116, 'addCard', 'Add card', 'Add a named card to your deck or hand.', colWrap)
+
+        addIconSectionHeader(page, rightX, -168, 'Remove & exhaust')
+        addIconRow(page, rightX, -146, 'destroy', 'Destroy', 'Remove a card in hand for the rest of the run.', colWrap)
+        addIconRow(page, rightX, -116, 'exile', 'Exile', 'Remove cards off the top of the world deck.', colWrap)
+        addIconRow(page, rightX, -86, 'return', 'Return', 'Send world cards back into the world deck.', colWrap)
+        addIconRow(page, rightX, -56, 'vanish', 'Vanish', 'This card exhausts — one use, then it is gone.', colWrap)
+
+        addIconSectionHeader(page, rightX, -22, 'Threats & timing')
+        addIconRow(page, rightX, 0, 'threat', 'Threat', 'Add a hazard to the world deck.', colWrap)
+        addIconRow(page, rightX, 30, 'brace', 'Brace', 'Reduce the damage you take this turn.', colWrap)
+        addIconRow(page, rightX, 60, 'survive', 'Survive', 'Endure the world’s end and press on.', colWrap)
+        addIconRow(page, rightX, 90, 'skipDraw', 'Skip draw', 'Skip your draw on your next turn.', colWrap)
+
+        // World-trigger icons lead the colored blocks on a hazard face, so their
+        // names echo those tints here. Laid as a full-width strip below the columns.
+        addPanel(page, 0, 188, 745, 70)
+        addIconSectionHeader(page, leftX, 162, 'Hazard triggers')
+        const trigWrap = 150
+        addIconRow(page, leftX, 196, 'eachTurn', 'Each turn', 'Fires each turn it stays in hand.', trigWrap, TEXT.textHeld)
+        addIconRow(page, -175, 196, 'onDiscard', 'If discarded', 'Fires if you discard the hazard.', trigWrap, TEXT.textPenalty)
+        addIconRow(page, 25, 196, 'onClear', 'Clear it', 'Fires when you fully clear it.', trigWrap, TEXT.textReward)
+        addIconRow(page, 215, 196, 'onPartialClear', 'Partial clear', 'Fires on some, but not enough, Progress.', trigWrap, TEXT.textDiscard)
       },
     },
     {
