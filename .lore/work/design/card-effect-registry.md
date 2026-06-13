@@ -1,7 +1,7 @@
 ---
 title: Co-locating card-effect behavior — registry over scattered switches
 date: 2026-06-13
-status: proposed
+status: implemented
 tags: [card-effect, core, refactor, extensibility, exhaustiveness, registry]
 modules: [core-model, core-engine, core-view, game-interaction]
 related: [.lore/work/design/card-effect-token-ir.md]

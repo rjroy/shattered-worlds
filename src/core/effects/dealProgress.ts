@@ -39,12 +39,11 @@ import type {
 } from '../model/types'
 import type { CardCatalog } from '../model/catalog'
 import type { EffectLine } from '../view/effectGlyphs'
-import { describeEffect } from '../view/describe'
-import { compileEffect } from '../view/effectGlyphs'
 import { applyEffect } from '../engine/effects'
 import type { CompileContext, ConnectorStyle, EffectContext, EffectResult } from './EffectContext'
 import { EffectHandler, HazardTargetingHandler } from './EffectHandler'
 import { worldCardsInHand } from './handState'
+import { bonusRider, icon, main, perRider, text, value } from './tokens'
 
 type DealProgressEffect = Extract<CardEffect, { kind: 'DealProgress' }>
 type DealProgressScaledEffect = Extract<CardEffect, { kind: 'DealProgressScaled' }>
@@ -137,11 +136,14 @@ export class DealProgressHandler extends HazardTargetingHandler<DealProgressEffe
   }
 
   override describe(effect: DealProgressEffect): string[] {
-    return describeEffect(effect)
+    const bonus = effect.bonus ? `\n(+${effect.bonus.amount} vs ${effect.bonus.tag})` : ''
+    return [`Add ${effect.base} Progress${bonus}`]
   }
 
-  override compile(effect: DealProgressEffect, ctx: CompileContext): EffectLine[] {
-    return compileEffect(effect, ctx.worldId)
+  override compile(effect: DealProgressEffect, _ctx: CompileContext): EffectLine[] {
+    const lines = [main([text('+'), value(`${effect.base}`, 'progress'), icon('progress')])]
+    if (effect.bonus) lines.push(bonusRider(effect.bonus, 'progress'))
+    return lines
   }
 
   override structuralSpec(effect: DealProgressEffect): TargetSpec {
@@ -190,11 +192,14 @@ export class DealProgressScaledHandler extends HazardTargetingHandler<DealProgre
   }
 
   override describe(effect: DealProgressScaledEffect): string[] {
-    return describeEffect(effect)
+    return [`Add ${effect.base} Progress`, `+${effect.amount} per ${effect.per.keyword} in hand`]
   }
 
-  override compile(effect: DealProgressScaledEffect, ctx: CompileContext): EffectLine[] {
-    return compileEffect(effect, ctx.worldId)
+  override compile(effect: DealProgressScaledEffect, _ctx: CompileContext): EffectLine[] {
+    return [
+      main([text('+'), value(`${effect.base}`, 'progress'), icon('progress')]),
+      perRider('+', effect.amount, effect.per),
+    ]
   }
 }
 
@@ -226,11 +231,16 @@ export class DealProgressAllHandler extends EffectHandler<DealProgressAllEffect>
   }
 
   override describe(effect: DealProgressAllEffect): string[] {
-    return describeEffect(effect)
+    const bonus = effect.bonus ? `\n(+${effect.bonus.amount} vs ${effect.bonus.tag})` : ''
+    return [`${effect.base} Progress to every hazard${bonus}`]
   }
 
-  override compile(effect: DealProgressAllEffect, ctx: CompileContext): EffectLine[] {
-    return compileEffect(effect, ctx.worldId)
+  override compile(effect: DealProgressAllEffect, _ctx: CompileContext): EffectLine[] {
+    const lines = [
+      main([text('+'), value(`${effect.base}`, 'progress'), text('all'), icon('progressAll')]),
+    ]
+    if (effect.bonus) lines.push(bonusRider(effect.bonus, 'progress'))
+    return lines
   }
 
   override isPlayable(_effect: DealProgressAllEffect, state: GameState, _selfId: CardId): boolean {

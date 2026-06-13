@@ -1,7 +1,7 @@
 ---
 title: "Implementation plan: card-effect handler registry"
 date: 2026-06-13
-status: draft
+status: executed
 tags: [plan, card-effect, refactor, registry, exhaustiveness, core]
 modules: [core-model, core-engine, core-view, game-interaction]
 related: [.lore/work/design/card-effect-registry.md, .lore/work/design/card-effect-token-ir.md]

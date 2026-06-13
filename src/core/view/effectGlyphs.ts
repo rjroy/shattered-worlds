@@ -14,9 +14,8 @@
  * mapping exists to drift as worlds add keywords.
  */
 import type { CardEffect } from "../../core/index";
-import { worldThreatByWorldId } from "../engine/effects";
-// Not part of the public core surface, so imported from the model directly.
-import type { CounterSpec, Keyword } from "../model/types";
+import type { CompileContext as HandlerCompileContext } from "../effects/EffectContext";
+import { EFFECTS } from "../effects/registry";
 
 /** Closed set of semantic icon identifiers. No Phaser types, no texture keys. */
 export type IconId =
@@ -59,44 +58,6 @@ export interface EffectLine {
 }
 
 // ---------------------------------------------------------------------------
-// Token constructors
-// ---------------------------------------------------------------------------
-
-function icon(id: IconId): EffectToken {
-  return { kind: "icon", icon: id };
-}
-
-function value(text: string, emphasis?: ValueEmphasis): EffectToken {
-  return emphasis === undefined ? { kind: "value", text } : { kind: "value", text, emphasis };
-}
-
-function text(s: string): EffectToken {
-  return { kind: "text", text: s };
-}
-
-function main(tokens: EffectToken[]): EffectLine {
-  return { tokens };
-}
-
-function rider(tokens: EffectToken[]): EffectLine {
-  return { tokens, role: "rider" };
-}
-
-/** Rider for a keyword bonus: `+2 vs Spore`. The keyword stays plain text. */
-function bonusRider(bonus: { tag: Keyword; amount: number }, emphasis?: ValueEmphasis): EffectLine {
-  return rider([value(`+${bonus.amount}`, emphasis), text("vs"), text(bonus.tag)]);
-}
-
-/** Rider for a scaled effect: `+1 per Spore in hand` / `−1 per Spore in hand`. */
-function perRider(sign: "+" | "−", amount: number, per: CounterSpec): EffectLine {
-  return rider([value(`${sign}${amount}`), text("per"), text(per.keyword), text("in hand")]);
-}
-
-function rangeText(min: number, max: number): string {
-  return min === max ? `${min}` : `${min}–${max}`;
-}
-
-// ---------------------------------------------------------------------------
 // Compilation
 // ---------------------------------------------------------------------------
 
@@ -113,135 +74,24 @@ function rangeText(min: number, max: number): string {
  * the empty compile encodes that rule once instead of leaving it to callers.
  */
 export function compileEffect(effect: CardEffect, worldId: string): EffectLine[] {
-  return compile(effect, { compactSequences: false }, worldId);
+  // Top-level compile starts with compactSequences = false (a top-level Sequence
+  // may split across lines); composites force it true for their children.
+  return dispatchCompile(effect, makeHandlerCtx(worldId, false));
 }
 
-interface CompileContext {
-  /**
-   * Inside a Modal branch, a Sequence always joins onto one line regardless
-   * of step count — branches are compact by nature (single indent level).
-   */
-  compactSequences: boolean;
+/**
+ * Build the core `CompileContext` a composite handler's `compile` receives. Its
+ * `compile` callback is bound to `dispatchCompile`, so Modal/Sequence handlers
+ * recurse into child effects without importing `registry.ts` themselves.
+ */
+function makeHandlerCtx(worldId: string, compactSequences: boolean): HandlerCompileContext {
+  return { worldId, compactSequences, compile: dispatchCompile };
 }
 
-function compile(effect: CardEffect, ctx: CompileContext, worldId: string): EffectLine[] {
-  switch (effect.kind) {
-    case "DealProgress": {
-      const lines = [main([text("+"), value(`${effect.base}`, "progress"), icon("progress")])];
-      if (effect.bonus) lines.push(bonusRider(effect.bonus, "progress"));
-      return lines;
-    }
-    case "DealProgressScaled":
-      return [
-        main([text("+"), value(`${effect.base}`, "progress"), icon("progress")]),
-        perRider("+", effect.amount, effect.per),
-      ];
-    case "DealProgressAll": {
-      const lines = [
-        main([text("+"), value(`${effect.base}`, "progress"), text("all"), icon("progressAll")]),
-      ];
-      if (effect.bonus) lines.push(bonusRider(effect.bonus, "progress"));
-      return lines;
-    }
-    case "Draw": {
-      const tokens: EffectToken[] = [];
-      if (effect.player !== undefined && effect.player > 0) {
-        tokens.push(icon("draw"), value(`${effect.player}`, "reward"));
-      }
-      if (effect.world !== undefined && effect.world > 0) {
-        if (tokens.length > 0) tokens.push(text("·"));
-        tokens.push(icon("worldDraw"), value(`${effect.world}`, "penalty"));
-      }
-      return [main(tokens.length > 0 ? tokens : [text("draw nothing")])];
-    }
-    case "Heal":
-      return [main([value(`+${effect.amount}`, "reward"), icon("hp")])];
-    case "Damage":
-      return [main([value(`−${effect.amount}`, "penalty"), icon("hp")])];
-    case "DamageScaled":
-      return [
-        main([value(`−${effect.base}`, "penalty"), icon("hp")]),
-        perRider("−", effect.amount, effect.per),
-      ];
-    case "GainEnergy":
-      return [main([value(`+${effect.amount}`, "reward"), icon("energy")])];
-    case "ReturnWorldCards":
-      return [main([icon("return"), value(rangeText(effect.min, effect.max), "reward")])];
-    case "DestroyCardInHand": {
-      const count = effect.max === 1 ? "1" : rangeText(effect.min, effect.max);
-      const lines = [main([icon("destroy"), value(count, "penalty"), text("in hand")])];
-      if (effect.min === 0 && effect.max === 1) lines.push(rider([text("(optional)")]));
-      return lines;
-    }
-    case "DiscardThenDraw":
-      return [
-        main([icon("discard"), value("1"), text("→"), icon("draw"), value(`${effect.player}`)]),
-      ];
-    case "ExileTopWorldCards":
-      return [main([icon("exile"), text("top"), value(`${effect.amount}`)])];
-    case "Brace":
-      return [main([value(`+${effect.amount}`, "brace"), icon("brace")])];
-    case "AddCard":
-    case "GainCard":
-      return [main([icon("addCard"), value(effect.template, "reward")])];
-    case "AddPlayerCardToTop":
-      return [
-        main([icon("addCard"), value(effect.template, "reward")]),
-        rider([text("top of deck")]),
-      ];
-    case "AddWorldCardToDeck":
-      return [main([icon("addCard"), value(effect.template, "penalty")])];
-    case "AddThreatToWorldDeck":
-      return [main([icon("addCard"), value(worldThreatByWorldId(worldId), "penalty")])];
-    case "SurviveWorld":
-      return [main([icon("survive"), text("SURVIVE!")])];
-    case "ForceDestroy":
-      // The amount is dropped, matching describeEffect's prose for this kind.
-      return [main([icon("destroy"), text("random, next hand")])];
-    case "DestroySelf":
-      return [main([icon("vanish")])];
-    case "None":
-      return [];
-    case "Modal":
-      return [
-        main([text("Choose:")]),
-        // A branch's first (main) line becomes a 'branch' line; rider lines it
-        // produced stay riders, and nested 'branch' lines stay 'branch' — the
-        // indent level deliberately does not stack.
-        ...effect.branches.flatMap((branch) =>
-          compile(branch, { compactSequences: true }, worldId).map(
-            (l): EffectLine => ({ ...l, role: l.role ?? "branch" }),
-          ),
-        ),
-      ];
-    case "Sequence": {
-      // None steps contribute nothing, so the join-vs-split count is over the
-      // steps that actually produced lines.
-      const compiledSteps = effect.steps
-        .map((step) => compile(step, ctx, worldId))
-        .filter((compiled) => compiled.length > 0);
-      if (ctx.compactSequences || compiledSteps.length <= 2) {
-        // Step main lines join onto one line with '→' connectives; any
-        // rider/branch lines the steps produced follow after, roles preserved.
-        const joined: EffectToken[] = [];
-        const trailing: EffectLine[] = [];
-        for (const [first, ...rest] of compiledSteps) {
-          if (first === undefined) continue;
-          if (joined.length > 0) joined.push(text("→"));
-          joined.push(...first.tokens);
-          trailing.push(...rest);
-        }
-        return joined.length > 0 ? [main(joined), ...trailing] : trailing;
-      }
-      // 3+ steps would overflow a single line, so each step gets its own line,
-      // continuation lines led by '→'. Each step's rider/branch lines
-      // immediately follow that step's line, keeping riders bound to their
-      // owner (see design §2 rider binding).
-      return compiledSteps.flatMap(([first, ...rest], index) => {
-        if (first === undefined) return [];
-        const tokens = index === 0 ? first.tokens : [text("→"), ...first.tokens];
-        return [{ ...first, tokens }, ...rest];
-      });
-    }
-  }
+/**
+ * Compile-time dispatcher mirroring `applyEffect`'s `dispatch`.
+ */
+function dispatchCompile(effect: CardEffect, ctx: HandlerCompileContext): EffectLine[] {
+  const h = EFFECTS[effect.kind];
+  return h.compile(effect as never, ctx);
 }

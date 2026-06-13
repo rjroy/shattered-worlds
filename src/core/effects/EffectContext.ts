@@ -96,7 +96,6 @@ export interface CompileContext {
 /**
  * The visual connector style a card's play draws toward its target. Defined in
  * core (Phaser-free) so the handler base can carry a `connectorStyle` method;
- * `src/game/interaction/feedback.ts` re-exports it for the renderer. Step 8
- * completes the move by deleting the legacy `selectConnectorStyle` switch.
+ * `src/game/interaction/feedback.ts` re-exports the type for renderer modules.
  */
 export type ConnectorStyle = 'progress' | 'destroy' | 'return'
