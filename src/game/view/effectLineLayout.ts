@@ -11,11 +11,7 @@
  *
  * It consumes the token IR from `src/core/view/effectGlyphs.ts` as types only.
  */
-import type {
-  EffectLine,
-  IconId,
-  ValueEmphasis,
-} from "../../core/view/effectGlyphs";
+import type { EffectLine, IconId, ValueEmphasis } from "../../core/view/effectGlyphs";
 import { EFFECT_ROW } from "./layout";
 import { TEXT } from "./presentation";
 
@@ -44,7 +40,6 @@ export const EFFECT_ICON_TEXTURES: Record<IconId, string> = {
   addCard: "effect-icon-add-card",
   threat: "effect-icon-threat",
   brace: "power-brace",
-  skipDraw: "effect-icon-skip-draw",
   survive: "effect-icon-survive",
   vanish: "effect-icon-vanish",
   eachTurn: "effect-icon-each-turn",
@@ -81,7 +76,6 @@ export const EFFECT_ICON_PLACEHOLDERS: Record<IconId, IconPlaceholderSpec> = {
   addCard: { letter: "+", color: "#5ad0d0" },
   threat: { letter: "T", color: "#d05a9c" },
   brace: { letter: "B", color: "#8fa3b8" },
-  skipDraw: { letter: "K", color: "#7a7f8a" },
   survive: { letter: "S", color: "#8fc97f" },
   vanish: { letter: "V", color: "#d8d8e0" },
   eachTurn: { letter: "U", color: "#ffaa66" },
@@ -210,10 +204,7 @@ export interface RowLayout {
 }
 
 /** Lay out token widths left-to-right with a fixed gap between neighbours. */
-export function layoutRowTokens(
-  widths: readonly number[],
-  gap: number,
-): RowLayout {
+export function layoutRowTokens(widths: readonly number[], gap: number): RowLayout {
   let cursor = 0;
   const centers: number[] = [];
   for (const width of widths) {
@@ -239,10 +230,7 @@ export function fitRowScale(rowWidth: number, availableWidth: number): number {
  * centre `indent` right of the block's centre line, so it loses `indent` of
  * clearance on BOTH sides of the symmetric `maxWidth`.
  */
-export function availableWidthFor(
-  style: EffectLineStyle,
-  maxWidth: number,
-): number {
+export function availableWidthFor(style: EffectLineStyle, maxWidth: number): number {
   return maxWidth - 2 * style.indent;
 }
 
@@ -257,10 +245,7 @@ export function availableWidthFor(
  * back to a font-size-derived height (`iconOnlyHeightFactor` keeps the disc
  * roughly the size text would have been).
  */
-export function lineHeightOf(
-  measuredTextHeight: number,
-  fontSize: number,
-): number {
+export function lineHeightOf(measuredTextHeight: number, fontSize: number): number {
   if (measuredTextHeight > 0) return measuredTextHeight;
   return Math.round(fontSize * EFFECT_ROW.iconOnlyHeightFactor);
 }
@@ -274,10 +259,7 @@ export interface LineStack {
 }
 
 /** Stack line heights top-to-bottom with a fixed spacing between neighbours. */
-export function stackLines(
-  lineHeights: readonly number[],
-  lineSpacing: number,
-): LineStack {
+export function stackLines(lineHeights: readonly number[], lineSpacing: number): LineStack {
   let cursor = 0;
   const centers: number[] = [];
   for (const lineHeight of lineHeights) {
@@ -297,20 +279,13 @@ export function stackLines(
  * Empty input stays empty — a `None` block never renders a naked trigger icon.
  * Pure: the input lines are not mutated.
  */
-export function withLeadIcon(
-  lines: readonly EffectLine[],
-  iconId: IconId,
-): EffectLine[] {
+export function withLeadIcon(lines: readonly EffectLine[], iconId: IconId): EffectLine[] {
   const [first, ...rest] = lines;
   if (first === undefined) return [];
   return [
     {
       ...first,
-      tokens: [
-        { kind: "icon", icon: iconId },
-        { kind: "text", text: ":" },
-        ...first.tokens,
-      ],
+      tokens: [{ kind: "icon", icon: iconId }, { kind: "text", text: ":" }, ...first.tokens],
     },
     ...rest,
   ];

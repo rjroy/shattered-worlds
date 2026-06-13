@@ -42,14 +42,11 @@ export function dealProgress(
   base: number,
   bonus?: { tag: string; amount: number },
 ): EffectResult {
-  const hazard = state.hand.find(
-    (c): c is WorldCard => c.kind === "world" && c.id === hazardId,
-  );
+  const hazard = state.hand.find((c): c is WorldCard => c.kind === "world" && c.id === hazardId);
   if (hazard === undefined) return { state, events: [] };
 
   const bonusAmount =
-    bonus !== undefined &&
-    hazard.keywords.includes(bonus.tag as WorldCard["keywords"][number])
+    bonus !== undefined && hazard.keywords.includes(bonus.tag as WorldCard["keywords"][number])
       ? bonus.amount
       : 0;
   const amount = base + bonusAmount;
@@ -60,9 +57,7 @@ export function dealProgress(
   };
   const hazardTurnTotal = newProgress[hazardId]!;
 
-  const events: GameEvent[] = [
-    { type: "ProgressDealt", hazardId, amount, hazardTurnTotal },
-  ];
+  const events: GameEvent[] = [{ type: "ProgressDealt", hazardId, amount, hazardTurnTotal }];
 
   let current: GameState = { ...state, progress: newProgress };
 
@@ -79,13 +74,7 @@ export function dealProgress(
     events.push({ type: "HazardResolved", hazardId });
   } else {
     // Hazard not yet resolved
-    const partialResult = applyEffect(
-      catalog,
-      current,
-      hazard.onPartialClear,
-      undefined,
-      hazardId,
-    );
+    const partialResult = applyEffect(catalog, current, hazard.onPartialClear, undefined, hazardId);
     current = partialResult.state;
     events.push(...partialResult.events);
     events.push({ type: "HazardPartial", hazardId });
@@ -97,8 +86,7 @@ export function dealProgress(
 export function resolveCounter(state: GameState, spec: CounterSpec): number {
   switch (spec.kind) {
     case "KeywordInHand":
-      return state.hand.filter((card) => card.keywords.includes(spec.keyword))
-        .length;
+      return state.hand.filter((card) => card.keywords.includes(spec.keyword)).length;
 
     default:
       return 0;
@@ -136,10 +124,7 @@ export function gainCard(
       };
       break;
     case "worldDraw": {
-      const shuffled = shuffle(
-        [card as WorldCard, ...nextState.worldDraw],
-        nextState.rng,
-      );
+      const shuffled = shuffle([card as WorldCard, ...nextState.worldDraw], nextState.rng);
       current = {
         ...nextState,
         worldDraw: shuffled[0],
@@ -169,10 +154,7 @@ export function gainCard(
  * Return world cards from hand back into worldDraw, shuffled with the current
  * active deck.
  */
-export function returnToActiveWorldDeck(
-  state: GameState,
-  ids: readonly CardId[],
-): EffectResult {
+export function returnToActiveWorldDeck(state: GameState, ids: readonly CardId[]): EffectResult {
   if (ids.length === 0) {
     return { state, events: [] };
   }
@@ -181,9 +163,7 @@ export function returnToActiveWorldDeck(
   // only those actually found (gracefully skip missing ids).
   const returned: WorldCard[] = [];
   for (const id of ids) {
-    const card = state.hand.find(
-      (c): c is WorldCard => c.kind === "world" && c.id === id,
-    );
+    const card = state.hand.find((c): c is WorldCard => c.kind === "world" && c.id === id);
     if (card !== undefined) returned.push(card);
   }
 
@@ -204,9 +184,7 @@ export function returnToActiveWorldDeck(
     worldDraw: shuffled,
   };
 
-  const events: GameEvent[] = [
-    { type: "WorldCardsReturned", ids: returnedIds },
-  ];
+  const events: GameEvent[] = [{ type: "WorldCardsReturned", ids: returnedIds }];
   return { state: current, events };
 }
 
@@ -218,10 +196,7 @@ export function returnToActiveWorldDeck(
  * Permanently remove a card from hand (not sent to any zone). If id is
  * undefined or the card is not found, nothing happens.
  */
-export function destroyInHand(
-  state: GameState,
-  ids: readonly CardId[],
-): EffectResult {
+export function destroyInHand(state: GameState, ids: readonly CardId[]): EffectResult {
   if (ids.length === 0) return { state, events: [] };
 
   const exists = state.hand.some((c) => ids.includes(c.id));
@@ -314,17 +289,10 @@ export function applyEffect(
 
   switch (effect.kind) {
     case "DealProgress":
-      return dealProgress(
-        catalog,
-        state,
-        play?.targetId ?? "",
-        effect.base,
-        effect.bonus,
-      );
+      return dealProgress(catalog, state, play?.targetId ?? "", effect.base, effect.bonus);
 
     case "DealProgressScaled": {
-      const amount =
-        effect.base + effect.amount * resolveCounter(state, effect.per);
+      const amount = effect.base + effect.amount * resolveCounter(state, effect.per);
       return dealProgress(catalog, state, play?.targetId ?? "", amount);
     }
 
@@ -375,10 +343,7 @@ export function applyEffect(
       const drawResult = drawPlayer(afterDiscard, effect.player);
       return {
         state: drawResult.state,
-        events: [
-          { type: "CardsDiscarded", cardIds: [play.discardId] },
-          ...drawResult.events,
-        ],
+        events: [{ type: "CardsDiscarded", cardIds: [play.discardId] }, ...drawResult.events],
       };
     }
 
@@ -386,12 +351,7 @@ export function applyEffect(
       return gainCard(catalog, state, effect.template, effect.dest);
 
     case "AddWorldCardToDeck":
-      return gainCard(
-        catalog,
-        state,
-        effect.template,
-        effect.bTop ? "worldDrawTop" : "worldDraw",
-      );
+      return gainCard(catalog, state, effect.template, effect.bTop ? "worldDrawTop" : "worldDraw");
 
     case "AddThreatToWorldDeck": {
       const template = WORLD_THREAT_BY_WORLD_ID[state.worldId];
@@ -424,15 +384,8 @@ export function applyEffect(
       return damage(state, effect.amount);
 
     case "DamageScaled": {
-      const amount =
-        effect.base + effect.amount * resolveCounter(state, effect.per);
+      const amount = effect.base + effect.amount * resolveCounter(state, effect.per);
       return damage(state, amount);
-    }
-
-    case "SkipDrawNextTurn": {
-      // Idempotent — setting to true when already true is a no-op.
-      const current: GameState = { ...state, skipDrawNext: true };
-      return { state: current, events: [] };
     }
 
     case "GainCard":
@@ -467,28 +420,18 @@ export function applyEffect(
     case "Brace": {
       const newCharges = state.braceCharges + effect.amount;
       const current: GameState = { ...state, braceCharges: newCharges };
-      const events: GameEvent[] = [
-        { type: "BraceChanged", braceCharges: newCharges },
-      ];
+      const events: GameEvent[] = [{ type: "BraceChanged", braceCharges: newCharges }];
       return { state: current, events };
     }
 
     case "DealProgressAll": {
       // Snapshot world cards in hand at resolution time — mid-sweep spawned
       // cards are excluded (they land in worldDraw via AddWorldCardToDeck, not hand).
-      const snapshot = state.hand.filter(
-        (c): c is WorldCard => c.kind === "world",
-      );
+      const snapshot = state.hand.filter((c): c is WorldCard => c.kind === "world");
       let current = state;
       const events: GameEvent[] = [];
       for (const hazard of snapshot) {
-        const r = dealProgress(
-          catalog,
-          current,
-          hazard.id,
-          effect.base,
-          effect.bonus,
-        );
+        const r = dealProgress(catalog, current, hazard.id, effect.base, effect.bonus);
         current = r.state;
         events.push(...r.events);
         if (current.status !== "playing") break;
@@ -515,9 +458,7 @@ export function applyEffect(
       }
 
       const current: GameState = { ...state, worldDraw: nextDraw };
-      const events: GameEvent[] = [
-        { type: "WorldCardsExiled", ids: exiledIds },
-      ];
+      const events: GameEvent[] = [{ type: "WorldCardsExiled", ids: exiledIds }];
       return { state: current, events };
     }
   }

@@ -770,21 +770,12 @@ export class HelpOverlayView extends Phaser.GameObjects.Container {
             "Remove a card for the rest of the run.",
             colWrap,
           );
-          addIconRow(
-            page,
-            rightX,
-            -56,
-            "skipDraw",
-            "Skip draw",
-            "Skip your draw on your next turn.",
-            colWrap,
-          );
 
-          addIconSectionHeader(page, rightX, -25, "World Deck");
+          addIconSectionHeader(page, rightX, -55, "World Deck");
           addIconRow(
             page,
             rightX,
-            0,
+            -30,
             "worldDraw",
             "World draw",
             "Draw hazard cards from world deck.",
@@ -793,7 +784,7 @@ export class HelpOverlayView extends Phaser.GameObjects.Container {
           addIconRow(
             page,
             rightX,
-            30,
+            0,
             "exile",
             "Exile",
             "Remove cards off the top of the world deck.",
@@ -802,7 +793,7 @@ export class HelpOverlayView extends Phaser.GameObjects.Container {
           addIconRow(
             page,
             rightX,
-            60,
+            30,
             "return",
             "Return",
             "Send world cards back into the world deck.",
@@ -811,7 +802,7 @@ export class HelpOverlayView extends Phaser.GameObjects.Container {
           addIconRow(
             page,
             rightX,
-            90,
+            60,
             "threat",
             "Threat",
             "Add the main themed hazard to the world deck.",

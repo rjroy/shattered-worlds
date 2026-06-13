@@ -33,17 +33,13 @@ function makeState(overrides: Partial<GameState> = {}): GameState {
     progress: {},
     hp: 10,
     energy: 0,
-    skipDrawNext: false,
     status: "playing",
     ...overrides,
   };
 }
 
 /** Mint a single WorldCard and advance state. */
-function mintWorld(
-  state: GameState,
-  name: Parameters<typeof mintCard>[2],
-): [WorldCard, GameState] {
+function mintWorld(state: GameState, name: Parameters<typeof mintCard>[2]): [WorldCard, GameState] {
   const [card, next] = mintCard(catalog, state, name);
   if (card.kind !== "world") throw new Error(`${name} is not a world card`);
   return [card as WorldCard, next];
@@ -60,16 +56,10 @@ describe("dealProgress keyword math", () => {
     state = { ...s1, hand: [zombie] };
 
     // Baseball Bat: base 2, bonus { tag: 'Creature', amount: 3 }
-    const { state: after, events } = dealProgress(
-      catalog,
-      state,
-      zombie.id,
-      2,
-      {
-        tag: "Creature",
-        amount: 3,
-      },
-    );
+    const { state: after, events } = dealProgress(catalog, state, zombie.id, 2, {
+      tag: "Creature",
+      amount: 3,
+    });
 
     // Zombie has Creature keyword → total = 2 + 3 = 5
     const progressEvent = events.find((e) => e.type === "ProgressDealt");
@@ -172,10 +162,7 @@ describe("returnToActiveWorldDeck", () => {
     const [yCard, s3] = mintWorld(s2, "Screams");
     state = { ...s3, hand: [xCard, yCard], worldDraw: drawPile };
 
-    const { state: after, events } = returnToActiveWorldDeck(state, [
-      xCard.id,
-      yCard.id,
-    ]);
+    const { state: after, events } = returnToActiveWorldDeck(state, [xCard.id, yCard.id]);
 
     // Total cards in worldDraw: 5 original + 2 returned = 7
     expect(after.worldDraw).toHaveLength(7);
@@ -212,12 +199,7 @@ describe("returnToActiveWorldDeck", () => {
 describe("gainCard destinations", () => {
   it("places card at front of playerDiscard", () => {
     const state = makeState();
-    const { state: after, events } = gainCard(
-      catalog,
-      state,
-      "Sprint",
-      "playerDiscard",
-    );
+    const { state: after, events } = gainCard(catalog, state, "Sprint", "playerDiscard");
 
     expect(after.playerDiscard).toHaveLength(1);
     const event = events.find((e) => e.type === "CardGained");
@@ -233,12 +215,7 @@ describe("gainCard destinations", () => {
     const [existing] = mintCard(catalog, state, "Explore");
     state = { ...state, playerDraw: [existing] };
 
-    const { state: after, events } = gainCard(
-      catalog,
-      state,
-      "Sprint",
-      "playerDrawTop",
-    );
+    const { state: after, events } = gainCard(catalog, state, "Sprint", "playerDrawTop");
 
     // New card is at index 0
     expect(after.playerDraw).toHaveLength(2);
@@ -255,12 +232,7 @@ describe("gainCard destinations", () => {
     const [existingWorld] = mintCard(catalog, state, "Rubble");
     state = { ...state, worldDraw: [existingWorld as WorldCard] };
 
-    const { state: after, events } = gainCard(
-      catalog,
-      state,
-      "Door",
-      "worldDrawTop",
-    );
+    const { state: after, events } = gainCard(catalog, state, "Door", "worldDrawTop");
 
     expect(after.worldDraw).toHaveLength(2);
     const event = events.find((e) => e.type === "CardGained");
@@ -305,31 +277,6 @@ describe("damage", () => {
     expect(after.hp).toBe(-7);
     expect(after.status).toBe("lost");
     expect(events.some((e) => e.type === "WorldLost")).toBe(true);
-  });
-});
-
-// ---------------------------------------------------------------------------
-// 7. SkipDrawNextTurn idempotent
-// ---------------------------------------------------------------------------
-
-describe("applyEffect SkipDrawNextTurn", () => {
-  it("sets skipDrawNext to true", () => {
-    const state = makeState({ skipDrawNext: false });
-    const { state: after } = applyEffect(catalog, state, {
-      kind: "SkipDrawNextTurn",
-    });
-    expect(after.skipDrawNext).toBe(true);
-  });
-
-  it("is idempotent — calling twice still yields skipDrawNext true", () => {
-    const state = makeState({ skipDrawNext: false });
-    const { state: once } = applyEffect(catalog, state, {
-      kind: "SkipDrawNextTurn",
-    });
-    const { state: twice } = applyEffect(catalog, once, {
-      kind: "SkipDrawNextTurn",
-    });
-    expect(twice.skipDrawNext).toBe(true);
   });
 });
 
@@ -381,12 +328,7 @@ describe("applyEffect Modal (Sprint)", () => {
       cardId: "sprint-id",
       choice: 0,
     };
-    const { state: after, events } = applyEffect(
-      catalog,
-      state,
-      sprintEffect,
-      action,
-    );
+    const { state: after, events } = applyEffect(catalog, state, sprintEffect, action);
 
     // 2 player + 1 world drawn
     expect(after.hand.filter((c) => c.kind === "player")).toHaveLength(2);
@@ -456,12 +398,7 @@ describe("applyEffect Sequence (Barricade)", () => {
     };
 
     // Should not throw — missing rubble is skipped gracefully
-    const { state: after, events } = applyEffect(
-      catalog,
-      state,
-      barricadeEffect,
-      action,
-    );
+    const { state: after, events } = applyEffect(catalog, state, barricadeEffect, action);
 
     // Step 0: Rubble resolved (cost 1, progress 1)
     expect(events.some((e) => e.type === "HazardResolved")).toBe(true);
@@ -503,9 +440,7 @@ describe("applyEffect Sequence (Barricade)", () => {
     };
 
     // Should not throw
-    expect(() =>
-      applyEffect(catalog, state, barricadeEffect, action),
-    ).not.toThrow();
+    expect(() => applyEffect(catalog, state, barricadeEffect, action)).not.toThrow();
 
     const { events } = applyEffect(catalog, state, barricadeEffect, action);
     expect(events.some((e) => e.type === "HazardResolved")).toBe(true);
@@ -598,13 +533,7 @@ describe("applyEffect DestroySelf", () => {
       ],
     };
 
-    const { state: after, events } = applyEffect(
-      catalog,
-      state,
-      sequence,
-      undefined,
-      corpse.id,
-    );
+    const { state: after, events } = applyEffect(catalog, state, sequence, undefined, corpse.id);
 
     // Corpse gone from hand
     expect(after.hand.find((c) => c.id === corpse.id)).toBeUndefined();
@@ -663,8 +592,7 @@ describe("DealProgressAll", () => {
     });
 
     const progressEvents = events.filter(
-      (e): e is Extract<typeof e, { type: "ProgressDealt" }> =>
-        e.type === "ProgressDealt",
+      (e): e is Extract<typeof e, { type: "ProgressDealt" }> => e.type === "ProgressDealt",
     );
     expect(progressEvents).toHaveLength(2);
 
@@ -912,10 +840,7 @@ describe("ExileTopWorldCards", () => {
 // 16. DealProgressScaled
 // ---------------------------------------------------------------------------
 
-function playerCarrier(
-  id: string,
-  keywords: PlayerCard["keywords"] = ["Spore"],
-): PlayerCard {
+function playerCarrier(id: string, keywords: PlayerCard["keywords"] = ["Spore"]): PlayerCard {
   return {
     kind: "player",
     id,
@@ -945,12 +870,8 @@ describe("DealProgressScaled", () => {
       ],
     });
 
-    expect(
-      resolveCounter(state, { kind: "KeywordInHand", keyword: "Spore" }),
-    ).toBe(3);
-    expect(
-      resolveCounter(state, { kind: "KeywordInHand", keyword: "Hidden" }),
-    ).toBe(0);
+    expect(resolveCounter(state, { kind: "KeywordInHand", keyword: "Spore" })).toBe(3);
+    expect(resolveCounter(state, { kind: "KeywordInHand", keyword: "Hidden" })).toBe(0);
   });
 
   it("applies base plus amount per Spore in hand at resolution time", () => {
@@ -987,12 +908,7 @@ describe("DealProgressScaled", () => {
     const [hazard, s1] = mintWorld(state, "Strange Sounds");
     state = {
       ...s1,
-      hand: [
-        hazard,
-        playerCarrier("spore-1"),
-        playerCarrier("spore-2"),
-        playerCarrier("spore-3"),
-      ],
+      hand: [hazard, playerCarrier("spore-1"), playerCarrier("spore-2"), playerCarrier("spore-3")],
     };
 
     const beforePlay = { ...state, hand: [hazard, playerCarrier("spore-1")] };

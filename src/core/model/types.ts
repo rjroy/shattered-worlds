@@ -8,11 +8,7 @@ export type CardTemplateId = string;
 
 export type Keyword = "Hidden" | "Creature" | "Slow" | "Spore";
 
-export type Dest =
-  | "playerDiscard"
-  | "playerDrawTop"
-  | "worldDraw"
-  | "worldDrawTop";
+export type Dest = "playerDiscard" | "playerDrawTop" | "worldDraw" | "worldDrawTop";
 
 export type CounterSpec = { kind: "KeywordInHand"; keyword: Keyword };
 
@@ -41,7 +37,6 @@ export type CardEffect =
   | { kind: "Sequence"; steps: readonly CardEffect[] }
   | { kind: "Damage"; amount: number }
   | { kind: "DamageScaled"; base: number; per: CounterSpec; amount: number }
-  | { kind: "SkipDrawNextTurn" }
   | { kind: "GainCard"; template: CardTemplateId }
   | { kind: "AddPlayerCardToTop"; template: CardTemplateId }
   | { kind: "SurviveWorld" }
@@ -135,7 +130,6 @@ export interface GameState {
   progress: Readonly<Record<CardId, number>>;
   hp: number;
   energy: number;
-  skipDrawNext: boolean;
   // Count of random player cards to destroy from the next refilled hand.
   // Queued by the ForceDestroy effect; drained at turn start.
   pendingForceDestroy: number;
@@ -176,7 +170,6 @@ export type GameEvent =
   | { type: "HazardPartial"; hazardId: CardId }
   | { type: "HazardDiscarded"; cardId: CardId }
   | { type: "DamageDealt"; amount: number }
-  | { type: "DrawSkipped" }
   | { type: "CardGained"; id: CardId; dest: Dest }
   | { type: "CardDestroyed"; ids: readonly CardId[] }
   | { type: "WorldCardsReturned"; ids: readonly CardId[] }

@@ -20,7 +20,6 @@ import effectIconExileUrl from "../assets/effect-icons/effect-icon-exile.png";
 import effectIconReturnUrl from "../assets/effect-icons/effect-icon-return.png";
 import effectIconAddCardUrl from "../assets/effect-icons/effect-icon-add-card.png";
 import effectIconThreatUrl from "../assets/effect-icons/effect-icon-threat.png";
-import effectIconSkipDrawUrl from "../assets/effect-icons/effect-icon-skip-draw.png";
 import effectIconSurviveUrl from "../assets/effect-icons/effect-icon-survive.png";
 import effectIconVanishUrl from "../assets/effect-icons/effect-icon-vanish.png";
 import effectIconEachTurnUrl from "../assets/effect-icons/effect-icon-each-turn.png";
@@ -117,7 +116,6 @@ export const assetManifest: Record<string, string> = {
   "effect-icon-return": effectIconReturnUrl,
   "effect-icon-add-card": effectIconAddCardUrl,
   "effect-icon-threat": effectIconThreatUrl,
-  "effect-icon-skip-draw": effectIconSkipDrawUrl,
   "effect-icon-survive": effectIconSurviveUrl,
   "effect-icon-vanish": effectIconVanishUrl,
   "effect-icon-each-turn": effectIconEachTurnUrl,

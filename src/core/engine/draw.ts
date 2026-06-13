@@ -8,10 +8,7 @@ import { shuffle } from "./rng";
 
 /** Total world cards remaining across worldDraw pile and all queued acts. */
 function worldCardsRemaining(state: GameState): number {
-  return (
-    state.worldDraw.length +
-    state.acts.reduce((sum, act) => sum + act.length, 0)
-  );
+  return state.worldDraw.length + state.acts.reduce((sum, act) => sum + act.length, 0);
 }
 
 // ---------------------------------------------------------------------------
@@ -26,10 +23,7 @@ function worldCardsRemaining(state: GameState): number {
  *
  * Emits: DeckShuffled (0 or more), CardsDrawn (exactly 1, omitted if 0 drawn)
  */
-export function drawPlayer(
-  state: GameState,
-  n: number,
-): { state: GameState; events: GameEvent[] } {
+export function drawPlayer(state: GameState, n: number): { state: GameState; events: GameEvent[] } {
   let current = state;
   const events: GameEvent[] = [];
   const drawnIds: string[] = [];
@@ -80,10 +74,7 @@ export function drawPlayer(
  *
  * Emits: ActAdvanced (0 or more), CardsDrawn (exactly 1, omitted if 0 drawn)
  */
-export function drawWorld(
-  state: GameState,
-  n: number,
-): { state: GameState; events: GameEvent[] } {
+export function drawWorld(state: GameState, n: number): { state: GameState; events: GameEvent[] } {
   let current = state;
   const events: GameEvent[] = [];
   const drawnIds: string[] = [];
@@ -141,9 +132,6 @@ export function drawWorld(
  *
  *   worldToDraw = clamp(max(1, WORLD_CONSTS.startWorldCards - heldWorld), 0, min(room, worldCardsRemaining))
  *   playerToDraw = max(0, WORLD_CONSTS.maxHandSize - newHand.length)   — after world draw
- *
- * If skipDrawNext is true: player draws are suppressed, DrawSkipped is emitted,
- * and the flag is consumed.
  */
 export function refillHand(state: GameState): {
   state: GameState;
@@ -179,16 +167,7 @@ export function refillHand(state: GameState): {
   }
 
   // Player draw: fill remaining room up to WORLD_CONSTS.maxHandSize
-  let playerToDraw = Math.max(
-    0,
-    WORLD_CONSTS.maxHandSize - current.hand.length,
-  );
-
-  if (current.skipDrawNext) {
-    allEvents.push({ type: "DrawSkipped" });
-    current = { ...current, skipDrawNext: false };
-    playerToDraw = 0;
-  }
+  const playerToDraw = Math.max(0, WORLD_CONSTS.maxHandSize - current.hand.length);
 
   if (playerToDraw > 0) {
     const result = drawPlayer(current, playerToDraw);
@@ -250,9 +229,7 @@ export function resolveForceDestroy(state: GameState): {
   }
 
   const [shuffled, nextRng] = shuffle(playerCards, current.rng);
-  const doomedIds = new Set<CardId>(
-    shuffled.slice(0, takeCount).map((c) => c.id),
-  );
+  const doomedIds = new Set<CardId>(shuffled.slice(0, takeCount).map((c) => c.id));
 
   const final: GameState = {
     ...current,
