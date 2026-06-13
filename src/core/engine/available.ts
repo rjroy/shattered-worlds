@@ -304,10 +304,12 @@ function checkSpec(
     }
 
     case "destroyHand": {
-      if (action.destroyIds === undefined && spec.min === 0) return null; // min is 0, destruction is optional
+      const length =
+        action.destroyIds === undefined ? 0 : action.destroyIds.length;
+      if (length === 0 && spec.min === 0) return null; // min is 0, destruction is optional
       const legal = available.legalTargets(cardId, step);
       if (
-        action.destroyIds === undefined ||
+        length === 0 ||
         !legal.some((id) => action.destroyIds?.includes(id))
       ) {
         return `destroyIds ${action.destroyIds} are not a legal destroy target for card ${cardId}`;
