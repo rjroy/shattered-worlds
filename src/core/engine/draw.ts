@@ -1,6 +1,6 @@
-import type { CardId, GameEvent, GameState, WorldCard } from '../model/types'
-import { WORLD_CONSTS } from './world'
-import { shuffle } from './rng'
+import type { CardId, GameEvent, GameState, WorldCard } from "../model/types";
+import { WORLD_CONSTS } from "./world";
+import { shuffle } from "./rng";
 
 // ---------------------------------------------------------------------------
 // Internal helpers
@@ -11,7 +11,7 @@ function worldCardsRemaining(state: GameState): number {
   return (
     state.worldDraw.length +
     state.acts.reduce((sum, act) => sum + act.length, 0)
-  )
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -30,43 +30,43 @@ export function drawPlayer(
   state: GameState,
   n: number,
 ): { state: GameState; events: GameEvent[] } {
-  let current = state
-  const events: GameEvent[] = []
-  const drawnIds: string[] = []
-  let remaining = n
+  let current = state;
+  const events: GameEvent[] = [];
+  const drawnIds: string[] = [];
+  let remaining = n;
 
   while (remaining > 0) {
     if (current.playerDraw.length === 0) {
       // Nothing in discard either — stop gracefully
-      if (current.playerDiscard.length === 0) break
+      if (current.playerDiscard.length === 0) break;
 
       // Reshuffle discard into a new draw pile
-      const [shuffled, nextRng] = shuffle(current.playerDiscard, current.rng)
+      const [shuffled, nextRng] = shuffle(current.playerDiscard, current.rng);
       current = {
         ...current,
         rng: nextRng,
         playerDraw: shuffled,
         playerDiscard: [],
-      }
-      events.push({ type: 'DeckShuffled' })
+      };
+      events.push({ type: "DeckShuffled" });
     }
 
     // noUncheckedIndexedAccess: playerDraw is non-empty here (guarded above).
-    const card = current.playerDraw[0]!
+    const card = current.playerDraw[0]!;
     current = {
       ...current,
       playerDraw: current.playerDraw.slice(1),
       hand: [...current.hand, card],
-    }
-    drawnIds.push(card.id)
-    remaining--
+    };
+    drawnIds.push(card.id);
+    remaining--;
   }
 
   if (drawnIds.length > 0) {
-    events.push({ type: 'CardsDrawn', ids: drawnIds })
+    events.push({ type: "CardsDrawn", ids: drawnIds });
   }
 
-  return { state: current, events }
+  return { state: current, events };
 }
 
 // ---------------------------------------------------------------------------
@@ -84,46 +84,46 @@ export function drawWorld(
   state: GameState,
   n: number,
 ): { state: GameState; events: GameEvent[] } {
-  let current = state
-  const events: GameEvent[] = []
-  const drawnIds: string[] = []
-  let remaining = n
+  let current = state;
+  const events: GameEvent[] = [];
+  const drawnIds: string[] = [];
+  let remaining = n;
 
   while (remaining > 0) {
     if (current.worldDraw.length === 0) {
       // No more acts to advance into — stop gracefully
-      if (current.acts.length === 0) break
+      if (current.acts.length === 0) break;
 
       // Advance to the next act: shuffle acts[0] into a new worldDraw
-      const nextAct = current.acts[0]!
-      const [shuffled, nextRng] = shuffle(nextAct as WorldCard[], current.rng)
-      const newActIndex = current.actIndex + 1
+      const nextAct = current.acts[0]!;
+      const [shuffled, nextRng] = shuffle(nextAct as WorldCard[], current.rng);
+      const newActIndex = current.actIndex + 1;
       current = {
         ...current,
         rng: nextRng,
         worldDraw: shuffled,
         acts: current.acts.slice(1),
         actIndex: newActIndex,
-      }
-      events.push({ type: 'ActAdvanced', act: newActIndex })
+      };
+      events.push({ type: "ActAdvanced", act: newActIndex });
     }
 
     // noUncheckedIndexedAccess: worldDraw is non-empty here (guarded above).
-    const card = current.worldDraw[0]!
+    const card = current.worldDraw[0]!;
     current = {
       ...current,
       worldDraw: current.worldDraw.slice(1),
       hand: [...current.hand, card],
-    }
-    drawnIds.push(card.id)
-    remaining--
+    };
+    drawnIds.push(card.id);
+    remaining--;
   }
 
   if (drawnIds.length > 0) {
-    events.push({ type: 'CardsDrawn', ids: drawnIds })
+    events.push({ type: "CardsDrawn", ids: drawnIds });
   }
 
-  return { state: current, events }
+  return { state: current, events };
 }
 
 // ---------------------------------------------------------------------------
@@ -145,52 +145,58 @@ export function drawWorld(
  * If skipDrawNext is true: player draws are suppressed, DrawSkipped is emitted,
  * and the flag is consumed.
  */
-export function refillHand(state: GameState): { state: GameState; events: GameEvent[] } {
-  const allEvents: GameEvent[] = []
+export function refillHand(state: GameState): {
+  state: GameState;
+  events: GameEvent[];
+} {
+  const allEvents: GameEvent[] = [];
 
-  const heldWorld = state.hand.filter((c) => c.kind === 'world').length
-  const room = WORLD_CONSTS.maxHandSize - heldWorld
+  const heldWorld = state.hand.filter((c) => c.kind === "world").length;
+  const room = WORLD_CONSTS.maxHandSize - heldWorld;
 
   if (room === 0) {
-    return { state, events: [] }
+    return { state, events: [] };
   }
 
   // World draw count: minimum 1, minimum (2 - held), capped by room and
   // by total world cards remaining. If no world cards exist at all, this
   // collapses to 0 via the min(…, worldCardsRemaining) clip.
-  const totalWorldRemaining = worldCardsRemaining(state)
+  const totalWorldRemaining = worldCardsRemaining(state);
   const worldToDraw = Math.min(
     // Try and draw `startWorldCards`
     // Reduce by 1 for each world card held beyond the first, so the first is "free" and encourages holding onto it.
     Math.max(1, WORLD_CONSTS.startWorldCards - Math.max(0, heldWorld - 1)),
     room,
     totalWorldRemaining,
-  )
+  );
 
   // Draw world cards
-  let current = state
+  let current = state;
   if (worldToDraw > 0) {
-    const result = drawWorld(current, worldToDraw)
-    current = result.state
-    allEvents.push(...result.events)
+    const result = drawWorld(current, worldToDraw);
+    current = result.state;
+    allEvents.push(...result.events);
   }
 
   // Player draw: fill remaining room up to WORLD_CONSTS.maxHandSize
-  let playerToDraw = Math.max(0, WORLD_CONSTS.maxHandSize - current.hand.length)
+  let playerToDraw = Math.max(
+    0,
+    WORLD_CONSTS.maxHandSize - current.hand.length,
+  );
 
   if (current.skipDrawNext) {
-    allEvents.push({ type: 'DrawSkipped' })
-    current = { ...current, skipDrawNext: false }
-    playerToDraw = 0
+    allEvents.push({ type: "DrawSkipped" });
+    current = { ...current, skipDrawNext: false };
+    playerToDraw = 0;
   }
 
   if (playerToDraw > 0) {
-    const result = drawPlayer(current, playerToDraw)
-    current = result.state
-    allEvents.push(...result.events)
+    const result = drawPlayer(current, playerToDraw);
+    current = result.state;
+    allEvents.push(...result.events);
   }
 
-  return { state: current, events: allEvents }
+  return { state: current, events: allEvents };
 }
 
 // ---------------------------------------------------------------------------
@@ -208,54 +214,57 @@ export function refillHand(state: GameState): { state: GameState; events: GameEv
  *
  * Emits: CardDestroyed (one per card removed).
  */
-export function resolveForceDestroy(
-  state: GameState,
-): { state: GameState; events: GameEvent[] } {
+export function resolveForceDestroy(state: GameState): {
+  state: GameState;
+  events: GameEvent[];
+} {
   if (state.pendingForceDestroy <= 0) {
-    return { state, events: [] }
+    return { state, events: [] };
   }
 
-  const events: GameEvent[] = []
-  let current = state
+  const events: GameEvent[] = [];
+  let current = state;
 
   // Absorb brace charges first (D3): each charge cancels one pending snatch.
-  const absorbed = Math.min(current.braceCharges, current.pendingForceDestroy)
+  const absorbed = Math.min(current.braceCharges, current.pendingForceDestroy);
   if (absorbed > 0) {
-    const remaining = current.pendingForceDestroy - absorbed
+    const remaining = current.pendingForceDestroy - absorbed;
     current = {
       ...current,
       braceCharges: current.braceCharges - absorbed,
       pendingForceDestroy: remaining,
-    }
-    events.push({ type: 'BraceConsumed', absorbed, remaining })
+    };
+    events.push({ type: "BraceConsumed", absorbed, remaining });
   }
 
   if (current.pendingForceDestroy <= 0) {
-    return { state: current, events }
+    return { state: current, events };
   }
 
-  const playerCards = current.hand.filter((c) => c.kind === 'player')
-  const takeCount = Math.min(current.pendingForceDestroy, playerCards.length)
+  const playerCards = current.hand.filter((c) => c.kind === "player");
+  const takeCount = Math.min(current.pendingForceDestroy, playerCards.length);
 
   if (takeCount === 0) {
     // Nothing to grab — consume the charge so it does not carry over.
-    return { state: { ...current, pendingForceDestroy: 0 }, events }
+    return { state: { ...current, pendingForceDestroy: 0 }, events };
   }
 
-  const [shuffled, nextRng] = shuffle(playerCards, current.rng)
-  const doomedIds = new Set<CardId>(shuffled.slice(0, takeCount).map((c) => c.id))
+  const [shuffled, nextRng] = shuffle(playerCards, current.rng);
+  const doomedIds = new Set<CardId>(
+    shuffled.slice(0, takeCount).map((c) => c.id),
+  );
 
   const final: GameState = {
     ...current,
     rng: nextRng,
     hand: current.hand.filter((c) => !doomedIds.has(c.id)),
     pendingForceDestroy: 0,
-  }
+  };
 
-  const destroyEvents: GameEvent[] = [...doomedIds].map((id) => ({
-    type: 'CardDestroyed' as const,
-    id,
-  }))
+  const destroyEvent: GameEvent = {
+    type: "CardDestroyed",
+    ids: [...doomedIds],
+  };
 
-  return { state: final, events: [...events, ...destroyEvents] }
+  return { state: final, events: [...events, destroyEvent] };
 }

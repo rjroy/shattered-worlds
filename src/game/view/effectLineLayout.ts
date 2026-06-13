@@ -304,7 +304,14 @@ export function withLeadIcon(
   const [first, ...rest] = lines;
   if (first === undefined) return [];
   return [
-    { ...first, tokens: [{ kind: "icon", icon: iconId }, ...first.tokens] },
+    {
+      ...first,
+      tokens: [
+        { kind: "icon", icon: iconId },
+        { kind: "text", text: ":" },
+        ...first.tokens,
+      ],
+    },
     ...rest,
   ];
 }

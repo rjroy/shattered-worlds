@@ -9,32 +9,32 @@
  * stepIdx stays 1:1 with the core's Sequence.steps indices so that
  * legalTargets(cardId, step) receives the correct step number.
  */
-import type { Action, CardId, TargetSpec } from '../../core/index'
+import type { Action, CardId, TargetSpec } from "../../core/index";
 
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
 
 export type StepResult =
-  | { kind: 'hazard'; targetId: CardId }
-  | { kind: 'destroyHand'; destroyId?: CardId }   // undefined = skipped optional destroy
-  | { kind: 'returnWorld'; returnIds: readonly CardId[] }
-  | { kind: 'discardPlayer'; discardId: CardId }
+  | { kind: "hazard"; targetId: CardId }
+  | { kind: "destroyHand"; destroyIds: readonly CardId[] } // undefined = skipped optional destroy
+  | { kind: "returnWorld"; returnIds: readonly CardId[] }
+  | { kind: "discardPlayer"; discardId: CardId };
 
 export type SelectionState =
-  | { phase: 'idle' }
-  | { phase: 'awaiting-modal'; cardId: CardId }
+  | { phase: "idle" }
+  | { phase: "awaiting-modal"; cardId: CardId }
   | {
-      phase: 'targeting'
-      cardId: CardId
-      choice?: number              // modal branch index, when entered through a modal
-      steps: readonly TargetSpec[] // NEVER stripped — indices stay 1:1 with core's Sequence.steps
-      stepIdx: number              // stepIdx === steps.length => complete
-      done: readonly StepResult[]  // completed step results, in order
-      current: readonly CardId[]   // picks accumulating for steps[stepIdx]
-    }
+      phase: "targeting";
+      cardId: CardId;
+      choice?: number; // modal branch index, when entered through a modal
+      steps: readonly TargetSpec[]; // NEVER stripped — indices stay 1:1 with core's Sequence.steps
+      stepIdx: number; // stepIdx === steps.length => complete
+      done: readonly StepResult[]; // completed step results, in order
+      current: readonly CardId[]; // picks accumulating for steps[stepIdx]
+    };
 
-export const IDLE: SelectionState = { phase: 'idle' }
+export const IDLE: SelectionState = { phase: "idle" };
 
 // ---------------------------------------------------------------------------
 // Internal helpers
@@ -42,32 +42,42 @@ export const IDLE: SelectionState = { phase: 'idle' }
 
 /** Advance stepIdx past any consecutive 'none' steps starting at `idx`. */
 function skipNoneSteps(steps: readonly TargetSpec[], idx: number): number {
-  let i = idx
-  while (i < steps.length && steps[i]?.kind === 'none') {
-    i++
+  let i = idx;
+  while (i < steps.length && steps[i]?.kind === "none") {
+    i++;
   }
-  return i
+  return i;
 }
 
 /** Effective min for a leaf TargetSpec. */
 function stepMin(spec: TargetSpec): number {
   switch (spec.kind) {
-    case 'hazard':       return 1
-    case 'discardPlayer': return 1
-    case 'destroyHand':  return spec.min
-    case 'returnWorld':  return spec.min
-    default:             return 0
+    case "hazard":
+      return 1;
+    case "discardPlayer":
+      return 1;
+    case "destroyHand":
+      return spec.min;
+    case "returnWorld":
+      return spec.min;
+    default:
+      return 0;
   }
 }
 
 /** Effective max for a leaf TargetSpec. */
 function stepMax(spec: TargetSpec): number {
   switch (spec.kind) {
-    case 'hazard':       return 1
-    case 'discardPlayer': return 1
-    case 'destroyHand':  return spec.max
-    case 'returnWorld':  return spec.max
-    default:             return 0
+    case "hazard":
+      return 1;
+    case "discardPlayer":
+      return 1;
+    case "destroyHand":
+      return spec.max;
+    case "returnWorld":
+      return spec.max;
+    default:
+      return 0;
   }
 }
 
@@ -91,50 +101,52 @@ export function beginTargeting(
   spec: TargetSpec,
   choice?: number,
 ): SelectionState {
-  let steps: readonly TargetSpec[]
+  let steps: readonly TargetSpec[];
 
-  if (spec.kind === 'compound') {
-    steps = spec.steps
-  } else if (spec.kind === 'none') {
-    steps = []
-  } else if (spec.kind === 'modal') {
+  if (spec.kind === "compound") {
+    steps = spec.steps;
+  } else if (spec.kind === "none") {
+    steps = [];
+  } else if (spec.kind === "modal") {
     // Modal is handled by chooseModal; falling through here would be misuse.
     // Treat as immediate-idle (no-op).
-    return IDLE
+    return IDLE;
   } else {
-    steps = [spec]
+    steps = [spec];
   }
 
   // Warn in dev if the same non-none kind appears more than once (mirrors
   // core's checkSpec constraint).
-  if (process.env.NODE_ENV !== 'production') {
-    const seen = new Set<string>()
+  if (process.env.NODE_ENV !== "production") {
+    const seen = new Set<string>();
     for (const s of steps) {
-      if (s.kind !== 'none') {
+      if (s.kind !== "none") {
         if (seen.has(s.kind)) {
-          console.warn(`[selection] duplicate step kind "${s.kind}" in steps array`)
+          console.warn(
+            `[selection] duplicate step kind "${s.kind}" in steps array`,
+          );
         }
-        seen.add(s.kind)
+        seen.add(s.kind);
       }
     }
   }
 
-  const stepIdx = skipNoneSteps(steps, 0)
+  const stepIdx = skipNoneSteps(steps, 0);
 
   const state: SelectionState = {
-    phase: 'targeting',
+    phase: "targeting",
     cardId,
     steps,
     stepIdx,
     done: [],
     current: [],
-  }
+  };
 
   if (choice !== undefined) {
-    return { ...state, choice }
+    return { ...state, choice };
   }
 
-  return state
+  return state;
 }
 
 /**
@@ -147,12 +159,12 @@ export function beginTargeting(
 export function chooseModal(
   sel: SelectionState,
   choice: number,
-  spec: Extract<TargetSpec, { kind: 'modal' }>,
+  spec: Extract<TargetSpec, { kind: "modal" }>,
 ): SelectionState {
-  if (sel.phase !== 'awaiting-modal') return sel
-  const branch = spec.branches[choice]
-  if (branch === undefined) return sel
-  return beginTargeting(sel.cardId, branch, choice)
+  if (sel.phase !== "awaiting-modal") return sel;
+  const branch = spec.branches[choice];
+  if (branch === undefined) return sel;
+  return beginTargeting(sel.cardId, branch, choice);
 }
 
 /**
@@ -164,30 +176,30 @@ export function chooseModal(
  * - Only works in targeting phase; returns sel unchanged otherwise
  */
 export function togglePick(sel: SelectionState, id: CardId): SelectionState {
-  if (sel.phase !== 'targeting') return sel
-  if (sel.stepIdx >= sel.steps.length) return sel
+  if (sel.phase !== "targeting") return sel;
+  if (sel.stepIdx >= sel.steps.length) return sel;
 
   // Bounds checked above; cast is safe
-  const step = sel.steps[sel.stepIdx] as TargetSpec
-  const current = sel.current
+  const step = sel.steps[sel.stepIdx] as TargetSpec;
+  const current = sel.current;
 
   if (current.includes(id)) {
     // Toggle off
-    return { ...sel, current: current.filter((c) => c !== id) }
+    return { ...sel, current: current.filter((c) => c !== id) };
   }
 
-  const max = stepMax(step)
+  const max = stepMax(step);
 
   if (current.length >= max) {
     if (max === 1) {
       // Replace the single pick
-      return { ...sel, current: [id] }
+      return { ...sel, current: [id] };
     }
     // At capacity and multi-pick — do nothing
-    return sel
+    return sel;
   }
 
-  return { ...sel, current: [...current, id] }
+  return { ...sel, current: [...current, id] };
 }
 
 /**
@@ -198,52 +210,48 @@ export function togglePick(sel: SelectionState, id: CardId): SelectionState {
  * caller should check isComplete first).
  */
 export function advance(sel: SelectionState): SelectionState {
-  if (sel.phase !== 'targeting') return sel
-  if (sel.stepIdx >= sel.steps.length) return sel
+  if (sel.phase !== "targeting") return sel;
+  if (sel.stepIdx >= sel.steps.length) return sel;
 
   // Bounds checked above; cast is safe
-  const step = sel.steps[sel.stepIdx] as TargetSpec
-  const current = sel.current
+  const step = sel.steps[sel.stepIdx] as TargetSpec;
+  const current = sel.current;
 
-  let result: StepResult
+  let result: StepResult;
 
   switch (step.kind) {
-    case 'hazard':
-      result = { kind: 'hazard', targetId: current[0] as CardId }
-      break
-    case 'discardPlayer':
-      result = { kind: 'discardPlayer', discardId: current[0] as CardId }
-      break
-    case 'destroyHand':
-      if (current.length > 0) {
-        result = { kind: 'destroyHand', destroyId: current[0] as CardId }
-      } else {
-        result = { kind: 'destroyHand' }
-      }
-      break
-    case 'returnWorld':
-      result = { kind: 'returnWorld', returnIds: [...current] }
-      break
+    case "hazard":
+      result = { kind: "hazard", targetId: current[0] as CardId };
+      break;
+    case "discardPlayer":
+      result = { kind: "discardPlayer", discardId: current[0] as CardId };
+      break;
+    case "destroyHand":
+      result = { kind: "destroyHand", destroyIds: [...current] };
+      break;
+    case "returnWorld":
+      result = { kind: "returnWorld", returnIds: [...current] };
+      break;
     default:
       // 'none' steps should never reach advance() (they are skipped by
       // skipNoneSteps), but guard defensively.
-      return sel
+      return sel;
   }
 
-  const nextRaw = sel.stepIdx + 1
-  const nextIdx = skipNoneSteps(sel.steps, nextRaw)
+  const nextRaw = sel.stepIdx + 1;
+  const nextIdx = skipNoneSteps(sel.steps, nextRaw);
 
   return {
     ...sel,
     done: [...sel.done, result],
     stepIdx: nextIdx,
     current: [],
-  }
+  };
 }
 
 /** Cancel from any state — always returns idle. */
 export function cancel(): SelectionState {
-  return IDLE
+  return IDLE;
 }
 
 // ---------------------------------------------------------------------------
@@ -257,10 +265,10 @@ export function cancel(): SelectionState {
  * Used by the renderer to skip the confirm button for exact-count steps.
  */
 export function autoAdvances(sel: SelectionState): boolean {
-  if (sel.phase !== 'targeting') return false
-  if (sel.stepIdx >= sel.steps.length) return false
-  const step = sel.steps[sel.stepIdx] as TargetSpec
-  return stepMax(step) === 1 && sel.current.length === 1
+  if (sel.phase !== "targeting") return false;
+  if (sel.stepIdx >= sel.steps.length) return false;
+  const step = sel.steps[sel.stepIdx] as TargetSpec;
+  return stepMax(step) === 1 && sel.current.length === 1;
 }
 
 /**
@@ -268,10 +276,10 @@ export function autoAdvances(sel: SelectionState): boolean {
  * player needs an explicit confirm button to proceed.
  */
 export function needsConfirm(sel: SelectionState): boolean {
-  if (sel.phase !== 'targeting') return false
-  if (sel.stepIdx >= sel.steps.length) return false
-  const step = sel.steps[sel.stepIdx] as TargetSpec
-  return stepMin(step) !== stepMax(step)
+  if (sel.phase !== "targeting") return false;
+  if (sel.stepIdx >= sel.steps.length) return false;
+  const step = sel.steps[sel.stepIdx] as TargetSpec;
+  return stepMin(step) !== stepMax(step);
 }
 
 /**
@@ -279,15 +287,15 @@ export function needsConfirm(sel: SelectionState): boolean {
  * Optional steps (min===0) are always satisfied.
  */
 export function stepSatisfied(sel: SelectionState): boolean {
-  if (sel.phase !== 'targeting') return false
-  if (sel.stepIdx >= sel.steps.length) return false
-  const step = sel.steps[sel.stepIdx] as TargetSpec
-  return sel.current.length >= stepMin(step)
+  if (sel.phase !== "targeting") return false;
+  if (sel.stepIdx >= sel.steps.length) return false;
+  const step = sel.steps[sel.stepIdx] as TargetSpec;
+  return sel.current.length >= stepMin(step);
 }
 
 /** True when all steps have been completed. */
 export function isComplete(sel: SelectionState): boolean {
-  return sel.phase === 'targeting' && sel.stepIdx === sel.steps.length
+  return sel.phase === "targeting" && sel.stepIdx === sel.steps.length;
 }
 
 /**
@@ -300,48 +308,51 @@ export function isComplete(sel: SelectionState): boolean {
  * Returns 0 for idle and awaiting-modal phases.
  */
 export function activeStep(sel: SelectionState): number {
-  if (sel.phase !== 'targeting') return 0
-  return sel.choice ?? sel.stepIdx
+  if (sel.phase !== "targeting") return 0;
+  return sel.choice ?? sel.stepIdx;
 }
 
 /** The phase-instruction text (and whether to show it) for a selection state. */
-export function hintForSelection(sel: SelectionState): { text: string; visible: boolean } {
-  if (sel.phase === 'idle') {
-    return { text: '', visible: false }
+export function hintForSelection(sel: SelectionState): {
+  text: string;
+  visible: boolean;
+} {
+  if (sel.phase === "idle") {
+    return { text: "", visible: false };
   }
 
-  if (sel.phase === 'awaiting-modal') {
-    return { text: 'Choose an option above', visible: true }
+  if (sel.phase === "awaiting-modal") {
+    return { text: "Choose an option above", visible: true };
   }
 
   // targeting phase
   if (sel.stepIdx >= sel.steps.length) {
-    return { text: '', visible: false }
+    return { text: "", visible: false };
   }
 
-  const step = sel.steps[sel.stepIdx] as TargetSpec
-  const min = stepMin(step)
-  const max = stepMax(step)
+  const step = sel.steps[sel.stepIdx] as TargetSpec;
+  const min = stepMin(step);
+  const max = stepMax(step);
 
   switch (step.kind) {
-    case 'hazard':
-      return { text: 'Select a Hazard target', visible: true }
-    case 'discardPlayer':
-      return { text: 'Select a player card to discard', visible: true }
-    case 'destroyHand':
+    case "hazard":
+      return { text: "Select a Hazard target", visible: true };
+    case "discardPlayer":
+      return { text: "Select a player card to discard", visible: true };
+    case "destroyHand":
       return {
-        text: min === 0
-          ? 'Select a card to destroy (optional)'
-          : 'Select a card to destroy',
+        text:
+          `Select a card to destroy (${sel.current.length} chosen)` +
+          (min === 0 ? "(optional)" : ""),
         visible: true,
-      }
-    case 'returnWorld':
+      };
+    case "returnWorld":
       return {
         text: `Select ${min}–${max} world cards to return (${sel.current.length} chosen)`,
         visible: true,
-      }
+      };
     default:
-      return { text: '', visible: false }
+      return { text: "", visible: false };
   }
 }
 
@@ -350,39 +361,37 @@ export function hintForSelection(sel: SelectionState): { text: string; visible: 
  * yet complete.
  *
  * Folds done[] into a flat PlayCard action. Fields are omitted when undefined
- * (e.g. destroyId when the destroy step was skipped).
+ * (e.g. destroyIds when the destroy step was skipped).
  */
 export function buildAction(sel: SelectionState): Action | null {
-  if (sel.phase !== 'targeting') return null
-  if (sel.stepIdx !== sel.steps.length) return null
+  if (sel.phase !== "targeting") return null;
+  if (sel.stepIdx !== sel.steps.length) return null;
 
-  const action: Extract<Action, { type: 'PlayCard' }> = {
-    type: 'PlayCard',
+  const action: Extract<Action, { type: "PlayCard" }> = {
+    type: "PlayCard",
     cardId: sel.cardId,
-  }
+  };
 
   if (sel.choice !== undefined) {
-    Object.assign(action, { choice: sel.choice })
+    Object.assign(action, { choice: sel.choice });
   }
 
   for (const result of sel.done) {
     switch (result.kind) {
-      case 'hazard':
-        Object.assign(action, { targetId: result.targetId })
-        break
-      case 'returnWorld':
-        Object.assign(action, { returnIds: result.returnIds })
-        break
-      case 'discardPlayer':
-        Object.assign(action, { discardId: result.discardId })
-        break
-      case 'destroyHand':
-        if (result.destroyId !== undefined) {
-          Object.assign(action, { destroyId: result.destroyId })
-        }
-        break
+      case "hazard":
+        Object.assign(action, { targetId: result.targetId });
+        break;
+      case "returnWorld":
+        Object.assign(action, { returnIds: result.returnIds });
+        break;
+      case "discardPlayer":
+        Object.assign(action, { discardId: result.discardId });
+        break;
+      case "destroyHand":
+        Object.assign(action, { destroyIds: result.destroyIds });
+        break;
     }
   }
 
-  return action
+  return action;
 }
