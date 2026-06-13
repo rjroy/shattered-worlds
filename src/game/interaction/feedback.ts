@@ -92,7 +92,26 @@ export function selectConnectorStyle(effect: CardEffect): ConnectorStyle | null 
       }
       return null
     }
-    default:
+    // Effects that draw no targeting connector.
+    case 'DealProgressScaled':
+    case 'Draw':
+    case 'Heal':
+    case 'GainEnergy':
+    case 'DiscardThenDraw':
+    case 'AddCard':
+    case 'AddWorldCardToDeck':
+    case 'AddThreatToWorldDeck':
+    case 'Damage':
+    case 'DamageScaled':
+    case 'GainCard':
+    case 'AddPlayerCardToTop':
+    case 'SurviveWorld':
+    case 'ForceDestroy':
+    case 'DestroySelf':
+    case 'None':
+    case 'Brace':
+    case 'DealProgressAll':
+    case 'ExileTopWorldCards':
       return null
   }
 }

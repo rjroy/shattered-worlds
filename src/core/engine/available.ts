@@ -58,8 +58,11 @@ function structuralSpec(effect: CardEffect): TargetSpec {
     case "None":
     case "Damage":
     case "DamageScaled":
-      return { kind: "none" };
-    default:
+    case "GainCard":
+    case "AddPlayerCardToTop":
+    case "SurviveWorld":
+    case "ForceDestroy":
+    case "DestroySelf":
       return { kind: "none" };
   }
 }
@@ -124,7 +127,14 @@ function isPlayable(
       // The first step determines whether the whole sequence is playable.
       return isPlayable(effect.steps[0]!, state, selfId);
 
-    default:
+    case "GainCard":
+    case "AddPlayerCardToTop":
+    case "SurviveWorld":
+    case "ForceDestroy":
+    case "DestroySelf":
+      // World-card hook effects, never directly played from hand. The former
+      // default reported these unplayable; enumerated so a new kind cannot
+      // silently inherit that.
       return false;
   }
 }
@@ -198,8 +208,12 @@ function computeLegalTargetsForEffect(
     case "ExileTopWorldCards":
     case "Damage":
     case "DamageScaled":
-      return [];
-    default:
+    case "None":
+    case "GainCard":
+    case "AddPlayerCardToTop":
+    case "SurviveWorld":
+    case "ForceDestroy":
+    case "DestroySelf":
       return [];
   }
 }
@@ -225,6 +239,8 @@ function computeLegalTargets(
       return computeLegalTargetsForEffect(card, stepEffect, state);
     }
 
+    // Leaf effects: targeting (if any) lives entirely at step 0. New leaf kinds
+    // must be classified here deliberately rather than inheriting a default.
     case "DealProgress":
     case "DealProgressScaled":
     case "DiscardThenDraw":
@@ -239,7 +255,14 @@ function computeLegalTargets(
     case "Brace":
     case "DealProgressAll":
     case "ExileTopWorldCards":
-    default:
+    case "Damage":
+    case "DamageScaled":
+    case "None":
+    case "GainCard":
+    case "AddPlayerCardToTop":
+    case "SurviveWorld":
+    case "ForceDestroy":
+    case "DestroySelf":
       // step 0: all cards in hand except self
       if (step !== 0) return [];
       return computeLegalTargetsForEffect(card, effect, state);

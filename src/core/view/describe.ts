@@ -166,7 +166,27 @@ function dealProgressOf(
       }
       return null;
     }
-    default:
+    // Non-progress effects: nothing to preview as Progress math.
+    case "DealProgressScaled":
+    case "Draw":
+    case "Heal":
+    case "GainEnergy":
+    case "ReturnWorldCards":
+    case "DestroyCardInHand":
+    case "DiscardThenDraw":
+    case "AddCard":
+    case "AddWorldCardToDeck":
+    case "AddThreatToWorldDeck":
+    case "Damage":
+    case "DamageScaled":
+    case "GainCard":
+    case "AddPlayerCardToTop":
+    case "SurviveWorld":
+    case "ForceDestroy":
+    case "DestroySelf":
+    case "None":
+    case "Brace":
+    case "ExileTopWorldCards":
       return null;
   }
 }
