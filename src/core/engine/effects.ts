@@ -6,12 +6,7 @@ import type {
 } from "../model/types";
 import type { CardCatalog } from "../model/catalog";
 import type { EffectContext, EffectResult } from "../effects/EffectContext";
-import { damage } from "../effects/damage";
-import { dealProgress, resolveCounter } from "../effects/dealProgress";
-import { gainCard, worldThreatByWorldId } from "../effects/gainCard";
 import { EFFECTS } from "../effects/registry";
-import { gainEnergy, heal } from "../effects/resources";
-import { destroyInHand, returnToActiveWorldDeck } from "../effects/worldCards";
 
 // ---------------------------------------------------------------------------
 // dealProgress / resolveCounter facade
@@ -22,31 +17,31 @@ import { destroyInHand, returnToActiveWorldDeck } from "../effects/worldCards";
 // existing `effects.test.ts` imports keep resolving unedited.
 // dealProgress imports `applyEffect` from this module; that import is used only
 // at call time inside its body, so no top-level evaluation cycle forms.
-export { dealProgress, resolveCounter };
+export { dealProgress, resolveCounter } from "../effects/dealProgress";
 
 // ---------------------------------------------------------------------------
 // gainCard
 // ---------------------------------------------------------------------------
 
-export { gainCard, worldThreatByWorldId };
+export { gainCard, worldThreatByWorldId } from "../effects/gainCard";
 
 // ---------------------------------------------------------------------------
 // returnToActiveWorldDeck
 // ---------------------------------------------------------------------------
 
-export { destroyInHand, returnToActiveWorldDeck };
+export { destroyInHand, returnToActiveWorldDeck } from "../effects/worldCards";
 
 // ---------------------------------------------------------------------------
 // damage
 // ---------------------------------------------------------------------------
 
-export { damage };
+export { damage } from "../effects/damage";
 
 // ---------------------------------------------------------------------------
 // heal
 // ---------------------------------------------------------------------------
 
-export { gainEnergy, heal };
+export { gainEnergy, heal } from "../effects/resources";
 
 // ---------------------------------------------------------------------------
 // applyEffect

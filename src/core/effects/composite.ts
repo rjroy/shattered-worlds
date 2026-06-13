@@ -1,38 +1,11 @@
-/**
- * Composite effect handlers: `Modal` and `Sequence`.
- *
- * These are the only handlers that recurse into child effects, so they are the
- * one place the registry-cycle risk is real. The cycle is broken concern by
- * concern:
- *
- *   - `apply`   recurses via `ctx.apply(ctx, child)` — the dispatcher-bound
- *               callback on `EffectContext`. composite.ts therefore never
- *               imports `effects.ts`'s `applyEffect`, nor `registry.ts`.
- *   - `compile` recurses via `ctx.compile(child, childCtx)` — the
- *               dispatcher-bound callback on `CompileContext`. composite.ts
- *               therefore never imports `effectGlyphs.ts`'s private `compile`,
- *               nor `registry.ts`.
- *   - `describe` / `structuralSpec` / `isPlayable` recurse through the existing
- *               public concern dispatchers (`describeEffect` in describe.ts,
- *               `structuralSpecOf` / `isPlayableOf` in available.ts). These are
- *               plain forward imports — composite.ts depends on those two
- *               modules, neither of which depends on composite.ts in this step.
- *               They are NOT routed through `registry.ts`, so composite.ts still
- *               imports neither `registry.ts` nor `applyEffect`. (See the report
- *               for the seam rationale and the Step-5 note.)
- *   - `legalTargets` for a composite is `[]` — target resolution for a
- *               Modal/Sequence happens at the branch/step level in available.ts's
- *               `computeLegalTargets`, not at the composite node. This mirrors the
- *               `Modal` / `Sequence` cases of `computeLegalTargetsForEffect`.
- *
- * Pure core — no Phaser, no DOM. Lint enforces the boundary.
- */
+/** Composite effect handlers: `Modal` and `Sequence`. */
 import type { CardEffect, CardId, GameState, TargetSpec } from '../model/types'
 import type { EffectLine } from '../view/effectGlyphs'
 import type { CompileContext, EffectContext, EffectResult } from './EffectContext'
 import { EffectHandler } from './EffectHandler'
 import { describeEffect } from '../view/describe'
 import { isPlayableOf, structuralSpecOf } from '../engine/available'
+import { main, text } from './tokens'
 
 type ModalEffect = Extract<CardEffect, { kind: 'Modal' }>
 type SequenceEffect = Extract<CardEffect, { kind: 'Sequence' }>
@@ -61,7 +34,7 @@ export class ModalHandler extends EffectHandler<ModalEffect> {
   override compile(effect: ModalEffect, ctx: CompileContext): EffectLine[] {
     return [
       // A "Choose:" header, then each branch's lines.
-      mainLine([text('Choose:')]),
+      main([text('Choose:')]),
       // A branch's first (main) line becomes a 'branch' line; rider lines it
       // produced stay riders, and nested 'branch' lines stay 'branch' — the
       // indent level deliberately does not stack. Inside a branch a Sequence
@@ -138,7 +111,7 @@ export class SequenceHandler extends EffectHandler<SequenceEffect> {
         joined.push(...first.tokens)
         trailing.push(...rest)
       }
-      return joined.length > 0 ? [mainLine(joined), ...trailing] : trailing
+      return joined.length > 0 ? [main(joined), ...trailing] : trailing
     }
 
     // 3+ steps would overflow a single line, so each step gets its own line,
@@ -188,23 +161,6 @@ export function effectAtStep(effect: CardEffect, step: number): CardEffect | nul
   if (effect.kind === 'Sequence') return effect.steps[step] ?? null
   if (effect.kind === 'Modal') return effect.branches[step] ?? null
   return effect
-}
-
-// ---------------------------------------------------------------------------
-// Local token/line helpers (mirrors effectGlyphs.ts's private constructors)
-// ---------------------------------------------------------------------------
-//
-// effectGlyphs.ts's `text` / `main` are module-private; the composite compile
-// bodies need the same constructors. They are tiny and pure, so they are
-// duplicated here rather than widening effectGlyphs.ts's surface. The compile
-// recursion itself goes through `ctx.compile`, never effectGlyphs.ts.
-
-function text(s: string): EffectLine['tokens'][number] {
-  return { kind: 'text', text: s }
-}
-
-function mainLine(tokens: EffectLine['tokens']): EffectLine {
-  return { tokens }
 }
 
 function lowerFirst(s: string): string {

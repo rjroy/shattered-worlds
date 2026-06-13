@@ -1,13 +1,4 @@
-/**
- * The effect-handler registry: one stateless handler singleton per `kind`,
- * indexed by `effect.kind`. Dispatchers (`applyEffect`, `describeEffect`,
- * `compileEffect`, and the `available.ts` targeting selectors) look a handler up
- * here and delegate to it; the per-kind switch bodies remain only as a
- * transitional fallback for kinds not yet registered (Step 5). Step 7 tightens
- * `EFFECTS` to the exhaustive mapped type and deletes those switches.
- *
- * Pure core — no Phaser, no DOM. Lint enforces the boundary.
- */
+/** The exhaustive effect-handler registry: one stateless handler per `kind`. */
 import type { CardEffect } from '../model/types'
 import type { EffectHandler } from './EffectHandler'
 import type { ConnectorStyle } from './EffectContext'
@@ -33,10 +24,6 @@ import {
   SurviveWorldHandler,
 } from './worldCards'
 
-/**
- * The exhaustive handler index. A missing `CardEffect["kind"]` is a compile
- * error, so adding a kind requires adding its one handler and one registry line.
- */
 export const EFFECTS: {
   [K in CardEffect['kind']]: EffectHandler<Extract<CardEffect, { kind: K }>>
 } = {

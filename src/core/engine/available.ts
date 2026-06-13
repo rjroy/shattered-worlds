@@ -41,16 +41,6 @@ function isPlayable(
   return h.isPlayable(effect as never, state, selfId);
 }
 
-/**
- * Public recursion entry points for the composite handlers.
- *
- * `ModalHandler` / `SequenceHandler` (in `../effects/composite`) recurse into
- * their child branches/steps via these, so the per-kind `structuralSpec` /
- * `isPlayable` logic stays single-homed here rather than being duplicated in the
- * handlers. They are plain forward exports — `composite.ts` imports them, and
- * `available.ts` does not import `composite.ts` — so no import cycle forms.
- * Thin wrappers (not renames) keep the internal call sites above untouched.
- */
 export function structuralSpecOf(effect: CardEffect): TargetSpec {
   return structuralSpec(effect)
 }
