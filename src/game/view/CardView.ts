@@ -67,7 +67,7 @@ interface CardTextOpts {
   color: string;
   originY: number; // 0 = top-anchored, 1 = bottom-anchored
   bold?: boolean;
-  wrapWidth?: number; // when set, the text wraps at this width and centers
+  maxWidth?: number;
   background?: number;
 }
 
@@ -85,10 +85,6 @@ function addCardText(
     color: opts.color,
   };
   if (opts.bold === true) style.fontStyle = "bold";
-  if (opts.wrapWidth !== undefined) {
-    style.wordWrap = { width: opts.wrapWidth };
-    style.align = "center";
-  }
   const text = scene.add.text(x, y, "", textStyle(style));
   text.setOrigin(0.5, opts.originY);
   const wrapped = text.getWrappedText(str);
@@ -98,6 +94,12 @@ function addCardText(
     const lineText = i == 0 ? text : scene.add.text(x, currY, "", textStyle(style));
     lineText.setText(line);
     lineText.setOrigin(0.5, opts.originY);
+    if (opts.maxWidth !== undefined) {
+      const scale = opts.maxWidth / lineText.width;
+      if (scale < 1.0) {
+        lineText.setScale(scale);
+      }
+    }
     currY += lineText.height;
     if (opts.background !== undefined) {
       const bg = scene.add
@@ -189,7 +191,7 @@ export class CardView extends Phaser.GameObjects.Container {
       fontSize: "16px",
       color: TEXT.textLight,
       bold: true,
-      wrapWidth: CARD_W - 12,
+      maxWidth: CARD_W - 12,
       originY: 0,
     });
 
