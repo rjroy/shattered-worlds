@@ -723,7 +723,7 @@ describe("PlayCard exhaust", () => {
     const destroyed = result.events.find((e) => e.type === "CardDestroyed");
     expect(destroyed).toBeDefined();
     if (destroyed?.type === "CardDestroyed") {
-      expect(destroyed.ids).toBe([exhaustCard.id]);
+      expect(destroyed.ids).toStrictEqual([exhaustCard.id]);
     }
 
     // CardDestroyed must come AFTER CardPlayed and after the effect events.
@@ -1078,7 +1078,7 @@ describe("EndTurn Corpse self-transform", () => {
     const destroyed = result.events.find((e) => e.type === "CardDestroyed");
     expect(destroyed).toBeDefined();
     if (destroyed?.type === "CardDestroyed") {
-      expect(destroyed.ids).toBe([corpse.id]);
+      expect(destroyed.ids).toStrictEqual([corpse.id]);
     }
 
     // Net world-card count grew by exactly one (the spawned Zombie), even

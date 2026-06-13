@@ -835,7 +835,7 @@ describe('CardView player-card keyword line (REQ-MALL-21)', () => {
     expect(rows.length).toBe(1)
     expect(rowTokens(rows[0]!)).toEqual({
       iconKeys: ['effect-icon-progress'],
-      textContents: ['1'],
+      textContents: ['+', '1'],
     })
   })
 
@@ -848,7 +848,7 @@ describe('CardView player-card keyword line (REQ-MALL-21)', () => {
     const [block] = effectBlocks(rendered)
     expect(block).toBeDefined()
     expect(block!.y).toBe(EFFECT_Y_DEFAULT)
-    expect(rowTokens(rowsOf(block!)[0]!).textContents).toEqual(['1'])
+    expect(rowTokens(rowsOf(block!)[0]!).textContents).toEqual(['+', '1'])
   })
 })
 
@@ -923,7 +923,7 @@ describe('CardView world-card trigger blocks', () => {
     const [eachTurn, onClear] = effectBlocks(rendered)
     expect(rowTokens(rowsOf(eachTurn!)[0]!)).toEqual({
       iconKeys: ['effect-icon-each-turn', 'effect-icon-hp'],
-      textContents: ['-1'], // core's true minus, normalized for the card font
+      textContents: [':', '-1'], // core's true minus, normalized for the card font
     })
     expect(rowTokens(rowsOf(onClear!)[0]!)).toEqual({
       iconKeys: ['effect-icon-on-clear', 'effect-icon-energy'],
@@ -963,10 +963,10 @@ describe('CardView world-card trigger blocks', () => {
     // block baseColor.
     const tints = blocks.map((block) => rowTextColors(rowsOf(block)[0]!))
     expect(tints).toEqual([
-      ['#ffaa66'], // eachTurn: Brace '2' → textHeld
-      ['#ff8888'], // onDiscard: threat '+1' → textPenalty
-      ['#88ee88', '#88ee88'], // onClear: exile 'top', '1' → textReward
-      ['#ff8888'], // onPartialClear: 'next turn' → textPenalty
+      ['#ffaa66', '#ffaa66'], // eachTurn: colon + Brace '2' → textHeld
+      ['#ff8888', '#ff8888'], // onDiscard: colon + threat '+1' → textPenalty
+      ['#88ee88', '#88ee88', '#88ee88'], // onClear: colon + exile 'top', '1' → textReward
+      ['#ff8888', '#ff8888'], // onPartialClear: colon + 'next turn' → textPenalty
     ])
   })
 })

@@ -30,7 +30,7 @@ function line(tokens: EffectToken[], role?: 'main' | 'branch' | 'rider'): Effect
 describe('compileEffect', () => {
   it('compiles DealProgress to an icon + emphasized value', () => {
     expect(compileEffect({ kind: 'DealProgress', base: 3 })).toStrictEqual([
-      line([i('progress'), v('3', 'progress')]),
+      line([t('+'), i('progress'), v('3', 'progress')]),
     ])
   })
 
@@ -38,7 +38,7 @@ describe('compileEffect', () => {
     expect(
       compileEffect({ kind: 'DealProgress', base: 3, bonus: { tag: 'Spore', amount: 2 } }),
     ).toStrictEqual([
-      line([i('progress'), v('3', 'progress')]),
+      line([t('+'), i('progress'), v('3', 'progress')]),
       line([v('+2'), t('vs'), t('Spore')], 'rider'),
     ])
   })
@@ -52,19 +52,19 @@ describe('compileEffect', () => {
         amount: 1,
       }),
     ).toStrictEqual([
-      line([i('progress'), v('1', 'progress')]),
+      line([t('+'), i('progress'), v('1', 'progress')]),
       line([v('+1'), t('per'), t('Spore'), t('in hand')], 'rider'),
     ])
   })
 
   it('compiles DealProgressAll with an "all" marker and the same bonus rider as DealProgress', () => {
     expect(compileEffect({ kind: 'DealProgressAll', base: 2 })).toStrictEqual([
-      line([i('progressAll'), v('2', 'progress'), t('all')]),
+      line([t('+'), i('progressAll'), v('2', 'progress'), t('all')]),
     ])
     expect(
       compileEffect({ kind: 'DealProgressAll', base: 2, bonus: { tag: 'Spore', amount: 2 } }),
     ).toStrictEqual([
-      line([i('progressAll'), v('2', 'progress'), t('all')]),
+      line([t('+'), i('progressAll'), v('2', 'progress'), t('all')]),
       line([v('+2'), t('vs'), t('Spore')], 'rider'),
     ])
   })
@@ -128,7 +128,7 @@ describe('compileEffect', () => {
 
   it('compiles the remaining simple player effects', () => {
     expect(compileEffect({ kind: 'DiscardThenDraw', player: 2 })).toStrictEqual([
-      line([i('discard'), v('1'), t('then'), i('draw'), v('2')]),
+      line([i('discard'), v('1'), t('→'), i('draw'), v('2')]),
     ])
     expect(compileEffect({ kind: 'ExileTopWorldCards', amount: 2 })).toStrictEqual([
       line([i('exile'), t('top'), v('2')]),
@@ -186,7 +186,7 @@ describe('compileEffect (composites)', () => {
     ])
   })
 
-  it('joins a 1–2 step Sequence onto one line with "then" connectives', () => {
+  it('joins a 1–2 step Sequence onto one line with "→" connectives', () => {
     const sequence: CardEffect = {
       kind: 'Sequence',
       steps: [
@@ -195,7 +195,7 @@ describe('compileEffect (composites)', () => {
       ],
     }
     expect(compileEffect(sequence)).toStrictEqual([
-      line([i('progress'), v('1', 'progress'), t('then'), i('draw'), v('1')]),
+      line([t('+'), i('progress'), v('1', 'progress'), t('→'), i('draw'), v('1')]),
     ])
   })
 
@@ -209,9 +209,10 @@ describe('compileEffect (composites)', () => {
     }
     expect(compileEffect(sequence)).toStrictEqual([
       line([
+        t('+'),
         i('progress'),
         v('2', 'progress'),
-        t('then'),
+        t('→'),
         i('draw'),
         v('1'),
         t('·'),
@@ -222,7 +223,7 @@ describe('compileEffect (composites)', () => {
     ])
   })
 
-  it('splits a 3+ step Sequence into one line per step, continuation lines led by "then"', () => {
+  it('splits a 3+ step Sequence into one line per step, continuation lines led by "→"', () => {
     const sequence: CardEffect = {
       kind: 'Sequence',
       steps: [
@@ -232,9 +233,9 @@ describe('compileEffect (composites)', () => {
       ],
     }
     expect(compileEffect(sequence)).toStrictEqual([
-      line([i('progress'), v('1', 'progress')]),
-      line([t('then'), i('draw'), v('1')]),
-      line([t('then'), i('hp'), v('+1', 'reward')]),
+      line([t('+'), i('progress'), v('1', 'progress')]),
+      line([t('→'), i('draw'), v('1')]),
+      line([t('→'), i('hp'), v('+1', 'reward')]),
     ])
   })
 
@@ -248,10 +249,10 @@ describe('compileEffect (composites)', () => {
       ],
     }
     expect(compileEffect(sequence)).toStrictEqual([
-      line([i('progress'), v('2', 'progress')]),
+      line([t('+'), i('progress'), v('2', 'progress')]),
       line([v('+2'), t('vs'), t('Spore')], 'rider'),
-      line([t('then'), i('draw'), v('1')]),
-      line([t('then'), i('hp'), v('+1', 'reward')]),
+      line([t('→'), i('draw'), v('1')]),
+      line([t('→'), i('hp'), v('+1', 'reward')]),
     ])
   })
 
@@ -280,7 +281,7 @@ describe('compileEffect (composites)', () => {
     expect(compileEffect(modal)).toStrictEqual([
       line([t('Choose:')]),
       line([i('hp'), v('+1', 'reward')], 'branch'),
-      line([i('progress'), v('1', 'progress'), t('then'), i('draw'), v('1')], 'branch'),
+      line([t('+'), i('progress'), v('1', 'progress'), t('→'), i('draw'), v('1')], 'branch'),
     ])
   })
 
@@ -304,12 +305,13 @@ describe('compileEffect (composites)', () => {
       line([i('hp'), v('+1', 'reward')], 'branch'),
       line(
         [
+          t('+'),
           i('progress'),
           v('1', 'progress'),
-          t('then'),
+          t('→'),
           i('draw'),
           v('1'),
-          t('then'),
+          t('→'),
           i('energy'),
           v('+1', 'reward'),
         ],
@@ -356,7 +358,7 @@ describe('compileEffect (composites)', () => {
       ],
     }
     expect(compileEffect(sequence)).toStrictEqual([
-      line([i('progress'), v('1', 'progress'), t('then'), t('Choose:')]),
+      line([t('+'), i('progress'), v('1', 'progress'), t('→'), t('Choose:')]),
       line([i('hp'), v('+1', 'reward')], 'branch'),
       line([i('draw'), v('1')], 'branch'),
     ])
@@ -379,7 +381,7 @@ describe('compileEffect (catalog composites)', () => {
     expect(compileEffect(sprint)).toStrictEqual([
       line([t('Choose:')]),
       line([i('draw'), v('3'), t('·'), i('worldDraw'), v('+1')], 'branch'),
-      line([i('progress'), v('0', 'progress')], 'branch'),
+      line([t('+'), i('progress'), v('0', 'progress')], 'branch'),
       line([v('+3'), t('vs'), t('Slow')], 'rider'),
     ])
   })
@@ -397,9 +399,9 @@ describe('compileEffect (catalog composites)', () => {
     }
     expect(compileEffect(onCleared)).toStrictEqual([
       line([i('addCard'), t('Pruning Shears')]),
-      line([t('then'), i('addCard'), t('Machete')]),
-      line([t('then'), i('addCard'), t('Weed Killer')]),
-      line([t('then'), i('addCard'), t('Bloom')]),
+      line([t('→'), i('addCard'), t('Machete')]),
+      line([t('→'), i('addCard'), t('Weed Killer')]),
+      line([t('→'), i('addCard'), t('Bloom')]),
     ])
   })
 
@@ -412,7 +414,7 @@ describe('compileEffect (catalog composites)', () => {
       ],
     }
     expect(compileEffect(barricade)).toStrictEqual([
-      line([i('progress'), v('1', 'progress'), t('then'), i('return'), v('0–1')]),
+      line([t('+'), i('progress'), v('1', 'progress'), t('→'), i('return'), v('0–1')]),
     ])
   })
 })

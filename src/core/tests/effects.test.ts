@@ -564,7 +564,7 @@ describe("applyEffect DestroySelf", () => {
     const destroyed = events.find((e) => e.type === "CardDestroyed");
     expect(destroyed).toBeDefined();
     if (destroyed?.type === "CardDestroyed") {
-      expect(destroyed.ids).toBe([corpse.id]);
+      expect(destroyed.ids).toStrictEqual([corpse.id]);
     }
   });
 
@@ -618,7 +618,7 @@ describe("applyEffect DestroySelf", () => {
     const destroyed = events.find((e) => e.type === "CardDestroyed");
     expect(destroyed).toBeDefined();
     if (destroyed?.type === "CardDestroyed") {
-      expect(destroyed.ids).toBe([corpse.id]);
+      expect(destroyed.ids).toStrictEqual([corpse.id]);
     }
   });
 });

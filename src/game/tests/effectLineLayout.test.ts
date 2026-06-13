@@ -288,6 +288,7 @@ describe('withLeadIcon', () => {
     const result = withLeadIcon(lines, 'eachTurn')
     expect(result[0]?.tokens).toEqual([
       { kind: 'icon', icon: 'eachTurn' },
+      { kind: 'text', text: ':' },
       { kind: 'value', text: '2' },
     ])
     expect(result[1]).toEqual(lines[1] as EffectLine)
