@@ -6,12 +6,12 @@
  *
  * Pure core — no Phaser, no DOM.
  */
-import type { GameState, PlayerCard, WorldCard } from '../model/types'
+import type { GameState, PlayerCard, WorldCard } from "../model/types";
 
 export function worldCardsInHand(state: GameState): WorldCard[] {
-  return state.hand.filter((c): c is WorldCard => c.kind === 'world')
+  return state.hand.filter((c): c is WorldCard => c.kind === "world");
 }
 
 export function playerCardsInHand(state: GameState): PlayerCard[] {
-  return state.hand.filter((c): c is PlayerCard => c.kind === 'player')
+  return state.hand.filter((c): c is PlayerCard => c.kind === "player");
 }

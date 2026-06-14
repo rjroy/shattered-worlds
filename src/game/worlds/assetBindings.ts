@@ -20,6 +20,10 @@ import mallRealityUrl from "../assets/themes/overgrown-mall/overgrown-mall-reali
 import mallOverlayUrl from "../assets/themes/overgrown-mall/intrusion-overlay.webp";
 import mallCardfrontUrl from "../assets/themes/overgrown-mall/overgrown-mall-cardfront.webp";
 
+import fogRealityUrl from "../assets/themes/fog-beach-party/fog-beach-party-reality.webp";
+import fogOverlayUrl from "../assets/themes/fog-beach-party/intrusion-overlay.webp";
+import fogCardfrontUrl from "../assets/themes/fog-beach-party/fog-beach-party-cardfront.webp";
+
 // ---------------------------------------------------------------------------
 // World inset imports
 // ---------------------------------------------------------------------------
@@ -56,6 +60,17 @@ import mallInsetSomethingInTheAtriumUrl from "../assets/themes/overgrown-mall/in
 import mallInsetSporeUrl from "../assets/themes/overgrown-mall/insets/inset-spore.webp";
 import mallInsetWeedKillerUrl from "../assets/themes/overgrown-mall/insets/inset-weed-killer.webp";
 
+import fogInsetAbandonedCoolerUrl from "../assets/themes/fog-beach-party/insets/inset-abandoned-cooler.webp";
+import fogInsetBonfireUrl from "../assets/themes/fog-beach-party/insets/inset-bonfire.webp";
+import fogInsetFlareGunUrl from "../assets/themes/fog-beach-party/insets/inset-flare-gun.webp";
+import fogInsetFlashlightUrl from "../assets/themes/fog-beach-party/insets/inset-flashlight.webp";
+import fogInsetRollingFogUrl from "../assets/themes/fog-beach-party/insets/inset-rolling-fog.webp";
+import fogInsetSearchlightUrl from "../assets/themes/fog-beach-party/insets/inset-searchlight.webp";
+import fogInsetSomethingInTheMistUrl from "../assets/themes/fog-beach-party/insets/inset-something-in-the-mist.webp";
+import fogInsetTheBonfireUrl from "../assets/themes/fog-beach-party/insets/inset-the-bonfire.webp";
+import fogInsetTheTideComingInUrl from "../assets/themes/fog-beach-party/insets/inset-the-tide-coming-in.webp";
+import fogInsetWhiteoutUrl from "../assets/themes/fog-beach-party/insets/inset-whiteout.webp";
+
 import zombieInsetBaseballUrl from "../assets/themes/zombie-big-box/insets/inset-baseball.webp";
 import zombieInsetCorpseUrl from "../assets/themes/zombie-big-box/insets/inset-corpse.webp";
 import zombieInsetEchoingAislesUrl from "../assets/themes/zombie-big-box/insets/inset-echoing-aisles.webp";
@@ -77,6 +92,10 @@ import zombieBigBoxMusicUrl from "../assets/audio/zombie-big-box-music.mp3?url";
 import birdBuildingMusicUrl from "../assets/audio/bird-building-music.mp3?url";
 import highwayVolcanoMusicUrl from "../assets/audio/highway-volcano-music.mp3?url";
 import overgrownMallMusicUrl from "../assets/audio/overgrown-mall-music.mp3?url";
+// Placeholder music until a dedicated Fog track ships (precedent: insets ship as
+// placeholders). Reuses the mall track under the distinct fog music key so the
+// world loads and the asset-binding conformance test passes.
+import fogBeachPartyMusicUrl from "../assets/audio/overgrown-mall-music.mp3?url";
 
 // ---------------------------------------------------------------------------
 // Exports
@@ -141,6 +160,20 @@ export const worldAssetUrls: Record<string, string> = {
   "mall-inset-machete": mallInsetMacheteUrl,
   "mall-inset-weed-killer": mallInsetWeedKillerUrl,
   "mall-inset-bloom": mallInsetBloomUrl,
+  // fog-beach-party
+  "fog-beach-party-bg": fogRealityUrl,
+  "fog-beach-party-overlay": fogOverlayUrl,
+  "fog-beach-party-cardfront": fogCardfrontUrl,
+  "fog-inset-flashlight": fogInsetFlashlightUrl,
+  "fog-inset-flare-gun": fogInsetFlareGunUrl,
+  "fog-inset-bonfire": fogInsetBonfireUrl,
+  "fog-inset-searchlight": fogInsetSearchlightUrl,
+  "fog-inset-rolling-fog": fogInsetRollingFogUrl,
+  "fog-inset-abandoned-cooler": fogInsetAbandonedCoolerUrl,
+  "fog-inset-the-bonfire": fogInsetTheBonfireUrl,
+  "fog-inset-something-in-the-mist": fogInsetSomethingInTheMistUrl,
+  "fog-inset-the-tide-coming-in": fogInsetTheTideComingInUrl,
+  "fog-inset-whiteout": fogInsetWhiteoutUrl,
 };
 
 export interface WorldMusicAsset {
@@ -154,4 +187,5 @@ export const worldMusicManifest: Record<string, WorldMusicAsset> = {
   "bird-building": { key: "music-bird-building", url: birdBuildingMusicUrl },
   "highway-volcano": { key: "music-highway-volcano", url: highwayVolcanoMusicUrl },
   "overgrown-mall": { key: "music-overgrown-mall", url: overgrownMallMusicUrl },
+  "fog-beach-party": { key: "music-fog-beach-party", url: fogBeachPartyMusicUrl },
 };

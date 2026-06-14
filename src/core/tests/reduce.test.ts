@@ -412,7 +412,7 @@ describe("Sprint modal", () => {
       name: "Slow Hazard",
       insetKey: undefined,
       cost: 1,
-      keywords: ["Slow"],
+      keywords: [{ name: "Slow" }],
       discardable: false,
       canExile: true,
       onDiscarded: { kind: "None" },
@@ -1792,7 +1792,7 @@ describe("PlayCard None effect (Spore semantics)", () => {
         effect: { kind: "None" },
         energyCost: 1,
         exhaust: true,
-        keywords: ["Spore"],
+        keywords: [{ name: "Spore" }],
       },
       next,
     ];

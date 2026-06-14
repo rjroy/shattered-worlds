@@ -36,6 +36,7 @@ const ALL_ICON_IDS: IconId[] = [
   "worldDraw",
   "hp",
   "energy",
+  "light",
   "discard",
   "destroy",
   "exile",

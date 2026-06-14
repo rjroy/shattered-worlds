@@ -1,9 +1,4 @@
-import type {
-  Action,
-  CardEffect,
-  CardId,
-  GameState,
-} from "../model/types";
+import type { Action, CardEffect, CardId, GameState } from "../model/types";
 import type { CardCatalog } from "../model/catalog";
 import type { EffectContext, EffectResult } from "../effects/EffectContext";
 import { EFFECTS } from "../effects/registry";

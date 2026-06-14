@@ -11,9 +11,9 @@
  *
  * Pure core types only — no Phaser, no DOM. Lint enforces the boundary.
  */
-import type { CardEffect, CardId, GameEvent, GameState } from '../model/types'
-import type { CardCatalog } from '../model/catalog'
-import type { EffectLine } from '../view/effectGlyphs'
+import type { CardEffect, CardId, GameEvent, GameState } from "../model/types";
+import type { CardCatalog } from "../model/catalog";
+import type { EffectLine } from "../view/effectGlyphs";
 
 // ---------------------------------------------------------------------------
 // EffectResult — the canonical { state, events } shape
@@ -26,8 +26,8 @@ import type { EffectLine } from '../view/effectGlyphs'
  * handlers, and `StartTurnResult`.
  */
 export interface EffectResult {
-  state: GameState
-  events: GameEvent[]
+  state: GameState;
+  events: GameEvent[];
 }
 
 // ---------------------------------------------------------------------------
@@ -43,26 +43,26 @@ export interface EffectResult {
  * `onEndOfTurn` world-hook firings that take no player input.
  */
 export interface EffectContext {
-  catalog: CardCatalog
-  state: GameState
+  catalog: CardCatalog;
+  state: GameState;
   /** Single hazard / discard target from the PlayCard action. */
-  targetId?: CardId
+  targetId?: CardId;
   /** World cards to return (ReturnWorldCards). */
-  returnIds?: readonly CardId[]
+  returnIds?: readonly CardId[];
   /** Player cards to destroy (DestroyCardInHand). */
-  destroyIds?: readonly CardId[]
+  destroyIds?: readonly CardId[];
   /** Player card to discard (DiscardThenDraw). */
-  discardId?: CardId
+  discardId?: CardId;
   /** Chosen branch index (Modal). */
-  choice?: number
+  choice?: number;
   /** The world card whose hook is firing, for DestroySelf. */
-  selfId?: CardId
+  selfId?: CardId;
   /**
    * Recursion seam for composite handlers (Modal / Sequence). Bound to the
    * dispatcher so handler modules never import `registry.ts`, which would form
    * a `composite.ts -> registry.ts -> composite.ts` cycle.
    */
-  apply(ctx: EffectContext, effect: CardEffect): EffectResult
+  apply(ctx: EffectContext, effect: CardEffect): EffectResult;
 }
 
 // ---------------------------------------------------------------------------
@@ -76,8 +76,8 @@ export interface EffectContext {
  * `compactSequences` tells a nested Sequence to join onto one line.
  */
 export interface CompileContext {
-  worldId: string
-  compactSequences: boolean
+  worldId: string;
+  compactSequences: boolean;
   /**
    * Recursion seam for composite handlers (Modal / Sequence) — the compile-time
    * mirror of `EffectContext.apply`. Bound to the dispatcher so composite
@@ -86,7 +86,7 @@ export interface CompileContext {
    * A composite recurses with `ctx.compile(child, { ...ctx, compactSequences })`,
    * choosing the child's `compactSequences` per its own composition rules.
    */
-  compile(effect: CardEffect, ctx: CompileContext): EffectLine[]
+  compile(effect: CardEffect, ctx: CompileContext): EffectLine[];
 }
 
 // ---------------------------------------------------------------------------
@@ -98,4 +98,4 @@ export interface CompileContext {
  * core (Phaser-free) so the handler base can carry a `connectorStyle` method;
  * `src/game/interaction/feedback.ts` re-exports the type for renderer modules.
  */
-export type ConnectorStyle = 'progress' | 'destroy' | 'return'
+export type ConnectorStyle = "progress" | "destroy" | "return";

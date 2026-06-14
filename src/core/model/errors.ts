@@ -1,4 +1,4 @@
-import type { Action, GameState } from './types'
+import type { Action, GameState } from "./types";
 
 export class IllegalActionError extends Error {
   constructor(
@@ -6,8 +6,8 @@ export class IllegalActionError extends Error {
     readonly state: GameState,
     message?: string,
   ) {
-    super(message ?? `Illegal action: ${action.type}`)
-    this.name = 'IllegalActionError'
+    super(message ?? `Illegal action: ${action.type}`);
+    this.name = "IllegalActionError";
   }
 }
 
@@ -17,14 +17,14 @@ export class UnknownTemplateError extends Error {
     readonly state: GameState,
     message?: string,
   ) {
-    super(message ?? `Unknown card template: ${templateId}`)
-    this.name = 'UnknownTemplateError'
+    super(message ?? `Unknown card template: ${templateId}`);
+    this.name = "UnknownTemplateError";
   }
 }
 
 export class CatalogError extends Error {
   constructor(readonly reason: string) {
-    super(reason)
-    this.name = 'CatalogError'
+    super(reason);
+    this.name = "CatalogError";
   }
 }

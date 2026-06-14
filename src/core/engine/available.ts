@@ -32,21 +32,17 @@ function structuralSpec(effect: CardEffect): TargetSpec {
  * `selfId` is the id of the card being evaluated — used to exclude self from
  * target lists for DiscardThenDraw legality checks.
  */
-function isPlayable(
-  effect: CardEffect,
-  state: GameState,
-  selfId: CardId,
-): boolean {
+function isPlayable(effect: CardEffect, state: GameState, selfId: CardId): boolean {
   const h = EFFECTS[effect.kind];
   return h.isPlayable(effect as never, state, selfId);
 }
 
 export function structuralSpecOf(effect: CardEffect): TargetSpec {
-  return structuralSpec(effect)
+  return structuralSpec(effect);
 }
 
 export function isPlayableOf(effect: CardEffect, state: GameState, selfId: CardId): boolean {
-  return isPlayable(effect, state, selfId)
+  return isPlayable(effect, state, selfId);
 }
 
 /**
@@ -54,11 +50,7 @@ export function isPlayableOf(effect: CardEffect, state: GameState, selfId: CardI
  * current hand, or null when the card should be excluded from `playable`.
  * Legality (isPlayable) and spec shape (structuralSpec) each have one home.
  */
-function playableSpec(
-  effect: CardEffect,
-  state: GameState,
-  selfId: CardId,
-): TargetSpec | null {
+function playableSpec(effect: CardEffect, state: GameState, selfId: CardId): TargetSpec | null {
   return isPlayable(effect, state, selfId) ? structuralSpec(effect) : null;
 }
 
@@ -79,11 +71,7 @@ function computeLegalTargetsForEffect(
   return h.legalTargets(effect as never, card.id, state);
 }
 
-function computeLegalTargets(
-  card: PlayerCard,
-  step: number,
-  state: GameState,
-): readonly CardId[] {
+function computeLegalTargets(card: PlayerCard, step: number, state: GameState): readonly CardId[] {
   const effect = card.effect;
   const stepEffect =
     effect.kind === "Modal" || effect.kind === "Sequence"
@@ -152,14 +140,10 @@ function checkSpec(
     }
 
     case "destroyHand": {
-      const length =
-        action.destroyIds === undefined ? 0 : action.destroyIds.length;
+      const length = action.destroyIds === undefined ? 0 : action.destroyIds.length;
       if (length === 0 && spec.min === 0) return null; // min is 0, destruction is optional
       const legal = available.legalTargets(cardId, step);
-      if (
-        length === 0 ||
-        !legal.some((id) => action.destroyIds?.includes(id))
-      ) {
+      if (length === 0 || !legal.some((id) => action.destroyIds?.includes(id))) {
         return `destroyIds ${action.destroyIds} are not a legal destroy target for card ${cardId}`;
       }
       return null;
@@ -175,20 +159,10 @@ function checkSpec(
 
     case "modal": {
       const choice = action.choice;
-      if (
-        choice === undefined ||
-        choice < 0 ||
-        choice >= spec.branches.length
-      ) {
+      if (choice === undefined || choice < 0 || choice >= spec.branches.length) {
         return `choice ${action.choice} is not a valid branch index for card ${cardId}`;
       }
-      return checkSpec(
-        spec.branches[choice]!,
-        action,
-        cardId,
-        available,
-        choice,
-      );
+      return checkSpec(spec.branches[choice]!, action, cardId, available, choice);
     }
 
     case "compound": {

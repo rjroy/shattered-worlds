@@ -26,6 +26,7 @@ export type IconId =
   | "worldDraw"
   | "hp"
   | "energy"
+  | "light"
   | "discard"
   | "destroy"
   | "exile"

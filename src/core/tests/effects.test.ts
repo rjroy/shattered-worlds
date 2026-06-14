@@ -9,6 +9,7 @@ import {
   returnToActiveWorldDeck,
 } from "../engine/effects";
 import { mintCard } from "../model/cards";
+import { availableActions } from "../engine/available";
 import { createWorld } from "../engine/world";
 import type { GameState, PlayerCard, WorldCard } from "../model/types";
 import { catalog, worldData } from "./testFixture";
@@ -293,6 +294,45 @@ describe("applyEffect SurviveWorld", () => {
 
     expect(after.status).toBe("won");
     expect(events.some((e) => e.type === "WorldWon")).toBe(true);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// 8b. applyEffect GainLight — raises light, emits LightChanged
+// ---------------------------------------------------------------------------
+
+describe("applyEffect GainLight", () => {
+  it("increases light by amount and emits LightChanged with the new value", () => {
+    const state = makeState({ light: 1 });
+    const { state: after, events } = applyEffect(catalog, state, {
+      kind: "GainLight",
+      amount: 2,
+    });
+
+    expect(after.light).toBe(3);
+    const lightEvent = events.find((e) => e.type === "LightChanged");
+    expect(lightEvent).toEqual({ type: "LightChanged", light: 3 });
+  });
+
+  it("is playable with no target (no-target effect, base playability)", () => {
+    // GainLight inherits the base structuralSpec/isPlayable: { kind: 'none' } and
+    // always-playable. available.ts has SILENT default fallbacks (REQ-MALL-5),
+    // so this asserts the no-target decision explicitly rather than assuming it.
+    const card: PlayerCard = {
+      kind: "player",
+      id: "flashlight",
+      name: "Flashlight",
+      insetKey: undefined,
+      sourceWorldId: "fog",
+      effect: { kind: "GainLight", amount: 2 },
+      energyCost: 1,
+      keywords: [],
+    };
+    const state = makeState({ hand: [card], energy: 3 });
+    const available = availableActions(state);
+    const entry = available.playable.find((p) => p.cardId === "flashlight");
+    expect(entry).toBeDefined();
+    expect(entry?.spec).toEqual({ kind: "none" });
   });
 });
 
@@ -628,6 +668,40 @@ describe("DealProgressAll", () => {
     expect(after.progress[strangeSounds.id]).toBe(1);
   });
 
+  it("hits a concealed world card the player cannot single-target (the Sweep)", () => {
+    // Searchlight (DealProgressAll) resolves on true data — concealment never
+    // filters its snapshot, so it pushes progress on a card too deep to aim at.
+    const concealed: WorldCard = {
+      kind: "world",
+      id: "mist",
+      name: "Something in the Mist",
+      insetKey: undefined,
+      cost: 3,
+      keywords: [{ name: "Concealed", value: 5 }, { name: "Hidden" }],
+      discardable: true,
+      canExile: true,
+      onDiscarded: { kind: "None" },
+      onCleared: { kind: "None" },
+      onEndOfTurn: { kind: "None" },
+      onPartialClear: { kind: "None" },
+    };
+    // light 0: the card is concealed (5 > 0) and not single-targetable, yet the
+    // sweep still lands on it.
+    const state = makeState({ hand: [concealed], light: 0, progress: {} });
+
+    const { events } = applyEffect(catalog, state, {
+      kind: "DealProgressAll",
+      base: 1,
+      bonus: { tag: "Hidden", amount: 1 },
+    });
+
+    const progress = events.find(
+      (e): e is Extract<typeof e, { type: "ProgressDealt" }> => e.type === "ProgressDealt",
+    );
+    expect(progress?.hazardId).toBe("mist");
+    expect(progress?.amount).toBe(2); // base 1 + Hidden bonus 1, blind through fog
+  });
+
   it("does not sweep cards spawned by a mid-sweep onCleared", () => {
     let state = makeState();
     // Screams cost 1 — clears on first progress; its onCleared gains a player card (Regroup),
@@ -840,7 +914,10 @@ describe("ExileTopWorldCards", () => {
 // 16. DealProgressScaled
 // ---------------------------------------------------------------------------
 
-function playerCarrier(id: string, keywords: PlayerCard["keywords"] = ["Spore"]): PlayerCard {
+function playerCarrier(
+  id: string,
+  keywords: PlayerCard["keywords"] = [{ name: "Spore" }],
+): PlayerCard {
   return {
     kind: "player",
     id,
@@ -855,10 +932,10 @@ function playerCarrier(id: string, keywords: PlayerCard["keywords"] = ["Spore"])
 
 describe("DealProgressScaled", () => {
   it("resolveCounter counts matching player and world cards in hand", () => {
-    const sporeWorld = { ...exilable("w-spore"), keywords: ["Spore"] as const };
+    const sporeWorld = { ...exilable("w-spore"), keywords: [{ name: "Spore" }] as const };
     const creatureWorld = {
       ...exilable("w-creature"),
-      keywords: ["Creature"] as const,
+      keywords: [{ name: "Creature" }] as const,
     };
     const state = makeState({
       hand: [
@@ -872,6 +949,24 @@ describe("DealProgressScaled", () => {
 
     expect(resolveCounter(state, { kind: "KeywordInHand", keyword: "Spore" })).toBe(3);
     expect(resolveCounter(state, { kind: "KeywordInHand", keyword: "Hidden" })).toBe(0);
+  });
+
+  it("KeywordInHand counts by name, ignoring keyword values, across both carriers", () => {
+    const concealedWorld = {
+      ...exilable("w-conceal"),
+      keywords: [{ name: "Concealed", value: 3 }] as const,
+    };
+    const state = makeState({
+      hand: [
+        playerCarrier("p-conceal", [{ name: "Concealed", value: 1 }]),
+        concealedWorld,
+        playerCarrier("p-spore"),
+      ],
+    });
+
+    // Two cards carry Concealed at different depths; the counter matches on the
+    // name and is blind to the value.
+    expect(resolveCounter(state, { kind: "KeywordInHand", keyword: "Concealed" })).toBe(2);
   });
 
   it("applies base plus amount per Spore in hand at resolution time", () => {
