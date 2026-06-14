@@ -192,8 +192,9 @@ export class CardView extends Phaser.GameObjects.Container {
     this.add(bg);
 
     // Card inset image: if the template defines an insetKey, render the
-    // corresponding image on top of the cardfront. This is used for player
-    // cards' unique artwork, and world cards don't have insets at all.
+    // corresponding image on top of the cardfront. Both player and world cards
+    // can carry inset artwork (e.g. fog-beach-party world cards); cards without
+    // an insetKey simply skip this block.
     if ("insetKey" in card && card.insetKey && card.insetKey !== "") {
       const insetImg = scene.add.image(INSET_X, INSET_Y, card.insetKey).setOrigin(0.5, 1);
       const ratio = Math.max(INSET_W / insetImg.width, INSET_H / insetImg.height);
@@ -437,7 +438,7 @@ export class CardView extends Phaser.GameObjects.Container {
       0,
       0,
       formatKeyword({ name: "Concealed", value: this.concealDepth }),
-      { fontSize: "14px", color: TEXT.textKeyword, bold: true, originY: 0.5, background: 0x000000 },
+      { fontSize: "14px", color: TEXT.textKeyword, bold: true, originY: 0.5 },
     )) {
       this.fogObjects.push(line);
     }
