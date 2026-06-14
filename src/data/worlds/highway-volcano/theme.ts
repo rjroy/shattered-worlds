@@ -27,6 +27,7 @@ export const HIGHWAY_VOLCANO_THEME: VisualTheme = {
     targetGlow: 0xffb38a,          // hot hover-target glow
     playableGlow: 0xffd24a,
     committedTarget: 0x7a3a2a,     // muted dark-ember "locked here" mark
+    pickedBorder: 0xff6633,        // warm red-orange batch member
   },
   backdrop: {
     realityKey: 'highway-volcano-bg',

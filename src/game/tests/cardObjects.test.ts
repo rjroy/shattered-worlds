@@ -1,5 +1,5 @@
 import { describe, it, expect } from "bun:test";
-import { CardView } from "../view/CardView";
+import { CardView, applyCardHighlight } from "../view/CardView";
 import { selectTheme } from "../view/themes/themeManifest";
 import { CARD_FACE } from "../view/layout";
 import { mintCard } from "../../core/model/cards";
@@ -386,6 +386,11 @@ interface FakeRect {
 interface HighlightCardViewFake {
   highlightRect: unknown;
   list: unknown[];
+  // Pre-initialized so applyHighlight's badge guard short-circuits for non-picked
+  // kinds without needing a scene stub. Tests that need badge behaviour use
+  // makeFakePickBadgeView instead.
+  pickedNow: boolean | undefined;
+  pickBadge: unknown;
   applyHighlight: CardView["applyHighlight"];
 }
 
@@ -420,10 +425,15 @@ function makeFakeHighlightCardView(): {
       return listRectObj;
     },
   };
+  const noopBadge = { setVisible(): unknown { return noopBadge; } };
   const view = Object.create(CardView.prototype) as HighlightCardViewFake;
   view.highlightRect = rectObj;
   // If CardView regresses to list[1], these assertions will see listRect mutate.
   view.list = [{}, listRectObj];
+  // Pre-set so the badge guard skips for non-picked kinds (existing tests
+  // don't care about the badge; the full badge behaviour is in makeFakePickBadgeView).
+  view.pickedNow = false;
+  view.pickBadge = noopBadge;
   return { view, rect, listRect };
 }
 
@@ -1088,5 +1098,141 @@ describe("CardView fog-back concealment", () => {
     expect(name!.visible).toBe(true);
     // No fog depth chip exists for a card with no Concealed keyword.
     expect(allTexts(rendered)).not.toContain("Concealed 0");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// CardView applyHighlight 'picked' badge — visibility toggle and idempotency
+//
+// The badge is a lazy Container built on first use. The idempotency guard
+// (pickedNow tracker) ensures setVisible is only called when the kind
+// actually changes, not on every drawAll cycle.
+// ---------------------------------------------------------------------------
+
+interface PickBadgeState {
+  visible: boolean;
+  containerCallCount: number;
+  setVisibleCallCount: number;
+}
+
+interface PickBadgeViewFake {
+  highlightRect: unknown;
+  list: unknown[];
+  pickedNow: boolean | undefined;
+  pickBadge: unknown | undefined;
+  added: unknown[];
+  add(child: unknown): unknown;
+  applyHighlight: CardView["applyHighlight"];
+}
+
+function makeFakePickBadgeView(): {
+  view: PickBadgeViewFake;
+  rect: FakeRect;
+  badgeState: PickBadgeState;
+} {
+  const rect: FakeRect = { strokeWidth: 0, strokeColor: 0, fillColor: 0x000000, fillAlpha: 0 };
+  const rectObj = {
+    setStrokeStyle(width: number, color?: number): unknown {
+      rect.strokeWidth = width;
+      rect.strokeColor = color ?? 0;
+      return rectObj;
+    },
+    setFillStyle(color: number, alpha?: number): unknown {
+      rect.fillColor = color;
+      rect.fillAlpha = alpha ?? 1;
+      return rectObj;
+    },
+  };
+
+  const badgeState: PickBadgeState = { visible: false, containerCallCount: 0, setVisibleCallCount: 0 };
+  const badgeObj = {
+    add(_child: unknown): unknown { return badgeObj; },
+    setVisible(v: boolean): unknown {
+      badgeState.visible = v;
+      badgeState.setVisibleCallCount++;
+      return badgeObj;
+    },
+  };
+
+  const fakeGraphics = { fillStyle(): void {}, fillCircle(): void {}, setAlpha(): void {} };
+  const fakeText = { setOrigin(): unknown { return fakeText; } };
+
+  const added: unknown[] = [];
+  const view = Object.create(CardView.prototype) as PickBadgeViewFake;
+  Object.assign(view, {
+    highlightRect: rectObj,
+    list: [{}, rectObj],
+    pickedNow: undefined as boolean | undefined,
+    pickBadge: undefined as unknown,
+    added,
+    add(child: unknown): unknown {
+      added.push(child);
+      return view;
+    },
+  });
+
+  const scene = {
+    add: {
+      container(_x: number, _y: number): unknown {
+        badgeState.containerCallCount++;
+        return badgeObj;
+      },
+      graphics(): unknown { return fakeGraphics; },
+      text(): unknown { return fakeText; },
+    },
+  };
+  Object.defineProperty(view, "scene", { value: scene });
+
+  return { view, rect, badgeState };
+}
+
+describe("CardView applyHighlight pick badge", () => {
+  const fs = selectTheme("zombie-big-box").frameStyle;
+
+  it("makes the badge visible when kind is 'picked'", () => {
+    const { view, badgeState } = makeFakePickBadgeView();
+    view.applyHighlight("picked", fs);
+    expect(badgeState.visible).toBe(true);
+    expect(badgeState.containerCallCount).toBe(1); // badge created exactly once
+  });
+
+  it("hides the badge when kind changes from 'picked' to another kind", () => {
+    const { view, badgeState } = makeFakePickBadgeView();
+    view.applyHighlight("picked", fs);
+    view.applyHighlight("committed", fs);
+    expect(badgeState.visible).toBe(false);
+  });
+
+  it("is idempotent: repeated 'picked' calls do not rebuild or re-toggle the badge", () => {
+    const { view, badgeState } = makeFakePickBadgeView();
+    view.applyHighlight("picked", fs); // first: builds + shows (2 setVisible calls: false at build, true here)
+    const callsAfterFirst = badgeState.setVisibleCallCount;
+    view.applyHighlight("picked", fs); // second: guard fires, no setVisible
+    view.applyHighlight("picked", fs); // third: same
+    expect(badgeState.containerCallCount).toBe(1); // built once only
+    expect(badgeState.setVisibleCallCount).toBe(callsAfterFirst); // no extra calls
+  });
+
+  it("badge is constructed lazily on first call and starts hidden for non-picked kinds", () => {
+    const { view, badgeState } = makeFakePickBadgeView();
+    // First applyHighlight triggers construction (pickedNow: undefined → false).
+    // The badge is built, shown as hidden by the constructor, then setVisible(false) again.
+    view.applyHighlight("none", fs);
+    expect(badgeState.containerCallCount).toBe(1); // built exactly once
+    expect(badgeState.visible).toBe(false); // and stays hidden for a non-picked kind
+  });
+
+  it("applyCardHighlight on a plain container applies pickedBorder stroke/fill without a badge", () => {
+    const rect: FakeRect = { strokeWidth: 0, strokeColor: 0, fillColor: 0x000000, fillAlpha: 0 };
+    const rectObj = {
+      setStrokeStyle(w: number, c?: number): unknown { rect.strokeWidth = w; rect.strokeColor = c ?? 0; return rectObj; },
+      setFillStyle(c: number, a?: number): unknown { rect.fillColor = c; rect.fillAlpha = a ?? 1; return rectObj; },
+    };
+    const plainContainer = { list: [{}, rectObj] } as unknown as import("phaser").GameObjects.Container;
+    // Must not throw even though plainContainer is not a CardView (no badge created).
+    expect(() => applyCardHighlight(plainContainer, "picked", fs)).not.toThrow();
+    expect(rect.strokeColor).toBe(fs.pickedBorder);
+    expect(rect.fillColor).toBe(fs.pickedBorder);
+    expect(rect.fillAlpha).toBeGreaterThan(0);
   });
 });

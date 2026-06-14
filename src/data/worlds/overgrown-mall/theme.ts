@@ -25,6 +25,7 @@ export const OVERGROWN_MALL_THEME: VisualTheme = {
     targetGlow: 0x8affc7,
     playableGlow: 0xffd24a,
     committedTarget: 0x1f5c48,
+    pickedBorder: 0x66dd88,        // seafoam batch member
   },
   backdrop: {
     realityKey: 'overgrown-mall-bg',

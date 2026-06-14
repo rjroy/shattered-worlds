@@ -9,6 +9,7 @@ export interface FrameStyle {
   targetGlow: number         // hover-target emphasis tint/glow
   playableGlow: number         // hover-target emphasis tint/glow
   committedTarget: number    // muted "already locked here" mark
+  pickedBorder: number       // in-progress multi-pick batch member; distinct from selectedBorder and committedTarget
 }
 
 export interface VisualTheme {

@@ -27,6 +27,7 @@ export const FOG_BEACH_PARTY_THEME: VisualTheme = {
     targetGlow: 0xffe2b0,
     playableGlow: 0xffd24a,
     committedTarget: 0x5a4a36,
+    pickedBorder: 0xffc077,        // sandy coral batch member
   },
   backdrop: {
     realityKey: "fog-beach-party-bg",

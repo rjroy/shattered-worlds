@@ -184,7 +184,7 @@ describe("compileEffect", () => {
       line([i("survive"), t("SURVIVE!")]),
     ]);
     expect(compileEffect({ kind: "ForceDestroy", amount: 1 }, "zombie-big-box")).toStrictEqual([
-      line([i("destroy"), t("random, next hand")]),
+      line([i("destroy"), t("1 random")]),
     ]);
     expect(compileEffect({ kind: "DestroySelf" }, "zombie-big-box")).toStrictEqual([
       line([i("vanish")]),

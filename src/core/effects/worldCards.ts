@@ -178,7 +178,7 @@ export class ForceDestroyHandler extends EffectHandler<ForceDestroyEffect> {
   }
 
   override compile(_effect: ForceDestroyEffect, _ctx: CompileContext): EffectLine[] {
-    return [main([icon("destroy"), text("random, next hand")])];
+    return [main([icon("destroy"), text(`${_effect.amount} random`)])];
   }
 
   override isPlayable(): boolean {

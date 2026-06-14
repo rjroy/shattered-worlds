@@ -27,6 +27,7 @@ export const ZOMBIE_BIG_BOX_THEME: VisualTheme = {
     targetGlow: 0x9bff6a,          // bright toxic hover-target glow
     playableGlow: 0xd6ff4a,
     committedTarget: 0x2a5a1a,     // muted dark-moss "locked here" mark
+    pickedBorder: 0x88dd33,        // lime-green batch member
   },
   backdrop: {
     realityKey: 'bigbox-reality',

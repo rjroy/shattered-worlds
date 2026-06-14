@@ -155,6 +155,13 @@ export function highlightDescriptor(kind: HighlightKind, frameStyle: FrameStyle)
   switch (kind) {
     case "selected":
       return { strokeWidth: 3, strokeColor: frameStyle.selectedBorder, ...transparentFill };
+    case "picked":
+      return {
+        strokeWidth: 3,
+        strokeColor: frameStyle.pickedBorder,
+        fillColor: frameStyle.pickedBorder,
+        fillAlpha: 0.22,
+      };
     case "target":
       return { strokeWidth: 3, strokeColor: frameStyle.targetBorder, ...transparentFill };
     case "discard":

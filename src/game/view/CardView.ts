@@ -163,6 +163,9 @@ export class CardView extends Phaser.GameObjects.Container {
   private readonly fogObjects: Phaser.GameObjects.GameObject[] = [];
   private concealedNow: boolean | undefined = undefined;
 
+  private pickBadge?: Phaser.GameObjects.Container;
+  private pickedNow: boolean | undefined = undefined;
+
   constructor(
     scene: Phaser.Scene,
     card: Card,
@@ -479,6 +482,12 @@ export class CardView extends Phaser.GameObjects.Container {
     );
     this.highlightRect.setFillStyle(fillColor, fillAlpha);
     this.highlightRect.setStrokeStyle(strokeWidth, strokeColor);
+
+    const picked = kind === "picked";
+    if (this.pickedNow !== picked) {
+      this.pickedNow = picked;
+      this.obtainPickBadge(frameStyle.pickedBorder).setVisible(picked);
+    }
   }
 
   /** Dim a card that is not currently playable. */
@@ -527,6 +536,23 @@ export class CardView extends Phaser.GameObjects.Container {
     this.add(glow);
     this.targetGlow = glow;
     return glow;
+  }
+
+  private obtainPickBadge(color: number): Phaser.GameObjects.Container {
+    if (this.pickBadge !== undefined) return this.pickBadge;
+    const badge = this.scene.add.container(-CARD_W / 2 + 16, CARD_H / 2 - 16);
+    const circle = this.scene.add.graphics();
+    circle.fillStyle(color, 1);
+    circle.fillCircle(0, 0, 8);
+    circle.setAlpha(0.8);
+    badge.add(circle);
+    const check = this.scene.add.text(0, 0, "✓", textStyle({ fontSize: "12px", color: "#ffffff" }));
+    check.setOrigin(0.5, 0.5);
+    badge.add(check);
+    badge.setVisible(false);
+    this.add(badge);
+    this.pickBadge = badge;
+    return badge;
   }
 }
 
