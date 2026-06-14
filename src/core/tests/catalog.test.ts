@@ -3,7 +3,7 @@ import { assembleCatalog } from '../model/catalog'
 import { CatalogError } from '../model/errors'
 import type { RawCardSource } from '../model/catalog'
 import starterJson from '../../data/worlds/starter.json'
-import zombieJson from '../../data/worlds/zombie-big-box.json'
+import zombieJson from '../../data/worlds/zombie-big-box/cards.json'
 
 const STARTER_SOURCE = starterJson as unknown as RawCardSource
 const ZOMBIE_SOURCE = zombieJson as unknown as RawCardSource

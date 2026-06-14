@@ -1,35 +1,10 @@
-/**
- * Zombie Big Box world fixture: the JSON card sources plus an assembled
- * catalog + world descriptor. Shared by the headless sim and the core tests
- * so the bootstrap lives in exactly one place. The Phaser renderer does NOT
- * use this — it loads the same JSON asynchronously through assetManifest.
- */
 import { CatalogError } from '../core'
 import { assembleCatalog } from '../core/model/catalog'
 import type { RawCardSource, WorldData, AssembledWorld } from '../core/model/catalog'
 import starterJson from './worlds/starter.json'
-import zombieJson from './worlds/zombie-big-box.json'
-import birdJson from './worlds/bird-building.json'
-import volcanoJson from './worlds/highway-volcano.json'
-import mallJson from './worlds/overgrown-mall.json'
+import { worldDataRegistry } from './worlds/registry'
 
-
-/**
- * The worldManifest maps worldId to a builder function that assembles the catalog
- * and world descriptor for that world. This indirection allows us to export the
- * same assembled data for use by the headless sim and core tests, while still
- * loading the JSON asynchronously for the Phaser renderer.
- *
- * starter.json supplies the shared player starterDeck (plus The Walker / Door
- * templates every world references); each world file supplies its own card
- * templates and deckComposition. Builders all follow the same shape, so they are
- * produced by makeWorldBuilder rather than hand-written per world.
- */
 const STARTER_SOURCE = starterJson as unknown as RawCardSource
-const ZOMBIE_SOURCE = zombieJson as unknown as RawCardSource
-const BIRD_SOURCE = birdJson as unknown as RawCardSource
-const VOLCANO_SOURCE = volcanoJson as unknown as RawCardSource
-const MALL_SOURCE = mallJson as unknown as RawCardSource
 
 /**
  * Build a world by merging the shared starter source with one world-specific
@@ -63,12 +38,9 @@ function makeWorldBuilder(worldSource: RawCardSource): () => AssembledWorld {
   }
 }
 
-export const worldManifest: Record<string, () => AssembledWorld> = {
-  [ZOMBIE_SOURCE.worldId]: makeWorldBuilder(ZOMBIE_SOURCE),
-  [BIRD_SOURCE.worldId]: makeWorldBuilder(BIRD_SOURCE),
-  [VOLCANO_SOURCE.worldId]: makeWorldBuilder(VOLCANO_SOURCE),
-  [MALL_SOURCE.worldId]: makeWorldBuilder(MALL_SOURCE),
-}
+export const worldManifest: Record<string, () => AssembledWorld> = Object.fromEntries(
+  worldDataRegistry.map((bundle) => [bundle.id, makeWorldBuilder(bundle.source)])
+)
 
 export function buildWorld(worldId: string): AssembledWorld {
   const builder = worldManifest[worldId]

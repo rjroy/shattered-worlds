@@ -113,3 +113,40 @@ Tests live in a `tests/` folder within each module (`*.test.ts`). Run them with 
 The core module has near-complete unit test coverage. New core logic requires tests. The sim runner provides integration-level validation of the full game loop.
 
 Do not mock the core in renderer tests. The core is pure and fast — use it directly.
+
+## Adding a world
+
+A world is one folder under `src/data/worlds/<id>/` plus two small entries in the renderer layer. The type system prevents most authoring mistakes; the two conformance tests catch the rest.
+
+### 1. Create the world folder
+
+```
+src/data/worlds/<id>/
+  cards.json    — card templates and act composition (same schema as existing worlds)
+  theme.ts      — exports a named VisualTheme constant (import the type from ../../../game/view/themes/theme)
+  meta.ts       — exports WorldDisplayData (name, tagline, story, backgroundKey) and WorldHelpData (mechanics[])
+  index.ts      — assembles and exports the WorldDataBundle (id, source, theme, display, help, musicKey)
+```
+
+A `WorldDataBundle` requires all of `theme`, `display`, `help`, and `musicKey` — the type will not compile with any of them missing.
+
+### 2. Register the bundle
+
+Add the bundle to the `worldDataRegistry` array in `src/data/worlds/registry.ts`. Order in the array is the world-select order shown to the player.
+
+### 3. Add asset bindings
+
+Add the world's asset entries (backdrops, card front, inset art) and music binding to `src/game/worlds/assetBindings.ts`. Each entry maps the string key used in `cards.json` / `theme.ts` to the Vite-resolved asset URL.
+
+### 4. Run the conformance tests
+
+```sh
+bun run test
+```
+
+Two tests catch every wiring mistake:
+
+- `src/core/tests/worldRegistry.test.ts` — verifies id uniqueness, id matches `source.worldId`, all required fields present, all asset key strings are non-empty, and every card-template cross-reference resolves in the assembled catalog.
+- `src/game/tests/worldAssetBindings.test.ts` — verifies every key that `referencedAssetKeys(bundle)` derives (card insets, backdrop keys, display background) is bound in `assetManifest`, and the music key is bound in `worldMusicManifest`.
+
+If a key is missing from `assetManifest`, the second test names it explicitly. Fix the `assetBindings.ts` entry rather than the key string.
