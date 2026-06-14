@@ -81,6 +81,21 @@ export function stepMax(spec: TargetSpec): number {
   }
 }
 
+export function doesStepResultContain(result: StepResult, target: CardId): boolean {
+  switch (result.kind) {
+    case "hazard":
+      return result.targetId === target;
+    case "destroyHand":
+      return result.destroyIds.includes(target);
+    case "returnWorld":
+      return result.returnIds.includes(target);
+    case "discardPlayer":
+      return result.discardId === target;
+    default:
+      return false;
+  }
+}
+
 // ---------------------------------------------------------------------------
 // State transitions
 // ---------------------------------------------------------------------------
@@ -96,11 +111,7 @@ export function stepMax(spec: TargetSpec): number {
  * If the result is already complete (stepIdx === steps.length), returns it
  * as-is so the caller can dispatch immediately.
  */
-export function beginTargeting(
-  cardId: CardId,
-  spec: TargetSpec,
-  choice?: number,
-): SelectionState {
+export function beginTargeting(cardId: CardId, spec: TargetSpec, choice?: number): SelectionState {
   let steps: readonly TargetSpec[];
 
   if (spec.kind === "compound") {
@@ -122,9 +133,7 @@ export function beginTargeting(
     for (const s of steps) {
       if (s.kind !== "none") {
         if (seen.has(s.kind)) {
-          console.warn(
-            `[selection] duplicate step kind "${s.kind}" in steps array`,
-          );
+          console.warn(`[selection] duplicate step kind "${s.kind}" in steps array`);
         }
         seen.add(s.kind);
       }

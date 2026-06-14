@@ -540,10 +540,11 @@ export class CardView extends Phaser.GameObjects.Container {
 
   private obtainPickBadge(color: number): Phaser.GameObjects.Container {
     if (this.pickBadge !== undefined) return this.pickBadge;
-    const badge = this.scene.add.container(-CARD_W / 2 + 12, -CARD_H / 2 + 28);
+    const badge = this.scene.add.container(-CARD_W / 2 + 16, CARD_H / 2 - 16);
     const circle = this.scene.add.graphics();
     circle.fillStyle(color, 1);
     circle.fillCircle(0, 0, 8);
+    circle.setAlpha(0.8);
     badge.add(circle);
     const check = this.scene.add.text(0, 0, "✓", textStyle({ fontSize: "12px", color: "#ffffff" }));
     check.setOrigin(0.5, 0.5);
