@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Fog Beach Party world: conceal / reveal &amp; endure</title>
+  <meta name="date" content="2026-06-13">
+  <meta name="status" content="draft">
+  <meta name="tags" content="world-design, fog-beach-party, conceal, reveal, light, numeric-keywords, core-effect">
+  <meta name="modules" content="core-engine, world-data, game-view, themes">
+  <meta name="related" content=".lore/work/brainstorm/fog-beach-party-world.md, .lore/work/specs/overgrown-mall.html, .lore/work/brainstorm/shard-response-archetypes.html, .lore/work/brainstorm/new-world-concepts.md, .lore/reference/theme-authoring.html, .lore/reference/visual-direction.html">
+  <meta name="req-prefix" content="FOG">
+  <style>
+    :root {
+      --bg: #070d12; --panel: #101a22; --panel-2: #16242e;
+      --ink: #e6f0f4; --muted: #8fa6b2; --accent: #79c6e0;
+      --gold: #e0c073; --danger: #ff9a9a; --border: #233440; --code: #bfe4f0;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: radial-gradient(1100px 560px at 50% -8%, #16323f 0%, var(--bg) 60%);
+      color: var(--ink); font: 16px/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      padding: 0 1rem 6rem; }
+    .wrap { max-width: 960px; margin: 0 auto; }
+    .sticky { position: sticky; top: 0; z-index: 10; background: rgba(7,13,18,.92); backdrop-filter: blur(6px);
+      border-bottom: 1px solid var(--border); padding: .6rem 0; margin-bottom: 2rem;
+      display: flex; gap: .8rem; align-items: center; font-size: .8rem; }
+    .sticky .chip { background: rgba(121,198,224,.12); border: 1px solid rgba(121,198,224,.35);
+      color: var(--accent); border-radius: 999px; padding: .15rem .7rem; font-weight: 600; }
+    .sticky .chip.draft { background: rgba(224,192,115,.12); border-color: rgba(224,192,115,.4); color: var(--gold); }
+    h1 { font-size: 2rem; margin: 1.6rem 0 .4rem; line-height: 1.1;
+      background: linear-gradient(180deg, #fff, #bfe4f0); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+    .one-liner { color: var(--muted); max-width: 760px; }
+    h2 { font-size: 1.3rem; margin: 2.6rem 0 .9rem; border-bottom: 1px solid var(--border); padding-bottom: .45rem; }
+    h2 .count { color: var(--muted); font-size: .8rem; font-weight: 400; }
+    p { margin: .6rem 0; }
+    code { font-family: ui-monospace, "Cascadia Code", Menlo, Consolas, monospace;
+      font-size: .87em; color: var(--code); background: rgba(121,198,224,.08);
+      border: 1px solid rgba(121,198,224,.16); border-radius: 5px; padding: .05rem .35rem; }
+    pre { background: rgba(121,198,224,.06); border: 1px solid rgba(121,198,224,.16); border-radius: 8px;
+      padding: .7rem .9rem; overflow-x: auto; font-size: .82rem; line-height: 1.5; }
+    pre code { background: none; border: none; padding: 0; }
+    .req { border: 1px solid var(--border); border-left: 3px solid var(--accent); border-radius: 0 10px 10px 0;
+      background: var(--panel); padding: .7rem 1rem; margin: .7rem 0; scroll-margin-top: 4rem; }
+    .req .rid { font-weight: 700; color: var(--accent); margin-right: .5rem; font-size: .85rem; }
+    .req .rid a { color: inherit; text-decoration: none; }
+    .req .rid a:hover { text-decoration: underline; }
+    .req p { margin: .35rem 0 0; font-size: .93rem; }
+    .req.core { border-left-color: var(--gold); }
+    .req.core .rid { color: var(--gold); }
+    .note { border-left: 3px dashed var(--muted); background: rgba(143,166,178,.07);
+      border-radius: 0 10px 10px 0; padding: .6rem 1rem; margin: .8rem 0; font-size: .88rem; color: var(--muted); }
+    .validation { border: 1px solid rgba(224,192,115,.5); background: rgba(224,192,115,.07);
+      border-radius: 14px; padding: 1.2rem 1.4rem; margin: 1.4rem 0; }
+    .validation h2 { border: none; margin-top: 0; color: var(--gold); }
+    table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: .88rem; }
+    th, td { text-align: left; padding: .5rem .65rem; border-bottom: 1px solid var(--border); vertical-align: top; }
+    th { color: var(--gold); font-size: .74rem; text-transform: uppercase; letter-spacing: .06em; }
+    details { margin: .5rem 0; }
+    summary { cursor: pointer; color: var(--accent); font-weight: 600; font-size: .9rem; }
+    .meta-foot { margin-top: 3.5rem; padding-top: 1rem; border-top: 1px solid var(--border);
+      color: var(--muted); font-size: .82rem; text-align: center; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="sticky">
+      <span class="chip draft">draft</span>
+      <span class="chip">REQ-FOG</span>
+      <span style="color: var(--muted);">Fog Beach Party · fifth world · one combined spec: numeric-keyword engine slice + the conceal world</span>
+    </div>
+
+    <h1>Fog Beach Party world: conceal / reveal &amp; endure</h1>
+    <p class="one-liner">"You can't aim at what you can't see, and it hurts you anyway." The fifth world. Threat-verb <strong>conceal</strong>: hazards arrive face-down, carrying a <code>Concealed:N</code> depth; the player holds one global <code>Light</code> level that decays each turn, and a card is visible <em>iff</em> <code>Light ≥ its Concealed:N</code>. Response archetype <strong>reveal/endure</strong> (light is the weapon; the clock is your own decision quality). This spec ships two slices as one identity: a world-agnostic <strong>numeric-keyword engine generalization</strong> (sequenced first, justified by Fog's <code>Concealed</code> and world 6's future <code>Frozen</code>), then the Fog world on top. Design settled in the <a href="../brainstorm/fog-beach-party-world.md">brainstorm</a>; the four-number tuning surface is deliberately soft (JSON-adjustable, playtest-owned) per the Mall precedent.</p>
+
+    <div class="note">Like the Mall spec, <strong>card costs, counts, act distribution, Conceal depths, starting Light, decay rate, and kit light-restore amounts are initial tuning values</strong> — freely adjustable in data without spec revision. Structure, hooks, and the visibility rule are requirements; the numbers are not. Three open brainstorm questions were resolved into this spec: one combined spec (Q6), ship-and-watch act-1 survivability with no mandated leg-up (Q2), and a flat-refuel Bonfire with no extra state (Q3).</div>
+
+    <h2>1 · Core engine — numeric keywords <span class="count">(REQ-FOG-1 … 6)</span></h2>
+    <p>A world-agnostic generalization of the keyword system so a keyword can carry an optional numeric value (<code>Concealed:N</code> now, <code>Frozen:N</code> in world 6). This mirrors the Mall rule (REQ-MALL-3): <strong>extend the vocabulary before any consumer depends on it.</strong> Today <code>Keyword</code> is a flat string union (<code>src/core/model/types.ts:9</code>: <code>"Hidden" | "Creature" | "Slow" | "Spore"</code>).</p>
+
+    <div class="req core" id="REQ-FOG-1"><span class="rid"><a href="#REQ-FOG-1">REQ-FOG-1</a></span> Split <code>KeywordName</code> from runtime <code>Keyword</code>.
+      <p>Introduce <code>KeywordName</code> (the string union, now including <code>"Concealed"</code>) and a runtime <code>Keyword = { name: KeywordName; value?: number }</code>. The references that match a keyword <em>by name, value ignored</em> become <code>KeywordName</code>: <code>CounterSpec.keyword</code> (<code>types.ts:13</code>), <code>DealProgress.bonus.tag</code> (<code>types.ts:19</code>), <code>DealProgressAll.bonus.tag</code> (<code>types.ts:59</code>), and <code>TargetSpec.hazard.tag</code> (<code>types.ts:147</code>). The carriers <code>PlayerCard.keywords</code> / <code>WorldCard.keywords</code> (<code>types.ts:79, 88</code>) become <code>readonly Keyword[]</code>.</p></div>
+
+    <div class="req core" id="REQ-FOG-2"><span class="rid"><a href="#REQ-FOG-2">REQ-FOG-2</a></span> JSON keyword strings parse at mint.
+      <p>Authoring stays string-based with a <code>"Name"</code> / <code>"Name:N"</code> convention (<code>keywords: ["Hidden", "Concealed:3"]</code>). The structured parse (<code>"Concealed:3"</code> → <code>{ name: "Concealed", value: 3 }</code>; <code>"Spore"</code> → <code>{ name: "Spore" }</code>) lands at card mint (<code>src/core/model/cards.ts</code>, <code>mintCard</code>) or in <code>assembleCatalog</code> (<code>src/core/model/catalog.ts</code>) — at or after the existing <code>cardsJson as unknown as RawCardSource</code> loader boundary, so the raw strings never have to satisfy the structured type at load. Existing flag keywords parse unchanged (no <code>value</code>). Invalid forms (non-numeric <code>N</code>, unknown name) fail loudly at parse, not silently.</p></div>
+
+    <div class="req core" id="REQ-FOG-3"><span class="rid"><a href="#REQ-FOG-3">REQ-FOG-3</a></span> Name-match helper replaces every <code>.includes</code>.
+      <p>A single seam — e.g. <code>hasKeyword(card, name)</code> / <code>keywordNames(card)</code> — routes all keyword matching. Every current consumer switches to it: <code>dealProgress.ts:72</code> (bonus match), <code>dealProgress.ts:112</code> (<code>KeywordInHand</code> counter), <code>dealProgress.ts:168</code> (<code>base===0</code> keyword-filtered <code>legalTargets</code>), <code>describe.ts:52</code> (preview math), <code>tokens.ts:31,35</code> (bonus/per rider text), <code>damage.ts:49</code> (<code>DamageScaled</code> describe). <code>KeywordInHand</code> counts every hand card (player or world) whose keyword <em>name</em> matches, value irrelevant. No <code>.includes</code> on a structured-keyword array survives.</p></div>
+
+    <div class="req core" id="REQ-FOG-4"><span class="rid"><a href="#REQ-FOG-4">REQ-FOG-4</a></span> <code>Concealed</code> joins the keyword vocabulary.
+      <p><code>KeywordName</code> gains <code>"Concealed"</code>; any validation/enumeration of keywords handles it; theme-authoring C2 is amended (REQ-FOG-35). <code>Concealed:N</code> is a <em>permanent</em> keyword (the card is always that deep in potential fog) — see REQ-FOG-13 for why this is orthogonal to the transient concealed <em>condition</em>.</p></div>
+
+    <div class="req core" id="REQ-FOG-5"><span class="rid"><a href="#REQ-FOG-5">REQ-FOG-5</a></span> Keyword display renders name + value.
+      <p>Wherever keywords render as text, structured values surface. The renderer chip path (<code>src/game/view/CardView.ts:201-203, 244, 273-276</code>, currently <code>card.keywords.join(" · ")</code>) and the core riders (<code>tokens.ts</code>) format <code>{ name: "Concealed", value: 3 }</code> as a readable chip (e.g. "Concealed 3"). Help-screen keyword vocabulary (<code>HelpOverlayView.ts</code>) renders the same way. A bare <code>.join</code> over structured keywords is a spec failure.</p></div>
+
+    <div class="req core" id="REQ-FOG-6"><span class="rid"><a href="#REQ-FOG-6">REQ-FOG-6</a></span> The generalization is value-add-only and world-agnostic.
+      <p>Slice 1 changes types and matching plumbing only — it introduces no new effect, no new game state, and no Fog-specific concept. Existing worlds (zombie, bird, volcano, mall) build, play, and replay byte-identically after it (golden tests unaffected, or knowingly regenerated per REQ-FOG-38). The slice is independently coherent: if Fog were cut, this section would still stand.</p></div>
+
+    <h2>2 · Core engine — Light &amp; concealment <span class="count">(REQ-FOG-7 … 14)</span></h2>
+    <p>The Fog mechanic, on top of slice 1. The model is a <strong>decaying threshold, not a pool</strong>: seeing is free and global; light is spent only by time.</p>
+
+    <div class="req core" id="REQ-FOG-7"><span class="rid"><a href="#REQ-FOG-7">REQ-FOG-7</a></span> <code>light</code> on <code>GameState</code>.
+      <p><code>GameState</code> (<code>types.ts:122-143</code>) gains <code>light: number</code>, initialized in <code>createWorld</code> (<code>src/core/engine/world.ts:69-86</code>) from a <code>startLight</code> const in <code>WORLD_CONSTS</code> (<code>world.ts:7-14</code>). It behaves as a <em>level</em>: never consumed by seeing, only decremented by decay and increased by <code>GainLight</code>. Starting value is soft tuning (brainstorm leans a starting value that decays, refueled by cards; ship-and-watch, no mandated act-1 leg-up — Q2 resolved).</p></div>
+
+    <div class="req core" id="REQ-FOG-8"><span class="rid"><a href="#REQ-FOG-8">REQ-FOG-8</a></span> Visibility is a derived comparison, nothing stored.
+      <p>A helper <code>isConcealed(card, light)</code> = <code>concealOf(card) &gt; light</code>, where <code>concealOf(card)</code> is the value of the card's <code>Concealed</code> keyword (<strong>0 if absent</strong>, so non-fog cards are never concealed). No <code>concealed</code> flag, no stored "revealed" set — visibility is recomputed live from <code>light</code> and the keyword. Used by targeting, describe, and the renderer; <strong>exported from the core public surface</strong> so the renderer calls it rather than reimplementing the comparison (the core/game boundary forbids the renderer reaching into core internals).</p></div>
+
+    <div class="req core" id="REQ-FOG-9"><span class="rid"><a href="#REQ-FOG-9">REQ-FOG-9</a></span> <code>GainLight</code> effect.
+      <p>New <code>CardEffect</code> kind <code>{ kind: "GainLight", amount: number }</code> in the union (<code>types.ts:15-64</code>), with a <code>GainLightHandler</code> (<code>light += amount</code>) registered in <code>src/core/effects/registry.ts</code> (the exhaustive <code>EFFECTS</code> map — a missing registration is a compile error). Because the post-#58 effect surface routes <code>apply</code> / <code>describe</code> / playability through the handler, the handler must implement all three; a handler that compiles but returns <code>[]</code> from <code>describe</code> or no-ops <code>apply</code> is a silent failure caught only by tests, not the compiler. It is a no-target effect: <code>structuralSpec</code> → <code>{ kind: 'none' }</code>, <code>isPlayable</code> → energy-permitting. The base defaults happen to be correct, but per the Mall gotcha (REQ-MALL-5) <code>available.ts</code> has <em>silent</em> default fallbacks, so the no-target decision is asserted by an explicit test (REQ-FOG-36), not assumed.</p></div>
+
+    <div class="req core" id="REQ-FOG-10"><span class="rid"><a href="#REQ-FOG-10">REQ-FOG-10</a></span> <code>LightChanged</code> event.
+      <p>The <code>GameEvent</code> union (<code>types.ts:161-187</code>) gains <code>LightChanged</code> (mirroring <code>EnergyChanged</code> / <code>BraceChanged</code>), emitted by both <code>GainLight</code> resolution and the decay step. Event consumers are handled, not crashed: <code>runStats.ts</code> (the <code>event.type</code> switch ~line 382, which has no default) gets a case or a safe ignore. The renderer reads <code>LightChanged</code> as its cue to re-evaluate the hand and fade fog-shapes in/out.</p></div>
+
+    <div class="req core" id="REQ-FOG-11"><span class="rid"><a href="#REQ-FOG-11">REQ-FOG-11</a></span> Decay at turn start.
+      <p><code>startTurn</code> (<code>src/core/engine/energy.ts:73-94</code>) applies <code>light = max(0, light − 1)</code> and emits <code>LightChanged</code> as part of its ordered event list. This is the clock: untended, light dims one step a turn and the deepest fog winks back out on its own (re-concealment for free, no bespoke mechanic). <strong>Decay fires first in <code>startTurn</code>, before <code>gainEnergy</code> / <code>refillHand</code> / <code>resolveForceDestroy</code></strong>, so the turn opens with the fog already crept in over the cards the player kept, and only then are new cards drawn into the dimmer light. The ordering is fixed (it determines event sequence, hence determinism) and carries a code comment stating the rationale. <code>onEndOfTurn</code> for in-hand world cards already fires (the threat ticks whether seen or not) and needs no new plumbing.</p></div>
+
+    <div class="req core" id="REQ-FOG-12"><span class="rid"><a href="#REQ-FOG-12">REQ-FOG-12</a></span> Concealment is exactly two things; everything else resolves on true data.
+      <p>A concealed card (<code>isConcealed</code> true) is subject to <strong>(1) no target</strong> and <strong>(2) no visible details</strong>, nothing more. (1): single-target progress excludes concealed cards from its legal targets. In the current architecture <code>computeLegalTargets</code> in <code>available.ts</code> delegates to the handler, so the filter lands where the handler computes hazard targets (<code>HazardTargetingHandler.legalTargets</code>), not in a switch in <code>available.ts</code> — you cannot snipe unlit fog. (2) is renderer + describe only (REQ-FOG-14, 28). Everything else resolves on the card's <em>true</em> data with no core masking: <code>DealProgressAll</code> (a <code>{kind:'none'}</code> spec) does <strong>not</strong> skip concealed cards — it chews them, keyword bonuses and all; <code>onEndOfTurn</code> ticks; keyword bonuses apply. The rule in one line: <em>all effects still happen, you just don't know why.</em></p></div>
+
+    <div class="req core" id="REQ-FOG-13"><span class="rid"><a href="#REQ-FOG-13">REQ-FOG-13</a></span> <code>Hidden</code> keyword stays orthogonal to the concealed condition.
+      <p><code>Hidden</code> is a permanent, value-less tag ("this lurks", player cards bonus against it). The <em>concealed condition</em> is transient (<code>Light &lt; Concealed:N</code>). They are independent: a card can be <code>Hidden</code> without any <code>Concealed:N</code> (<code>Door</code>), and concealed without being <code>Hidden</code>. Light changes visibility and <strong>never touches keywords</strong>. The payoff this protects: revealing a hazard leaves its <code>Hidden</code> keyword intact, so starter <code>Explore</code>'s <code>+1 vs Hidden</code> still lands the instant it becomes targetable — reveal-then-Explore is the snipe line.</p></div>
+
+    <div class="req core" id="REQ-FOG-14"><span class="rid"><a href="#REQ-FOG-14">REQ-FOG-14</a></span> Describe text for concealment and <code>GainLight</code>.
+      <p><code>describeEffect</code> (<code>src/core/view/describe.ts</code>) now delegates to the per-handler <code>describe</code> (post-#58 registry), so the <code>GainLight</code> describe text (e.g. "gain 2 Light") lives on <code>GainLightHandler.describe</code>; there is no central switch and therefore no compile trip-wire for it — the REQ-FOG-36 test is the safety net (REQ-FOG-9). A concealed card describes as <strong>"lost in the fog (needs Light N)"</strong> — its real name/cost/effect/keywords are withheld, but its required Light (its <code>Concealed:N</code>) is shown, because light management needs that number (Q4 resolved: depth always shown).</p></div>
+
+    <h2>3 · The light kit cards <span class="count">(REQ-FOG-15 … 17)</span></h2>
+    <p>All "reveal" is just adding Light, so the kit is <code>GainLight</code> cards differentiated by magnitude/cost/persistence, plus the one sweep card. The single-target heavy hitter is starter <code>Explore</code> (<code>+1 vs Hidden</code>) — no Machete-equivalent needed. The kit is <strong>unlocked, not starter</strong> (granted by the Bonfire capstone), so it does not leak into other worlds — same containment as the Mall kit.</p>
+
+    <div class="req" id="REQ-FOG-15"><span class="rid"><a href="#REQ-FOG-15">REQ-FOG-15</a></span> The strategic triangle is live: snipe / sweep / see.
+      <p>The shipped composition must make all three answers to fog playable, each with its true cost: <strong>Snipe</strong> (single-target <code>Explore</code>, blocked until the target is lit), <strong>Sweep</strong> (area <code>DealProgressAll</code>, ignores light, fires blind and spread thin), <strong>See</strong> (raise <code>Light</code>, unlock the snipe and the information). Light is never strictly mandatory (sweep + blind-discard prevent soft-lock) but is almost always better — that is what makes the world about light. Viability is playtest-verified, tuned in data.</p></div>
+
+    <div class="req" id="REQ-FOG-16"><span class="rid"><a href="#REQ-FOG-16">REQ-FOG-16</a></span> Player light kit (initial tuning).
+      <table>
+        <tr><th>Card</th><th>Effect (initial)</th><th>Role</th></tr>
+        <tr><td>Flashlight</td><td><code>energyCost 1, GainLight 2</code>, repeatable (no exhaust)</td><td>Maintenance top-up; keep shallow fog lit turn to turn.</td></tr>
+        <tr><td>Flare Gun</td><td><code>energyCost 1, exhaust, GainLight 6</code></td><td>One-shot flood; "show me everything now", then the decay bleeds it away.</td></tr>
+        <tr><td>Bonfire (card)</td><td><code>energyCost 2, GainLight 4</code>, repeatable (no exhaust)</td><td>Sustained centerpiece. <strong>Flat refuel, no extra state</strong> (Q3 resolved); distinctiveness is the higher cost and its repeatability vs Flare's exhausting one-shot, not new mechanics.</td></tr>
+        <tr><td>Searchlight</td><td><code>energyCost 2, exhaust, DealProgressAll base 1, bonus { tag: "Hidden", amount: 1 }</code></td><td>The sweep: hits every world card in hand including concealed ones, extra vs <code>Hidden</code> (which the fog all is). Passes straight through concealment.</td></tr>
+      </table></div>
+
+    <div class="req" id="REQ-FOG-17"><span class="rid"><a href="#REQ-FOG-17">REQ-FOG-17</a></span> Signature verb claim.
+      <p>Fog's exclusive signature is the <code>GainLight</code> light-economy kit. No other world's data may use <code>GainLight</code> until a future proposal claims it (mirrors REQ-MALL-16 / theme-authoring SV1). <code>DealProgressAll</code> and <code>Hidden</code> are shared verbs and remain reusable; only <code>GainLight</code> is claimed here.</p></div>
+
+    <h2>4 · World data — the party turned mean <span class="count">(REQ-FOG-18 … 27)</span></h2>
+
+    <div class="req" id="REQ-FOG-18"><span class="rid"><a href="#REQ-FOG-18">REQ-FOG-18</a></span> World identity.
+      <p><code>worldId: "fog-beach-party"</code>, one folder under <code>src/data/worlds/fog-beach-party/</code> following the consolidated per-world pattern (<code>index.ts</code> + <code>meta.ts</code> + <code>theme.ts</code> + <code>cards.json</code>, as in <code>overgrown-mall/</code>), registered in <code>src/data/worlds/registry.ts</code>. Three acts via <code>deckComposition.acts</code>. The same kebab-case id is the join key everywhere (theme-authoring RULE 0).</p></div>
+
+    <div class="req" id="REQ-FOG-19"><span class="rid"><a href="#REQ-FOG-19">REQ-FOG-19</a></span> Threat roster (initial tuning).
+      <p>Every hazard except the always-visible Bonfire and Walker carries a <code>Concealed:N</code> depth (the harmless Cooler included — that is the point of it) and the <code>Hidden</code> tag by convention, so the once-lit <code>Explore</code> / <code>Searchlight</code> payoffs apply. HP and depths are soft.</p>
+      <table>
+        <tr><th>Hazard</th><th>Act</th><th>Concealed:N</th><th>onEndOfTurn</th><th>Discardable / onDiscarded</th><th>Role</th></tr>
+        <tr><td>Rolling Fog</td><td>1</td><td>1</td><td><code>Damage 1</code></td><td>yes / <code>None</code></td><td>Cheap creep; almost always visible. Teaches the loop.</td></tr>
+        <tr><td>Abandoned Cooler</td><td>1</td><td>2</td><td><code>None</code></td><td>yes / <code>None</code></td><td>The false alarm — harmless, but identical to a depth-2 monster. Makes spending light a gamble.</td></tr>
+        <tr><td>The Bonfire (capstone)</td><td>1–3</td><td>none (visible)</td><td><code>None</code></td><td>yes / <code>None</code></td><td>High cost, never concealed (it is light), ~3 copies in act 1. <code>onCleared</code> grants the light kit. Benign, just hard to clear; walk away and forfeit the kit.</td></tr>
+        <tr><td>Something in the Mist</td><td>2</td><td>3</td><td><code>Damage 2</code></td><td>yes / <code>Damage 2</code></td><td><code>Creature</code> + <code>Hidden</code>. Mauls blind and lunges if you flee. The high-stakes light target.</td></tr>
+        <tr><td>The Tide Coming In</td><td>2–3</td><td>3</td><td><code>Damage 2</code></td><td>yes / <code>Damage 2</code></td><td>Mid-game squeeze; mean, so discardable.</td></tr>
+        <tr><td>Whiteout</td><td>3</td><td>5</td><td><code>DamageScaled base 0, per { KeywordInHand: "Concealed" }, amount 1</code></td><td>yes / <code>Damage 2</code></td><td>The mechanic's capstone — deepest fog; 1 damage per <code>Concealed</code>-tagged card in hand (itself included). Only a flare-level burst sees it coming.</td></tr>
+        <tr><td>The Walker</td><td>3</td><td>none</td><td><code>None</code></td><td>(existing)</td><td>Shared run-capstone, one copy in act 3.</td></tr>
+      </table></div>
+
+    <div class="req" id="REQ-FOG-20"><span class="rid"><a href="#REQ-FOG-20">REQ-FOG-20</a></span> The discardability safety rule.
+      <p><strong>Every punishing, high-tick concealed hazard must be <code>discardable: true</code></strong>, so a reveal-starved player always has the blind-discard valve (flee the shape, gamble on its <code>onDiscarded</code>). Only gentle, low-tick concealed clutter may be non-discardable. This is the structural guarantee against soft-lock, alongside starter <code>Panic</code>/<code>Barricade</code> (return-to-deck, which re-conceals on redraw). No concealed hazard with a damaging <code>onEndOfTurn</code> ships non-discardable.</p></div>
+
+    <div class="req" id="REQ-FOG-21"><span class="rid"><a href="#REQ-FOG-21">REQ-FOG-21</a></span> The Bonfire dodges the chicken-and-egg.
+      <p>The capstone "The Bonfire" is the one hazard that is <strong>not concealed</strong> (a literal light source — of course it is visible). It is a high-cost, visible hazard with an <code>onCleared</code> grant of the REQ-FOG-16 light kit — a <code>Sequence</code> of <code>GainCard</code> effects, one per kit card (Flashlight, Flare Gun, Bonfire card, Searchlight), following the Garden Center precedent. ~3 copies in act 1 (like the Garden Center). Because it is visible, no reveal is needed to clear it, so there is no deadlock (need-reveal-to-get-reveal). Its HP is the one number with a structural floor, not pure tuning: it must be high enough to take several turns, or the kit arrives before the fog has taught anything. Early concealed clutter is gentle and discardable; the player survives the opening on blind-discard + starter cards while burning a Bonfire down.</p></div>
+
+    <div class="req" id="REQ-FOG-22"><span class="rid"><a href="#REQ-FOG-22">REQ-FOG-22</a></span> The Cooler is load-bearing, not filler.
+      <p>A harmless concealed card (Abandoned Cooler) is required: at equal Conceal depth every fog card looks identical, so the decision-quality clock — "is it worth the light to find out?" — only exists because some shapes are nothing. Without noise, light is rote. The composition ships at least one harmless concealed card at a depth shared with a dangerous one.</p></div>
+
+    <div class="req" id="REQ-FOG-23"><span class="rid"><a href="#REQ-FOG-23">REQ-FOG-23</a></span> Whiteout reuses the generalized counter.
+      <p>Whiteout's escalation is <code>DamageScaled { base: 0, per: { kind: "KeywordInHand", keyword: "Concealed" }, amount: 1 }</code> — no bespoke <code>ConcealedInHand</code> variant. It counts every <code>Concealed</code>-tagged card in hand (lit or not, itself included): "damage per fog-thing you're carrying", which is simpler and on-theme. This is the dependency that justifies slice 1's generalization being real, not cosmetic.</p></div>
+
+    <div class="req" id="REQ-FOG-24"><span class="rid"><a href="#REQ-FOG-24">REQ-FOG-24</a></span> Zero deck-pollution surface.
+      <p>There is <strong>no Spore-equivalent junk card</strong>. Conceal does not inject cards into the player deck; the hazards themselves are the threat, face-down. The Fog world JSON references no junk-injection template; its novelty is concentrated entirely in the concealment state.</p></div>
+
+    <div class="req" id="REQ-FOG-25"><span class="rid"><a href="#REQ-FOG-25">REQ-FOG-25</a></span> Walker capstone, untouched canon.
+      <p>Act 3 contains exactly one <code>The Walker</code>; <code>The Walker</code> and <code>Door</code> are referenced from the shared starter source, never redefined (canon N1).</p></div>
+
+    <div class="req" id="REQ-FOG-26"><span class="rid"><a href="#REQ-FOG-26">REQ-FOG-26</a></span> Distinct rewards.
+      <p>The Bonfire / clear-reward kit cards (Flashlight, Flare Gun, Bonfire card, Searchlight) are distinct from every other world's reward — no card identical in effect+cost to another world's reward (Mall rule D2). Searchlight in particular must differ from the Mall's Weed Killer / zombie sweep by its <code>Hidden</code> bonus and/or cost.</p></div>
+
+    <div class="req" id="REQ-FOG-27"><span class="rid"><a href="#REQ-FOG-27">REQ-FOG-27</a></span> Acts escalate by fog depth and bite.
+      <p>Act 1 is shallow and gentle (Conceal 1–2, ticks 0–1, the Cooler false alarm, ~3 visible Bonfires to clear). Act 2 introduces mid-depth damaging hazards (Conceal 3, <code>Damage 2</code>, lunge-on-flee). Act 3 is the deep end (Conceal 5 Whiteout whose damage scales with carried fog, plus the Walker). The escalation is depth + tick severity, against the decaying light.</p></div>
+
+    <h2>5 · Visual &amp; theme <span class="count">(REQ-FOG-28 … 32)</span></h2>
+
+    <div class="req" id="REQ-FOG-28"><span class="rid"><a href="#REQ-FOG-28">REQ-FOG-28</a></span> The fog-back and the light-line animation.
+      <p>The renderer <code>CardView</code> renders a concealed card (<code>isConcealed</code> true) as a fog-shrouded back showing <strong>only its <code>Concealed:N</code> chip</strong> — depth visible, identity (name/cost/effect/other keywords/inset) hidden. A <code>LightChanged</code> event re-evaluates the hand and animates shapes fading in as light rises and back out as it decays (the fog closing in from the deep end first). The core exposes <code>light</code> + <code>Concealed:N</code>; the renderer derives <code>isConcealed</code> and hides — determinism untouched, cosmetic fog jitter never feeds back into state.</p></div>
+
+    <div class="req" id="REQ-FOG-29"><span class="rid"><a href="#REQ-FOG-29">REQ-FOG-29</a></span> Light reads out in the HUD power-up area; <code>effect-icon-light</code> serves it and the <code>GainLight</code> glyph.
+      <p>Light is a standing global resource the player must read every turn to compare against each card's <code>Concealed:N</code> chip, so it needs a persistent HUD readout — not just the per-card fog animation of REQ-FOG-28. <code>HUDView</code> shows a Light indicator in the power-up area via the existing <code>addPowerUp</code> path, displaying the current <code>light</code> value and updating on every <code>LightChanged</code>. A single new <code>effect-icon-light</code> asset sources both this indicator <strong>and</strong> the <code>GainLight</code> effect-line glyph — the brace precedent exactly (<code>effect-icon-brace</code> sources both brace's power-up indicator and the Brace effect line; see <code>HUDView.addPowerUp("effect-icon-brace")</code> and the effect-line glyph map).</p>
+      <p><strong>Visibility rule.</strong> Unlike brace's <code>charges &gt; 0</code> gate, the Light indicator must stay visible whenever the world uses light <strong>including at Light 0</strong> (the thickest-fog moment, the most important to read), and must be <strong>absent in worlds that do not use light</strong> (where <code>light</code> sits at 0 meaninglessly). So <code>light &gt; 0</code> is explicitly the wrong predicate; the indicator keys off "this world uses concealment/light." The concrete signal (the in-core <code>worldId</code>, a world flag, or the presence of any <code>Concealed</code> card) is an implementation choice for the plan, but the two behaviors above are requirements.</p></div>
+
+    <div class="req" id="REQ-FOG-30"><span class="rid"><a href="#REQ-FOG-30">REQ-FOG-30</a></span> Five artifacts, three registrations.
+      <p>Per theme-authoring W3: world JSON, <code>src/game/view/themes/fog-beach-party.ts</code> (<code>VisualTheme</code>), assets under <code>src/game/assets/themes/fog-beach-party/</code> (+ <code>insets/</code>), and entries in <code>assetManifest.ts</code>, <code>worldManifest.ts</code> (using the existing <code>makeWorldBuilder(…_SOURCE)</code> pattern — do not invent a per-world builder), and <code>themeManifest.ts</code>. A missing registration is a spec failure, not a polish gap.</p></div>
+
+    <div class="req" id="REQ-FOG-31"><span class="rid"><a href="#REQ-FOG-31">REQ-FOG-31</a></span> Asset minimum, precedent art bar.
+      <p>Required: a <code>fog-beach-party-reality.webp</code> backdrop (golden-hour beach party, Walker distant), an intrusion/fog overlay, a <code>fog-beach-party-cardfront.webp</code>, a <strong>fog-back texture</strong> for concealed cards (REQ-FOG-28), an <code>effect-icon-light</code> glyph (REQ-FOG-29, serves the HUD Light readout and the <code>GainLight</code> effect line), and one inset key per themed card (<code>fog-inset-…</code> namespace, every key registered). Card insets may ship as placeholders (bird-building / highway-volcano / mall precedent).</p></div>
+
+    <div class="req" id="REQ-FOG-32"><span class="rid"><a href="#REQ-FOG-32">REQ-FOG-32</a></span> Place-vs-disaster identity, visually distinct.
+      <p>The contrast is the joy of the party against the meanness of the Mist (the brighter the party, the crueler the turn) — the place-vs-disaster theme rule (new-world-concepts). Intrusion reads as cold fog rolling over warm golden-hour color and must be distinct at a glance from every shipped world. All visual-direction pass tests apply: ink-and-ash linework, desaturated reality with the intrusion as the dominant tonal shift, localized apocalypse radius, violet Door.</p></div>
+
+    <h2>6 · Manifests &amp; help <span class="count">(REQ-FOG-33 … 34)</span></h2>
+
+    <div class="req" id="REQ-FOG-33"><span class="rid"><a href="#REQ-FOG-33">REQ-FOG-33</a></span> World select entry.
+      <p><code>worldDisplayManifest.ts</code> gains a <code>fog-beach-party</code> entry (name, fiction blurb consistent with "golden-hour beach party; then the fog rolls in faster than fog should, and there is something in it").</p>
+      <div class="note">Dependency flagged, not owned here: world-select already overflows at 4 worlds (<code>WORLD_SELECT_LAYOUT</code> in <code>src/game/view/layout.ts</code>, <code>WorldSelectScene.ts</code>); the recorded fix is a shift-by-one carousel. World 5 worsens it but the carousel is a separate spec.</div></div>
+
+    <div class="req" id="REQ-FOG-34"><span class="rid"><a href="#REQ-FOG-34">REQ-FOG-34</a></span> Help entry within budget.
+      <p><code>worldHelpManifest.ts</code> gains a <code>fog-beach-party</code> entry: at most 6 notes (REQ-HELP-13), at minimum a Light note (it decays each turn; visible iff Light ≥ a card's Concealed depth), a concealment note (concealed = can't target + details hidden, but it still hits you), and a blind-discard note (you can flee a concealed shape even though you can't aim at it).</p></div>
+
+    <h2>7 · Documentation <span class="count">(REQ-FOG-35)</span></h2>
+
+    <div class="req" id="REQ-FOG-35"><span class="rid"><a href="#REQ-FOG-35">REQ-FOG-35</a></span> Theme-authoring doc amended in the same spec.
+      <p><code>.lore/reference/theme-authoring.html</code> updates (Mall rule REQ-MALL-24, amend-with not after): C1 effect vocabulary adds <code>GainLight</code>; C2 keyword list adds <code>Concealed</code> and documents the <strong>numeric-keyword <code>"Name:N"</code> authoring convention</strong> (a keyword may carry an optional value, matched by name); the SV1 archetype table gains the Fog row — <em>fog-beach-party · reveal &amp; endure · light economy (<code>GainLight</code> kit) exclusive to this world; concealment = no-target + hidden-details over true data</em>. Existing stale marks (if any remain) are cleared in the same edit.</p></div>
+
+    <h2>8 · Tests <span class="count">(REQ-FOG-36 … 38)</span></h2>
+
+    <div class="req" id="REQ-FOG-36"><span class="rid"><a href="#REQ-FOG-36">REQ-FOG-36</a></span> Core coverage for every new behavior.
+      <p>Unit tests written alongside, extending the existing suites (<code>cards.test.ts</code>, <code>effects.test.ts</code>, <code>available.test.ts</code>, <code>world.test.ts</code>, <code>effectRegistry.test.ts</code>): numeric-keyword parse (<code>"Concealed:3"</code> → <code>{name,value:3}</code>; <code>"Spore"</code> → no value; invalid form throws); <code>hasKeyword</code> name-matching ignores value; <code>KeywordInHand</code> counts by name across player+world carriers; <code>GainLight</code> resolution (<code>light += amount</code>, <code>LightChanged</code> emitted) and its asserted no-target playability (explicit, because <code>available.ts</code> defaults hide a missing case); <code>isConcealed</code> = <code>concealOf &gt; light</code> with 0-for-absent; single-target <code>legalTargets</code> exclude concealed cards while <code>DealProgressAll</code> hits them; turn-start decay <code>max(0, light−1)</code> + event; Whiteout <code>DamageScaled per KeywordInHand "Concealed"</code> math (incl. self-count); determinism (seeded Fog run with light/conceal plays replays byte-identically via the existing state-snapshot + event-sequence comparison).</p></div>
+
+    <div class="req" id="REQ-FOG-37"><span class="rid"><a href="#REQ-FOG-37">REQ-FOG-37</a></span> Catalog, manifest, and renderer tests cover the new world.
+      <p><code>worldManifest.test.ts</code> catalog-build covers <code>fog-beach-party</code> (every referenced template resolves — the safety net for the unchecked JSON cast); <code>worldDisplayManifest.test.ts</code> / <code>worldHelpManifest.test.ts</code> completeness covers the new entries; renderer tests (<code>describe.test.ts</code>, <code>cardObjects.test.ts</code>/<code>presentation.test.ts</code>) cover the structured-keyword chip, the concealed "lost in the fog (needs Light N)" describe, and that depth shows on the fog-back while identity hides.</p></div>
+
+    <div class="req" id="REQ-FOG-38"><span class="rid"><a href="#REQ-FOG-38">REQ-FOG-38</a></span> Existing golden runs stay green or are knowingly regenerated.
+      <p>The keyword generalization (slice 1) must leave other worlds' golden runs byte-identical. If a shared code path shifts event ordering, regeneration is a deliberate, explained step — never a silent update.</p></div>
+
+    <h2>Not in scope</h2>
+    <div class="note">
+      <p>· <strong>World 6 (Whiteout Parking Garage / freeze, <code>Frozen:N</code>)</strong> — the second customer of the numeric-keyword generalization, separate spec. Slice 1 is built world-agnostic so <code>Frozen:N</code> is additive.<br>
+      · <strong>Bonfire second-state mechanic</strong> (slow-decay / Light floor) — Q3 resolved to flat refuel; revisit only if playtest says samey. Out of scope here.<br>
+      · <strong>Mandated act-1 leg-up</strong> (start Light 4 / Flashlight-on-discard) — Q2 resolved to ship-and-watch; the fallback is recorded in the brainstorm, not specced.<br>
+      · <strong>World-select carousel</strong> — pre-existing overflow at 4 worlds; separate spec (REQ-FOG-33 note).<br>
+      · Other counter-spec members beyond <code>KeywordInHand</code>; final inset art (placeholder precedent applies).<br>
+      · The four-number tuning surface (starting Light, decay rate, per-act Conceal depths, kit restore amounts) — soft, owned by playtest against a playable build.</p>
+    </div>
+
+    <div class="validation">
+      <h2>AI Validation</h2>
+      <p>How the AI verifies this spec is done. All commands from repo root.</p>
+      <table>
+        <tr><th>Check</th><th>Method</th><th>Covers</th></tr>
+        <tr><td>Full suite green</td><td><code>bun run test</code> exits 0; new test names match REQ-FOG-36/37 behaviors</td><td>1–14, 23, 36–38</td></tr>
+        <tr><td>Core purity</td><td><code>bun run lint</code> exits 0 (no Phaser in <code>src/core/</code>)</td><td>6, 28</td></tr>
+        <tr><td>Build works</td><td><code>bun run build</code> exits 0</td><td>all</td></tr>
+        <tr><td>Keyword type split</td><td>Inspect <code>types.ts</code>: <code>KeywordName</code> (string union incl. <code>Concealed</code>) distinct from <code>Keyword = {name; value?}</code>; <code>CounterSpec.keyword</code>, <code>DealProgress(.bonus).tag</code>, <code>DealProgressAll.bonus.tag</code>, <code>TargetSpec.hazard.tag</code> are <code>KeywordName</code></td><td>1, 4</td></tr>
+        <tr><td>Parse correctness</td><td>Core test: <code>"Concealed:3"</code> mints to <code>{name:"Concealed",value:3}</code>; <code>"Spore"</code> to <code>{name:"Spore"}</code> (no value); a malformed string throws at parse</td><td>2</td></tr>
+        <tr><td>No surviving <code>.includes</code></td><td>Grep <code>keywords.includes</code> / <code>.keywords)</code> over <code>src/core</code> and <code>src/game</code>: no structured-keyword array is matched by <code>.includes</code> or rendered by bare <code>.join</code>; all route through the name-match helper / value formatter</td><td>3, 5</td></tr>
+        <tr><td>GainLight semantics</td><td>Core test: dispatch <code>GainLight</code> from a seeded state — <code>light</code> rises by amount, <code>LightChanged</code> emitted, nothing else changes; no-target playability asserted explicitly</td><td>9, 10</td></tr>
+        <tr><td>Playability coverage</td><td>Confirm <code>GainLight</code>'s <code>isPlayable</code>/<code>structuralSpec</code> behavior is test-asserted (the <code>available.ts</code> defaults silently mask a missing case — REQ-MALL-5 gotcha)</td><td>9</td></tr>
+        <tr><td>Visibility &amp; targeting</td><td>Core test: <code>isConcealed(card,light)</code> = <code>concealOf&gt;light</code>, 0 for absent; single-target <code>legalTargets</code> exclude a concealed card; <code>DealProgressAll</code> deals to it; raising light makes it targetable and keeps its <code>Hidden</code> keyword (Explore bonus still applies)</td><td>8, 12, 13</td></tr>
+        <tr><td>Decay clock (core)</td><td>Core test: <code>startTurn</code> drops <code>light</code> by 1 (floored at 0), emits <code>LightChanged</code>, and fires the decay before <code>gainEnergy</code>/refill in the event order</td><td>11</td></tr>
+        <tr><td>Decay clock (renderer)</td><td>Renderer test: a <code>Concealed:3</code> card renders lit at <code>light≥3</code> and as a fog-back once decay brings <code>light</code> to 2</td><td>11, 28</td></tr>
+        <tr><td>Light HUD readout</td><td>Renderer test + runtime: <code>HUDView</code> shows a Light indicator in the power-up area sourcing <code>effect-icon-light</code>, value updating on <code>LightChanged</code>; visible at Light 0 in Fog, absent in a non-light world (predicate is not <code>light&gt;0</code>); <code>GainLight</code>'s effect-line glyph is <code>effect-icon-light</code></td><td>29</td></tr>
+        <tr><td>Kit card shapes</td><td>Inspect <code>fog-beach-party</code> data: Flashlight (<code>GainLight 2</code>, no exhaust), Flare Gun (<code>GainLight 6</code>, exhaust), Bonfire card (<code>GainLight 4</code>, no exhaust), Searchlight (<code>DealProgressAll base 1, bonus Hidden +1</code>, exhaust) match REQ-FOG-16</td><td>16</td></tr>
+        <tr><td>Whiteout math</td><td>Core test: hand with K <code>Concealed</code>-tagged cards → Whiteout end-of-turn damage = K (self included), via <code>DamageScaled per KeywordInHand "Concealed"</code>, no bespoke counter</td><td>23</td></tr>
+        <tr><td>Describe coverage</td><td><code>describeEffect</code> returns text for <code>GainLight</code>; a concealed card describes "lost in the fog (needs Light N)" with depth shown, identity hidden; <code>tsc</code> compiles (no-default switch trip-wire)</td><td>14</td></tr>
+        <tr><td>World JSON shape</td><td>Inspect <code>fog-beach-party</code> data: 3 acts; act 3 has exactly one <code>The Walker</code>; The Bonfire has no <code>Concealed:N</code> and an <code>onCleared</code> kit grant; every concealed hazard with a damaging <code>onEndOfTurn</code> is <code>discardable:true</code>; at least one harmless concealed card shares a depth with a dangerous one; no junk-injection template referenced</td><td>18–22, 24, 25, 27</td></tr>
+        <tr><td>Distinct rewards</td><td>Diff kit templates against the other worlds' rewards — no identical effect+cost pair (Searchlight ≠ Weed Killer/zombie sweep)</td><td>26</td></tr>
+        <tr><td>Signature claim</td><td>Grep <code>GainLight</code> across world data: only <code>fog-beach-party</code> references it</td><td>17</td></tr>
+        <tr><td>Registrations</td><td>Grep <code>fog-beach-party</code> in <code>assetManifest.ts</code>, <code>worldManifest.ts</code>, <code>themeManifest.ts</code>, <code>worldDisplayManifest.ts</code>, <code>worldHelpManifest.ts</code> — all five hit; every <code>fog-inset-*</code> key referenced in JSON exists in the asset manifest; the fog-back texture and <code>effect-icon-light</code> are registered</td><td>29, 30, 31, 33, 34</td></tr>
+        <tr><td>Help budget</td><td><code>fog-beach-party</code> help entry has ≤ 6 notes incl. a Light note, a concealment note, and a blind-discard note</td><td>34</td></tr>
+        <tr><td>Docs amended</td><td>theme-authoring.html: C1 lists <code>GainLight</code>; C2 includes <code>Concealed</code> + the <code>"Name:N"</code> numeric-keyword convention; SV1 has the Fog row</td><td>35</td></tr>
+        <tr><td>Runtime smoke</td><td>Launch the game, select Fog Beach Party, play one run: backdrop/cardfront/insets load (no magenta); concealed cards render as fog-backs showing only depth; a Flare/Flashlight raises Light and shapes fade in (and the HUD Light readout updates); light decays and the deepest fog winks back out; a concealed hazard can be blind-discarded; clearing a Bonfire grants the kit; Searchlight hits concealed cards. Confirms reachability only, not line viability</td><td>15, 21, 28, 29 (manual / browser-driven)</td></tr>
+      </table>
+      <p><strong>Strategic-triangle check (REQ-FOG-15):</strong> not AI-verifiable beyond existence (snipe/sweep/see all reachable in data); whether light is the skilled-but-optional line and act 1 survives without a leg-up is explicit human playtest territory — the brainstorm's stated single biggest tuning risk.</p>
+    </div>
+
+    <div class="meta-foot">Spec · REQ-FOG · draft 2026-06-13 · source decisions: .lore/work/brainstorm/fog-beach-party-world.md</div>
+  </div>
+</body>
+</html>
