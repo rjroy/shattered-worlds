@@ -22,6 +22,7 @@ function makeEmptyState(nextId = 0): GameState {
     progress: {},
     hp: 10,
     energy: 0,
+    light: 0,
     pendingForceDestroy: 0,
     braceCharges: 0,
     status: "playing",
@@ -286,7 +287,7 @@ describe("player card keywords", () => {
     };
     const [card] = mintCard(sporeCatalog, makeEmptyState(), "Spore Burst");
     if (card.kind !== "player") throw new Error("expected player card");
-    expect(card.keywords).toEqual(["Spore"]);
+    expect(card.keywords).toEqual([{ name: "Spore" }]);
   });
 
   it("a player template without keywords mints with keywords: []", () => {

@@ -77,6 +77,9 @@ export function createWorld(catalog: CardCatalog, world: WorldData, seed: number
     progress: {},
     hp: WORLD_CONSTS.startHp,
     energy: 0,
+    // Per-world starting Light. 0 everywhere but Fog (world.startLight unset),
+    // which is the invariant keeping decay and concealment no-ops elsewhere.
+    light: world.startLight ?? 0,
     pendingForceDestroy: 0,
     braceCharges: 0,
     status: "playing",

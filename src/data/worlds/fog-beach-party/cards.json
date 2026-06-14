@@ -1,0 +1,148 @@
+{
+  "worldId": "fog-beach-party",
+  "startLight": 4,
+  "cardTemplates": {
+    "Flashlight": {
+      "kind": "player",
+      "name": "Flashlight",
+      "insetKey": "fog-inset-flashlight",
+      "energyCost": 1,
+      "effect": { "kind": "GainLight", "amount": 2 }
+    },
+    "Flare Gun": {
+      "kind": "player",
+      "name": "Flare Gun",
+      "insetKey": "fog-inset-flare-gun",
+      "energyCost": 1,
+      "exhaust": true,
+      "effect": { "kind": "GainLight", "amount": 6 }
+    },
+    "Bonfire": {
+      "kind": "player",
+      "name": "Bonfire",
+      "insetKey": "fog-inset-bonfire",
+      "energyCost": 2,
+      "effect": { "kind": "GainLight", "amount": 4 }
+    },
+    "Searchlight": {
+      "kind": "player",
+      "name": "Searchlight",
+      "insetKey": "fog-inset-searchlight",
+      "energyCost": 2,
+      "exhaust": true,
+      "effect": { "kind": "DealProgressAll", "base": 1, "bonus": { "tag": "Hidden", "amount": 1 } }
+    },
+    "Rolling Fog": {
+      "kind": "world",
+      "name": "Rolling Fog",
+      "insetKey": "fog-inset-rolling-fog",
+      "cost": 2,
+      "keywords": ["Concealed:1", "Hidden"],
+      "discardable": true,
+      "onDiscarded": { "kind": "None" },
+      "onCleared": { "kind": "None" },
+      "onPartialClear": { "kind": "None" },
+      "onEndOfTurn": { "kind": "Damage", "amount": 1 }
+    },
+    "Abandoned Cooler": {
+      "kind": "world",
+      "name": "Abandoned Cooler",
+      "insetKey": "fog-inset-abandoned-cooler",
+      "cost": 2,
+      "keywords": ["Concealed:1", "Hidden"],
+      "discardable": true,
+      "onDiscarded": { "kind": "None" },
+      "onCleared": { "kind": "None" },
+      "onPartialClear": { "kind": "None" },
+      "onEndOfTurn": { "kind": "None" }
+    },
+    "The Bonfire": {
+      "kind": "world",
+      "name": "The Bonfire",
+      "insetKey": "fog-inset-the-bonfire",
+      "cost": 8,
+      "keywords": ["Hidden"],
+      "discardable": true,
+      "onDiscarded": { "kind": "None" },
+      "onCleared": {
+        "kind": "Sequence",
+        "steps": [
+          { "kind": "GainCard", "template": "Flashlight" },
+          { "kind": "GainCard", "template": "Flare Gun" },
+          { "kind": "GainCard", "template": "Bonfire" },
+          { "kind": "GainCard", "template": "Searchlight" }
+        ]
+      },
+      "onPartialClear": { "kind": "None" },
+      "onEndOfTurn": { "kind": "None" }
+    },
+    "Something in the Mist": {
+      "kind": "world",
+      "name": "Something in the Mist",
+      "insetKey": "fog-inset-something-in-the-mist",
+      "cost": 3,
+      "keywords": ["Concealed:3", "Creature", "Hidden"],
+      "discardable": true,
+      "onDiscarded": { "kind": "Damage", "amount": 2 },
+      "onCleared": { "kind": "None" },
+      "onPartialClear": { "kind": "None" },
+      "onEndOfTurn": { "kind": "Damage", "amount": 2 }
+    },
+    "The Tide Coming In": {
+      "kind": "world",
+      "name": "The Tide Coming In",
+      "insetKey": "fog-inset-the-tide-coming-in",
+      "cost": 3,
+      "keywords": ["Concealed:3", "Hidden"],
+      "discardable": true,
+      "onDiscarded": { "kind": "Damage", "amount": 2 },
+      "onCleared": { "kind": "None" },
+      "onPartialClear": { "kind": "None" },
+      "onEndOfTurn": { "kind": "Damage", "amount": 2 }
+    },
+    "Whiteout": {
+      "kind": "world",
+      "name": "Whiteout",
+      "insetKey": "fog-inset-whiteout",
+      "cost": 4,
+      "keywords": ["Concealed:5", "Hidden"],
+      "discardable": true,
+      "onDiscarded": { "kind": "Damage", "amount": 2 },
+      "onCleared": { "kind": "None" },
+      "onPartialClear": { "kind": "None" },
+      "onEndOfTurn": {
+        "kind": "DamageScaled",
+        "base": 0,
+        "per": { "kind": "KeywordInHand", "keyword": "Concealed" },
+        "amount": 1
+      }
+    }
+  },
+  "deckComposition": {
+    "acts": [
+      {
+        "cards": [
+          { "templateId": "Rolling Fog", "count": 5 },
+          { "templateId": "Abandoned Cooler", "count": 2 },
+          { "templateId": "The Bonfire", "count": 3 }
+        ]
+      },
+      {
+        "cards": [
+          { "templateId": "Rolling Fog", "count": 3 },
+          { "templateId": "Something in the Mist", "count": 3 },
+          { "templateId": "The Tide Coming In", "count": 3 },
+          { "templateId": "Abandoned Cooler", "count": 1 }
+        ]
+      },
+      {
+        "cards": [
+          { "templateId": "The Tide Coming In", "count": 3 },
+          { "templateId": "Something in the Mist", "count": 2 },
+          { "templateId": "Whiteout", "count": 3 },
+          { "templateId": "The Walker", "count": 1 }
+        ]
+      }
+    ]
+  }
+}

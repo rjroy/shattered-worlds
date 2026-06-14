@@ -7,6 +7,7 @@ import Phaser from "phaser";
 import type { GameState } from "../../core/index";
 import { TEXT, textStyle } from "./presentation";
 import { HUD_LAYOUT } from "./layout";
+import { worldUsesLightManifest } from "../../data/worldUsesLightManifest";
 
 // HUD backing panel geometry. The text-back texture is a 600×600 grunge frame:
 // a thick decorated border around a dark interior. As a nine-slice we keep the
@@ -36,6 +37,7 @@ export class HUDView extends Phaser.GameObjects.Container {
   private powerUpIndicators: PowerUpIndicator[] = [];
   private braceIndicator: PowerUpIndicator | undefined;
   private forceDestroyIndicator: PowerUpIndicator | undefined;
+  private lightIndicator: PowerUpIndicator | undefined;
   private powerUpPanel: Phaser.GameObjects.NineSlice;
 
   constructor(scene: Phaser.Scene) {
@@ -116,6 +118,19 @@ export class HUDView extends Phaser.GameObjects.Container {
     this.hpText.setText(`HP: ${state.hp}`);
     this.actText.setText(`Act ${state.actIndex + 1} / ${state.totalActs}`);
     this.energyText.setText(`${state.energy}`);
+    // Light readout. Decision 3: the indicator is shown for the whole run in a
+    // light-world (visible even at Light 0 — that is exactly when the player
+    // needs the number) and is absent entirely in a non-light world. So the
+    // gate is `worldUsesLight[worldId]`, never `light > 0`. Purely a readout of
+    // `state.light`; it never feeds back into core.
+    if (worldUsesLightManifest[state.worldId] === true) {
+      if (this.lightIndicator === undefined) {
+        this.lightIndicator = this.addPowerUp("effect-icon-light");
+      }
+      this.setPowerUpValue(this.lightIndicator, state.light);
+    } else if (this.lightIndicator !== undefined) {
+      this.lightIndicator.container.setVisible(false);
+    }
     if (state.braceCharges > 0) {
       if (this.braceIndicator === undefined) {
         this.braceIndicator = this.addPowerUp("effect-icon-brace");

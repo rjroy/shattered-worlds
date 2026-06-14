@@ -52,6 +52,13 @@ export interface WorldDataBundle {
   readonly display: WorldDisplayData
   readonly help: WorldHelpData
   readonly musicKey: string
+  /**
+   * Whether this world runs on the Light economy (a Light HUD readout, fog
+   * concealment). Default-absent = false; only a light-world (Fog) sets it
+   * true. Surfaced as the `worldUsesLight` manifest so the HUD can decide
+   * whether to show the Light indicator from `worldId` alone.
+   */
+  readonly usesLight?: boolean
 }
 
 // ---------------------------------------------------------------------------

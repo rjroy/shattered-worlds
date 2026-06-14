@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'bun:test'
 import { createWorld } from '../engine/world'
+import { startTurn } from '../engine/energy'
 import { applyEffect } from '../engine/effects'
+import { createGame } from '../engine/game'
+import type { GameEvent } from '../model/types'
+import type { WorldData } from '../model/catalog'
 import { catalog, worldData } from './testFixture'
 
 // ---------------------------------------------------------------------------
@@ -203,6 +207,115 @@ describe('energy initialization', () => {
   it('createWorld initializes energy to 1 (opening hand is a turn start)', () => {
     const state = createWorld(catalog, worldData, 42)
     expect(state.energy).toBe(1)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// 10. Light: initialization, decay clock, and the non-Fog invariant
+// ---------------------------------------------------------------------------
+
+/** A light-using world descriptor: the zombie world with a starting Light. */
+function litWorldData(startLight: number): WorldData {
+  return { ...worldData, startLight }
+}
+
+describe('Light initialization', () => {
+  it('createWorld defaults light to 0 when the world omits startLight', () => {
+    const state = createWorld(catalog, worldData, 42)
+    expect(state.light).toBe(0)
+  })
+
+  it('createWorld seeds light from world.startLight (minus the opening-turn decay)', () => {
+    // createWorld runs one startTurn to deal the opening hand, so a startLight
+    // of 4 has already decayed one step to 3 by the time the hand is dealt.
+    const state = createWorld(catalog, litWorldData(4), 42)
+    expect(state.light).toBe(3)
+  })
+})
+
+describe('Light decay clock (startTurn)', () => {
+  it('decrements light and emits LightChanged when light > 0', () => {
+    const base = createWorld(catalog, worldData, 42)
+    const lit = { ...base, light: 2 }
+    const { state, events } = startTurn(lit)
+    expect(state.light).toBe(1)
+    expect(events.some((e) => e.type === 'LightChanged' && e.light === 1)).toBe(true)
+  })
+
+  it('floors at 0 and emits LightChanged when stepping down from 1', () => {
+    const base = createWorld(catalog, worldData, 42)
+    const { state, events } = startTurn({ ...base, light: 1 })
+    expect(state.light).toBe(0)
+    expect(events.some((e) => e.type === 'LightChanged' && e.light === 0)).toBe(true)
+  })
+
+  it('emits NO LightChanged when light is already 0 (emit-on-change)', () => {
+    const base = createWorld(catalog, worldData, 42)
+    const { state, events } = startTurn({ ...base, light: 0 })
+    expect(state.light).toBe(0)
+    expect(events.some((e) => e.type === 'LightChanged')).toBe(false)
+  })
+
+  it('fires decay BEFORE the energy gain in the event stream', () => {
+    const base = createWorld(catalog, worldData, 42)
+    const { events } = startTurn({ ...base, light: 2, energy: 0 })
+    const lightIdx = events.findIndex((e) => e.type === 'LightChanged')
+    const energyIdx = events.findIndex((e) => e.type === 'EnergyChanged')
+    expect(lightIdx).toBeGreaterThanOrEqual(0)
+    expect(energyIdx).toBeGreaterThanOrEqual(0)
+    expect(lightIdx).toBeLessThan(energyIdx)
+  })
+
+  it('fires decay BEFORE the hand refill (cards drawn into the dimmer light)', () => {
+    const base = createWorld(catalog, worldData, 42)
+    // Empty the hand so the refill produces CardsDrawn events to order against.
+    const { events } = startTurn({ ...base, light: 2, hand: [] })
+    const lightIdx = events.findIndex((e) => e.type === 'LightChanged')
+    const drawnIdx = events.findIndex((e) => e.type === 'CardsDrawn')
+    expect(lightIdx).toBeGreaterThanOrEqual(0)
+    expect(drawnIdx).toBeGreaterThanOrEqual(0)
+    expect(lightIdx).toBeLessThan(drawnIdx)
+  })
+})
+
+describe('non-Fog Light invariant', () => {
+  it('a non-Fog world runs with light === 0 throughout and emits NO LightChanged', () => {
+    // Play several turns of the real zombie world; light must never move off 0
+    // and the event stream must carry no LightChanged at all. This is what keeps
+    // the decay/concealment additions byte-identical for every non-Fog run.
+    const game = createGame(catalog, worldData, 42)
+    expect(game.state.light).toBe(0)
+
+    const allEvents: GameEvent[] = []
+    for (let turn = 0; turn < 6 && game.state.status === 'playing'; turn++) {
+      const { events } = game.dispatch({ type: 'EndTurn' })
+      allEvents.push(...events)
+      expect(game.state.light).toBe(0)
+    }
+
+    expect(allEvents.some((e) => e.type === 'LightChanged')).toBe(false)
+  })
+})
+
+describe('determinism with light decay', () => {
+  it('two light-world runs with the same seed + actions replay identically', () => {
+    function run(): { light: number; eventTypes: string[]; status: string } {
+      const game = createGame(catalog, litWorldData(5), 7)
+      const eventTypes: string[] = []
+      for (let turn = 0; turn < 5 && game.state.status === 'playing'; turn++) {
+        const { events } = game.dispatch({ type: 'EndTurn' })
+        eventTypes.push(...events.map((e) => e.type))
+      }
+      return { light: game.state.light, eventTypes, status: game.state.status }
+    }
+
+    const a = run()
+    const b = run()
+    expect(a.light).toBe(b.light)
+    expect(a.status).toBe(b.status)
+    expect(a.eventTypes).toEqual(b.eventTypes)
+    // The light-world run actually exercised decay (sanity: LightChanged fired).
+    expect(a.eventTypes).toContain('LightChanged')
   })
 })
 

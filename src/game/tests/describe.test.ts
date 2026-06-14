@@ -19,6 +19,7 @@ function makeState(progress: Record<string, number> = {}): GameState {
     progress,
     hp: 10,
     energy: 0,
+    light: 0,
     pendingForceDestroy: 0,
     braceCharges: 0,
     status: "playing",
@@ -86,6 +87,10 @@ describe("describeEffect", () => {
     expect(describeEffect({ kind: "Draw", player: 2, world: 1 })).toEqual(["Draw 2, +1 world"]);
     expect(describeEffect({ kind: "Draw", world: 1 })).toEqual(["+1 world"]);
     expect(describeEffect({ kind: "Draw", player: 2 })).toEqual(["Draw 2"]);
+  });
+
+  it("describes GainLight (Fog's reveal effect)", () => {
+    expect(describeEffect({ kind: "GainLight", amount: 2 })).toEqual(["Gain 2 Light"]);
   });
 
   it("describes the simple effects", () => {
@@ -185,13 +190,17 @@ describe("describeEffect Brace", () => {
 describe("previewPlay", () => {
   it("adds the keyword bonus and reports a clear (Baseball Bat vs Zombie)", () => {
     const bat = player({ kind: "DealProgress", base: 2, bonus: { tag: "Creature", amount: 3 } });
-    const zombie = hazard({ name: "Zombie", cost: 1, keywords: ["Slow", "Creature"] });
+    const zombie = hazard({
+      name: "Zombie",
+      cost: 1,
+      keywords: [{ name: "Slow" }, { name: "Creature" }],
+    });
     expect(previewPlay(bat, zombie, makeState())).toBe("Make 5 Progress → clears Zombie");
   });
 
   it("omits the bonus when the target lacks the tag", () => {
     const explore = player({ kind: "DealProgress", base: 1, bonus: { tag: "Hidden", amount: 1 } });
-    const zombie = hazard({ name: "Zombie", cost: 1, keywords: ["Creature"] });
+    const zombie = hazard({ name: "Zombie", cost: 1, keywords: [{ name: "Creature" }] });
     expect(previewPlay(explore, zombie, makeState())).toBe("Make 1 Progress → clears Zombie");
   });
 
@@ -214,7 +223,11 @@ describe("previewPlay", () => {
         { kind: "DealProgress", base: 1, bonus: { tag: "Slow", amount: 1 } },
       ],
     });
-    const zombie = hazard({ name: "Zombie", cost: 1, keywords: ["Slow", "Creature"] });
+    const zombie = hazard({
+      name: "Zombie",
+      cost: 1,
+      keywords: [{ name: "Slow" }, { name: "Creature" }],
+    });
     expect(previewPlay(sprint, zombie, makeState(), 1)).toBe("Make 2 Progress → clears Zombie");
     expect(previewPlay(sprint, zombie, makeState(), 0)).toBeNull();
   });
@@ -236,5 +249,22 @@ describe("previewPlay", () => {
   it("returns null for a non-Progress card (Med Kit)", () => {
     const medkit = player({ kind: "Heal", amount: 2 });
     expect(previewPlay(medkit, hazard({}), makeState())).toBeNull();
+  });
+
+  it("shows the fog string (only the needed Light) for a concealed target", () => {
+    // Concealed:3 with light 1 → lost in the fog; identity (cost/effect math) is
+    // suppressed in favor of the required Light. Threshold reveals at light 3.
+    const explore = player({ kind: "DealProgress", base: 1, bonus: { tag: "Hidden", amount: 1 } });
+    const mist = hazard({
+      name: "Something in the Mist",
+      cost: 3,
+      keywords: [{ name: "Concealed", value: 3 }, { name: "Hidden" }],
+    });
+    const fogged = { ...makeState(), light: 1 };
+    expect(previewPlay(explore, mist, fogged)).toBe("lost in the fog (needs Light 3)");
+
+    // At light 3 it reveals and the normal Progress math returns (Hidden bonus lands).
+    const lit = { ...makeState(), light: 3 };
+    expect(previewPlay(explore, mist, lit)).toBe("Make 2 Progress → 1 more to clear Something in the Mist");
   });
 });

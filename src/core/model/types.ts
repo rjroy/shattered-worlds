@@ -6,17 +6,22 @@ export type CardId = string;
 // 'Zombie' | 'Find Baseball Bat' | 'The Walker' | 'Door'
 export type CardTemplateId = string;
 
-export type Keyword = "Hidden" | "Creature" | "Slow" | "Spore";
+export type KeywordName = "Hidden" | "Creature" | "Slow" | "Spore" | "Concealed";
+
+// A keyword as it lives on a minted card: a name plus an optional numeric
+// value (e.g. "Concealed:3" authors as { name: "Concealed", value: 3 }).
+// Bare keywords carry no value.
+export type Keyword = { name: KeywordName; value?: number };
 
 export type Dest = "playerDiscard" | "playerDrawTop" | "worldDraw" | "worldDrawTop";
 
-export type CounterSpec = { kind: "KeywordInHand"; keyword: Keyword };
+export type CounterSpec = { kind: "KeywordInHand"; keyword: KeywordName };
 
 export type CardEffect =
   | {
       kind: "DealProgress";
       base: number;
-      bonus?: { tag: Keyword; amount: number };
+      bonus?: { tag: KeywordName; amount: number };
     }
   | {
       kind: "DealProgressScaled";
@@ -37,6 +42,9 @@ export type CardEffect =
   | { kind: "Sequence"; steps: readonly CardEffect[] }
   | { kind: "Damage"; amount: number }
   | { kind: "DamageScaled"; base: number; per: CounterSpec; amount: number }
+  // Raises the player's global Light level. No target; mirrors GainEnergy/Heal.
+  // Fog's exclusive signature effect: the only way to lift concealment.
+  | { kind: "GainLight"; amount: number }
   | { kind: "GainCard"; template: CardTemplateId }
   | { kind: "AddPlayerCardToTop"; template: CardTemplateId }
   | { kind: "SurviveWorld" }
@@ -56,7 +64,7 @@ export type CardEffect =
   | {
       kind: "DealProgressAll";
       base: number;
-      bonus?: { tag: Keyword; amount: number };
+      bonus?: { tag: KeywordName; amount: number };
     }
   // Permanently removes up to `amount` exilable cards from the top of worldDraw.
   // Non-exilable cards (canExile: false) are skipped in place; stops gracefully
@@ -130,6 +138,12 @@ export interface GameState {
   progress: Readonly<Record<CardId, number>>;
   hp: number;
   energy: number;
+  // The player's global Light level. A standing resource (not a pool): seeing
+  // is free, light is only spent by turn-start decay and raised by GainLight.
+  // A world card is concealed iff its Concealed:N depth exceeds `light`.
+  // Non-Fog worlds run with light === 0 throughout (startLight defaults to 0),
+  // which keeps decay (emit-on-change) and concealment no-ops everywhere but Fog.
+  light: number;
   // Count of random player cards to destroy from the next refilled hand.
   // Queued by the ForceDestroy effect; drained at turn start.
   pendingForceDestroy: number;
@@ -144,7 +158,7 @@ export interface GameState {
 
 export type TargetSpec =
   | { kind: "none" }
-  | { kind: "hazard"; tag?: Keyword }
+  | { kind: "hazard"; tag?: KeywordName }
   | { kind: "modal"; branches: readonly TargetSpec[] }
   | { kind: "returnWorld"; min: number; max: number }
   | { kind: "destroyHand"; min: number; max: number; maxCost?: number }
@@ -175,6 +189,7 @@ export type GameEvent =
   | { type: "WorldCardsReturned"; ids: readonly CardId[] }
   | { type: "HpChanged"; hp: number }
   | { type: "EnergyChanged"; energy: number }
+  | { type: "LightChanged"; light: number }
   | { type: "CardsDiscarded"; cardIds: readonly CardId[] }
   | { type: "DeckShuffled" }
   | { type: "ActAdvanced"; act: number }

@@ -32,6 +32,9 @@ function makeWorldBuilder(worldSource: RawCardSource): () => AssembledWorld {
       worldId: worldSource.worldId,
       starterDeck: STARTER_SOURCE.starterDeck,
       deckComposition: worldSource.deckComposition,
+      // Spread only when present so exactOptionalPropertyTypes stays satisfied
+      // (omitted means default 0 in createWorld; non-Fog sources omit it).
+      ...(worldSource.startLight !== undefined ? { startLight: worldSource.startLight } : {}),
     }
 
     return { catalog, worldData }

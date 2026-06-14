@@ -8,6 +8,7 @@
  * and is unit-tested headless.
  */
 import type { CardEffect, GameState, PlayerCard, WorldCard } from "../../core/index";
+import { concealOf, hasKeyword, isConcealed } from "../model/keywords";
 import { EFFECTS } from "../effects/registry";
 
 // ---------------------------------------------------------------------------
@@ -45,11 +46,19 @@ export function previewPlay(
   state: GameState,
   branchIndex?: number,
 ): string | null {
+  // A concealed target hides its identity behind the fog. Suppress the
+  // name/cost/effect math entirely and show only the Light needed to reveal it
+  // (its Concealed:N depth) — light management needs that number. This is the
+  // core seam for Decision 4; the card-face fog-back is the Phase 3 renderer half.
+  if (isConcealed(target, state.light)) {
+    return `lost in the fog (needs Light ${concealOf(target)})`;
+  }
+
   const deal = dealProgressOf(card.effect, branchIndex);
   if (deal === null) return null;
 
   const bonus =
-    deal.bonus !== undefined && target.keywords.includes(deal.bonus.tag) ? deal.bonus.amount : 0;
+    deal.bonus !== undefined && hasKeyword(target, deal.bonus.tag) ? deal.bonus.amount : 0;
   const amount = deal.base + bonus;
   const already = state.progress[target.id] ?? 0;
   const total = already + amount;
@@ -89,6 +98,7 @@ function dealProgressOf(
     case "Draw":
     case "Heal":
     case "GainEnergy":
+    case "GainLight":
     case "ReturnWorldCards":
     case "DestroyCardInHand":
     case "DiscardThenDraw":

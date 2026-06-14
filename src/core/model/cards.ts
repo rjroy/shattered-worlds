@@ -2,11 +2,11 @@ import type {
   CardEffect,
   CardTemplateId,
   GameState,
-  Keyword,
   PlayerCard,
   WorldCard,
 } from './types'
 import type { CardCatalog } from './catalog'
+import { parseKeyword } from './keywords'
 import { UnknownTemplateError } from './errors'
 
 // ---------------------------------------------------------------------------
@@ -23,15 +23,18 @@ export interface PlayerCardTemplate extends BasicCardTemplate {
   effect: CardEffect
   energyCost?: number
   exhaust?: boolean
-  // Optional in templates so existing JSON catalogs load unchanged; minted
-  // cards always carry a concrete (possibly empty) keywords array.
-  keywords?: readonly Keyword[]
+  // Authored as strings ("Name" or "Name:N"); parsed to structured Keywords at
+  // mint. Optional in templates so existing JSON catalogs load unchanged;
+  // minted cards always carry a concrete (possibly empty) keywords array.
+  keywords?: readonly string[]
 }
 
 export interface WorldCardTemplate extends BasicCardTemplate {
   kind: 'world'
   cost: number
-  keywords: readonly Keyword[]
+  // Authored as strings ("Name" or "Name:N"); parsed to structured Keywords at
+  // mint.
+  keywords: readonly string[]
   discardable: boolean
   // When explicitly false, the minted card gets canExile: false. Omitting it
   // defaults to true (most world cards can be exiled).
@@ -74,7 +77,7 @@ export function mintCard(
       effect: template.effect,
       energyCost: template.energyCost ?? 0,
       exhaust: template.exhaust ?? false,
-      keywords: template.keywords ?? [],
+      keywords: (template.keywords ?? []).map(parseKeyword),
     }
     return [card, next]
   }
@@ -85,7 +88,7 @@ export function mintCard(
     name: template.name,
     insetKey: template.insetKey,
     cost: template.cost,
-    keywords: template.keywords,
+    keywords: template.keywords.map(parseKeyword),
     discardable: template.discardable,
     canExile: template.canExile ?? true,
     onDiscarded: template.onDiscarded,

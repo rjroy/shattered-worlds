@@ -13,6 +13,7 @@ import effectIconProgressAllUrl from "../assets/effect-icons/effect-icon-progres
 import effectIconDrawUrl from "../assets/effect-icons/effect-icon-draw.png";
 import effectIconWorldDrawUrl from "../assets/effect-icons/effect-icon-world-draw.png";
 import effectIconHpUrl from "../assets/effect-icons/effect-icon-hp.png";
+import effectIconLightUrl from "../assets/effect-icons/effect-icon-light.png";
 import effectIconDiscardUrl from "../assets/effect-icons/effect-icon-discard.png";
 import effectIconDestroyUrl from "../assets/effect-icons/effect-icon-destroy.png";
 import effectIconExileUrl from "../assets/effect-icons/effect-icon-exile.png";
@@ -49,6 +50,10 @@ export const assetManifest: Record<string, string> = {
   "effect-icon-draw": effectIconDrawUrl,
   "effect-icon-world-draw": effectIconWorldDrawUrl,
   "effect-icon-hp": effectIconHpUrl,
+  // Placeholder art until the Fog theme pass. The `light` IconId and the HUD
+  // Light indicator both bind this key; a loaded texture takes precedence over
+  // the generated disc placeholder behind the same key (see ensureEffectIconTextures).
+  "effect-icon-light": effectIconLightUrl,
   "effect-icon-discard": effectIconDiscardUrl,
   "effect-icon-destroy": effectIconDestroyUrl,
   "effect-icon-exile": effectIconExileUrl,

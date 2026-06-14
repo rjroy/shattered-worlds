@@ -17,6 +17,9 @@ export interface WorldData {
   worldId: string
   starterDeck: CardCount[]
   deckComposition: DeckComposition
+  // Starting Light level. Per-world (NOT a global const): only Fog sets this
+  // above 0, so every other world boots with light === 0. Defaults to 0.
+  startLight?: number
 }
 
 export interface AssembledWorld {
@@ -29,6 +32,8 @@ export interface RawCardSource {
   cardTemplates: Record<string, CardTemplate>
   starterDeck?: CardCount[]
   deckComposition?: DeckComposition
+  // Per-world starting Light (see WorldData.startLight). Defaults to 0.
+  startLight?: number
 }
 
 // ---------------------------------------------------------------------------
