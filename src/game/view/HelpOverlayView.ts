@@ -287,7 +287,7 @@ export class HelpOverlayView extends Phaser.GameObjects.Container {
           0.5,
           0,
         );
-        const energy = scene.add.image(x + 60, y - 80, "energy-icon");
+        const energy = scene.add.image(x + 60, y - 80, "effect-icon-energy");
         energy.setDisplaySize(30, 30);
         parent.add(energy);
         addText(
@@ -726,11 +726,20 @@ export class HelpOverlayView extends Phaser.GameObjects.Container {
             "Prevent random card destroy effects.",
             colWrap,
           );
-
-          addIconSectionHeader(page, leftX, 59, "Either Deck");
           addIconRow(
             page,
             leftX,
+            60,
+            "light",
+            "Light",
+            "Reveals cards which are 'Concealed'.",
+            colWrap,
+          );
+
+          addIconSectionHeader(page, rightX, 59, "Either Deck");
+          addIconRow(
+            page,
+            rightX,
             86,
             "addCard",
             "Gain card",
@@ -739,7 +748,7 @@ export class HelpOverlayView extends Phaser.GameObjects.Container {
           );
           addIconRow(
             page,
-            leftX,
+            rightX,
             116,
             "vanish",
             "Vanish",

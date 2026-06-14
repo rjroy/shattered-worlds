@@ -958,7 +958,7 @@ describe("CardView world-card trigger blocks", () => {
     const rendered = renderCard(mintWorld("Shambler"));
     const [onClear, eachTurn] = effectBlocks(rendered);
     expect(rowTokens(rowsOf(onClear!)[0]!)).toEqual({
-      iconKeys: ["effect-icon-on-clear", "energy-icon"],
+      iconKeys: ["effect-icon-on-clear", "effect-icon-energy"],
       textContents: [":", "+1"],
     });
     expect(rowTokens(rowsOf(eachTurn!)[0]!)).toEqual({

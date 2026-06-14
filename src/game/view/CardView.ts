@@ -254,7 +254,7 @@ export class CardView extends Phaser.GameObjects.Container {
 
       // Energy cost badge: only for cards with energyCost > 0.
       if (card.energyCost > 0) {
-        const badgeBg = scene.add.image(CARD_W / 2 - 16, -CARD_H / 2 + 16, "energy-icon");
+        const badgeBg = scene.add.image(CARD_W / 2 - 16, -CARD_H / 2 + 16, "effect-icon-energy");
         badgeBg.setDisplaySize(28, 28);
         this.add(badgeBg);
 

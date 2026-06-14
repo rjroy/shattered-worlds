@@ -32,7 +32,7 @@ export const EFFECT_ICON_TEXTURES: Record<IconId, string> = {
   draw: "effect-icon-draw",
   worldDraw: "effect-icon-world-draw",
   hp: "effect-icon-hp",
-  energy: "energy-icon",
+  energy: "effect-icon-energy",
   light: "effect-icon-light",
   discard: "effect-icon-discard",
   destroy: "effect-icon-destroy",

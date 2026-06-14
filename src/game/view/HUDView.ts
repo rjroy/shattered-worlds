@@ -81,7 +81,11 @@ export class HUDView extends Phaser.GameObjects.Container {
     });
     this.powerUps = scene.add.container(HUD_LAYOUT.labels.powerUpX, HUD_PANEL_H / 2);
     const energyIcon = scene.add
-      .image(this.energyText.x - HUD_LAYOUT.energyIconOffsetX, this.energyText.y, "energy-icon")
+      .image(
+        this.energyText.x - HUD_LAYOUT.energyIconOffsetX,
+        this.energyText.y,
+        "effect-icon-energy",
+      )
       .setDisplaySize(HUD_LAYOUT.energyIconSize, HUD_LAYOUT.energyIconSize);
 
     for (const label of [this.hpText, this.actText, this.energyText, energyIcon]) {
