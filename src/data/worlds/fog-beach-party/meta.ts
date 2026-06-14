@@ -1,4 +1,4 @@
-import type { WorldDisplayData, WorldHelpData } from '../types'
+import type { WorldDisplayData, WorldHelpData } from "../types";
 
 export const FOG_BEACH_PARTY_DISPLAY: WorldDisplayData = {
   name: "Fog Beach Party",
@@ -6,7 +6,7 @@ export const FOG_BEACH_PARTY_DISPLAY: WorldDisplayData = {
   story:
     "The bonfires were lit, the music was good, and the light held warm and low over the water. Then the fog came off the sea faster than fog should, cold and total, swallowing the party string by string. The shapes moving through it are still close. You just can't see which ones mean to hurt you.",
   backgroundKey: "fog-beach-party-bg",
-}
+};
 
 export const FOG_BEACH_PARTY_HELP: WorldHelpData = {
   mechanics: [
@@ -41,4 +41,4 @@ export const FOG_BEACH_PARTY_HELP: WorldHelpData = {
         "Whiteout sits in the deepest fog and deals 1 damage for every concealed card in your hand, itself included. Carrying a fistful of fog into a Whiteout turn is how the party ends.",
     },
   ],
-}
+};

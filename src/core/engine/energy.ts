@@ -1,11 +1,11 @@
-import type { GameState } from '../model/types'
-import { refillHand, resolveForceDestroy } from './draw'
-import type { EffectResult } from '../effects/EffectContext'
+import type { GameState } from "../model/types";
+import { refillHand, resolveForceDestroy } from "./draw";
+import type { EffectResult } from "../effects/EffectContext";
 
 // Light dims one step per turn. A constant (not per-world tuning): the decay
 // model is "untended light fades", and the per-world dial is starting Light,
 // not the decay rate. Soft per the spec; revisit in data if playtest demands.
-const LIGHT_DECAY = 1
+const LIGHT_DECAY = 1;
 
 // ---------------------------------------------------------------------------
 // EffectResult type (used consistently across energy, draw, effects)
@@ -14,10 +14,10 @@ const LIGHT_DECAY = 1
 // The canonical `EffectResult` now lives in `../effects/EffectContext`. It is
 // re-exported here so existing importers of `EffectResult` from `energy.ts`
 // keep compiling.
-export type { EffectResult }
+export type { EffectResult };
 
 export interface StartTurnResult extends EffectResult {
-  playerCardsDrawn: number
+  playerCardsDrawn: number;
 }
 
 // ---------------------------------------------------------------------------
@@ -30,11 +30,11 @@ export interface StartTurnResult extends EffectResult {
  * Returns: { state with energy += 1, events: [EnergyChanged] }
  */
 export function gainEnergy(state: GameState): EffectResult {
-  const newEnergy = state.energy + 1
+  const newEnergy = state.energy + 1;
   return {
     state: { ...state, energy: newEnergy },
-    events: [{ type: 'EnergyChanged', energy: newEnergy }],
-  }
+    events: [{ type: "EnergyChanged", energy: newEnergy }],
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -51,14 +51,14 @@ export function gainEnergy(state: GameState): EffectResult {
  */
 export function spendEnergy(state: GameState, cost: number): EffectResult {
   if (cost === 0) {
-    return { state, events: [] }
+    return { state, events: [] };
   }
 
-  const newEnergy = state.energy - cost
+  const newEnergy = state.energy - cost;
   return {
     state: { ...state, energy: newEnergy },
-    events: [{ type: 'EnergyChanged', energy: newEnergy }],
-  }
+    events: [{ type: "EnergyChanged", energy: newEnergy }],
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -73,10 +73,13 @@ export function spendEnergy(state: GameState, cost: number): EffectResult {
  */
 function decayLight(state: GameState): EffectResult {
   if (state.light <= 0) {
-    return { state, events: [] }
+    return { state, events: [] };
   }
-  const newLight = Math.max(0, state.light - LIGHT_DECAY)
-  return { state: { ...state, light: newLight }, events: [{ type: 'LightChanged', light: newLight }] }
+  const newLight = Math.max(0, state.light - LIGHT_DECAY);
+  return {
+    state: { ...state, light: newLight },
+    events: [{ type: "LightChanged", light: newLight }],
+  };
 }
 
 /**
@@ -97,22 +100,22 @@ function decayLight(state: GameState): EffectResult {
  */
 export function startTurn(state: GameState): StartTurnResult {
   // Light decay first — before energy, refill, and force-destroy.
-  const afterDecay = decayLight(state)
-  const decayEvents = afterDecay.events
+  const afterDecay = decayLight(state);
+  const decayEvents = afterDecay.events;
 
   // Gain 1 energy
-  const afterGain = gainEnergy(afterDecay.state)
-  const stateWithEnergy = afterGain.state
-  const energyEvents = afterGain.events
+  const afterGain = gainEnergy(afterDecay.state);
+  const stateWithEnergy = afterGain.state;
+  const energyEvents = afterGain.events;
 
-  const playerCountBeforeRefill = stateWithEnergy.hand.filter((c) => c.kind === 'player').length
+  const playerCountBeforeRefill = stateWithEnergy.hand.filter((c) => c.kind === "player").length;
 
   // Then refill the hand
-  const refillResult = refillHand(stateWithEnergy)
-  const playerCountAfterRefill = refillResult.state.hand.filter((c) => c.kind === 'player').length
+  const refillResult = refillHand(stateWithEnergy);
+  const playerCountAfterRefill = refillResult.state.hand.filter((c) => c.kind === "player").length;
 
   // Finally, drain any pending ForceDestroy charges against the new hand
-  const destroyResult = resolveForceDestroy(refillResult.state)
+  const destroyResult = resolveForceDestroy(refillResult.state);
 
   // Combine events: light decay first (when it fired), then energy gain, then
   // draw/shuffle, then destruction.
@@ -120,5 +123,5 @@ export function startTurn(state: GameState): StartTurnResult {
     state: destroyResult.state,
     events: [...decayEvents, ...energyEvents, ...refillResult.events, ...destroyResult.events],
     playerCardsDrawn: Math.max(0, playerCountAfterRefill - playerCountBeforeRefill),
-  }
+  };
 }

@@ -1,39 +1,39 @@
-import type { CardTemplate } from './cards'
-import { CatalogError } from './errors'
+import type { CardTemplate } from "./cards";
+import { CatalogError } from "./errors";
 
 // ---------------------------------------------------------------------------
 // Public types
 // ---------------------------------------------------------------------------
 
-export type CardCatalog = Record<string, CardTemplate>
+export type CardCatalog = Record<string, CardTemplate>;
 
-export type CardCount = { templateId: string; count: number }
+export type CardCount = { templateId: string; count: number };
 
 export interface DeckComposition {
-  acts: { cards: CardCount[] }[]
+  acts: { cards: CardCount[] }[];
 }
 
 export interface WorldData {
-  worldId: string
-  starterDeck: CardCount[]
-  deckComposition: DeckComposition
+  worldId: string;
+  starterDeck: CardCount[];
+  deckComposition: DeckComposition;
   // Starting Light level. Per-world (NOT a global const): only Fog sets this
   // above 0, so every other world boots with light === 0. Defaults to 0.
-  startLight?: number
+  startLight?: number;
 }
 
 export interface AssembledWorld {
-  catalog: CardCatalog
-  worldData: WorldData
+  catalog: CardCatalog;
+  worldData: WorldData;
 }
 
 export interface RawCardSource {
-  worldId: string
-  cardTemplates: Record<string, CardTemplate>
-  starterDeck?: CardCount[]
-  deckComposition?: DeckComposition
+  worldId: string;
+  cardTemplates: Record<string, CardTemplate>;
+  starterDeck?: CardCount[];
+  deckComposition?: DeckComposition;
   // Per-world starting Light (see WorldData.startLight). Defaults to 0.
-  startLight?: number
+  startLight?: number;
 }
 
 // ---------------------------------------------------------------------------
@@ -47,18 +47,18 @@ export interface RawCardSource {
  * be silently resolved by last-writer-wins.
  */
 export function assembleCatalog(sources: RawCardSource[]): CardCatalog {
-  const catalog: CardCatalog = {}
+  const catalog: CardCatalog = {};
 
   for (const source of sources) {
     for (const [templateId, template] of Object.entries(source.cardTemplates)) {
       if (Object.prototype.hasOwnProperty.call(catalog, templateId)) {
         throw new CatalogError(
           `Duplicate templateId "${templateId}" found in world "${source.worldId}"`,
-        )
+        );
       }
-      catalog[templateId] = template
+      catalog[templateId] = template;
     }
   }
 
-  return catalog
+  return catalog;
 }

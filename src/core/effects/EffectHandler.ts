@@ -11,11 +11,11 @@
  *
  * Pure core — no Phaser, no DOM. Lint enforces the boundary.
  */
-import { isConcealed } from '../model/keywords'
-import type { CardEffect, CardId, GameState, TargetSpec } from '../model/types'
-import type { EffectLine } from '../view/effectGlyphs'
-import type { CompileContext, ConnectorStyle, EffectContext, EffectResult } from './EffectContext'
-import { worldCardsInHand } from './handState'
+import { isConcealed } from "../model/keywords";
+import type { CardEffect, CardId, GameState, TargetSpec } from "../model/types";
+import type { EffectLine } from "../view/effectGlyphs";
+import type { CompileContext, ConnectorStyle, EffectContext, EffectResult } from "./EffectContext";
+import { worldCardsInHand } from "./handState";
 
 /**
  * Behavior for one `CardEffect` kind. `E` is the narrowed effect type the
@@ -24,20 +24,20 @@ import { worldCardsInHand } from './handState'
  */
 export abstract class EffectHandler<E extends CardEffect> {
   /** Apply the effect, returning the next state and the events it produced. */
-  abstract apply(ctx: EffectContext, effect: E): EffectResult
+  abstract apply(ctx: EffectContext, effect: E): EffectResult;
 
   /** Full English prose lines (chooser labels, previews). */
-  abstract describe(effect: E): string[]
+  abstract describe(effect: E): string[];
 
   /** Compact icon/token lines for the card face. */
-  abstract compile(effect: E, ctx: CompileContext): EffectLine[]
+  abstract compile(effect: E, ctx: CompileContext): EffectLine[];
 
   /**
    * The structural target shape the UI needs to present the effect. Most
    * effects need no target.
    */
   structuralSpec(_effect: E): TargetSpec {
-    return { kind: 'none' }
+    return { kind: "none" };
   }
 
   /**
@@ -46,17 +46,17 @@ export abstract class EffectHandler<E extends CardEffect> {
    * from hand override this to `false` in their own handlers.
    */
   isPlayable(_effect: E, _state: GameState, _selfId: CardId): boolean {
-    return true
+    return true;
   }
 
   /** Concrete legal target ids. Most effects have no targets. */
   legalTargets(_effect: E, _selfId: CardId, _state: GameState): readonly CardId[] {
-    return []
+    return [];
   }
 
   /** The visual connector the play draws toward its target, or none. */
   connectorStyle(_effect: E): ConnectorStyle | null {
-    return null
+    return null;
   }
 }
 
@@ -70,7 +70,7 @@ export abstract class EffectHandler<E extends CardEffect> {
  */
 export abstract class HazardTargetingHandler<E extends CardEffect> extends EffectHandler<E> {
   override structuralSpec(_effect: E): TargetSpec {
-    return { kind: 'hazard' }
+    return { kind: "hazard" };
   }
 
   override isPlayable(_effect: E, state: GameState, _selfId: CardId): boolean {
@@ -80,12 +80,12 @@ export abstract class HazardTargetingHandler<E extends CardEffect> extends Effec
     // than presenting a dead-end click with zero legal targets. Outside Fog
     // nothing is concealed (light === 0, concealOf === 0), so this matches the
     // old "any world card in hand" behavior exactly.
-    return this.legalTargets(_effect, _selfId, state).length > 0
+    return this.legalTargets(_effect, _selfId, state).length > 0;
   }
 
   override legalTargets(_effect: E, _selfId: CardId, state: GameState): readonly CardId[] {
     return worldCardsInHand(state)
       .filter((c) => !isConcealed(c, state.light))
-      .map((c) => c.id)
+      .map((c) => c.id);
   }
 }
