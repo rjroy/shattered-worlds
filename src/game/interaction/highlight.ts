@@ -53,13 +53,14 @@ export function classifyHighlight(
   if ("cardId" in sel && sel.cardId === id)
     return { kind: "selected", dim: false };
 
-  // Picks accumulating for the current step: "picked" for multi-pick steps
-  // (stepMax > 1), "selected" for single-pick steps (preserves today's behaviour).
+  // Picks accumulating for the current step: "picked" when the player is making
+  // a selection as part of a multi-step sequence (sel.steps.length > 1) OR
+  // picking multiple targets in one step (stepMax > 1). "selected" otherwise.
   // Must precede the legal-target check: a picked card stays in legalTargetIds
   // (it can be un-picked), but it should read as "already chosen", not "available".
   if (sel.phase === "targeting" && sel.current.includes(id)) {
     const step = sel.steps[sel.stepIdx];
-    const multi = step !== undefined && stepMax(step) > 1;
+    const multi = step !== undefined && (stepMax(step) > 1 || sel.steps.length > 1);
     return { kind: multi ? "picked" : "selected", dim: false };
   }
 

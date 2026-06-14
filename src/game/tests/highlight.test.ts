@@ -227,7 +227,7 @@ describe("classifyHighlight 'picked' kind", () => {
     expect(classify(sel, player("p2"))).toEqual({ kind: "selected", dim: false });
   });
 
-  it("keeps a destroyHand max:1 current card as 'selected' (cardinality gates, not kind)", () => {
+  it("keeps a destroyHand max:1 current card as 'selected' (single-step card, not part of a sequence)", () => {
     const sel: SelectionState = {
       phase: "targeting",
       cardId: "p1",
@@ -237,6 +237,21 @@ describe("classifyHighlight 'picked' kind", () => {
       current: ["p2"],
     };
     expect(classify(sel, player("p2"))).toEqual({ kind: "selected", dim: false });
+  });
+
+  it("classifies a single-pick step within a compound sequence as 'picked' (Barricade pattern)", () => {
+    // Barricade: [DealProgress (none), ReturnWorldCards max:1] — two steps, one targeting.
+    // stepMax === 1 but steps.length > 1, so "picked" fires to signal it's part of a multi-step play.
+    // "none" steps auto-advance without appending to done, so done stays empty.
+    const sel: SelectionState = {
+      phase: "targeting",
+      cardId: "p1",
+      steps: [{ kind: "none" }, { kind: "returnWorld", min: 0, max: 1 }],
+      stepIdx: 1,
+      done: [],
+      current: ["w1"],
+    };
+    expect(classify(sel, world("w1"))).toEqual({ kind: "picked", dim: false });
   });
 
   it("acting card stays 'selected' even during a multi-pick step", () => {

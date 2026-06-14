@@ -49,3 +49,10 @@ related:
 - S6: 16 new passing tests across 4 files (highlight, presentation, cardObjects, theme); pre-existing stale assertion in highlight.test.ts also fixed; validator found missing `discardPlayer` case — added
 - S7: All S7 checklist items confirmed by plan-reviewer agent. Full gate: `lint && typecheck && test` clean. 735 pass, 1 pre-existing unrelated fail.
 - Manual browser verification of badge geometry and color contrast still required before merge (per plan §Risks).
+
+### 2026-06-14 — Option B: compound-sequence picks also show 'picked'
+- User testing Barricade (steps = [none, returnWorld max:1]) never saw "picked"; single-pick sub-steps in a sequence showed "selected"
+- Decision: "picked" should mean "I'm making a selection as part of a multi-step card play", not just "I'm picking one of multiple targets"
+- Changed `multi` condition in `highlight.ts` from `stepMax(step) > 1` to `stepMax(step) > 1 || sel.steps.length > 1`
+- Added Barricade-pattern test; updated misleading comment on destroyHand max:1 test
+- 736 pass, 1 pre-existing unrelated fail.
