@@ -38,7 +38,7 @@ export const EFFECT_ICON_TEXTURES: Record<IconId, string> = {
   exile: "effect-icon-exile",
   return: "effect-icon-return",
   addCard: "effect-icon-add-card",
-  brace: "power-brace",
+  brace: "effect-icon-brace",
   survive: "effect-icon-survive",
   vanish: "effect-icon-vanish",
   eachTurn: "effect-icon-each-turn",

@@ -7,8 +7,7 @@ import doorGlowUrl from "../assets/door-glow.webp";
 import textBackUrl from "../assets/text-background.webp";
 import insetFrameUrl from "../assets/inset-frame.webp";
 import energyIconUrl from "../assets/energy.webp";
-import powerBraceUrl from "../assets/power-brace.png";
-import powerForceDestroyUrl from "../assets/power-force-destroy.png";
+import effectIconBraceUrl from "../assets/effect-icons/effect-icon-brace.png";
 import effectIconProgressUrl from "../assets/effect-icons/effect-icon-progress.png";
 import effectIconProgressAllUrl from "../assets/effect-icons/effect-icon-progress-all.png";
 import effectIconDrawUrl from "../assets/effect-icons/effect-icon-draw.png";
@@ -44,8 +43,7 @@ export const assetManifest: Record<string, string> = {
   "text-back": textBackUrl,
   "inset-frame": insetFrameUrl,
   "energy-icon": energyIconUrl,
-  "power-brace": powerBraceUrl,
-  "power-force-destroy": powerForceDestroyUrl,
+  "effect-icon-brace": effectIconBraceUrl,
   "effect-icon-progress": effectIconProgressUrl,
   "effect-icon-progress-all": effectIconProgressAllUrl,
   "effect-icon-draw": effectIconDrawUrl,
