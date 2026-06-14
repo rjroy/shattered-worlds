@@ -27,6 +27,7 @@ export const BIRD_BUILDING_THEME: VisualTheme = {
     targetGlow: 0x88cfff,          // bright sky hover-target glow
     playableGlow: 0xffe066,
     committedTarget: 0x274a6a,     // muted deep-blue "locked here" mark
+    pickedBorder: 0xbbaaff,        // lavender batch member
   },
   backdrop: {
     realityKey: 'bird-building-bg',

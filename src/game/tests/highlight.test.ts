@@ -123,7 +123,7 @@ describe("classifyHighlight", () => {
     expect(classify(idle, player("p1"))).toEqual({ kind: "none", dim: true });
   });
 
-  it("marks chosen return targets selected and the committed hazard distinct", () => {
+  it("marks chosen return targets picked and the committed hazard distinct", () => {
     const sel: SelectionState = {
       phase: "targeting",
       cardId: "p1",
@@ -133,7 +133,7 @@ describe("classifyHighlight", () => {
       current: ["w2"],
     };
     expect(classify(sel, world("w2"))).toEqual({
-      kind: "selected",
+      kind: "picked",
       dim: false,
     });
     expect(classify(sel, world("w9"))).toEqual({
@@ -172,6 +172,95 @@ describe("classifyHighlight", () => {
     };
     // If w9 is somehow still legal, the live-target highlight wins.
     expect(classify(sel, world("w9"), { legal: set("w9") })).toEqual({
+      kind: "target",
+      dim: false,
+    });
+  });
+});
+
+describe("classifyHighlight 'picked' kind", () => {
+  it("classifies a returnWorld multi-pick current card as 'picked'", () => {
+    const sel: SelectionState = {
+      phase: "targeting",
+      cardId: "p1",
+      steps: [{ kind: "returnWorld", min: 1, max: 2 }],
+      stepIdx: 0,
+      done: [],
+      current: ["w1"],
+    };
+    expect(classify(sel, world("w1"))).toEqual({ kind: "picked", dim: false });
+  });
+
+  it("classifies a destroyHand multi-pick current card as 'picked'", () => {
+    const sel: SelectionState = {
+      phase: "targeting",
+      cardId: "p1",
+      steps: [{ kind: "destroyHand", min: 1, max: 3 }],
+      stepIdx: 0,
+      done: [],
+      current: ["p2"],
+    };
+    expect(classify(sel, player("p2"))).toEqual({ kind: "picked", dim: false });
+  });
+
+  it("keeps a hazard current card as 'selected' (single-pick, max 1)", () => {
+    const sel: SelectionState = {
+      phase: "targeting",
+      cardId: "p1",
+      steps: [{ kind: "hazard" }],
+      stepIdx: 0,
+      done: [],
+      current: ["w1"],
+    };
+    expect(classify(sel, world("w1"))).toEqual({ kind: "selected", dim: false });
+  });
+
+  it("keeps a discardPlayer current card as 'selected' (single-pick, max 1)", () => {
+    const sel: SelectionState = {
+      phase: "targeting",
+      cardId: "p1",
+      steps: [{ kind: "discardPlayer" }],
+      stepIdx: 0,
+      done: [],
+      current: ["p2"],
+    };
+    expect(classify(sel, player("p2"))).toEqual({ kind: "selected", dim: false });
+  });
+
+  it("keeps a destroyHand max:1 current card as 'selected' (cardinality gates, not kind)", () => {
+    const sel: SelectionState = {
+      phase: "targeting",
+      cardId: "p1",
+      steps: [{ kind: "destroyHand", min: 1, max: 1 }],
+      stepIdx: 0,
+      done: [],
+      current: ["p2"],
+    };
+    expect(classify(sel, player("p2"))).toEqual({ kind: "selected", dim: false });
+  });
+
+  it("acting card stays 'selected' even during a multi-pick step", () => {
+    const sel: SelectionState = {
+      phase: "targeting",
+      cardId: "p1",
+      steps: [{ kind: "returnWorld", min: 1, max: 2 }],
+      stepIdx: 0,
+      done: [],
+      current: [],
+    };
+    expect(classify(sel, player("p1"))).toEqual({ kind: "selected", dim: false });
+  });
+
+  it("legal-target precedence beats 'picked' for a card that is also in current", () => {
+    const sel: SelectionState = {
+      phase: "targeting",
+      cardId: "p1",
+      steps: [{ kind: "returnWorld", min: 1, max: 2 }],
+      stepIdx: 0,
+      done: [],
+      current: ["w1"],
+    };
+    expect(classify(sel, world("w1"), { legal: set("w1") })).toEqual({
       kind: "target",
       dim: false,
     });

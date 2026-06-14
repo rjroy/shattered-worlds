@@ -7,11 +7,12 @@
  * the selection state it reads so the precedence rules have one home.
  */
 import type { Card } from "../../core/index";
-import type { SelectionState, StepResult } from "./selection";
+import { stepMax, type SelectionState, type StepResult } from "./selection";
 
 /** Visual highlight applied to a card's overlay rectangle. */
 export type HighlightKind =
   | "selected"
+  | "picked"
   | "target"
   | "discard"
   | "committed"
@@ -59,9 +60,12 @@ export function classifyHighlight(
     return { kind: "none", dim: false };
   }
 
-  // Picks accumulating for the current step stay lit as 'selected'.
+  // Picks accumulating for the current step: "picked" for multi-pick steps
+  // (stepMax > 1), "selected" for single-pick steps (preserves today's behaviour).
   if (sel.phase === "targeting" && sel.current.includes(id)) {
-    return { kind: "selected", dim: false };
+    const step = sel.steps[sel.stepIdx];
+    const multi = step !== undefined && stepMax(step) > 1;
+    return { kind: multi ? "picked" : "selected", dim: false };
   }
 
   // Cards committed by earlier completed steps stay lit with a muted 'committed'

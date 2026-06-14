@@ -148,6 +148,18 @@ describe('highlightDescriptor', () => {
     expect(d.strokeWidth).toBe(0)
     expect(d.fillAlpha).toBe(0)
   })
+
+  it("marks 'picked' with pickedBorder stroke + faint matching fill", () => {
+    const d = highlightDescriptor("picked", fs)
+    expect(d.strokeWidth).toBe(3)
+    expect(d.strokeColor).toBe(fs.pickedBorder)
+    expect(d.fillColor).toBe(fs.pickedBorder)
+    expect(d.fillAlpha).toBeGreaterThan(0)
+    expect(d.fillAlpha).toBeLessThan(1)
+    // Visually distinct from committed (different color, slightly higher alpha)
+    expect(d.fillAlpha).toBeGreaterThan(0.18) // committed uses 0.18
+    expect(d.strokeColor).not.toBe(fs.committedTarget)
+  })
 })
 
 // ---------------------------------------------------------------------------

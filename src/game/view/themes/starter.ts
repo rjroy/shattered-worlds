@@ -27,6 +27,7 @@ export const STARTER: VisualTheme = {
     targetGlow: 0xd0b3ff,          // bright violet hover-target glow
     playableGlow: 0xffe066,        // gold selection  
     committedTarget: 0x4a3a6a,     // muted deep-violet "locked here" mark
+    pickedBorder: 0x9966ff,        // bright violet batch member
   },
   backdrop: {
     realityKey: 'reality',

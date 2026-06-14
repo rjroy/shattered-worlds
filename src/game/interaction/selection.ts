@@ -66,7 +66,7 @@ function stepMin(spec: TargetSpec): number {
 }
 
 /** Effective max for a leaf TargetSpec. */
-function stepMax(spec: TargetSpec): number {
+export function stepMax(spec: TargetSpec): number {
   switch (spec.kind) {
     case "hazard":
       return 1;

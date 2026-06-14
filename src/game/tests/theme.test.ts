@@ -71,3 +71,25 @@ describe('theme color identity is distinct per world', () => {
     expect(ZOMBIE_BIG_BOX_THEME.frameStyle.targetBorder).not.toBe(STARTER.frameStyle.targetBorder)
   })
 })
+
+describe("pickedBorder is present and distinct in every theme", () => {
+  const themes = [STARTER, ...Object.values(themeManifest)]
+
+  it("every theme defines pickedBorder as a number", () => {
+    for (const theme of themes) {
+      expect(typeof theme.frameStyle.pickedBorder).toBe("number")
+    }
+  })
+
+  it("pickedBorder is distinct from selectedBorder in every theme", () => {
+    for (const theme of themes) {
+      expect(theme.frameStyle.pickedBorder).not.toBe(theme.frameStyle.selectedBorder)
+    }
+  })
+
+  it("pickedBorder is distinct from committedTarget in every theme", () => {
+    for (const theme of themes) {
+      expect(theme.frameStyle.pickedBorder).not.toBe(theme.frameStyle.committedTarget)
+    }
+  })
+})
