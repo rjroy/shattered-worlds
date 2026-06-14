@@ -7,38 +7,20 @@
  * the selection state it reads so the precedence rules have one home.
  */
 import type { Card } from "../../core/index";
-import { stepMax, type SelectionState, type StepResult } from "./selection";
+import { doesStepResultContain, type SelectionState } from "./selection";
 
 /** Visual highlight applied to a card's overlay rectangle. */
-export type HighlightKind =
-  | "selected"
-  | "picked"
-  | "target"
-  | "discard"
-  | "committed"
-  | "none";
-
-/** True when `id` appears in any completed step result. */
-function isCommitted(done: readonly StepResult[], id: string): boolean {
-  return done.some(
-    (r) =>
-      (r.kind === "hazard" && r.targetId === id) ||
-      (r.kind === "destroyHand" && r.destroyIds.includes(id)) ||
-      (r.kind === "returnWorld" && r.returnIds.includes(id)) ||
-      (r.kind === "discardPlayer" && r.discardId === id),
-  );
-}
+export type HighlightKind = "selected" | "picked" | "target" | "discard" | "committed" | "none";
 
 /**
  * Classify a card's highlight + dim state. Precedence (first match wins):
- * the actively-selected card, a pick in progress for the current step,
- * a live legal target (not yet picked), a discardable hazard (idle),
- * a playable player card (idle), a card committed by an earlier completed
- * step, then the dimmed/neutral fall-through.
+ * the acting card (selected), any card chosen during this play — current step
+ * or a prior completed step (picked), a live legal target not yet chosen
+ * (target), discardable hazard when idle (discard), playable player card when
+ * idle (none/undimmed), then dimmed/neutral fall-through.
  *
- * Current picks beat legal-target so a multi-pick card already in sel.current
- * reads as "picked" rather than "target" — the player needs to know they've
- * already chosen it, not that it's available to choose.
+ * Picks precede legal-target: a card in sel.current stays in legalTargetIds
+ * (it can be un-picked), but must read as "already chosen", not "available".
  */
 export function classifyHighlight(
   sel: SelectionState,
@@ -50,42 +32,31 @@ export function classifyHighlight(
   const id = card.id;
 
   // Selected card (awaiting-modal and targeting both carry cardId)
-  if ("cardId" in sel && sel.cardId === id)
-    return { kind: "selected", dim: false };
+  if ("cardId" in sel && sel.cardId === id) return { kind: "selected", dim: false };
 
-  // Picks accumulating for the current step: "picked" when the player is making
-  // a selection as part of a multi-step sequence (sel.steps.length > 1) OR
-  // picking multiple targets in one step (stepMax > 1). "selected" otherwise.
-  // Must precede the legal-target check: a picked card stays in legalTargetIds
-  // (it can be un-picked), but it should read as "already chosen", not "available".
-  if (sel.phase === "targeting" && sel.current.includes(id)) {
-    const step = sel.steps[sel.stepIdx];
-    const multi = step !== undefined && (stepMax(step) > 1 || sel.steps.length > 1);
-    return { kind: multi ? "picked" : "selected", dim: false };
+  // Any card chosen during this play — accumulating in the current step or
+  // recorded in a prior completed step — shows as "picked". Comes before the
+  // legal-target check because a current pick stays in legalTargetIds (can be
+  // un-picked), but must read as "already chosen", not "available".
+  if (sel.phase === "targeting") {
+    if (sel.current.includes(id)) return { kind: "picked", dim: false };
+    if (sel.done.some((result) => doesStepResultContain(result, id))) return { kind: "picked", dim: false };
   }
 
   // Legal target during a targeting phase (not yet picked)
   if (legalTargetIds.has(id)) return { kind: "target", dim: false };
 
   // Discardable world card (only outside a selection)
-  if (discardableIds.has(id) && sel.phase === "idle")
-    return { kind: "discard", dim: false };
+  if (discardableIds.has(id) && sel.phase === "idle") return { kind: "discard", dim: false };
 
   // Playable player card (idle state)
   if (card.kind === "player" && playableIds.has(id) && sel.phase === "idle") {
     return { kind: "none", dim: false };
   }
 
-  // Cards committed by earlier completed steps stay lit with a muted 'committed'
-  // mark — they are no longer live targets but must not go dark.
-  if (sel.phase === "targeting" && isCommitted(sel.done, id)) {
-    return { kind: "committed", dim: false };
-  }
-
   // Everything else: dimmed when a selection is active, or for an unplayable
   // player card outside a selection; otherwise neutral and undimmed.
   if (sel.phase !== "idle") return { kind: "none", dim: true };
-  if (card.kind === "player" && !playableIds.has(id))
-    return { kind: "none", dim: true };
+  if (card.kind === "player" && !playableIds.has(id)) return { kind: "none", dim: true };
   return { kind: "none", dim: false };
 }

@@ -1154,7 +1154,7 @@ function makeFakePickBadgeView(): {
     },
   };
 
-  const fakeGraphics = { fillStyle(): void {}, fillCircle(): void {} };
+  const fakeGraphics = { fillStyle(): void {}, fillCircle(): void {}, setAlpha(): void {} };
   const fakeText = { setOrigin(): unknown { return fakeText; } };
 
   const added: unknown[] = [];

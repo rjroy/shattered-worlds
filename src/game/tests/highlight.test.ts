@@ -123,7 +123,7 @@ describe("classifyHighlight", () => {
     expect(classify(idle, player("p1"))).toEqual({ kind: "none", dim: true });
   });
 
-  it("marks chosen return targets picked and the committed hazard distinct", () => {
+  it("marks all chosen cards as 'picked' — current step and prior steps", () => {
     const sel: SelectionState = {
       phase: "targeting",
       cardId: "p1",
@@ -132,17 +132,11 @@ describe("classifyHighlight", () => {
       done: [{ kind: "hazard", targetId: "w9" }],
       current: ["w2"],
     };
-    expect(classify(sel, world("w2"))).toEqual({
-      kind: "picked",
-      dim: false,
-    });
-    expect(classify(sel, world("w9"))).toEqual({
-      kind: "committed",
-      dim: false,
-    });
+    expect(classify(sel, world("w2"))).toEqual({ kind: "picked", dim: false });
+    expect(classify(sel, world("w9"))).toEqual({ kind: "picked", dim: false });
   });
 
-  it("keeps a Cut It Loose destroy pick committed during hazard targeting", () => {
+  it("keeps a Cut It Loose destroy pick as 'picked' during the following hazard step", () => {
     const sel: SelectionState = {
       phase: "targeting",
       cardId: "p1",
@@ -151,17 +145,14 @@ describe("classifyHighlight", () => {
       done: [{ kind: "destroyHand", destroyIds: ["p2"] }],
       current: [],
     };
-    expect(classify(sel, player("p2"))).toEqual({
-      kind: "committed",
-      dim: false,
-    });
+    expect(classify(sel, player("p2"))).toEqual({ kind: "picked", dim: false });
     expect(classify(sel, world("w1"), { legal: set("w1") })).toEqual({
       kind: "target",
       dim: false,
     });
   });
 
-  it("legal-target precedence beats the committed mark", () => {
+  it("'picked' beats legal-target for a card already chosen in a prior step", () => {
     const sel: SelectionState = {
       phase: "targeting",
       cardId: "p1",
@@ -170,9 +161,9 @@ describe("classifyHighlight", () => {
       done: [{ kind: "hazard", targetId: "w9" }],
       current: [],
     };
-    // If w9 is somehow still legal, the live-target highlight wins.
+    // w9 was chosen in a prior step — reads as "already chosen" even if still in legalTargetIds.
     expect(classify(sel, world("w9"), { legal: set("w9") })).toEqual({
-      kind: "target",
+      kind: "picked",
       dim: false,
     });
   });
@@ -203,7 +194,7 @@ describe("classifyHighlight 'picked' kind", () => {
     expect(classify(sel, player("p2"))).toEqual({ kind: "picked", dim: false });
   });
 
-  it("keeps a hazard current card as 'selected' (single-pick, max 1)", () => {
+  it("classifies a hazard current card as 'picked'", () => {
     const sel: SelectionState = {
       phase: "targeting",
       cardId: "p1",
@@ -212,10 +203,10 @@ describe("classifyHighlight 'picked' kind", () => {
       done: [],
       current: ["w1"],
     };
-    expect(classify(sel, world("w1"))).toEqual({ kind: "selected", dim: false });
+    expect(classify(sel, world("w1"))).toEqual({ kind: "picked", dim: false });
   });
 
-  it("keeps a discardPlayer current card as 'selected' (single-pick, max 1)", () => {
+  it("classifies a discardPlayer current card as 'picked'", () => {
     const sel: SelectionState = {
       phase: "targeting",
       cardId: "p1",
@@ -224,10 +215,10 @@ describe("classifyHighlight 'picked' kind", () => {
       done: [],
       current: ["p2"],
     };
-    expect(classify(sel, player("p2"))).toEqual({ kind: "selected", dim: false });
+    expect(classify(sel, player("p2"))).toEqual({ kind: "picked", dim: false });
   });
 
-  it("keeps a destroyHand max:1 current card as 'selected' (single-step card, not part of a sequence)", () => {
+  it("classifies a destroyHand max:1 current card as 'picked'", () => {
     const sel: SelectionState = {
       phase: "targeting",
       cardId: "p1",
@@ -236,13 +227,12 @@ describe("classifyHighlight 'picked' kind", () => {
       done: [],
       current: ["p2"],
     };
-    expect(classify(sel, player("p2"))).toEqual({ kind: "selected", dim: false });
+    expect(classify(sel, player("p2"))).toEqual({ kind: "picked", dim: false });
   });
 
   it("classifies a single-pick step within a compound sequence as 'picked' (Barricade pattern)", () => {
-    // Barricade: [DealProgress (none), ReturnWorldCards max:1] — two steps, one targeting.
-    // stepMax === 1 but steps.length > 1, so "picked" fires to signal it's part of a multi-step play.
-    // "none" steps auto-advance without appending to done, so done stays empty.
+    // Barricade: [DealProgress (none), ReturnWorldCards max:1]. "none" steps auto-advance
+    // without appending to done, so done is empty when the returnWorld step fires.
     const sel: SelectionState = {
       phase: "targeting",
       cardId: "p1",
