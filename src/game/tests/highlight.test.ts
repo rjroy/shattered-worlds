@@ -251,7 +251,7 @@ describe("classifyHighlight 'picked' kind", () => {
     expect(classify(sel, player("p1"))).toEqual({ kind: "selected", dim: false });
   });
 
-  it("legal-target precedence beats 'picked' for a card that is also in current", () => {
+  it("'picked' beats legal-target for a card already in current (it reads as chosen, not available)", () => {
     const sel: SelectionState = {
       phase: "targeting",
       cardId: "p1",
@@ -260,8 +260,10 @@ describe("classifyHighlight 'picked' kind", () => {
       done: [],
       current: ["w1"],
     };
+    // w1 is still in legalTargetIds (can be un-picked), but must read as "picked"
+    // so the player sees they've already chosen it.
     expect(classify(sel, world("w1"), { legal: set("w1") })).toEqual({
-      kind: "target",
+      kind: "picked",
       dim: false,
     });
   });
