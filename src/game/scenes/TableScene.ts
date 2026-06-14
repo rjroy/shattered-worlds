@@ -509,6 +509,13 @@ export class TableScene extends Phaser.Scene {
         const progress = this.game_.state.progress[card.id] ?? 0;
         const fraction = ringFraction(progress, card.cost);
         container.updateCostRing(fraction, this.theme_.frameStyle.ringAccent);
+
+        // Fog-back reconcile: re-read Light every cycle so a card concealed at
+        // the current depth shows its fog-back and identity stays hidden. This
+        // is the LightChanged transition — EndTurn decay and a played GainLight
+        // both repaint via drawAll, so the fog-back tracks Light with no event
+        // subscription. Purely cosmetic; never feeds back into core state.
+        container.applyConcealment(this.game_.state.light);
       }
     });
   }

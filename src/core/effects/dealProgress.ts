@@ -34,10 +34,12 @@ import type {
   CounterSpec,
   GameEvent,
   GameState,
+  KeywordName,
   TargetSpec,
   WorldCard,
 } from '../model/types'
 import type { CardCatalog } from '../model/catalog'
+import { hasKeyword, isConcealed } from '../model/keywords'
 import type { EffectLine } from '../view/effectGlyphs'
 import { applyEffect } from '../engine/effects'
 import type { CompileContext, ConnectorStyle, EffectContext, EffectResult } from './EffectContext'
@@ -63,15 +65,12 @@ export function dealProgress(
   state: GameState,
   hazardId: CardId,
   base: number,
-  bonus?: { tag: string; amount: number },
+  bonus?: { tag: KeywordName; amount: number },
 ): EffectResult {
   const hazard = state.hand.find((c): c is WorldCard => c.kind === 'world' && c.id === hazardId)
   if (hazard === undefined) return { state, events: [] }
 
-  const bonusAmount =
-    bonus !== undefined && hazard.keywords.includes(bonus.tag as WorldCard['keywords'][number])
-      ? bonus.amount
-      : 0
+  const bonusAmount = bonus !== undefined && hasKeyword(hazard, bonus.tag) ? bonus.amount : 0
   const amount = base + bonusAmount
 
   const newProgress = {
@@ -109,7 +108,7 @@ export function dealProgress(
 export function resolveCounter(state: GameState, spec: CounterSpec): number {
   switch (spec.kind) {
     case 'KeywordInHand':
-      return state.hand.filter((card) => card.keywords.includes(spec.keyword)).length
+      return state.hand.filter((card) => hasKeyword(card, spec.keyword)).length
 
     default:
       return 0
@@ -160,16 +159,17 @@ export class DealProgressHandler extends HazardTargetingHandler<DealProgressEffe
     _selfId: CardId,
     state: GameState,
   ): readonly CardId[] {
+    // Concealed hazards are never legal single-targets — you can't aim at what
+    // the fog hides (it is unfiltered when light === 0, the non-Fog case).
+    const visible = worldCardsInHand(state).filter((c) => !isConcealed(c, state.light))
     if (effect.base === 0) {
       const tag = effect.bonus?.tag
       if (tag !== undefined) {
-        // Filter to world cards that carry the matching keyword.
-        return worldCardsInHand(state)
-          .filter((c) => c.keywords.includes(tag))
-          .map((c) => c.id)
+        // Filter to visible world cards that carry the matching keyword.
+        return visible.filter((c) => hasKeyword(c, tag)).map((c) => c.id)
       }
     }
-    return worldCardsInHand(state).map((c) => c.id)
+    return visible.map((c) => c.id)
   }
 }
 

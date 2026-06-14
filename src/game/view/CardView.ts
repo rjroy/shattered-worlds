@@ -8,7 +8,8 @@
  * for older call sites and tests.
  */
 import Phaser from "phaser";
-import type { Card, CardEffect, WorldCard } from "../../core/index";
+import type { Card, CardEffect, Keyword, WorldCard } from "../../core/index";
+import { concealOf } from "../../core/index";
 import type { FrameStyle, VisualTheme } from "./themes/theme";
 import { compileEffect, type IconId } from "../../core/view/effectGlyphs";
 import { addEffectLines } from "./effectLineView";
@@ -22,6 +23,23 @@ import {
   emphasisDescriptor,
 } from "./presentation";
 import { CARD_FACE, TABLE_LAYOUT } from "./layout";
+
+// ---------------------------------------------------------------------------
+// Keyword display
+// ---------------------------------------------------------------------------
+
+/**
+ * Render a structured keyword as text: name alone, or "name value" when the
+ * keyword carries a value (e.g. "Concealed 3"). Keywords are text, never icons.
+ */
+export function formatKeyword(keyword: Keyword): string {
+  return keyword.value === undefined ? keyword.name : `${keyword.name} ${keyword.value}`;
+}
+
+/** Join a card's keywords into the on-face line ("Spore · Slow"). */
+export function formatKeywords(keywords: readonly Keyword[]): string {
+  return keywords.map(formatKeyword).join(" · ");
+}
 
 // ---------------------------------------------------------------------------
 // Card dimensions
@@ -133,6 +151,18 @@ export class CardView extends Phaser.GameObjects.Container {
   private targetGlow?: Phaser.GameObjects.Graphics;
   private emphasized = false;
 
+  // Concealment (world cards only). `concealDepth` is the card's Concealed:N
+  // value (0 = never concealable). `revealObjects` is the identity face shown
+  // when revealed; `fogObjects` is the fog-back shown only its depth chip. The
+  // two groups are toggled by `applyConcealment(light)` — a purely cosmetic
+  // read of `state.light` that NEVER feeds back into core. `concealedNow`
+  // tracks the last applied state so an unchanged light is idempotent (no tween
+  // restart, no flicker) on the per-cycle reconcile path.
+  private concealDepth = 0;
+  private readonly revealObjects: Phaser.GameObjects.GameObject[] = [];
+  private readonly fogObjects: Phaser.GameObjects.GameObject[] = [];
+  private concealedNow: boolean | undefined = undefined;
+
   constructor(
     scene: Phaser.Scene,
     card: Card,
@@ -187,7 +217,7 @@ export class CardView extends Phaser.GameObjects.Container {
     }
 
     // Name at top — identical for player and world cards.
-    addCardText(scene, this, 0, -CARD_H / 2 + 8, card.name, {
+    const nameText = addCardText(scene, this, 0, -CARD_H / 2 + 8, card.name, {
       fontSize: "16px",
       color: TEXT.textLight,
       bold: true,
@@ -200,7 +230,7 @@ export class CardView extends Phaser.GameObjects.Container {
       // Spore card is identifiable in hand (REQ-MALL-21).
       const hasKeywords = card.keywords.length > 0;
       if (hasKeywords) {
-        addCardText(scene, this, 0, -CARD_H / 2 + 23, card.keywords.join(" · "), {
+        addCardText(scene, this, 0, -CARD_H / 2 + 23, formatKeywords(card.keywords), {
           fontSize: "9px",
           color: TEXT.textKeyword,
           originY: 0,
@@ -250,32 +280,51 @@ export class CardView extends Phaser.GameObjects.Container {
     } else {
       const worldCard = card as WorldCard;
 
+      // The world card's full identity face. Each piece is pushed onto
+      // `revealObjects` so the fog-back can hide all of it at once when the card
+      // is concealed; the name (built above) is part of that identity too.
+      const reveal = this.revealObjects;
+      for (const line of nameText) reveal.push(line);
+
       // Progress ring backing the cost digit.
       const costRing = scene.add.graphics() as CostRing;
       costRing.setPosition(CARD_W / 2 - 21, CARD_H / 2 - 21);
       this.costRing = costRing;
       this.add(costRing);
+      reveal.push(costRing);
 
       // Cost label + value (cost is the Progress needed to clear the Hazard).
-      addCardText(scene, this, CARD_W / 2 - 21, CARD_H / 2 - 21, String(worldCard.cost), {
-        fontSize: "30px",
-        color: TEXT.textCost,
-        bold: true,
-        originY: 0.5,
-      });
-      addCardText(scene, this, CARD_W / 2 - 21, CARD_H / 2 - 3, "to clear", {
+      for (const line of addCardText(
+        scene,
+        this,
+        CARD_W / 2 - 21,
+        CARD_H / 2 - 21,
+        String(worldCard.cost),
+        { fontSize: "30px", color: TEXT.textCost, bold: true, originY: 0.5 },
+      )) {
+        reveal.push(line);
+      }
+      for (const line of addCardText(scene, this, CARD_W / 2 - 21, CARD_H / 2 - 3, "to clear", {
         fontSize: "8px",
         color: TEXT.textMuted,
         originY: 1,
-      });
+      })) {
+        reveal.push(line);
+      }
 
-      // Keywords.
+      // Keywords. The whole keyword line is identity (hidden under fog); the
+      // Concealed:N depth chip is rendered separately on the fog-back below.
       if (worldCard.keywords.length > 0) {
-        addCardText(scene, this, 0, -CARD_H / 2 + 23, worldCard.keywords.join(" · "), {
-          fontSize: "9px",
-          color: TEXT.textKeyword,
-          originY: 0,
-        });
+        for (const line of addCardText(
+          scene,
+          this,
+          0,
+          -CARD_H / 2 + 23,
+          formatKeywords(worldCard.keywords),
+          { fontSize: "9px", color: TEXT.textKeyword, originY: 0 },
+        )) {
+          reveal.push(line);
+        }
       }
 
       // onEndOfTurn, onDiscarded, onCleared, onPartialClear — compact token
@@ -332,19 +381,92 @@ export class CardView extends Phaser.GameObjects.Container {
         }
         container.setPosition(0, currY);
         this.add(container);
+        reveal.push(container);
         currY += height + effectLineSpacing;
       }
 
       // Discard indicator.
       if (worldCard.discardable) {
-        addCardText(scene, this, 0, CARD_H / 2 - 22, "click to discard", {
+        for (const line of addCardText(scene, this, 0, CARD_H / 2 - 22, "click to discard", {
           fontSize: "9px",
           color: TEXT.textDiscard,
           bold: true,
           originY: 0,
           background: 0x000000,
-        });
+        })) {
+          reveal.push(line);
+        }
       }
+
+      // Fog-back overlay. A world card with `Concealed:N` hides its identity
+      // behind fog until Light reaches N; only the depth chip stays visible so
+      // the player knows how much Light the card demands. Built unconditionally
+      // (depth 0 means it never shows) and toggled by `applyConcealment(light)`,
+      // a cosmetic read of `state.light` that never touches core. `buildFogBack`
+      // assigns `this.concealDepth` and populates `this.fogObjects`.
+      this.concealDepth = concealOf(worldCard);
+      this.buildFogBack(scene);
+      // Start revealed; the first reconcile cycle calls applyConcealment(light)
+      // with the live Light, so a card concealed at spawn snaps to fog with no
+      // flicker (the table draws once, synchronously, right after creation).
+      this.setObjectsVisible(this.fogObjects, false);
+    }
+  }
+
+  /**
+   * Build the fog-back: a translucent fog panel over the card face plus the
+   * `Concealed:N` depth chip. Cosmetic only — it reads no GameState and feeds
+   * nothing back into core. Hidden by default; `applyConcealment` reveals it.
+   */
+  private buildFogBack(scene: Phaser.Scene): void {
+    if (this.concealDepth <= 0) return;
+
+    // Translucent panel that veils the identity face beneath it.
+    const fog = scene.add
+      .rectangle(0, 0, CARD_W - 8, CARD_H - 8, 0x2a3a4a, 0.92)
+      .setOrigin(0.5, 0.5)
+      .setRounded(10);
+    this.add(fog);
+    this.fogObjects.push(fog);
+
+    // Depth chip: the only thing legible through the fog. Reuses the structured
+    // keyword formatter so "Concealed 3" matches the on-face keyword language.
+    for (const line of addCardText(
+      scene,
+      this,
+      0,
+      0,
+      formatKeyword({ name: "Concealed", value: this.concealDepth }),
+      { fontSize: "14px", color: TEXT.textKeyword, bold: true, originY: 0.5, background: 0x000000 },
+    )) {
+      this.fogObjects.push(line);
+    }
+  }
+
+  /**
+   * Toggle the fog-back against the current Light. Pure cosmetic reconcile:
+   * called every drawAll cycle (and so on every LightChanged, since EndTurn
+   * decay and GainLight both repaint), it reads `light` and shows the fog-back
+   * when `isConcealed`, the identity face otherwise. Idempotent on an unchanged
+   * concealment state. No-op for cards that can never be concealed (depth 0).
+   */
+  applyConcealment(light: number): void {
+    if (this.concealDepth <= 0) return;
+    // isConcealed is `concealOf(card) > light`; with depth cached, the card is
+    // concealed exactly while Light has not yet reached its depth.
+    const concealed = this.concealDepth > light;
+    if (this.concealedNow === concealed) return;
+    this.concealedNow = concealed;
+    this.setObjectsVisible(this.revealObjects, !concealed);
+    this.setObjectsVisible(this.fogObjects, concealed);
+  }
+
+  private setObjectsVisible(
+    objects: readonly Phaser.GameObjects.GameObject[],
+    visible: boolean,
+  ): void {
+    for (const obj of objects) {
+      (obj as unknown as { setVisible(v: boolean): void }).setVisible(visible);
     }
   }
 

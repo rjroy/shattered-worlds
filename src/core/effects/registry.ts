@@ -14,7 +14,7 @@ import {
   GainCardHandler,
 } from './gainCard'
 import { NoneHandler } from './none'
-import { BraceHandler, GainEnergyHandler, HealHandler } from './resources'
+import { BraceHandler, GainEnergyHandler, GainLightHandler, HealHandler } from './resources'
 import {
   DestroyCardInHandHandler,
   DestroySelfHandler,
@@ -36,6 +36,7 @@ export const EFFECTS: {
   DiscardThenDraw: new DiscardThenDrawHandler(),
   Heal: new HealHandler(),
   GainEnergy: new GainEnergyHandler(),
+  GainLight: new GainLightHandler(),
   Brace: new BraceHandler(),
   Damage: new DamageHandler(),
   DamageScaled: new DamageScaledHandler(),

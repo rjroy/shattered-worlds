@@ -78,6 +78,92 @@ describe("DealProgress playability", () => {
 });
 
 // ---------------------------------------------------------------------------
+// 1b. Concealment gating (Fog) — single-target progress vs concealed world cards
+// ---------------------------------------------------------------------------
+
+/** Build a WorldCard directly so we can assign a Concealed:N depth. */
+function concealedWorld(id: string, depth: number, extra: WorldCard["keywords"] = []): WorldCard {
+  return {
+    kind: "world",
+    id,
+    name: id,
+    insetKey: undefined,
+    cost: 5,
+    keywords: [{ name: "Concealed", value: depth }, ...extra],
+    discardable: true,
+    canExile: true,
+    onDiscarded: { kind: "None" },
+    onCleared: { kind: "None" },
+    onEndOfTurn: { kind: "None" },
+    onPartialClear: { kind: "None" },
+  };
+}
+
+/** A single-target progress player card (Explore-shaped: +1, +1 vs Hidden). */
+function explorePlayer(id: string): PlayerCard {
+  return {
+    kind: "player",
+    id,
+    name: "Explore",
+    insetKey: undefined,
+    sourceWorldId: "fog",
+    effect: { kind: "DealProgress", base: 1, bonus: { tag: "Hidden", amount: 1 } },
+    energyCost: 1,
+    keywords: [],
+  };
+}
+
+describe("concealment gating of single-target progress", () => {
+  it("legalTargets excludes a concealed world card and includes a revealed one", () => {
+    const explore = explorePlayer("explore");
+    const deep = concealedWorld("deep", 3); // needs Light 3
+    const shallow = concealedWorld("shallow", 1); // needs Light 1
+    // light 1: shallow revealed (1 not > 1), deep still concealed (3 > 1).
+    const state = makeState({ hand: [explore, deep, shallow], light: 1, energy: 3 });
+
+    const actions = availableActions(state);
+    const legal = actions.legalTargets("explore", 0);
+    expect(legal).toContain("shallow");
+    expect(legal).not.toContain("deep");
+  });
+
+  it("isPlayable is false when EVERY world card in hand is concealed", () => {
+    const explore = explorePlayer("explore");
+    const deep = concealedWorld("deep", 3);
+    const state = makeState({ hand: [explore, deep], light: 0, energy: 3 });
+
+    const actions = availableActions(state);
+    expect(actions.playable.find((p) => p.cardId === "explore")).toBeUndefined();
+  });
+
+  it("isPlayable is true once at least one world card is unconcealed", () => {
+    const explore = explorePlayer("explore");
+    const deep = concealedWorld("deep", 3);
+    const state = makeState({ hand: [explore, deep], light: 3, energy: 3 });
+
+    const actions = availableActions(state);
+    expect(actions.playable.find((p) => p.cardId === "explore")).toBeDefined();
+    expect(actions.legalTargets("explore", 0)).toContain("deep");
+  });
+
+  it("raising light restores targetability AND keeps the Hidden bonus payoff", () => {
+    // The card is both Concealed:2 and Hidden. At light 1 it is hidden; at
+    // light 2 it reveals, and because Light never touches keywords it is still
+    // Hidden, so an Explore-style "+1 vs Hidden" snipe still lands.
+    const explore = explorePlayer("explore");
+    const lurker = concealedWorld("lurker", 2, [{ name: "Hidden" }]);
+
+    const dim = makeState({ hand: [explore, lurker], light: 1, energy: 3 });
+    expect(availableActions(dim).legalTargets("explore", 0)).not.toContain("lurker");
+
+    const lit = makeState({ hand: [explore, lurker], light: 2, energy: 3 });
+    expect(availableActions(lit).legalTargets("explore", 0)).toContain("lurker");
+    // Hidden survives the reveal — the keyword is intact for the snipe bonus.
+    expect(lurker.keywords.some((k) => k.name === "Hidden")).toBe(true);
+  });
+});
+
+// ---------------------------------------------------------------------------
 // 2. Panic playability
 // ---------------------------------------------------------------------------
 
@@ -266,7 +352,7 @@ describe("legalTargets Sprint (modal)", () => {
       name: "Slow Hazard",
       insetKey: undefined,
       cost: 1,
-      keywords: ["Slow"],
+      keywords: [{ name: "Slow" }],
       discardable: false,
       canExile: true,
       onDiscarded: { kind: "None" },
@@ -647,7 +733,7 @@ describe("None-effect playability (Spore)", () => {
         effect: { kind: "None" },
         energyCost: 1,
         exhaust: true,
-        keywords: ["Spore"],
+        keywords: [{ name: "Spore" }],
       },
       next,
     ];

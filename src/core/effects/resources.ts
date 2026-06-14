@@ -7,6 +7,7 @@ import { icon, main, value } from './tokens'
 type HealEffect = Extract<CardEffect, { kind: 'Heal' }>
 type GainEnergyEffect = Extract<CardEffect, { kind: 'GainEnergy' }>
 type BraceEffect = Extract<CardEffect, { kind: 'Brace' }>
+type GainLightEffect = Extract<CardEffect, { kind: 'GainLight' }>
 
 export function heal(state: GameState, n: number): EffectResult {
   const newHp = state.hp + n
@@ -45,6 +46,22 @@ export class GainEnergyHandler extends EffectHandler<GainEnergyEffect> {
 
   override compile(effect: GainEnergyEffect, _ctx: CompileContext): EffectLine[] {
     return [main([value(`+${effect.amount}`, 'reward'), icon('energy')])]
+  }
+}
+
+export class GainLightHandler extends EffectHandler<GainLightEffect> {
+  override apply(ctx: EffectContext, effect: GainLightEffect): EffectResult {
+    const newLight = ctx.state.light + effect.amount
+    const current: GameState = { ...ctx.state, light: newLight }
+    return { state: current, events: [{ type: 'LightChanged', light: newLight }] }
+  }
+
+  override describe(effect: GainLightEffect): string[] {
+    return [`Gain ${effect.amount} Light`]
+  }
+
+  override compile(effect: GainLightEffect, _ctx: CompileContext): EffectLine[] {
+    return [main([value(`+${effect.amount}`, 'reward'), icon('light')])]
   }
 }
 

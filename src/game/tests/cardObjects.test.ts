@@ -529,6 +529,7 @@ interface TrackedText {
   content: string;
   fontSize: string;
   color: string;
+  visible: boolean;
 }
 
 /**
@@ -539,10 +540,17 @@ interface TrackedText {
  */
 const childProtocol = {
   parentContainer: null as unknown,
+  visible: true,
   once(): void {},
   off(): void {},
   removeFromDisplayList(): void {},
   addedToScene(): void {},
+  // CardView's fog-back toggles identity vs. fog via setVisible; every fake
+  // child records the last value so the concealment tests can read it.
+  setVisible(this: { visible: boolean }, v: boolean): unknown {
+    this.visible = v;
+    return this;
+  },
 };
 
 function makeFakeText(
@@ -558,6 +566,7 @@ function makeFakeText(
     content,
     fontSize: style.fontSize ?? "",
     color: style.color ?? "",
+    visible: true,
   };
   sink.push(tracked);
   const text = {
@@ -567,6 +576,12 @@ function makeFakeText(
     width: 40,
     height: 12,
     displayWidth: 40,
+    // The fog-back toggles identity via setVisible; mirror it onto the tracked
+    // record so the concealment tests can read each line's visibility.
+    setVisible(v: boolean): unknown {
+      tracked.visible = v;
+      return text;
+    },
     // Mirror the tracked content and colour so token assertions can read them
     // off the object a row container holds (addEffectLines never calls setText).
     get content(): string {
@@ -741,6 +756,7 @@ function makeMintState(): GameState {
     progress: {},
     hp: 10,
     energy: 0,
+    light: 0,
     pendingForceDestroy: 0,
     braceCharges: 0,
     status: "playing",
@@ -986,5 +1002,91 @@ describe("CardView world-card trigger blocks", () => {
       ["#e8eaf0", "#ff8888"], // onDiscard: colon + threat 'Zombie'
       ["#e8eaf0", "#e8eaf0"], // eachTurn: colon + Brace '+2'
     ]);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// CardView fog-back (concealment, REQ-FOG-28)
+//
+// A world card carrying `Concealed:N` renders a fog-back that shows ONLY its
+// depth chip ("Concealed 3") and hides every identity object (name, cost,
+// effect tokens). applyConcealment(light) is the cosmetic reconcile the table
+// runs every drawAll cycle: it reads `state.light` and toggles the two groups,
+// never touching core. Raising light past the depth reveals the card.
+// ---------------------------------------------------------------------------
+
+describe("CardView fog-back concealment", () => {
+  const fogCatalog: CardCatalog = {
+    "Something in the Mist": {
+      kind: "world",
+      name: "Something in the Mist",
+      cost: 3,
+      keywords: ["Concealed:3", "Hidden"],
+      discardable: false,
+      onEndOfTurn: { kind: "Damage", amount: 2 },
+      onDiscarded: { kind: "None" },
+      onCleared: { kind: "None" },
+      onPartialClear: { kind: "None" },
+    },
+    "Plain Hazard": {
+      kind: "world",
+      name: "Plain Hazard",
+      cost: 2,
+      keywords: [],
+      discardable: false,
+      onEndOfTurn: { kind: "Damage", amount: 1 },
+      onDiscarded: { kind: "None" },
+      onCleared: { kind: "None" },
+      onPartialClear: { kind: "None" },
+    },
+  };
+
+  function mintFogWorld(templateId: string): WorldCard {
+    const [card] = mintCard(fogCatalog, makeMintState(), templateId);
+    if (card.kind !== "world") throw new Error(`expected ${templateId} to mint a world card`);
+    return card;
+  }
+
+  /** All text contents the card rendered, regardless of nesting. */
+  function allTexts(rendered: RenderedCard): string[] {
+    return rendered.texts.map((t) => t.content);
+  }
+
+  it("renders the structured-keyword depth chip ('Concealed 3')", () => {
+    const rendered = renderCard(mintFogWorld("Something in the Mist"));
+    expect(allTexts(rendered)).toContain("Concealed 3");
+  });
+
+  it("shows the depth chip and hides identity when concealed (Light below depth)", () => {
+    const rendered = renderCard(mintFogWorld("Something in the Mist"));
+    // Light 1 < depth 3 → concealed.
+    rendered.view.applyConcealment(1);
+
+    // The depth chip is visible; the name (identity) is hidden.
+    const chip = rendered.texts.find((t) => t.content === "Concealed 3");
+    const name = rendered.texts.find((t) => t.content === "Something in the Mist");
+    expect(chip!.visible).toBe(true);
+    expect(name!.visible).toBe(false);
+  });
+
+  it("reveals identity and hides the fog chip once Light reaches the depth", () => {
+    const rendered = renderCard(mintFogWorld("Something in the Mist"));
+    rendered.view.applyConcealment(1); // concealed
+    rendered.view.applyConcealment(3); // Light 3 >= depth 3 → revealed
+
+    const chip = rendered.texts.find((t) => t.content === "Concealed 3");
+    const name = rendered.texts.find((t) => t.content === "Something in the Mist");
+    expect(name!.visible).toBe(true);
+    expect(chip!.visible).toBe(false);
+  });
+
+  it("never conceals a card without a Concealed keyword (depth 0 is a no-op)", () => {
+    const rendered = renderCard(mintFogWorld("Plain Hazard"));
+    // Even at Light 0 a non-concealable card stays fully revealed.
+    rendered.view.applyConcealment(0);
+    const name = rendered.texts.find((t) => t.content === "Plain Hazard");
+    expect(name!.visible).toBe(true);
+    // No fog depth chip exists for a card with no Concealed keyword.
+    expect(allTexts(rendered)).not.toContain("Concealed 0");
   });
 });
