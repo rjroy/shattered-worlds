@@ -92,10 +92,7 @@ import zombieBigBoxMusicUrl from "../assets/audio/zombie-big-box-music.mp3?url";
 import birdBuildingMusicUrl from "../assets/audio/bird-building-music.mp3?url";
 import highwayVolcanoMusicUrl from "../assets/audio/highway-volcano-music.mp3?url";
 import overgrownMallMusicUrl from "../assets/audio/overgrown-mall-music.mp3?url";
-// Placeholder music until a dedicated Fog track ships (precedent: insets ship as
-// placeholders). Reuses the mall track under the distinct fog music key so the
-// world loads and the asset-binding conformance test passes.
-import fogBeachPartyMusicUrl from "../assets/audio/overgrown-mall-music.mp3?url";
+import fogBeachPartyMusicUrl from "../assets/audio/fog-beach-party-music.mp3?url";
 
 // ---------------------------------------------------------------------------
 // Exports
