@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Energy Turn Resource</title>
+  <meta name="date" content="2026-06-15">
+  <meta name="status" content="current">
+  <meta name="tags" content="energy, player-resource, turn-economy, cost, core-state">
+  <meta name="fg-type" content="architecture">
+  <meta name="fg-sources" content=".lore/work/specs/player-energy-resource.html, .lore/work/plans/player-energy-resource.html, .lore/work/notes/player-energy-resource.html">
+  <meta name="fg-status" content="current">
+  <style>body{font:16px/1.6 system-ui,sans-serif;max-width:880px;margin:40px auto;padding:0 20px;color:#20242a}h1{line-height:1.1}h2{margin-top:28px}code{background:#f3f4f6;padding:2px 5px;border-radius:4px}</style>
+</head>
+<body>
+  <h1>Energy Turn Resource</h1>
+  <p>Energy is a per-turn player resource stored on <code>GameState</code>. It gates player-card playability without changing world-card hazard cost. The two costs are separate concepts: hazard cost is cleared by Progress; energy cost is paid by the player to play certain cards.</p>
+  <h2>Lifecycle</h2>
+  <p>Energy initializes to 0 when a world is created, then the shared start-turn step grants +1 before the opening hand and before every later refill. Unspent energy carries across turns with no cap. Act transitions do not reset energy; a new world does.</p>
+  <h2>Playability</h2>
+  <p>A card is playable only when its structural targeting requirements are satisfied and current energy is at least its energy cost. Cost-0 cards preserve existing behavior. Spending energy happens as part of playing the card, so reducer tests must cover both state change and event emission.</p>
+</body>
+</html>

@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Effect System Extension Pattern</title>
+  <meta name="date" content="2026-06-15">
+  <meta name="status" content="current">
+  <meta name="tags" content="card-effect, effect-system, deferred-effect, testing, exhaustive-switch">
+  <meta name="fg-type" content="lesson">
+  <meta name="fg-sources" content=".lore/work/retros/adding-forcedestroy-effect.html">
+  <meta name="fg-status" content="current">
+  <style>body{font:16px/1.6 system-ui,sans-serif;max-width:880px;margin:40px auto;padding:0 20px;color:#20242a}h1{line-height:1.1}h2{margin-top:28px}code{background:#f3f4f6;padding:2px 5px;border-radius:4px}</style>
+</head>
+<body>
+  <h1>Effect System Extension Pattern</h1>
+  <p>Adding a new card effect is rarely a one-file change. The effect union, apply logic, description text, playability or target spec, data authoring, tests, and renderer feedback all need consideration. Exhaustive switches are useful tripwires, but some areas have defaults that silently mask missing cases.</p>
+  <h2>Checklist</h2>
+  <p>Add the union member and the effect handler or apply case. Add display text in the pure description path. Add explicit playability and target-spec handling when the defaults would be ambiguous. Add data and catalog tests because JSON is loaded across a cast boundary and is not typechecked like TypeScript.</p>
+  <p>Deferred effects need a queued field on <code>GameState</code> plus a well-defined resolution point in the turn cycle. <code>skipDrawNext</code> and <code>ForceDestroy</code> are the reference pattern: queue at trigger time, resolve later when the target state exists, and emit events when resolution actually happens.</p>
+  <p>Renderer feedback is separate work. A state-diff renderer may make the state change visible only by removing or redrawing cards; if the effect needs to feel impactful, add event-driven or explicit presentation handling.</p>
+</body>
+</html>
