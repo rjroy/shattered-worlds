@@ -1,7 +1,7 @@
 ---
 title: Feat definitions and Memory Fragments
 date: 2026-06-15
-status: draft
+status: approved
 tags: [feats, meta-progression, memory-fragments, run-summary, rewards, evaluation]
 modules: [feats-profile, feat-evaluator, run-stats, run-summary-view, gameplay-runtime]
 related:
@@ -39,6 +39,14 @@ The `gameplayRuntime` already creates and exposes `featsStore`, but no subscribe
 - Unlock definitions and the fragment spend mechanic
 - Displaying feat history or Memory Fragment balance outside the run-end summary
 - Whiteout Parking Garage world (not yet implemented)
+
+## File layout and the core/game boundary
+
+The evaluator depends on runtime types (`RunRecord`, `LifetimeStats`, `WitnessProfile`, `FeatsStore`, `RunStatsReader`, `WitnessStore`, `Clock`, `RunStreamSubscriber`) that all live in `src/game/runtime/`. `src/core/**` is lint-forbidden from importing the game layer, so the evaluator is **not** core. Placement:
+
+- `src/data/feats/types.ts` — `FeatCondition`, `RewardItem`, `FeatReward`, `FeatDefinition` (pure data types).
+- `src/data/feats/catalog.ts` — `FEAT_CATALOG` and `computeFragmentBalance` (the latter type-imports `FeatsProfile` from `game/runtime`; a type-only cross-layer import, matching the existing precedent at `src/data/worlds/types.ts`).
+- `src/game/runtime/featEvaluator.ts` — `EvaluationContext`, `FeatEvaluator`, `evaluateCondition`, `evaluateFeat`, `createFeatEvaluator`.
 
 ---
 
@@ -111,7 +119,7 @@ type FeatDefinition = {
 | `witness.{templateId}.encounterCount` | `WitnessProfile.threats[templateId].encounterCount` | |
 | `witness.{templateId}.diedTo` | `WitnessProfile.threats[templateId].diedTo` | boolean |
 
-No other `statId` forms are valid. An unrecognised `statId` resolves to `undefined`.
+No other `statId` forms are valid. An unrecognised `statId` resolves to `undefined`. The `lifetime.{field}` and `world.{field}` namespaces are resolved by a generic dot-path lookup against `LifetimeStats` / `WorldStats`, so any real field on those objects is reachable (e.g. `world.fewestTurnsWin`). The non-numeric fields `lifetime.version`, `lifetime.byWorld`, and `lifetime.lastRun` are reachable too but harmless: numeric operators against a non-number fail-closed (REQ-FEAT-6), and no catalog feat references them. Implementations need not special-case them.
 
 **REQ-FEAT-5:** If a `statId` resolves to `undefined` (absent optional field, unrecognised path, or a `world.*` stat for a `worldId` not yet in `byWorld`), the condition evaluates to `false` and the feat is not earned for that run. Silent resolution failure never throws.
 
@@ -209,6 +217,10 @@ stream.subscribe(featEvaluator.subscriber)   // 3rd — sees updated runStats an
 
 This order ensures `runStats.lifetime().lastRun` and `witnessStore.getProfile()` already reflect the just-ended run when feat conditions are evaluated.
 
+Note: `createGameplayRuntime` also has an existing anonymous subscriber that removes the ended session from `openSessions` on `RunEnded`. `featEvaluator.subscriber` only needs to run after `runStats.subscriber` and `witnessStore.subscriber`; its order relative to the `openSessions` cleanup is irrelevant. Subscribe `featEvaluator.subscriber` immediately after `witnessStore.subscriber` and leave the cleanup lambda where it is.
+
+The `clock` argument is `Clock` (required). The call site resolves the fallback: `createFeatEvaluator(FEAT_CATALOG, featsStore, runStats, witnessStore, options.clock ?? Date.now)`.
+
 ---
 
 ### Memory Fragment balance
@@ -240,9 +252,15 @@ When empty, the panel renders exactly as today.
 
 **REQ-FEAT-16:** In `TableScene.buildRunSummaryData()`, populate `featsEarned` from `this.runtime_.featEvaluator.lastRunEarned()`.
 
-**REQ-FEAT-17:** When `featsEarned` is non-empty, `RunSummaryView.show()` inserts a feats section below the records badge (or below the last stat row, at y=110, when no records badge is shown). Each feat occupies one row: feat name left-aligned, Memory Fragment reward right-aligned (sum of all `memoryFragments` `RewardItem`s for that definition, formatted as e.g. `+10 Fragments`). Color: `TEXT.textReward`. Font: 14px, bold. Row height: 22px. First feat row starts at y = (records badge y or last stat row y) + 28.
+**REQ-FEAT-17:** When `featsEarned` is non-empty, `RunSummaryView.show()` inserts a feats section below the records badge (or below the last stat row, at **y=104** — i.e. `-92 + 7*28`, the actual last stat row — when no records badge is shown). Each feat occupies one row: feat name left-aligned, Memory Fragment reward right-aligned (sum of all `memoryFragments` `RewardItem`s for that definition, formatted as e.g. `+10 Fragments`). Color: `TEXT.textReward`. Font: 14px, bold (intentionally 1px smaller than the 15px stat rows). Row height: 22px. First feat row starts at y = (records badge y of 142, or last stat row y of 104) + 28.
 
-**REQ-FEAT-18:** The inner panel `Rectangle` (620×430 created inside `show()`) and the corner `Graphics` frame are re-computed with an expanded height when feats are present. Computed height = base 430px + (feat row count × 22px) + any overflow row × 22px, rounded up to the nearest 2px. The `Rectangle` is re-created (or re-sized) with the new height; the frame redraws to match. "Tap to continue" always appears at least 24px below the last visible feat row. There is no scroll.
+**REQ-FEAT-18:** When feats are present, the inner panel `Rectangle` (620×430) and the corner `Graphics` frame grow **downward only — the top edge stays fixed at y=-215** and the box extends down under the existing title/stats. Let `continueY` be the "Tap to continue" y (REQ-FEAT-19 places it at `max(184, lastFeatRowY + 28)`, satisfying "at least 24px below the last feat row") and `bottomEdge = continueY + 31` (preserving the current 31px bottom margin). Then:
+
+- `panelHeight = bottomEdge + 215`, rounded up to the nearest even pixel; the `Rectangle` is re-created at local `(0, (bottomEdge - 215) / 2)` so its top edge stays at -215.
+- frame rect: `strokeRect(-286, -186, 572, bottomEdge + 157)` (top inset unchanged).
+- corner circles: top two unchanged at `(±260, -160)`; bottom two move to `(±260, bottomEdge - 55)` (preserving the 55px corner inset).
+
+At zero feats this collapses to the original `(0,0)` / 430px panel, byte-identical to today. There is no scroll: this panel shows only feats earned in the just-ended run, bounded by the 11-feat catalog and capped per REQ-FEAT-19.
 
 **REQ-FEAT-19:** If more than 4 feats are earned in a single run, the first 4 are shown by name and an additional row reads `+ N more` (plain style, `TEXT.textMuted`) where N is the remainder. This guards against layout overflow, not an expected flow.
 
@@ -298,13 +316,13 @@ When empty, the panel renders exactly as today.
 
 10. **`evaluateCondition` — `world.*` path.** Condition `{ statId: 'world.wins', operator: 'gte', value: 1 }` resolves `ctx.lifetime.byWorld[ctx.run.worldId].wins`. Returns `false` if the world has no entry in `byWorld`.
 
-11. **Feat earned on run end.** Run a session that satisfies `first-survivor` (`outcome is won`). After `RunEnded`, assert `featsStore.getProfile().earned` contains `{ featId: 'first-survivor' }` and `featEvaluator.lastRunEarned()` returns the `first-survivor` definition.
+11. **Feat earned on run end.** Run a session that satisfies `first-survivor` (`outcome is won`). After `RunEnded`, assert `featsStore.getProfile().earned` contains a record whose `featId === 'first-survivor'` (match on `featId` via `.find`/`toMatchObject` — the `FeatRecord` also carries `earnedAt` and `sessionId`, so exact-object equality will not match) and `featEvaluator.lastRunEarned()` returns the `first-survivor` definition.
 
 12. **Feat not re-earned.** Earn `first-survivor` once. Run a second winning session. Assert `featsStore.getProfile().earned` still contains exactly one `first-survivor` entry.
 
 13. **Abandoned run skips evaluation.** Run a session, abandon it. Assert `featEvaluator.lastRunEarned()` is empty and `featsStore.getProfile().earned` is unchanged.
 
-14. **Subscriber order respected.** Inject a mock `RunStatsReader` whose `lifetime()` implementation records the timestamp of each call. In a test session, verify that `lifetime()` was called during `featEvaluator.subscriber` processing of `RunEnded`, and that the returned value already has `lastRun` set to the just-completed run (i.e., the real `runStats.subscriber` ran first).
+14. **Subscriber order respected.** Two parts. (a) Inject a stub `RunStatsReader` returning a pre-populated `LifetimeStats` with `lastRun` set, and assert `evaluateFeat` runs against a context whose `lifetime.lastRun` is that run (proves the evaluator reads `runStats.lifetime()` at `RunEnded` time, not stale state). (b) Through the real `createGameplayRuntime`, run a winning session end-to-end and assert a feat that depends on the just-ended run's data is earned — proving the real `runStats.subscriber` ran before `featEvaluator.subscriber` so `lastRun` was populated in time.
 
 15. **`computeFragmentBalance`.** A `FeatsProfile` with `first-survivor` and `swift-clear` earned returns `10 + 20 = 30`. An entry in `earned` with no matching catalog definition contributes 0.
 
