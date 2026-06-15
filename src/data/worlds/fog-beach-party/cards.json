@@ -6,7 +6,6 @@
       "kind": "player",
       "name": "Flashlight",
       "insetKey": "fog-inset-flashlight",
-      "energyCost": 1,
       "effect": { "kind": "GainLight", "amount": 2 }
     },
     "Flare Gun": {
@@ -15,14 +14,27 @@
       "insetKey": "fog-inset-flare-gun",
       "energyCost": 1,
       "exhaust": true,
-      "effect": { "kind": "GainLight", "amount": 6 }
+      "effect": {
+        "kind": "Modal",
+        "branches": [
+          { "kind": "DealProgress", "base": 2, "bonus": { "tag": "Hidden", "amount": 2 } },
+          { "kind": "GainLight", "amount": 6 }
+        ]
+      }
     },
     "Bonfire": {
       "kind": "player",
       "name": "Bonfire",
       "insetKey": "fog-inset-bonfire",
       "energyCost": 2,
-      "effect": { "kind": "GainLight", "amount": 4 }
+      "exhaust": true,
+      "effect": {
+        "kind": "Sequence",
+        "steps": [
+          { "kind": "DealProgressAll", "base": 1 },
+          { "kind": "GainLight", "amount": 4 }
+        ]
+      }
     },
     "Searchlight": {
       "kind": "player",
@@ -30,7 +42,7 @@
       "insetKey": "fog-inset-searchlight",
       "energyCost": 2,
       "exhaust": true,
-      "effect": { "kind": "DealProgressAll", "base": 1, "bonus": { "tag": "Hidden", "amount": 1 } }
+      "effect": { "kind": "DealProgressAll", "base": 1, "bonus": { "tag": "Hidden", "amount": 2 } }
     },
     "Rolling Fog": {
       "kind": "world",
@@ -52,7 +64,7 @@
       "keywords": ["Concealed:1", "Hidden"],
       "discardable": true,
       "onDiscarded": { "kind": "None" },
-      "onCleared": { "kind": "None" },
+      "onCleared": { "kind": "GainCard", "template": "Barricade" },
       "onPartialClear": { "kind": "None" },
       "onEndOfTurn": { "kind": "None" }
     },
@@ -60,7 +72,7 @@
       "kind": "world",
       "name": "The Bonfire",
       "insetKey": "fog-inset-the-bonfire",
-      "cost": 8,
+      "cost": 6,
       "keywords": ["Hidden"],
       "discardable": true,
       "onDiscarded": { "kind": "None" },
@@ -85,7 +97,7 @@
       "discardable": true,
       "onDiscarded": { "kind": "Damage", "amount": 2 },
       "onCleared": { "kind": "None" },
-      "onPartialClear": { "kind": "None" },
+      "onPartialClear": { "kind": "Damage", "amount": 1 },
       "onEndOfTurn": { "kind": "Damage", "amount": 2 }
     },
     "The Tide Coming In": {
@@ -112,7 +124,7 @@
       "onPartialClear": { "kind": "None" },
       "onEndOfTurn": {
         "kind": "DamageScaled",
-        "base": 0,
+        "base": 1,
         "per": { "kind": "KeywordInHand", "keyword": "Concealed" },
         "amount": 1
       }
@@ -138,7 +150,7 @@
       {
         "cards": [
           { "templateId": "The Tide Coming In", "count": 3 },
-          { "templateId": "Something in the Mist", "count": 2 },
+          { "templateId": "Something in the Mist", "count": 3 },
           { "templateId": "Whiteout", "count": 3 },
           { "templateId": "The Walker", "count": 1 }
         ]
