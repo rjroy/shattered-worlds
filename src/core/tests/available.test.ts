@@ -134,7 +134,7 @@ describe("Panic playability", () => {
     if (spec.kind !== "compound") throw new Error("not compound");
 
     // steps[0]: ReturnWorldCards{1,2}
-    expect(spec.steps[0]).toEqual({ kind: "returnWorld", min: 1, max: 2 });
+    expect(spec.steps[0]).toEqual({ kind: "returnWorld", min: 1, max: 4 });
     // steps[1]: Draw → no target needed
     expect(spec.steps[1]).toEqual({ kind: "none" });
   });

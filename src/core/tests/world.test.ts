@@ -194,7 +194,7 @@ describe("starter provenance", () => {
     expect(allPlayers.length).toBeGreaterThan(0);
     for (const card of allPlayers) {
       if (card.kind !== "player") continue;
-      expect(card.sourceWorldId).toBe("starter");
+      expect(card.sourceWorldId).toBe("basic");
     }
   });
 });

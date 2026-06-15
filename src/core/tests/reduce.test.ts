@@ -577,7 +577,7 @@ describe("Adrenaline discardPlayer", () => {
 // ---------------------------------------------------------------------------
 
 describe("Regroup destroyHand", () => {
-  it("Regroup with no destroyIds plays without destroying anything", () => {
+  it("Regroup with no destroyIds plays with only destroying self", () => {
     const { state: base } = createWorld(catalog, worldData, 42);
     const [regroup, s1] = mintCard(catalog, base, "Regroup");
     const [rubble, s2] = mintCard(catalog, s1, "Rubble");
@@ -594,7 +594,13 @@ describe("Regroup destroyHand", () => {
 
     const types = result.events.map((e) => e.type);
     expect(types).toContain("CardPlayed");
-    expect(types).not.toContain("CardDestroyed");
+    expect(types).toContain("CardDestroyed");
+
+    const destroyedIds = result.events
+      .filter((e) => e.type == "CardDestroyed")
+      .flatMap((e) => e.ids);
+    expect(destroyedIds.length).toBe(1);
+    expect(destroyedIds).toContain(regroup.id);
   });
 
   it("Regroup with destroyIds removes the card from hand permanently", () => {
