@@ -3,7 +3,7 @@ import { describe, expect, it } from 'bun:test'
 import type { WorldData } from '../../core/index'
 import { catalog, worldData } from '../../core/tests/testFixture'
 import { createGameplaySession } from '../runtime/gameplaySession'
-import type { GameplayBatch, RunStreamItem } from '../runtime/gameplayEventStream'
+import type { GameplayBatch, RunEnded, RunStarted, RunStreamItem } from '../runtime/gameplayEventStream'
 
 function createGuaranteedWinWorldData(): WorldData {
   return {
@@ -80,15 +80,16 @@ describe('gameplaySession integration', () => {
       'GameplayBatch',
       'RunEnded',
     ])
-    expect(firstHistory[0]).toEqual({
-      kind: 'RunStarted',
-      sessionId: 'shared-history',
-      worldId: worldData.worldId,
-      seed: 17,
-      appliedModifiers: [],
-      timestamp: 2_000,
-    })
-    expect(firstHistory.at(-1)).toEqual({
+    const started = firstHistory[0]
+    expect(started?.kind).toBe('RunStarted')
+    expect(started && 'sessionId' in started ? started.sessionId : undefined).toBe('shared-history')
+    expect(started && 'worldId' in started ? started.worldId : undefined).toBe(worldData.worldId)
+    expect(started && 'seed' in started ? started.seed : undefined).toBe(17)
+    expect(started && 'appliedModifiers' in started ? started.appliedModifiers : undefined).toEqual([])
+    expect(started && 'timestamp' in started ? started.timestamp : undefined).toBe(2_000)
+    expect(started && 'initialEvents' in started ? Array.isArray(started.initialEvents) : false).toBe(true)
+    expect(started && 'initialState' in started ? started.initialState : undefined).toBeDefined()
+    expect(firstHistory.at(-1)).toMatchObject({
       kind: 'RunEnded',
       sessionId: 'shared-history',
       outcome: 'lost',
@@ -133,15 +134,14 @@ describe('gameplaySession integration', () => {
 
     const runEndedItems = items.filter((item) => item.kind === 'RunEnded')
 
-    expect(runEndedItems).toEqual([
-      {
-        kind: 'RunEnded',
-        sessionId: 'winning-history',
-        outcome: 'won',
-        finalActIndex: session.state.actIndex,
-        timestamp: 3_000,
-      },
-    ])
+    expect(runEndedItems).toHaveLength(1)
+    expect(runEndedItems[0]).toMatchObject({
+      kind: 'RunEnded',
+      sessionId: 'winning-history',
+      outcome: 'won',
+      finalActIndex: session.state.actIndex,
+      timestamp: 3_000,
+    })
     expect(session.state.actIndex).toBe(0)
   })
 
@@ -185,5 +185,155 @@ describe('gameplaySession integration', () => {
     expect(source).toContain('statsTransfer?.inspectImport')
     expect(source).toContain('statsTransfer?.applyImport')
     expect(source).toContain("this.scene.start('WorldSelect')")
+  })
+})
+
+describe('RunStarted Phase 2 — initialEvents and initialState', () => {
+  it('RunStarted.initialEvents contains HazardAdded for world cards in the opening hand', () => {
+    const captured: RunStarted[] = []
+    createGameplaySession(catalog, worldData, 42, {
+      clock: () => 0,
+      makeSessionId: () => 'phase2-test',
+      subscribers: [
+        (item) => {
+          if (item.kind === 'RunStarted') captured.push(item)
+        },
+      ],
+    })
+
+    expect(captured).toHaveLength(1)
+    const started = captured[0]!
+    expect(Array.isArray(started.initialEvents)).toBe(true)
+
+    // The opening hand always includes world cards (HazardAdded events from
+    // the startTurn draw). The zombie-big-box world starts with 2 world cards.
+    const hazardEvents = started.initialEvents.filter((e) => e.type === 'HazardAdded')
+    expect(hazardEvents.length).toBeGreaterThan(0)
+  })
+
+  it('RunStarted.initialState has the opening hand populated', () => {
+    const captured: RunStarted[] = []
+    createGameplaySession(catalog, worldData, 42, {
+      clock: () => 0,
+      makeSessionId: () => 'phase2-state-test',
+      subscribers: [
+        (item) => {
+          if (item.kind === 'RunStarted') captured.push(item)
+        },
+      ],
+    })
+
+    expect(captured).toHaveLength(1)
+    const started = captured[0]!
+    expect(started.initialState).toBeDefined()
+    expect(started.initialState.hand.length).toBeGreaterThan(0)
+    expect(started.initialState.worldId).toBe(worldData.worldId)
+  })
+
+  it('RunStarted.initialEvents is deterministic — same seed produces same events', () => {
+    function captureInitialEvents(seed: number) {
+      let captured: RunStarted | undefined
+      createGameplaySession(catalog, worldData, seed, {
+        clock: () => 0,
+        makeSessionId: () => `det-test-${seed}`,
+        subscribers: [
+          (item) => {
+            if (item.kind === 'RunStarted') captured = item
+          },
+        ],
+      })
+      return captured?.initialEvents ?? []
+    }
+
+    const run1 = captureInitialEvents(7)
+    const run2 = captureInitialEvents(7)
+    expect(run1).toEqual(run2)
+
+    const run3 = captureInitialEvents(8)
+    // Different seeds can produce different event sequences (different shuffle order).
+    // At minimum, verify both are valid non-empty arrays.
+    expect(run3.length).toBeGreaterThan(0)
+    expect(run1.length).toBeGreaterThan(0)
+  })
+})
+
+// REQ-EVENTS-16 (Phase 3): RunEnded.finalState
+describe('RunEnded Phase 3 — finalState', () => {
+  it('RunEnded.finalState is defined and contains valid game state on abandon', () => {
+    const capturedEnded: RunEnded[] = []
+    createGameplaySession(catalog, worldData, 42, {
+      clock: () => 0,
+      subscribers: [
+        (item) => {
+          if (item.kind === 'RunEnded') capturedEnded.push(item)
+        },
+      ],
+    }).abandon()
+
+    expect(capturedEnded).toHaveLength(1)
+    const ended = capturedEnded[0]!
+    expect(ended.finalState).toBeDefined()
+    expect(ended.finalState.hp).toBeGreaterThan(0)
+    expect(ended.outcome).toBe('abandoned')
+  })
+
+  it('RunEnded.finalState hp and energy match session state at the moment of close', () => {
+    const capturedEnded: RunEnded[] = []
+    const session = createGameplaySession(catalog, worldData, 42, {
+      clock: () => 0,
+      subscribers: [
+        (item) => {
+          if (item.kind === 'RunEnded') capturedEnded.push(item)
+        },
+      ],
+    })
+
+    const stateBeforeClose = session.state
+    session.abandon()
+
+    expect(capturedEnded).toHaveLength(1)
+    const ended = capturedEnded[0]!
+    expect(ended.finalState.hp).toBe(stateBeforeClose.hp)
+    expect(ended.finalState.energy).toBe(stateBeforeClose.energy)
+  })
+
+  it('RunEnded.finalState matches the terminal game state after a lost run', () => {
+    const capturedEnded: RunEnded[] = []
+    const session = createGameplaySession(catalog, worldData, 17, {
+      clock: () => 0,
+      subscribers: [
+        (item) => {
+          if (item.kind === 'RunEnded') capturedEnded.push(item)
+        },
+      ],
+    })
+
+    for (let turn = 0; turn < 4; turn += 1) {
+      session.dispatch({ type: 'EndTurn' })
+    }
+
+    expect(session.state.status).toBe('lost')
+    expect(capturedEnded).toHaveLength(1)
+    const ended = capturedEnded[0]!
+    expect(ended.outcome).toBe('lost')
+    expect(ended.finalState.hp).toBe(session.state.hp)
+    expect(ended.finalState.status).toBe('lost')
+    expect(ended.finalState.actIndex).toBe(session.state.actIndex)
+  })
+
+  it('RunEnded.finalState is a deep-frozen snapshot independent of live session state', () => {
+    const capturedEnded: RunEnded[] = []
+    createGameplaySession(catalog, worldData, 42, {
+      clock: () => 0,
+      subscribers: [
+        (item) => {
+          if (item.kind === 'RunEnded') capturedEnded.push(item)
+        },
+      ],
+    }).abandon()
+
+    const ended = capturedEnded[0]!
+    expect(Object.isFrozen(ended.finalState)).toBe(true)
+    expect(Object.isFrozen(ended.finalState.hand)).toBe(true)
   })
 })

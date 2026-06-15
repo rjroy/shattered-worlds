@@ -12,7 +12,7 @@ import { catalog, worldData } from "./testFixture";
 describe("refillHand draw table", () => {
   it(`0 world cards held → draws ${WORLD_CONSTS.startWorldCards} world + ${WORLD_CONSTS.startWorldCards} player (total ${WORLD_CONSTS.maxHandSize})`, () => {
     // createWorld already fills hand; start from raw piles instead
-    const base = createWorld(catalog, worldData, 1);
+    const { state: base } = createWorld(catalog, worldData, 1);
     // Move all hand cards back to their piles so hand is empty
     const playerCards = base.hand.filter((c) => c.kind === "player");
     const worldCards = base.hand.filter((c) => c.kind === "world") as WorldCard[];
@@ -35,7 +35,7 @@ describe("refillHand draw table", () => {
   });
 
   it(`1 world card held → draws 2 world + 3 player (total ${WORLD_CONSTS.maxHandSize})`, () => {
-    const base = createWorld(catalog, worldData, 1);
+    const { state: base } = createWorld(catalog, worldData, 1);
     const playerCards = base.hand.filter((c) => c.kind === "player");
     const worldCards = base.hand.filter((c) => c.kind === "world") as WorldCard[];
 
@@ -59,7 +59,7 @@ describe("refillHand draw table", () => {
   });
 
   it(`2 world cards held → draws 1 world + ${WORLD_CONSTS.maxHandSize - 3} player (total ${WORLD_CONSTS.maxHandSize})`, () => {
-    const base = createWorld(catalog, worldData, 1);
+    const { state: base } = createWorld(catalog, worldData, 1);
     const playerCards = base.hand.filter((c) => c.kind === "player");
 
     // Keep both world cards in hand (they came from createWorld)
@@ -89,7 +89,7 @@ describe("refillHand draw table", () => {
 
 describe("refillHand with full hand", () => {
   it(`returns no events and unchanged state when hand has ${WORLD_CONSTS.maxHandSize} cards and worldDraw is empty`, () => {
-    const base = createWorld(catalog, worldData, 1);
+    const { state: base } = createWorld(catalog, worldData, 1);
 
     const state: GameState = {
       ...base,
@@ -115,7 +115,7 @@ describe("refillHand with full hand", () => {
 
 describe("drawWorld act advancement", () => {
   it("shuffles acts[0] into worldDraw and emits ActAdvanced when worldDraw is empty", () => {
-    const base = createWorld(catalog, worldData, 1);
+    const { state: base } = createWorld(catalog, worldData, 1);
 
     // Construct a state with worldDraw empty but acts non-empty
     const act2 = base.acts[0];
@@ -153,7 +153,7 @@ describe("drawWorld act advancement", () => {
 
 describe("drawWorld exhaustion safety", () => {
   it("returns empty events and unchanged hand when both worldDraw and acts are empty", () => {
-    const base = createWorld(catalog, worldData, 1);
+    const { state: base } = createWorld(catalog, worldData, 1);
     const state: GameState = {
       ...base,
       hand: [],
@@ -176,7 +176,7 @@ describe("drawWorld exhaustion safety", () => {
 describe("drawPlayer discard reshuffle", () => {
   it("reshuffles discard mid-draw, emits DeckShuffled, draws all 4 cards", () => {
     // Build a state using mintCard to get valid card objects
-    let state: GameState = createWorld(catalog, worldData, 1);
+    let state: GameState = createWorld(catalog, worldData, 1).state;
 
     // Clear all piles and hand, set up 1 in draw + 3 in discard
     const [c1, s1] = mintCard(catalog, state, "Sprint");
@@ -202,17 +202,17 @@ describe("drawPlayer discard reshuffle", () => {
 
 describe("createWorld opening deal", () => {
   it(`hand has exactly ${WORLD_CONSTS.maxHandSize} cards`, () => {
-    const state = createWorld(catalog, worldData, 42);
+    const { state } = createWorld(catalog, worldData, 42);
     expect(state.hand).toHaveLength(WORLD_CONSTS.maxHandSize);
   });
 
   it(`hand has exactly ${WORLD_CONSTS.startWorldCards} world cards`, () => {
-    const state = createWorld(catalog, worldData, 42);
+    const { state } = createWorld(catalog, worldData, 42);
     expect(state.hand.filter((c) => c.kind === "world")).toHaveLength(WORLD_CONSTS.startWorldCards);
   });
 
   it(`hand has exactly ${WORLD_CONSTS.startPlayerCards} player cards`, () => {
-    const state = createWorld(catalog, worldData, 42);
+    const { state } = createWorld(catalog, worldData, 42);
     expect(state.hand.filter((c) => c.kind === "player")).toHaveLength(
       WORLD_CONSTS.startPlayerCards,
     );
@@ -225,14 +225,14 @@ describe("createWorld opening deal", () => {
 
 describe("determinism", () => {
   it("same seed produces identical hand card names", () => {
-    const a = createWorld(catalog, worldData, 1);
-    const b = createWorld(catalog, worldData, 1);
+    const { state: a } = createWorld(catalog, worldData, 1);
+    const { state: b } = createWorld(catalog, worldData, 1);
     expect(a.hand.map((c) => c.name)).toEqual(b.hand.map((c) => c.name));
   });
 
   it("different seeds produce different hand card name orders", () => {
-    const a = createWorld(catalog, worldData, 1);
-    const b = createWorld(catalog, worldData, 2);
+    const { state: a } = createWorld(catalog, worldData, 1);
+    const { state: b } = createWorld(catalog, worldData, 2);
     // The probability of accidental equality is negligible given shuffled decks
     const aNamesStr = a.hand.map((c) => c.name).join(",");
     const bNamesStr = b.hand.map((c) => c.name).join(",");
@@ -258,7 +258,7 @@ describe("resolveForceDestroy", () => {
   }
 
   it("no pending charge is a no-op", () => {
-    const base = createWorld(catalog, worldData, 1);
+    const { state: base } = createWorld(catalog, worldData, 1);
     const [players, s1] = handOfPlayers(base, 3);
     const state: GameState = { ...s1, hand: players, pendingForceDestroy: 0 };
 
@@ -269,7 +269,7 @@ describe("resolveForceDestroy", () => {
   });
 
   it("destroys one random player card and drains the charge", () => {
-    const base = createWorld(catalog, worldData, 1);
+    const { state: base } = createWorld(catalog, worldData, 1);
     const [players, s1] = handOfPlayers(base, 3);
     const state: GameState = { ...s1, hand: players, pendingForceDestroy: 1 };
 
@@ -286,7 +286,7 @@ describe("resolveForceDestroy", () => {
   });
 
   it("spares world cards — only player cards are eligible", () => {
-    const base = createWorld(catalog, worldData, 1);
+    const { state: base } = createWorld(catalog, worldData, 1);
     const [zombie, s1] = mintCard(catalog, base, "Zombie");
     const [players, s2] = handOfPlayers(s1, 1);
     const state: GameState = {
@@ -304,7 +304,7 @@ describe("resolveForceDestroy", () => {
   });
 
   it("fizzles (drains the charge) when no player cards are present", () => {
-    const base = createWorld(catalog, worldData, 1);
+    const { state: base } = createWorld(catalog, worldData, 1);
     const [zombie, s1] = mintCard(catalog, base, "Zombie");
     const state: GameState = {
       ...s1,
@@ -320,7 +320,7 @@ describe("resolveForceDestroy", () => {
   });
 
   it("multiple charges destroy multiple distinct player cards", () => {
-    const base = createWorld(catalog, worldData, 1);
+    const { state: base } = createWorld(catalog, worldData, 1);
     const [players, s1] = handOfPlayers(base, 3);
     const state: GameState = { ...s1, hand: players, pendingForceDestroy: 2 };
 
@@ -350,7 +350,7 @@ describe("resolveForceDestroy with Brace", () => {
   }
 
   it("charges >= pending: all absorbed, zero cards destroyed, counter decremented", () => {
-    const base = createWorld(catalog, worldData, 1);
+    const { state: base } = createWorld(catalog, worldData, 1);
     const [players, s1] = handOfPlayers(base, 3);
     const state: GameState = {
       ...s1,
@@ -377,7 +377,7 @@ describe("resolveForceDestroy with Brace", () => {
   });
 
   it("charges < pending: partial absorption, remainder destroys cards", () => {
-    const base = createWorld(catalog, worldData, 1);
+    const { state: base } = createWorld(catalog, worldData, 1);
     const [players, s1] = handOfPlayers(base, 3);
     const state: GameState = {
       ...s1,
@@ -406,7 +406,7 @@ describe("resolveForceDestroy with Brace", () => {
   });
 
   it("zero charges: unchanged behavior (existing ForceDestroy logic)", () => {
-    const base = createWorld(catalog, worldData, 1);
+    const { state: base } = createWorld(catalog, worldData, 1);
     const [players, s1] = handOfPlayers(base, 3);
     const state: GameState = {
       ...s1,
@@ -430,7 +430,7 @@ describe("resolveForceDestroy with Brace", () => {
   });
 
   it("emits BraceConsumed before CardDestroyed", () => {
-    const base = createWorld(catalog, worldData, 1);
+    const { state: base } = createWorld(catalog, worldData, 1);
     const [players, s1] = handOfPlayers(base, 3);
     const state: GameState = {
       ...s1,
@@ -447,5 +447,38 @@ describe("resolveForceDestroy with Brace", () => {
     expect(braceIdx).toBeGreaterThanOrEqual(0);
     expect(destroyIdx).toBeGreaterThanOrEqual(0);
     expect(braceIdx).toBeLessThan(destroyIdx);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// 10. HazardAdded event
+// ---------------------------------------------------------------------------
+
+describe("HazardAdded event", () => {
+  it("drawWorld emits HazardAdded with templateId for each world card drawn", () => {
+    let state = createWorld(catalog, worldData, 1).state;
+    // Move all cards out of hand and clear worldDraw of existing, mint fresh
+    const [zombie, s1] = mintCard(catalog, state, "Zombie");
+    state = { ...s1, hand: [], worldDraw: [zombie as WorldCard], acts: [] };
+
+    const { events } = drawWorld(state, 1);
+
+    const hazardAdded = events.find((e) => e.type === "HazardAdded");
+    expect(hazardAdded).toBeDefined();
+    if (hazardAdded?.type === "HazardAdded") {
+      expect(hazardAdded.templateId).toBe("Zombie");
+    }
+  });
+
+  it("drawWorld emits one HazardAdded per card drawn (two cards = two events)", () => {
+    let state = createWorld(catalog, worldData, 1).state;
+    const [w1, s1] = mintCard(catalog, state, "Zombie");
+    const [w2, s2] = mintCard(catalog, s1, "Rubble");
+    state = { ...s2, hand: [], worldDraw: [w1 as WorldCard, w2 as WorldCard], acts: [] };
+
+    const { events } = drawWorld(state, 2);
+
+    const hazardEvents = events.filter((e) => e.type === "HazardAdded");
+    expect(hazardEvents).toHaveLength(2);
   });
 });

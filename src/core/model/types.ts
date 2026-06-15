@@ -199,4 +199,6 @@ export type GameEvent =
   | { type: "WorldLost" }
   | { type: "BraceChanged"; braceCharges: number }
   | { type: "BraceConsumed"; absorbed: number; remaining: number }
-  | { type: "WorldCardsExiled"; ids: readonly CardId[] };
+  | { type: "WorldCardsExiled"; ids: readonly CardId[] }
+  | { type: "HealReceived"; amount: number }
+  | { type: "HazardAdded"; templateId: string };

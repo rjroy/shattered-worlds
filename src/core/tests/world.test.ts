@@ -13,13 +13,13 @@ import { catalog, worldData } from "./testFixture";
 
 describe("Act 1 composition", () => {
   it("worldDraw + hand world cards total 10 after opening deal", () => {
-    const state = createWorld(catalog, worldData, 42);
+    const { state } = createWorld(catalog, worldData, 42);
     const handWorldCount = state.hand.filter((c) => c.kind === "world").length;
     expect(state.worldDraw.length + handWorldCount).toBe(10);
   });
 
   it("worldDraw + hand world cards contain 3 Strange Sounds, 4 Rubble, 3 Screams", () => {
-    const state = createWorld(catalog, worldData, 42);
+    const { state } = createWorld(catalog, worldData, 42);
     const handWorldCards = state.hand.filter((c) => c.kind === "world");
     const allAct1 = [...state.worldDraw, ...handWorldCards];
     const names = allAct1.map((c) => c.name);
@@ -35,12 +35,12 @@ describe("Act 1 composition", () => {
 
 describe("act queuing", () => {
   it("acts has 2 entries", () => {
-    const state = createWorld(catalog, worldData, 42);
+    const { state } = createWorld(catalog, worldData, 42);
     expect(state.acts).toHaveLength(2);
   });
 
   it("acts[0] has 10 cards: Rubble×2, Zombie×3, Corpse×3, Find Baseball Bat×2", () => {
-    const state = createWorld(catalog, worldData, 42);
+    const { state } = createWorld(catalog, worldData, 42);
     const act2 = state.acts[0];
     if (act2 === undefined) throw new Error("acts[0] missing");
 
@@ -53,7 +53,7 @@ describe("act queuing", () => {
   });
 
   it("acts[1] has 10 cards: Find Shotgun×1, Zombie×4, Corpse×2, Echoing Aisles×2, The Walker×1", () => {
-    const state = createWorld(catalog, worldData, 42);
+    const { state } = createWorld(catalog, worldData, 42);
     const act3 = state.acts[1];
     if (act3 === undefined) throw new Error("acts[1] missing");
 
@@ -73,13 +73,13 @@ describe("act queuing", () => {
 
 describe("playerDraw", () => {
   it("playerDraw + hand player cards total 10 after opening deal", () => {
-    const state = createWorld(catalog, worldData, 42);
+    const { state } = createWorld(catalog, worldData, 42);
     const handPlayerCount = state.hand.filter((c) => c.kind === "player").length;
     expect(state.playerDraw.length + handPlayerCount).toBe(10);
   });
 
   it("playerDraw + hand player cards contain correct starter names", () => {
-    const state = createWorld(catalog, worldData, 42);
+    const { state } = createWorld(catalog, worldData, 42);
     const handPlayerCards = state.hand.filter((c) => c.kind === "player");
     const allStarter = [...state.playerDraw, ...handPlayerCards];
     const names = allStarter.map((c) => c.name);
@@ -98,20 +98,20 @@ describe("playerDraw", () => {
 
 describe("determinism", () => {
   it("two calls with the same seed produce identical Act 1 card name order", () => {
-    const a = createWorld(catalog, worldData, 42);
-    const b = createWorld(catalog, worldData, 42);
+    const { state: a } = createWorld(catalog, worldData, 42);
+    const { state: b } = createWorld(catalog, worldData, 42);
     expect(a.worldDraw.map((c) => c.name)).toEqual(b.worldDraw.map((c) => c.name));
   });
 
   it("two calls with the same seed produce identical playerDraw name order", () => {
-    const a = createWorld(catalog, worldData, 42);
-    const b = createWorld(catalog, worldData, 42);
+    const { state: a } = createWorld(catalog, worldData, 42);
+    const { state: b } = createWorld(catalog, worldData, 42);
     expect(a.playerDraw.map((c) => c.name)).toEqual(b.playerDraw.map((c) => c.name));
   });
 
   it("different seeds produce different opening hands (same card multiset, different order)", () => {
-    const a = createWorld(catalog, worldData, 1);
-    const b = createWorld(catalog, worldData, 2);
+    const { state: a } = createWorld(catalog, worldData, 1);
+    const { state: b } = createWorld(catalog, worldData, 2);
 
     // Compare full Act 1 card sequence: worldDraw + world cards in hand
     const aAct1 = [...a.worldDraw, ...a.hand.filter((c) => c.kind === "world")];
@@ -143,7 +143,7 @@ describe("determinism", () => {
 
 describe("unique ids", () => {
   it("all 40 card ids across all piles and hand are unique", () => {
-    const state = createWorld(catalog, worldData, 42);
+    const { state } = createWorld(catalog, worldData, 42);
 
     const act2 = state.acts[0] ?? [];
     const act3 = state.acts[1] ?? [];
@@ -164,17 +164,17 @@ describe("unique ids", () => {
 
 describe("hand", () => {
   it("createWorld deals an opening hand of 6 cards", () => {
-    const state = createWorld(catalog, worldData, 42);
+    const { state } = createWorld(catalog, worldData, 42);
     expect(state.hand).toHaveLength(6);
   });
 
   it("opening hand has exactly 2 world cards", () => {
-    const state = createWorld(catalog, worldData, 42);
+    const { state } = createWorld(catalog, worldData, 42);
     expect(state.hand.filter((c) => c.kind === "world")).toHaveLength(2);
   });
 
   it("opening hand has exactly 4 player cards", () => {
-    const state = createWorld(catalog, worldData, 42);
+    const { state } = createWorld(catalog, worldData, 42);
     expect(state.hand.filter((c) => c.kind === "player")).toHaveLength(4);
   });
 });
@@ -184,8 +184,8 @@ describe("hand", () => {
 // ---------------------------------------------------------------------------
 
 describe("starter provenance", () => {
-  it('all player cards in playerDraw have sourceWorldId === "basic"', () => {
-    const state = createWorld(catalog, worldData, 42);
+  it('all player cards in playerDraw have sourceWorldId === "starter"', () => {
+    const { state } = createWorld(catalog, worldData, 42);
     // Collect all player cards across playerDraw and hand
     const handPlayers = state.hand.filter((c) => c.kind === "player");
     const drawPlayers = state.playerDraw.filter((c) => c.kind === "player");
@@ -205,7 +205,7 @@ describe("starter provenance", () => {
 
 describe("energy initialization", () => {
   it("createWorld initializes energy to 1 (opening hand is a turn start)", () => {
-    const state = createWorld(catalog, worldData, 42);
+    const { state } = createWorld(catalog, worldData, 42);
     expect(state.energy).toBe(1);
   });
 });
@@ -221,21 +221,21 @@ function litWorldData(startLight: number): WorldData {
 
 describe("Light initialization", () => {
   it("createWorld defaults light to 0 when the world omits startLight", () => {
-    const state = createWorld(catalog, worldData, 42);
+    const { state } = createWorld(catalog, worldData, 42);
     expect(state.light).toBe(0);
   });
 
   it("createWorld seeds light from world.startLight (minus the opening-turn decay)", () => {
     // createWorld runs one startTurn to deal the opening hand, so a startLight
     // of 4 has already decayed one step to 3 by the time the hand is dealt.
-    const state = createWorld(catalog, litWorldData(4), 42);
+    const { state } = createWorld(catalog, litWorldData(4), 42);
     expect(state.light).toBe(3);
   });
 });
 
 describe("Light decay clock (startTurn)", () => {
   it("decrements light and emits LightChanged when light > 0", () => {
-    const base = createWorld(catalog, worldData, 42);
+    const { state: base } = createWorld(catalog, worldData, 42);
     const lit = { ...base, light: 2 };
     const { state, events } = startTurn(lit);
     expect(state.light).toBe(1);
@@ -243,21 +243,21 @@ describe("Light decay clock (startTurn)", () => {
   });
 
   it("floors at 0 and emits LightChanged when stepping down from 1", () => {
-    const base = createWorld(catalog, worldData, 42);
+    const { state: base } = createWorld(catalog, worldData, 42);
     const { state, events } = startTurn({ ...base, light: 1 });
     expect(state.light).toBe(0);
     expect(events.some((e) => e.type === "LightChanged" && e.light === 0)).toBe(true);
   });
 
   it("emits NO LightChanged when light is already 0 (emit-on-change)", () => {
-    const base = createWorld(catalog, worldData, 42);
+    const { state: base } = createWorld(catalog, worldData, 42);
     const { state, events } = startTurn({ ...base, light: 0 });
     expect(state.light).toBe(0);
     expect(events.some((e) => e.type === "LightChanged")).toBe(false);
   });
 
   it("fires decay BEFORE the energy gain in the event stream", () => {
-    const base = createWorld(catalog, worldData, 42);
+    const { state: base } = createWorld(catalog, worldData, 42);
     const { events } = startTurn({ ...base, light: 2, energy: 0 });
     const lightIdx = events.findIndex((e) => e.type === "LightChanged");
     const energyIdx = events.findIndex((e) => e.type === "EnergyChanged");
@@ -267,7 +267,7 @@ describe("Light decay clock (startTurn)", () => {
   });
 
   it("fires decay BEFORE the hand refill (cards drawn into the dimmer light)", () => {
-    const base = createWorld(catalog, worldData, 42);
+    const { state: base } = createWorld(catalog, worldData, 42);
     // Empty the hand so the refill produces CardsDrawn events to order against.
     const { events } = startTurn({ ...base, light: 2, hand: [] });
     const lightIdx = events.findIndex((e) => e.type === "LightChanged");
@@ -327,7 +327,7 @@ describe("onCleared provenance", () => {
   it("a GainCard onCleared mints a player card stamped with the active worldId", () => {
     // Start from a createWorld state so nextId and rng are valid, then override
     // worldId to 'zombie-big-box' before firing the onCleared effect.
-    const base = createWorld(catalog, worldData, 1);
+    const { state: base } = createWorld(catalog, worldData, 1);
     const state = { ...base, worldId: "zombie-big-box" };
 
     // Strange Sounds onCleared: { kind: 'GainCard', template: 'Listen' }

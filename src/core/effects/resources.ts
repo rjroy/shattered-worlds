@@ -11,14 +11,21 @@ type GainLightEffect = Extract<CardEffect, { kind: "GainLight" }>;
 
 export function heal(state: GameState, n: number): EffectResult {
   const newHp = state.hp + n;
-  const current: GameState = { ...state, hp: newHp };
-  return { state: current, events: [{ type: "HpChanged", hp: newHp }] };
+  return {
+    state: { ...state, hp: newHp },
+    events: [
+      { type: "HpChanged", hp: newHp },
+      { type: "HealReceived", amount: n },
+    ],
+  };
 }
 
 export function gainEnergy(state: GameState, n: number): EffectResult {
   const newEnergy = state.energy + n;
-  const current: GameState = { ...state, energy: newEnergy };
-  return { state: current, events: [{ type: "EnergyChanged", energy: newEnergy }] };
+  return {
+    state: { ...state, energy: newEnergy },
+    events: [{ type: "EnergyChanged", energy: newEnergy }],
+  };
 }
 
 export class HealHandler extends EffectHandler<HealEffect> {

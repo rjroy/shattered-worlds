@@ -10,6 +10,8 @@ import {
 import { createGameplaySession, type GameplaySession, type GameplaySessionOptions } from './gameplaySession'
 import { createRunStatsCollector, type RunStatsReader, type RunStatsStorage } from './runStats'
 import { createStatsTransfer, type StatsTransfer } from './statsTransfer'
+import { createFeatsStore, type FeatsStore } from './featsProfile'
+import { createWitnessCollector, type WitnessStore } from './witnessProfile'
 
 // The runtime owns the stream, failure handling, and the clock — sessions it
 // starts must not override them, or cross-run consumers would see
@@ -26,6 +28,8 @@ export interface GameplayRuntime {
   readonly stream: GameplayEventStream
   readonly runStats: RunStatsReader
   readonly statsTransfer: StatsTransfer
+  readonly witnessStore: WitnessStore
+  readonly featsStore: FeatsStore
   /** Runtime-wide observation: receives items from every session, correlated by sessionId. */
   subscribe(subscriber: RunStreamSubscriber): () => void
   startSession(
@@ -60,11 +64,18 @@ export function createGameplayRuntime(options: GameplayRuntimeOptions = {}): Gam
     visibility: options.visibility,
     subscribeVisibility: options.subscribeVisibility,
   })
-  const statsTransfer =
-    options.clock === undefined ? createStatsTransfer(runStats) : createStatsTransfer(runStats, options.clock)
+  const witnessStore = createWitnessCollector(options.storage)
+  const featsStore = createFeatsStore(options.storage)
+  const statsTransfer = createStatsTransfer({
+    runStats,
+    witness: witnessStore,
+    feats: featsStore,
+    clock: options.clock,
+  })
   const openSessions = new Map<GameplaySession['sessionId'], GameplaySession>()
 
   stream.subscribe(runStats.subscriber)
+  stream.subscribe(witnessStore.subscriber)
   stream.subscribe((item) => {
     if (item.kind === 'RunEnded') {
       openSessions.delete(item.sessionId)
@@ -75,6 +86,8 @@ export function createGameplayRuntime(options: GameplayRuntimeOptions = {}): Gam
     stream,
     runStats,
     statsTransfer,
+    witnessStore,
+    featsStore,
 
     subscribe(subscriber) {
       return stream.subscribe(subscriber)

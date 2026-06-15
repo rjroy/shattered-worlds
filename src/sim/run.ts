@@ -19,7 +19,7 @@ let hadError = false
 
 for (let seed = 1; seed <= N; seed++) {
   try {
-    let state = createWorld(catalog, worldData, seed)
+    let state = createWorld(catalog, worldData, seed).state
     let turns = 0
     let actions = 0
 

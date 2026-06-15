@@ -29,6 +29,10 @@ export interface RunStarted {
   readonly appliedModifiers: readonly SetupModifier[]
   /** Epoch ms from the session's {@link Clock}. */
   readonly timestamp: number
+  /** Events produced by dealing the opening hand (e.g. HazardAdded for world cards). */
+  readonly initialEvents: readonly GameEvent[]
+  /** Game state after the opening hand has been dealt. */
+  readonly initialState: GameState
 }
 
 export interface GameplayDispatchResolution {
@@ -51,6 +55,7 @@ export interface RunEnded {
   readonly outcome: RunOutcome
   readonly finalActIndex: GameState['actIndex']
   readonly timestamp: number
+  readonly finalState: GameState
 }
 
 export type RunStreamItem = RunStarted | GameplayBatch | RunEnded

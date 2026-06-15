@@ -18,7 +18,7 @@ const WORLD_COUNT = 1000
 const MAX_ACTIONS = 500
 
 function runWorld(seed: number): { finalState: GameState; turns: number; actions: number } {
-  let state = createWorld(catalog, worldData, seed)
+  let state = createWorld(catalog, worldData, seed).state
   const rng = rngFromSeed(seed)
   let turns = 0
   let actions = 0
@@ -79,7 +79,7 @@ describe('policy', () => {
 
   test(`ID accounting holds for ${WORLD_COUNT} worlds`, () => {
     for (let seed = 1; seed <= WORLD_COUNT; seed++) {
-      let state = createWorld(catalog, worldData, seed)
+      let state = createWorld(catalog, worldData, seed).state
       const rng = rngFromSeed(seed)
       let actions = 0
 

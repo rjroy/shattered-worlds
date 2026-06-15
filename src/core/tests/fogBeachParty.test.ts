@@ -294,7 +294,7 @@ describe('distinct rewards (REQ-FOG-26)', () => {
 describe('opening Light after turn-start decay', () => {
   it('createWorld then the first startTurn lands at startLight - 1', () => {
     const { catalog, worldData } = buildWorld(FOG_ID)
-    const state = createWorld(catalog, worldData, 12345)
+    const { state } = createWorld(catalog, worldData, 12345)
     // createWorld deals the opening hand via startTurn, which decays Light once.
     expect(state.light).toBe((fogSource.startLight ?? 0) - 1)
   })

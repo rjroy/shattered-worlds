@@ -7,11 +7,16 @@ import { createGameplayBatch, createRunEnded, createRunStarted } from './gamepla
 import { createGameplaySession } from './gameplaySession'
 import {
   createRunStatsCollector,
+  isRunRecord,
   RUN_STATS_LEGACY_V1_KEY,
   RUN_STATS_STORAGE_KEY,
   type RunStatsStorage,
 } from './runStats'
 import { RUN_HISTORY_STORAGE_KEY } from './runHistory'
+
+/** A real GameState sourced from the test fixture — used as a stub wherever
+ *  createRunStarted/createRunEnded require state but the test doesn't care about it. */
+const stubState = createGameplaySession(catalog, worldData, 42).state
 
 function createMemoryStorage(initial?: Record<string, string>): RunStatsStorage & {
   dump(): Record<string, string>
@@ -88,7 +93,7 @@ describe('runStats collector', () => {
       mostProgressInRun: expectedProgress,
     })
     expect(lifetime.durationMs).toBe(300)
-    expect(lifetime.lastRun).toEqual({
+    expect(lifetime.lastRun).toMatchObject({
       sessionId: 'stats-win',
       worldId: 'run-stats-win-world',
       seed: 42,
@@ -163,13 +168,13 @@ describe('runStats collector', () => {
     const state = createGameplaySession(catalog, worldData, 42).state
 
     collector.subscriber(
-      createRunStarted({ sessionId: 'seen', worldId: 'w', seed: 1, appliedModifiers: [], timestamp: 1_000 }),
+      createRunStarted({ sessionId: 'seen', worldId: 'w', seed: 1, appliedModifiers: [], timestamp: 1_000, initialEvents: [], initialState: stubState }),
     )
     collector.subscriber(
       createGameplayBatch('seen', { type: 'EndTurn' }, { state, events: [{ type: 'TurnEnded' }] }, 1_100),
     )
-    collector.subscriber(createRunEnded({ sessionId: 'seen', outcome: 'lost', finalActIndex: 0, timestamp: 1_200 }))
-    collector.subscriber(createRunEnded({ sessionId: 'unseen', outcome: 'lost', finalActIndex: 0, timestamp: 1_300 }))
+    collector.subscriber(createRunEnded({ sessionId: 'seen', outcome: 'lost', finalActIndex: 0, timestamp: 1_200, finalState: stubState }))
+    collector.subscriber(createRunEnded({ sessionId: 'unseen', outcome: 'lost', finalActIndex: 0, timestamp: 1_300, finalState: stubState }))
 
     expect(collector.history().map((run) => run.sessionId)).toEqual(['seen'])
     expect(collector.history()[0]?.turns).toBe(1)
@@ -199,9 +204,9 @@ describe('runStats collector', () => {
     const storage = createMemoryStorage()
     const firstCollector = createRunStatsCollector({ storage })
     firstCollector.subscriber(
-      createRunStarted({ sessionId: 'stored-run', worldId: 'w', seed: 1, appliedModifiers: [], timestamp: 1_000 }),
+      createRunStarted({ sessionId: 'stored-run', worldId: 'w', seed: 1, appliedModifiers: [], timestamp: 1_000, initialEvents: [], initialState: stubState }),
     )
-    firstCollector.subscriber(createRunEnded({ sessionId: 'stored-run', outcome: 'lost', finalActIndex: 0, timestamp: 2_000 }))
+    firstCollector.subscriber(createRunEnded({ sessionId: 'stored-run', outcome: 'lost', finalActIndex: 0, timestamp: 2_000, finalState: stubState }))
 
     storage.setItem(RUN_HISTORY_STORAGE_KEY, 'bad history{')
     const withBadHistory = createRunStatsCollector({ storage })
@@ -404,10 +409,10 @@ describe('runStats collector', () => {
     })
 
     collector.subscriber(
-      createRunStarted({ sessionId: 'after-migration', worldId: 'legacy', seed: 12, appliedModifiers: [], timestamp: 3_000 }),
+      createRunStarted({ sessionId: 'after-migration', worldId: 'legacy', seed: 12, appliedModifiers: [], timestamp: 3_000, initialEvents: [], initialState: stubState }),
     )
     collector.subscriber(
-      createRunEnded({ sessionId: 'after-migration', outcome: 'lost', finalActIndex: 0, timestamp: 4_000 }),
+      createRunEnded({ sessionId: 'after-migration', outcome: 'lost', finalActIndex: 0, timestamp: 4_000, finalState: stubState }),
     )
 
     expect(storage.dump()[RUN_STATS_STORAGE_KEY]).toBeDefined()
@@ -418,9 +423,9 @@ describe('runStats collector', () => {
     const collector = createRunStatsCollector()
 
     collector.subscriber(
-      createRunStarted({ sessionId: 'skewed', worldId: 'w', seed: 1, appliedModifiers: [], timestamp: 5_000 }),
+      createRunStarted({ sessionId: 'skewed', worldId: 'w', seed: 1, appliedModifiers: [], timestamp: 5_000, initialEvents: [], initialState: stubState }),
     )
-    collector.subscriber(createRunEnded({ sessionId: 'skewed', outcome: 'lost', finalActIndex: 0, timestamp: 4_000 }))
+    collector.subscriber(createRunEnded({ sessionId: 'skewed', outcome: 'lost', finalActIndex: 0, timestamp: 4_000, finalState: stubState }))
 
     const lifetime = collector.lifetime()
 
@@ -444,7 +449,7 @@ describe('runStats collector', () => {
     })
 
     collector.subscriber(
-      createRunStarted({ sessionId: 'visible-run', worldId: 'w', seed: 1, appliedModifiers: [], timestamp: 1_000 }),
+      createRunStarted({ sessionId: 'visible-run', worldId: 'w', seed: 1, appliedModifiers: [], timestamp: 1_000, initialEvents: [], initialState: stubState }),
     )
     now = 1_400
     visible = false
@@ -452,7 +457,7 @@ describe('runStats collector', () => {
     now = 2_400
     visible = true
     onVisibilityChange()
-    collector.subscriber(createRunEnded({ sessionId: 'visible-run', outcome: 'lost', finalActIndex: 0, timestamp: 3_000 }))
+    collector.subscriber(createRunEnded({ sessionId: 'visible-run', outcome: 'lost', finalActIndex: 0, timestamp: 3_000, finalState: stubState }))
 
     expect(collector.lifetime().lastRun?.activeDurationMs).toBe(1_000)
     expect(collector.lifetime().durationMs).toBe(1_000)
@@ -472,12 +477,12 @@ describe('runStats collector', () => {
     })
 
     collector.subscriber(
-      createRunStarted({ sessionId: 'hidden-run', worldId: 'w', seed: 1, appliedModifiers: [], timestamp: 1_000 }),
+      createRunStarted({ sessionId: 'hidden-run', worldId: 'w', seed: 1, appliedModifiers: [], timestamp: 1_000, initialEvents: [], initialState: stubState }),
     )
     now = 2_000
     visible = true
     onVisibilityChange()
-    collector.subscriber(createRunEnded({ sessionId: 'hidden-run', outcome: 'lost', finalActIndex: 0, timestamp: 2_500 }))
+    collector.subscriber(createRunEnded({ sessionId: 'hidden-run', outcome: 'lost', finalActIndex: 0, timestamp: 2_500, finalState: stubState }))
 
     expect(collector.lifetime().lastRun?.activeDurationMs).toBe(500)
   })
@@ -496,13 +501,13 @@ describe('runStats collector', () => {
     })
 
     collector.subscriber(
-      createRunStarted({ sessionId: 'skewed-visible', worldId: 'w', seed: 1, appliedModifiers: [], timestamp: 5_000 }),
+      createRunStarted({ sessionId: 'skewed-visible', worldId: 'w', seed: 1, appliedModifiers: [], timestamp: 5_000, initialEvents: [], initialState: stubState }),
     )
     now = 4_000
     visible = false
     onVisibilityChange()
     collector.subscriber(
-      createRunEnded({ sessionId: 'skewed-visible', outcome: 'lost', finalActIndex: 0, timestamp: 4_500 }),
+      createRunEnded({ sessionId: 'skewed-visible', outcome: 'lost', finalActIndex: 0, timestamp: 4_500, finalState: stubState }),
     )
 
     expect(collector.lifetime().lastRun?.activeDurationMs).toBe(0)
@@ -540,7 +545,7 @@ describe('runStats collector', () => {
       }, 1_100),
     )
     collector.subscriber(
-      createRunEnded({ sessionId: 'unseen-session', outcome: 'lost', finalActIndex: 0, timestamp: 1_200 }),
+      createRunEnded({ sessionId: 'unseen-session', outcome: 'lost', finalActIndex: 0, timestamp: 1_200, finalState: stubState }),
     )
 
     expect(collector.lifetime().runs).toBe(0)
@@ -551,7 +556,7 @@ describe('runStats collector', () => {
     const state = createGameplaySession(catalog, worldData, 42).state
 
     collector.subscriber(
-      createRunStarted({ sessionId: 'a', worldId: 'world-a', seed: 1, appliedModifiers: [], timestamp: 1_000 }),
+      createRunStarted({ sessionId: 'a', worldId: 'world-a', seed: 1, appliedModifiers: [], timestamp: 1_000, initialEvents: [], initialState: state }),
     )
     collector.subscriber(
       createRunStarted({
@@ -560,13 +565,15 @@ describe('runStats collector', () => {
         seed: 2,
         appliedModifiers: [{ kind: 'hard-mode' }],
         timestamp: 2_000,
+        initialEvents: [],
+        initialState: state,
       }),
     )
     collector.subscriber(
       createGameplayBatch('a', { type: 'EndTurn' }, { state, events: [{ type: 'TurnEnded' }] }, 1_100),
     )
-    collector.subscriber(createRunEnded({ sessionId: 'a', outcome: 'won', finalActIndex: 0, timestamp: 1_500 }))
-    collector.subscriber(createRunEnded({ sessionId: 'b', outcome: 'lost', finalActIndex: 1, timestamp: 2_700 }))
+    collector.subscriber(createRunEnded({ sessionId: 'a', outcome: 'won', finalActIndex: 0, timestamp: 1_500, finalState: state }))
+    collector.subscriber(createRunEnded({ sessionId: 'b', outcome: 'lost', finalActIndex: 1, timestamp: 2_700, finalState: state }))
 
     const lifetime = collector.lifetime()
 
@@ -591,7 +598,7 @@ describe('runStats collector', () => {
 
     function finishRun(sessionId: string, outcome: 'won' | 'lost' | 'abandoned', turns: number, progress: number): void {
       collector.subscriber(
-        createRunStarted({ sessionId, worldId: 'record-world', seed: 1, appliedModifiers: [], timestamp: 1_000 }),
+        createRunStarted({ sessionId, worldId: 'record-world', seed: 1, appliedModifiers: [], timestamp: 1_000, initialEvents: [], initialState: state }),
       )
       collector.subscriber(
         createGameplayBatch(sessionId, { type: 'EndTurn' }, {
@@ -602,7 +609,7 @@ describe('runStats collector', () => {
           ],
         }, 1_100),
       )
-      collector.subscriber(createRunEnded({ sessionId, outcome, finalActIndex: 0, timestamp: 2_000 }))
+      collector.subscriber(createRunEnded({ sessionId, outcome, finalActIndex: 0, timestamp: 2_000, finalState: state }))
     }
 
     finishRun('first-win', 'won', 5, 10)
@@ -648,5 +655,93 @@ describe('runStats collector', () => {
     copy.runs = 999
 
     expect(collector.lifetime().runs).toBe(0)
+  })
+
+  it('AI #4 — sums HealReceived events into healingReceived', () => {
+    const collector = createRunStatsCollector()
+
+    collector.subscriber(
+      createRunStarted({ sessionId: 'heal-run', worldId: 'w', seed: 1, appliedModifiers: [], timestamp: 1_000, initialEvents: [], initialState: stubState }),
+    )
+    collector.subscriber(
+      createGameplayBatch('heal-run', { type: 'EndTurn' }, {
+        state: stubState,
+        events: [
+          { type: 'HealReceived', amount: 3 },
+          { type: 'HealReceived', amount: 5 },
+        ],
+      }, 1_100),
+    )
+    collector.subscriber(
+      createRunEnded({ sessionId: 'heal-run', outcome: 'lost', finalActIndex: 0, timestamp: 1_200, finalState: stubState }),
+    )
+
+    expect(collector.history()[0]?.healingReceived).toBe(8)
+  })
+
+  it('AI #5 — extracts finalHp and finalResources from the terminal state', () => {
+    const collector = createRunStatsCollector()
+    const terminalState = { ...stubState, hp: 7, energy: 3, light: 0, braceCharges: 0 }
+
+    collector.subscriber(
+      createRunStarted({ sessionId: 'hp-run', worldId: 'w', seed: 1, appliedModifiers: [], timestamp: 1_000, initialEvents: [], initialState: stubState }),
+    )
+    collector.subscriber(
+      createRunEnded({ sessionId: 'hp-run', outcome: 'won', finalActIndex: 0, timestamp: 1_200, finalState: terminalState }),
+    )
+
+    const run = collector.history()[0]
+    expect(run?.finalHp).toBe(7)
+    expect(run?.finalResources).toEqual({ energy: 3, light: 0, brace: 0 })
+  })
+
+  it('AI #6 — old stored RunRecord without new fields passes isRunRecord', () => {
+    // Simulates a record persisted before Phase 4: no finalHp, finalResources, or healingReceived.
+    const oldRecord: unknown = {
+      sessionId: 'old-run',
+      worldId: 'w',
+      seed: 1,
+      appliedModifiers: [],
+      outcome: 'won',
+      finalActIndex: 0,
+      startedAt: 1_000,
+      endedAt: 2_000,
+      activeDurationMs: 1_000,
+      turns: 3,
+      cardsPlayed: 4,
+      progressDealt: 9,
+      damageTaken: 2,
+      hazardsResolved: 1,
+      hazardsDiscarded: 0,
+      cardsDiscarded: 0,
+    }
+
+    expect(isRunRecord(oldRecord)).toBe(true)
+    if (isRunRecord(oldRecord)) {
+      expect(oldRecord.finalHp).toBeUndefined()
+      expect(oldRecord.finalResources).toBeUndefined()
+      expect(oldRecord.healingReceived).toBeUndefined()
+    }
+  })
+
+  it('AI (bonus) — HealReceived in initialEvents counts toward healingReceived', () => {
+    const collector = createRunStatsCollector()
+
+    collector.subscriber(
+      createRunStarted({
+        sessionId: 'opening-heal',
+        worldId: 'w',
+        seed: 1,
+        appliedModifiers: [],
+        timestamp: 1_000,
+        initialEvents: [{ type: 'HealReceived', amount: 4 }],
+        initialState: stubState,
+      }),
+    )
+    collector.subscriber(
+      createRunEnded({ sessionId: 'opening-heal', outcome: 'lost', finalActIndex: 0, timestamp: 1_200, finalState: stubState }),
+    )
+
+    expect(collector.history()[0]?.healingReceived).toBe(4)
   })
 })

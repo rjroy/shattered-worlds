@@ -7,12 +7,16 @@ import {
   type LifetimeStatsV1,
 } from './runStats'
 import { emptyHistory, isRunHistoryPayload, type RunHistoryPayload } from './runHistory'
+import { isWitnessProfile, type WitnessProfile, type WitnessStore } from './witnessProfile'
+import { isFeatsProfile, type FeatsProfile, type FeatsStore } from './featsProfile'
 
 export interface StatsExportPayload {
   readonly kind: 'shattered-worlds-stats'
   readonly exportedAt: number
   readonly lifetime: LifetimeStats
   readonly history: RunHistoryPayload
+  readonly witnessProfile?: WitnessProfile
+  readonly featsProfile?: FeatsProfile
 }
 
 interface StatsImportPayloadV1 {
@@ -20,6 +24,8 @@ interface StatsImportPayloadV1 {
   readonly exportedAt?: unknown
   readonly lifetime: LifetimeStats | LifetimeStatsV1
   readonly history?: RunHistoryPayload
+  readonly witnessProfile?: WitnessProfile
+  readonly featsProfile?: FeatsProfile
 }
 
 export type InspectedStatsImport =
@@ -32,18 +38,34 @@ export interface StatsTransfer {
   applyImport(inspected: Extract<InspectedStatsImport, { ok: true }>): void
 }
 
+export interface StatsTransferOptions {
+  readonly runStats: RunStatsCollector
+  readonly witness?: WitnessStore | undefined
+  readonly feats?: FeatsStore | undefined
+  readonly clock?: (() => number) | undefined
+}
+
 function isStatsImportEnvelope(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && (value as Record<string, unknown>).kind === 'shattered-worlds-stats'
 }
 
-export function createStatsTransfer(collector: RunStatsCollector, clock: () => number = Date.now): StatsTransfer {
+export function createStatsTransfer(options: StatsTransferOptions): StatsTransfer {
   return {
     exportJson() {
+      const witnessProfile = options.witness?.getProfile()
+      const featsProfile = options.feats?.getProfile()
+
       const payload: StatsExportPayload = {
         kind: 'shattered-worlds-stats',
-        exportedAt: clock(),
-        lifetime: collector.lifetime(),
-        history: { version: 1, records: collector.history() },
+        exportedAt: (options.clock ?? Date.now)(),
+        lifetime: options.runStats.lifetime(),
+        history: { version: 1, records: options.runStats.history() },
+        ...(witnessProfile !== undefined && Object.keys(witnessProfile.threats).length > 0
+          ? { witnessProfile }
+          : {}),
+        ...(featsProfile !== undefined && featsProfile.earned.length > 0
+          ? { featsProfile }
+          : {}),
       }
 
       return JSON.stringify(payload, null, 2)
@@ -73,6 +95,16 @@ export function createStatsTransfer(collector: RunStatsCollector, clock: () => n
         return { ok: false, reason: 'The selected file has invalid run history.' }
       }
 
+      const witnessProfileRaw = parsed.witnessProfile
+      if (witnessProfileRaw !== undefined && !isWitnessProfile(witnessProfileRaw)) {
+        return { ok: false, reason: 'The selected file has invalid witness profile data.' }
+      }
+
+      const featsProfileRaw = parsed.featsProfile
+      if (featsProfileRaw !== undefined && !isFeatsProfile(featsProfileRaw)) {
+        return { ok: false, reason: 'The selected file has invalid feats profile data.' }
+      }
+
       return {
         ok: true,
         needsMigration: lifetimeIsV1,
@@ -81,6 +113,8 @@ export function createStatsTransfer(collector: RunStatsCollector, clock: () => n
           exportedAt: parsed.exportedAt,
           lifetime,
           ...(history === undefined ? {} : { history }),
+          ...(witnessProfileRaw !== undefined ? { witnessProfile: witnessProfileRaw as WitnessProfile } : {}),
+          ...(featsProfileRaw !== undefined ? { featsProfile: featsProfileRaw as FeatsProfile } : {}),
         },
       }
     },
@@ -91,7 +125,15 @@ export function createStatsTransfer(collector: RunStatsCollector, clock: () => n
         : inspected.payload.lifetime
       const history = inspected.payload.history ?? emptyHistory()
 
-      collector.replaceAll(lifetime, history)
+      options.runStats.replaceAll(lifetime, history)
+
+      if (inspected.payload.witnessProfile !== undefined && options.witness !== undefined) {
+        options.witness.setProfile(inspected.payload.witnessProfile)
+      }
+
+      if (inspected.payload.featsProfile !== undefined && options.feats !== undefined) {
+        options.feats.setProfile(inspected.payload.featsProfile)
+      }
     },
   }
 }

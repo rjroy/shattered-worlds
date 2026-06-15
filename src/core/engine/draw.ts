@@ -107,6 +107,7 @@ export function drawWorld(state: GameState, n: number): { state: GameState; even
       hand: [...current.hand, card],
     };
     drawnIds.push(card.id);
+    events.push({ type: "HazardAdded", templateId: card.name });
     remaining--;
   }
 
