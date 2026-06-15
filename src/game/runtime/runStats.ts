@@ -1,6 +1,6 @@
+import type { GameEvent } from '../../core/index'
 import type {
   Clock,
-  GameplayBatch,
   RunEnded,
   RunOutcome,
   RunStarted,
@@ -43,6 +43,9 @@ export interface RunRecord {
   readonly hazardsResolved: number
   readonly hazardsDiscarded: number
   readonly cardsDiscarded: number
+  readonly finalHp?: number
+  readonly finalResources?: Record<string, number>
+  readonly healingReceived?: number
 }
 
 export interface WorldStats {
@@ -147,6 +150,7 @@ type RunAccumulator = {
   hazardsResolved: number
   hazardsDiscarded: number
   cardsDiscarded: number
+  healingReceived: number
 }
 
 const LIFETIME_COUNTER_KEYS = [
@@ -200,18 +204,22 @@ function emptyLifetime(): LifetimeStats {
   }
 }
 
+function isFiniteNumber(value: unknown): value is number {
+  return typeof value === 'number' && Number.isFinite(value)
+}
+
+function isOptionalFiniteNumber(value: unknown): boolean {
+  return value === undefined || isFiniteNumber(value)
+}
+
 function isWorldStats(value: unknown): value is WorldStats {
   if (typeof value !== 'object' || value === null) return false
 
   const world = value as Record<string, unknown>
   return (
-    (['runs', 'wins', 'losses', 'abandoned'] as const).every(
-      (key) => typeof world[key] === 'number' && Number.isFinite(world[key]),
-    ) &&
-    (world.fewestTurnsWin === undefined ||
-      (typeof world.fewestTurnsWin === 'number' && Number.isFinite(world.fewestTurnsWin))) &&
-    (world.mostProgressInRun === undefined ||
-      (typeof world.mostProgressInRun === 'number' && Number.isFinite(world.mostProgressInRun)))
+    (['runs', 'wins', 'losses', 'abandoned'] as const).every((key) => isFiniteNumber(world[key])) &&
+    isOptionalFiniteNumber(world.fewestTurnsWin) &&
+    isOptionalFiniteNumber(world.mostProgressInRun)
   )
 }
 
@@ -219,9 +227,7 @@ function isWorldStatsV1(value: unknown): value is WorldStatsV1 {
   if (typeof value !== 'object' || value === null) return false
 
   const world = value as Record<string, unknown>
-  return (['runs', 'wins', 'losses', 'abandoned'] as const).every(
-    (key) => typeof world[key] === 'number' && Number.isFinite(world[key]),
-  )
+  return (['runs', 'wins', 'losses', 'abandoned'] as const).every((key) => isFiniteNumber(world[key]))
 }
 
 function isSetupModifier(value: unknown): value is SetupModifier {
@@ -236,14 +242,29 @@ export function isRunRecord(value: unknown): value is RunRecord {
   if (typeof value !== 'object' || value === null) return false
 
   const run = value as Record<string, unknown>
-  return (
+
+  const requiredOk =
     typeof run.sessionId === 'string' &&
     typeof run.worldId === 'string' &&
     Array.isArray(run.appliedModifiers) &&
     run.appliedModifiers.every(isSetupModifier) &&
     (run.outcome === 'won' || run.outcome === 'lost' || run.outcome === 'abandoned') &&
-    RUN_RECORD_NUMBER_KEYS.every((key) => typeof run[key] === 'number' && Number.isFinite(run[key]))
-  )
+    RUN_RECORD_NUMBER_KEYS.every((key) => isFiniteNumber(run[key]))
+
+  if (!requiredOk) return false
+
+  // Optional fields: absent is OK; present must be the right type.
+  if (!isOptionalFiniteNumber(run.finalHp) || !isOptionalFiniteNumber(run.healingReceived)) {
+    return false
+  }
+  if (run.finalResources !== undefined) {
+    if (typeof run.finalResources !== 'object' || run.finalResources === null) return false
+    if (!Object.values(run.finalResources as Record<string, unknown>).every(isFiniteNumber)) {
+      return false
+    }
+  }
+
+  return true
 }
 
 function isRunRecordV1(value: unknown): value is RunRecordV1 {
@@ -256,7 +277,7 @@ function isRunRecordV1(value: unknown): value is RunRecordV1 {
     Array.isArray(run.appliedModifiers) &&
     run.appliedModifiers.every(isSetupModifier) &&
     (run.outcome === 'won' || run.outcome === 'lost' || run.outcome === 'abandoned') &&
-    RUN_RECORD_V1_NUMBER_KEYS.every((key) => typeof run[key] === 'number' && Number.isFinite(run[key]))
+    RUN_RECORD_V1_NUMBER_KEYS.every((key) => isFiniteNumber(run[key]))
   )
 }
 
@@ -269,7 +290,7 @@ export function isLifetimeStatsV2(value: unknown): value is LifetimeStats {
   const stats = value as Record<string, unknown>
   return (
     stats.version === 2 &&
-    LIFETIME_COUNTER_KEYS.every((key) => typeof stats[key] === 'number' && Number.isFinite(stats[key])) &&
+    LIFETIME_COUNTER_KEYS.every((key) => isFiniteNumber(stats[key])) &&
     typeof stats.byWorld === 'object' &&
     stats.byWorld !== null &&
     Object.values(stats.byWorld).every(isWorldStats) &&
@@ -283,7 +304,7 @@ export function isLifetimeStatsV1(value: unknown): value is LifetimeStatsV1 {
   const stats = value as Record<string, unknown>
   return (
     stats.version === 1 &&
-    LIFETIME_COUNTER_KEYS.every((key) => typeof stats[key] === 'number' && Number.isFinite(stats[key])) &&
+    LIFETIME_COUNTER_KEYS.every((key) => isFiniteNumber(stats[key])) &&
     typeof stats.byWorld === 'object' &&
     stats.byWorld !== null &&
     Object.values(stats.byWorld).every(isWorldStatsV1) &&
@@ -377,8 +398,8 @@ function persistLifetime(
   }
 }
 
-function tally(accumulator: RunAccumulator, batch: GameplayBatch): void {
-  for (const event of batch.events) {
+function tallyEvents(accumulator: RunAccumulator, events: readonly GameEvent[]): void {
+  for (const event of events) {
     switch (event.type) {
       case 'TurnEnded':
         accumulator.turns += 1
@@ -400,6 +421,9 @@ function tally(accumulator: RunAccumulator, batch: GameplayBatch): void {
         break
       case 'CardsDiscarded':
         accumulator.cardsDiscarded += event.cardIds.length
+        break
+      case 'HealReceived':
+        accumulator.healingReceived += event.amount
         break
       default:
         break
@@ -434,6 +458,13 @@ function finalizeRun(accumulator: RunAccumulator, ended: RunEnded): RunRecord {
     hazardsResolved: accumulator.hazardsResolved,
     hazardsDiscarded: accumulator.hazardsDiscarded,
     cardsDiscarded: accumulator.cardsDiscarded,
+    finalHp: ended.finalState.hp,
+    finalResources: {
+      energy: ended.finalState.energy,
+      light: ended.finalState.light,
+      brace: ended.finalState.braceCharges,
+    },
+    healingReceived: accumulator.healingReceived,
   }
 }
 
@@ -451,35 +482,35 @@ function foldIntoLifetime(lifetime: LifetimeStats, run: RunRecord): { lifetime: 
 
   return {
     lifetime: {
-    version: 2,
-    runs: lifetime.runs + 1,
-    wins: lifetime.wins + (run.outcome === 'won' ? 1 : 0),
-    losses: lifetime.losses + (run.outcome === 'lost' ? 1 : 0),
-    abandoned: lifetime.abandoned + (run.outcome === 'abandoned' ? 1 : 0),
-    turns: lifetime.turns + (completed ? run.turns : 0),
-    cardsPlayed: lifetime.cardsPlayed + (completed ? run.cardsPlayed : 0),
-    progressDealt: lifetime.progressDealt + (completed ? run.progressDealt : 0),
-    damageTaken: lifetime.damageTaken + (completed ? run.damageTaken : 0),
-    hazardsResolved: lifetime.hazardsResolved + (completed ? run.hazardsResolved : 0),
-    hazardsDiscarded: lifetime.hazardsDiscarded + (completed ? run.hazardsDiscarded : 0),
-    cardsDiscarded: lifetime.cardsDiscarded + (completed ? run.cardsDiscarded : 0),
-    durationMs: lifetime.durationMs + (completed ? run.activeDurationMs : 0),
-    byWorld: {
-      ...lifetime.byWorld,
-      [run.worldId]: {
-        runs: world.runs + 1,
-        wins: world.wins + (run.outcome === 'won' ? 1 : 0),
-        losses: world.losses + (run.outcome === 'lost' ? 1 : 0),
-        abandoned: world.abandoned + (run.outcome === 'abandoned' ? 1 : 0),
-        ...(fewestTurnsWin || world.fewestTurnsWin !== undefined
-          ? { fewestTurnsWin: fewestTurnsWin ? run.turns : world.fewestTurnsWin }
-          : {}),
-        ...(mostProgressInRun || world.mostProgressInRun !== undefined
-          ? { mostProgressInRun: mostProgressInRun ? run.progressDealt : world.mostProgressInRun }
-          : {}),
+      version: 2,
+      runs: lifetime.runs + 1,
+      wins: lifetime.wins + (run.outcome === 'won' ? 1 : 0),
+      losses: lifetime.losses + (run.outcome === 'lost' ? 1 : 0),
+      abandoned: lifetime.abandoned + (run.outcome === 'abandoned' ? 1 : 0),
+      turns: lifetime.turns + (completed ? run.turns : 0),
+      cardsPlayed: lifetime.cardsPlayed + (completed ? run.cardsPlayed : 0),
+      progressDealt: lifetime.progressDealt + (completed ? run.progressDealt : 0),
+      damageTaken: lifetime.damageTaken + (completed ? run.damageTaken : 0),
+      hazardsResolved: lifetime.hazardsResolved + (completed ? run.hazardsResolved : 0),
+      hazardsDiscarded: lifetime.hazardsDiscarded + (completed ? run.hazardsDiscarded : 0),
+      cardsDiscarded: lifetime.cardsDiscarded + (completed ? run.cardsDiscarded : 0),
+      durationMs: lifetime.durationMs + (completed ? run.activeDurationMs : 0),
+      byWorld: {
+        ...lifetime.byWorld,
+        [run.worldId]: {
+          runs: world.runs + 1,
+          wins: world.wins + (run.outcome === 'won' ? 1 : 0),
+          losses: world.losses + (run.outcome === 'lost' ? 1 : 0),
+          abandoned: world.abandoned + (run.outcome === 'abandoned' ? 1 : 0),
+          ...(fewestTurnsWin || world.fewestTurnsWin !== undefined
+            ? { fewestTurnsWin: fewestTurnsWin ? run.turns : world.fewestTurnsWin }
+            : {}),
+          ...(mostProgressInRun || world.mostProgressInRun !== undefined
+            ? { mostProgressInRun: mostProgressInRun ? run.progressDealt : world.mostProgressInRun }
+            : {}),
+        },
       },
-    },
-    lastRun: run,
+      lastRun: run,
     },
     newRecords,
   }
@@ -518,7 +549,7 @@ export function createRunStatsCollector(options: RunStatsCollectorOptions = {}):
   })
 
   function onRunStarted(item: RunStarted): void {
-    activeRuns.set(item.sessionId, {
+    const accumulator: RunAccumulator = {
       worldId: item.worldId,
       seed: item.seed,
       appliedModifiers: item.appliedModifiers,
@@ -532,7 +563,11 @@ export function createRunStatsCollector(options: RunStatsCollectorOptions = {}):
       hazardsResolved: 0,
       hazardsDiscarded: 0,
       cardsDiscarded: 0,
-    })
+      healingReceived: 0,
+    }
+    activeRuns.set(item.sessionId, accumulator)
+    // Tally opening-deal events (e.g. opening-hand heals count toward healingReceived).
+    tallyEvents(accumulator, item.initialEvents)
   }
 
   function onRunEnded(item: RunEnded): void {
@@ -559,7 +594,7 @@ export function createRunStatsCollector(options: RunStatsCollectorOptions = {}):
           break
         case 'GameplayBatch': {
           const accumulator = activeRuns.get(item.sessionId)
-          if (accumulator !== undefined) tally(accumulator, item)
+          if (accumulator !== undefined) tallyEvents(accumulator, item.events)
           break
         }
         case 'RunEnded':

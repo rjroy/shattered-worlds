@@ -24,7 +24,7 @@ import { catalog, worldData } from "./testFixture";
  * piles, and progress replaced by what the test needs.
  */
 function makeState(overrides: Partial<GameState>): GameState {
-  const base = createWorld(catalog, worldData, 42);
+  const { state: base } = createWorld(catalog, worldData, 42);
   return {
     ...base,
     playerDraw: [],
@@ -45,7 +45,7 @@ function makeState(overrides: Partial<GameState>): GameState {
 describe("PlayCard basic", () => {
   it("playing Explore on Screams (cost 1) emits CardPlayed + ProgressDealt + HazardResolved", () => {
     // seed 42 starting hand: Strange Sounds(id=11) + Screams(id=14) + Sprint(id=1) + Panic(id=8) + MedKit(id=7) + Explore(id=2)
-    const state = createWorld(catalog, worldData, 42);
+    const { state } = createWorld(catalog, worldData, 42);
     const screams = state.hand.find(
       (c): c is WorldCard => c.kind === "world" && c.name === "Screams",
     );
@@ -82,7 +82,7 @@ describe("progress reset on EndTurn", () => {
   it("partial progress on a 2-cost hazard is wiped on EndTurn", () => {
     // Screams costs 1 and would resolve with 1 Explore, but Strange Sounds costs 2.
     // We build a crafted state with a Strange Sounds (cost 2) and a single Explore.
-    const base = createWorld(catalog, worldData, 42);
+    const { state: base } = createWorld(catalog, worldData, 42);
     const [strangeSounds, s1] = mintCard(catalog, base, "Strange Sounds");
     const [explore, s2] = mintCard(catalog, s1, "Explore");
 
@@ -114,7 +114,7 @@ describe("EndTurn hold vs discard", () => {
     // Use a large playerDraw so refillHand does not recycle the discarded card
     // back into hand immediately. Use Find Baseball Bat (onEndOfTurn: None) so
     // the world card stays in hand instead of self-destructing.
-    const base = createWorld(catalog, worldData, 42);
+    const { state: base } = createWorld(catalog, worldData, 42);
     const [findBat, s1] = mintCard(catalog, base, "Find Baseball Bat");
     const [explore, s2] = mintCard(catalog, s1, "Explore");
 
@@ -151,7 +151,7 @@ describe("EndTurn hold vs discard", () => {
   });
 
   it("CardsDiscarded event lists the discarded player card ids", () => {
-    const base = createWorld(catalog, worldData, 42);
+    const { state: base } = createWorld(catalog, worldData, 42);
     const [screams, s1] = mintCard(catalog, base, "Screams");
     const [explore, s2] = mintCard(catalog, s1, "Explore");
     const [e2, s3] = mintCard(catalog, s2, "Explore");
@@ -181,7 +181,7 @@ describe("EndTurn hold vs discard", () => {
 
 describe("DiscardHazard legal", () => {
   it("discarding Zombie (Damage 5) decrements HP", () => {
-    const base = createWorld(catalog, worldData, 42);
+    const { state: base } = createWorld(catalog, worldData, 42);
     const [zombie, s1] = mintCard(catalog, base, "Zombie");
 
     const state = makeState({
@@ -226,7 +226,7 @@ describe("ForceDestroy onDiscarded", () => {
   }
 
   it("discarding queues a charge but does NOT destroy from the current hand", () => {
-    const base = createWorld(catalog, worldData, 42);
+    const { state: base } = createWorld(catalog, worldData, 42);
     const [talon, s1] = grippingTalon(base);
     const state = makeState({ ...s1, hand: [talon] });
 
@@ -242,7 +242,7 @@ describe("ForceDestroy onDiscarded", () => {
   });
 
   it("the queued charge destroys a player card from the refilled hand on EndTurn", () => {
-    const base = createWorld(catalog, worldData, 42);
+    const { state: base } = createWorld(catalog, worldData, 42);
     const [talon, s1] = grippingTalon(base);
 
     // Six player cards to refill from, plus world cards so the livelock guard
@@ -297,7 +297,7 @@ describe("ForceDestroy onDiscarded", () => {
 
 describe("DiscardHazard on Door", () => {
   it("attempting to discard the Door throws IllegalActionError", () => {
-    const base = createWorld(catalog, worldData, 42);
+    const { state: base } = createWorld(catalog, worldData, 42);
     const [door, s1] = mintCard(catalog, base, "Door");
 
     const state = makeState({
@@ -317,7 +317,7 @@ describe("DiscardHazard on Door", () => {
 
 describe("post-terminal throws", () => {
   it("any action after WorldLost throws IllegalActionError", () => {
-    const base = createWorld(catalog, worldData, 42);
+    const { state: base } = createWorld(catalog, worldData, 42);
     const [zombie, s1] = mintCard(catalog, base, "Zombie");
 
     const lostState = makeState({
@@ -334,7 +334,7 @@ describe("post-terminal throws", () => {
   });
 
   it("any action after WorldWon throws IllegalActionError", () => {
-    const base = createWorld(catalog, worldData, 42);
+    const { state: base } = createWorld(catalog, worldData, 42);
     const [explore, s1] = mintCard(catalog, base, "Explore");
 
     const wonState = makeState({
@@ -353,7 +353,7 @@ describe("post-terminal throws", () => {
 
 describe("PlayCard with no legal play", () => {
   it("playing Explore when no world card is in hand throws IllegalActionError", () => {
-    const base = createWorld(catalog, worldData, 42);
+    const { state: base } = createWorld(catalog, worldData, 42);
     const [explore, s1] = mintCard(catalog, base, "Explore");
 
     const state = makeState({
@@ -372,7 +372,7 @@ describe("PlayCard with no legal play", () => {
   });
 
   it("playing a card not in hand throws IllegalActionError", () => {
-    const state = createWorld(catalog, worldData, 42);
+    const { state } = createWorld(catalog, worldData, 42);
     expect(() => {
       reduce(catalog, state, { type: "PlayCard", cardId: "ghost-card-id" });
     }).toThrow(IllegalActionError);
@@ -386,7 +386,7 @@ describe("PlayCard with no legal play", () => {
 describe("Sprint modal", () => {
   it("Sprint choice=0 draws player and world cards", () => {
     // seed 42 hand contains Sprint (id=1); worldDraw has 4 remaining world cards
-    const state = createWorld(catalog, worldData, 42);
+    const { state } = createWorld(catalog, worldData, 42);
     const sprint = state.hand.find((c) => c.kind === "player" && c.name === "Sprint");
     if (!sprint) throw new Error("Sprint not found in seed 42 hand");
 
@@ -402,7 +402,7 @@ describe("Sprint modal", () => {
   });
 
   it("Sprint choice=1 (Slow hazard) deals progress on a Slow hazard and resolves it", () => {
-    const base = createWorld(catalog, worldData, 42);
+    const { state: base } = createWorld(catalog, worldData, 42);
     const [sprint, s1] = mintCard(catalog, base, "Sprint");
 
     // Construct a Slow hazard directly — avoids dependency on which world cards carry the keyword
@@ -444,7 +444,7 @@ describe("Sprint modal", () => {
 
   it("Sprint choice=1 throws when no Slow hazard is in hand", () => {
     // Strange Sounds has no keywords, so Sprint branch 1 can't target it
-    const base = createWorld(catalog, worldData, 42);
+    const { state: base } = createWorld(catalog, worldData, 42);
     const [strangeSounds, s1] = mintCard(catalog, base, "Strange Sounds");
     const [sprint, s2] = mintCard(catalog, s1, "Sprint");
 
@@ -464,7 +464,7 @@ describe("Sprint modal", () => {
   });
 
   it("Sprint throws when choice is out of range", () => {
-    const state = createWorld(catalog, worldData, 42);
+    const { state } = createWorld(catalog, worldData, 42);
     const sprint = state.hand.find((c) => c.kind === "player" && c.name === "Sprint");
     if (!sprint) throw new Error("Sprint not found in seed 42 hand");
 
@@ -484,7 +484,7 @@ describe("Sprint modal", () => {
 
 describe("Barricade compound", () => {
   it("Barricade deals 1 progress on Rubble (resolves) with empty returnIds", () => {
-    const base = createWorld(catalog, worldData, 42);
+    const { state: base } = createWorld(catalog, worldData, 42);
     const [rubble, s1] = mintCard(catalog, base, "Rubble");
     const [barricade, s2] = mintCard(catalog, s1, "Barricade");
 
@@ -513,7 +513,7 @@ describe("Barricade compound", () => {
 
 describe("Adrenaline discardPlayer", () => {
   it("Adrenaline discards a player card and draws 2", () => {
-    const base = createWorld(catalog, worldData, 42);
+    const { state: base } = createWorld(catalog, worldData, 42);
     const [adrenaline, s1] = mintCard(catalog, base, "Adrenaline");
     const [explore, s2] = mintCard(catalog, s1, "Explore");
     const [rubble, s3] = mintCard(catalog, s2, "Rubble");
@@ -552,7 +552,7 @@ describe("Adrenaline discardPlayer", () => {
   });
 
   it("Adrenaline throws when discardId is not a legal target", () => {
-    const base = createWorld(catalog, worldData, 42);
+    const { state: base } = createWorld(catalog, worldData, 42);
     const [adrenaline, s1] = mintCard(catalog, base, "Adrenaline");
     const [rubble, s2] = mintCard(catalog, s1, "Rubble");
     const [explore, s3] = mintCard(catalog, s2, "Explore");
@@ -577,8 +577,8 @@ describe("Adrenaline discardPlayer", () => {
 // ---------------------------------------------------------------------------
 
 describe("Regroup destroyHand", () => {
-  it("Regroup with no destroyIds plays without destroying anything", () => {
-    const base = createWorld(catalog, worldData, 42);
+  it("Regroup with no destroyIds plays with only destroying self", () => {
+    const { state: base } = createWorld(catalog, worldData, 42);
     const [regroup, s1] = mintCard(catalog, base, "Regroup");
     const [rubble, s2] = mintCard(catalog, s1, "Rubble");
 
@@ -594,11 +594,17 @@ describe("Regroup destroyHand", () => {
 
     const types = result.events.map((e) => e.type);
     expect(types).toContain("CardPlayed");
-    expect(types).not.toContain("CardDestroyed");
+    expect(types).toContain("CardDestroyed");
+
+    const destroyedIds = result.events
+      .filter((e) => e.type == "CardDestroyed")
+      .flatMap((e) => e.ids);
+    expect(destroyedIds.length).toBe(1);
+    expect(destroyedIds).toContain(regroup.id);
   });
 
   it("Regroup with destroyIds removes the card from hand permanently", () => {
-    const base = createWorld(catalog, worldData, 42);
+    const { state: base } = createWorld(catalog, worldData, 42);
     const [regroup, s1] = mintCard(catalog, base, "Regroup");
     const [explore, s2] = mintCard(catalog, s1, "Explore");
 
@@ -643,7 +649,7 @@ describe("PlayCard exhaust", () => {
   }
 
   it("playing an exhaust card removes it from hand AND keeps it out of playerDiscard", () => {
-    const base = createWorld(catalog, worldData, 42);
+    const { state: base } = createWorld(catalog, worldData, 42);
     const [exhaustCard, s1] = exhaustExplore(base);
     const [rubble, s2] = mintCard(catalog, s1, "Rubble");
 
@@ -663,7 +669,7 @@ describe("PlayCard exhaust", () => {
   });
 
   it("playing an exhaust card emits CardDestroyed with the card id alongside CardPlayed", () => {
-    const base = createWorld(catalog, worldData, 42);
+    const { state: base } = createWorld(catalog, worldData, 42);
     const [exhaustCard, s1] = exhaustExplore(base);
     const [rubble, s2] = mintCard(catalog, s1, "Rubble");
 
@@ -697,7 +703,7 @@ describe("PlayCard exhaust", () => {
   });
 
   it("an exhaust card's effect still applies (exhaust + Heal raises hp)", () => {
-    const base = createWorld(catalog, worldData, 42);
+    const { state: base } = createWorld(catalog, worldData, 42);
     const [medKit, s1] = exhaustMedKit(base);
 
     const state = makeState({
@@ -718,7 +724,7 @@ describe("PlayCard exhaust", () => {
   });
 
   it("control: a non-exhaust card lands in playerDiscard and emits NO CardDestroyed", () => {
-    const base = createWorld(catalog, worldData, 42);
+    const { state: base } = createWorld(catalog, worldData, 42);
     const [explore, s1] = mintCard(catalog, base, "Explore");
     const [rubble, s2] = mintCard(catalog, s1, "Rubble");
 
@@ -741,7 +747,7 @@ describe("PlayCard exhaust", () => {
     // Empty playerDraw with a non-empty playerDiscard forces refillHand to
     // recycle the discard into a reshuffled draw pile on the next turn start.
     // The exhausted card must not be anywhere to be recycled.
-    const base = createWorld(catalog, worldData, 42);
+    const { state: base } = createWorld(catalog, worldData, 42);
     const [exhaustCard, s1] = exhaustExplore(base);
     const [rubble, s2] = mintCard(catalog, s1, "Rubble");
     // A second player card lands in playerDiscard so the reshuffle path runs.
@@ -779,7 +785,7 @@ describe("PlayCard exhaust", () => {
 
 describe("EndTurn onEndOfTurn", () => {
   function makeEndTurnState(worldCard: WorldCard, hp: number): GameState {
-    const base = createWorld(catalog, worldData, 42);
+    const { state: base } = createWorld(catalog, worldData, 42);
     const [e1, s1] = mintCard(catalog, base, "Explore");
     const [e2, s2] = mintCard(catalog, s1, "Explore");
     const [e3, s3] = mintCard(catalog, s2, "Explore");
@@ -800,7 +806,7 @@ describe("EndTurn onEndOfTurn", () => {
   }
 
   it("Zombie in hand deals 1 damage at end of turn", () => {
-    const base = createWorld(catalog, worldData, 42);
+    const { state: base } = createWorld(catalog, worldData, 42);
     const [zombie, _s1] = mintCard(catalog, base, "Zombie");
     const state = makeEndTurnState(zombie as WorldCard, 10);
 
@@ -811,7 +817,7 @@ describe("EndTurn onEndOfTurn", () => {
   });
 
   it("onEndOfTurn fires after TurnEnded and before CardsDiscarded", () => {
-    const base = createWorld(catalog, worldData, 42);
+    const { state: base } = createWorld(catalog, worldData, 42);
     const [zombie, s1] = mintCard(catalog, base, "Zombie");
     const [explore, s2] = mintCard(catalog, s1, "Explore");
     const [e2, s3] = mintCard(catalog, s2, "Explore");
@@ -838,7 +844,7 @@ describe("EndTurn onEndOfTurn", () => {
   });
 
   it("onEndOfTurn can kill the player and short-circuits to status=lost", () => {
-    const base = createWorld(catalog, worldData, 42);
+    const { state: base } = createWorld(catalog, worldData, 42);
     const [zombie, _s1] = mintCard(catalog, base, "Zombie");
     const state = makeEndTurnState(zombie as WorldCard, 1);
 
@@ -850,7 +856,7 @@ describe("EndTurn onEndOfTurn", () => {
   });
 
   it("world cards with onEndOfTurn=None deal no damage", () => {
-    const base = createWorld(catalog, worldData, 42);
+    const { state: base } = createWorld(catalog, worldData, 42);
     const [findBat, _s1] = mintCard(catalog, base, "Find Baseball Bat");
     const state = makeEndTurnState(findBat as WorldCard, 10);
 
@@ -862,7 +868,7 @@ describe("EndTurn onEndOfTurn", () => {
 
   it("Door in zombie-big-box adds Zombie threat to the world deck", () => {
     const { catalog: worldCatalog, worldData: world } = buildWorld("zombie-big-box");
-    const base = createWorld(worldCatalog, world, 42);
+    const { state: base } = createWorld(worldCatalog, world, 42);
     const [door, s1] = mintCard(worldCatalog, base, "Door");
     const [e1, s2] = mintCard(worldCatalog, s1, "Explore");
     const [e2, s3] = mintCard(worldCatalog, s2, "Explore");
@@ -902,7 +908,7 @@ describe("EndTurn onEndOfTurn", () => {
 
   it("Door in highway-volcano adds Lava Flow threat to the world deck", () => {
     const { catalog: worldCatalog, worldData: world } = buildWorld("highway-volcano");
-    const base = createWorld(worldCatalog, world, 42);
+    const { state: base } = createWorld(worldCatalog, world, 42);
     const [door, s1] = mintCard(worldCatalog, base, "Door");
     const [e1, s2] = mintCard(worldCatalog, s1, "Explore");
     const [e2, s3] = mintCard(worldCatalog, s2, "Explore");
@@ -942,7 +948,7 @@ describe("EndTurn onEndOfTurn", () => {
 
   it("Door in bird-building adds Gripping Talon threat to the world deck", () => {
     const { catalog: worldCatalog, worldData: world } = buildWorld("bird-building");
-    const base = createWorld(worldCatalog, world, 42);
+    const { state: base } = createWorld(worldCatalog, world, 42);
     const [door, s1] = mintCard(worldCatalog, base, "Door");
     const [e1, s2] = mintCard(worldCatalog, s1, "Explore");
     const [e2, s3] = mintCard(worldCatalog, s2, "Explore");
@@ -991,7 +997,7 @@ describe("EndTurn Corpse self-transform", () => {
   // piles so the only world card that can appear is one the end-of-turn loop
   // spawns. Returns the crafted state and the minted Corpse.
   function makeCorpseState(): { state: GameState; corpse: WorldCard } {
-    const base = createWorld(catalog, worldData, 42);
+    const { state: base } = createWorld(catalog, worldData, 42);
     const [corpse, c1] = mintCard(catalog, base, "Corpse");
 
     let acc: GameState = c1;
@@ -1088,7 +1094,7 @@ describe("EndTurn Corpse self-transform", () => {
 
 describe("EndTurn gains energy", () => {
   it("EndTurn with no plays gains exactly +1 energy", () => {
-    const base = createWorld(catalog, worldData, 42);
+    const { state: base } = createWorld(catalog, worldData, 42);
     const initialEnergy = base.energy;
     expect(initialEnergy).toBe(1); // Opening hand is a turn start
 
@@ -1103,7 +1109,7 @@ describe("EndTurn gains energy", () => {
   });
 
   it("several EndTurns are monotonic +1 with no cap", () => {
-    const base = createWorld(catalog, worldData, 42);
+    const { state: base } = createWorld(catalog, worldData, 42);
     const [rubble, s1] = mintCard(catalog, base, "Rubble");
     const [explore, seeded] = mintCard(catalog, s1, "Explore");
     let state = makeState({
@@ -1126,7 +1132,7 @@ describe("EndTurn gains energy", () => {
   });
 
   it("EnergyChanged event appears during turn start (after TurnEnded)", () => {
-    const base = createWorld(catalog, worldData, 42);
+    const { state: base } = createWorld(catalog, worldData, 42);
     const state = makeState({
       hand: base.hand.filter((c) => c.kind === "world"),
       energy: 1,
@@ -1146,7 +1152,7 @@ describe("EndTurn gains energy", () => {
   it("energy is identical across ActAdvanced boundary", () => {
     // Create a state where the next EndTurn will cause an ActAdvanced event.
     // We do this by draining worldDraw to empty and queuing an act.
-    const base = createWorld(catalog, worldData, 42);
+    const { state: base } = createWorld(catalog, worldData, 42);
     const [walker, s1] = mintCard(catalog, base, "The Walker");
 
     const state = makeState({
@@ -1173,7 +1179,7 @@ describe("EndTurn gains energy", () => {
 
 describe("PlayCard deducts energy cost (Step 5)", () => {
   it("playing a cost-1 card deducts energy: energy 1 → 0", () => {
-    const base = createWorld(catalog, worldData, 42);
+    const { state: base } = createWorld(catalog, worldData, 42);
     // Find or create a cost-1 card and a target
     const [listen, s1] = mintCard(catalog, base, "Listen");
     const [rubble, s2] = mintCard(catalog, s1, "Rubble");
@@ -1200,7 +1206,7 @@ describe("PlayCard deducts energy cost (Step 5)", () => {
   });
 
   it("playing a cost-1 card when energy 2 leaves energy 1", () => {
-    const base = createWorld(catalog, worldData, 42);
+    const { state: base } = createWorld(catalog, worldData, 42);
     const [listen, s1] = mintCard(catalog, base, "Listen");
     const [rubble, s2] = mintCard(catalog, s1, "Rubble");
 
@@ -1220,7 +1226,7 @@ describe("PlayCard deducts energy cost (Step 5)", () => {
   });
 
   it("playing a cost-0 card leaves energy unchanged and no EnergyChanged event", () => {
-    const base = createWorld(catalog, worldData, 42);
+    const { state: base } = createWorld(catalog, worldData, 42);
     const [explore, s1] = mintCard(catalog, base, "Explore");
     const [rubble, s2] = mintCard(catalog, s1, "Rubble");
 
@@ -1243,7 +1249,7 @@ describe("PlayCard deducts energy cost (Step 5)", () => {
   });
 
   it("playing a cost-1 card with energy 0 throws IllegalActionError (affordability gate)", () => {
-    const base = createWorld(catalog, worldData, 42);
+    const { state: base } = createWorld(catalog, worldData, 42);
     const [listen, s1] = mintCard(catalog, base, "Listen");
     const [rubble, s2] = mintCard(catalog, s1, "Rubble");
 
@@ -1263,7 +1269,7 @@ describe("PlayCard deducts energy cost (Step 5)", () => {
   });
 
   it("energy never goes negative during play", () => {
-    const base = createWorld(catalog, worldData, 42);
+    const { state: base } = createWorld(catalog, worldData, 42);
     const [barricade, s1] = mintCard(catalog, base, "Barricade");
     const [rubble, s2] = mintCard(catalog, s1, "Rubble");
 
@@ -1284,7 +1290,7 @@ describe("PlayCard deducts energy cost (Step 5)", () => {
   });
 
   it("EnergyChanged event carries the new energy total", () => {
-    const base = createWorld(catalog, worldData, 42);
+    const { state: base } = createWorld(catalog, worldData, 42);
     const [listen, s1] = mintCard(catalog, base, "Listen");
     const [rubble, s2] = mintCard(catalog, s1, "Rubble");
 
@@ -1310,7 +1316,7 @@ describe("PlayCard deducts energy cost (Step 5)", () => {
   it("REQ-12: Barricade (cost-1 Sequence) deducts energy exactly once despite multi-step effect", () => {
     // Barricade is a Sequence with DealProgress + ReturnWorldCards.
     // Energy should be deducted once for the whole card, not per step.
-    const base = createWorld(catalog, worldData, 42);
+    const { state: base } = createWorld(catalog, worldData, 42);
     const [barricade, s1] = mintCard(catalog, base, "Barricade");
     const [rubble, s2] = mintCard(catalog, s1, "Rubble");
 
@@ -1354,7 +1360,7 @@ describe("EndTurn loss guard A with ignoreEnergy", () => {
     // Expected: status stays 'playing' (not lost), because energy rises +1/turn
     // and Barricade will become affordable
 
-    const base = createWorld(catalog, worldData, 42);
+    const { state: base } = createWorld(catalog, worldData, 42);
     const [barricade, s1] = mintCard(catalog, base, "Barricade");
     const [rubble, s2] = mintCard(catalog, s1, "Rubble");
 
@@ -1385,7 +1391,7 @@ describe("EndTurn loss guard A with ignoreEnergy", () => {
     // Expected: WorldLost is emitted, because there is NO structural play at all,
     // not even when ignoring energy
 
-    const base = createWorld(catalog, worldData, 42);
+    const { state: base } = createWorld(catalog, worldData, 42);
 
     const state = makeState({
       ...base,
@@ -1412,7 +1418,7 @@ describe("EndTurn loss guard A with ignoreEnergy", () => {
     // - At least one player card available to draw
     // Expected: status stays 'playing' (not a dead state).
 
-    const base = createWorld(catalog, worldData, 42);
+    const { state: base } = createWorld(catalog, worldData, 42);
     const [rubble, s1] = mintCard(catalog, base, "Rubble");
     const [explore, s2] = mintCard(catalog, s1, "Explore");
 
@@ -1441,7 +1447,7 @@ describe("EndTurn loss guard A with ignoreEnergy", () => {
 
 describe("EndTurn draw-phase loss", () => {
   it("loses when hazards fill the hand and leave no room for player draws", () => {
-    const base = createWorld(catalog, worldData, 42);
+    const { state: base } = createWorld(catalog, worldData, 42);
     let seeded = base;
     const hazards: WorldCard[] = [];
 
@@ -1468,7 +1474,7 @@ describe("EndTurn draw-phase loss", () => {
   });
 
   it("loses when no player cards can be drawn from player piles", () => {
-    const base = createWorld(catalog, worldData, 42);
+    const { state: base } = createWorld(catalog, worldData, 42);
     const [rubble, seeded] = mintCard(catalog, base, "Rubble");
 
     const state = makeState({
@@ -1540,7 +1546,7 @@ describe("Brace integration", () => {
     // With one brace charge banked the ForceDestroy should be absorbed —
     // no CardDestroyed event should fire on the next turn start.
     const { catalog: birdCatalog, worldData: birdWorld } = buildWorld("bird-building");
-    const base = createWorld(birdCatalog, birdWorld, 42);
+    const { state: base } = createWorld(birdCatalog, birdWorld, 42);
 
     const [steady, s1] = mintCard(birdCatalog, base, "Steady");
     const [slidingDebris, s2] = mintCard(birdCatalog, s1, "Sliding Debris");
@@ -1677,7 +1683,7 @@ describe("PlayCard Cut It Loose (Sequence: destroyHand → hazard)", () => {
 
   /** Build a minimal state seeded from bird-building for Cut It Loose tests. */
   function makeBirdState(overrides: Partial<GameState> = {}): GameState {
-    const base = createWorld(birdCatalog, birdWorld, 42);
+    const { state: base } = createWorld(birdCatalog, birdWorld, 42);
     return {
       ...base,
       playerDraw: [],
@@ -1798,7 +1804,7 @@ describe("PlayCard None effect (Spore semantics)", () => {
   }
 
   it("playing Spore pays 1 energy, exhausts it from every zone, and changes nothing else", () => {
-    const base = createWorld(catalog, worldData, 42);
+    const { state: base } = createWorld(catalog, worldData, 42);
     const [spore, s1] = mintSpore(base);
     const [rubble, s2] = mintCard(catalog, s1, "Rubble");
     const [filler, s3] = mintCard(catalog, s2, "Explore");

@@ -23,7 +23,7 @@ import { catalog, worldData } from "./testFixture";
  * nextId and rng are valid, then overrides piles as needed.
  */
 function makeState(overrides: Partial<GameState> = {}): GameState {
-  const base = createWorld(catalog, worldData, 1);
+  const { state: base } = createWorld(catalog, worldData, 1);
   return {
     ...base,
     hand: [],
@@ -1045,5 +1045,24 @@ describe("DealProgressScaled", () => {
 
     expect(after.hand.find((card) => card.id === zombie.id)).toBeUndefined();
     expect(events.some((event) => event.type === "HazardResolved")).toBe(true);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// 18. HealReceived event
+// ---------------------------------------------------------------------------
+
+describe("HealReceived event", () => {
+  it("heal emits HealReceived with the heal amount after HpChanged", () => {
+    const state = makeState({ hp: 5 });
+    const { events } = applyEffect(catalog, state, { kind: "Heal", amount: 4 });
+    const healReceived = events.find((e) => e.type === "HealReceived");
+    expect(healReceived).toBeDefined();
+    if (healReceived?.type === "HealReceived") {
+      expect(healReceived.amount).toBe(4);
+    }
+    // Order: HpChanged comes before HealReceived
+    const types = events.map((e) => e.type);
+    expect(types.indexOf("HpChanged")).toBeLessThan(types.indexOf("HealReceived"));
   });
 });

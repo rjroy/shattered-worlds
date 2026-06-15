@@ -8,9 +8,38 @@ import { createGameplaySession } from './gameplaySession'
 import {
   createGameplayEventStream,
   type GameplayBatch,
+  type RunEnded,
+  type RunStarted,
   type RunStreamItem,
   type SubscriberFailure,
 } from './gameplayEventStream'
+
+/** Narrows a captured stream item to RunStarted, failing the test if it is anything else. */
+function requireRunStarted(item: RunStreamItem | undefined): RunStarted {
+  if (item?.kind !== 'RunStarted') {
+    throw new Error(`expected a RunStarted item, got ${item?.kind ?? 'undefined'}`)
+  }
+
+  return item
+}
+
+/** Narrows a captured stream item to RunEnded, failing the test if it is anything else. */
+function requireRunEnded(item: RunStreamItem | undefined): RunEnded {
+  if (item?.kind !== 'RunEnded') {
+    throw new Error(`expected a RunEnded item, got ${item?.kind ?? 'undefined'}`)
+  }
+
+  return item
+}
+
+/** Narrows a captured stream item to GameplayBatch, failing the test if it is anything else. */
+function requireGameplayBatch(item: RunStreamItem | undefined): GameplayBatch {
+  if (item?.kind !== 'GameplayBatch') {
+    throw new Error(`expected a GameplayBatch item, got ${item?.kind ?? 'undefined'}`)
+  }
+
+  return item
+}
 
 function requireHandCardId(
   session: Pick<ReturnType<typeof createGame>, 'state'>,
@@ -73,16 +102,15 @@ describe('gameplaySession', () => {
     })
 
     expect(session.sessionId).toBe('session-42')
-    expect(items).toEqual([
-      {
-        kind: 'RunStarted',
-        sessionId: 'session-42',
-        worldId: worldData.worldId,
-        seed: 42,
-        appliedModifiers: [{ kind: 'hard-mode' }],
-        timestamp: 1_000,
-      },
-    ])
+    expect(items).toHaveLength(1)
+    const started = requireRunStarted(items[0])
+    expect(started.sessionId).toBe('session-42')
+    expect(started.worldId).toBe(worldData.worldId)
+    expect(started.seed).toBe(42)
+    expect(started.appliedModifiers).toEqual([{ kind: 'hard-mode' }])
+    expect(started.timestamp).toBe(1_000)
+    expect(Array.isArray(started.initialEvents)).toBe(true)
+    expect(started.initialState).toBeDefined()
 
     session.subscribe((item) => items.push(item))
     expect(items).toHaveLength(1)
@@ -126,16 +154,13 @@ describe('gameplaySession', () => {
     })
 
     expect(session.sessionId).toBe('session-run-start-error')
-    expect(items).toEqual([
-      {
-        kind: 'RunStarted',
-        sessionId: 'session-run-start-error',
-        worldId: worldData.worldId,
-        seed: 42,
-        appliedModifiers: [],
-        timestamp: 1_000,
-      },
-    ])
+    expect(items).toHaveLength(1)
+    const started = requireRunStarted(items[0])
+    expect(started.sessionId).toBe('session-run-start-error')
+    expect(started.worldId).toBe(worldData.worldId)
+    expect(started.seed).toBe(42)
+    expect(started.appliedModifiers).toEqual([])
+    expect(started.timestamp).toBe(1_000)
     expect(reports).toHaveLength(1)
     expect(reports[0]?.error).toBe(failure)
     expect(reports[0]?.item).toEqual(items[0])
@@ -202,12 +227,11 @@ describe('gameplaySession', () => {
     expect(items).toHaveLength(2)
     expect(items[0]?.kind).toBe('RunStarted')
 
-    const batch = items[1]
+    const batch = requireGameplayBatch(items[1])
 
-    expect(batch?.kind).toBe('GameplayBatch')
-    expect(batch && 'events' in batch ? batch.events : []).toEqual(coreResult.events)
-    expect(batch && 'action' in batch ? batch.action : undefined).toEqual({ type: 'EndTurn' })
-    expect(batch && 'state' in batch ? batch.state : undefined).toEqual(coreResult.state)
+    expect(batch.events).toEqual(coreResult.events)
+    expect(batch.action).toEqual({ type: 'EndTurn' })
+    expect(batch.state).toEqual(coreResult.state)
   })
 
   it('keeps core output identical for the same seed and actions after subscribers are added', () => {
@@ -280,13 +304,15 @@ describe('gameplaySession', () => {
     }
 
     expect(session.state.status).toBe('lost')
-    expect(items.at(-1)).toEqual({
+    const runEnded = requireRunEnded(items.at(-1))
+    expect(runEnded).toMatchObject({
       kind: 'RunEnded',
       sessionId: 'session-terminal',
       outcome: 'lost',
       finalActIndex: session.state.actIndex,
       timestamp: 5_000,
     })
+    expect(runEnded.finalState).toBeDefined()
     expect(items.filter((item) => item.kind === 'RunEnded')).toHaveLength(1)
     expect(items.filter((item) => item.kind === 'GameplayBatch')).toHaveLength(4)
   })
@@ -319,16 +345,14 @@ describe('gameplaySession', () => {
 
     expect(sessionResult).toEqual(coreResult)
     expect(session.state).toEqual(core.state)
-    expect(items.at(0)).toEqual({
-      kind: 'RunStarted',
-      sessionId: 'session-dispatch-error',
-      worldId: worldData.worldId,
-      seed: 17,
-      appliedModifiers: [],
-      timestamp: 7_000,
-    })
+    const started = requireRunStarted(items.at(0))
+    expect(started.sessionId).toBe('session-dispatch-error')
+    expect(started.worldId).toBe(worldData.worldId)
+    expect(started.seed).toBe(17)
+    expect(started.appliedModifiers).toEqual([])
+    expect(started.timestamp).toBe(7_000)
     expect(items.filter((item) => item.kind === 'GameplayBatch')).toHaveLength(4)
-    expect(items.at(-1)).toEqual({
+    expect(items.at(-1)).toMatchObject({
       kind: 'RunEnded',
       sessionId: 'session-dispatch-error',
       outcome: 'lost',
@@ -412,15 +436,17 @@ describe('gameplaySession', () => {
     session.abandon()
     session.abandon()
 
-    expect(items.filter((item) => item.kind === 'RunEnded')).toEqual([
-      {
-        kind: 'RunEnded',
-        sessionId: 'session-abandoned',
-        outcome: 'abandoned',
-        finalActIndex: session.state.actIndex,
-        timestamp: 9_000,
-      },
-    ])
+    const runEndedItems = items.filter((item) => item.kind === 'RunEnded')
+    expect(runEndedItems).toHaveLength(1)
+    const runEnded = requireRunEnded(runEndedItems[0])
+    expect(runEnded).toMatchObject({
+      kind: 'RunEnded',
+      sessionId: 'session-abandoned',
+      outcome: 'abandoned',
+      finalActIndex: session.state.actIndex,
+      timestamp: 9_000,
+    })
+    expect(runEnded.finalState).toBeDefined()
   })
 
   it('refuses dispatch after abandon so nothing follows the closing RunEnded', () => {
@@ -540,23 +566,28 @@ describe('gameplaySession', () => {
       'RunEnded',
     ])
 
-    const [runStarted, firstBatch, secondBatch, runEnded] = items
+    const runStarted = requireRunStarted(items[0])
+    const firstBatch = requireGameplayBatch(items[1])
+    const secondBatch = requireGameplayBatch(items[2])
+    const runEnded = requireRunEnded(items[3])
 
-    expect(runStarted?.kind).toBe('RunStarted')
-    expectOwnKeys(runStarted!, ['kind', 'sessionId', 'worldId', 'seed', 'appliedModifiers', 'timestamp'])
-    expect(runStarted).toEqual({
-      kind: 'RunStarted',
-      sessionId: 'session-headless-shapes',
-      worldId: 'req-events-win-world',
-      seed: 42,
-      appliedModifiers: [],
-      timestamp: 1_000,
-    })
-
-    expect(firstBatch?.kind).toBe('GameplayBatch')
-    if (firstBatch?.kind !== 'GameplayBatch') {
-      throw new Error('expected first emitted batch')
-    }
+    expectOwnKeys(runStarted, [
+      'kind',
+      'sessionId',
+      'worldId',
+      'seed',
+      'appliedModifiers',
+      'timestamp',
+      'initialEvents',
+      'initialState',
+    ])
+    expect(runStarted.sessionId).toBe('session-headless-shapes')
+    expect(runStarted.worldId).toBe('req-events-win-world')
+    expect(runStarted.seed).toBe(42)
+    expect(runStarted.appliedModifiers).toEqual([])
+    expect(runStarted.timestamp).toBe(1_000)
+    expect(Array.isArray(runStarted.initialEvents)).toBe(true)
+    expect(runStarted.initialState).toBeDefined()
 
     expectOwnKeys(firstBatch, ['kind', 'sessionId', 'timestamp', 'action', 'events', 'state'])
     expect(firstBatch.timestamp).toBe(1_001)
@@ -590,14 +621,15 @@ describe('gameplaySession', () => {
     expectOwnKeys(secondBatch.events[3]!, ['type', 'hazardId'])
 
     expect(runEnded?.kind).toBe('RunEnded')
-    expectOwnKeys(runEnded!, ['kind', 'sessionId', 'outcome', 'finalActIndex', 'timestamp'])
-    expect(runEnded).toEqual({
+    expectOwnKeys(runEnded!, ['kind', 'sessionId', 'outcome', 'finalActIndex', 'timestamp', 'finalState'])
+    expect(runEnded).toMatchObject({
       kind: 'RunEnded',
       sessionId: 'session-headless-shapes',
       outcome: 'won',
       finalActIndex: 0,
       timestamp: 1_003,
     })
+    expect(runEnded && 'finalState' in runEnded ? runEnded.finalState : undefined).toBeDefined()
   })
 
   it('stays opt-in by matching a full terminal core run with no subscribers', () => {

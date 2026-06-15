@@ -1,8 +1,13 @@
-import type { GameState, WorldCard } from "../model/types";
+import type { Card, GameEvent, GameState, WorldCard } from "../model/types";
 import type { CardCatalog, CardCount, WorldData } from "../model/catalog";
 import { createRng, shuffle } from "./rng";
 import { mintCard } from "../model/cards";
 import { startTurn } from "./energy";
+
+export type CreateWorldResult = {
+  readonly state: GameState;
+  readonly openingEvents: readonly GameEvent[];
+};
 
 export const WORLD_CONSTS = {
   startHp: 10,
@@ -26,8 +31,8 @@ function mintAll(
   catalog: CardCatalog,
   state: GameState,
   spec: readonly CardCount[],
-): [cards: GameState["playerDraw"][number][], next: GameState] {
-  const cards: GameState["playerDraw"][number][] = [];
+): [cards: Card[], next: GameState] {
+  const cards: Card[] = [];
   let current = state;
   for (const { templateId, count } of spec) {
     for (let i = 0; i < count; i++) {
@@ -44,7 +49,7 @@ function mintAll(
  * world template is a WorldCard; the cast is safe because mintAll is only
  * ever called with world-template ids for act specs.
  */
-function asWorldCards(cards: GameState["playerDraw"][number][]): WorldCard[] {
+function asWorldCards(cards: Card[]): WorldCard[] {
   return cards.filter((c): c is WorldCard => c.kind === "world");
 }
 
@@ -61,7 +66,7 @@ function asWorldCards(cards: GameState["playerDraw"][number][]): WorldCard[] {
  *   each act activates in drawWorld.
  * - Hand is left empty — refillHand deals the opening hand.
  */
-export function createWorld(catalog: CardCatalog, world: WorldData, seed: number): GameState {
+export function createWorld(catalog: CardCatalog, world: WorldData, seed: number): CreateWorldResult {
   const rng = createRng(seed);
 
   // Bootstrap a skeleton state so mintCard has a valid GameState to thread.
@@ -122,8 +127,9 @@ export function createWorld(catalog: CardCatalog, world: WorldData, seed: number
     hand: [],
   };
 
-  // Deal the opening hand — events are discarded at init time.
+  // Deal the opening hand. Capture opening events so callers can surface them
+  // through the stream (e.g. HazardAdded events for world cards in hand).
   // startTurn ensures the opening hand is a turn start (energy === 1).
-  const { state: dealt } = startTurn(baseState);
-  return dealt;
+  const { state: dealt, events: openingEvents } = startTurn(baseState);
+  return { state: dealt, openingEvents };
 }

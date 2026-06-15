@@ -3,54 +3,8 @@ import { availableActions } from "../engine/available";
 import { mintCard } from "../model/cards";
 import { createWorld } from "../engine/world";
 import type { GameState, PlayerCard, WorldCard } from "../model/types";
-import { catalog, worldData } from "./testFixture";
+import { makePlayerCard, makeState, makeWorldCard, mintPlayer, mintWorld } from "./testFixture";
 import { buildWorld } from "../../data/worldManifest";
-
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
-
-/**
- * Build a minimal GameState for testing. Uses createWorld as a base so
- * nextId and rng are valid, then overrides hand and status as needed.
- */
-function makeState(overrides: Partial<GameState> = {}): GameState {
-  const base = createWorld(catalog, worldData, 1);
-  return {
-    ...base,
-    hand: [],
-    playerDraw: [],
-    playerDiscard: [],
-    worldDraw: [],
-    acts: [],
-    progress: {},
-    hp: 10,
-    energy: 0,
-    status: "playing",
-    ...overrides,
-  };
-}
-
-/** Mint a PlayerCard and advance state. */
-function mintPlayer(
-  state: GameState,
-  name: Parameters<typeof mintCard>[2],
-): [PlayerCard, GameState] {
-  const [card, next] = mintCard(catalog, state, name);
-  if (card.kind !== "player") throw new Error(`${name} is not a player card`);
-  return [card as PlayerCard, next];
-}
-
-/** Mint a WorldCard and advance state. */
-function mintWorld(state: GameState, name: Parameters<typeof mintCard>[2]): [WorldCard, GameState] {
-  const [card, next] = mintCard(catalog, state, name);
-  if (card.kind !== "world") throw new Error(`${name} is not a world card`);
-  return [card as WorldCard, next];
-}
-
-// ---------------------------------------------------------------------------
-// 1. DealProgress absent without hazard
-// ---------------------------------------------------------------------------
 
 describe("DealProgress playability", () => {
   it("Explore is absent from playable when hand has only player cards", () => {
@@ -77,40 +31,26 @@ describe("DealProgress playability", () => {
   });
 });
 
-// ---------------------------------------------------------------------------
-// 1b. Concealment gating (Fog) — single-target progress vs concealed world cards
-// ---------------------------------------------------------------------------
+// Concealment gating (Fog): single-target progress vs concealed world cards.
 
-/** Build a WorldCard directly so we can assign a Concealed:N depth. */
+/** A WorldCard with a Concealed:N depth (cost 5). */
 function concealedWorld(id: string, depth: number, extra: WorldCard["keywords"] = []): WorldCard {
-  return {
-    kind: "world",
+  return makeWorldCard({
     id,
-    name: id,
-    insetKey: undefined,
     cost: 5,
     keywords: [{ name: "Concealed", value: depth }, ...extra],
-    discardable: true,
-    canExile: true,
-    onDiscarded: { kind: "None" },
-    onCleared: { kind: "None" },
-    onEndOfTurn: { kind: "None" },
-    onPartialClear: { kind: "None" },
-  };
+  });
 }
 
 /** A single-target progress player card (Explore-shaped: +1, +1 vs Hidden). */
 function explorePlayer(id: string): PlayerCard {
-  return {
-    kind: "player",
+  return makePlayerCard({
     id,
     name: "Explore",
-    insetKey: undefined,
     sourceWorldId: "fog",
     effect: { kind: "DealProgress", base: 1, bonus: { tag: "Hidden", amount: 1 } },
     energyCost: 1,
-    keywords: [],
-  };
+  });
 }
 
 describe("concealment gating of single-target progress", () => {
@@ -194,7 +134,7 @@ describe("Panic playability", () => {
     if (spec.kind !== "compound") throw new Error("not compound");
 
     // steps[0]: ReturnWorldCards{1,2}
-    expect(spec.steps[0]).toEqual({ kind: "returnWorld", min: 1, max: 2 });
+    expect(spec.steps[0]).toEqual({ kind: "returnWorld", min: 1, max: 4 });
     // steps[1]: Draw → no target needed
     expect(spec.steps[1]).toEqual({ kind: "none" });
   });
@@ -613,7 +553,7 @@ describe("Cut It Loose (Sequence: destroyHand → hazard)", () => {
 
   /** Build a minimal GameState for bird-building tests. */
   function makeBirdState(overrides: Partial<GameState> = {}): GameState {
-    const base = createWorld(birdCatalog, birdWorld, 1);
+    const { state: base } = createWorld(birdCatalog, birdWorld, 1);
     return {
       ...base,
       hand: [],

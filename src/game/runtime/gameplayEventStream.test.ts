@@ -30,6 +30,7 @@ describe("gameplayEventStream contract", () => {
     );
 
   it("defines a run-start envelope with session identity, setup modifiers, and a timestamp", () => {
+    const core = createGame(catalog, worldData, 42);
     const item = createRunStarted({
       sessionId: "session-1",
       worldId: "zombie-big-box",
@@ -39,19 +40,21 @@ describe("gameplayEventStream contract", () => {
         { kind: "hard-mode" },
       ],
       timestamp: 1_000,
+      initialEvents: core.openingEvents,
+      initialState: core.state,
     }) satisfies RunStarted;
 
-    expect(item).toEqual({
-      kind: "RunStarted",
-      sessionId: "session-1",
-      worldId: "zombie-big-box",
-      seed: 42,
-      appliedModifiers: [
-        { kind: "bonus-card", templateId: "Listen" },
-        { kind: "hard-mode" },
-      ],
-      timestamp: 1_000,
-    });
+    expect(item.kind).toBe("RunStarted");
+    expect(item.sessionId).toBe("session-1");
+    expect(item.worldId).toBe("zombie-big-box");
+    expect(item.seed).toBe(42);
+    expect(item.appliedModifiers).toEqual([
+      { kind: "bonus-card", templateId: "Listen" },
+      { kind: "hard-mode" },
+    ]);
+    expect(item.timestamp).toBe(1_000);
+    expect(Array.isArray(item.initialEvents)).toBe(true);
+    expect(item.initialState).toBeDefined();
   });
 
   it("wraps one accepted dispatch as one grouped gameplay batch", () => {
@@ -147,6 +150,7 @@ describe("gameplayEventStream contract", () => {
   });
 
   it("snapshots run-start appliedModifiers so caller mutation does not affect the emitted envelope", () => {
+    const core = createGame(catalog, worldData, 5);
     const modifiers = [{ kind: "hard-mode", level: 1 }];
     const item = createRunStarted({
       sessionId: "session-clone",
@@ -154,6 +158,8 @@ describe("gameplayEventStream contract", () => {
       seed: 5,
       appliedModifiers: modifiers,
       timestamp: 1_000,
+      initialEvents: core.openingEvents,
+      initialState: core.state,
     });
 
     modifiers.push({ kind: "bonus-card", level: 2 });
@@ -164,20 +170,21 @@ describe("gameplayEventStream contract", () => {
   });
 
   it("defines a terminal run envelope with outcome, final act index, and a timestamp", () => {
+    const finalState = createGame(catalog, worldData, 1).state;
     const item = createRunEnded({
       sessionId: "session-1",
       outcome: "won",
       finalActIndex: 2,
       timestamp: 1_200,
+      finalState,
     });
 
-    expect(item).toEqual({
-      kind: "RunEnded",
-      sessionId: "session-1",
-      outcome: "won",
-      finalActIndex: 2,
-      timestamp: 1_200,
-    });
+    expect(item.kind).toBe("RunEnded");
+    expect(item.sessionId).toBe("session-1");
+    expect(item.outcome).toBe("won");
+    expect(item.finalActIndex).toBe(2);
+    expect(item.timestamp).toBe(1_200);
+    expect(item.finalState).toBeDefined();
   });
 
   it("supports an abandoned outcome distinct from won and lost", () => {
@@ -186,6 +193,7 @@ describe("gameplayEventStream contract", () => {
       outcome: "abandoned",
       finalActIndex: 1,
       timestamp: 1_200,
+      finalState: createGame(catalog, worldData, 1).state,
     });
 
     expect(item.outcome).toBe("abandoned");
@@ -205,7 +213,8 @@ describe("gameplayEventStream contract", () => {
   });
 
   it("discriminates the stream without flattening gameplay events to top-level items", () => {
-    const state = createGame(catalog, worldData, 7).state;
+    const core7 = createGame(catalog, worldData, 7);
+    const state = core7.state;
 
     const stream: RunStreamItem[] = [
       createRunStarted({
@@ -214,6 +223,8 @@ describe("gameplayEventStream contract", () => {
         seed: 7,
         appliedModifiers: [],
         timestamp: 1_000,
+        initialEvents: core7.openingEvents,
+        initialState: core7.state,
       }),
       createGameplayBatch(
         "session-7",
@@ -226,6 +237,7 @@ describe("gameplayEventStream contract", () => {
         outcome: "lost",
         finalActIndex: state.actIndex,
         timestamp: 1_200,
+        finalState: state,
       }),
     ];
 
@@ -243,7 +255,8 @@ describe("gameplayEventStream contract", () => {
   });
 
   it("exposes semantic payloads for gameplay tracking without renderer-only envelopes", () => {
-    const state = createGame(catalog, worldData, 7).state;
+    const core7 = createGame(catalog, worldData, 7);
+    const state = core7.state;
     const stream: RunStreamItem[] = [
       createRunStarted({
         sessionId: "session-7",
@@ -251,6 +264,8 @@ describe("gameplayEventStream contract", () => {
         seed: 7,
         appliedModifiers: [{ kind: "hard-mode" }],
         timestamp: 1_000,
+        initialEvents: core7.openingEvents,
+        initialState: core7.state,
       }),
       createGameplayBatch(
         "session-7",
@@ -277,6 +292,7 @@ describe("gameplayEventStream contract", () => {
         outcome: "won",
         finalActIndex: 1,
         timestamp: 1_200,
+        finalState: state,
       }),
     ];
 
@@ -287,6 +303,8 @@ describe("gameplayEventStream contract", () => {
       "seed",
       "appliedModifiers",
       "timestamp",
+      "initialEvents",
+      "initialState",
     ]);
     expect(stream[1]).toEqual({
       kind: "GameplayBatch",
@@ -313,6 +331,7 @@ describe("gameplayEventStream contract", () => {
       "outcome",
       "finalActIndex",
       "timestamp",
+      "finalState",
     ]);
     expect(() => structuredClone(stream)).not.toThrow();
   });
@@ -431,6 +450,7 @@ describe("gameplayEventStream contract", () => {
       outcome: "lost",
       finalActIndex: firstItem.state.actIndex,
       timestamp: 1_200,
+      finalState: firstItem.state,
     });
     const calls: string[] = [];
     let addedLateSubscriber = false;

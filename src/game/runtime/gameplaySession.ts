@@ -107,7 +107,7 @@ export function createGameplaySession(
 
   function closeRun(outcome: RunOutcome, finalActIndex: number): void {
     runEnded = true
-    stream.emit(createRunEnded({ sessionId, outcome, finalActIndex, timestamp: clock() }))
+    stream.emit(createRunEnded({ sessionId, outcome, finalActIndex, timestamp: clock(), finalState: core.state }))
 
     // Each unsubscribe removes itself from the list; iterate over a copy.
     for (const unsubscribe of [...sessionUnsubscribes]) {
@@ -126,6 +126,8 @@ export function createGameplaySession(
       seed,
       appliedModifiers: options.appliedModifiers ?? [],
       timestamp: clock(),
+      initialEvents: core.openingEvents,
+      initialState: core.state,
     }),
   )
 
@@ -134,6 +136,10 @@ export function createGameplaySession(
 
     get state() {
       return core.state
+    },
+
+    get openingEvents() {
+      return core.openingEvents
     },
 
     dispatch(action: Action) {

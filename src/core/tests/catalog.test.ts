@@ -2,11 +2,10 @@ import { describe, expect, it } from "bun:test";
 import { assembleCatalog } from "../model/catalog";
 import { CatalogError } from "../model/errors";
 import type { RawCardSource } from "../model/catalog";
-import starterJson from "../../data/worlds/starters/starter.json";
 import basicJson from "../../data/worlds/starters/basic.json";
 import zombieJson from "../../data/worlds/zombie-big-box/cards.json";
 
-const STARTER_SOURCE = starterJson as unknown as RawCardSource;
+const BASIC_SOURCE = basicJson as unknown as RawCardSource;
 const ZOMBIE_SOURCE = zombieJson as unknown as RawCardSource;
 
 // ---------------------------------------------------------------------------
@@ -15,12 +14,12 @@ const ZOMBIE_SOURCE = zombieJson as unknown as RawCardSource;
 
 describe("assembleCatalog merge completeness", () => {
   it("merging starter and zombie-big-box sources produces 22 templates", () => {
-    const catalog = assembleCatalog([STARTER_SOURCE, ZOMBIE_SOURCE]);
+    const catalog = assembleCatalog([BASIC_SOURCE, ZOMBIE_SOURCE]);
     expect(Object.keys(catalog)).toHaveLength(22);
   });
 
   it("merged catalog contains all expected template ids", () => {
-    const catalog = assembleCatalog([STARTER_SOURCE, ZOMBIE_SOURCE]);
+    const catalog = assembleCatalog([BASIC_SOURCE, ZOMBIE_SOURCE]);
     const expectedIds = [
       "Sprint",
       "Explore",

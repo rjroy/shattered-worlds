@@ -7,6 +7,7 @@ import { intensity } from "./intensity";
 
 export interface GameCore {
   readonly state: GameState;
+  readonly openingEvents: readonly GameEvent[];
   dispatch(action: Action): { state: GameState; events: GameEvent[] };
   availableActions(): AvailableActions;
   intensity(): number;
@@ -17,12 +18,14 @@ export interface GameCore {
  * descriptor are captured in the closure and threaded through all dispatches.
  */
 export function createGame(catalog: CardCatalog, world: WorldData, seed: number): GameCore {
-  let current = createWorld(catalog, world, seed);
+  const { state: initialState, openingEvents } = createWorld(catalog, world, seed);
+  let current = initialState;
 
   return {
     get state() {
       return current;
     },
+    openingEvents,
     dispatch(action: Action) {
       const result = reduce(catalog, current, action);
       current = result.state;

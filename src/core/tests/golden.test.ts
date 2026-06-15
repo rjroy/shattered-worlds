@@ -27,7 +27,7 @@ import { catalog, worldData } from './testFixture'
  * Clears all draw piles, acts, and progress unless the caller restores them.
  */
 function makeState(overrides: Partial<GameState>): GameState {
-  const base = createWorld(catalog, worldData, 42)
+  const { state: base } = createWorld(catalog, worldData, 42)
   return {
     ...base,
     playerDraw: [],
@@ -56,7 +56,7 @@ function makeState(overrides: Partial<GameState>): GameState {
 
 describe('golden win: Door via two Explore plays', () => {
   // Mint the three cards we need from a fixed base state
-  const base = createWorld(catalog, worldData, 42)
+  const { state: base } = createWorld(catalog, worldData, 42)
   const [door, s1] = mintCard(catalog, base, 'Door')
   const [explore1, s2] = mintCard(catalog, s1, 'Explore')
   const [explore2, finalMinted] = mintCard(catalog, s2, 'Explore')
@@ -67,7 +67,7 @@ describe('golden win: Door via two Explore plays', () => {
 
   // Verify expected IDs so the test is self-describing
   it('minted card ids are deterministic', () => {
-    const base2 = createWorld(catalog, worldData, 42)
+    const { state: base2 } = createWorld(catalog, worldData, 42)
     const [d, t1] = mintCard(catalog, base2, 'Door')
     const [e1, t2] = mintCard(catalog, t1, 'Explore')
     const [e2] = mintCard(catalog, t2, 'Explore')
@@ -143,7 +143,7 @@ describe('golden win: Door via two Explore plays', () => {
 // ---------------------------------------------------------------------------
 
 describe('golden loss: HP reaches 0 via Zombie discard', () => {
-  const base = createWorld(catalog, worldData, 42)
+  const { state: base } = createWorld(catalog, worldData, 42)
   const [zombie, minted] = mintCard(catalog, base, 'Zombie')
   const zombieCard = zombie as WorldCard
 
@@ -198,7 +198,7 @@ describe('replay equivalence', () => {
    * state. The sequence exercises PlayCard, DiscardHazard, and EndTurn.
    */
   function runReplay(): GameState {
-    const state0 = createWorld(catalog, worldData, 42)
+    const { state: state0 } = createWorld(catalog, worldData, 42)
 
     // seed 42 starting hand:
     //   Rubble(id=14), Screams(id=17), Sprint(id=1), Panic(id=8), MedKit(id=7), Explore(id=2)
@@ -306,7 +306,7 @@ describe('replay equivalence: Spore + DealProgressScaled', () => {
     topDeckGains: number
     bloomAmount: number | undefined
   } {
-    const base = createWorld(mallCatalog, worldData, 42)
+    const { state: base } = createWorld(mallCatalog, worldData, 42)
     const [planter, s1] = mintCard(mallCatalog, base, 'Bloom Planter')
     const [explore, s2] = mintCard(mallCatalog, s1, 'Explore')
     const [bloom, s3] = mintCard(mallCatalog, s2, 'Bloom')
