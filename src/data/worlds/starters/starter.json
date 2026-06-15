@@ -1,0 +1,11 @@
+{
+  "worldId": "starter",
+  "starterDeck": [
+    { "templateId": "Sprint", "count": 2 },
+    { "templateId": "Explore", "count": 3 },
+    { "templateId": "Barricade", "count": 2 },
+    { "templateId": "Med Kit", "count": 1 },
+    { "templateId": "Panic", "count": 1 },
+    { "templateId": "Adrenaline", "count": 1 }
+  ]
+}

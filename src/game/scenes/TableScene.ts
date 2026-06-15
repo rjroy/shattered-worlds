@@ -39,10 +39,7 @@ import { HUDView } from "../view/HUDView";
 import { RunSummaryView, type RunSummaryData } from "../view/RunSummaryView";
 import { HelpOverlayView } from "../view/HelpOverlayView";
 import { textStyle, TEXT, getRealityPalette } from "../view/presentation";
-import {
-  ringFraction,
-  connectorLine,
-} from "../interaction/feedback";
+import { ringFraction, connectorLine } from "../interaction/feedback";
 import type { ConnectorStyle } from "../interaction/feedback";
 import { effectAtStep } from "../../core/effects/composite";
 import { connectorStyleOf } from "../../core/effects/registry";
@@ -130,9 +127,10 @@ export class TableScene extends Phaser.Scene {
   // pointer-eating object over the cards).
   private connectorGfx!: Phaser.GameObjects.Graphics;
 
-  private worldId_ = "zombie-big-box";
-  private seed_ = 0;
-  private terminalSummaryShown_ = false;
+  private worldId_: string = "zombie-big-box";
+  private starterId_: string = "starter";
+  private seed_: number = 0;
+  private terminalSummaryShown_: boolean = false;
   private runtime_: GameplayRuntime;
 
   constructor(runtime?: GameplayRuntime) {
@@ -143,8 +141,9 @@ export class TableScene extends Phaser.Scene {
     this.runtime_ = runtime ?? createGameplayRuntime();
   }
 
-  init(data: { worldId?: string; seed?: number }): void {
+  init(data: { worldId?: string; starterId?: string; seed?: number }): void {
     this.worldId_ = data.worldId ?? "zombie-big-box";
+    this.starterId_ = data.starterId ?? "starter";
     this.seed_ = data.seed ?? Math.floor(Math.random() * 2 ** 32);
     this.terminalSummaryShown_ = false;
     this.cardObjects = new Map();
@@ -155,7 +154,7 @@ export class TableScene extends Phaser.Scene {
     // register here rather than in preload — before any CardView renders.
     ensureEffectIconTextures(this);
 
-    const { catalog, worldData } = buildWorld(this.worldId_);
+    const { catalog, worldData } = buildWorld(this.worldId_, this.starterId_);
 
     this.game_ = this.runtime_.startSession(catalog, worldData, this.seed_);
     // Registered before any other create() work can throw, so a session that

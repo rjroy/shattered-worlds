@@ -142,8 +142,9 @@
       "kind": "player",
       "name": "Regroup",
       "insetKey": "zombie-inset-regroup",
-      "energyCost": 1,
-      "effect": { "kind": "DestroyCardInHand", "min": 0, "max": 2 }
+      "energyCost": 0,
+      "exhaust": true,
+      "effect": { "kind": "DestroyCardInHand", "min": 0, "max": 3 }
     },
     "Shelf Sweep": {
       "kind": "player",

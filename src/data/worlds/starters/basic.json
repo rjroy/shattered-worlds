@@ -1,5 +1,5 @@
 {
-  "worldId": "starter",
+  "worldId": "basic",
   "cardTemplates": {
     "Sprint": {
       "kind": "player",
@@ -29,7 +29,7 @@
         "kind": "Sequence",
         "steps": [
           { "kind": "DealProgress", "base": 1 },
-          { "kind": "ReturnWorldCards", "min": 0, "max": 1 }
+          { "kind": "ReturnWorldCards", "min": 0, "max": 3 }
         ]
       }
     },
@@ -46,7 +46,7 @@
       "effect": {
         "kind": "Sequence",
         "steps": [
-          { "kind": "ReturnWorldCards", "min": 1, "max": 2 },
+          { "kind": "ReturnWorldCards", "min": 1, "max": 4 },
           { "kind": "Draw", "world": 1 }
         ]
       }
@@ -96,13 +96,5 @@
       "onPartialClear": { "kind": "None" },
       "onEndOfTurn": { "kind": "AddThreatToWorldDeck" }
     }
-  },
-  "starterDeck": [
-    { "templateId": "Sprint", "count": 2 },
-    { "templateId": "Explore", "count": 3 },
-    { "templateId": "Barricade", "count": 2 },
-    { "templateId": "Med Kit", "count": 1 },
-    { "templateId": "Panic", "count": 1 },
-    { "templateId": "Adrenaline", "count": 1 }
-  ]
+  }
 }
