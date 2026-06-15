@@ -2,6 +2,7 @@ import Phaser from 'phaser'
 
 import type { RunOutcome } from '../runtime/gameplayEventStream'
 import type { RunRecordRecords } from '../runtime/runStats'
+import type { FeatDefinition } from '../../data/feats/types'
 import { CANVAS_W, CANVAS_H } from './layout'
 import { textStyle, TEXT } from './presentation'
 import { formatDuration } from './format'
@@ -20,6 +21,7 @@ export interface RunSummaryData {
   readonly hazardsDiscarded: number
   readonly cardsDiscarded: number
   readonly records: RunRecordRecords
+  readonly featsEarned: readonly FeatDefinition[]
 }
 
 function titleForOutcome(outcome: RunOutcome): string {
@@ -133,7 +135,53 @@ export class RunSummaryView extends Phaser.GameObjects.Container {
       this.add(recordText)
     }
 
-    const continueText = this.scene.add.text(0, 184, 'Tap to continue', textStyle({
+    let continueY = 184
+
+    if (data.featsEarned.length > 0) {
+      const anchor = recordLabels.length > 0 ? 142 : 104
+      const capped = data.featsEarned.slice(0, 4)
+      const overflow = data.featsEarned.length - 4
+      const rowCount = capped.length + (overflow > 0 ? 1 : 0)
+      const lastFeatRowY = anchor + 28 + (rowCount - 1) * 22
+
+      capped.forEach((def, i) => {
+        const y = anchor + 28 + i * 22
+        const fragments = def.reward.items.reduce((sum, item) =>
+          item.type === 'memoryFragments' ? sum + item.amount : sum, 0)
+        const nameText = this.scene.add.text(-220, y, def.name, textStyle({
+          fontSize: '14px', color: TEXT.textReward, fontStyle: 'bold',
+        })).setOrigin(0, 0.5)
+        const rewardText = this.scene.add.text(220, y, `+${fragments} Fragments`, textStyle({
+          fontSize: '14px', color: TEXT.textReward, fontStyle: 'bold',
+        })).setOrigin(1, 0.5)
+        this.add([nameText, rewardText])
+      })
+
+      if (overflow > 0) {
+        const y = anchor + 28 + capped.length * 22
+        const moreText = this.scene.add.text(0, y, `+ ${overflow} more`, textStyle({
+          fontSize: '14px', color: TEXT.textMuted,
+        })).setOrigin(0.5, 0.5)
+        this.add(moreText)
+      }
+
+      continueY = Math.max(184, lastFeatRowY + 28)
+      const bottomEdge = continueY + 31
+      const panelHeight = Math.ceil((bottomEdge + 215) / 2) * 2
+      const panelCenterY = (bottomEdge - 215) / 2
+
+      panel.setPosition(0, panelCenterY)
+      panel.setSize(620, panelHeight)
+      frame.clear()
+      frame.lineStyle(1, 0xd6b15c, 0.45)
+      frame.strokeRect(-286, -186, 572, bottomEdge + 157)
+      frame.strokeCircle(-260, -160, 18)
+      frame.strokeCircle(260, -160, 18)
+      frame.strokeCircle(-260, bottomEdge - 55, 18)
+      frame.strokeCircle(260, bottomEdge - 55, 18)
+    }
+
+    const continueText = this.scene.add.text(0, continueY, 'Tap to continue', textStyle({
       fontSize: '16px',
       color: '#d6b15c',
       fontStyle: 'bold',
