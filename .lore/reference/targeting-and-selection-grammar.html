@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Targeting and Selection Grammar</title>
+  <meta name="date" content="2026-06-15">
+  <meta name="status" content="current">
+  <meta name="tags" content="targeting, selection, available-actions, renderer, ux, legality">
+  <meta name="fg-type" content="architecture">
+  <meta name="fg-sources" content=".lore/work/design/targeting-interaction.html, .lore/work/plans/generalize-selection-targeting.html, .lore/work/specs/player-feedback-selection-and-progress.html">
+  <meta name="fg-status" content="current">
+  <style>body{font:16px/1.6 system-ui,sans-serif;max-width:880px;margin:40px auto;padding:0 20px;color:#20242a}h1{line-height:1.1}h2{margin-top:28px}code{background:#f3f4f6;padding:2px 5px;border-radius:4px}</style>
+</head>
+<body>
+  <h1>Targeting and Selection Grammar</h1>
+  <p>Selection is renderer-only transient state. The core never sees half-built interactions such as "card selected, target pending." It receives only complete actions. Legality, however, comes from the core through a pure available-actions read model, so renderer highlights and reducer validation share the same source of truth.</p>
+  <h2>Grammar</h2>
+  <p>The interaction pattern is select, resolve requirements, commit. A card's target spec decides whether the middle step is no target, one hazard target, a modal branch, a return selection, a destroy selection, a discard step, or a compound sequence. Cancel is available during every non-idle selection and dispatches nothing.</p>
+  <h2>World Cards</h2>
+  <p>A world card is an actor only when selected from idle for discard. While a player card is selected, the same world card is a possible target. The Door and other non-discardable world cards do not offer a discard affordance.</p>
+  <h2>Design Rule</h2>
+  <p>The renderer can project legality into hover states, connectors, previews, and dimming, but it must not reimplement game rules. If a highlight would offer an action that dispatch rejects, the bug is in the availability seam.</p>
+</body>
+</html>

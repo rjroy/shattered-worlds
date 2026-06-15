@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Core Render Split</title>
+  <meta name="date" content="2026-06-15">
+  <meta name="status" content="current">
+  <meta name="tags" content="architecture, core, renderer, phaser, deterministic, event-log, seam">
+  <meta name="fg-type" content="architecture">
+  <meta name="fg-sources" content=".lore/work/design/core-render-architecture.html, .lore/work/specs/poc-core-loop.html, .lore/work/plans/poc-core-loop.html">
+  <meta name="fg-status" content="current">
+  <style>body{font:16px/1.6 system-ui,sans-serif;max-width:880px;margin:40px auto;padding:0 20px;color:#20242a}h1{line-height:1.1}h2{margin-top:28px}code{background:#f3f4f6;padding:2px 5px;border-radius:4px}</style>
+</head>
+<body>
+  <h1>Core Render Split</h1>
+  <p>Game truth lives in a pure, synchronous, deterministic TypeScript core. The Phaser layer is a renderer and input adapter. The core never imports Phaser, DOM, canvas, timers, audio, or game presentation code; the build enforces that boundary.</p>
+  <h2>Contract</h2>
+  <p>The renderer sends a complete action to the core. The core returns the authoritative next state plus an ordered semantic event log. The renderer may animate those events at human pace or skip directly to the returned state. Simulation runners can ignore animation events and run at full speed.</p>
+  <p>All game randomness lives in the core behind seeded state. Same seed plus same action sequence must replay identically. Cosmetic renderer randomness may exist, but it never feeds back into state.</p>
+  <h2>Why It Matters</h2>
+  <p>The split makes balance sims, golden tests, reducer tests, and AI code review feasible. It also protects the project from presentation-driven rule drift: if something decides what is true in the game, it belongs in the core; if it decides how truth looks or feels, it belongs in the renderer.</p>
+</body>
+</html>

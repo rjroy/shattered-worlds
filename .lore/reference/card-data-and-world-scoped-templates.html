@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Card Data and World Scoped Templates</title>
+  <meta name="date" content="2026-06-15">
+  <meta name="status" content="current">
+  <meta name="tags" content="card-data, json, catalog, world-id, provenance, templates">
+  <meta name="fg-type" content="architecture">
+  <meta name="fg-sources" content=".lore/work/specs/card-data-externalization.html, .lore/work/plans/card-data-externalization.html, .lore/work/notes/card-data-externalization.html">
+  <meta name="fg-status" content="current">
+  <style>body{font:16px/1.6 system-ui,sans-serif;max-width:880px;margin:40px auto;padding:0 20px;color:#20242a}h1{line-height:1.1}h2{margin-top:28px}code{background:#f3f4f6;padding:2px 5px;border-radius:4px}</style>
+</head>
+<body>
+  <h1>Card Data and World Scoped Templates</h1>
+  <p>Card templates and deck composition are authored as JSON content, not inline TypeScript. A run assembles a catalog from the shared starter source plus the active world's source. Minting cards goes through that catalog and stamps card provenance, including the card's source world.</p>
+  <h2>Rules</h2>
+  <p><code>worldId</code> is the join key across world JSON, world manifests, visual themes, assets, help text, and display manifests. Starter cards use <code>starter</code> as their source world. Theme cards belong to their world; reward cards should remain mechanically distinct so a deck carries the fingerprint of the worlds it passed through.</p>
+  <p>The catalog must fail loudly before world creation if required JSON is absent, invalid, or incomplete. The game must not silently proceed with a missing starter source, missing active-world source, or unresolved template reference.</p>
+  <h2>Renderer Impact</h2>
+  <p>Card provenance is a presentation seam, not a core presentation leak. The core stores source identity as data; the renderer maps it to visual theme choices. Today player cards still use generic fronts in some cases, but the lookup is correctly keyed for future per-world art.</p>
+</body>
+</html>

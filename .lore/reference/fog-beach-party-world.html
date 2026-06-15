@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Fog Beach Party World</title>
+  <meta name="date" content="2026-06-15">
+  <meta name="status" content="current">
+  <meta name="tags" content="world-design, fog-beach-party, conceal, light, numeric-keywords, gain-light">
+  <meta name="fg-type" content="concept">
+  <meta name="fg-sources" content=".lore/work/specs/fog-beach-party.html">
+  <meta name="fg-status" content="current">
+  <style>body{font:16px/1.6 system-ui,sans-serif;max-width:880px;margin:40px auto;padding:0 20px;color:#20242a}h1{line-height:1.1}h2{margin-top:28px}code{background:#f3f4f6;padding:2px 5px;border-radius:4px}</style>
+</head>
+<body>
+  <h1>Fog Beach Party World</h1>
+  <p>Fog Beach Party's threat verb is <strong>conceal</strong>: hazards can be present and harmful while their identity is hidden. The response archetype is <strong>reveal and endure</strong>. Light is the weapon, but blind discard and sweep effects prevent hard lock.</p>
+  <h2>Core Mechanic</h2>
+  <p>Keywords support numeric values such as <code>Concealed:3</code>. The world has a global <code>light</code> value on state. A card is concealed when its Concealed depth is greater than current Light. Concealment means exactly two things: the card cannot be single-targeted and its details are hidden. Other effects still resolve on true data.</p>
+  <h2>Light</h2>
+  <p><code>GainLight</code> raises the global Light value. Light decays at turn start, so visibility is a threshold that changes over time, not a resource spent by targeting. The HUD must show Light in Fog even at 0 and hide it in non-light worlds.</p>
+  <h2>World Shape</h2>
+  <p>The Bonfire is visible and grants the light kit, solving the need-reveal-to-get-reveal problem. Abandoned Cooler provides harmless concealed noise so spending Light remains a decision. Whiteout uses a generalized keyword counter instead of bespoke fog logic.</p>
+</body>
+</html>

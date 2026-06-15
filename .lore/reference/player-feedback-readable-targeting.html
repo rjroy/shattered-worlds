@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Readable Targeting Feedback</title>
+  <meta name="date" content="2026-06-15">
+  <meta name="status" content="current">
+  <meta name="tags" content="feedback, targeting, connector, hover, progress-ring, ux">
+  <meta name="fg-type" content="lesson">
+  <meta name="fg-sources" content=".lore/work/specs/player-feedback-selection-and-progress.html, .lore/work/brainstorm/player-feedback-selection-and-progress.html, .lore/work/plans/player-feedback-selection-and-progress.html">
+  <meta name="fg-status" content="current">
+  <style>body{font:16px/1.6 system-ui,sans-serif;max-width:880px;margin:40px auto;padding:0 20px;color:#20242a}h1{line-height:1.1}h2{margin-top:28px}code{background:#f3f4f6;padding:2px 5px;border-radius:4px}</style>
+</head>
+<body>
+  <h1>Readable Targeting Feedback</h1>
+  <p>Click-to-commit targeting is only fair if the hover state makes the outcome unmistakable before the click. The target read must be loud enough to stand on its own: not only a border tint, but a clear highlighted target, a connector from acting card to target, and a live preview of what will happen.</p>
+  <h2>Lessons</h2>
+  <p><strong>The connector names the target.</strong> It turns "match these two highlighted things in your head" into a visible line from actor to target. Connector style also communicates action type: progress, destroy, or return-to-deck.</p>
+  <p><strong>Instruction and preview need separate surfaces.</strong> A phase hint and a target-specific live preview should not overwrite each other in one text slot. If they fight, the player loses either the current task or the consequence of committing.</p>
+  <p><strong>Progress reset must be taught visually.</strong> Because hazard Progress resets at end of turn, the UI needs both a current-turn progress meter and a drain animation. A static meter communicates "some progress exists" but hides that the progress is temporary.</p>
+</body>
+</html>
