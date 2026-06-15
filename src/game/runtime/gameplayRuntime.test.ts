@@ -1,10 +1,25 @@
 import { describe, expect, it } from 'bun:test'
 
+import type { WorldData } from '../../core/index'
 import { catalog, worldData } from '../../core/tests/testFixture'
 
 import { createGameplayRuntime } from './gameplayRuntime'
 import type { RunStreamItem, SubscriberFailure } from './gameplayEventStream'
 import { RUN_STATS_STORAGE_KEY, type RunStatsStorage } from './runStats'
+
+function createGuaranteedWinWorldData(): WorldData {
+  return {
+    worldId: 'runtime-win-world',
+    starterDeck: [{ templateId: 'Explore', count: 4 }],
+    deckComposition: {
+      acts: [
+        {
+          cards: [{ templateId: 'Door', count: 2 }],
+        },
+      ],
+    },
+  }
+}
 
 function createMemoryStorage(): RunStatsStorage & { dump(): Record<string, string> } {
   const entries = new Map<string, string>()
@@ -159,5 +174,23 @@ describe('gameplayRuntime composition root', () => {
     }
 
     expect(observed.state).toEqual(bare.state)
+  })
+
+  it('wires featEvaluator so first-survivor is earned after a won run (REQ-FEAT-12, REQ-FEAT-13)', () => {
+    const winWorldData = createGuaranteedWinWorldData()
+    const runtime = createGameplayRuntime()
+    const session = runtime.startSession(catalog, winWorldData, 42)
+
+    const doorId = session.state.hand.find((card) => card.kind === 'world' && card.name === 'Door')?.id
+    if (doorId === undefined) throw new Error('expected Door in opening hand')
+
+    for (let plays = 0; plays < 2; plays += 1) {
+      const exploreId = session.state.hand.find((card) => card.kind === 'player' && card.name === 'Explore')?.id
+      if (exploreId === undefined) throw new Error('expected Explore in hand')
+      session.dispatch({ type: 'PlayCard', cardId: exploreId, targetId: doorId })
+    }
+
+    expect(session.state.status).toBe('won')
+    expect(runtime.featEvaluator.lastRunEarned().find((d) => d.id === 'first-survivor')).toBeDefined()
   })
 })

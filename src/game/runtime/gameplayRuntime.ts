@@ -12,6 +12,8 @@ import { createRunStatsCollector, type RunStatsReader, type RunStatsStorage } fr
 import { createStatsTransfer, type StatsTransfer } from './statsTransfer'
 import { createFeatsStore, type FeatsStore } from './featsProfile'
 import { createWitnessCollector, type WitnessStore } from './witnessProfile'
+import { createFeatEvaluator, type FeatEvaluator } from './featEvaluator'
+import { FEAT_CATALOG } from '../../data/feats/catalog'
 
 // The runtime owns the stream, failure handling, and the clock — sessions it
 // starts must not override them, or cross-run consumers would see
@@ -30,6 +32,7 @@ export interface GameplayRuntime {
   readonly statsTransfer: StatsTransfer
   readonly witnessStore: WitnessStore
   readonly featsStore: FeatsStore
+  readonly featEvaluator: FeatEvaluator
   /** Runtime-wide observation: receives items from every session, correlated by sessionId. */
   subscribe(subscriber: RunStreamSubscriber): () => void
   startSession(
@@ -66,6 +69,7 @@ export function createGameplayRuntime(options: GameplayRuntimeOptions = {}): Gam
   })
   const witnessStore = createWitnessCollector(options.storage)
   const featsStore = createFeatsStore(options.storage)
+  const featEvaluator = createFeatEvaluator(FEAT_CATALOG, featsStore, runStats, witnessStore, options.clock ?? Date.now)
   const statsTransfer = createStatsTransfer({
     runStats,
     witness: witnessStore,
@@ -76,6 +80,7 @@ export function createGameplayRuntime(options: GameplayRuntimeOptions = {}): Gam
 
   stream.subscribe(runStats.subscriber)
   stream.subscribe(witnessStore.subscriber)
+  stream.subscribe(featEvaluator.subscriber)
   stream.subscribe((item) => {
     if (item.kind === 'RunEnded') {
       openSessions.delete(item.sessionId)
@@ -88,6 +93,7 @@ export function createGameplayRuntime(options: GameplayRuntimeOptions = {}): Gam
     statsTransfer,
     witnessStore,
     featsStore,
+    featEvaluator,
 
     subscribe(subscriber) {
       return stream.subscribe(subscriber)

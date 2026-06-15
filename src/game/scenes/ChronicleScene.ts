@@ -2,11 +2,15 @@ import Phaser from 'phaser'
 
 import { worldManifest } from '../../data/worldManifest'
 import { worldDisplayManifest } from '../../data/worldDisplayManifest'
+import { FEAT_CATALOG, computeFragmentBalance } from '../../data/feats/catalog'
 import type { RunStatsReader } from '../runtime/runStats'
 import type { StatsTransfer, InspectedStatsImport } from '../runtime/statsTransfer'
+import type { FeatsStore } from '../runtime/featsProfile'
 import { CANVAS_W, CANVAS_H } from '../view/layout'
 import { TEXT, textStyle } from '../view/presentation'
 import { formatDuration } from '../view/format'
+
+const VISIBLE_WORLDS = 4
 
 type Button = {
   container: Phaser.GameObjects.Container
@@ -16,18 +20,22 @@ type Button = {
 export class ChronicleScene extends Phaser.Scene {
   private readonly runStats: RunStatsReader | undefined
   private readonly statsTransfer: StatsTransfer | undefined
+  private readonly featsStore: FeatsStore | undefined
   private content?: Phaser.GameObjects.Container
   private messageText?: Phaser.GameObjects.Text
   private confirmOverlay?: Phaser.GameObjects.Container
   private fileInput?: HTMLInputElement
+  private worldsScrollOffset = 0
 
-  constructor(runStats?: RunStatsReader, statsTransfer?: StatsTransfer) {
+  constructor(runStats?: RunStatsReader, statsTransfer?: StatsTransfer, featsStore?: FeatsStore) {
     super({ key: 'Chronicle' })
     this.runStats = runStats
     this.statsTransfer = statsTransfer
+    this.featsStore = featsStore
   }
 
   create(): void {
+    this.worldsScrollOffset = 0
     this.add.rectangle(CANVAS_W / 2, CANVAS_H / 2, CANVAS_W, CANVAS_H, 0x0d0a12, 1)
     this.add.text(42, 24, 'Chronicle', textStyle({
       fontSize: '32px',
@@ -47,6 +55,21 @@ export class ChronicleScene extends Phaser.Scene {
     })).setOrigin(0.5, 0.5)
 
     this.input.keyboard?.on('keydown-ESC', () => this.scene.start('WorldSelect'))
+
+    this.input.on('wheel', (pointer: Phaser.Input.Pointer, _over: unknown, _dx: number, deltaY: number) => {
+      const allWorldIds = Object.keys(worldManifest)
+      if (allWorldIds.length <= VISIBLE_WORLDS) return
+      if (pointer.y < 222 || pointer.y > 432) return
+      const maxOffset = allWorldIds.length - VISIBLE_WORLDS
+      if (deltaY > 0 && this.worldsScrollOffset < maxOffset) {
+        this.worldsScrollOffset += 1
+        this.renderStats()
+      } else if (deltaY < 0 && this.worldsScrollOffset > 0) {
+        this.worldsScrollOffset -= 1
+        this.renderStats()
+      }
+    })
+
     this.renderStats()
   }
 
@@ -84,6 +107,10 @@ export class ChronicleScene extends Phaser.Scene {
 
     this.addPanel(44, 82, 812, 116)
     this.addText(64, 100, 'Lifetime', 18, '#d6b15c', true)
+    if (this.featsStore !== undefined) {
+      const balance = computeFragmentBalance(this.featsStore.getProfile(), FEAT_CATALOG)
+      this.addText(500, 103, `${balance} Memory Fragments`, 14, TEXT.textReward, true)
+    }
     const totals = [
       `Runs ${lifetime.runs}`,
       `Wins ${lifetime.wins}`,
@@ -107,8 +134,11 @@ export class ChronicleScene extends Phaser.Scene {
     this.addText(590, 272, 'Abandons', 12, TEXT.textMuted, true)
     this.addText(690, 272, 'Bests', 12, TEXT.textMuted, true)
 
-    Object.keys(worldManifest).forEach((worldId, index) => {
-      const y = 304 + index * 30
+    const worldIds = Object.keys(worldManifest)
+    const visibleWorldIds = worldIds.slice(this.worldsScrollOffset, this.worldsScrollOffset + VISIBLE_WORLDS)
+
+    visibleWorldIds.forEach((worldId, visibleIndex) => {
+      const y = 304 + visibleIndex * 30
       const stats = lifetime.byWorld[worldId]
       const display = worldDisplayManifest[worldId]
       const bests = [
@@ -123,6 +153,30 @@ export class ChronicleScene extends Phaser.Scene {
       this.addText(590, y, (stats?.abandoned ?? 0).toString(), 13, TEXT.textLight)
       this.addText(690, y, bests, 13, TEXT.textReward)
     })
+
+    if (worldIds.length > VISIBLE_WORLDS) {
+      const maxOffset = worldIds.length - VISIBLE_WORLDS
+      const showingEnd = Math.min(this.worldsScrollOffset + VISIBLE_WORLDS, worldIds.length)
+      this.addText(740, 241, `${this.worldsScrollOffset + 1}–${showingEnd} of ${worldIds.length}`, 11, TEXT.textMuted)
+
+      if (this.worldsScrollOffset > 0) {
+        const upArrow = this.add.text(846, 287, '▲', textStyle({ fontSize: '13px', color: '#d6b15c' }))
+          .setInteractive({ useHandCursor: true })
+          .on('pointerdown', () => { this.worldsScrollOffset -= 1; this.renderStats() })
+        upArrow.on('pointerover', () => upArrow.setAlpha(0.7))
+        upArrow.on('pointerout', () => upArrow.setAlpha(1))
+        this.addToContent(upArrow)
+      }
+
+      if (this.worldsScrollOffset < maxOffset) {
+        const downArrow = this.add.text(846, 410, '▼', textStyle({ fontSize: '13px', color: '#d6b15c' }))
+          .setInteractive({ useHandCursor: true })
+          .on('pointerdown', () => { this.worldsScrollOffset += 1; this.renderStats() })
+        downArrow.on('pointerover', () => downArrow.setAlpha(0.7))
+        downArrow.on('pointerout', () => downArrow.setAlpha(1))
+        this.addToContent(downArrow)
+      }
+    }
 
     const lastRun = lifetime.lastRun
     if (lastRun !== undefined) {
@@ -228,6 +282,7 @@ export class ChronicleScene extends Phaser.Scene {
         this.statsTransfer?.applyImport(inspected)
         overlay.destroy(true)
         this.messageText?.setText('')
+        this.worldsScrollOffset = 0
         this.renderStats()
       }),
     ])

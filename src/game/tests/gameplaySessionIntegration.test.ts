@@ -166,7 +166,7 @@ describe('gameplaySession integration', () => {
     expect(source).toContain("visibility: () => document.visibilityState === 'visible'")
     expect(source).toContain("document.addEventListener('visibilitychange', onChange)")
     expect(source).toContain('new WorldSelectScene(gameplayRuntime.runStats)')
-    expect(source).toContain('new ChronicleScene(gameplayRuntime.runStats, gameplayRuntime.statsTransfer)')
+    expect(source).toContain('new ChronicleScene(gameplayRuntime.runStats, gameplayRuntime.statsTransfer, gameplayRuntime.featsStore)')
     expect(source).toContain('new TableScene(gameplayRuntime)')
   })
 
@@ -185,6 +185,14 @@ describe('gameplaySession integration', () => {
     expect(source).toContain('statsTransfer?.inspectImport')
     expect(source).toContain('statsTransfer?.applyImport')
     expect(source).toContain("this.scene.start('WorldSelect')")
+  })
+
+  it('Chronicle Worlds section supports scroll when world count exceeds visible limit', async () => {
+    const source = await Bun.file(new URL('../scenes/ChronicleScene.ts', import.meta.url)).text()
+
+    expect(source).toContain('VISIBLE_WORLDS')
+    expect(source).toContain('worldsScrollOffset')
+    expect(source).toContain('worldIds.slice(this.worldsScrollOffset')
   })
 })
 

@@ -436,6 +436,7 @@ export class TableScene extends Phaser.Scene {
       hazardsDiscarded: lastRun.hazardsDiscarded,
       cardsDiscarded: lastRun.cardsDiscarded,
       records: this.runtime_.runStats.lastRunRecords(),
+      featsEarned: this.runtime_.featEvaluator.lastRunEarned(),
     };
   }
 
