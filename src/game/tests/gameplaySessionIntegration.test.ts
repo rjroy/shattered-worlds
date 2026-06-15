@@ -186,6 +186,14 @@ describe('gameplaySession integration', () => {
     expect(source).toContain('statsTransfer?.applyImport')
     expect(source).toContain("this.scene.start('WorldSelect')")
   })
+
+  it('Chronicle Worlds section supports scroll when world count exceeds visible limit', async () => {
+    const source = await Bun.file(new URL('../scenes/ChronicleScene.ts', import.meta.url)).text()
+
+    expect(source).toContain('VISIBLE_WORLDS')
+    expect(source).toContain('worldsScrollOffset')
+    expect(source).toContain('worldIds.slice(this.worldsScrollOffset')
+  })
 })
 
 describe('RunStarted Phase 2 — initialEvents and initialState', () => {
