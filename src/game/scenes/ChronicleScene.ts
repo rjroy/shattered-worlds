@@ -2,8 +2,10 @@ import Phaser from 'phaser'
 
 import { worldManifest } from '../../data/worldManifest'
 import { worldDisplayManifest } from '../../data/worldDisplayManifest'
+import { FEAT_CATALOG, computeFragmentBalance } from '../../data/feats/catalog'
 import type { RunStatsReader } from '../runtime/runStats'
 import type { StatsTransfer, InspectedStatsImport } from '../runtime/statsTransfer'
+import type { FeatsStore } from '../runtime/featsProfile'
 import { CANVAS_W, CANVAS_H } from '../view/layout'
 import { TEXT, textStyle } from '../view/presentation'
 import { formatDuration } from '../view/format'
@@ -16,15 +18,17 @@ type Button = {
 export class ChronicleScene extends Phaser.Scene {
   private readonly runStats: RunStatsReader | undefined
   private readonly statsTransfer: StatsTransfer | undefined
+  private readonly featsStore: FeatsStore | undefined
   private content?: Phaser.GameObjects.Container
   private messageText?: Phaser.GameObjects.Text
   private confirmOverlay?: Phaser.GameObjects.Container
   private fileInput?: HTMLInputElement
 
-  constructor(runStats?: RunStatsReader, statsTransfer?: StatsTransfer) {
+  constructor(runStats?: RunStatsReader, statsTransfer?: StatsTransfer, featsStore?: FeatsStore) {
     super({ key: 'Chronicle' })
     this.runStats = runStats
     this.statsTransfer = statsTransfer
+    this.featsStore = featsStore
   }
 
   create(): void {
@@ -84,6 +88,10 @@ export class ChronicleScene extends Phaser.Scene {
 
     this.addPanel(44, 82, 812, 116)
     this.addText(64, 100, 'Lifetime', 18, '#d6b15c', true)
+    if (this.featsStore !== undefined) {
+      const balance = computeFragmentBalance(this.featsStore.getProfile(), FEAT_CATALOG)
+      this.addText(500, 103, `${balance} Memory Fragments`, 14, TEXT.textReward, true)
+    }
     const totals = [
       `Runs ${lifetime.runs}`,
       `Wins ${lifetime.wins}`,

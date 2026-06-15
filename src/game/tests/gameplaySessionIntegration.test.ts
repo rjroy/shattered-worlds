@@ -166,7 +166,7 @@ describe('gameplaySession integration', () => {
     expect(source).toContain("visibility: () => document.visibilityState === 'visible'")
     expect(source).toContain("document.addEventListener('visibilitychange', onChange)")
     expect(source).toContain('new WorldSelectScene(gameplayRuntime.runStats)')
-    expect(source).toContain('new ChronicleScene(gameplayRuntime.runStats, gameplayRuntime.statsTransfer)')
+    expect(source).toContain('new ChronicleScene(gameplayRuntime.runStats, gameplayRuntime.statsTransfer, gameplayRuntime.featsStore)')
     expect(source).toContain('new TableScene(gameplayRuntime)')
   })
 

@@ -57,7 +57,7 @@ const game = new Phaser.Game({
   scene: [
     new BootScene(),
     new WorldSelectScene(gameplayRuntime.runStats),
-    new ChronicleScene(gameplayRuntime.runStats, gameplayRuntime.statsTransfer),
+    new ChronicleScene(gameplayRuntime.runStats, gameplayRuntime.statsTransfer, gameplayRuntime.featsStore),
     new TableScene(gameplayRuntime),
   ],
 })
