@@ -138,7 +138,7 @@ export class WorldSelectScene extends Phaser.Scene {
     if (buildWorld === undefined) {
       throw new Error(`WorldSelectScene: no world builder found for worldId "${worldId}"`);
     }
-    const totalActs = buildWorld().worldData.deckComposition.acts.length;
+    const totalActs = buildWorld("starter").worldData.deckComposition.acts.length;
     this.helpOverlay = new HelpOverlayView(this, worldId, totalActs);
     this.helpOverlay.setVisible(true);
   }
@@ -393,7 +393,7 @@ export class WorldSelectScene extends Phaser.Scene {
       bg.disableInteractive();
       this.disableCarouselInteractions();
       const seed = Math.floor(Math.random() * 2 ** 32);
-      this.scene.launch("Table", { worldId, seed });
+      this.scene.launch("Table", { worldId, seed, starterId: "starter" });
     });
     return { container, background: bg };
   }

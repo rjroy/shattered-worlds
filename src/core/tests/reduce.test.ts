@@ -711,7 +711,6 @@ describe("PlayCard exhaust", () => {
       cardId: medKit.id,
     });
 
-    // Med Kit heals 2 (starter.json) — effect resolves despite the exhaust.
     expect(result.state.hp).toBe(7);
     expect(result.events.map((e) => e.type)).toContain("CardDestroyed");
     // Destroyed, not recycled.

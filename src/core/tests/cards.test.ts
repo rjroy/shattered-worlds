@@ -217,10 +217,10 @@ describe("starter provenance", () => {
   it("mintCard stamps sourceWorldId from state.worldId", () => {
     const state = makeEmptyState();
     // makeEmptyState sets worldId: 'zombie-big-box'; override to 'starter'
-    const starterState: GameState = { ...state, worldId: "starter" };
+    const starterState: GameState = { ...state, worldId: "basic" };
     const [card] = mintCard(catalog, starterState, "Sprint");
     if (card.kind !== "player") throw new Error("expected player card");
-    expect(card.sourceWorldId).toBe("starter");
+    expect(card.sourceWorldId).toBe("basic");
   });
 
   it("mintCard stamps the active worldId, not a hardcoded value", () => {
