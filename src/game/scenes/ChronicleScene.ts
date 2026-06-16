@@ -10,6 +10,7 @@ import { CANVAS_W, CANVAS_H } from "../view/layout";
 import { TEXT, textStyle } from "../view/presentation";
 import { formatDuration } from "../view/format";
 import { addScreenBackdrop } from "../view/screenBackdrop";
+import { beginTargeting } from "../interaction/selection";
 
 const VISIBLE_WORLDS = 4;
 
@@ -77,6 +78,7 @@ export class ChronicleScene extends Phaser.Scene {
     this.input.on(
       "wheel",
       (pointer: Phaser.Input.Pointer, _over: unknown, _dx: number, deltaY: number) => {
+        if (this.statsContent === undefined || !this.statsContent.visible) return;
         const allWorldIds = Object.keys(worldManifest);
         if (allWorldIds.length <= VISIBLE_WORLDS) return;
         if (pointer.y < 222 || pointer.y > 432) return;
@@ -303,7 +305,37 @@ export class ChronicleScene extends Phaser.Scene {
 
       const featsProfile = this.featsStore.getProfile();
 
-      this.addText(this.featsContent, 64, 133, "Name", 16, TEXT.textLight, true);
+      const FEAT_NAME_X = 64;
+      const FEAT_DESC_X = 184;
+      const FEAT_NAME_W = FEAT_DESC_X - FEAT_NAME_X - 8;
+      const FEAT_REWARD_X = 684;
+      const FEAT_DESC_W = FEAT_REWARD_X - FEAT_DESC_X - 8;
+      const FEAT_EARNED_X = 764;
+
+      this.addText(
+        this.featsContent,
+        FEAT_NAME_X,
+        133,
+        "Name",
+        16,
+        TEXT.textLight,
+        true,
+        undefined,
+        FEAT_NAME_W,
+      );
+      this.addText(
+        this.featsContent,
+        FEAT_DESC_X,
+        133,
+        "Description",
+        16,
+        TEXT.textLight,
+        true,
+        undefined,
+        FEAT_DESC_W,
+      );
+      this.addText(this.featsContent, FEAT_REWARD_X, 133, "Reward", 16, TEXT.textLight, true);
+      this.addText(this.featsContent, FEAT_EARNED_X, 133, "Earned", 16, TEXT.textLight, true);
 
       FEAT_CATALOG.forEach((feat, index) => {
         if (this.featsContent === undefined) {
@@ -312,12 +344,37 @@ export class ChronicleScene extends Phaser.Scene {
         }
         const y = 165 + index * 32;
 
-        const color = featsProfile.earned.some((e) => e.featId == feat.id)
-          ? TEXT.textReward
-          : TEXT.textLight;
-        this.addText(this.featsContent, 64, y, feat.name, 13, color);
+        const reward = feat.reward.items
+          .map((item) => {
+            switch (item.type) {
+              case "memoryFragments":
+                return `+${item.amount}`;
+              case "unlock":
+                return `${item.id}`;
+            }
+          })
+          .join(", ");
+
+        const bEarned = featsProfile.earned.some((e) => e.featId == feat.id);
+        const color = bEarned ? TEXT.textReward : TEXT.textLight;
+        this.addText(this.featsContent, FEAT_NAME_X, y, feat.name, 13, color);
+        this.addText(this.featsContent, FEAT_DESC_X, y, feat.description, 13, color);
+        this.addText(this.featsContent, FEAT_REWARD_X, y, reward, 13, color);
+        if (bEarned) {
+          const at = featsProfile.earned
+            .filter((e) => e.featId == feat.id)
+            .map((e) => this.toDateStr(e.earnedAt));
+          if (at.length > 0 && at[0]) {
+            this.addText(this.featsContent, FEAT_EARNED_X, y, at[0], 13, color);
+          }
+        }
       });
     }
+  }
+
+  private toDateStr(epochMs: number): string {
+    const date = new Date(epochMs);
+    return `${date.getMonth() + 1}/${date.getDate()}/${date.getFullYear()}`;
   }
 
   private addPanel(
