@@ -620,12 +620,12 @@ describe("createFeatEvaluator — Validation #22: veteran cross-run via stub rea
 // ---------------------------------------------------------------------------
 
 describe("createFeatEvaluator — Validation #23: light-keeper world-scoped", () => {
-  it("earns light-keeper on fog-beach-party with light >= 10", () => {
+  it("earns light-keeper on fog-beach-party with light >= 20", () => {
     const fogWorldData = buildWorld("fog-beach-party");
     const fogSession = createGameplaySession(fogWorldData.catalog, fogWorldData.worldData, 42);
     const fogStubState = {
       ...fogSession.state,
-      light: 10,
+      light: 20,
       worldId: "fog-beach-party",
       status: "won" as const,
     };

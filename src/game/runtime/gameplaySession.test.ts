@@ -612,8 +612,14 @@ describe("gameplaySession", () => {
       "HazardPartial",
     ]);
     expectOwnKeys(firstBatch.events[0]!, ["type", "cardId"]);
-    expectOwnKeys(firstBatch.events[1]!, ["type", "hazardId", "amount", "hazardTurnTotal"]);
-    expectOwnKeys(firstBatch.events[2]!, ["type", "hazardId"]);
+    expectOwnKeys(firstBatch.events[1]!, [
+      "type",
+      "hazardId",
+      "templateId",
+      "amount",
+      "hazardTurnTotal",
+    ]);
+    expectOwnKeys(firstBatch.events[2]!, ["type", "hazardId", "templateId"]);
 
     expect(secondBatch?.kind).toBe("GameplayBatch");
     if (secondBatch?.kind !== "GameplayBatch") {
@@ -630,9 +636,15 @@ describe("gameplaySession", () => {
       "HazardResolved",
     ]);
     expectOwnKeys(secondBatch.events[0]!, ["type", "cardId"]);
-    expectOwnKeys(secondBatch.events[1]!, ["type", "hazardId", "amount", "hazardTurnTotal"]);
+    expectOwnKeys(secondBatch.events[1]!, [
+      "type",
+      "hazardId",
+      "templateId",
+      "amount",
+      "hazardTurnTotal",
+    ]);
     expectOwnKeys(secondBatch.events[2]!, ["type"]);
-    expectOwnKeys(secondBatch.events[3]!, ["type", "hazardId"]);
+    expectOwnKeys(secondBatch.events[3]!, ["type", "hazardId", "templateId"]);
 
     expect(runEnded?.kind).toBe("RunEnded");
     expectOwnKeys(runEnded!, [
