@@ -303,21 +303,19 @@ export class ChronicleScene extends Phaser.Scene {
 
       const featsProfile = this.featsStore.getProfile();
 
+      this.addText(this.featsContent, 64, 133, "Name", 16, TEXT.textLight, true);
+
       FEAT_CATALOG.forEach((feat, index) => {
         if (this.featsContent === undefined) {
           console.error("Feats content is undefined when adding stats panel");
           return;
         }
-        const y = 133 + index * 32;
+        const y = 165 + index * 32;
 
-        this.addText(
-          this.featsContent,
-          64,
-          y,
-          feat.name,
-          13,
-          featsProfile.earned.some((e) => e.featId == feat.id) ? TEXT.textReward : TEXT.textLight,
-        );
+        const color = featsProfile.earned.some((e) => e.featId == feat.id)
+          ? TEXT.textReward
+          : TEXT.textLight;
+        this.addText(this.featsContent, 64, y, feat.name, 13, color);
       });
     }
   }
