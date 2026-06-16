@@ -1,7 +1,7 @@
 ---
 title: "Implementation plan: unlock system (Destiny Blessings and RunModifiers)"
 date: 2026-06-15
-status: draft
+status: executed
 tags: [plan, unlocks, meta-progression, run-modifiers, persistence, core-engine]
 modules: [unlocks, feats, meta-progression, core-engine, game-runtime]
 related:

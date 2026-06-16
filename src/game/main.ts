@@ -4,6 +4,7 @@ import { BootScene } from './scenes/BootScene'
 import { WorldSelectScene } from './scenes/WorldSelectScene'
 import { TableScene } from './scenes/TableScene'
 import { ChronicleScene } from './scenes/ChronicleScene'
+import { DestinyScene } from './scenes/DestinyScene'
 import { CANVAS_W, CANVAS_H } from './view/layout'
 import { TEXT } from './view/presentation'
 import { installDebugErrorOverlay } from './debugErrorOverlay'
@@ -58,6 +59,7 @@ const game = new Phaser.Game({
     new BootScene(),
     new WorldSelectScene(gameplayRuntime.runStats),
     new ChronicleScene(gameplayRuntime.runStats, gameplayRuntime.statsTransfer, gameplayRuntime.featsStore),
+    new DestinyScene(gameplayRuntime.featsStore, gameplayRuntime.unlocksStore),
     new TableScene(gameplayRuntime),
   ],
 })

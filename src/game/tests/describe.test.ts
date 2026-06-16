@@ -1,5 +1,6 @@
 import { describe, expect, it } from "bun:test";
 import { createRng } from "../../core/engine/rng";
+import { DEFAULT_RUN_MODIFIERS } from "../../data/unlocks/types";
 import type { CardEffect, GameState, PlayerCard, WorldCard } from "../../core/index";
 import { describeEffect, previewPlay } from "../../core/view/describe";
 
@@ -22,6 +23,7 @@ function makeState(progress: Record<string, number> = {}): GameState {
     light: 0,
     pendingForceDestroy: 0,
     braceCharges: 0,
+    runModifiers: DEFAULT_RUN_MODIFIERS,
     status: "playing",
     worldId: "zombie-big-box",
     rng: createRng(0),

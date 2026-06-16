@@ -1,7 +1,7 @@
 ---
 title: Final validation sweep
 date: 2026-06-15
-status: pending
+status: complete
 tags: [task, unlocks, validation, review]
 source: .lore/work/plans/unlock-system.md
 sequence: 10

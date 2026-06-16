@@ -1,4 +1,4 @@
-import type { CardCatalog, WorldData } from '../../core/index'
+import type { AssembledWorld } from '../../core/index'
 
 import {
   createGameplayEventStream,
@@ -11,14 +11,20 @@ import { createGameplaySession, type GameplaySession, type GameplaySessionOption
 import { createRunStatsCollector, type RunStatsReader, type RunStatsStorage } from './runStats'
 import { createStatsTransfer, type StatsTransfer } from './statsTransfer'
 import { createFeatsStore, type FeatsStore } from './featsProfile'
+import { createUnlocksStore, type UnlocksStore } from './unlocksProfile'
 import { createWitnessCollector, type WitnessStore } from './witnessProfile'
 import { createFeatEvaluator, type FeatEvaluator } from './featEvaluator'
 import { FEAT_CATALOG } from '../../data/feats/catalog'
+import { buildWorld } from '../../data/worldManifest'
+import { buildRunModifiers, UNLOCK_CATALOG } from '../../data/unlocks/catalog'
+import type { UnlockDefinition } from '../../data/unlocks/types'
 
 // The runtime owns the stream, failure handling, and the clock — sessions it
 // starts must not override them, or cross-run consumers would see
 // inconsistently sourced items.
-type RuntimeSessionOptions = Omit<GameplaySessionOptions, 'stream' | 'onSubscriberFailure' | 'clock'>
+type RuntimeSessionOptions = Omit<GameplaySessionOptions, 'stream' | 'onSubscriberFailure' | 'clock' | 'runModifiers' | 'appliedModifiers'> & {
+  readonly world?: AssembledWorld
+}
 
 /**
  * Composition root for gameplay observation. Owns the one long-lived stream
@@ -32,12 +38,12 @@ export interface GameplayRuntime {
   readonly statsTransfer: StatsTransfer
   readonly witnessStore: WitnessStore
   readonly featsStore: FeatsStore
+  readonly unlocksStore: UnlocksStore
   readonly featEvaluator: FeatEvaluator
   /** Runtime-wide observation: receives items from every session, correlated by sessionId. */
   subscribe(subscriber: RunStreamSubscriber): () => void
   startSession(
-    catalog: CardCatalog,
-    world: WorldData,
+    worldId: string,
     seed: number,
     options?: RuntimeSessionOptions,
   ): GameplaySession
@@ -69,6 +75,7 @@ export function createGameplayRuntime(options: GameplayRuntimeOptions = {}): Gam
   })
   const witnessStore = createWitnessCollector(options.storage)
   const featsStore = createFeatsStore(options.storage)
+  const unlocksStore = createUnlocksStore(options.storage, featsStore)
   const featEvaluator = createFeatEvaluator(FEAT_CATALOG, featsStore, runStats, witnessStore, options.clock ?? Date.now)
   const statsTransfer = createStatsTransfer({
     runStats,
@@ -93,15 +100,24 @@ export function createGameplayRuntime(options: GameplayRuntimeOptions = {}): Gam
     statsTransfer,
     witnessStore,
     featsStore,
+    unlocksStore,
     featEvaluator,
 
     subscribe(subscriber) {
       return stream.subscribe(subscriber)
     },
 
-    startSession(catalog, world, seed, sessionOptions = {}) {
-      const session = createGameplaySession(catalog, world, seed, {
-        ...sessionOptions,
+    startSession(worldId, seed, sessionOptions = {}) {
+      const { world: injectedWorld, ...forwardOptions } = sessionOptions
+      const activeIds = unlocksStore.getProfile().activated
+      const assembled =
+        injectedWorld ?? buildWorld(worldId, resolveStarterDeckId(activeIds, UNLOCK_CATALOG) ?? 'starter')
+      const runModifiers = buildRunModifiers(activeIds, UNLOCK_CATALOG)
+      const appliedModifiers = activeIds.map((id) => ({ kind: 'unlock', id }))
+      const session = createGameplaySession(assembled.catalog, assembled.worldData, seed, {
+        ...forwardOptions,
+        runModifiers,
+        appliedModifiers,
         stream,
         clock: options.clock,
       })
@@ -116,4 +132,15 @@ export function createGameplayRuntime(options: GameplayRuntimeOptions = {}): Gam
       }
     },
   }
+}
+
+function resolveStarterDeckId(
+  activeIds: readonly string[],
+  catalog: readonly UnlockDefinition[],
+): string | undefined {
+  for (const id of activeIds) {
+    const def = catalog.find((candidate) => candidate.id === id)
+    if (def?.effect.type === 'starterDeckOverride') return def.effect.starterDeckId
+  }
+  return undefined
 }

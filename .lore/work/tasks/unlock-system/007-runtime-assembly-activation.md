@@ -1,7 +1,7 @@
 ---
 title: Runtime world assembly, activation subset, and call-site migration
 date: 2026-06-15
-status: pending
+status: complete
 tags: [task, unlocks, game-runtime, buildworld, activation, migration]
 source: .lore/work/plans/unlock-system.md
 sequence: 7

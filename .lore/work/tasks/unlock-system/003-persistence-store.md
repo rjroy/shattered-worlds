@@ -1,7 +1,7 @@
 ---
 title: UnlocksProfile persistence and store
 date: 2026-06-15
-status: pending
+status: complete
 tags: [task, unlocks, persistence, store, activation]
 source: .lore/work/plans/unlock-system.md
 sequence: 3

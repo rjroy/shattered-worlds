@@ -4,6 +4,7 @@ import type { CardCatalog } from "../model/catalog";
 import { mintCard } from "../model/cards";
 import { UnknownTemplateError } from "../model/errors";
 import { createRng } from "../engine/rng";
+import { DEFAULT_RUN_MODIFIERS } from "../../data/unlocks/types";
 import { catalog } from "./testFixture";
 
 // ---------------------------------------------------------------------------
@@ -25,6 +26,7 @@ function makeEmptyState(nextId = 0): GameState {
     light: 0,
     pendingForceDestroy: 0,
     braceCharges: 0,
+    runModifiers: DEFAULT_RUN_MODIFIERS,
     status: "playing",
     worldId: "zombie-big-box",
     rng: createRng(0),

@@ -1,7 +1,7 @@
 ---
 title: unlockCardState pure helper
 date: 2026-06-15
-status: pending
+status: complete
 tags: [task, unlocks, view, pure-helper]
 source: .lore/work/plans/unlock-system.md
 sequence: 8

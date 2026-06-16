@@ -1,7 +1,7 @@
 ---
 title: Unlock catalog, fragment economy, and Destiny budget
 date: 2026-06-15
-status: pending
+status: complete
 tags: [task, unlocks, catalog, economy, budget]
 source: .lore/work/plans/unlock-system.md
 sequence: 2

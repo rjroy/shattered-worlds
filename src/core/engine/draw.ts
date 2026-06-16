@@ -1,5 +1,5 @@
 import type { CardId, GameEvent, GameState, WorldCard } from "../model/types";
-import { WORLD_CONSTS } from "./world";
+import { effectiveHandSize, WORLD_CONSTS } from "./world";
 import { shuffle } from "./rng";
 
 // ---------------------------------------------------------------------------
@@ -123,16 +123,16 @@ export function drawWorld(state: GameState, n: number): { state: GameState; even
 // ---------------------------------------------------------------------------
 
 /**
- * Fill the hand to {WORLD_CONSTS.maxHandSize} cards using the draw formula from REQ-WDS-7.
+ * Fill the hand to {effectiveHandSize(state)} cards using the draw formula from REQ-WDS-7.
  *
  * Formula (evaluated after player cards have been discarded at EndTurn, so
  * hand contains only world cards):
  *
  *   heldWorld = hand.filter(c => c.kind === 'world').length
- *   room      = WORLD_CONSTS.maxHandSize - hand.length
+ *   room      = effectiveHandSize(state) - heldWorld
  *
  *   worldToDraw = clamp(max(1, WORLD_CONSTS.startWorldCards - heldWorld), 0, min(room, worldCardsRemaining))
- *   playerToDraw = max(0, WORLD_CONSTS.maxHandSize - newHand.length)   — after world draw
+ *   playerToDraw = max(0, WORLD_CONSTS.baseHandSize - newHand.length)   — after world draw
  */
 export function refillHand(state: GameState): {
   state: GameState;
@@ -141,7 +141,7 @@ export function refillHand(state: GameState): {
   const allEvents: GameEvent[] = [];
 
   const heldWorld = state.hand.filter((c) => c.kind === "world").length;
-  const room = WORLD_CONSTS.maxHandSize - heldWorld;
+  const room = effectiveHandSize(state) - heldWorld;
 
   if (room === 0) {
     return { state, events: [] };
@@ -167,8 +167,8 @@ export function refillHand(state: GameState): {
     allEvents.push(...result.events);
   }
 
-  // Player draw: fill remaining room up to WORLD_CONSTS.maxHandSize
-  const playerToDraw = Math.max(0, WORLD_CONSTS.maxHandSize - current.hand.length);
+  // Player draw: fill remaining room up to the turn-start effective hand size.
+  const playerToDraw = Math.max(0, effectiveHandSize(state) - current.hand.length);
 
   if (playerToDraw > 0) {
     const result = drawPlayer(current, playerToDraw);

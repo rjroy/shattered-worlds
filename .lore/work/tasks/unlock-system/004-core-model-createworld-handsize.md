@@ -1,7 +1,7 @@
 ---
 title: Core RunModifiers field, createWorld application, and hand-size rename
 date: 2026-06-15
-status: pending
+status: complete
 tags: [task, unlocks, core-engine, createworld, hand-size]
 source: .lore/work/plans/unlock-system.md
 sequence: 4

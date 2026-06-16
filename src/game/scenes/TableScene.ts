@@ -50,7 +50,6 @@ import { CommonLabel, CommonButton } from "../view/components";
 import { previewPlay } from "../../core/view/describe";
 import { PileLayer } from "../view/PileLayer";
 import { BackdropLayer } from "../view/backdrop";
-import { buildWorld } from "../../data/worldManifest";
 import { worldDisplayManifest } from "../../data/worldDisplayManifest";
 import { CARD_FACE, TABLE_LAYOUT } from "../view/layout";
 import { rowCardPositions } from "../view/tableLayout";
@@ -128,7 +127,6 @@ export class TableScene extends Phaser.Scene {
   private connectorGfx!: Phaser.GameObjects.Graphics;
 
   private worldId_: string = "zombie-big-box";
-  private starterId_: string = "starter";
   private seed_: number = 0;
   private terminalSummaryShown_: boolean = false;
   private runtime_: GameplayRuntime;
@@ -141,9 +139,8 @@ export class TableScene extends Phaser.Scene {
     this.runtime_ = runtime ?? createGameplayRuntime();
   }
 
-  init(data: { worldId?: string; starterId?: string; seed?: number }): void {
+  init(data: { worldId?: string; seed?: number }): void {
     this.worldId_ = data.worldId ?? "zombie-big-box";
-    this.starterId_ = data.starterId ?? "starter";
     this.seed_ = data.seed ?? Math.floor(Math.random() * 2 ** 32);
     this.terminalSummaryShown_ = false;
     this.cardObjects = new Map();
@@ -154,9 +151,7 @@ export class TableScene extends Phaser.Scene {
     // register here rather than in preload — before any CardView renders.
     ensureEffectIconTextures(this);
 
-    const { catalog, worldData } = buildWorld(this.worldId_, this.starterId_);
-
-    this.game_ = this.runtime_.startSession(catalog, worldData, this.seed_);
+    this.game_ = this.runtime_.startSession(this.worldId_, this.seed_);
     // Registered before any other create() work can throw, so a session that
     // emitted RunStarted always gets its closing RunEnded on shutdown. Closes
     // the run as 'abandoned' when the player exits mid-run; no-op if the run

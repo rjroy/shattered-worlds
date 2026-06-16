@@ -1,3 +1,5 @@
+import type { RunModifiers } from "../../data/unlocks/types";
+
 export type CardId = string;
 
 // Known template names (for documentation only — the type is open for JSON-loaded catalogs):
@@ -150,6 +152,7 @@ export interface GameState {
   // Charges that absorb ForceDestroy snatches before they destroy player
   // cards. Granted by the Brace effect; consumed in resolveForceDestroy.
   braceCharges: number;
+  readonly runModifiers: RunModifiers;
   status: "playing" | "won" | "lost";
   worldId: string;
   rng: RngState;

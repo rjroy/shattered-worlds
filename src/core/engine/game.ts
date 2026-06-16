@@ -1,5 +1,6 @@
 import type { Action, AvailableActions, GameEvent, GameState } from "../model/types";
 import type { CardCatalog, WorldData } from "../model/catalog";
+import type { RunModifiers } from "../../data/unlocks/types";
 import { createWorld } from "./world";
 import { availableActions } from "./available";
 import { reduce } from "./reduce";
@@ -17,8 +18,13 @@ export interface GameCore {
  * Create a new game instance seeded with `seed`. The catalog and world
  * descriptor are captured in the closure and threaded through all dispatches.
  */
-export function createGame(catalog: CardCatalog, world: WorldData, seed: number): GameCore {
-  const { state: initialState, openingEvents } = createWorld(catalog, world, seed);
+export function createGame(
+  catalog: CardCatalog,
+  world: WorldData,
+  seed: number,
+  runModifiers?: RunModifiers,
+): GameCore {
+  const { state: initialState, openingEvents } = createWorld(catalog, world, seed, runModifiers);
   let current = initialState;
 
   return {

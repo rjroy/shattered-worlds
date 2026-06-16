@@ -1,5 +1,6 @@
 import { createGame } from '../../core/index'
 import type { Action, CardCatalog, GameCore, WorldData } from '../../core/index'
+import type { RunModifiers } from '../../data/unlocks/types'
 
 import {
   createGameplayBatch,
@@ -30,6 +31,7 @@ export interface GameplaySession extends GameCore {
 
 export interface GameplaySessionOptions {
   readonly appliedModifiers?: readonly SetupModifier[]
+  readonly runModifiers?: RunModifiers
   /** Stamps every stream item this session emits. Defaults to Date.now. */
   readonly clock?: Clock | undefined
   readonly makeSessionId?: () => SessionId
@@ -82,7 +84,7 @@ export function createGameplaySession(
   const stream = options.stream ?? createGameplayEventStream(options.onSubscriberFailure)
   const sessionId = (options.makeSessionId ?? defaultMakeSessionId)()
   const clock = options.clock ?? (() => Date.now())
-  const core = createGame(catalog, world, seed)
+  const core = createGame(catalog, world, seed, options.runModifiers)
 
   // Session-scoped subscriptions are released when the run closes: after
   // RunEnded this session emits nothing more, and a shared stream must not

@@ -1,7 +1,7 @@
 ---
 title: Destiny scene — purchase and activation UI
 date: 2026-06-15
-status: pending
+status: complete
 tags: [task, unlocks, scene, ui, activation]
 source: .lore/work/plans/unlock-system.md
 sequence: 9

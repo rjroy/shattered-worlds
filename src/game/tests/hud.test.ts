@@ -1,4 +1,5 @@
 import { describe, it, expect, afterEach } from "bun:test";
+import { DEFAULT_RUN_MODIFIERS } from "../../data/unlocks/types";
 import { HUDView } from "../view/HUDView";
 import type { GameState } from "../../core/index";
 import { worldUsesLightManifest } from "../../data/worldUsesLightManifest";
@@ -102,6 +103,7 @@ describe("HUDView.update", () => {
       light: 0,
       pendingForceDestroy: 0,
       braceCharges: 0,
+      runModifiers: DEFAULT_RUN_MODIFIERS,
       status: "playing",
       worldId: "test-world",
       rng: { a: 1, b: 2, c: 3, d: 4 },
@@ -129,6 +131,7 @@ describe("HUDView.update", () => {
       light: 0,
       pendingForceDestroy: 0,
       braceCharges: 0,
+      runModifiers: DEFAULT_RUN_MODIFIERS,
       status: "playing",
       worldId: "test-world",
       rng: { a: 1, b: 2, c: 3, d: 4 },
@@ -246,6 +249,7 @@ describe("HUDView.update", () => {
       light,
       pendingForceDestroy: 0,
       braceCharges: 0,
+      runModifiers: DEFAULT_RUN_MODIFIERS,
       status: "playing",
       worldId,
       rng: { a: 1, b: 2, c: 3, d: 4 },
@@ -308,6 +312,7 @@ describe("HUDView.update", () => {
       light: 0,
       pendingForceDestroy: 0,
       braceCharges: 0,
+      runModifiers: DEFAULT_RUN_MODIFIERS,
       status: "playing",
       worldId: "test-world",
       rng: { a: 1, b: 2, c: 3, d: 4 },

@@ -70,7 +70,10 @@ export function dealProgress(
   const hazard = state.hand.find((c): c is WorldCard => c.kind === "world" && c.id === hazardId);
   if (hazard === undefined) return { state, events: [] };
 
-  const bonusAmount = bonus !== undefined && hasKeyword(hazard, bonus.tag) ? bonus.amount : 0;
+  const bonusAmount =
+    bonus !== undefined && hasKeyword(hazard, bonus.tag)
+      ? bonus.amount + state.runModifiers.keywordDamageBonus
+      : 0;
   const amount = base + bonusAmount;
 
   const newProgress = {

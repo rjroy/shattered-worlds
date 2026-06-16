@@ -72,6 +72,7 @@ export class WorldSelectScene extends Phaser.Scene {
     this.worldIds = Object.keys(worldManifest);
     this.visibleStartIndex = 0;
     this.createChronicleButton();
+    this.createDestinyButton();
     this.createHelpButton();
     this.createArrows();
     this.renderVisibleWorlds();
@@ -103,6 +104,30 @@ export class WorldSelectScene extends Phaser.Scene {
     bg.on("pointerover", () => button.setScale(1.05));
     bg.on("pointerout", () => button.setScale(1));
     bg.on("pointerdown", () => this.scene.start("Chronicle"));
+  }
+
+  private createDestinyButton(): void {
+    const button = this.add.container(CANVAS_W - 228, 34);
+    const bg = this.add.rectangle(0, 0, 108, 34, 0x0f0b15, 0.82);
+    bg.setStrokeStyle(1, 0xd6b15c, 0.9);
+    bg.setRounded(6);
+    bg.setInteractive({ useHandCursor: true });
+    const label = this.add
+      .text(
+        0,
+        -8,
+        "Destiny",
+        textStyle({
+          fontSize: "15px",
+          color: "#d6b15c",
+          fontStyle: "bold",
+        }),
+      )
+      .setOrigin(0.5, 0);
+    button.add([bg, label]);
+    bg.on("pointerover", () => button.setScale(1.05));
+    bg.on("pointerout", () => button.setScale(1));
+    bg.on("pointerdown", () => this.scene.start("Destiny"));
   }
 
   private createHelpButton(): void {
@@ -393,7 +418,7 @@ export class WorldSelectScene extends Phaser.Scene {
       bg.disableInteractive();
       this.disableCarouselInteractions();
       const seed = Math.floor(Math.random() * 2 ** 32);
-      this.scene.launch("Table", { worldId, seed, starterId: "starter" });
+      this.scene.launch("Table", { worldId, seed });
     });
     return { container, background: bg };
   }

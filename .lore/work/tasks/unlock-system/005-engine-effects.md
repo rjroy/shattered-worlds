@@ -1,7 +1,7 @@
 ---
 title: Engine effects — light floor, energy floor, keyword bonus
 date: 2026-06-15
-status: pending
+status: complete
 tags: [task, unlocks, core-engine, effects]
 source: .lore/work/plans/unlock-system.md
 sequence: 5

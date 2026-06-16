@@ -1,7 +1,7 @@
 ---
 title: Unlock data types
 date: 2026-06-15
-status: pending
+status: complete
 tags: [task, unlocks, types]
 source: .lore/work/plans/unlock-system.md
 sequence: 1

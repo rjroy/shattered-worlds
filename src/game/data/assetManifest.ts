@@ -32,6 +32,16 @@ import insetPanicUrl from "../assets/insets/inset-panic.webp";
 import insetAdrenalineUrl from "../assets/insets/inset-adrenaline.webp";
 import insetDoorUrl from "../assets/insets/inset-door.webp";
 import insetWalkerUrl from "../assets/insets/inset-walker.webp";
+import unlockActRewardUrl from "../assets/unlocks/act-reward.webp";
+import unlockExtraBraceUrl from "../assets/unlocks/extra-brace.webp";
+import unlockExtraEnergyUrl from "../assets/unlocks/extra-energy.webp";
+import unlockExtraHpUrl from "../assets/unlocks/extra-hp.webp";
+import unlockExtraLightUrl from "../assets/unlocks/extra-light.webp";
+import unlockHandSizePerActUrl from "../assets/unlocks/hand-size-per-act.webp";
+import unlockKeywordBonusUrl from "../assets/unlocks/keyword-bonus.webp";
+import unlockMinEnergyUrl from "../assets/unlocks/min-energy.webp";
+import unlockMinLightUrl from "../assets/unlocks/min-light.webp";
+import unlockStarterFootballerUrl from "../assets/unlocks/starter-footballer.webp";
 import worldSelectBgUrl from "../assets/world-select.webp";
 import { worldAssetUrls } from "../worlds/assetBindings";
 
@@ -72,6 +82,16 @@ export const assetManifest: Record<string, string> = {
   "inset-adrenaline": insetAdrenalineUrl,
   "inset-door": insetDoorUrl,
   "inset-walker": insetWalkerUrl,
+  "unlock/act-reward": unlockActRewardUrl,
+  "unlock/extra-brace": unlockExtraBraceUrl,
+  "unlock/extra-energy": unlockExtraEnergyUrl,
+  "unlock/extra-hp": unlockExtraHpUrl,
+  "unlock/extra-light": unlockExtraLightUrl,
+  "unlock/hand-size-per-act": unlockHandSizePerActUrl,
+  "unlock/keyword-bonus": unlockKeywordBonusUrl,
+  "unlock/min-energy": unlockMinEnergyUrl,
+  "unlock/min-light": unlockMinLightUrl,
+  "unlock/starter-footballer": unlockStarterFootballerUrl,
   "world-select-bg": worldSelectBgUrl,
   ...worldAssetUrls,
 };

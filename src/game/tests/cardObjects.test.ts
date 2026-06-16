@@ -4,6 +4,7 @@ import { selectTheme } from "../view/themes/themeManifest";
 import { CARD_FACE } from "../view/layout";
 import { mintCard } from "../../core/model/cards";
 import { createRng } from "../../core/engine/rng";
+import { DEFAULT_RUN_MODIFIERS } from "../../data/unlocks/types";
 import type { Card, CardCatalog, GameState, PlayerCard, WorldCard } from "../../core/index";
 
 // ---------------------------------------------------------------------------
@@ -769,6 +770,7 @@ function makeMintState(): GameState {
     light: 0,
     pendingForceDestroy: 0,
     braceCharges: 0,
+    runModifiers: DEFAULT_RUN_MODIFIERS,
     status: "playing",
     worldId: "zombie-big-box",
     rng: createRng(0),
