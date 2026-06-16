@@ -6,6 +6,7 @@ import { worldDisplayManifest } from "../../data/worldDisplayManifest";
 import { worldHelpManifest } from "../../data/worldHelpManifest";
 import type { CardEffect } from "../../core/index";
 import { compileEffect, type IconId } from "../../core/view/effectGlyphs";
+import { EFFECT_ICON_TOOLTIPS } from "../../core/view/effectTooltips";
 import { EFFECT_ICON_TEXTURES } from "./effectLineLayout";
 import { addEffectLines } from "./effectLineView";
 
@@ -368,6 +369,18 @@ export class HelpOverlayView extends Phaser.GameObjects.Container {
       });
     }
 
+    function addIconTooltipRow(
+      parent: Phaser.GameObjects.Container,
+      x: number,
+      y: number,
+      iconId: IconId,
+      wrapWidth = 320,
+      nameColor = TEXT.textLight,
+    ): void {
+      const copy = EFFECT_ICON_TOOLTIPS[iconId];
+      addIconRow(parent, x, y, iconId, copy.title, copy.body, wrapWidth, nameColor);
+    }
+
     function addIconSectionHeader(
       parent: Phaser.GameObjects.Container,
       x: number,
@@ -660,7 +673,7 @@ export class HelpOverlayView extends Phaser.GameObjects.Container {
       {
         tab: "Icons",
         title: "What the card icons mean",
-        subtitle: "Here is every effect icon you will see on cards, grouped by what they effect.",
+        subtitle: "Here is every effect icon you will see on cards, grouped by what they affect.",
         build: (page) => {
           // Two reference columns. Left edge of each column holds the icon; the
           // name and gloss hang to its right. Column gutter is wide enough that
@@ -670,15 +683,7 @@ export class HelpOverlayView extends Phaser.GameObjects.Container {
           const colWrap = 300;
 
           addIconSectionHeader(page, leftX, -173, "Make Progress");
-          addIconRow(
-            page,
-            leftX,
-            -146,
-            "progress",
-            "Progress",
-            "Add Progress to the hazard you target.",
-            colWrap,
-          );
+          addIconTooltipRow(page, leftX, -146, "progress", colWrap);
           addIconRow(
             page,
             leftX,

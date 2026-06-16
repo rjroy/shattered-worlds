@@ -636,6 +636,18 @@ function makeFakeRect(x: number, y: number): unknown {
   return rect;
 }
 
+function makeFakeCircle(x: number, y: number): unknown {
+  const circle = {
+    ...childProtocol,
+    x,
+    y,
+    setOrigin: (): unknown => circle,
+    setStrokeStyle: (): unknown => circle,
+    setFillStyle: (): unknown => circle,
+  };
+  return circle;
+}
+
 function makeFakeImage(x: number, y: number, textureKey: string): unknown {
   const img = {
     ...childProtocol,
@@ -742,6 +754,7 @@ function makeRenderScene(): { scene: unknown; texts: TrackedText[]; containers: 
       existing(): void {},
       image: (x: number, y: number, key: string): unknown => makeFakeImage(x, y, key),
       rectangle: (x: number, y: number): unknown => makeFakeRect(x, y),
+      circle: (x: number, y: number): unknown => makeFakeCircle(x, y),
       graphics: (): unknown => makeFakeGraphics(),
       container: (): unknown => makeFakeContainer(containers),
       text: (

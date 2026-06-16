@@ -555,7 +555,13 @@ export class TableScene extends Phaser.Scene {
       this.emphasizeIfLegalTarget(id, container);
       this.emphasizeIfPlayable(id, container);
     });
-    container.on("pointerout", () => {
+    container.on("pointerout", (pointer: Phaser.Input.Pointer) => {
+      // Interactive children (effect icons/tooltips) can become the top hit
+      // target while the cursor is still visually over the card. In that case
+      // keep the card lifted; clearing here would shrink the icon out from
+      // under the cursor and produce hover bounce.
+      if (this.pointerInsideCardVisual(pointer, container)) return;
+
       // Seam case (a): pointer-out clears the stored hovered id AND restores
       // this container's base transform (scale 1, glow off).
       if (this.hoveredCardId === id) this.hoveredCardId = null;
@@ -569,6 +575,14 @@ export class TableScene extends Phaser.Scene {
     });
 
     return container;
+  }
+
+  private pointerInsideCardVisual(pointer: Phaser.Input.Pointer, container: CardView): boolean {
+    const x = pointer.worldX ?? pointer.x;
+    const y = pointer.worldY ?? pointer.y;
+    const halfW = (CARD_FACE.width * container.scaleX) / 2;
+    const halfH = (CARD_FACE.height * container.scaleY) / 2;
+    return Math.abs(x - container.x) <= halfW && Math.abs(y - container.y) <= halfH;
   }
 
   /** Apply the correct highlight and alpha to a card container. */
