@@ -5,68 +5,78 @@
  * the interactive variant. Both are plain Phaser game objects with no
  * knowledge of GameState — callers construct them and pass in text/style.
  */
-import Phaser from 'phaser'
+import Phaser from "phaser";
+import { TooltipCopy } from "../../core/view/effectTooltips";
+import { addTooltip } from "./TooltipView";
 
 export class CommonLabel extends Phaser.GameObjects.Container {
+  protected txtBg: Phaser.GameObjects.NineSlice;
+  protected label: Phaser.GameObjects.Text;
 
-  protected txtBg: Phaser.GameObjects.NineSlice
-  protected label: Phaser.GameObjects.Text
-
-  constructor(scene: Phaser.Scene, x: number, y: number, text: string, textStyle: Phaser.Types.GameObjects.Text.TextStyle) {
-    super(scene, x, y)
+  constructor(
+    scene: Phaser.Scene,
+    x: number,
+    y: number,
+    text: string,
+    textStyle: Phaser.Types.GameObjects.Text.TextStyle,
+  ) {
+    super(scene, x, y);
 
     this.txtBg = scene.add
-      .nineslice(
-        0, 0,
-        'text-back',
-        undefined,
-        30, 20,
-        4, 4, 2, 2,
-      )
+      .nineslice(0, 0, "text-back", undefined, 30, 20, 4, 4, 2, 2)
       .setOrigin(0.5, 0.5)
-      .setTint(0x777777)
-    this.add(this.txtBg)
+      .setTint(0x777777);
+    this.add(this.txtBg);
 
-    this.label = scene.add.text(0, 0, text, textStyle)
-    this.label.setOrigin(0.5, 0.5)
-    this.txtBg.setSize(this.label.width + 24, this.label.height + 14)
+    this.label = scene.add.text(0, 0, text, textStyle);
+    this.label.setOrigin(0.5, 0.5);
+    this.txtBg.setSize(this.label.width + 24, this.label.height + 14);
 
-    this.add(this.label)
-    this.setPosition(x, y)
-    scene.add.existing(this)
+    this.add(this.label);
+    this.setPosition(x, y);
+    scene.add.existing(this);
   }
 
   setText(text: string): void {
-    this.label.setText(text)
-    this.txtBg.setSize(this.label.width + 24, this.label.height + 14)
+    this.label.setText(text);
+    this.txtBg.setSize(this.label.width + 24, this.label.height + 14);
+  }
+
+  setTooltip(copy: TooltipCopy): void {
+    addTooltip(this.scene, this.txtBg, copy);
   }
 }
 
 export class CommonButton extends CommonLabel {
-
-  constructor(scene: Phaser.Scene, x: number, y: number, text: string, textStyle: Phaser.Types.GameObjects.Text.TextStyle) {
-    super(scene, x, y, text, textStyle)
-    this.txtBg.setInteractive({ useHandCursor: true })
+  constructor(
+    scene: Phaser.Scene,
+    x: number,
+    y: number,
+    text: string,
+    textStyle: Phaser.Types.GameObjects.Text.TextStyle,
+  ) {
+    super(scene, x, y, text, textStyle);
+    this.txtBg.setInteractive({ useHandCursor: true });
   }
 
   on(event: string, callback: () => void): this {
     if (this.txtBg !== undefined) {
-      this.txtBg.on(event, callback)
+      this.txtBg.on(event, callback);
     }
-    return this
+    return this;
   }
 
   disableInteractive(): this {
     if (this.txtBg !== undefined) {
-      this.txtBg.disableInteractive()
+      this.txtBg.disableInteractive();
     }
-    return this
+    return this;
   }
 
   setInteractive(config?: Phaser.Types.Input.InputConfiguration): this {
     if (this.txtBg !== undefined) {
-      this.txtBg.setInteractive(config)
+      this.txtBg.setInteractive(config);
     }
-    return this
+    return this;
   }
 }

@@ -156,7 +156,7 @@ export class TooltipView extends Phaser.GameObjects.Container {
           emit?: (event: string, ...args: unknown[]) => void;
         }
       | undefined;
-    while (parent !== undefined) {
+    while (parent !== undefined && parent) {
       if (typeof parent.cardId === "string" && typeof parent.emit === "function") {
         parent.emit("pointerdown", ...args);
         return;
