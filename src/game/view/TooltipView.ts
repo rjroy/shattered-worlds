@@ -44,7 +44,11 @@ export class TooltipView extends Phaser.GameObjects.Container {
       TOOLTIP_PAD_X,
       TOOLTIP_PAD_Y,
       "",
-      textStyle({ fontSize: "12px", color: TEXT.textKeyword, fontStyle: "bold" }),
+      textStyle({
+        fontSize: "12px",
+        color: TEXT.textKeyword,
+        fontStyle: "bold",
+      }),
     );
     this.titleText.setOrigin(0, 0);
     this.add(this.titleText);
@@ -66,7 +70,10 @@ export class TooltipView extends Phaser.GameObjects.Container {
 
   static forScene(scene: Phaser.Scene): TooltipView {
     const tooltipScene = scene as TooltipScene;
-    if (tooltipScene.cardTooltipView === undefined) {
+    if (
+      tooltipScene.cardTooltipView === undefined ||
+      tooltipScene.cardTooltipView.scene !== scene
+    ) {
       tooltipScene.cardTooltipView = new TooltipView(scene);
     }
     return tooltipScene.cardTooltipView;
@@ -85,14 +92,21 @@ export class TooltipView extends Phaser.GameObjects.Container {
   }
 
   private schedule(copy: TooltipCopy, pointer: unknown): void {
-    this.activeCopy = copy;
-    this.track(pointer);
-    this.cancelShowEvent();
-    this.showEvent = this.scene.time.delayedCall(TOOLTIP_DELAY_MS, () => this.show(copy));
+    if (this.scene !== undefined && this.scene.time !== undefined) {
+      this.activeCopy = copy;
+      this.track(pointer);
+      this.cancelShowEvent();
+      this.showEvent = this.scene.time.delayedCall(TOOLTIP_DELAY_MS, () => this.show(copy));
+    }
   }
 
   private track(pointer: unknown): void {
-    const p = pointer as { x?: number; y?: number; worldX?: number; worldY?: number };
+    const p = pointer as {
+      x?: number;
+      y?: number;
+      worldX?: number;
+      worldY?: number;
+    };
     this.pointerX = p.worldX ?? p.x ?? this.pointerX;
     this.pointerY = p.worldY ?? p.y ?? this.pointerY;
     if (this.visible && this.activeCopy !== undefined) {
@@ -136,7 +150,11 @@ export class TooltipView extends Phaser.GameObjects.Container {
 
   private forwardCardPointerDown(target: TooltipTarget, args: readonly unknown[]): void {
     let parent = target.parentContainer as
-      | { parentContainer?: unknown; cardId?: unknown; emit?: (event: string, ...args: unknown[]) => void }
+      | {
+          parentContainer?: unknown;
+          cardId?: unknown;
+          emit?: (event: string, ...args: unknown[]) => void;
+        }
       | undefined;
     while (parent !== undefined) {
       if (typeof parent.cardId === "string" && typeof parent.emit === "function") {
@@ -148,11 +166,7 @@ export class TooltipView extends Phaser.GameObjects.Container {
   }
 }
 
-export function addTooltip(
-  scene: Phaser.Scene,
-  target: TooltipTarget,
-  copy: TooltipCopy,
-): void {
+export function addTooltip(scene: Phaser.Scene, target: TooltipTarget, copy: TooltipCopy): void {
   if (target.setInteractive === undefined || target.on === undefined) return;
   TooltipView.forScene(scene).register(target, copy);
 }
