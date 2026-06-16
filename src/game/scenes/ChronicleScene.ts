@@ -10,7 +10,6 @@ import { CANVAS_W, CANVAS_H } from "../view/layout";
 import { TEXT, textStyle } from "../view/presentation";
 import { formatDuration } from "../view/format";
 import { addScreenBackdrop } from "../view/screenBackdrop";
-import { beginTargeting } from "../interaction/selection";
 
 const VISIBLE_WORLDS = 4;
 
