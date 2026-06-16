@@ -43,6 +43,9 @@ import unlockMinEnergyUrl from "../assets/unlocks/min-energy.webp";
 import unlockMinLightUrl from "../assets/unlocks/min-light.webp";
 import unlockStarterFootballerUrl from "../assets/unlocks/starter-footballer.webp";
 import worldSelectBgUrl from "../assets/world-select.webp";
+import screenChronicleUrl from "../assets/screens/shattered-chronicle.webp";
+import screenDestinyUrl from "../assets/screens/shattered-destiny.webp";
+import screenLoseUrl from "../assets/screens/shattered-lose.webp";
 import { worldAssetUrls } from "../worlds/assetBindings";
 
 export const assetManifest: Record<string, string> = {
@@ -93,6 +96,9 @@ export const assetManifest: Record<string, string> = {
   "unlock/min-light": unlockMinLightUrl,
   "unlock/starter-footballer": unlockStarterFootballerUrl,
   "world-select-bg": worldSelectBgUrl,
+  "screen-chronicle": screenChronicleUrl,
+  "screen-destiny": screenDestinyUrl,
+  "screen-lose": screenLoseUrl,
   ...worldAssetUrls,
 };
 

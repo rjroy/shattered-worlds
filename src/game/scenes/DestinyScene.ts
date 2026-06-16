@@ -13,6 +13,7 @@ import type { UnlocksStore } from '../runtime/unlocksProfile'
 import { unlockCardState } from '../view/unlockShop'
 import { CANVAS_W, CANVAS_H } from '../view/layout'
 import { TEXT, textStyle } from '../view/presentation'
+import { addScreenBackdrop } from '../view/screenBackdrop'
 
 const CARD_W = 382
 const CARD_H = 132
@@ -43,7 +44,11 @@ export class DestinyScene extends Phaser.Scene {
 
   create(): void {
     this.scrollOffset = 0
-    this.add.rectangle(CANVAS_W / 2, CANVAS_H / 2, CANVAS_W, CANVAS_H, 0x0d0a12, 1)
+    addScreenBackdrop(this, {
+      key: 'screen-destiny',
+      veilAlpha: 0.7,
+      tint: 0xcbb8ff,
+    })
     this.add.text(42, 24, 'Destiny', textStyle({
       fontSize: '32px',
       color: '#d6b15c',
