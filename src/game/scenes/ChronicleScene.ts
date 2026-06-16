@@ -10,8 +10,10 @@ import { CANVAS_W, CANVAS_H } from "../view/layout";
 import { TEXT, textStyle } from "../view/presentation";
 import { formatDuration } from "../view/format";
 import { addScreenBackdrop } from "../view/screenBackdrop";
+import { FeatReward } from "../../data/feats/types";
 
 const VISIBLE_WORLDS = 4;
+const VISIBLE_FEATS = 11;
 
 type Button = {
   container: Phaser.GameObjects.Container;
@@ -28,6 +30,7 @@ export class ChronicleScene extends Phaser.Scene {
   private confirmOverlay?: Phaser.GameObjects.Container;
   private fileInput?: HTMLInputElement;
   private worldsScrollOffset = 0;
+  private featsScrollOffset = 0;
 
   constructor(runStats?: RunStatsReader, statsTransfer?: StatsTransfer, featsStore?: FeatsStore) {
     super({ key: "Chronicle" });
@@ -38,6 +41,7 @@ export class ChronicleScene extends Phaser.Scene {
 
   create(): void {
     this.worldsScrollOffset = 0;
+    this.featsScrollOffset = 0;
     addScreenBackdrop(this, {
       key: "screen-chronicle",
       veilAlpha: 0.64,
@@ -74,20 +78,41 @@ export class ChronicleScene extends Phaser.Scene {
 
     this.input.keyboard?.on("keydown-ESC", () => this.scene.start("WorldSelect"));
 
+    const scrollWorlds = (pointer: Phaser.Input.Pointer, deltaY: number) => {
+      const allWorldIds = Object.keys(worldManifest);
+      if (allWorldIds.length <= VISIBLE_WORLDS) return;
+      if (pointer.y < 222 || pointer.y > 432) return;
+      const maxOffset = allWorldIds.length - VISIBLE_WORLDS;
+      if (deltaY > 0 && this.worldsScrollOffset < maxOffset) {
+        this.worldsScrollOffset += 1;
+        this.renderStats();
+      } else if (deltaY < 0 && this.worldsScrollOffset > 0) {
+        this.worldsScrollOffset -= 1;
+        this.renderStats();
+      }
+    };
+
+    const scrollFeats = (pointer: Phaser.Input.Pointer, deltaY: number) => {
+      if (FEAT_CATALOG.length <= VISIBLE_FEATS) return;
+      if (pointer.y < 165 || pointer.y > 165 + 32 * VISIBLE_FEATS) return;
+      const maxOffset = FEAT_CATALOG.length - VISIBLE_FEATS;
+      if (deltaY > 0 && this.featsScrollOffset < maxOffset) {
+        this.featsScrollOffset += 1;
+        this.renderFeats();
+      } else if (deltaY < 0 && this.featsScrollOffset > 0) {
+        this.featsScrollOffset -= 1;
+        this.renderFeats();
+      }
+    };
+
     this.input.on(
       "wheel",
       (pointer: Phaser.Input.Pointer, _over: unknown, _dx: number, deltaY: number) => {
-        if (this.statsContent === undefined || !this.statsContent.visible) return;
-        const allWorldIds = Object.keys(worldManifest);
-        if (allWorldIds.length <= VISIBLE_WORLDS) return;
-        if (pointer.y < 222 || pointer.y > 432) return;
-        const maxOffset = allWorldIds.length - VISIBLE_WORLDS;
-        if (deltaY > 0 && this.worldsScrollOffset < maxOffset) {
-          this.worldsScrollOffset += 1;
-          this.renderStats();
-        } else if (deltaY < 0 && this.worldsScrollOffset > 0) {
-          this.worldsScrollOffset -= 1;
-          this.renderStats();
+        if (this.statsContent !== undefined && this.statsContent.visible) {
+          scrollWorlds(pointer, deltaY);
+        }
+        if (this.featsContent !== undefined && this.featsContent.visible) {
+          scrollFeats(pointer, deltaY);
         }
       },
     );
@@ -294,7 +319,7 @@ export class ChronicleScene extends Phaser.Scene {
       const balance = computeFragmentBalance(this.featsStore.getProfile(), FEAT_CATALOG);
       this.addText(
         this.featsContent,
-        500,
+        250,
         103,
         `Total Memory Fragments: ${balance}`,
         14,
@@ -307,36 +332,30 @@ export class ChronicleScene extends Phaser.Scene {
       const FEAT_NAME_X = 64;
       const FEAT_DESC_X = 184;
       const FEAT_NAME_W = FEAT_DESC_X - FEAT_NAME_X - 8;
-      const FEAT_REWARD_X = 684;
+      const FEAT_REWARD_X = 664;
       const FEAT_DESC_W = FEAT_REWARD_X - FEAT_DESC_X - 8;
-      const FEAT_EARNED_X = 764;
+      const FEAT_EARNED_X = 744;
 
-      this.addText(
-        this.featsContent,
-        FEAT_NAME_X,
-        133,
-        "Name",
-        16,
-        TEXT.textLight,
-        true,
-        undefined,
-        FEAT_NAME_W,
-      );
-      this.addText(
-        this.featsContent,
-        FEAT_DESC_X,
-        133,
-        "Description",
-        16,
-        TEXT.textLight,
-        true,
-        undefined,
-        FEAT_DESC_W,
-      );
+      this.addText(this.featsContent, FEAT_NAME_X, 133, "Name", 16, TEXT.textLight, true);
+      this.addText(this.featsContent, FEAT_DESC_X, 133, "Description", 16, TEXT.textLight, true);
       this.addText(this.featsContent, FEAT_REWARD_X, 133, "Reward", 16, TEXT.textLight, true);
       this.addText(this.featsContent, FEAT_EARNED_X, 133, "Earned", 16, TEXT.textLight, true);
 
-      FEAT_CATALOG.forEach((feat, index) => {
+      const totalFragments = (r: FeatReward) =>
+        r.items.reduce((acc, item) => acc + (item.type === "memoryFragments" ? item.amount : 0), 0);
+
+      const orderedFeats = [...FEAT_CATALOG];
+      orderedFeats.sort((a, b) => {
+        const fragDelta = totalFragments(a.reward) - totalFragments(b.reward);
+        if (fragDelta !== 0) return fragDelta;
+        return a.name < b.name ? -1 : a.name > b.name ? 1 : 0;
+      });
+      const visibleFeats = orderedFeats.slice(
+        this.featsScrollOffset,
+        this.featsScrollOffset + VISIBLE_FEATS,
+      );
+
+      visibleFeats.forEach((feat, index) => {
         if (this.featsContent === undefined) {
           console.error("Feats content is undefined when adding stats panel");
           return;
@@ -356,8 +375,18 @@ export class ChronicleScene extends Phaser.Scene {
 
         const bEarned = featsProfile.earned.some((e) => e.featId == feat.id);
         const color = bEarned ? TEXT.textReward : TEXT.textLight;
-        this.addText(this.featsContent, FEAT_NAME_X, y, feat.name, 13, color);
-        this.addText(this.featsContent, FEAT_DESC_X, y, feat.description, 13, color);
+        this.addPanel(this.featsContent, 56, y - 1, 770, 32, 0x5e2f29);
+        this.addText(this.featsContent, FEAT_NAME_X, y, feat.name, 13, color, false, FEAT_NAME_W);
+        this.addText(
+          this.featsContent,
+          FEAT_DESC_X,
+          y,
+          feat.description,
+          13,
+          color,
+          false,
+          FEAT_DESC_W,
+        );
         this.addText(this.featsContent, FEAT_REWARD_X, y, reward, 13, color);
         if (bEarned) {
           const at = featsProfile.earned
@@ -368,6 +397,50 @@ export class ChronicleScene extends Phaser.Scene {
           }
         }
       });
+    }
+
+    if (FEAT_CATALOG.length > VISIBLE_FEATS) {
+      const maxOffset = FEAT_CATALOG.length - VISIBLE_FEATS;
+      const showingEnd = Math.min(this.featsScrollOffset + VISIBLE_FEATS, FEAT_CATALOG.length);
+      this.addText(
+        this.featsContent,
+        700,
+        103,
+        `${this.featsScrollOffset + 1}–${showingEnd} of ${FEAT_CATALOG.length}`,
+        11,
+        TEXT.textMuted,
+      );
+
+      if (this.featsScrollOffset > 0) {
+        const upArrow = this.add
+          .text(840, 133, "▲", textStyle({ fontSize: "16px", color: "#d6b15c" }))
+          .setInteractive({ useHandCursor: true })
+          .on("pointerdown", () => {
+            this.featsScrollOffset -= 1;
+            this.renderFeats();
+          });
+        upArrow.on("pointerover", () => upArrow.setAlpha(0.7));
+        upArrow.on("pointerout", () => upArrow.setAlpha(1));
+        this.featsContent.add(upArrow);
+      }
+
+      if (this.featsScrollOffset < maxOffset) {
+        const downArrow = this.add
+          .text(
+            840,
+            133 + 32 * VISIBLE_FEATS,
+            "▼",
+            textStyle({ fontSize: "16px", color: "#d6b15c" }),
+          )
+          .setInteractive({ useHandCursor: true })
+          .on("pointerdown", () => {
+            this.featsScrollOffset += 1;
+            this.renderFeats();
+          });
+        downArrow.on("pointerover", () => downArrow.setAlpha(0.7));
+        downArrow.on("pointerout", () => downArrow.setAlpha(1));
+        this.featsContent.add(downArrow);
+      }
     }
   }
 
@@ -388,6 +461,37 @@ export class ChronicleScene extends Phaser.Scene {
     panel.setStrokeStyle(1, strokeOverride ?? 0x5f4b2a, 0.85);
     panel.setRounded(8);
     content.add(panel);
+  }
+
+  private addIcon(
+    content: Phaser.GameObjects.Container,
+    x: number,
+    y: number,
+    value: string,
+    size: number,
+    color: string,
+    bold = false,
+    wordWrapOverride?: number,
+    maxWidth?: number,
+  ): Phaser.GameObjects.Text {
+    const text = this.add.text(
+      x,
+      y,
+      value,
+      textStyle({
+        fontSize: `${size}px`,
+        color,
+        fontStyle: bold ? "bold" : "",
+        wordWrap: { width: wordWrapOverride ?? 780 },
+      }),
+    );
+    if (maxWidth !== undefined) {
+      if (text.width > maxWidth) {
+        text.setScale(maxWidth / text.width);
+      }
+    }
+    content.add(text);
+    return text;
   }
 
   private addText(

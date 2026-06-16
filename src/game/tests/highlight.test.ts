@@ -7,6 +7,7 @@ function player(id: string): PlayerCard {
   return {
     kind: "player",
     id,
+    templateId: "P",
     name: "P",
     insetKey: undefined,
     sourceWorldId: "test",
@@ -20,6 +21,7 @@ function world(id: string, discardable = false): WorldCard {
   return {
     kind: "world",
     id,
+    templateId: "W",
     name: "W",
     insetKey: undefined,
     cost: 1,
@@ -87,9 +89,7 @@ describe("classifyHighlight", () => {
 
   it("marks a discardable hazard only when idle", () => {
     const idle: SelectionState = { phase: "idle" };
-    expect(
-      classify(idle, world("w1", true), { discardable: set("w1") }),
-    ).toEqual({
+    expect(classify(idle, world("w1", true), { discardable: set("w1") })).toEqual({
       kind: "discard",
       dim: false,
     });
@@ -102,9 +102,7 @@ describe("classifyHighlight", () => {
       done: [],
       current: [],
     };
-    expect(
-      classify(sel, world("w1", true), { discardable: set("w1") }),
-    ).toEqual({
+    expect(classify(sel, world("w1", true), { discardable: set("w1") })).toEqual({
       kind: "none",
       dim: true,
     });

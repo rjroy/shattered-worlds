@@ -76,6 +76,7 @@ export type CardEffect =
 export interface PlayerCard {
   kind: "player";
   id: CardId;
+  templateId: CardTemplateId;
   name: string;
   insetKey: string | undefined;
   sourceWorldId: string;
@@ -92,6 +93,7 @@ export interface PlayerCard {
 export interface WorldCard {
   kind: "world";
   id: CardId;
+  templateId: CardTemplateId;
   name: string;
   insetKey: string | undefined;
   cost: number;
@@ -180,28 +182,29 @@ export type GameEvent =
   | {
       type: "ProgressDealt";
       hazardId: CardId;
+      templateId: CardTemplateId;
       amount: number;
       hazardTurnTotal: number;
     }
-  | { type: "HazardResolved"; hazardId: CardId }
-  | { type: "HazardPartial"; hazardId: CardId }
-  | { type: "HazardDiscarded"; cardId: CardId }
+  | { type: "HazardResolved"; hazardId: CardId; templateId: CardTemplateId }
+  | { type: "HazardPartial"; hazardId: CardId; templateId: CardTemplateId }
+  | { type: "HazardDiscarded"; cardId: CardId; templateId: CardTemplateId }
   | { type: "DamageDealt"; amount: number }
-  | { type: "CardGained"; id: CardId; dest: Dest }
-  | { type: "CardDestroyed"; ids: readonly CardId[] }
-  | { type: "WorldCardsReturned"; ids: readonly CardId[] }
+  | { type: "CardGained"; id: CardId; templateId: CardTemplateId; dest: Dest }
+  | { type: "CardDestroyed"; ids: readonly CardId[]; templateIds: readonly CardTemplateId[] }
+  | { type: "WorldCardsReturned"; ids: readonly CardId[]; templateIds: readonly CardTemplateId[] }
   | { type: "HpChanged"; hp: number }
   | { type: "EnergyChanged"; energy: number }
   | { type: "LightChanged"; light: number }
-  | { type: "CardsDiscarded"; cardIds: readonly CardId[] }
+  | { type: "CardsDiscarded"; cardIds: readonly CardId[]; templateIds: readonly CardTemplateId[] }
   | { type: "DeckShuffled" }
   | { type: "ActAdvanced"; act: number }
-  | { type: "CardsDrawn"; ids: readonly CardId[] }
+  | { type: "CardsDrawn"; ids: readonly CardId[]; templateIds: readonly CardTemplateId[] }
   | { type: "TurnEnded" }
   | { type: "WorldWon" }
   | { type: "WorldLost" }
   | { type: "BraceChanged"; braceCharges: number }
   | { type: "BraceConsumed"; absorbed: number; remaining: number }
-  | { type: "WorldCardsExiled"; ids: readonly CardId[] }
+  | { type: "WorldCardsExiled"; ids: readonly CardId[]; templateIds: readonly CardTemplateId[] }
   | { type: "HealReceived"; amount: number }
-  | { type: "HazardAdded"; templateId: string };
+  | { type: "HazardAdded"; templateId: CardTemplateId };

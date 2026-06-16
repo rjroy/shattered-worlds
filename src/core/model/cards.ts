@@ -65,6 +65,7 @@ export function mintCard(
     const card: PlayerCard = {
       kind: "player",
       id,
+      templateId,
       name: template.name,
       insetKey: template.insetKey,
       sourceWorldId: state.worldId,
@@ -79,6 +80,7 @@ export function mintCard(
   const card: WorldCard = {
     kind: "world",
     id,
+    templateId,
     name: template.name,
     insetKey: template.insetKey,
     cost: template.cost,

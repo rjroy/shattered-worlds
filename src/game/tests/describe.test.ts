@@ -35,6 +35,7 @@ function player(effect: CardEffect): PlayerCard {
   return {
     kind: "player",
     id: "p1",
+    templateId: "Test",
     name: "Test",
     insetKey: undefined,
     sourceWorldId: "test",
@@ -48,6 +49,7 @@ function hazard(over: Partial<WorldCard>): WorldCard {
   return {
     kind: "world",
     id: "w1",
+    templateId: "Zombie",
     name: "Zombie",
     insetKey: undefined,
     cost: 1,
@@ -267,6 +269,8 @@ describe("previewPlay", () => {
 
     // At light 3 it reveals and the normal Progress math returns (Hidden bonus lands).
     const lit = { ...makeState(), light: 3 };
-    expect(previewPlay(explore, mist, lit)).toBe("Make 2 Progress → 1 more to clear Something in the Mist");
+    expect(previewPlay(explore, mist, lit)).toBe(
+      "Make 2 Progress → 1 more to clear Something in the Mist",
+    );
   });
 });

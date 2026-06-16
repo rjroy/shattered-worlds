@@ -1,10 +1,10 @@
-import { describe, expect, it } from 'bun:test'
+import { describe, expect, it } from "bun:test";
 
-import { createGame } from '../../core/index'
-import type { Action, WorldData } from '../../core/index'
-import { catalog, worldData } from '../../core/tests/testFixture'
+import { createGame } from "../../core/index";
+import type { Action, WorldData } from "../../core/index";
+import { catalog, worldData } from "../../core/tests/testFixture";
 
-import { createGameplaySession } from './gameplaySession'
+import { createGameplaySession } from "./gameplaySession";
 import {
   createGameplayEventStream,
   type GameplayBatch,
@@ -12,60 +12,60 @@ import {
   type RunStarted,
   type RunStreamItem,
   type SubscriberFailure,
-} from './gameplayEventStream'
+} from "./gameplayEventStream";
 
 /** Narrows a captured stream item to RunStarted, failing the test if it is anything else. */
 function requireRunStarted(item: RunStreamItem | undefined): RunStarted {
-  if (item?.kind !== 'RunStarted') {
-    throw new Error(`expected a RunStarted item, got ${item?.kind ?? 'undefined'}`)
+  if (item?.kind !== "RunStarted") {
+    throw new Error(`expected a RunStarted item, got ${item?.kind ?? "undefined"}`);
   }
 
-  return item
+  return item;
 }
 
 /** Narrows a captured stream item to RunEnded, failing the test if it is anything else. */
 function requireRunEnded(item: RunStreamItem | undefined): RunEnded {
-  if (item?.kind !== 'RunEnded') {
-    throw new Error(`expected a RunEnded item, got ${item?.kind ?? 'undefined'}`)
+  if (item?.kind !== "RunEnded") {
+    throw new Error(`expected a RunEnded item, got ${item?.kind ?? "undefined"}`);
   }
 
-  return item
+  return item;
 }
 
 /** Narrows a captured stream item to GameplayBatch, failing the test if it is anything else. */
 function requireGameplayBatch(item: RunStreamItem | undefined): GameplayBatch {
-  if (item?.kind !== 'GameplayBatch') {
-    throw new Error(`expected a GameplayBatch item, got ${item?.kind ?? 'undefined'}`)
+  if (item?.kind !== "GameplayBatch") {
+    throw new Error(`expected a GameplayBatch item, got ${item?.kind ?? "undefined"}`);
   }
 
-  return item
+  return item;
 }
 
 function requireHandCardId(
-  session: Pick<ReturnType<typeof createGame>, 'state'>,
-  kind: 'player' | 'world',
+  session: Pick<ReturnType<typeof createGame>, "state">,
+  kind: "player" | "world",
   name: string,
 ): string {
-  const cardId = session.state.hand.find((card) => card.kind === kind && card.name === name)?.id
+  const cardId = session.state.hand.find((card) => card.kind === kind && card.name === name)?.id;
   if (cardId === undefined) {
-    throw new Error(`expected ${kind} card ${name} in hand`)
+    throw new Error(`expected ${kind} card ${name} in hand`);
   }
 
-  return cardId
+  return cardId;
 }
 
 function createGuaranteedWinWorldData(): WorldData {
   return {
-    worldId: 'req-events-win-world',
-    starterDeck: [{ templateId: 'Explore', count: 4 }],
+    worldId: "req-events-win-world",
+    starterDeck: [{ templateId: "Explore", count: 4 }],
     deckComposition: {
       acts: [
         {
-          cards: [{ templateId: 'Door', count: 2 }],
+          cards: [{ templateId: "Door", count: 2 }],
         },
       ],
     },
-  }
+  };
 }
 
 // Two-act world: act 0 has two Screams (onEndOfTurn: DestroySelf), act 1 has one Door.
@@ -75,106 +75,106 @@ function createGuaranteedWinWorldData(): WorldData {
 // queued, triggering ActAdvanced(1) before drawing Door.
 function createTwoActWorldData(): WorldData {
   return {
-    worldId: 'req-events-two-act',
-    starterDeck: [{ templateId: 'Explore', count: 4 }],
+    worldId: "req-events-two-act",
+    starterDeck: [{ templateId: "Explore", count: 4 }],
     deckComposition: {
       acts: [
-        { cards: [{ templateId: 'Screams', count: 2 }] },
-        { cards: [{ templateId: 'Door', count: 1 }] },
+        { cards: [{ templateId: "Screams", count: 2 }] },
+        { cards: [{ templateId: "Door", count: 1 }] },
       ],
     },
-  }
+  };
 }
 
 function expectOwnKeys(value: object, expected: readonly string[]): void {
-  expect(Object.keys(value).sort()).toEqual([...expected].sort())
+  expect(Object.keys(value).sort()).toEqual([...expected].sort());
 }
 
-describe('gameplaySession', () => {
-  it('emits one run-start envelope at creation through initial subscribers', () => {
-    const items: RunStreamItem[] = []
+describe("gameplaySession", () => {
+  it("emits one run-start envelope at creation through initial subscribers", () => {
+    const items: RunStreamItem[] = [];
 
     const session = createGameplaySession(catalog, worldData, 42, {
-      makeSessionId: () => 'session-42',
-      appliedModifiers: [{ kind: 'hard-mode' }],
+      makeSessionId: () => "session-42",
+      appliedModifiers: [{ kind: "hard-mode" }],
       clock: () => 1_000,
       subscribers: [(item) => items.push(item)],
-    })
+    });
 
-    expect(session.sessionId).toBe('session-42')
-    expect(items).toHaveLength(1)
-    const started = requireRunStarted(items[0])
-    expect(started.sessionId).toBe('session-42')
-    expect(started.worldId).toBe(worldData.worldId)
-    expect(started.seed).toBe(42)
-    expect(started.appliedModifiers).toEqual([{ kind: 'hard-mode' }])
-    expect(started.timestamp).toBe(1_000)
-    expect(Array.isArray(started.initialEvents)).toBe(true)
-    expect(started.initialState).toBeDefined()
+    expect(session.sessionId).toBe("session-42");
+    expect(items).toHaveLength(1);
+    const started = requireRunStarted(items[0]);
+    expect(started.sessionId).toBe("session-42");
+    expect(started.worldId).toBe(worldData.worldId);
+    expect(started.seed).toBe(42);
+    expect(started.appliedModifiers).toEqual([{ kind: "hard-mode" }]);
+    expect(started.timestamp).toBe(1_000);
+    expect(Array.isArray(started.initialEvents)).toBe(true);
+    expect(started.initialState).toBeDefined();
 
-    session.subscribe((item) => items.push(item))
-    expect(items).toHaveLength(1)
-  })
+    session.subscribe((item) => items.push(item));
+    expect(items).toHaveLength(1);
+  });
 
-  it('creates a default session id when crypto.randomUUID is unavailable', () => {
-    const originalCrypto = globalThis.crypto
-    Object.defineProperty(globalThis, 'crypto', {
+  it("creates a default session id when crypto.randomUUID is unavailable", () => {
+    const originalCrypto = globalThis.crypto;
+    Object.defineProperty(globalThis, "crypto", {
       configurable: true,
       value: { getRandomValues: originalCrypto.getRandomValues.bind(originalCrypto) },
-    })
+    });
 
     try {
-      const session = createGameplaySession(catalog, worldData, 42)
+      const session = createGameplaySession(catalog, worldData, 42);
       expect(session.sessionId).toMatch(
         /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/,
-      )
+      );
     } finally {
-      Object.defineProperty(globalThis, 'crypto', {
+      Object.defineProperty(globalThis, "crypto", {
         configurable: true,
         value: originalCrypto,
-      })
+      });
     }
-  })
+  });
 
-  it('reports run-start subscriber failures without aborting session creation', () => {
-    const items: RunStreamItem[] = []
-    const reports: SubscriberFailure[] = []
-    const failure = new Error('run start subscriber failed')
+  it("reports run-start subscriber failures without aborting session creation", () => {
+    const items: RunStreamItem[] = [];
+    const reports: SubscriberFailure[] = [];
+    const failure = new Error("run start subscriber failed");
 
     const session = createGameplaySession(catalog, worldData, 42, {
-      makeSessionId: () => 'session-run-start-error',
+      makeSessionId: () => "session-run-start-error",
       clock: () => 1_000,
       subscribers: [
         () => {
-          throw failure
+          throw failure;
         },
         (item) => items.push(item),
       ],
       onSubscriberFailure: (report) => reports.push(report),
-    })
+    });
 
-    expect(session.sessionId).toBe('session-run-start-error')
-    expect(items).toHaveLength(1)
-    const started = requireRunStarted(items[0])
-    expect(started.sessionId).toBe('session-run-start-error')
-    expect(started.worldId).toBe(worldData.worldId)
-    expect(started.seed).toBe(42)
-    expect(started.appliedModifiers).toEqual([])
-    expect(started.timestamp).toBe(1_000)
-    expect(reports).toHaveLength(1)
-    expect(reports[0]?.error).toBe(failure)
-    expect(reports[0]?.item).toEqual(items[0])
-  })
+    expect(session.sessionId).toBe("session-run-start-error");
+    expect(items).toHaveLength(1);
+    const started = requireRunStarted(items[0]);
+    expect(started.sessionId).toBe("session-run-start-error");
+    expect(started.worldId).toBe(worldData.worldId);
+    expect(started.seed).toBe(42);
+    expect(started.appliedModifiers).toEqual([]);
+    expect(started.timestamp).toBe(1_000);
+    expect(reports).toHaveLength(1);
+    expect(reports[0]?.error).toBe(failure);
+    expect(reports[0]?.item).toEqual(items[0]);
+  });
 
-  it('stays close to GameCore by delegating state, available actions, intensity, and dispatch', () => {
+  it("stays close to GameCore by delegating state, available actions, intensity, and dispatch", () => {
     const session = createGameplaySession(catalog, worldData, 42, {
-      makeSessionId: () => 'session-core-shape',
-    })
-    const core = createGame(catalog, worldData, 42)
-    const sessionActions = session.availableActions()
-    const coreActions = core.availableActions()
+      makeSessionId: () => "session-core-shape",
+    });
+    const core = createGame(catalog, worldData, 42);
+    const sessionActions = session.availableActions();
+    const coreActions = core.availableActions();
 
-    expect(session.state).toEqual(core.state)
+    expect(session.state).toEqual(core.state);
     expect({
       playable: sessionActions.playable,
       discardable: sessionActions.discardable,
@@ -183,20 +183,22 @@ describe('gameplaySession', () => {
       playable: coreActions.playable,
       discardable: coreActions.discardable,
       canEndTurn: coreActions.canEndTurn,
-    })
+    });
     for (const playable of coreActions.playable) {
-      expect(sessionActions.legalTargets(playable.cardId, 0)).toEqual(coreActions.legalTargets(playable.cardId, 0))
+      expect(sessionActions.legalTargets(playable.cardId, 0)).toEqual(
+        coreActions.legalTargets(playable.cardId, 0),
+      );
     }
-    expect(session.intensity()).toBe(core.intensity())
+    expect(session.intensity()).toBe(core.intensity());
 
-    const action: Action = { type: 'EndTurn' }
-    const sessionResult = session.dispatch(action)
-    const coreResult = core.dispatch(action)
-    const nextSessionActions = session.availableActions()
-    const nextCoreActions = core.availableActions()
+    const action: Action = { type: "EndTurn" };
+    const sessionResult = session.dispatch(action);
+    const coreResult = core.dispatch(action);
+    const nextSessionActions = session.availableActions();
+    const nextCoreActions = core.availableActions();
 
-    expect(sessionResult).toEqual(coreResult)
-    expect(session.state).toEqual(core.state)
+    expect(sessionResult).toEqual(coreResult);
+    expect(session.state).toEqual(core.state);
     expect({
       playable: nextSessionActions.playable,
       discardable: nextSessionActions.discardable,
@@ -205,545 +207,580 @@ describe('gameplaySession', () => {
       playable: nextCoreActions.playable,
       discardable: nextCoreActions.discardable,
       canEndTurn: nextCoreActions.canEndTurn,
-    })
+    });
     for (const playable of nextCoreActions.playable) {
-      expect(nextSessionActions.legalTargets(playable.cardId, 0)).toEqual(nextCoreActions.legalTargets(playable.cardId, 0))
+      expect(nextSessionActions.legalTargets(playable.cardId, 0)).toEqual(
+        nextCoreActions.legalTargets(playable.cardId, 0),
+      );
     }
-    expect(session.intensity()).toBe(core.intensity())
-  })
+    expect(session.intensity()).toBe(core.intensity());
+  });
 
-  it('forwards each accepted dispatch as one gameplay batch with ordered core events', () => {
-    const items: RunStreamItem[] = []
+  it("forwards each accepted dispatch as one gameplay batch with ordered core events", () => {
+    const items: RunStreamItem[] = [];
     const session = createGameplaySession(catalog, worldData, 42, {
-      makeSessionId: () => 'session-batch',
+      makeSessionId: () => "session-batch",
       subscribers: [(item) => items.push(item)],
-    })
-    const core = createGame(catalog, worldData, 42)
+    });
+    const core = createGame(catalog, worldData, 42);
 
-    const sessionResult = session.dispatch({ type: 'EndTurn' })
-    const coreResult = core.dispatch({ type: 'EndTurn' })
+    const sessionResult = session.dispatch({ type: "EndTurn" });
+    const coreResult = core.dispatch({ type: "EndTurn" });
 
-    expect(sessionResult).toEqual(coreResult)
-    expect(items).toHaveLength(2)
-    expect(items[0]?.kind).toBe('RunStarted')
+    expect(sessionResult).toEqual(coreResult);
+    expect(items).toHaveLength(2);
+    expect(items[0]?.kind).toBe("RunStarted");
 
-    const batch = requireGameplayBatch(items[1])
+    const batch = requireGameplayBatch(items[1]);
 
-    expect(batch.events).toEqual(coreResult.events)
-    expect(batch.action).toEqual({ type: 'EndTurn' })
-    expect(batch.state).toEqual(coreResult.state)
-  })
+    expect(batch.events).toEqual(coreResult.events);
+    expect(batch.action).toEqual({ type: "EndTurn" });
+    expect(batch.state).toEqual(coreResult.state);
+  });
 
-  it('keeps core output identical for the same seed and actions after subscribers are added', () => {
-    const reports: SubscriberFailure[] = []
-    const observedItems: RunStreamItem[] = []
+  it("keeps core output identical for the same seed and actions after subscribers are added", () => {
+    const reports: SubscriberFailure[] = [];
+    const observedItems: RunStreamItem[] = [];
     const baselineSession = createGameplaySession(catalog, worldData, 42, {
-      makeSessionId: () => 'session-baseline',
-    })
+      makeSessionId: () => "session-baseline",
+    });
     const observedSession = createGameplaySession(catalog, worldData, 42, {
-      makeSessionId: () => 'session-observed',
+      makeSessionId: () => "session-observed",
       subscribers: [
         (item) => {
-          if (item.kind !== 'GameplayBatch') return
+          if (item.kind !== "GameplayBatch") return;
 
           // Mutation attempts throw on the frozen item and surface as
           // reported failures; they must not affect gameplay resolution.
-          const mutable = item as unknown as { action: { type: string } }
-          mutable.action.type = 'Mutated'
+          const mutable = item as unknown as { action: { type: string } };
+          mutable.action.type = "Mutated";
         },
         (item) => {
-          observedItems.push(item)
-          if (item.kind === 'GameplayBatch') {
-            throw new Error(`listener failed on ${item.action.type}`)
+          observedItems.push(item);
+          if (item.kind === "GameplayBatch") {
+            throw new Error(`listener failed on ${item.action.type}`);
           }
         },
       ],
       onSubscriberFailure: (report) => reports.push(report),
-    })
-    const core = createGame(catalog, worldData, 42)
+    });
+    const core = createGame(catalog, worldData, 42);
     const playExploreOnScreams: Action = {
-      type: 'PlayCard',
-      cardId: requireHandCardId(core, 'player', 'Explore'),
-      targetId: requireHandCardId(core, 'world', 'Screams'),
-    }
-    const actions: readonly Action[] = [playExploreOnScreams, { type: 'EndTurn' }]
+      type: "PlayCard",
+      cardId: requireHandCardId(core, "player", "Explore"),
+      targetId: requireHandCardId(core, "world", "Screams"),
+    };
+    const actions: readonly Action[] = [playExploreOnScreams, { type: "EndTurn" }];
 
     for (const action of actions) {
-      const observedResult = observedSession.dispatch(action)
-      const baselineResult = baselineSession.dispatch(action)
-      const coreResult = core.dispatch(action)
+      const observedResult = observedSession.dispatch(action);
+      const baselineResult = baselineSession.dispatch(action);
+      const coreResult = core.dispatch(action);
 
-      expect(observedResult).toEqual(baselineResult)
-      expect(observedResult).toEqual(coreResult)
+      expect(observedResult).toEqual(baselineResult);
+      expect(observedResult).toEqual(coreResult);
     }
 
-    expect(observedSession.state).toEqual(baselineSession.state)
-    expect(observedSession.state).toEqual(core.state)
-    expect(observedItems.map((item) => item.kind)).toEqual(['RunStarted', 'GameplayBatch', 'GameplayBatch'])
+    expect(observedSession.state).toEqual(baselineSession.state);
+    expect(observedSession.state).toEqual(core.state);
+    expect(observedItems.map((item) => item.kind)).toEqual([
+      "RunStarted",
+      "GameplayBatch",
+      "GameplayBatch",
+    ]);
     // Each dispatch reports two failures: the frozen-item mutation attempt,
     // then the throwing listener.
     expect(reports.map((report) => report.item.kind)).toEqual([
-      'GameplayBatch',
-      'GameplayBatch',
-      'GameplayBatch',
-      'GameplayBatch',
-    ])
-    expect(reports.filter((report) => report.error instanceof TypeError)).toHaveLength(2)
-  })
+      "GameplayBatch",
+      "GameplayBatch",
+      "GameplayBatch",
+      "GameplayBatch",
+    ]);
+    expect(reports.filter((report) => report.error instanceof TypeError)).toHaveLength(2);
+  });
 
-  it('emits one run-end envelope exactly once when dispatch reaches a terminal state', () => {
-    const items: RunStreamItem[] = []
+  it("emits one run-end envelope exactly once when dispatch reaches a terminal state", () => {
+    const items: RunStreamItem[] = [];
     const session = createGameplaySession(catalog, worldData, 17, {
-      makeSessionId: () => 'session-terminal',
+      makeSessionId: () => "session-terminal",
       clock: () => 5_000,
       subscribers: [(item) => items.push(item)],
-    })
+    });
 
     for (let turn = 0; turn < 4; turn += 1) {
-      session.dispatch({ type: 'EndTurn' })
+      session.dispatch({ type: "EndTurn" });
     }
 
-    expect(session.state.status).toBe('lost')
-    const runEnded = requireRunEnded(items.at(-1))
+    expect(session.state.status).toBe("lost");
+    const runEnded = requireRunEnded(items.at(-1));
     expect(runEnded).toMatchObject({
-      kind: 'RunEnded',
-      sessionId: 'session-terminal',
-      outcome: 'lost',
+      kind: "RunEnded",
+      sessionId: "session-terminal",
+      outcome: "lost",
       finalActIndex: session.state.actIndex,
       timestamp: 5_000,
-    })
-    expect(runEnded.finalState).toBeDefined()
-    expect(items.filter((item) => item.kind === 'RunEnded')).toHaveLength(1)
-    expect(items.filter((item) => item.kind === 'GameplayBatch')).toHaveLength(4)
-  })
+    });
+    expect(runEnded.finalState).toBeDefined();
+    expect(items.filter((item) => item.kind === "RunEnded")).toHaveLength(1);
+    expect(items.filter((item) => item.kind === "GameplayBatch")).toHaveLength(4);
+  });
 
-  it('reports subscriber failures without changing accepted dispatch or terminal emission', () => {
-    const items: RunStreamItem[] = []
-    const reports: SubscriberFailure[] = []
-    const failure = new Error('dispatch subscriber failed')
+  it("reports subscriber failures without changing accepted dispatch or terminal emission", () => {
+    const items: RunStreamItem[] = [];
+    const reports: SubscriberFailure[] = [];
+    const failure = new Error("dispatch subscriber failed");
     const session = createGameplaySession(catalog, worldData, 17, {
-      makeSessionId: () => 'session-dispatch-error',
+      makeSessionId: () => "session-dispatch-error",
       clock: () => 7_000,
       subscribers: [
         (item) => {
-          if (item.kind !== 'RunStarted') {
-            throw failure
+          if (item.kind !== "RunStarted") {
+            throw failure;
           }
         },
         (item) => items.push(item),
       ],
       onSubscriberFailure: (report) => reports.push(report),
-    })
-    const core = createGame(catalog, worldData, 17)
-    let sessionResult = undefined as ReturnType<typeof session.dispatch> | undefined
-    let coreResult = undefined as ReturnType<typeof core.dispatch> | undefined
+    });
+    const core = createGame(catalog, worldData, 17);
+    let sessionResult = undefined as ReturnType<typeof session.dispatch> | undefined;
+    let coreResult = undefined as ReturnType<typeof core.dispatch> | undefined;
 
     for (let turn = 0; turn < 4; turn += 1) {
-      sessionResult = session.dispatch({ type: 'EndTurn' })
-      coreResult = core.dispatch({ type: 'EndTurn' })
+      sessionResult = session.dispatch({ type: "EndTurn" });
+      coreResult = core.dispatch({ type: "EndTurn" });
     }
 
-    expect(sessionResult).toEqual(coreResult)
-    expect(session.state).toEqual(core.state)
-    const started = requireRunStarted(items.at(0))
-    expect(started.sessionId).toBe('session-dispatch-error')
-    expect(started.worldId).toBe(worldData.worldId)
-    expect(started.seed).toBe(17)
-    expect(started.appliedModifiers).toEqual([])
-    expect(started.timestamp).toBe(7_000)
-    expect(items.filter((item) => item.kind === 'GameplayBatch')).toHaveLength(4)
+    expect(sessionResult).toEqual(coreResult);
+    expect(session.state).toEqual(core.state);
+    const started = requireRunStarted(items.at(0));
+    expect(started.sessionId).toBe("session-dispatch-error");
+    expect(started.worldId).toBe(worldData.worldId);
+    expect(started.seed).toBe(17);
+    expect(started.appliedModifiers).toEqual([]);
+    expect(started.timestamp).toBe(7_000);
+    expect(items.filter((item) => item.kind === "GameplayBatch")).toHaveLength(4);
     expect(items.at(-1)).toMatchObject({
-      kind: 'RunEnded',
-      sessionId: 'session-dispatch-error',
-      outcome: 'lost',
+      kind: "RunEnded",
+      sessionId: "session-dispatch-error",
+      outcome: "lost",
       finalActIndex: session.state.actIndex,
       timestamp: 7_000,
-    })
-    expect(items.filter((item) => item.kind === 'RunEnded')).toHaveLength(1)
-    expect(reports).toHaveLength(5)
-    expect(reports.map((report) => report.error)).toEqual([failure, failure, failure, failure, failure])
+    });
+    expect(items.filter((item) => item.kind === "RunEnded")).toHaveLength(1);
+    expect(reports).toHaveLength(5);
+    expect(reports.map((report) => report.error)).toEqual([
+      failure,
+      failure,
+      failure,
+      failure,
+      failure,
+    ]);
     expect(reports.map((report) => report.item.kind)).toEqual([
-      'GameplayBatch',
-      'GameplayBatch',
-      'GameplayBatch',
-      'GameplayBatch',
-      'RunEnded',
-    ])
-  })
+      "GameplayBatch",
+      "GameplayBatch",
+      "GameplayBatch",
+      "GameplayBatch",
+      "RunEnded",
+    ]);
+  });
 
-  it('does not emit partial stream items for illegal post-terminal actions', () => {
-    const items: RunStreamItem[] = []
+  it("does not emit partial stream items for illegal post-terminal actions", () => {
+    const items: RunStreamItem[] = [];
     const session = createGameplaySession(catalog, worldData, 17, {
-      makeSessionId: () => 'session-illegal',
+      makeSessionId: () => "session-illegal",
       subscribers: [(item) => items.push(item)],
-    })
+    });
 
     for (let turn = 0; turn < 4; turn += 1) {
-      session.dispatch({ type: 'EndTurn' })
+      session.dispatch({ type: "EndTurn" });
     }
 
-    const emittedBeforeIllegal = items.slice()
+    const emittedBeforeIllegal = items.slice();
 
-    expect(() => session.dispatch({ type: 'EndTurn' })).toThrow()
-    expect(items).toEqual(emittedBeforeIllegal)
-  })
+    expect(() => session.dispatch({ type: "EndTurn" })).toThrow();
+    expect(items).toEqual(emittedBeforeIllegal);
+  });
 
-  it('supports optional subscribers and keeps emitted batches isolated from listener mutation', () => {
-    const reports: SubscriberFailure[] = []
+  it("supports optional subscribers and keeps emitted batches isolated from listener mutation", () => {
+    const reports: SubscriberFailure[] = [];
     const session = createGameplaySession(catalog, worldData, 42, {
-      makeSessionId: () => 'session-optional',
+      makeSessionId: () => "session-optional",
       onSubscriberFailure: (report) => reports.push(report),
-    })
+    });
 
-    expect(() => session.dispatch({ type: 'EndTurn' })).not.toThrow()
+    expect(() => session.dispatch({ type: "EndTurn" })).not.toThrow();
 
-    const observed: GameplayBatch[] = []
+    const observed: GameplayBatch[] = [];
     session.subscribe((item) => {
-      if (item.kind !== 'GameplayBatch') return
+      if (item.kind !== "GameplayBatch") return;
 
-      const mutable = item as unknown as { action: { type: string } }
-      mutable.action.type = 'Mutated'
-    })
+      const mutable = item as unknown as { action: { type: string } };
+      mutable.action.type = "Mutated";
+    });
     session.subscribe((item) => {
-      if (item.kind === 'GameplayBatch') {
-        observed.push(item)
+      if (item.kind === "GameplayBatch") {
+        observed.push(item);
       }
-    })
+    });
 
-    const resolution = session.dispatch({ type: 'EndTurn' })
-    const batch = observed[0]
+    const resolution = session.dispatch({ type: "EndTurn" });
+    const batch = observed[0];
 
-    expect(batch).toBeDefined()
-    expect(batch?.action).toEqual({ type: 'EndTurn' })
-    expect(batch?.events).toEqual(resolution.events)
-    expect(batch?.state).toEqual(resolution.state)
-    expect(session.state.hp).toBe(resolution.state.hp)
-    expect(reports).toHaveLength(1)
-    expect(reports[0]?.error).toBeInstanceOf(TypeError)
-  })
+    expect(batch).toBeDefined();
+    expect(batch?.action).toEqual({ type: "EndTurn" });
+    expect(batch?.events).toEqual(resolution.events);
+    expect(batch?.state).toEqual(resolution.state);
+    expect(session.state.hp).toBe(resolution.state.hp);
+    expect(reports).toHaveLength(1);
+    expect(reports[0]?.error).toBeInstanceOf(TypeError);
+  });
 
-  it('emits an abandoned run-end exactly once when the session is abandoned mid-run', () => {
-    const items: RunStreamItem[] = []
+  it("emits an abandoned run-end exactly once when the session is abandoned mid-run", () => {
+    const items: RunStreamItem[] = [];
     const session = createGameplaySession(catalog, worldData, 42, {
-      makeSessionId: () => 'session-abandoned',
+      makeSessionId: () => "session-abandoned",
       clock: () => 9_000,
       subscribers: [(item) => items.push(item)],
-    })
+    });
 
-    session.dispatch({ type: 'EndTurn' })
-    expect(session.state.status).toBe('playing')
+    session.dispatch({ type: "EndTurn" });
+    expect(session.state.status).toBe("playing");
 
-    session.abandon()
-    session.abandon()
+    session.abandon();
+    session.abandon();
 
-    const runEndedItems = items.filter((item) => item.kind === 'RunEnded')
-    expect(runEndedItems).toHaveLength(1)
-    const runEnded = requireRunEnded(runEndedItems[0])
+    const runEndedItems = items.filter((item) => item.kind === "RunEnded");
+    expect(runEndedItems).toHaveLength(1);
+    const runEnded = requireRunEnded(runEndedItems[0]);
     expect(runEnded).toMatchObject({
-      kind: 'RunEnded',
-      sessionId: 'session-abandoned',
-      outcome: 'abandoned',
+      kind: "RunEnded",
+      sessionId: "session-abandoned",
+      outcome: "abandoned",
       finalActIndex: session.state.actIndex,
       timestamp: 9_000,
-    })
-    expect(runEnded.finalState).toBeDefined()
-  })
+    });
+    expect(runEnded.finalState).toBeDefined();
+  });
 
-  it('refuses dispatch after abandon so nothing follows the closing RunEnded', () => {
-    const items: RunStreamItem[] = []
+  it("refuses dispatch after abandon so nothing follows the closing RunEnded", () => {
+    const items: RunStreamItem[] = [];
     const session = createGameplaySession(catalog, worldData, 42, {
-      makeSessionId: () => 'session-dispatch-after-abandon',
+      makeSessionId: () => "session-dispatch-after-abandon",
       subscribers: [(item) => items.push(item)],
-    })
+    });
 
-    session.dispatch({ type: 'EndTurn' })
-    session.abandon()
+    session.dispatch({ type: "EndTurn" });
+    session.abandon();
 
-    const closedHistory = items.slice()
+    const closedHistory = items.slice();
 
-    expect(() => session.dispatch({ type: 'EndTurn' })).toThrow(/run closed/)
-    expect(items).toEqual(closedHistory)
-    expect(items.at(-1)?.kind).toBe('RunEnded')
-  })
+    expect(() => session.dispatch({ type: "EndTurn" })).toThrow(/run closed/);
+    expect(items).toEqual(closedHistory);
+    expect(items.at(-1)?.kind).toBe("RunEnded");
+  });
 
-  it('treats abandon after a terminal outcome as a no-op', () => {
-    const items: RunStreamItem[] = []
+  it("treats abandon after a terminal outcome as a no-op", () => {
+    const items: RunStreamItem[] = [];
     const session = createGameplaySession(catalog, worldData, 17, {
-      makeSessionId: () => 'session-abandon-after-loss',
+      makeSessionId: () => "session-abandon-after-loss",
       subscribers: [(item) => items.push(item)],
-    })
+    });
 
     for (let turn = 0; turn < 4; turn += 1) {
-      session.dispatch({ type: 'EndTurn' })
+      session.dispatch({ type: "EndTurn" });
     }
 
-    expect(session.state.status).toBe('lost')
-    session.abandon()
+    expect(session.state.status).toBe("lost");
+    session.abandon();
 
-    const runEndedItems = items.filter((item) => item.kind === 'RunEnded')
-    expect(runEndedItems).toHaveLength(1)
-    expect(runEndedItems[0]).toMatchObject({ outcome: 'lost' })
-  })
+    const runEndedItems = items.filter((item) => item.kind === "RunEnded");
+    expect(runEndedItems).toHaveLength(1);
+    expect(runEndedItems[0]).toMatchObject({ outcome: "lost" });
+  });
 
-  it('emits into an injected shared stream and scopes session.subscribe to its own items', () => {
-    const sharedItems: RunStreamItem[] = []
-    const stream = createGameplayEventStream()
-    stream.subscribe((item) => sharedItems.push(item))
+  it("emits into an injected shared stream and scopes session.subscribe to its own items", () => {
+    const sharedItems: RunStreamItem[] = [];
+    const stream = createGameplayEventStream();
+    stream.subscribe((item) => sharedItems.push(item));
 
     const firstSession = createGameplaySession(catalog, worldData, 42, {
-      makeSessionId: () => 'shared-first',
+      makeSessionId: () => "shared-first",
       stream,
-    })
-    const firstScoped: RunStreamItem[] = []
-    firstSession.subscribe((item) => firstScoped.push(item))
-    firstSession.dispatch({ type: 'EndTurn' })
-    firstSession.abandon()
+    });
+    const firstScoped: RunStreamItem[] = [];
+    firstSession.subscribe((item) => firstScoped.push(item));
+    firstSession.dispatch({ type: "EndTurn" });
+    firstSession.abandon();
 
     const secondSession = createGameplaySession(catalog, worldData, 7, {
-      makeSessionId: () => 'shared-second',
+      makeSessionId: () => "shared-second",
       stream,
-    })
-    secondSession.dispatch({ type: 'EndTurn' })
-    secondSession.abandon()
+    });
+    secondSession.dispatch({ type: "EndTurn" });
+    secondSession.abandon();
 
     // The shared stream sees both sessions' full histories, correlated by id.
     expect(sharedItems.map((item) => `${item.sessionId}:${item.kind}`)).toEqual([
-      'shared-first:RunStarted',
-      'shared-first:GameplayBatch',
-      'shared-first:RunEnded',
-      'shared-second:RunStarted',
-      'shared-second:GameplayBatch',
-      'shared-second:RunEnded',
-    ])
+      "shared-first:RunStarted",
+      "shared-first:GameplayBatch",
+      "shared-first:RunEnded",
+      "shared-second:RunStarted",
+      "shared-second:GameplayBatch",
+      "shared-second:RunEnded",
+    ]);
 
     // Session-scoped observation never leaks the other session's items.
-    expect(firstScoped.every((item) => item.sessionId === 'shared-first')).toBe(true)
-    expect(firstScoped.map((item) => item.kind)).toEqual(['GameplayBatch', 'RunEnded'])
-  })
+    expect(firstScoped.every((item) => item.sessionId === "shared-first")).toBe(true);
+    expect(firstScoped.map((item) => item.kind)).toEqual(["GameplayBatch", "RunEnded"]);
+  });
 
-  it('releases session-scoped subscriptions when the run closes', () => {
-    const stream = createGameplayEventStream()
+  it("releases session-scoped subscriptions when the run closes", () => {
+    const stream = createGameplayEventStream();
     const session = createGameplaySession(catalog, worldData, 42, {
-      makeSessionId: () => 'session-release',
+      makeSessionId: () => "session-release",
       stream,
-    })
-    const unsubscribe = session.subscribe(() => {})
+    });
+    const unsubscribe = session.subscribe(() => {});
 
-    session.abandon()
+    session.abandon();
 
-    expect(() => unsubscribe()).not.toThrow()
-    expect(session.subscribe(() => {})).toBeInstanceOf(Function)
-  })
+    expect(() => unsubscribe()).not.toThrow();
+    expect(session.subscribe(() => {})).toBeInstanceOf(Function);
+  });
 
-  it('emits actual runtime payloads with semantic headless shapes only', () => {
-    const items: RunStreamItem[] = []
+  it("emits actual runtime payloads with semantic headless shapes only", () => {
+    const items: RunStreamItem[] = [];
     // Each emission reads the clock once: RunStarted 1000, batches 1001/1002,
     // RunEnded 1003 — exact values below also prove stamping order.
-    let now = 1_000
+    let now = 1_000;
     const session = createGameplaySession(catalog, createGuaranteedWinWorldData(), 42, {
-      makeSessionId: () => 'session-headless-shapes',
+      makeSessionId: () => "session-headless-shapes",
       clock: () => now++,
       subscribers: [(item) => items.push(item)],
-    })
+    });
 
-    const doorId = requireHandCardId(session, 'world', 'Door')
+    const doorId = requireHandCardId(session, "world", "Door");
 
     session.dispatch({
-      type: 'PlayCard',
-      cardId: requireHandCardId(session, 'player', 'Explore'),
+      type: "PlayCard",
+      cardId: requireHandCardId(session, "player", "Explore"),
       targetId: doorId,
-    })
+    });
     session.dispatch({
-      type: 'PlayCard',
-      cardId: requireHandCardId(session, 'player', 'Explore'),
+      type: "PlayCard",
+      cardId: requireHandCardId(session, "player", "Explore"),
       targetId: doorId,
-    })
+    });
 
     expect(items.map((item) => item.kind)).toEqual([
-      'RunStarted',
-      'GameplayBatch',
-      'GameplayBatch',
-      'RunEnded',
-    ])
+      "RunStarted",
+      "GameplayBatch",
+      "GameplayBatch",
+      "RunEnded",
+    ]);
 
-    const runStarted = requireRunStarted(items[0])
-    const firstBatch = requireGameplayBatch(items[1])
-    const secondBatch = requireGameplayBatch(items[2])
-    const runEnded = requireRunEnded(items[3])
+    const runStarted = requireRunStarted(items[0]);
+    const firstBatch = requireGameplayBatch(items[1]);
+    const secondBatch = requireGameplayBatch(items[2]);
+    const runEnded = requireRunEnded(items[3]);
 
     expectOwnKeys(runStarted, [
-      'kind',
-      'sessionId',
-      'worldId',
-      'seed',
-      'appliedModifiers',
-      'timestamp',
-      'initialEvents',
-      'initialState',
-    ])
-    expect(runStarted.sessionId).toBe('session-headless-shapes')
-    expect(runStarted.worldId).toBe('req-events-win-world')
-    expect(runStarted.seed).toBe(42)
-    expect(runStarted.appliedModifiers).toEqual([])
-    expect(runStarted.timestamp).toBe(1_000)
-    expect(Array.isArray(runStarted.initialEvents)).toBe(true)
-    expect(runStarted.initialState).toBeDefined()
+      "kind",
+      "sessionId",
+      "worldId",
+      "seed",
+      "appliedModifiers",
+      "timestamp",
+      "initialEvents",
+      "initialState",
+    ]);
+    expect(runStarted.sessionId).toBe("session-headless-shapes");
+    expect(runStarted.worldId).toBe("req-events-win-world");
+    expect(runStarted.seed).toBe(42);
+    expect(runStarted.appliedModifiers).toEqual([]);
+    expect(runStarted.timestamp).toBe(1_000);
+    expect(Array.isArray(runStarted.initialEvents)).toBe(true);
+    expect(runStarted.initialState).toBeDefined();
 
-    expectOwnKeys(firstBatch, ['kind', 'sessionId', 'timestamp', 'action', 'events', 'state'])
-    expect(firstBatch.timestamp).toBe(1_001)
-    expectOwnKeys(firstBatch.action, ['type', 'cardId', 'targetId'])
+    expectOwnKeys(firstBatch, ["kind", "sessionId", "timestamp", "action", "events", "state"]);
+    expect(firstBatch.timestamp).toBe(1_001);
+    expectOwnKeys(firstBatch.action, ["type", "cardId", "targetId"]);
     expect(firstBatch.events.map((event) => event.type)).toEqual([
-      'CardPlayed',
-      'ProgressDealt',
-      'HazardPartial',
-    ])
-    expectOwnKeys(firstBatch.events[0]!, ['type', 'cardId'])
-    expectOwnKeys(firstBatch.events[1]!, ['type', 'hazardId', 'amount', 'hazardTurnTotal'])
-    expectOwnKeys(firstBatch.events[2]!, ['type', 'hazardId'])
+      "CardPlayed",
+      "ProgressDealt",
+      "HazardPartial",
+    ]);
+    expectOwnKeys(firstBatch.events[0]!, ["type", "cardId"]);
+    expectOwnKeys(firstBatch.events[1]!, [
+      "type",
+      "hazardId",
+      "templateId",
+      "amount",
+      "hazardTurnTotal",
+    ]);
+    expectOwnKeys(firstBatch.events[2]!, ["type", "hazardId", "templateId"]);
 
-    expect(secondBatch?.kind).toBe('GameplayBatch')
-    if (secondBatch?.kind !== 'GameplayBatch') {
-      throw new Error('expected second emitted batch')
+    expect(secondBatch?.kind).toBe("GameplayBatch");
+    if (secondBatch?.kind !== "GameplayBatch") {
+      throw new Error("expected second emitted batch");
     }
 
-    expectOwnKeys(secondBatch, ['kind', 'sessionId', 'timestamp', 'action', 'events', 'state'])
-    expect(secondBatch.timestamp).toBe(1_002)
-    expectOwnKeys(secondBatch.action, ['type', 'cardId', 'targetId'])
+    expectOwnKeys(secondBatch, ["kind", "sessionId", "timestamp", "action", "events", "state"]);
+    expect(secondBatch.timestamp).toBe(1_002);
+    expectOwnKeys(secondBatch.action, ["type", "cardId", "targetId"]);
     expect(secondBatch.events.map((event) => event.type)).toEqual([
-      'CardPlayed',
-      'ProgressDealt',
-      'WorldWon',
-      'HazardResolved',
-    ])
-    expectOwnKeys(secondBatch.events[0]!, ['type', 'cardId'])
-    expectOwnKeys(secondBatch.events[1]!, ['type', 'hazardId', 'amount', 'hazardTurnTotal'])
-    expectOwnKeys(secondBatch.events[2]!, ['type'])
-    expectOwnKeys(secondBatch.events[3]!, ['type', 'hazardId'])
+      "CardPlayed",
+      "ProgressDealt",
+      "WorldWon",
+      "HazardResolved",
+    ]);
+    expectOwnKeys(secondBatch.events[0]!, ["type", "cardId"]);
+    expectOwnKeys(secondBatch.events[1]!, [
+      "type",
+      "hazardId",
+      "templateId",
+      "amount",
+      "hazardTurnTotal",
+    ]);
+    expectOwnKeys(secondBatch.events[2]!, ["type"]);
+    expectOwnKeys(secondBatch.events[3]!, ["type", "hazardId", "templateId"]);
 
-    expect(runEnded?.kind).toBe('RunEnded')
-    expectOwnKeys(runEnded!, ['kind', 'sessionId', 'outcome', 'finalActIndex', 'timestamp', 'finalState'])
+    expect(runEnded?.kind).toBe("RunEnded");
+    expectOwnKeys(runEnded!, [
+      "kind",
+      "sessionId",
+      "outcome",
+      "finalActIndex",
+      "timestamp",
+      "finalState",
+    ]);
     expect(runEnded).toMatchObject({
-      kind: 'RunEnded',
-      sessionId: 'session-headless-shapes',
-      outcome: 'won',
+      kind: "RunEnded",
+      sessionId: "session-headless-shapes",
+      outcome: "won",
       finalActIndex: 0,
       timestamp: 1_003,
-    })
-    expect(runEnded && 'finalState' in runEnded ? runEnded.finalState : undefined).toBeDefined()
-  })
+    });
+    expect(runEnded && "finalState" in runEnded ? runEnded.finalState : undefined).toBeDefined();
+  });
 
-  it('stays opt-in by matching a full terminal core run with no subscribers', () => {
+  it("stays opt-in by matching a full terminal core run with no subscribers", () => {
     const session = createGameplaySession(catalog, worldData, 17, {
-      makeSessionId: () => 'session-headless-optional',
-    })
-    const core = createGame(catalog, worldData, 17)
+      makeSessionId: () => "session-headless-optional",
+    });
+    const core = createGame(catalog, worldData, 17);
 
     for (let turn = 0; turn < 4; turn += 1) {
-      expect(() => session.dispatch({ type: 'EndTurn' })).not.toThrow()
-      core.dispatch({ type: 'EndTurn' })
+      expect(() => session.dispatch({ type: "EndTurn" })).not.toThrow();
+      core.dispatch({ type: "EndTurn" });
     }
 
-    expect(session.state.status).toBe('lost')
-    expect(session.state).toEqual(core.state)
-    expect(session.availableActions().canEndTurn).toBe(core.availableActions().canEndTurn)
-    expect(session.intensity()).toBe(core.intensity())
-  })
+    expect(session.state.status).toBe("lost");
+    expect(session.state).toEqual(core.state);
+    expect(session.availableActions().canEndTurn).toBe(core.availableActions().canEndTurn);
+    expect(session.intensity()).toBe(core.intensity());
+  });
 
-  it('keeps dispatching when the onSubscriberFailure handler itself throws', () => {
+  it("keeps dispatching when the onSubscriberFailure handler itself throws", () => {
     // Subscriber throws, the failure handler also throws, and dispatch still
     // returns a valid result (the stream falls back to console.error).
-    const items: RunStreamItem[] = []
+    const items: RunStreamItem[] = [];
     const session = createGameplaySession(catalog, worldData, 42, {
-      makeSessionId: () => 'session-reporter-throw',
+      makeSessionId: () => "session-reporter-throw",
       subscribers: [
         () => {
-          throw new Error('subscriber failed')
+          throw new Error("subscriber failed");
         },
         (item) => items.push(item),
       ],
       onSubscriberFailure: () => {
-        throw new Error('reporter also failed')
+        throw new Error("reporter also failed");
       },
-    })
+    });
 
-    let result: ReturnType<typeof session.dispatch> | undefined
+    let result: ReturnType<typeof session.dispatch> | undefined;
     expect(() => {
-      result = session.dispatch({ type: 'EndTurn' })
-    }).not.toThrow()
+      result = session.dispatch({ type: "EndTurn" });
+    }).not.toThrow();
 
-    expect(result).toBeDefined()
-    expect(result!.state).toEqual(session.state)
-    expect(items.filter((item) => item.kind === 'GameplayBatch')).toHaveLength(1)
-  })
+    expect(result).toBeDefined();
+    expect(result!.state).toEqual(session.state);
+    expect(items.filter((item) => item.kind === "GameplayBatch")).toHaveLength(1);
+  });
 
   // REQ-EVENTS-4: discard/destruction tracking — HazardDiscarded
-  it('exposes HazardDiscarded events in stream batches when a hazard is discarded', () => {
-    const items: RunStreamItem[] = []
+  it("exposes HazardDiscarded events in stream batches when a hazard is discarded", () => {
+    const items: RunStreamItem[] = [];
     const session = createGameplaySession(catalog, worldData, 42, {
-      makeSessionId: () => 'session-hazard-discard',
+      makeSessionId: () => "session-hazard-discard",
       subscribers: [(item) => items.push(item)],
-    })
+    });
 
     // Screams is discardable and present in the initial hand at seed 42
     const screamsId = session.state.hand.find(
-      (card) => card.kind === 'world' && card.name === 'Screams',
-    )?.id
-    expect(screamsId).toBeDefined()
-    if (screamsId === undefined) throw new Error('expected Screams in initial hand at seed 42')
+      (card) => card.kind === "world" && card.name === "Screams",
+    )?.id;
+    expect(screamsId).toBeDefined();
+    if (screamsId === undefined) throw new Error("expected Screams in initial hand at seed 42");
 
-    session.dispatch({ type: 'DiscardHazard', cardId: screamsId })
+    session.dispatch({ type: "DiscardHazard", cardId: screamsId });
 
-    const batches = items.filter((item): item is GameplayBatch => item.kind === 'GameplayBatch')
-    expect(batches).toHaveLength(1)
-    const eventTypes = batches[0]!.events.map((e) => e.type)
-    expect(eventTypes).toContain('HazardDiscarded')
-    expect(batches[0]!.events[0]).toEqual({ type: 'HazardDiscarded', cardId: screamsId })
-  })
+    const batches = items.filter((item): item is GameplayBatch => item.kind === "GameplayBatch");
+    expect(batches).toHaveLength(1);
+    const eventTypes = batches[0]!.events.map((e) => e.type);
+    expect(eventTypes).toContain("HazardDiscarded");
+    expect(batches[0]!.events[0]).toEqual({
+      type: "HazardDiscarded",
+      cardId: screamsId,
+      templateId: "Screams",
+    });
+  });
 
   // REQ-EVENTS-4: discard/destruction tracking — CardDestroyed and CardsDiscarded
-  it('exposes CardDestroyed and CardsDiscarded events in EndTurn batches when world cards self-destruct', () => {
-    const items: RunStreamItem[] = []
+  it("exposes CardDestroyed and CardsDiscarded events in EndTurn batches when world cards self-destruct", () => {
+    const items: RunStreamItem[] = [];
     // Seed 42: Screams (onEndOfTurn: DestroySelf) is in the initial hand, so EndTurn
     // fires DestroySelf → CardDestroyed, then discards player hand → CardsDiscarded.
     const session = createGameplaySession(catalog, worldData, 42, {
-      makeSessionId: () => 'session-destroy-tracking',
+      makeSessionId: () => "session-destroy-tracking",
       subscribers: [(item) => items.push(item)],
-    })
+    });
 
-    expect(session.state.hand.some((c) => c.kind === 'world' && c.name === 'Screams')).toBe(true)
-    session.dispatch({ type: 'EndTurn' })
+    expect(session.state.hand.some((c) => c.kind === "world" && c.name === "Screams")).toBe(true);
+    session.dispatch({ type: "EndTurn" });
 
-    const batches = items.filter((item): item is GameplayBatch => item.kind === 'GameplayBatch')
-    expect(batches).toHaveLength(1)
-    const eventTypes = batches[0]!.events.map((e) => e.type)
-    expect(eventTypes).toContain('CardDestroyed')
-    expect(eventTypes).toContain('CardsDiscarded')
+    const batches = items.filter((item): item is GameplayBatch => item.kind === "GameplayBatch");
+    expect(batches).toHaveLength(1);
+    const eventTypes = batches[0]!.events.map((e) => e.type);
+    expect(eventTypes).toContain("CardDestroyed");
+    expect(eventTypes).toContain("CardsDiscarded");
     // CardDestroyed (from DestroySelf) comes before CardsDiscarded (player hand cleanup)
-    expect(eventTypes.indexOf('CardDestroyed')).toBeLessThan(eventTypes.indexOf('CardsDiscarded'))
-  })
+    expect(eventTypes.indexOf("CardDestroyed")).toBeLessThan(eventTypes.indexOf("CardsDiscarded"));
+  });
 
   // REQ-EVENTS-4, REQ-EVENTS-9: act-boundary tracking — ActAdvanced
-  it('exposes ActAdvanced events in stream batches when gameplay crosses an act boundary', () => {
-    const twoActWorld = createTwoActWorldData()
-    const items: RunStreamItem[] = []
+  it("exposes ActAdvanced events in stream batches when gameplay crosses an act boundary", () => {
+    const twoActWorld = createTwoActWorldData();
+    const items: RunStreamItem[] = [];
     // Act 0 has 1 Screams card; after initial draw, worldDraw is empty and act 1
     // (Door) is queued. The first EndTurn fires DestroySelf on Screams then draws
     // across the act boundary, producing ActAdvanced(1) in the same batch.
     const session = createGameplaySession(catalog, twoActWorld, 42, {
-      makeSessionId: () => 'session-act-boundary',
+      makeSessionId: () => "session-act-boundary",
       subscribers: [(item) => items.push(item)],
-    })
+    });
 
-    session.dispatch({ type: 'EndTurn' })
+    session.dispatch({ type: "EndTurn" });
 
-    const batches = items.filter((item): item is GameplayBatch => item.kind === 'GameplayBatch')
-    const allEventTypes = batches.flatMap((b) => b.events.map((e) => e.type))
-    expect(allEventTypes).toContain('ActAdvanced')
+    const batches = items.filter((item): item is GameplayBatch => item.kind === "GameplayBatch");
+    const allEventTypes = batches.flatMap((b) => b.events.map((e) => e.type));
+    expect(allEventTypes).toContain("ActAdvanced");
 
     // Subscribers can determine act transitions without touching renderer state
-    const actAdvancedBatch = batches.find((b) => b.events.some((e) => e.type === 'ActAdvanced'))
-    expect(actAdvancedBatch).toBeDefined()
-    const actEvent = actAdvancedBatch!.events.find((e) => e.type === 'ActAdvanced')
-    expect(actEvent).toEqual({ type: 'ActAdvanced', act: 1 })
-  })
-})
+    const actAdvancedBatch = batches.find((b) => b.events.some((e) => e.type === "ActAdvanced"));
+    expect(actAdvancedBatch).toBeDefined();
+    const actEvent = actAdvancedBatch!.events.find((e) => e.type === "ActAdvanced");
+    expect(actEvent).toEqual({ type: "ActAdvanced", act: 1 });
+  });
+});

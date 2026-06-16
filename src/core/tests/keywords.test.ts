@@ -10,6 +10,7 @@ function playerWith(keywords: PlayerCard["keywords"]): PlayerCard {
   return {
     kind: "player",
     id: "p",
+    templateId: "p",
     name: "p",
     insetKey: undefined,
     sourceWorldId: "test",
@@ -23,6 +24,7 @@ function worldWith(keywords: WorldCard["keywords"]): WorldCard {
   return {
     kind: "world",
     id: "w",
+    templateId: "w",
     name: "w",
     insetKey: undefined,
     cost: 1,

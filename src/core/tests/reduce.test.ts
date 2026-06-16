@@ -409,6 +409,7 @@ describe("Sprint modal", () => {
     const slowHazard: WorldCard = {
       kind: "world",
       id: "slow-test",
+      templateId: "Slow Hazard",
       name: "Slow Hazard",
       insetKey: undefined,
       cost: 1,
@@ -542,6 +543,7 @@ describe("Adrenaline discardPlayer", () => {
     expect(result.events).toContainEqual({
       type: "CardsDiscarded",
       cardIds: [explore.id],
+      templateIds: [explore.templateId],
     });
     expect(types.indexOf("CardsDiscarded")).toBeLessThan(types.indexOf("CardsDrawn"));
 
@@ -1633,6 +1635,7 @@ describe("ExileTopWorldCards: livelock guard", () => {
     const floorIt: PlayerCard = {
       kind: "player",
       id: "floor-it-test",
+      templateId: "Floor It",
       name: "Floor It",
       insetKey: undefined,
       sourceWorldId: "highway-volcano",
@@ -1833,7 +1836,7 @@ describe("PlayCard None effect (Spore semantics)", () => {
     expect(result.events).toEqual([
       { type: "CardPlayed", cardId: spore.id },
       { type: "EnergyChanged", energy: 1 },
-      { type: "CardDestroyed", ids: [spore.id] },
+      { type: "CardDestroyed", ids: [spore.id], templateIds: [spore.templateId] },
     ]);
 
     // Nothing else changed: the remaining state equals the pre-play state

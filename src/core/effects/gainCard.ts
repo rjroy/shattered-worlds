@@ -75,7 +75,9 @@ export function gainCard(
       break;
   }
 
-  const events: GameEvent[] = [{ type: "CardGained", id: card.id, dest }];
+  const events: GameEvent[] = [
+    { type: "CardGained", id: card.id, templateId: card.templateId, dest },
+  ];
   return { state: current, events };
 }
 

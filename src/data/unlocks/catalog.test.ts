@@ -39,13 +39,15 @@ describe("computeUnlockSpend", () => {
   });
 
   it("sums known purchased unlock costs and ignores unknown ids", () => {
-    expect(computeUnlockSpend(unlocks(["extra-hp", "extra-energy", "unknown"]), UNLOCK_CATALOG)).toBe(35);
+    expect(
+      computeUnlockSpend(unlocks(["extra-hp", "extra-energy", "unknown"]), UNLOCK_CATALOG),
+    ).toBe(35);
   });
 });
 
 describe("computeSpendableBalance", () => {
   it("derives fragments earned minus unlock spend", () => {
-    expect(computeSpendableBalance(feats50, unlocks(["extra-hp"]))).toBe(35);
+    expect(computeSpendableBalance(feats50, unlocks(["extra-hp"]))).toBe(25);
   });
 });
 
@@ -67,7 +69,10 @@ describe("buildRunModifiers", () => {
 
   it("builds floors, hand-size, and keyword modifiers from active ids only", () => {
     expect(
-      buildRunModifiers(["extra-hp", "min-energy", "hand-size-per-act", "keyword-bonus"], UNLOCK_CATALOG),
+      buildRunModifiers(
+        ["extra-hp", "min-energy", "hand-size-per-act", "keyword-bonus"],
+        UNLOCK_CATALOG,
+      ),
     ).toEqual({
       ...DEFAULT_RUN_MODIFIERS,
       extraStartHp: 3,
