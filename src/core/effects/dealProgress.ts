@@ -82,7 +82,9 @@ export function dealProgress(
   };
   const hazardTurnTotal = newProgress[hazardId]!;
 
-  const events: GameEvent[] = [{ type: "ProgressDealt", hazardId, amount, hazardTurnTotal }];
+  const events: GameEvent[] = [
+    { type: "ProgressDealt", hazardId, templateId: hazard.templateId, amount, hazardTurnTotal },
+  ];
 
   let current: GameState = { ...state, progress: newProgress };
 

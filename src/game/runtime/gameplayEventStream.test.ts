@@ -35,10 +35,7 @@ describe("gameplayEventStream contract", () => {
       sessionId: "session-1",
       worldId: "zombie-big-box",
       seed: 42,
-      appliedModifiers: [
-        { kind: "bonus-card", templateId: "Listen" },
-        { kind: "hard-mode" },
-      ],
+      appliedModifiers: [{ kind: "bonus-card", templateId: "Listen" }, { kind: "hard-mode" }],
       timestamp: 1_000,
       initialEvents: core.openingEvents,
       initialState: core.state,
@@ -60,12 +57,14 @@ describe("gameplayEventStream contract", () => {
   it("wraps one accepted dispatch as one grouped gameplay batch", () => {
     const state = createGame(catalog, worldData, 42).state;
     const hazardId = (
-      state.hand.find((card): card is WorldCard => card.kind === "world") ??
-      state.acts[0]?.[0]
+      state.hand.find((card): card is WorldCard => card.kind === "world") ?? state.acts[0]?.[0]
     )?.id;
+    const templateId = (
+      state.hand.find((card): card is WorldCard => card.kind === "world") ?? state.acts[0]?.[0]
+    )?.templateId;
 
     expect(hazardId).toBeDefined();
-    if (hazardId === undefined)
+    if (hazardId === undefined || templateId === undefined)
       throw new Error("expected fixture to include a hazard id");
 
     const action: Action = {
@@ -75,9 +74,9 @@ describe("gameplayEventStream contract", () => {
     };
     const events: readonly GameEvent[] = [
       { type: "CardPlayed", cardId: "play-1" },
-      { type: "ProgressDealt", hazardId, amount: 2, hazardTurnTotal: 2 },
-      { type: "HazardDiscarded", cardId: hazardId },
-      { type: "CardDestroyed", ids: ["spent-1"] },
+      { type: "ProgressDealt", hazardId, templateId, amount: 2, hazardTurnTotal: 2 },
+      { type: "HazardDiscarded", cardId: hazardId, templateId },
+      { type: "CardDestroyed", ids: ["spent-1"], templateIds: ["spent-1"] },
       { type: "ActAdvanced", act: 1 },
     ];
 
@@ -113,14 +112,9 @@ describe("gameplayEventStream contract", () => {
       returnIds: ["hazard-1"],
     };
     const events: readonly GameEvent[] = [
-      { type: "WorldCardsReturned", ids: ["hazard-1"] },
+      { type: "WorldCardsReturned", ids: ["hazard-1"], templateIds: ["hazard-1"] },
     ];
-    const batch = createGameplayBatch(
-      "session-13",
-      action,
-      { state, events },
-      1_100,
-    );
+    const batch = createGameplayBatch("session-13", action, { state, events }, 1_100);
     const mutableAction = action as unknown as {
       cardId: string;
       returnIds: string[];
@@ -143,7 +137,7 @@ describe("gameplayEventStream contract", () => {
       returnIds: ["hazard-1"],
     });
     expect(batch.events).toEqual([
-      { type: "WorldCardsReturned", ids: ["hazard-1"] },
+      { type: "WorldCardsReturned", ids: ["hazard-1"], templateIds: ["hazard-1"] },
     ]);
     expect(batch.state.nextId).not.toBe(999);
     expect(batch.state.rng.a).not.toBe(777);
@@ -241,17 +235,11 @@ describe("gameplayEventStream contract", () => {
       }),
     ];
 
-    expect(stream.map((item) => item.kind)).toEqual([
-      "RunStarted",
-      "GameplayBatch",
-      "RunEnded",
-    ]);
+    expect(stream.map((item) => item.kind)).toEqual(["RunStarted", "GameplayBatch", "RunEnded"]);
     const batch = stream[1];
 
     expect(batch?.kind).toBe("GameplayBatch");
-    expect(batch && "events" in batch ? batch.events : []).toEqual([
-      { type: "TurnEnded" },
-    ]);
+    expect(batch && "events" in batch ? batch.events : []).toEqual([{ type: "TurnEnded" }]);
   });
 
   it("exposes semantic payloads for gameplay tracking without renderer-only envelopes", () => {
@@ -277,11 +265,12 @@ describe("gameplayEventStream contract", () => {
             {
               type: "ProgressDealt",
               hazardId: "hazard-1",
+              templateId: "hazard-1",
               amount: 2,
               hazardTurnTotal: 3,
             },
-            { type: "HazardDiscarded", cardId: "hazard-2" },
-            { type: "CardDestroyed", ids: ["spent-1"] },
+            { type: "HazardDiscarded", cardId: "hazard-2", templateId: "hazard-2" },
+            { type: "CardDestroyed", ids: ["spent-1"], templateIds: ["spent-1"] },
             { type: "ActAdvanced", act: 1 },
           ],
         },
@@ -316,11 +305,12 @@ describe("gameplayEventStream contract", () => {
         {
           type: "ProgressDealt",
           hazardId: "hazard-1",
+          templateId: "hazard-1",
           amount: 2,
           hazardTurnTotal: 3,
         },
-        { type: "HazardDiscarded", cardId: "hazard-2" },
-        { type: "CardDestroyed", ids: ["spent-1"] },
+        { type: "HazardDiscarded", cardId: "hazard-2", templateId: "hazard-2" },
+        { type: "CardDestroyed", ids: ["spent-1"], templateIds: ["spent-1"] },
         { type: "ActAdvanced", act: 1 },
       ],
       state,
@@ -393,9 +383,7 @@ describe("gameplayEventStream contract", () => {
 
   it("surfaces subscriber mutation attempts as failures and keeps later listeners intact", () => {
     const failures: SubscriberFailure[] = [];
-    const stream = createGameplayEventStream((failure) =>
-      failures.push(failure),
-    );
+    const stream = createGameplayEventStream((failure) => failures.push(failure));
     const batch = createGameplayBatch(
       "session-isolated",
       {
@@ -405,7 +393,7 @@ describe("gameplayEventStream contract", () => {
       },
       {
         state: createGame(catalog, worldData, 17).state,
-        events: [{ type: "WorldCardsReturned", ids: ["hazard-1"] }],
+        events: [{ type: "WorldCardsReturned", ids: ["hazard-1"], templateIds: ["hazard-1"] }],
       },
       1_100,
     );
@@ -436,7 +424,7 @@ describe("gameplayEventStream contract", () => {
       returnIds: ["hazard-1"],
     });
     expect(batch.events).toEqual([
-      { type: "WorldCardsReturned", ids: ["hazard-1"] },
+      { type: "WorldCardsReturned", ids: ["hazard-1"], templateIds: ["hazard-1"] },
     ]);
     expect(batch.state.hand).toHaveLength(authoritativeHandSize);
     expect(batch.state.nextId).toBe(authoritativeNextId);
@@ -481,9 +469,7 @@ describe("gameplayEventStream contract", () => {
 
   it("reports every subscriber failure without throwing back into the emitter", () => {
     const failures: SubscriberFailure[] = [];
-    const stream = createGameplayEventStream((failure) =>
-      failures.push(failure),
-    );
+    const stream = createGameplayEventStream((failure) => failures.push(failure));
     const calls: string[] = [];
     const firstError = new Error("first listener failed");
     const secondError = new Error("second listener failed");
@@ -503,10 +489,7 @@ describe("gameplayEventStream contract", () => {
 
     expect(() => stream.emit(batch)).not.toThrow();
     expect(calls).toEqual(["first", "second", "third"]);
-    expect(failures.map((failure) => failure.error)).toEqual([
-      firstError,
-      secondError,
-    ]);
+    expect(failures.map((failure) => failure.error)).toEqual([firstError, secondError]);
     expect(failures.every((failure) => failure.item === batch)).toBe(true);
   });
 

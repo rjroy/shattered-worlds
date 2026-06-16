@@ -182,6 +182,7 @@ export type GameEvent =
   | {
       type: "ProgressDealt";
       hazardId: CardId;
+      templateId: CardTemplateId;
       amount: number;
       hazardTurnTotal: number;
     }

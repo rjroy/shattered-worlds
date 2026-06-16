@@ -289,6 +289,7 @@ describe("legalTargets Sprint (modal)", () => {
     const slowCard: WorldCard = {
       kind: "world",
       id: "slow-1",
+      templateId: "Slow Hazard",
       name: "Slow Hazard",
       insetKey: undefined,
       cost: 1,
@@ -303,6 +304,7 @@ describe("legalTargets Sprint (modal)", () => {
     const otherCard: WorldCard = {
       kind: "world",
       id: "other-1",
+      templateId: "Other Hazard",
       name: "Other Hazard",
       insetKey: undefined,
       cost: 1,
@@ -370,6 +372,7 @@ describe("DealProgressAll playability", () => {
     const shelfSweep: PlayerCard = {
       kind: "player",
       id: "sweep-1",
+      templateId: "Shelf Sweep",
       name: "Shelf Sweep",
       insetKey: undefined,
       sourceWorldId: "zombie-big-box",
@@ -390,6 +393,7 @@ describe("DealProgressAll playability", () => {
     const shelfSweep: PlayerCard = {
       kind: "player",
       id: "sweep-2",
+      templateId: "Shelf Sweep",
       name: "Shelf Sweep",
       insetKey: undefined,
       sourceWorldId: "zombie-big-box",
@@ -475,6 +479,7 @@ function makeExilable(id: string): WorldCard {
   return {
     kind: "world",
     id,
+    templateId: `Card-${id}`,
     name: `Card-${id}`,
     insetKey: undefined,
     cost: 1,
@@ -498,6 +503,7 @@ function makeFloorIt(id: string): PlayerCard {
   return {
     kind: "player",
     id,
+    templateId: "Floor It",
     name: "Floor It",
     insetKey: undefined,
     sourceWorldId: "highway-volcano",
@@ -710,6 +716,7 @@ describe("DealProgressScaled playability", () => {
     return {
       kind: "player",
       id,
+      templateId: "Bloom",
       name: "Bloom",
       insetKey: undefined,
       sourceWorldId: "overgrown-mall",

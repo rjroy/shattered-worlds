@@ -348,6 +348,7 @@ describe("applyEffect GainLight", () => {
     const card: PlayerCard = {
       kind: "player",
       id: "flashlight",
+      templateId: "Flashlight",
       name: "Flashlight",
       insetKey: undefined,
       sourceWorldId: "fog",
@@ -701,6 +702,7 @@ describe("DealProgressAll", () => {
     const concealed: WorldCard = {
       kind: "world",
       id: "mist",
+      templateId: "Something in the Mist",
       name: "Something in the Mist",
       insetKey: undefined,
       cost: 3,
@@ -834,6 +836,7 @@ function exilable(id: string): WorldCard {
   return {
     kind: "world",
     id,
+    templateId: `Card-${id}`,
     name: `Card-${id}`,
     insetKey: undefined,
     cost: 1,
@@ -948,6 +951,7 @@ function playerCarrier(
   return {
     kind: "player",
     id,
+    templateId: id,
     name: id,
     insetKey: undefined,
     sourceWorldId: "test",

@@ -3,10 +3,7 @@ import { createRng } from "../../core/engine/rng";
 import { DEFAULT_RUN_MODIFIERS } from "../../data/unlocks/types";
 import type { CardEffect, GameState, PlayerCard, WorldCard } from "../../core/index";
 import { previewPlay } from "../../core/view/describe";
-import {
-  ringFraction,
-  connectorLine,
-} from "../interaction/feedback";
+import { ringFraction, connectorLine } from "../interaction/feedback";
 
 // ---------------------------------------------------------------------------
 // Helpers — mirror describe.test.ts so fixtures stay consistent.
@@ -39,6 +36,7 @@ function player(effect: CardEffect): PlayerCard {
   return {
     kind: "player",
     id: "p1",
+    templateId: "Test",
     name: "Test",
     insetKey: undefined,
     sourceWorldId: "test",
@@ -52,6 +50,7 @@ function hazard(over: Partial<WorldCard>): WorldCard {
   return {
     kind: "world",
     id: "w1",
+    templateId: "Zombie",
     name: "Zombie",
     insetKey: undefined,
     cost: 1,
