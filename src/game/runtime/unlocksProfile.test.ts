@@ -8,7 +8,9 @@ import {
   UNLOCKS_PROFILE_STORAGE_KEY,
 } from "./unlocksProfile";
 
-function memoryStorage(seed: Record<string, string> = {}): RunStatsStorage & { dump(): Record<string, string> } {
+function memoryStorage(
+  seed: Record<string, string> = {},
+): RunStatsStorage & { dump(): Record<string, string> } {
   const entries = new Map(Object.entries(seed));
   return {
     getItem: (key) => entries.get(key) ?? null,
@@ -22,7 +24,11 @@ function featsStore(fragmentIds: readonly string[]): FeatsStore {
   return {
     getProfile: () => ({
       version: 1,
-      earned: fragmentIds.map((featId, index) => ({ featId, earnedAt: index + 1, sessionId: `s-${index}` })),
+      earned: fragmentIds.map((featId, index) => ({
+        featId,
+        earnedAt: index + 1,
+        sessionId: `s-${index}`,
+      })),
     }),
     setProfile() {},
     appendFeat() {},
@@ -44,7 +50,11 @@ const richFeats = featsStore([
 describe("loadUnlocksProfile", () => {
   it("returns empty without storage or when the key is missing", () => {
     expect(loadUnlocksProfile(undefined)).toEqual({ version: 1, purchased: [], activated: [] });
-    expect(loadUnlocksProfile(memoryStorage())).toEqual({ version: 1, purchased: [], activated: [] });
+    expect(loadUnlocksProfile(memoryStorage())).toEqual({
+      version: 1,
+      purchased: [],
+      activated: [],
+    });
   });
 
   it("discards malformed JSON", () => {
@@ -103,11 +113,12 @@ describe("createUnlocksStore", () => {
     });
     const store = createUnlocksStore(storage, richFeats);
 
-    expect(store.purchase("act-reward")).toBe("ok");
+    expect(store.purchase("min-energy")).toBe("ok");
+    expect(store.purchase("min-light")).toBe("ok");
     expect(store.getProfile()).toEqual({
       version: 1,
-      purchased: ["starter-footballer", "act-reward"],
-      activated: ["starter-footballer"],
+      purchased: ["starter-footballer", "min-energy", "min-light"],
+      activated: ["starter-footballer", "min-energy"],
     });
   });
 
