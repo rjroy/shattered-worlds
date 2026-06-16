@@ -67,7 +67,10 @@ export class DiscardThenDrawHandler extends EffectHandler<DiscardThenDrawEffect>
     const drawResult = drawPlayer(afterDiscard, effect.player);
     return {
       state: drawResult.state,
-      events: [{ type: "CardsDiscarded", cardIds: [discardId] }, ...drawResult.events],
+      events: [
+        { type: "CardsDiscarded", cardIds: [discardId], templateIds: [discardedCard.templateId] },
+        ...drawResult.events,
+      ],
     };
   }
 

@@ -61,7 +61,7 @@ function handlePlayCard(
   // CardDestroyed comes AFTER the effect events so the play reads as
   // play → spend → effect → the card vanishes.
   if (exhaust) {
-    events.push({ type: "CardDestroyed", ids: [cardId] });
+    events.push({ type: "CardDestroyed", ids: [cardId], templateIds: [card.templateId] });
   }
 
   return { state: effectResult.state, events };
@@ -104,7 +104,10 @@ function handleDiscardHazard(
 
   const penaltyResult = applyEffect(catalog, stateAfterRemove, (card as WorldCard).onDiscarded);
 
-  const events: GameEvent[] = [{ type: "HazardDiscarded", cardId }, ...penaltyResult.events];
+  const events: GameEvent[] = [
+    { type: "HazardDiscarded", cardId, templateId: card.templateId },
+    ...penaltyResult.events,
+  ];
 
   return { state: penaltyResult.state, events };
 }
@@ -136,6 +139,7 @@ function handleEndTurn(catalog: CardCatalog, state: GameState): ReduceResult {
   const playerCardsInHand = current.hand.filter((c) => c.kind === "player");
   const worldCardsInHand = current.hand.filter((c) => c.kind === "world");
   const discardedIds = playerCardsInHand.map((c) => c.id);
+  const templateIds = worldCardsInHand.map((c) => c.templateId);
 
   const stateAfterDiscard: GameState = {
     ...current,
@@ -145,7 +149,7 @@ function handleEndTurn(catalog: CardCatalog, state: GameState): ReduceResult {
   };
 
   if (discardedIds.length > 0) {
-    events.push({ type: "CardsDiscarded", cardIds: discardedIds });
+    events.push({ type: "CardsDiscarded", cardIds: discardedIds, templateIds });
   }
 
   // Start turn: gain +1 energy, then refill hand

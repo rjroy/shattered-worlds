@@ -1,6 +1,7 @@
 import type {
   CardEffect,
   CardId,
+  CardTemplateId,
   GameEvent,
   GameState,
   TargetSpec,
@@ -37,6 +38,7 @@ export function returnToActiveWorldDeck(state: GameState, ids: readonly CardId[]
 
   const returnedIds = returned.map((c) => c.id);
   const handAfter = state.hand.filter((c) => !returnedIds.includes(c.id));
+  const templateIds = state.hand.filter((c) => ids.includes(c.id)).map((c) => c.templateId);
 
   const pool: WorldCard[] = [...state.worldDraw, ...returned];
   const [shuffled, nextRng] = shuffle(pool, state.rng);
@@ -48,7 +50,7 @@ export function returnToActiveWorldDeck(state: GameState, ids: readonly CardId[]
     worldDraw: shuffled,
   };
 
-  const events: GameEvent[] = [{ type: "WorldCardsReturned", ids: returnedIds }];
+  const events: GameEvent[] = [{ type: "WorldCardsReturned", ids: returnedIds, templateIds }];
   return { state: current, events };
 }
 
@@ -58,11 +60,13 @@ export function destroyInHand(state: GameState, ids: readonly CardId[]): EffectR
   const exists = state.hand.some((c) => ids.includes(c.id));
   if (!exists) return { state, events: [] };
 
+  const templateIds = state.hand.filter((c) => ids.includes(c.id)).map((c) => c.templateId);
+
   const current: GameState = {
     ...state,
     hand: state.hand.filter((c) => !ids.includes(c.id)),
   };
-  const events: GameEvent[] = [{ type: "CardDestroyed", ids }];
+  const events: GameEvent[] = [{ type: "CardDestroyed", ids, templateIds }];
   return { state: current, events };
 }
 
@@ -190,11 +194,13 @@ export class ExileTopWorldCardsHandler extends EffectHandler<ExileTopWorldCardsE
   override apply(ctx: EffectContext, effect: ExileTopWorldCardsEffect): EffectResult {
     let remaining = effect.amount;
     const exiledIds: CardId[] = [];
+    const templateIds: CardTemplateId[] = [];
     const nextDraw: WorldCard[] = [];
 
     for (const card of ctx.state.worldDraw) {
       if (remaining > 0 && card.canExile) {
         exiledIds.push(card.id);
+        templateIds.push(card.templateId);
         remaining--;
       } else {
         nextDraw.push(card);
@@ -206,7 +212,7 @@ export class ExileTopWorldCardsHandler extends EffectHandler<ExileTopWorldCardsE
     }
 
     const current: GameState = { ...ctx.state, worldDraw: nextDraw };
-    const events: GameEvent[] = [{ type: "WorldCardsExiled", ids: exiledIds }];
+    const events: GameEvent[] = [{ type: "WorldCardsExiled", ids: exiledIds, templateIds }];
     return { state: current, events };
   }
 

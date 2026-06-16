@@ -96,13 +96,13 @@ export function dealProgress(
     const rewardResult = applyEffect(catalog, current, hazard.onCleared);
     current = rewardResult.state;
     events.push(...rewardResult.events);
-    events.push({ type: "HazardResolved", hazardId });
+    events.push({ type: "HazardResolved", hazardId, templateId: hazard.templateId });
   } else {
     // Hazard not yet resolved
     const partialResult = applyEffect(catalog, current, hazard.onPartialClear, undefined, hazardId);
     current = partialResult.state;
     events.push(...partialResult.events);
-    events.push({ type: "HazardPartial", hazardId });
+    events.push({ type: "HazardPartial", hazardId, templateId: hazard.templateId });
   }
 
   return { state: current, events };

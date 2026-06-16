@@ -1,4 +1,4 @@
-import type { CardId, GameEvent, GameState, WorldCard } from "../model/types";
+import type { CardId, CardTemplateId, GameEvent, GameState, WorldCard } from "../model/types";
 import { effectiveHandSize, WORLD_CONSTS } from "./world";
 import { shuffle } from "./rng";
 
@@ -26,7 +26,8 @@ function worldCardsRemaining(state: GameState): number {
 export function drawPlayer(state: GameState, n: number): { state: GameState; events: GameEvent[] } {
   let current = state;
   const events: GameEvent[] = [];
-  const drawnIds: string[] = [];
+  const drawnIds: CardId[] = [];
+  const templateIds: CardTemplateId[] = [];
   let remaining = n;
 
   while (remaining > 0) {
@@ -57,7 +58,7 @@ export function drawPlayer(state: GameState, n: number): { state: GameState; eve
   }
 
   if (drawnIds.length > 0) {
-    events.push({ type: "CardsDrawn", ids: drawnIds });
+    events.push({ type: "CardsDrawn", ids: drawnIds, templateIds });
   }
 
   return { state: current, events };
@@ -78,6 +79,7 @@ export function drawWorld(state: GameState, n: number): { state: GameState; even
   let current = state;
   const events: GameEvent[] = [];
   const drawnIds: string[] = [];
+  const templateIds: CardTemplateId[] = [];
   let remaining = n;
 
   while (remaining > 0) {
@@ -107,12 +109,13 @@ export function drawWorld(state: GameState, n: number): { state: GameState; even
       hand: [...current.hand, card],
     };
     drawnIds.push(card.id);
+    templateIds.push(card.templateId);
     events.push({ type: "HazardAdded", templateId: card.name });
     remaining--;
   }
 
   if (drawnIds.length > 0) {
-    events.push({ type: "CardsDrawn", ids: drawnIds });
+    events.push({ type: "CardsDrawn", ids: drawnIds, templateIds });
   }
 
   return { state: current, events };
@@ -230,7 +233,9 @@ export function resolveForceDestroy(state: GameState): {
   }
 
   const [shuffled, nextRng] = shuffle(playerCards, current.rng);
-  const doomedIds = new Set<CardId>(shuffled.slice(0, takeCount).map((c) => c.id));
+  const doomedCards = shuffled.slice(0, takeCount);
+  const doomedIds = new Set<CardId>(doomedCards.map((c) => c.id));
+  const templateIds = doomedCards.map((c) => c.templateId);
 
   const final: GameState = {
     ...current,
@@ -242,6 +247,7 @@ export function resolveForceDestroy(state: GameState): {
   const destroyEvent: GameEvent = {
     type: "CardDestroyed",
     ids: [...doomedIds],
+    templateIds,
   };
 
   return { state: final, events: [...events, destroyEvent] };
