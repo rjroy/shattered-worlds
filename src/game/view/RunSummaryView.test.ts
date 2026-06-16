@@ -96,8 +96,13 @@ function makeView(scene: unknown): {
   // The caller passes scene in and we return view only; texts come from makeFakeScene.
   const bgStub = {
     setInteractive() {},
+    setFillStyle() { return bgStub },
     removeAllListeners(_ev: string) {},
     once(_ev: string, _fn: () => void) {},
+  }
+  const backdropStub = {
+    setTexture() { return backdropStub },
+    setTint() { return backdropStub },
   }
 
   const view = Object.create(RunSummaryView.prototype) as RunSummaryView & { list: unknown[] }
@@ -105,6 +110,7 @@ function makeView(scene: unknown): {
   // Install the required instance fields.
   Object.defineProperty(view, 'scene', { value: scene, writable: false })
   Object.defineProperty(view, 'bg', { value: bgStub, writable: false })
+  Object.defineProperty(view, 'backdrop', { value: backdropStub, writable: false })
   ;(view as unknown as { onDismiss: null }).onDismiss = null
   view.list = []
 
@@ -123,8 +129,9 @@ function makeView(scene: unknown): {
     return view as never
   }
 
-  // Seed list with bg so the clearing loop in show() has something to compare.
-  view.list.push(bgStub)
+  // Seed list with the persistent backdrop + bg so the clearing loop mirrors
+  // the real constructor and preserves both background layers.
+  view.list.push(backdropStub, bgStub)
 
   return { view, trackedTexts: [] }
 }

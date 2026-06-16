@@ -9,6 +9,7 @@ import type { FeatsStore } from '../runtime/featsProfile'
 import { CANVAS_W, CANVAS_H } from '../view/layout'
 import { TEXT, textStyle } from '../view/presentation'
 import { formatDuration } from '../view/format'
+import { addScreenBackdrop } from '../view/screenBackdrop'
 
 const VISIBLE_WORLDS = 4
 
@@ -36,7 +37,11 @@ export class ChronicleScene extends Phaser.Scene {
 
   create(): void {
     this.worldsScrollOffset = 0
-    this.add.rectangle(CANVAS_W / 2, CANVAS_H / 2, CANVAS_W, CANVAS_H, 0x0d0a12, 1)
+    addScreenBackdrop(this, {
+      key: 'screen-chronicle',
+      veilAlpha: 0.64,
+      tint: 0xd8c6ff,
+    })
     this.add.text(42, 24, 'Chronicle', textStyle({
       fontSize: '32px',
       color: '#d6b15c',

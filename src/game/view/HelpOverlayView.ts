@@ -9,6 +9,7 @@ import { compileEffect, type IconId } from "../../core/view/effectGlyphs";
 import { EFFECT_ICON_TOOLTIPS } from "../../core/view/effectTooltips";
 import { EFFECT_ICON_TEXTURES } from "./effectLineLayout";
 import { addEffectLines } from "./effectLineView";
+import { addScreenBackdrop } from "./screenBackdrop";
 
 /** Full-screen help overlay with tab/page navigation, hidden by default. */
 export class HelpOverlayView extends Phaser.GameObjects.Container {
@@ -22,7 +23,16 @@ export class HelpOverlayView extends Phaser.GameObjects.Container {
     this.setDepth(1000);
     this.setVisible(false);
 
-    const bg = scene.add.rectangle(0, 0, CANVAS_W, CANVAS_H, 0x080a12, 0.92);
+    const backdrop = addScreenBackdrop(scene, {
+      key: "screen-destiny",
+      veilColor: 0x080a12,
+      veilAlpha: 0.86,
+      tint: 0xb8d5ff,
+    });
+    backdrop.setPosition(0, 0);
+    this.add(backdrop);
+
+    const bg = scene.add.rectangle(0, 0, CANVAS_W, CANVAS_H, 0x080a12, 0.26);
     bg.setInteractive();
     this.add(bg);
 

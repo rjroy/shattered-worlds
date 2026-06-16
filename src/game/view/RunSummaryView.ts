@@ -47,6 +47,7 @@ function colorForOutcome(outcome: RunOutcome): string {
 }
 
 export class RunSummaryView extends Phaser.GameObjects.Container {
+  private readonly backdrop: Phaser.GameObjects.Image
   private readonly bg: Phaser.GameObjects.Rectangle
   private onDismiss: (() => void) | null = null
 
@@ -56,17 +57,22 @@ export class RunSummaryView extends Phaser.GameObjects.Container {
     this.setDepth(1000)
     this.setVisible(false)
 
-    this.bg = scene.add.rectangle(0, 0, CANVAS_W, CANVAS_H, 0x050409, 0.88)
+    this.backdrop = scene.add.image(0, 0, 'screen-chronicle')
+    this.backdrop.setDisplaySize(CANVAS_W, CANVAS_H)
+    this.add(this.backdrop)
+
+    this.bg = scene.add.rectangle(0, 0, CANVAS_W, CANVAS_H, 0x050409, 0.8)
     this.bg.setInteractive()
     this.add(this.bg)
   }
 
   show(data: RunSummaryData, onDismiss: () => void): void {
     for (const child of [...this.list]) {
-      if (child !== this.bg) this.remove(child, true)
+      if (child !== this.backdrop && child !== this.bg) this.remove(child, true)
     }
     this.onDismiss = onDismiss
     this.setVisible(true)
+    this.applyOutcomeBackdrop(data.outcome)
 
     const panel = this.scene.add.rectangle(0, 0, 620, 430, 0x12101a, 0.96)
     panel.setStrokeStyle(2, 0xd6b15c, 0.95)
@@ -200,5 +206,24 @@ export class RunSummaryView extends Phaser.GameObjects.Container {
     this.onDismiss = null
     this.setVisible(false)
     callback?.()
+  }
+
+  private applyOutcomeBackdrop(outcome: RunOutcome): void {
+    switch (outcome) {
+      case 'won':
+        this.backdrop.setTexture('screen-chronicle')
+        this.backdrop.setTint(0xffe1a6)
+        this.bg.setFillStyle(0x08050a, 0.76)
+        return
+      case 'lost':
+        this.backdrop.setTexture('screen-lose')
+        this.backdrop.setTint(0xffb0b0)
+        this.bg.setFillStyle(0x050409, 0.83)
+        return
+      case 'abandoned':
+        this.backdrop.setTexture('screen-destiny')
+        this.backdrop.setTint(0xcbb8ff)
+        this.bg.setFillStyle(0x050409, 0.82)
+    }
   }
 }
