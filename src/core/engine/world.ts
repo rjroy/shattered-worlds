@@ -1,5 +1,7 @@
 import type { Card, GameEvent, GameState, WorldCard } from "../model/types";
 import type { CardCatalog, CardCount, WorldData } from "../model/catalog";
+import type { RunModifiers } from "../../data/unlocks/types";
+import { DEFAULT_RUN_MODIFIERS } from "../../data/unlocks/types";
 import { createRng, shuffle } from "./rng";
 import { mintCard } from "../model/cards";
 import { startTurn } from "./energy";
@@ -11,12 +13,16 @@ export type CreateWorldResult = {
 
 export const WORLD_CONSTS = {
   startHp: 10,
-  maxHandSize: 6,
+  baseHandSize: 6,
   startWorldCards: 2,
   get startPlayerCards(): number {
-    return WORLD_CONSTS.maxHandSize - WORLD_CONSTS.startWorldCards;
+    return WORLD_CONSTS.baseHandSize - WORLD_CONSTS.startWorldCards;
   },
 };
+
+export function effectiveHandSize(state: GameState): number {
+  return WORLD_CONSTS.baseHandSize + state.actIndex * state.runModifiers.handSizeBonusPerAct;
+}
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -66,8 +72,14 @@ function asWorldCards(cards: Card[]): WorldCard[] {
  *   each act activates in drawWorld.
  * - Hand is left empty — refillHand deals the opening hand.
  */
-export function createWorld(catalog: CardCatalog, world: WorldData, seed: number): CreateWorldResult {
+export function createWorld(
+  catalog: CardCatalog,
+  world: WorldData,
+  seed: number,
+  runModifiers?: RunModifiers,
+): CreateWorldResult {
   const rng = createRng(seed);
+  const mods = runModifiers ?? DEFAULT_RUN_MODIFIERS;
 
   // Bootstrap a skeleton state so mintCard has a valid GameState to thread.
   // hp, status, and the pile arrays are all filled in below.
@@ -80,13 +92,14 @@ export function createWorld(catalog: CardCatalog, world: WorldData, seed: number
     actIndex: 0,
     totalActs: world.deckComposition.acts.length,
     progress: {},
-    hp: WORLD_CONSTS.startHp,
-    energy: 0,
+    hp: WORLD_CONSTS.startHp + mods.extraStartHp,
+    energy: mods.extraStartEnergy,
     // Per-world starting Light. 0 everywhere but Fog (world.startLight unset),
     // which is the invariant keeping decay and concealment no-ops elsewhere.
-    light: world.startLight ?? 0,
+    light: (world.startLight ?? 0) + mods.extraStartLight,
     pendingForceDestroy: 0,
-    braceCharges: 0,
+    braceCharges: mods.extraStartBrace,
+    runModifiers: mods,
     status: "playing",
     worldId: "basic",
     rng,

@@ -30,7 +30,8 @@ export interface StartTurnResult extends EffectResult {
  * Returns: { state with energy += 1, events: [EnergyChanged] }
  */
 export function gainEnergy(state: GameState): EffectResult {
-  const newEnergy = state.energy + 1;
+  const gained = state.energy + 1;
+  const newEnergy = Math.max(gained, state.runModifiers.minEnergyPerTurn);
   return {
     state: { ...state, energy: newEnergy },
     events: [{ type: "EnergyChanged", energy: newEnergy }],
@@ -72,10 +73,15 @@ export function spendEnergy(state: GameState, cost: number): EffectResult {
  * and their event streams stay byte-identical to the pre-Light engine.
  */
 function decayLight(state: GameState): EffectResult {
-  if (state.light <= 0) {
+  const floor = state.runModifiers.minLightPerTurn;
+  if (state.light <= 0 && floor === 0) {
     return { state, events: [] };
   }
-  const newLight = Math.max(0, state.light - LIGHT_DECAY);
+  const decayed = Math.max(0, state.light - LIGHT_DECAY);
+  const newLight = Math.max(decayed, floor);
+  if (state.light === newLight) {
+    return { state, events: [] };
+  }
   return {
     state: { ...state, light: newLight },
     events: [{ type: "LightChanged", light: newLight }],

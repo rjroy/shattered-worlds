@@ -417,7 +417,7 @@ export class HelpOverlayView extends Phaser.GameObjects.Container {
             -360,
             -72,
             "1",
-            `Draw up to ${WORLD_CONSTS.maxHandSize} cards. World cards are hazards; player cards are tools.`,
+            `Draw up to ${WORLD_CONSTS.baseHandSize} cards. World cards are hazards; player cards are tools.`,
           );
           addStep(
             page,

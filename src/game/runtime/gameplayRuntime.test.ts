@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'bun:test'
 
-import type { WorldData } from '../../core/index'
+import type { AssembledWorld, WorldData } from '../../core/index'
 import { catalog, worldData } from '../../core/tests/testFixture'
 
 import { createGameplayRuntime } from './gameplayRuntime'
@@ -36,17 +36,27 @@ function createMemoryStorage(): RunStatsStorage & { dump(): Record<string, strin
   }
 }
 
+const testWorld: AssembledWorld = { catalog, worldData }
+
+function startTestSession(
+  runtime: ReturnType<typeof createGameplayRuntime>,
+  seed: number,
+  options: Parameters<ReturnType<typeof createGameplayRuntime>['startSession']>[2] = {},
+) {
+  return runtime.startSession(worldData.worldId, seed, { world: testWorld, ...options })
+}
+
 describe('gameplayRuntime composition root', () => {
   it('lets a runtime-wide subscriber observe every session from start to close', () => {
     const runtime = createGameplayRuntime()
     const observed: RunStreamItem[] = []
     runtime.subscribe((item) => observed.push(item))
 
-    const first = runtime.startSession(catalog, worldData, 42, { makeSessionId: () => 'run-1' })
+    const first = startTestSession(runtime, 42, { makeSessionId: () => 'run-1' })
     first.dispatch({ type: 'EndTurn' })
     first.abandon()
 
-    const second = runtime.startSession(catalog, worldData, 17, { makeSessionId: () => 'run-2' })
+    const second = startTestSession(runtime, 17, { makeSessionId: () => 'run-2' })
     for (let turn = 0; turn < 4; turn += 1) {
       second.dispatch({ type: 'EndTurn' })
     }
@@ -69,7 +79,7 @@ describe('gameplayRuntime composition root', () => {
     const storage = createMemoryStorage()
     const runtime = createGameplayRuntime({ storage })
 
-    const session = runtime.startSession(catalog, worldData, 17, { makeSessionId: () => 'stats-run' })
+    const session = startTestSession(runtime, 17, { makeSessionId: () => 'stats-run' })
     for (let turn = 0; turn < 4; turn += 1) {
       session.dispatch({ type: 'EndTurn' })
     }
@@ -90,11 +100,11 @@ describe('gameplayRuntime composition root', () => {
     let now = 0
     const runtime = createGameplayRuntime({ clock: () => (now += 1_000) })
 
-    const first = runtime.startSession(catalog, worldData, 42, { makeSessionId: () => 'timed-1' })
+    const first = startTestSession(runtime, 42, { makeSessionId: () => 'timed-1' })
     first.dispatch({ type: 'EndTurn' })
     first.abandon()
 
-    const second = runtime.startSession(catalog, worldData, 42, { makeSessionId: () => 'timed-2' })
+    const second = startTestSession(runtime, 42, { makeSessionId: () => 'timed-2' })
     second.dispatch({ type: 'EndTurn' })
     second.abandon()
 
@@ -109,7 +119,7 @@ describe('gameplayRuntime composition root', () => {
   it('counts abandoned sessions so exits mid-run still close the stream', () => {
     const runtime = createGameplayRuntime()
 
-    const session = runtime.startSession(catalog, worldData, 42)
+    const session = startTestSession(runtime, 42)
     session.dispatch({ type: 'EndTurn' })
     session.abandon()
 
@@ -122,12 +132,12 @@ describe('gameplayRuntime composition root', () => {
     runtime.subscribe((item) => observed.push(item))
 
     // One session finishes (lost), one stays open at page exit.
-    const finished = runtime.startSession(catalog, worldData, 17, { makeSessionId: () => 'finished' })
+    const finished = startTestSession(runtime, 17, { makeSessionId: () => 'finished' })
     for (let turn = 0; turn < 4; turn += 1) {
       finished.dispatch({ type: 'EndTurn' })
     }
 
-    const open = runtime.startSession(catalog, worldData, 42, { makeSessionId: () => 'open' })
+    const open = startTestSession(runtime, 42, { makeSessionId: () => 'open' })
     open.dispatch({ type: 'EndTurn' })
 
     runtime.abandonAll()
@@ -152,7 +162,7 @@ describe('gameplayRuntime composition root', () => {
       throw new Error('runtime subscriber failed')
     })
 
-    const session = runtime.startSession(catalog, worldData, 42, { makeSessionId: () => 'failing-run' })
+    const session = startTestSession(runtime, 42, { makeSessionId: () => 'failing-run' })
 
     expect(() => session.dispatch({ type: 'EndTurn' })).not.toThrow()
     expect(failures.length).toBeGreaterThanOrEqual(2)
@@ -163,8 +173,8 @@ describe('gameplayRuntime composition root', () => {
     const observedRuntime = createGameplayRuntime({ storage: createMemoryStorage() })
     observedRuntime.subscribe(() => {})
 
-    const observed = observedRuntime.startSession(catalog, worldData, 42)
-    const bare = createGameplayRuntime().startSession(catalog, worldData, 42)
+    const observed = startTestSession(observedRuntime, 42)
+    const bare = startTestSession(createGameplayRuntime(), 42)
 
     for (let turn = 0; turn < 3; turn += 1) {
       const observedResult = observed.dispatch({ type: 'EndTurn' })
@@ -179,7 +189,9 @@ describe('gameplayRuntime composition root', () => {
   it('wires featEvaluator so first-survivor is earned after a won run (REQ-FEAT-12, REQ-FEAT-13)', () => {
     const winWorldData = createGuaranteedWinWorldData()
     const runtime = createGameplayRuntime()
-    const session = runtime.startSession(catalog, winWorldData, 42)
+    const session = runtime.startSession(winWorldData.worldId, 42, {
+      world: { catalog, worldData: winWorldData },
+    })
 
     const doorId = session.state.hand.find((card) => card.kind === 'world' && card.name === 'Door')?.id
     if (doorId === undefined) throw new Error('expected Door in opening hand')
@@ -192,5 +204,29 @@ describe('gameplayRuntime composition root', () => {
 
     expect(session.state.status).toBe('won')
     expect(runtime.featEvaluator.lastRunEarned().find((d) => d.id === 'first-survivor')).toBeDefined()
+  })
+
+  it('applies only activated unlocks to run modifiers and RunStarted metadata', () => {
+    const storage = createMemoryStorage()
+    storage.setItem(
+      'shattered-worlds/unlocks/v1',
+      JSON.stringify({
+        version: 1,
+        purchased: ['extra-hp', 'extra-energy'],
+        activated: ['extra-hp'],
+      }),
+    )
+    const runtime = createGameplayRuntime({ storage })
+    const observed: RunStreamItem[] = []
+    runtime.subscribe((item) => observed.push(item))
+
+    const session = startTestSession(runtime, 42)
+
+    expect(session.state.runModifiers.extraStartHp).toBe(3)
+    expect(session.state.runModifiers.extraStartEnergy).toBe(0)
+    expect(observed[0]).toMatchObject({
+      kind: 'RunStarted',
+      appliedModifiers: [{ kind: 'unlock', id: 'extra-hp' }],
+    })
   })
 })

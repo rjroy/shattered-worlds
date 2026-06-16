@@ -12,6 +12,7 @@ import { mintCard } from "../model/cards";
 import { availableActions } from "../engine/available";
 import { createWorld } from "../engine/world";
 import type { GameState, PlayerCard, WorldCard } from "../model/types";
+import { DEFAULT_RUN_MODIFIERS } from "../../data/unlocks/types";
 import { catalog, worldData } from "./testFixture";
 
 // ---------------------------------------------------------------------------
@@ -73,6 +74,32 @@ describe("dealProgress keyword math", () => {
     // 5 >= cost 1: auto-resolved
     expect(events.some((e) => e.type === "HazardResolved")).toBe(true);
     expect(after.hand.find((c) => c.id === zombie.id)).toBeUndefined();
+  });
+
+  it("adds run keyword bonus only when the hazard has the matching keyword", () => {
+    let state = makeState({
+      runModifiers: { ...DEFAULT_RUN_MODIFIERS, keywordDamageBonus: 1 },
+    });
+    const [hidden, s1] = mintWorld(state, "Zombie");
+    const [plain, s2] = mintWorld(s1, "Strange Sounds");
+    const hiddenWithKeyword: WorldCard = { ...hidden, keywords: [{ name: "Hidden" }] };
+    state = { ...s2, hand: [hiddenWithKeyword, plain] };
+
+    const matching = dealProgress(catalog, state, hiddenWithKeyword.id, 1, {
+      tag: "Hidden",
+      amount: 1,
+    });
+    const nonMatching = dealProgress(catalog, state, plain.id, 1, {
+      tag: "Hidden",
+      amount: 1,
+    });
+
+    expect(matching.events.find((e) => e.type === "ProgressDealt")).toMatchObject({
+      amount: 3,
+    });
+    expect(nonMatching.events.find((e) => e.type === "ProgressDealt")).toMatchObject({
+      amount: 1,
+    });
   });
 });
 

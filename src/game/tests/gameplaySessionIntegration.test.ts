@@ -149,7 +149,7 @@ describe('gameplaySession integration', () => {
     const source = await Bun.file(new URL('../scenes/TableScene.ts', import.meta.url)).text()
 
     expect(source).toContain('private game_!: GameplaySession')
-    expect(source).toContain('this.game_ = this.runtime_.startSession(catalog, worldData, this.seed_)')
+    expect(source).toContain('this.game_ = this.runtime_.startSession(this.worldId_, this.seed_)')
     expect(source).toContain('new RunSummaryView(this)')
     expect(source).toContain('this.showRunSummaryFromStats()')
     // Scene shutdown closes the run stream for sessions exited mid-run.
@@ -167,6 +167,7 @@ describe('gameplaySession integration', () => {
     expect(source).toContain("document.addEventListener('visibilitychange', onChange)")
     expect(source).toContain('new WorldSelectScene(gameplayRuntime.runStats)')
     expect(source).toContain('new ChronicleScene(gameplayRuntime.runStats, gameplayRuntime.statsTransfer, gameplayRuntime.featsStore)')
+    expect(source).toContain('new DestinyScene(gameplayRuntime.featsStore, gameplayRuntime.unlocksStore)')
     expect(source).toContain('new TableScene(gameplayRuntime)')
   })
 
@@ -175,6 +176,7 @@ describe('gameplaySession integration', () => {
 
     expect(source).toContain('worldBadgeLabel')
     expect(source).toContain('this.scene.start("Chronicle")')
+    expect(source).toContain('this.scene.start("Destiny")')
     expect(source).toContain('private readonly runStats: RunStatsReader | undefined')
   })
 

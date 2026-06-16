@@ -1,11 +1,16 @@
 import { describe, expect, it } from "bun:test";
-import { createWorld } from "../engine/world";
+import { createWorld, effectiveHandSize, WORLD_CONSTS } from "../engine/world";
 import { startTurn } from "../engine/energy";
 import { applyEffect } from "../engine/effects";
 import { createGame } from "../engine/game";
 import type { GameEvent } from "../model/types";
 import type { WorldData } from "../model/catalog";
+import { DEFAULT_RUN_MODIFIERS, type RunModifiers } from "../../data/unlocks/types";
 import { catalog, worldData } from "./testFixture";
+
+function mods(overrides: Partial<RunModifiers>): RunModifiers {
+  return { ...DEFAULT_RUN_MODIFIERS, ...overrides };
+}
 
 // ---------------------------------------------------------------------------
 // 1. Act 1 composition
@@ -208,6 +213,28 @@ describe("energy initialization", () => {
     const { state } = createWorld(catalog, worldData, 42);
     expect(state.energy).toBe(1);
   });
+
+  it("applies the turn-start energy floor only when needed", () => {
+    const { state: base } = createWorld(catalog, worldData, 42, mods({ minEnergyPerTurn: 2 }));
+
+    expect(startTurn({ ...base, energy: 0 }).state.energy).toBe(2);
+    expect(startTurn({ ...base, energy: 3 }).state.energy).toBe(4);
+  });
+});
+
+describe("RunModifiers in createWorld", () => {
+  it("applies starting stat offsets", () => {
+    expect(createWorld(catalog, worldData, 42, mods({ extraStartHp: 5 })).state.hp).toBe(15);
+    expect(createWorld(catalog, worldData, 42, mods({ extraStartEnergy: 1 })).state.energy).toBe(2);
+    expect(createWorld(catalog, litWorldData(4), 42, mods({ extraStartLight: 2 })).state.light).toBe(5);
+    expect(createWorld(catalog, worldData, 42, mods({ extraStartBrace: 2 })).state.braceCharges).toBe(2);
+  });
+
+  it("derives effective hand size from act index and the run modifier", () => {
+    const { state } = createWorld(catalog, worldData, 42, mods({ handSizeBonusPerAct: 1 }));
+    expect(effectiveHandSize(state)).toBe(WORLD_CONSTS.baseHandSize);
+    expect(effectiveHandSize({ ...state, actIndex: 1 })).toBe(7);
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -254,6 +281,14 @@ describe("Light decay clock (startTurn)", () => {
     const { state, events } = startTurn({ ...base, light: 0 });
     expect(state.light).toBe(0);
     expect(events.some((e) => e.type === "LightChanged")).toBe(false);
+  });
+
+  it("respects a configured minimum light floor", () => {
+    let state = createWorld(catalog, litWorldData(4), 42, mods({ minLightPerTurn: 1 })).state;
+    for (let turn = 0; turn < 10; turn++) {
+      state = startTurn(state).state;
+    }
+    expect(state.light).toBe(1);
   });
 
   it("fires decay BEFORE the energy gain in the event stream", () => {

@@ -10,7 +10,7 @@ import { catalog, worldData } from "./testFixture";
 // ---------------------------------------------------------------------------
 
 describe("refillHand draw table", () => {
-  it(`0 world cards held → draws ${WORLD_CONSTS.startWorldCards} world + ${WORLD_CONSTS.startWorldCards} player (total ${WORLD_CONSTS.maxHandSize})`, () => {
+  it(`0 world cards held → draws ${WORLD_CONSTS.startWorldCards} world + ${WORLD_CONSTS.startWorldCards} player (total ${WORLD_CONSTS.baseHandSize})`, () => {
     // createWorld already fills hand; start from raw piles instead
     const { state: base } = createWorld(catalog, worldData, 1);
     // Move all hand cards back to their piles so hand is empty
@@ -25,7 +25,7 @@ describe("refillHand draw table", () => {
 
     const { state: filled } = refillHand(state);
 
-    expect(filled.hand).toHaveLength(WORLD_CONSTS.maxHandSize);
+    expect(filled.hand).toHaveLength(WORLD_CONSTS.baseHandSize);
     expect(filled.hand.filter((c) => c.kind === "world")).toHaveLength(
       WORLD_CONSTS.startWorldCards,
     );
@@ -34,7 +34,7 @@ describe("refillHand draw table", () => {
     );
   });
 
-  it(`1 world card held → draws 2 world + 3 player (total ${WORLD_CONSTS.maxHandSize})`, () => {
+  it(`1 world card held → draws 2 world + 3 player (total ${WORLD_CONSTS.baseHandSize})`, () => {
     const { state: base } = createWorld(catalog, worldData, 1);
     const playerCards = base.hand.filter((c) => c.kind === "player");
     const worldCards = base.hand.filter((c) => c.kind === "world") as WorldCard[];
@@ -52,13 +52,13 @@ describe("refillHand draw table", () => {
 
     const { state: filled } = refillHand(state);
 
-    expect(filled.hand).toHaveLength(WORLD_CONSTS.maxHandSize);
+    expect(filled.hand).toHaveLength(WORLD_CONSTS.baseHandSize);
     // 1 held + 2 drawn = 3 world (first held card is "free"; draw still targets startWorldCards)
     expect(filled.hand.filter((c) => c.kind === "world")).toHaveLength(3);
     expect(filled.hand.filter((c) => c.kind === "player")).toHaveLength(3);
   });
 
-  it(`2 world cards held → draws 1 world + ${WORLD_CONSTS.maxHandSize - 3} player (total ${WORLD_CONSTS.maxHandSize})`, () => {
+  it(`2 world cards held → draws 1 world + ${WORLD_CONSTS.baseHandSize - 3} player (total ${WORLD_CONSTS.baseHandSize})`, () => {
     const { state: base } = createWorld(catalog, worldData, 1);
     const playerCards = base.hand.filter((c) => c.kind === "player");
 
@@ -74,21 +74,21 @@ describe("refillHand draw table", () => {
 
     const { state: filled } = refillHand(state);
 
-    expect(filled.hand).toHaveLength(WORLD_CONSTS.maxHandSize);
+    expect(filled.hand).toHaveLength(WORLD_CONSTS.baseHandSize);
     // 2 held + 1 drawn = 3 world
     expect(filled.hand.filter((c) => c.kind === "world")).toHaveLength(3);
     expect(filled.hand.filter((c) => c.kind === "player")).toHaveLength(
-      WORLD_CONSTS.maxHandSize - 3,
+      WORLD_CONSTS.baseHandSize - 3,
     );
   });
 });
 
 // ---------------------------------------------------------------------------
-// 2. Hand already at WORLD_CONSTS.maxHandSize — no draws
+// 2. Hand already at WORLD_CONSTS.baseHandSize — no draws
 // ---------------------------------------------------------------------------
 
 describe("refillHand with full hand", () => {
-  it(`returns no events and unchanged state when hand has ${WORLD_CONSTS.maxHandSize} cards and worldDraw is empty`, () => {
+  it(`returns no events and unchanged state when hand has ${WORLD_CONSTS.baseHandSize} cards and worldDraw is empty`, () => {
     const { state: base } = createWorld(catalog, worldData, 1);
 
     const state: GameState = {
@@ -98,13 +98,13 @@ describe("refillHand with full hand", () => {
       acts: [],
     };
 
-    // Sanity: hand must be exactly WORLD_CONSTS.maxHandSize
-    expect(state.hand).toHaveLength(WORLD_CONSTS.maxHandSize);
+    // Sanity: hand must be exactly WORLD_CONSTS.baseHandSize
+    expect(state.hand).toHaveLength(WORLD_CONSTS.baseHandSize);
 
     const { state: filled, events } = refillHand(state);
 
     expect(events).toHaveLength(0);
-    expect(filled.hand).toHaveLength(WORLD_CONSTS.maxHandSize);
+    expect(filled.hand).toHaveLength(WORLD_CONSTS.baseHandSize);
     expect(filled).toBe(state);
   });
 });
@@ -201,9 +201,9 @@ describe("drawPlayer discard reshuffle", () => {
 // ---------------------------------------------------------------------------
 
 describe("createWorld opening deal", () => {
-  it(`hand has exactly ${WORLD_CONSTS.maxHandSize} cards`, () => {
+  it(`hand has exactly ${WORLD_CONSTS.baseHandSize} cards`, () => {
     const { state } = createWorld(catalog, worldData, 42);
-    expect(state.hand).toHaveLength(WORLD_CONSTS.maxHandSize);
+    expect(state.hand).toHaveLength(WORLD_CONSTS.baseHandSize);
   });
 
   it(`hand has exactly ${WORLD_CONSTS.startWorldCards} world cards`, () => {
