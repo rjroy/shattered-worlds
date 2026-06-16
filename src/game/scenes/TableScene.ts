@@ -53,6 +53,7 @@ import { BackdropLayer } from "../view/backdrop";
 import { worldDisplayManifest } from "../../data/worldDisplayManifest";
 import { CARD_FACE, TABLE_LAYOUT } from "../view/layout";
 import { rowCardPositions } from "../view/tableLayout";
+import { addTooltip } from "../view/TooltipView";
 
 // ---------------------------------------------------------------------------
 // Layout constants
@@ -71,6 +72,21 @@ const HAND_ROW_Y = TABLE_LAYOUT.handRowY;
 const CONNECTOR_DEPTH = TABLE_LAYOUT.connectorDepth;
 // ROW_LEFT reserved for future fixed-layout mode
 // const ROW_LEFT = 80
+
+const TABLE_TOOLTIPS = {
+  endTurn: {
+    title: "End Turn",
+    body: "End your turn, discard your hand, and start a new turn.",
+  },
+  question: {
+    title: "Help",
+    body: "For detailed help.",
+  },
+  exit: {
+    title: "Exit",
+    body: "Abandon this run and exit to the main menu.",
+  },
+};
 
 // ---------------------------------------------------------------------------
 // Scene
@@ -177,6 +193,7 @@ export class TableScene extends Phaser.Scene {
       "[ End Turn ]",
       endTurnStyle,
     ).on("pointerdown", () => this.onEndTurnClick());
+    addTooltip(this, this.endTurnBtn, TABLE_TOOLTIPS.endTurn);
 
     const cancelStyle = textStyle({
       fontSize: "13px",
@@ -228,6 +245,7 @@ export class TableScene extends Phaser.Scene {
       "?",
       questionStyle,
     ).on("pointerup", () => this.helpOverlay.setVisible(true));
+    addTooltip(this, this.questionBtn, TABLE_TOOLTIPS.question);
 
     this.exitBtn = new CommonButton(
       this,
@@ -240,6 +258,7 @@ export class TableScene extends Phaser.Scene {
       this.game_.abandon();
       this.showRunSummaryFromStats();
     });
+    addTooltip(this, this.exitBtn, TABLE_TOOLTIPS.exit);
 
     this.input.keyboard?.on("keydown-ESC", () => {
       if (this.helpOverlay.visible) this.helpOverlay.setVisible(false);

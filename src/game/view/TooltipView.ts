@@ -156,7 +156,7 @@ export class TooltipView extends Phaser.GameObjects.Container {
           emit?: (event: string, ...args: unknown[]) => void;
         }
       | undefined;
-    while (parent !== undefined) {
+    while (parent !== undefined && parent) {
       if (typeof parent.cardId === "string" && typeof parent.emit === "function") {
         parent.emit("pointerdown", ...args);
         return;
@@ -167,6 +167,7 @@ export class TooltipView extends Phaser.GameObjects.Container {
 }
 
 export function addTooltip(scene: Phaser.Scene, target: TooltipTarget, copy: TooltipCopy): void {
+  if (!target) return;
   if (target.setInteractive === undefined || target.on === undefined) return;
   TooltipView.forScene(scene).register(target, copy);
 }

@@ -8,6 +8,7 @@ import type { GameState } from "../../core/index";
 import { TEXT, textStyle } from "./presentation";
 import { HUD_LAYOUT } from "./layout";
 import { worldUsesLightManifest } from "../../data/worldUsesLightManifest";
+import { addTooltip } from "./TooltipView";
 
 // HUD backing panel geometry. The text-back texture is a 600×600 grunge frame:
 // a thick decorated border around a dark interior. As a nine-slice we keep the
@@ -24,9 +25,37 @@ const HUD_PANEL_SIDE_INSET = HUD_LAYOUT.panel.sideInset; // left/right: keep the
 const HUD_PANEL_EDGE_INSET = HUD_LAYOUT.panel.edgeInset; // top/bottom: thin frayed edge, interior shows through
 const HUD_POWER_UPS = HUD_LAYOUT.powerUps;
 
+const HUD_TOOLTIPS = {
+  hp: {
+    title: "Current HP",
+    body: "Your current health. If this reaches 0 you lose the game.",
+  },
+  energy: {
+    title: "Current Energy",
+    body: "Your current energy used to play some cards. Gain 1 per turn or with some cards.",
+  },
+  act: {
+    title: "Act Progression",
+    body: "Each world has its own act progression. You start at Act 1 and progress by surviving hazards.",
+  },
+  light: {
+    title: "Light Level",
+    body: "The current level of light. Have a light level creater than the conceal of a card to reveal it.",
+  },
+  brace: {
+    title: "Available Brace",
+    body: "You can brace your self for grasping attacks which can steal your cards.",
+  },
+  forceDestroy: {
+    title: "Amount to be Grasped",
+    body: "The number of player cards which will be destroyed at the start of your next turn.",
+  },
+};
+
 interface PowerUpIndicator {
   container: Phaser.GameObjects.Container;
   countText: Phaser.GameObjects.Text;
+  icon: Phaser.GameObjects.Image;
 }
 
 export class HUDView extends Phaser.GameObjects.Container {
@@ -74,7 +103,9 @@ export class HUDView extends Phaser.GameObjects.Container {
       ...style,
       color: TEXT.textHp,
     });
+    addTooltip(this.scene, this.hpText, HUD_TOOLTIPS.hp);
     this.actText = scene.add.text(HUD_LAYOUT.labels.actX, HUD_PANEL_H / 2, "Act 1 / 3", style);
+    addTooltip(this.scene, this.actText, HUD_TOOLTIPS.act);
     this.energyText = scene.add.text(HUD_LAYOUT.labels.energyX, HUD_PANEL_H / 2, "—", {
       ...style,
       color: TEXT.textEnergy,
@@ -87,6 +118,7 @@ export class HUDView extends Phaser.GameObjects.Container {
         "effect-icon-energy",
       )
       .setDisplaySize(HUD_LAYOUT.energyIconSize, HUD_LAYOUT.energyIconSize);
+    addTooltip(this.scene, energyIcon, HUD_TOOLTIPS.energy);
 
     for (const label of [this.hpText, this.actText, this.energyText, energyIcon]) {
       label.setOrigin(0, 0.5);
@@ -130,6 +162,7 @@ export class HUDView extends Phaser.GameObjects.Container {
     if (worldUsesLightManifest[state.worldId] === true) {
       if (this.lightIndicator === undefined) {
         this.lightIndicator = this.addPowerUp("effect-icon-light");
+        addTooltip(this.scene, this.lightIndicator.icon, HUD_TOOLTIPS.light);
       }
       this.setPowerUpValue(this.lightIndicator, state.light);
     } else if (this.lightIndicator !== undefined) {
@@ -138,6 +171,7 @@ export class HUDView extends Phaser.GameObjects.Container {
     if (state.braceCharges > 0) {
       if (this.braceIndicator === undefined) {
         this.braceIndicator = this.addPowerUp("effect-icon-brace");
+        addTooltip(this.scene, this.braceIndicator.icon, HUD_TOOLTIPS.brace);
       }
       this.setPowerUpValue(this.braceIndicator, state.braceCharges);
     } else {
@@ -148,6 +182,7 @@ export class HUDView extends Phaser.GameObjects.Container {
     if (state.pendingForceDestroy > 0) {
       if (this.forceDestroyIndicator === undefined) {
         this.forceDestroyIndicator = this.addPowerUp("effect-icon-destroy");
+        addTooltip(this.scene, this.forceDestroyIndicator.icon, HUD_TOOLTIPS.forceDestroy);
       }
       this.setPowerUpValue(this.forceDestroyIndicator, state.pendingForceDestroy);
     } else {
@@ -199,7 +234,7 @@ export class HUDView extends Phaser.GameObjects.Container {
     container.add([icon, countText]);
     this.powerUps.add(container);
 
-    const indicator = { container, countText };
+    const indicator: PowerUpIndicator = { container, countText, icon };
     this.powerUpIndicators.push(indicator);
     return indicator;
   }

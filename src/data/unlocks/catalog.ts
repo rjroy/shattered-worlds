@@ -1,11 +1,7 @@
 import type { FeatsProfile } from "../../game/runtime/featsProfile";
 import type { UnlocksProfile } from "../../game/runtime/unlocksProfile";
 import { computeFragmentBalance, FEAT_CATALOG } from "../feats/catalog";
-import {
-  DEFAULT_RUN_MODIFIERS,
-  type RunModifiers,
-  type UnlockDefinition,
-} from "./types";
+import { DEFAULT_RUN_MODIFIERS, type RunModifiers, type UnlockDefinition } from "./types";
 
 export const UNLOCK_CATALOG: readonly UnlockDefinition[] = [
   {
@@ -83,9 +79,9 @@ export const UNLOCK_CATALOG: readonly UnlockDefinition[] = [
   {
     id: "act-reward",
     name: "Fortune",
-    description: "You've learned to look for useful things in impossible places.",
-    cost: 70,
-    destinyWeight: 3,
+    description: "You've learned to look for useful things in impossible places. (NotImplemented)",
+    cost: 7000,
+    destinyWeight: 6,
     effect: { type: "actReward", offeredCount: 3 },
   },
 ];
@@ -189,5 +185,8 @@ export function canActivate(
   activeIds: readonly string[],
   catalog: readonly UnlockDefinition[],
 ): boolean {
-  return !activeIds.includes(def.id) && activeWeight(activeIds, catalog) + def.destinyWeight <= DESTINY_BUDGET;
+  return (
+    !activeIds.includes(def.id) &&
+    activeWeight(activeIds, catalog) + def.destinyWeight <= DESTINY_BUDGET
+  );
 }
