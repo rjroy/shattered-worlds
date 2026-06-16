@@ -22,7 +22,8 @@ export class ChronicleScene extends Phaser.Scene {
   private readonly runStats: RunStatsReader | undefined;
   private readonly statsTransfer: StatsTransfer | undefined;
   private readonly featsStore: FeatsStore | undefined;
-  private content?: Phaser.GameObjects.Container;
+  private statsContent?: Phaser.GameObjects.Container;
+  private featsContent?: Phaser.GameObjects.Container;
   private messageText?: Phaser.GameObjects.Text;
   private confirmOverlay?: Phaser.GameObjects.Container;
   private fileInput?: HTMLInputElement;
@@ -91,6 +92,21 @@ export class ChronicleScene extends Phaser.Scene {
     );
 
     this.renderStats();
+    this.renderFeats();
+
+    this.switchTab(this.statsContent);
+
+    this.createButton(280, 42, "Stats", () => this.switchTab(this.statsContent));
+    this.createButton(380, 42, "Feats", () => this.switchTab(this.featsContent));
+  }
+
+  private switchTab(tabContent?: Phaser.GameObjects.Container): void {
+    if (this.statsContent !== undefined) {
+      this.statsContent.setVisible(this.statsContent == tabContent);
+    }
+    if (this.featsContent !== undefined) {
+      this.featsContent.setVisible(this.featsContent == tabContent);
+    }
   }
 
   private createButton(x: number, y: number, label: string, onClick: () => void): Button {
@@ -119,12 +135,12 @@ export class ChronicleScene extends Phaser.Scene {
   }
 
   private renderStats(): void {
-    this.content?.destroy(true);
-    this.content = this.add.container(0, 0);
+    this.statsContent?.destroy(true);
+    this.statsContent = this.add.container(0, 0);
 
     const lifetime = this.runStats?.lifetime();
     if (lifetime === undefined || lifetime.runs === 0) {
-      this.addToContent(
+      this.statsContent.add(
         this.add
           .text(
             CANVAS_W / 2,
@@ -141,12 +157,8 @@ export class ChronicleScene extends Phaser.Scene {
       return;
     }
 
-    this.addPanel(44, 82, 812, 116);
-    this.addText(64, 100, "Lifetime", 18, "#d6b15c", true);
-    if (this.featsStore !== undefined) {
-      const balance = computeFragmentBalance(this.featsStore.getProfile(), FEAT_CATALOG);
-      this.addText(500, 103, `Total ${balance} Memory Fragments`, 14, TEXT.textReward, true);
-    }
+    this.addPanel(this.statsContent, 44, 82, 812, 116);
+    this.addText(this.statsContent, 64, 100, "Lifetime", 18, "#d6b15c", true);
     const totals = [
       `Runs ${lifetime.runs}`,
       `Wins ${lifetime.wins}`,
@@ -159,16 +171,16 @@ export class ChronicleScene extends Phaser.Scene {
       `Hazards ${lifetime.hazardsResolved}/${lifetime.hazardsDiscarded}`,
       `Time ${formatDuration(lifetime.durationMs)}`,
     ];
-    this.addText(64, 132, totals.join("   "), 13, TEXT.textLight);
+    this.addText(this.statsContent, 64, 132, totals.join("   "), 13, TEXT.textLight);
 
-    this.addPanel(44, 222, 812, 210);
-    this.addText(64, 240, "Worlds", 18, "#d6b15c", true);
-    this.addText(64, 272, "World", 12, TEXT.textMuted, true);
-    this.addText(340, 272, "Attempts", 12, TEXT.textMuted, true);
-    this.addText(430, 272, "Wins", 12, TEXT.textMuted, true);
-    this.addText(505, 272, "Losses", 12, TEXT.textMuted, true);
-    this.addText(590, 272, "Abandons", 12, TEXT.textMuted, true);
-    this.addText(690, 272, "Bests", 12, TEXT.textMuted, true);
+    this.addPanel(this.statsContent, 44, 222, 812, 210);
+    this.addText(this.statsContent, 64, 240, "Worlds", 18, "#d6b15c", true);
+    this.addText(this.statsContent, 64, 272, "World", 12, TEXT.textMuted, true);
+    this.addText(this.statsContent, 340, 272, "Attempts", 12, TEXT.textMuted, true);
+    this.addText(this.statsContent, 430, 272, "Wins", 12, TEXT.textMuted, true);
+    this.addText(this.statsContent, 505, 272, "Losses", 12, TEXT.textMuted, true);
+    this.addText(this.statsContent, 590, 272, "Abandons", 12, TEXT.textMuted, true);
+    this.addText(this.statsContent, 690, 272, "Bests", 12, TEXT.textMuted, true);
 
     const worldIds = Object.keys(worldManifest);
     const visibleWorldIds = worldIds.slice(
@@ -177,6 +189,10 @@ export class ChronicleScene extends Phaser.Scene {
     );
 
     visibleWorldIds.forEach((worldId, visibleIndex) => {
+      if (this.statsContent === undefined) {
+        console.error("Stats content is undefined when adding stats panel");
+        return;
+      }
       const y = 304 + visibleIndex * 32;
       const stats = lifetime.byWorld[worldId];
       const display = worldDisplayManifest[worldId];
@@ -187,20 +203,27 @@ export class ChronicleScene extends Phaser.Scene {
         .filter(Boolean)
         .join("\n");
 
-      this.addPanel(56, y - 1, 770, 32, 0x5e2f29);
-      this.addText(64, y, display?.name ?? worldId, 13, TEXT.textLight);
-      this.addText(340, y, (stats?.runs ?? 0).toString(), 13, TEXT.textLight);
-      this.addText(430, y, (stats?.wins ?? 0).toString(), 13, TEXT.textLight);
-      this.addText(505, y, (stats?.losses ?? 0).toString(), 13, TEXT.textLight);
-      this.addText(590, y, (stats?.abandoned ?? 0).toString(), 13, TEXT.textLight);
-      this.addText(690, y, bests, 13, TEXT.textReward);
-      // this.addToContent(this.add.line(64, y + 30, 0, 0, 760, 0, 0x5f4b2a, 0.8).setOrigin(0, 0));
+      this.addPanel(this.statsContent, 56, y - 1, 770, 32, 0x5e2f29);
+      this.addText(this.statsContent, 64, y, display?.name ?? worldId, 13, TEXT.textLight);
+      this.addText(this.statsContent, 340, y, (stats?.runs ?? 0).toString(), 13, TEXT.textLight);
+      this.addText(this.statsContent, 430, y, (stats?.wins ?? 0).toString(), 13, TEXT.textLight);
+      this.addText(this.statsContent, 505, y, (stats?.losses ?? 0).toString(), 13, TEXT.textLight);
+      this.addText(
+        this.statsContent,
+        590,
+        y,
+        (stats?.abandoned ?? 0).toString(),
+        13,
+        TEXT.textLight,
+      );
+      this.addText(this.statsContent, 690, y, bests, 13, TEXT.textReward);
     });
 
     if (worldIds.length > VISIBLE_WORLDS) {
       const maxOffset = worldIds.length - VISIBLE_WORLDS;
       const showingEnd = Math.min(this.worldsScrollOffset + VISIBLE_WORLDS, worldIds.length);
       this.addText(
+        this.statsContent,
         740,
         241,
         `${this.worldsScrollOffset + 1}–${showingEnd} of ${worldIds.length}`,
@@ -210,7 +233,7 @@ export class ChronicleScene extends Phaser.Scene {
 
       if (this.worldsScrollOffset > 0) {
         const upArrow = this.add
-          .text(846, 287, "▲", textStyle({ fontSize: "13px", color: "#d6b15c" }))
+          .text(840, 287, "▲", textStyle({ fontSize: "16px", color: "#d6b15c" }))
           .setInteractive({ useHandCursor: true })
           .on("pointerdown", () => {
             this.worldsScrollOffset -= 1;
@@ -218,12 +241,12 @@ export class ChronicleScene extends Phaser.Scene {
           });
         upArrow.on("pointerover", () => upArrow.setAlpha(0.7));
         upArrow.on("pointerout", () => upArrow.setAlpha(1));
-        this.addToContent(upArrow);
+        this.statsContent.add(upArrow);
       }
 
       if (this.worldsScrollOffset < maxOffset) {
         const downArrow = this.add
-          .text(846, 410, "▼", textStyle({ fontSize: "13px", color: "#d6b15c" }))
+          .text(840, 412, "▼", textStyle({ fontSize: "16px", color: "#d6b15c" }))
           .setInteractive({ useHandCursor: true })
           .on("pointerdown", () => {
             this.worldsScrollOffset += 1;
@@ -231,16 +254,17 @@ export class ChronicleScene extends Phaser.Scene {
           });
         downArrow.on("pointerover", () => downArrow.setAlpha(0.7));
         downArrow.on("pointerout", () => downArrow.setAlpha(1));
-        this.addToContent(downArrow);
+        this.statsContent.add(downArrow);
       }
     }
 
     const lastRun = lifetime.lastRun;
     if (lastRun !== undefined) {
-      this.addPanel(44, 454, 812, 72);
+      this.addPanel(this.statsContent, 44, 454, 812, 72);
       const display = worldDisplayManifest[lastRun.worldId];
-      this.addText(64, 472, "Last Run", 18, "#d6b15c", true);
+      this.addText(this.statsContent, 64, 472, "Last Run", 18, "#d6b15c", true);
       this.addText(
+        this.statsContent,
         64,
         502,
         [
@@ -258,14 +282,62 @@ export class ChronicleScene extends Phaser.Scene {
     }
   }
 
-  private addPanel(x: number, y: number, w: number, h: number, strokeOverride?: number): void {
+  private renderFeats(): void {
+    this.featsContent?.destroy(true);
+    this.featsContent = this.add.container(0, 0);
+
+    this.addPanel(this.featsContent, 44, 82, 812, 442);
+    this.addText(this.featsContent, 64, 100, "Feats", 18, "#d6b15c", true);
+
+    if (this.featsStore !== undefined) {
+      const balance = computeFragmentBalance(this.featsStore.getProfile(), FEAT_CATALOG);
+      this.addText(
+        this.featsContent,
+        500,
+        103,
+        `Total Memory Fragments: ${balance}`,
+        14,
+        TEXT.textReward,
+        true,
+      );
+
+      const featsProfile = this.featsStore.getProfile();
+
+      FEAT_CATALOG.forEach((feat, index) => {
+        if (this.featsContent === undefined) {
+          console.error("Feats content is undefined when adding stats panel");
+          return;
+        }
+        const y = 133 + index * 32;
+
+        this.addText(
+          this.featsContent,
+          64,
+          y,
+          feat.name,
+          13,
+          featsProfile.earned.some((e) => e.featId == feat.id) ? TEXT.textReward : TEXT.textLight,
+        );
+      });
+    }
+  }
+
+  private addPanel(
+    content: Phaser.GameObjects.Container,
+    x: number,
+    y: number,
+    w: number,
+    h: number,
+    strokeOverride?: number,
+  ): void {
     const panel = this.add.rectangle(x, y, w, h, 0x15101d, 0.92).setOrigin(0, 0);
     panel.setStrokeStyle(1, strokeOverride ?? 0x5f4b2a, 0.85);
     panel.setRounded(8);
-    this.addToContent(panel);
+    content.add(panel);
   }
 
   private addText(
+    content: Phaser.GameObjects.Container,
     x: number,
     y: number,
     value: string,
@@ -291,12 +363,8 @@ export class ChronicleScene extends Phaser.Scene {
         text.setScale(maxWidth / text.width);
       }
     }
-    this.addToContent(text);
+    content.add(text);
     return text;
-  }
-
-  private addToContent(child: Phaser.GameObjects.GameObject): void {
-    this.content?.add(child);
   }
 
   private exportStats(): void {
