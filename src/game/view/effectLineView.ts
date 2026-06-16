@@ -19,8 +19,10 @@
  */
 import Phaser from "phaser";
 import type { EffectLine, IconId } from "../../core/view/effectGlyphs";
+import { EFFECT_ICON_TOOLTIPS } from "../../core/view/effectTooltips";
 import { textStyle } from "./presentation";
 import { EFFECT_ROW } from "./layout";
+import { addTooltip } from "./TooltipView";
 import {
   EFFECT_ICON_PLACEHOLDERS,
   EFFECT_ICON_TEXTURES,
@@ -245,6 +247,7 @@ function buildRow(
           const img = scene.add.image(0, 0, EFFECT_ICON_TEXTURES[slot.icon]);
           const scale = lineHeight / Math.max(img.width, img.height);
           img.setScale(scale);
+          addTooltip(scene, img, EFFECT_ICON_TOOLTIPS[slot.icon]);
           return img;
         })(),
   );

@@ -12,6 +12,7 @@ import type { Card, CardEffect, Keyword, WorldCard } from "../../core/index";
 import { concealOf } from "../../core/index";
 import type { FrameStyle, VisualTheme } from "./themes/theme";
 import { compileEffect, type IconId } from "../../core/view/effectGlyphs";
+import { ENERGY_COST_TOOLTIP, PROGRESS_RING_TOOLTIP } from "../../core/view/effectTooltips";
 import { addEffectLines } from "./effectLineView";
 import type { HighlightKind } from "../interaction/highlight";
 import {
@@ -23,6 +24,7 @@ import {
   emphasisDescriptor,
 } from "./presentation";
 import { CARD_FACE, TABLE_LAYOUT } from "./layout";
+import { addTooltip } from "./TooltipView";
 
 // ---------------------------------------------------------------------------
 // Keyword display
@@ -260,6 +262,7 @@ export class CardView extends Phaser.GameObjects.Container {
       if (card.energyCost > 0) {
         const badgeBg = scene.add.image(CARD_W / 2 - 16, -CARD_H / 2 + 16, "effect-icon-energy");
         badgeBg.setDisplaySize(28, 28);
+        addTooltip(scene, badgeBg, ENERGY_COST_TOOLTIP);
         this.add(badgeBg);
 
         addCardText(scene, this, CARD_W / 2 - 16, -CARD_H / 2 + 16, String(card.energyCost), {
@@ -315,6 +318,11 @@ export class CardView extends Phaser.GameObjects.Container {
       })) {
         reveal.push(line);
       }
+
+      const costRingHit = scene.add.circle(CARD_W / 2 - 21, CARD_H / 2 - 21, 24, 0x000000, 0);
+      addTooltip(scene, costRingHit, PROGRESS_RING_TOOLTIP);
+      this.add(costRingHit);
+      reveal.push(costRingHit);
 
       // Keywords. The whole keyword line is identity (hidden under fog); the
       // Concealed:N depth chip is rendered separately on the fog-back below.
