@@ -6,28 +6,28 @@
       "name": "Lucky Break",
       "insetKey": "fortune-inset-lucky-break",
       "exhaust": true,
-      "effect": { "kind": "Heal", "amount": 2 }
+      "effect": { "kind": "Heal", "amount": 3 }
     },
     "Second Wind": {
       "kind": "player",
       "name": "Second Wind",
       "insetKey": "fortune-inset-second-wind",
       "exhaust": true,
-      "effect": { "kind": "GainEnergy", "amount": 2 }
+      "effect": { "kind": "GainEnergy", "amount": 3 }
     },
     "Found Tool": {
       "kind": "player",
       "name": "Found Tool",
       "insetKey": "fortune-inset-found-tool",
       "exhaust": true,
-      "effect": { "kind": "DealProgress", "base": 2 }
+      "effect": { "kind": "DealProgress", "base": 3 }
     },
     "Clear Path": {
       "kind": "player",
       "name": "Clear Path",
       "insetKey": "fortune-inset-clear-path",
       "exhaust": true,
-      "effect": { "kind": "ReturnWorldCards", "min": 0, "max": 2 }
+      "effect": { "kind": "ReturnWorldCards", "min": 0, "max": 8 }
     },
     "Steady Nerve": {
       "kind": "player",
@@ -37,8 +37,9 @@
       "effect": {
         "kind": "Sequence",
         "steps": [
-          { "kind": "Brace", "amount": 1 },
-          { "kind": "GainLight", "amount": 1 }
+          { "kind": "Brace", "amount": 2 },
+          { "kind": "GainLight", "amount": 2 },
+          { "kind": "Heat", "amount": 2 }
         ]
       }
     }
