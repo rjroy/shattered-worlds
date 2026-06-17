@@ -39,7 +39,7 @@
         "steps": [
           { "kind": "Brace", "amount": 2 },
           { "kind": "GainLight", "amount": 2 },
-          { "kind": "Heat", "amount": 2 }
+          { "kind": "GainHeat", "amount": 2 }
         ]
       }
     }
