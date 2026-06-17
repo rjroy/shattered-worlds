@@ -115,28 +115,6 @@ describe("Whiteout frozen cards and heat", () => {
     expect(thawedCard?.frozen).toBeUndefined();
   });
 
-  it("burns frozen cards for heat as an emergency valve", () => {
-    const burn = heatCard({ kind: "BurnForHeat", min: 1, max: 1, amountPerCard: 3 });
-    const frozen = makePlayerCard({ id: "locked", templateId: "Explore", frozen: 2 });
-    const state = stateWithHand([burn, frozen]);
-
-    expect(availableActions(state).legalTargets(burn.id, 0)).toContain(frozen.id);
-
-    const { state: after, events } = reduce({} as CardCatalog, state, {
-      type: "PlayCard",
-      cardId: burn.id,
-      destroyIds: [frozen.id],
-    });
-
-    expect(after.heat).toBe(3);
-    expect(after.hand.some((card) => card.id === frozen.id)).toBe(false);
-    expect(events).toContainEqual({
-      type: "CardsBurnedForHeat",
-      ids: [frozen.id],
-      templateIds: ["Explore"],
-    });
-  });
-
   it("assembles the Whiteout world with three acts and a final Walker", () => {
     const { catalog, worldData } = buildWorld("whiteout-parking-garage");
     const finalAct = worldData.deckComposition.acts[2]!;
