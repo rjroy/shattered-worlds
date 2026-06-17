@@ -8,7 +8,7 @@
   <meta name="status" content="resolved">
   <meta name="tags" content="world, differentiation, effects, archetype, deckbuilder, zombie-big-box, bird-building, highway-volcano">
   <meta name="modules" content="core-engine, worlds, data">
-  <meta name="related" content=".lore/work/brainstorm/theme-mechanical-differentiation.html, .lore/reference/theme-authoring.html, .lore/reference/vision.html">
+  <meta name="related" content=".lore/work/brainstorm/theme-mechanical-differentiation.html, .lore/reference/theme-authoring.md, .lore/reference/vision.html">
   <style>
     :root {
       --bg: #0c0a10; --panel: #18141f; --panel-2: #211a2b;
@@ -236,12 +236,12 @@
   <h2><span class="mark">◈</span> Open questions — all resolved 2026-06-10</h2>
   <div class="q"><span class="qid">Q1</span><strong>What can exile skip?</strong> <span class="arch">Resolved:</span> exilability is a per-template flag, <code>canExile</code>, mirroring <code>discardable</code>. <span class="term">Door</span> and <span class="term">The Walker</span> are marked <code>canExile: false</code>; exile slides past them, so blind exile can still eat a Find (the owned gamble, per Principle 4) but never the win condition. Details in the volcano section above.</div>
   <div class="q"><span class="qid">Q2</span><strong>Does kill-energy snowball?</strong> <span class="arch">Resolved:</span> ship it and see how it plays. Bounded by hand size and sweep card count in theory; Principle 6 says the verdict comes from playtest data, not pre-tuning by feel.</div>
-  <div class="q"><span class="qid">Q3</span><strong>Amend the theme-authoring recipe?</strong> <span class="arch">Resolved: yes.</span> The five-archetype recipe in <code>theme-authoring.html</code> is what produced the identical trios — it created this mess and must change with this proposal, not after it. New rule to add: every world defines one signature player verb, and no other world's recipe slot may reuse it.</div>
+  <div class="q"><span class="qid">Q3</span><strong>Amend the theme-authoring recipe?</strong> <span class="arch">Resolved: yes.</span> The five-archetype recipe in <code>theme-authoring.md</code> is what produced the identical trios — it created this mess and must change with this proposal, not after it. New rule to add: every world defines one signature player verb, and no other world's recipe slot may reuse it.</div>
 
   <h2><span class="mark">◈</span> Recommended order</h2>
   <p>(1) <strong>Data-only batch first</strong> — Shotgun, kill-energy, Push Through, exhaust consumables, keyword saturation, act shapes. One JSON-heavy PR, immediate feel delta, zero engine risk. (2) <strong>Amend the theme-authoring recipe</strong> (Q3) in the same breath, so no new world is authored against the old template while this lands. (3) <strong>Wave-1 effects</strong> — <code>Brace</code> then <code>DealProgressAll</code> then <code>ExileTopWorldCards</code> with the <code>canExile</code> flag (rising order of design risk). (4) <strong>Trio rewrite</strong> lands with each effect as it ships. (5) <strong>Wave 2</strong> (<code>DealProgressScaled</code>) only after playtest confirms "travel light" reads as an archetype.</p>
 
-  <div class="meta-foot">Shattered Worlds · Proposal · builds on <a href="theme-mechanical-differentiation.html">theme-mechanical-differentiation</a> · related: <a href="../../reference/theme-authoring.html">theme-authoring</a>, <a href="../../reference/vision.html">vision</a></div>
+  <div class="meta-foot">Shattered Worlds · Proposal · builds on <a href="theme-mechanical-differentiation.html">theme-mechanical-differentiation</a> · related: <a href="../../reference/theme-authoring.md">theme-authoring</a>, <a href="../../reference/vision.html">vision</a></div>
 
 </div>
 </body>

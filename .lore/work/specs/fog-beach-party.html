@@ -7,7 +7,7 @@
   <meta name="status" content="draft">
   <meta name="tags" content="world-design, fog-beach-party, conceal, reveal, light, numeric-keywords, core-effect">
   <meta name="modules" content="core-engine, world-data, game-view, themes">
-  <meta name="related" content=".lore/work/brainstorm/fog-beach-party-world.md, .lore/work/specs/overgrown-mall.html, .lore/work/brainstorm/shard-response-archetypes.html, .lore/work/brainstorm/new-world-concepts.md, .lore/reference/theme-authoring.html, .lore/reference/visual-direction.html">
+  <meta name="related" content=".lore/work/brainstorm/fog-beach-party-world.md, .lore/work/specs/overgrown-mall.html, .lore/work/brainstorm/shard-response-archetypes.html, .lore/work/brainstorm/new-world-concepts.md, .lore/reference/theme-authoring.md, .lore/reference/visual-direction.html">
   <meta name="req-prefix" content="FOG">
   <style>
     :root {
@@ -211,7 +211,7 @@
     <h2>7 · Documentation <span class="count">(REQ-FOG-35)</span></h2>
 
     <div class="req" id="REQ-FOG-35"><span class="rid"><a href="#REQ-FOG-35">REQ-FOG-35</a></span> Theme-authoring doc amended in the same spec.
-      <p><code>.lore/reference/theme-authoring.html</code> updates (Mall rule REQ-MALL-24, amend-with not after): C1 effect vocabulary adds <code>GainLight</code>; C2 keyword list adds <code>Concealed</code> and documents the <strong>numeric-keyword <code>"Name:N"</code> authoring convention</strong> (a keyword may carry an optional value, matched by name); the SV1 archetype table gains the Fog row — <em>fog-beach-party · reveal &amp; endure · light economy (<code>GainLight</code> kit) exclusive to this world; concealment = no-target + hidden-details over true data</em>. Existing stale marks (if any remain) are cleared in the same edit.</p></div>
+      <p><code>.lore/reference/theme-authoring.md</code> updates (Mall rule REQ-MALL-24, amend-with not after): C1 effect vocabulary adds <code>GainLight</code>; C2 keyword list adds <code>Concealed</code> and documents the <strong>numeric-keyword <code>"Name:N"</code> authoring convention</strong> (a keyword may carry an optional value, matched by name); the SV1 archetype table gains the Fog row — <em>fog-beach-party · reveal &amp; endure · light economy (<code>GainLight</code> kit) exclusive to this world; concealment = no-target + hidden-details over true data</em>. Existing stale marks (if any remain) are cleared in the same edit.</p></div>
 
     <h2>8 · Tests <span class="count">(REQ-FOG-36 … 38)</span></h2>
 
@@ -259,7 +259,7 @@
         <tr><td>Signature claim</td><td>Grep <code>GainLight</code> across world data: only <code>fog-beach-party</code> references it</td><td>17</td></tr>
         <tr><td>Registrations</td><td>Grep <code>fog-beach-party</code> in <code>assetManifest.ts</code>, <code>worldManifest.ts</code>, <code>themeManifest.ts</code>, <code>worldDisplayManifest.ts</code>, <code>worldHelpManifest.ts</code> — all five hit; every <code>fog-inset-*</code> key referenced in JSON exists in the asset manifest; the fog-back texture and <code>effect-icon-light</code> are registered</td><td>29, 30, 31, 33, 34</td></tr>
         <tr><td>Help budget</td><td><code>fog-beach-party</code> help entry has ≤ 6 notes incl. a Light note, a concealment note, and a blind-discard note</td><td>34</td></tr>
-        <tr><td>Docs amended</td><td>theme-authoring.html: C1 lists <code>GainLight</code>; C2 includes <code>Concealed</code> + the <code>"Name:N"</code> numeric-keyword convention; SV1 has the Fog row</td><td>35</td></tr>
+        <tr><td>Docs amended</td><td>theme-authoring.md: C1 lists <code>GainLight</code>; C2 includes <code>Concealed</code> + the <code>"Name:N"</code> numeric-keyword convention; SV1 has the Fog row</td><td>35</td></tr>
         <tr><td>Runtime smoke</td><td>Launch the game, select Fog Beach Party, play one run: backdrop/cardfront/insets load (no magenta); concealed cards render as fog-backs showing only depth; a Flare/Flashlight raises Light and shapes fade in (and the HUD Light readout updates); light decays and the deepest fog winks back out; a concealed hazard can be blind-discarded; clearing a Bonfire grants the kit; Searchlight hits concealed cards. Confirms reachability only, not line viability</td><td>15, 21, 28, 29 (manual / browser-driven)</td></tr>
       </table>
       <p><strong>Strategic-triangle check (REQ-FOG-15):</strong> not AI-verifiable beyond existence (snipe/sweep/see all reachable in data); whether light is the skilled-but-optional line and act 1 survives without a leg-up is explicit human playtest territory — the brainstorm's stated single biggest tuning risk.</p>

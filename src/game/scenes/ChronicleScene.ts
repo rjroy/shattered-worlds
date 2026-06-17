@@ -14,6 +14,13 @@ import { FeatReward } from "../../data/feats/types";
 
 const VISIBLE_WORLDS = 4;
 const VISIBLE_FEATS = 11;
+const WORLDS_SCROLL_TOP = 222;
+const WORLDS_SCROLL_BOTTOM = 432;
+const FEATS_SCROLL_TOP = 165;
+const FEATS_ROW_H = 32;
+const TOUCH_SCROLL_THRESHOLD = 32;
+
+type TouchScrollTarget = "worlds" | "feats";
 
 type Button = {
   container: Phaser.GameObjects.Container;
@@ -31,6 +38,9 @@ export class ChronicleScene extends Phaser.Scene {
   private fileInput?: HTMLInputElement;
   private worldsScrollOffset = 0;
   private featsScrollOffset = 0;
+  private touchScrollTarget: TouchScrollTarget | undefined;
+  private touchScrollLastY: number | undefined;
+  private touchScrollRemainder = 0;
 
   constructor(runStats?: RunStatsReader, statsTransfer?: StatsTransfer, featsStore?: FeatsStore) {
     super({ key: "Chronicle" });
@@ -78,44 +88,19 @@ export class ChronicleScene extends Phaser.Scene {
 
     this.input.keyboard?.on("keydown-ESC", () => this.scene.start("WorldSelect"));
 
-    const scrollWorlds = (pointer: Phaser.Input.Pointer, deltaY: number) => {
-      const allWorldIds = Object.keys(worldManifest);
-      if (allWorldIds.length <= VISIBLE_WORLDS) return;
-      if (pointer.y < 222 || pointer.y > 432) return;
-      const maxOffset = allWorldIds.length - VISIBLE_WORLDS;
-      if (deltaY > 0 && this.worldsScrollOffset < maxOffset) {
-        this.worldsScrollOffset += 1;
-        this.renderStats();
-      } else if (deltaY < 0 && this.worldsScrollOffset > 0) {
-        this.worldsScrollOffset -= 1;
-        this.renderStats();
-      }
-    };
-
-    const scrollFeats = (pointer: Phaser.Input.Pointer, deltaY: number) => {
-      if (FEAT_CATALOG.length <= VISIBLE_FEATS) return;
-      if (pointer.y < 165 || pointer.y > 165 + 32 * VISIBLE_FEATS) return;
-      const maxOffset = FEAT_CATALOG.length - VISIBLE_FEATS;
-      if (deltaY > 0 && this.featsScrollOffset < maxOffset) {
-        this.featsScrollOffset += 1;
-        this.renderFeats();
-      } else if (deltaY < 0 && this.featsScrollOffset > 0) {
-        this.featsScrollOffset -= 1;
-        this.renderFeats();
-      }
-    };
-
     this.input.on(
       "wheel",
       (pointer: Phaser.Input.Pointer, _over: unknown, _dx: number, deltaY: number) => {
-        if (this.statsContent !== undefined && this.statsContent.visible) {
-          scrollWorlds(pointer, deltaY);
-        }
-        if (this.featsContent !== undefined && this.featsContent.visible) {
-          scrollFeats(pointer, deltaY);
-        }
+        if (this.statsContent !== undefined && this.statsContent.visible)
+          this.scrollWorldsAt(pointer, deltaY);
+        if (this.featsContent !== undefined && this.featsContent.visible)
+          this.scrollFeatsAt(pointer, deltaY);
       },
     );
+    this.input.on("pointerdown", (pointer: Phaser.Input.Pointer) => this.beginTouchScroll(pointer));
+    this.input.on("pointermove", (pointer: Phaser.Input.Pointer) => this.updateTouchScroll(pointer));
+    this.input.on("pointerup", () => this.endTouchScroll());
+    this.input.on("pointerupoutside", () => this.endTouchScroll());
 
     this.renderStats();
     this.renderFeats();
@@ -261,10 +246,7 @@ export class ChronicleScene extends Phaser.Scene {
         const upArrow = this.add
           .text(840, 287, "▲", textStyle({ fontSize: "16px", color: "#d6b15c" }))
           .setInteractive({ useHandCursor: true })
-          .on("pointerdown", () => {
-            this.worldsScrollOffset -= 1;
-            this.renderStats();
-          });
+          .on("pointerdown", () => this.scrollWorldsBy(-1));
         upArrow.on("pointerover", () => upArrow.setAlpha(0.7));
         upArrow.on("pointerout", () => upArrow.setAlpha(1));
         this.statsContent.add(upArrow);
@@ -274,10 +256,7 @@ export class ChronicleScene extends Phaser.Scene {
         const downArrow = this.add
           .text(840, 412, "▼", textStyle({ fontSize: "16px", color: "#d6b15c" }))
           .setInteractive({ useHandCursor: true })
-          .on("pointerdown", () => {
-            this.worldsScrollOffset += 1;
-            this.renderStats();
-          });
+          .on("pointerdown", () => this.scrollWorldsBy(1));
         downArrow.on("pointerover", () => downArrow.setAlpha(0.7));
         downArrow.on("pointerout", () => downArrow.setAlpha(1));
         this.statsContent.add(downArrow);
@@ -415,10 +394,7 @@ export class ChronicleScene extends Phaser.Scene {
         const upArrow = this.add
           .text(840, 133, "▲", textStyle({ fontSize: "16px", color: "#d6b15c" }))
           .setInteractive({ useHandCursor: true })
-          .on("pointerdown", () => {
-            this.featsScrollOffset -= 1;
-            this.renderFeats();
-          });
+          .on("pointerdown", () => this.scrollFeatsBy(-1));
         upArrow.on("pointerover", () => upArrow.setAlpha(0.7));
         upArrow.on("pointerout", () => upArrow.setAlpha(1));
         this.featsContent.add(upArrow);
@@ -433,10 +409,7 @@ export class ChronicleScene extends Phaser.Scene {
             textStyle({ fontSize: "16px", color: "#d6b15c" }),
           )
           .setInteractive({ useHandCursor: true })
-          .on("pointerdown", () => {
-            this.featsScrollOffset += 1;
-            this.renderFeats();
-          });
+          .on("pointerdown", () => this.scrollFeatsBy(1));
         downArrow.on("pointerover", () => downArrow.setAlpha(0.7));
         downArrow.on("pointerout", () => downArrow.setAlpha(1));
         this.featsContent.add(downArrow);
@@ -447,6 +420,95 @@ export class ChronicleScene extends Phaser.Scene {
   private toDateStr(epochMs: number): string {
     const date = new Date(epochMs);
     return `${date.getMonth() + 1}/${date.getDate()}/${date.getFullYear()}`;
+  }
+
+  private scrollWorldsAt(pointer: Phaser.Input.Pointer, deltaY: number): void {
+    if (!this.pointerInWorldsScrollArea(pointer)) return;
+    this.scrollWorldsBy(deltaY > 0 ? 1 : -1);
+  }
+
+  private scrollFeatsAt(pointer: Phaser.Input.Pointer, deltaY: number): void {
+    if (!this.pointerInFeatsScrollArea(pointer)) return;
+    this.scrollFeatsBy(deltaY > 0 ? 1 : -1);
+  }
+
+  private scrollWorldsBy(delta: number): void {
+    const maxOffset = Math.max(0, Object.keys(worldManifest).length - VISIBLE_WORLDS);
+    const next = Phaser.Math.Clamp(this.worldsScrollOffset + delta, 0, maxOffset);
+    if (next === this.worldsScrollOffset) return;
+    this.worldsScrollOffset = next;
+    this.renderStats();
+  }
+
+  private scrollFeatsBy(delta: number): void {
+    const maxOffset = Math.max(0, FEAT_CATALOG.length - VISIBLE_FEATS);
+    const next = Phaser.Math.Clamp(this.featsScrollOffset + delta, 0, maxOffset);
+    if (next === this.featsScrollOffset) return;
+    this.featsScrollOffset = next;
+    this.renderFeats();
+  }
+
+  private beginTouchScroll(pointer: Phaser.Input.Pointer): void {
+    if (this.confirmOverlay !== undefined) return;
+
+    const target = this.touchScrollTargetAt(pointer);
+    if (target === undefined) return;
+
+    this.touchScrollTarget = target;
+    this.touchScrollLastY = pointer.y;
+    this.touchScrollRemainder = 0;
+  }
+
+  private updateTouchScroll(pointer: Phaser.Input.Pointer): void {
+    if (
+      this.touchScrollTarget === undefined ||
+      this.touchScrollLastY === undefined ||
+      !pointer.isDown
+    )
+      return;
+
+    this.touchScrollRemainder += this.touchScrollLastY - pointer.y;
+    this.touchScrollLastY = pointer.y;
+
+    const rows = Math.trunc(this.touchScrollRemainder / TOUCH_SCROLL_THRESHOLD);
+    if (rows === 0) return;
+
+    this.touchScrollRemainder -= rows * TOUCH_SCROLL_THRESHOLD;
+    if (this.touchScrollTarget === "worlds") {
+      this.scrollWorldsBy(rows);
+    } else {
+      this.scrollFeatsBy(rows);
+    }
+  }
+
+  private endTouchScroll(): void {
+    this.touchScrollTarget = undefined;
+    this.touchScrollLastY = undefined;
+    this.touchScrollRemainder = 0;
+  }
+
+  private touchScrollTargetAt(pointer: Phaser.Input.Pointer): TouchScrollTarget | undefined {
+    if (
+      this.statsContent !== undefined &&
+      this.statsContent.visible &&
+      this.pointerInWorldsScrollArea(pointer)
+    )
+      return "worlds";
+    if (
+      this.featsContent !== undefined &&
+      this.featsContent.visible &&
+      this.pointerInFeatsScrollArea(pointer)
+    )
+      return "feats";
+    return undefined;
+  }
+
+  private pointerInWorldsScrollArea(pointer: Phaser.Input.Pointer): boolean {
+    return pointer.y >= WORLDS_SCROLL_TOP && pointer.y <= WORLDS_SCROLL_BOTTOM;
+  }
+
+  private pointerInFeatsScrollArea(pointer: Phaser.Input.Pointer): boolean {
+    return pointer.y >= FEATS_SCROLL_TOP && pointer.y <= FEATS_SCROLL_TOP + FEATS_ROW_H * VISIBLE_FEATS;
   }
 
   private addPanel(
