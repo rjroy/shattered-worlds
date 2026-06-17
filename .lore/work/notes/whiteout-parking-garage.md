@@ -24,6 +24,7 @@ modules: [core-engine, world-data, game-view, themes]
 - Existing base assets are already present under `src/game/assets/themes/whiteout-parking-garage/`: reality, intrusion overlay, cardfront, and CATACLYSM reference.
 - Added heat, freeze, thaw, and burn-for-heat core effects, plus frozen-card hand retention and start-of-turn thawing.
 - Registered `whiteout-parking-garage` world data, theme metadata, asset bindings, heat HUD support, Whiteout feats, and the Thermal Cache unlock.
-- Generated a heat effect icon and fourteen Whiteout card insets in the existing painterly card-art format.
+- Generated a heat effect icon and fourteen Whiteout card insets.
+- Replaced the initial line-art-style Whiteout insets with `imagegen`-generated cinematic painted garage scenes matching the existing world art direction: cold concrete, whiteout glare, dirty sodium light, and amber heat accents.
 - Validation passed: `bun run typecheck`, `bun run test`, direct `bun test`, `bun run build`, local dev-server HTTP 200, and asset dimension checks.
 - In-app Browser smoke could not be run because the required Browser Node REPL bridge was not exposed in this session; production build and local server smoke passed as fallback validation.
