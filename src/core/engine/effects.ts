@@ -71,8 +71,10 @@ export function applyEffect(
     ...(play?.targetId !== undefined && { targetId: play.targetId }),
     ...(play?.returnIds !== undefined && { returnIds: play.returnIds }),
     ...(play?.destroyIds !== undefined && { destroyIds: play.destroyIds }),
+    ...(play?.thawIds !== undefined && { thawIds: play.thawIds }),
     ...(play?.discardId !== undefined && { discardId: play.discardId }),
     ...(play?.choice !== undefined && { choice: play.choice }),
+    ...(play?.cardId !== undefined && { sourceId: play.cardId }),
     ...(selfId !== undefined && { selfId }),
     // `apply` is the INTERNAL context-form dispatcher below, not this public
     // wrapper: composite handlers recurse via `ctx.apply(ctx, child)`.

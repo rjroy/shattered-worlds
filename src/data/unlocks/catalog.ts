@@ -29,6 +29,14 @@ export const UNLOCK_CATALOG: readonly UnlockDefinition[] = [
     effect: { type: "startingStat", stat: "light", amount: 2 },
   },
   {
+    id: "extra-heat",
+    name: "Thermal Cache",
+    description: "A pocket of warmth saved for the worlds that can freeze your hands.",
+    cost: 20,
+    destinyWeight: 1,
+    effect: { type: "startingStat", stat: "heat", amount: 2 },
+  },
+  {
     id: "extra-brace",
     name: "Braced",
     description: "Shoulders back. Ready for something to grab.",
@@ -142,6 +150,9 @@ export function buildRunModifiers(
             break;
           case "light":
             mods = { ...mods, extraStartLight: mods.extraStartLight + def.effect.amount };
+            break;
+          case "heat":
+            mods = { ...mods, extraStartHeat: mods.extraStartHeat + def.effect.amount };
             break;
           case "brace":
             mods = { ...mods, extraStartBrace: mods.extraStartBrace + def.effect.amount };

@@ -46,6 +46,11 @@ export interface RunRecord {
   readonly finalHp?: number
   readonly finalResources?: Record<string, number>
   readonly healingReceived?: number
+  readonly cardsFrozen?: number
+  readonly cardsThawed?: number
+  readonly heatGained?: number
+  readonly heatSpent?: number
+  readonly cardsBurnedForHeat?: number
 }
 
 export interface WorldStats {
@@ -151,6 +156,11 @@ type RunAccumulator = {
   hazardsDiscarded: number
   cardsDiscarded: number
   healingReceived: number
+  cardsFrozen: number
+  cardsThawed: number
+  heatGained: number
+  heatSpent: number
+  cardsBurnedForHeat: number
 }
 
 const LIFETIME_COUNTER_KEYS = [
@@ -254,7 +264,15 @@ export function isRunRecord(value: unknown): value is RunRecord {
   if (!requiredOk) return false
 
   // Optional fields: absent is OK; present must be the right type.
-  if (!isOptionalFiniteNumber(run.finalHp) || !isOptionalFiniteNumber(run.healingReceived)) {
+  if (
+    !isOptionalFiniteNumber(run.finalHp) ||
+    !isOptionalFiniteNumber(run.healingReceived) ||
+    !isOptionalFiniteNumber(run.cardsFrozen) ||
+    !isOptionalFiniteNumber(run.cardsThawed) ||
+    !isOptionalFiniteNumber(run.heatGained) ||
+    !isOptionalFiniteNumber(run.heatSpent) ||
+    !isOptionalFiniteNumber(run.cardsBurnedForHeat)
+  ) {
     return false
   }
   if (run.finalResources !== undefined) {
@@ -425,6 +443,19 @@ function tallyEvents(accumulator: RunAccumulator, events: readonly GameEvent[]):
       case 'HealReceived':
         accumulator.healingReceived += event.amount
         break
+      case 'CardsFrozen':
+        accumulator.cardsFrozen += event.ids.length
+        break
+      case 'CardsThawed':
+        accumulator.cardsThawed += event.ids.length
+        break
+      case 'HeatChanged':
+        if (event.delta > 0) accumulator.heatGained += event.delta
+        if (event.delta < 0) accumulator.heatSpent += Math.abs(event.delta)
+        break
+      case 'CardsBurnedForHeat':
+        accumulator.cardsBurnedForHeat += event.ids.length
+        break
       default:
         break
     }
@@ -463,8 +494,14 @@ function finalizeRun(accumulator: RunAccumulator, ended: RunEnded): RunRecord {
       energy: ended.finalState.energy,
       light: ended.finalState.light,
       brace: ended.finalState.braceCharges,
+      heat: ended.finalState.heat,
     },
     healingReceived: accumulator.healingReceived,
+    cardsFrozen: accumulator.cardsFrozen,
+    cardsThawed: accumulator.cardsThawed,
+    heatGained: accumulator.heatGained,
+    heatSpent: accumulator.heatSpent,
+    cardsBurnedForHeat: accumulator.cardsBurnedForHeat,
   }
 }
 
@@ -564,6 +601,11 @@ export function createRunStatsCollector(options: RunStatsCollectorOptions = {}):
       hazardsDiscarded: 0,
       cardsDiscarded: 0,
       healingReceived: 0,
+      cardsFrozen: 0,
+      cardsThawed: 0,
+      heatGained: 0,
+      heatSpent: 0,
+      cardsBurnedForHeat: 0,
     }
     activeRuns.set(item.sessionId, accumulator)
     // Tally opening-deal events (e.g. opening-hand heals count toward healingReceived).

@@ -17,6 +17,7 @@ import {
   AddWorldCardToDeckHandler,
   GainCardHandler,
 } from "./gainCard";
+import { FreezeCardsHandler, GainHeatHandler, ThawCardsHandler } from "./heat";
 import { NoneHandler } from "./none";
 import { BraceHandler, GainEnergyHandler, GainLightHandler, HealHandler } from "./resources";
 import {
@@ -54,6 +55,9 @@ export const EFFECTS: {
   DestroySelf: new DestroySelfHandler(),
   ForceDestroy: new ForceDestroyHandler(),
   ExileTopWorldCards: new ExileTopWorldCardsHandler(),
+  GainHeat: new GainHeatHandler(),
+  FreezeCards: new FreezeCardsHandler(),
+  ThawCards: new ThawCardsHandler(),
   SurviveWorld: new SurviveWorldHandler(),
   None: new NoneHandler(),
 };

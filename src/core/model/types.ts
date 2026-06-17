@@ -17,7 +17,9 @@ export type Keyword = { name: KeywordName; value?: number };
 
 export type Dest = "playerDiscard" | "playerDrawTop" | "worldDraw" | "worldDrawTop";
 
-export type CounterSpec = { kind: "KeywordInHand"; keyword: KeywordName };
+export type CounterSpec =
+  | { kind: "KeywordInHand"; keyword: KeywordName }
+  | { kind: "FrozenPlayerCards" };
 
 export type CardEffect =
   | {
@@ -68,6 +70,9 @@ export type CardEffect =
       base: number;
       bonus?: { tag: KeywordName; amount: number };
     }
+  | { kind: "GainHeat"; amount: number }
+  | { kind: "FreezeCards"; amount: number; duration: number }
+  | { kind: "ThawCards"; amount: number; heatCost: number }
   // Permanently removes up to `amount` exilable cards from the top of worldDraw.
   // Non-exilable cards (canExile: false) are skipped in place; stops gracefully
   // when fewer exilable cards exist than amount.
@@ -85,6 +90,9 @@ export interface PlayerCard {
   // When true, the card is destroyed (sent to no zone) on play instead of
   // recycling to playerDiscard.
   exhaust?: boolean;
+  // Whiteout-only transient instance state. Positive values mean the card is
+  // locked for that many turn-start thaw ticks; absent/0 means playable.
+  frozen?: number;
   // Always present on minted cards (empty when the template omits keywords),
   // matching WorldCard so consumers never need undefined checks.
   keywords: readonly Keyword[];
@@ -119,6 +127,7 @@ export type Action =
       choice?: number;
       returnIds?: readonly CardId[];
       destroyIds?: readonly CardId[];
+      thawIds?: readonly CardId[];
       discardId?: CardId;
     }
   | { type: "DiscardHazard"; cardId: CardId }
@@ -148,6 +157,9 @@ export interface GameState {
   // Non-Fog worlds run with light === 0 throughout (startLight defaults to 0),
   // which keeps decay (emit-on-change) and concealment no-ops everywhere but Fog.
   light: number;
+  // Spendable warmth used by Whiteout thaw effects. Non-heat worlds may carry
+  // a number from unlocks, but it has no local meaning unless the world uses it.
+  heat: number;
   // Count of random player cards to destroy from the next refilled hand.
   // Queued by the ForceDestroy effect; drained at turn start.
   pendingForceDestroy: number;
@@ -167,6 +179,7 @@ export type TargetSpec =
   | { kind: "modal"; branches: readonly TargetSpec[] }
   | { kind: "returnWorld"; min: number; max: number }
   | { kind: "destroyHand"; min: number; max: number; maxCost?: number }
+  | { kind: "thawHand"; amount: number; heatCost: number }
   | { kind: "discardPlayer" }
   | { kind: "compound"; steps: readonly TargetSpec[] };
 
@@ -196,6 +209,10 @@ export type GameEvent =
   | { type: "HpChanged"; hp: number }
   | { type: "EnergyChanged"; energy: number }
   | { type: "LightChanged"; light: number }
+  | { type: "HeatChanged"; heat: number; delta: number }
+  | { type: "CardsFrozen"; ids: readonly CardId[]; templateIds: readonly CardTemplateId[] }
+  | { type: "CardsThawed"; ids: readonly CardId[]; templateIds: readonly CardTemplateId[] }
+  | { type: "CardsBurnedForHeat"; ids: readonly CardId[]; templateIds: readonly CardTemplateId[] }
   | { type: "CardsDiscarded"; cardIds: readonly CardId[]; templateIds: readonly CardTemplateId[] }
   | { type: "DeckShuffled" }
   | { type: "ActAdvanced"; act: number }

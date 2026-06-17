@@ -24,6 +24,10 @@ import fogRealityUrl from "../assets/themes/fog-beach-party/fog-beach-party-real
 import fogOverlayUrl from "../assets/themes/fog-beach-party/intrusion-overlay.webp";
 import fogCardfrontUrl from "../assets/themes/fog-beach-party/fog-beach-party-cardfront.webp";
 
+import whiteoutRealityUrl from "../assets/themes/whiteout-parking-garage/whiteout-parking-garage-reality.webp";
+import whiteoutOverlayUrl from "../assets/themes/whiteout-parking-garage/intrusion-overlay.webp";
+import whiteoutCardfrontUrl from "../assets/themes/whiteout-parking-garage/whiteout-parking-garage-cardfront.webp";
+
 // ---------------------------------------------------------------------------
 // World inset imports
 // ---------------------------------------------------------------------------
@@ -70,6 +74,21 @@ import fogInsetSomethingInTheMistUrl from "../assets/themes/fog-beach-party/inse
 import fogInsetTheBonfireUrl from "../assets/themes/fog-beach-party/insets/inset-the-bonfire.webp";
 import fogInsetTheTideComingInUrl from "../assets/themes/fog-beach-party/insets/inset-the-tide-coming-in.webp";
 import fogInsetWhiteoutUrl from "../assets/themes/fog-beach-party/insets/inset-whiteout.webp";
+
+import whiteoutInsetBlackIceRampUrl from "../assets/themes/whiteout-parking-garage/insets/inset-black-ice-ramp.webp";
+import whiteoutInsetBurnTheManualUrl from "../assets/themes/whiteout-parking-garage/insets/inset-burn-the-manual.webp";
+import whiteoutInsetDeadBatteryUrl from "../assets/themes/whiteout-parking-garage/insets/inset-dead-battery.webp";
+import whiteoutInsetFrozenPuddleUrl from "../assets/themes/whiteout-parking-garage/insets/inset-frozen-puddle.webp";
+import whiteoutInsetHandWarmersUrl from "../assets/themes/whiteout-parking-garage/insets/inset-hand-warmers.webp";
+import whiteoutInsetIceLockedDoorUrl from "../assets/themes/whiteout-parking-garage/insets/inset-ice-locked-door.webp";
+import whiteoutInsetIceScraperUrl from "../assets/themes/whiteout-parking-garage/insets/inset-ice-scraper.webp";
+import whiteoutInsetJumperCablesUrl from "../assets/themes/whiteout-parking-garage/insets/inset-jumper-cables.webp";
+import whiteoutInsetMaintenanceClosetUrl from "../assets/themes/whiteout-parking-garage/insets/inset-maintenance-closet.webp";
+import whiteoutInsetPlowBuriedInSnowUrl from "../assets/themes/whiteout-parking-garage/insets/inset-plow-buried-in-snow.webp";
+import whiteoutInsetPowderDriftUrl from "../assets/themes/whiteout-parking-garage/insets/inset-powder-drift.webp";
+import whiteoutInsetSnowblindHeadlightsUrl from "../assets/themes/whiteout-parking-garage/insets/inset-snowblind-headlights.webp";
+import whiteoutInsetSpaceHeaterUrl from "../assets/themes/whiteout-parking-garage/insets/inset-space-heater.webp";
+import whiteoutInsetTheGarageFreezesShutUrl from "../assets/themes/whiteout-parking-garage/insets/inset-the-garage-freezes-shut.webp";
 
 import zombieInsetBaseballUrl from "../assets/themes/zombie-big-box/insets/inset-baseball.webp";
 import zombieInsetCorpseUrl from "../assets/themes/zombie-big-box/insets/inset-corpse.webp";
@@ -171,6 +190,24 @@ export const worldAssetUrls: Record<string, string> = {
   "fog-inset-something-in-the-mist": fogInsetSomethingInTheMistUrl,
   "fog-inset-the-tide-coming-in": fogInsetTheTideComingInUrl,
   "fog-inset-whiteout": fogInsetWhiteoutUrl,
+  // whiteout-parking-garage
+  "whiteout-parking-garage-bg": whiteoutRealityUrl,
+  "whiteout-parking-garage-overlay": whiteoutOverlayUrl,
+  "whiteout-parking-garage-cardfront": whiteoutCardfrontUrl,
+  "whiteout-inset-hand-warmers": whiteoutInsetHandWarmersUrl,
+  "whiteout-inset-ice-scraper": whiteoutInsetIceScraperUrl,
+  "whiteout-inset-burn-the-manual": whiteoutInsetBurnTheManualUrl,
+  "whiteout-inset-space-heater": whiteoutInsetSpaceHeaterUrl,
+  "whiteout-inset-jumper-cables": whiteoutInsetJumperCablesUrl,
+  "whiteout-inset-maintenance-closet": whiteoutInsetMaintenanceClosetUrl,
+  "whiteout-inset-powder-drift": whiteoutInsetPowderDriftUrl,
+  "whiteout-inset-frozen-puddle": whiteoutInsetFrozenPuddleUrl,
+  "whiteout-inset-dead-battery": whiteoutInsetDeadBatteryUrl,
+  "whiteout-inset-black-ice-ramp": whiteoutInsetBlackIceRampUrl,
+  "whiteout-inset-snowblind-headlights": whiteoutInsetSnowblindHeadlightsUrl,
+  "whiteout-inset-ice-locked-door": whiteoutInsetIceLockedDoorUrl,
+  "whiteout-inset-plow-buried-in-snow": whiteoutInsetPlowBuriedInSnowUrl,
+  "whiteout-inset-the-garage-freezes-shut": whiteoutInsetTheGarageFreezesShutUrl,
 };
 
 export interface WorldMusicAsset {
@@ -185,4 +222,5 @@ export const worldMusicManifest: Record<string, WorldMusicAsset> = {
   "highway-volcano": { key: "music-highway-volcano", url: highwayVolcanoMusicUrl },
   "overgrown-mall": { key: "music-overgrown-mall", url: overgrownMallMusicUrl },
   "fog-beach-party": { key: "music-fog-beach-party", url: fogBeachPartyMusicUrl },
+  "whiteout-parking-garage": { key: "music-whiteout-parking-garage", url: fogBeachPartyMusicUrl },
 };

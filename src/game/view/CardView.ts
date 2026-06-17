@@ -284,6 +284,22 @@ export class CardView extends Phaser.GameObjects.Container {
           background: 0x000000,
         });
       }
+
+      if ((card.frozen ?? 0) > 0) {
+        const ice = scene.add
+          .rectangle(0, 0, CARD_W - 8, CARD_H - 8, 0xbfe9ff, 0.22)
+          .setOrigin(0.5, 0.5)
+          .setRounded(10);
+        ice.setStrokeStyle(2, 0xe8f8ff, 0.85);
+        this.add(ice);
+        addCardText(scene, this, 0, CARD_H / 2 - 25, `Frozen ${card.frozen}`, {
+          fontSize: "11px",
+          color: "#e8f8ff",
+          bold: true,
+          originY: 1,
+          background: 0x102435,
+        });
+      }
     } else {
       const worldCard = card as WorldCard;
 

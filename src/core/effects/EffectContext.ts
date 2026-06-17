@@ -51,8 +51,12 @@ export interface EffectContext {
   returnIds?: readonly CardId[];
   /** Player cards to destroy (DestroyCardInHand). */
   destroyIds?: readonly CardId[];
+  /** Frozen player cards to thaw (ThawCards). */
+  thawIds?: readonly CardId[];
   /** Player card to discard (DiscardThenDraw). */
   discardId?: CardId;
+  /** The player card currently being played. */
+  sourceId?: CardId;
   /** Chosen branch index (Modal). */
   choice?: number;
   /** The world card whose hook is firing, for DestroySelf. */

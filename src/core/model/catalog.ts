@@ -20,6 +20,7 @@ export interface WorldData {
   // Starting Light level. Per-world (NOT a global const): only Fog sets this
   // above 0, so every other world boots with light === 0. Defaults to 0.
   startLight?: number;
+  startHeat?: number;
 }
 
 export interface AssembledWorld {
@@ -34,6 +35,7 @@ export interface RawCardSource {
   deckComposition?: DeckComposition;
   // Per-world starting Light (see WorldData.startLight). Defaults to 0.
   startLight?: number;
+  startHeat?: number;
 }
 
 // ---------------------------------------------------------------------------

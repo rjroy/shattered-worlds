@@ -69,6 +69,7 @@ Map the world's fiction onto these roles.
 | `bird-building` | travel light | Trim hand size, recycle cheap cards, prefer efficiency over force |
 | `overgrown-mall` | prune and profit | Self-pruning `Spore`; `Bloom` scales from Spores; owns `DealProgressScaled` |
 | `fog-beach-party` | reveal and endure | Light economy; owns `GainLight`; reveals `Concealed` hazards |
+| `whiteout-parking-garage` | freeze | Heat economy; owns `GainHeat`, `FreezeCards`, `ThawCards`, and `BurnForHeat`; frozen cards stop hand usability |
 
 **SV1:** Enforce the signature verb at authorship time. If a reward card would fit another world's verb, redesign it.
 
@@ -92,7 +93,7 @@ The threat resurfaces next turn rather than replacing the card in hand. Canonica
 
 **C1:** Stay inside the existing effect vocabulary unless the change is explicitly a core feature:
 
-`DealProgress`, `Draw`, `Heal`, `ReturnWorldCards`, `DestroyCardInHand`, `DiscardThenDraw`, `AddCard`, `AddWorldCardToTop`, `AddPlayerCardToTop`, `GainCard`, `GainEnergy`, `Modal`, `Sequence`, `Damage`, `SkipDrawNextTurn`, `SurviveWorld`, `DestroySelf`, `Brace`, `DealProgressAll`, `ExileTopWorldCards`, `DealProgressScaled`, `GainLight`, `None`.
+`DealProgress`, `Draw`, `Heal`, `ReturnWorldCards`, `DestroyCardInHand`, `DiscardThenDraw`, `AddCard`, `AddWorldCardToTop`, `AddPlayerCardToTop`, `GainCard`, `GainEnergy`, `Modal`, `Sequence`, `Damage`, `SkipDrawNextTurn`, `SurviveWorld`, `DestroySelf`, `Brace`, `DealProgressAll`, `ExileTopWorldCards`, `DealProgressScaled`, `GainLight`, `GainHeat`, `FreezeCards`, `ThawCards`, `BurnForHeat`, `None`.
 
 Exclusive effects:
 
@@ -100,6 +101,7 @@ Exclusive effects:
 | --- | --- | --- |
 | `DealProgressScaled` | `overgrown-mall` | No other world may use it without a new design decision |
 | `GainLight` | `fog-beach-party` | No other world may use it without a new design decision |
+| `GainHeat`, `FreezeCards`, `ThawCards`, `BurnForHeat` | `whiteout-parking-garage` | No other world may use them without a new design decision |
 
 **C1a:** `DestroySelf` removes the firing world card from hand. It is only meaningful in `onEndOfTurn`, where the engine has a `selfId`.
 

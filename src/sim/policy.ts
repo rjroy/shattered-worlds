@@ -90,6 +90,13 @@ function buildPlayAction(
       return { ...base, destroyIds: chosen };
     }
 
+    case "thawHand": {
+      const targets = legalTargets(cardId, 0);
+      const count = Math.min(pickCount(1, spec.amount, rng), targets.length);
+      const chosen = pickSubset(targets, count, rng);
+      return { ...base, thawIds: chosen };
+    }
+
     case "returnWorld": {
       const targets = legalTargets(cardId, 0);
       const count = Math.min(
@@ -169,6 +176,11 @@ function buildPlayAction(
           );
           const chosen = pickSubset(targets, count, rng);
           action = { ...action, destroyIds: chosen };
+        } else if (stepSpec.kind === "thawHand") {
+          const targets = legalTargets(cardId, stepIdx);
+          const count = Math.min(pickCount(1, stepSpec.amount, rng), targets.length);
+          const chosen = pickSubset(targets, count, rng);
+          action = { ...action, thawIds: chosen };
         }
         // 'none' / 'modal': no supplementary fields needed or handled at top level
       }

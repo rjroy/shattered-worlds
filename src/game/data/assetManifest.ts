@@ -14,6 +14,7 @@ import effectIconDrawUrl from "../assets/effect-icons/effect-icon-draw.png";
 import effectIconWorldDrawUrl from "../assets/effect-icons/effect-icon-world-draw.png";
 import effectIconHpUrl from "../assets/effect-icons/effect-icon-hp.png";
 import effectIconLightUrl from "../assets/effect-icons/effect-icon-light.png";
+import effectIconHeatUrl from "../assets/effect-icons/effect-icon-heat.png";
 import effectIconDiscardUrl from "../assets/effect-icons/effect-icon-discard.png";
 import effectIconDestroyUrl from "../assets/effect-icons/effect-icon-destroy.png";
 import effectIconExileUrl from "../assets/effect-icons/effect-icon-exile.png";
@@ -67,6 +68,7 @@ export const assetManifest: Record<string, string> = {
   // Light indicator both bind this key; a loaded texture takes precedence over
   // the generated disc placeholder behind the same key (see ensureEffectIconTextures).
   "effect-icon-light": effectIconLightUrl,
+  "effect-icon-heat": effectIconHeatUrl,
   "effect-icon-discard": effectIconDiscardUrl,
   "effect-icon-destroy": effectIconDestroyUrl,
   "effect-icon-exile": effectIconExileUrl,
