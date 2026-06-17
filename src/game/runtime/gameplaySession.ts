@@ -176,6 +176,10 @@ export function createGameplaySession(
       return core.intensity()
     },
 
+    template(templateId) {
+      return core.template(templateId)
+    },
+
     subscribe(subscriber) {
       if (runEnded) return () => {}
       return subscribeForSession(subscriber)

@@ -212,8 +212,8 @@ describe('gameplayRuntime composition root', () => {
       'shattered-worlds/unlocks/v1',
       JSON.stringify({
         version: 1,
-        purchased: ['extra-hp', 'extra-energy'],
-        activated: ['extra-hp'],
+        purchased: ['extra-hp', 'extra-energy', 'act-reward'],
+        activated: ['extra-hp', 'act-reward'],
       }),
     )
     const runtime = createGameplayRuntime({ storage })
@@ -224,9 +224,40 @@ describe('gameplayRuntime composition root', () => {
 
     expect(session.state.runModifiers.extraStartHp).toBe(3)
     expect(session.state.runModifiers.extraStartEnergy).toBe(0)
+    expect(session.state.runModifiers.actBoon).toMatchObject({
+      poolId: 'fortune-v1',
+      offeredCount: 3,
+      chooseCount: 1,
+    })
     expect(observed[0]).toMatchObject({
       kind: 'RunStarted',
-      appliedModifiers: [{ kind: 'unlock', id: 'extra-hp' }],
+      appliedModifiers: [
+        { kind: 'unlock', id: 'extra-hp' },
+        { kind: 'unlock', id: 'act-reward' },
+      ],
+    })
+  })
+
+  it('ignores purchased act-reward when it is not activated', () => {
+    const storage = createMemoryStorage()
+    storage.setItem(
+      'shattered-worlds/unlocks/v1',
+      JSON.stringify({
+        version: 1,
+        purchased: ['act-reward'],
+        activated: [],
+      }),
+    )
+    const runtime = createGameplayRuntime({ storage })
+    const observed: RunStreamItem[] = []
+    runtime.subscribe((item) => observed.push(item))
+
+    const session = startTestSession(runtime, 42)
+
+    expect(session.state.runModifiers.actBoon).toBeNull()
+    expect(observed[0]).toMatchObject({
+      kind: 'RunStarted',
+      appliedModifiers: [],
     })
   })
 })

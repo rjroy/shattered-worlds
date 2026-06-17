@@ -2,6 +2,7 @@ import { describe, expect, it } from "bun:test";
 
 import type { FeatsProfile } from "../../game/runtime/featsProfile";
 import type { UnlocksProfile } from "../../game/runtime/unlocksProfile";
+import { FORTUNE_BOON_POOLS } from "../worlds/boons/fortune";
 import { DEFAULT_RUN_MODIFIERS } from "./types";
 import {
   activeWeight,
@@ -30,6 +31,20 @@ describe("UNLOCK_CATALOG", () => {
   it("has no duplicate ids", () => {
     const ids = UNLOCK_CATALOG.map((def) => def.id);
     expect(new Set(ids).size).toBe(ids.length);
+  });
+
+  it("defines Fortune as an implemented legal destiny unlock", () => {
+    const fortune = UNLOCK_CATALOG.find((def) => def.id === "act-reward");
+
+    expect(fortune).toMatchObject({
+      id: "act-reward",
+      name: "Fortune",
+      cost: 70,
+      destinyWeight: 3,
+      effect: { type: "actReward", boonPoolId: "fortune-v1", offeredCount: 3, chooseCount: 1 },
+    });
+    expect(fortune?.destinyWeight).toBeLessThanOrEqual(DESTINY_BUDGET);
+    expect(fortune?.description).not.toContain(["Not", "Implemented"].join(""));
   });
 });
 
@@ -84,6 +99,20 @@ describe("buildRunModifiers", () => {
       minEnergyPerTurn: 2,
       keywordDamageBonus: 1,
     });
+  });
+
+  it("builds the Fortune act boon modifier only when active", () => {
+    expect(buildRunModifiers([], UNLOCK_CATALOG).actBoon).toBeNull();
+
+    const mods = buildRunModifiers(["act-reward"], UNLOCK_CATALOG);
+
+    expect(mods.actBoon).toEqual({
+      poolId: "fortune-v1",
+      poolTemplateIds: FORTUNE_BOON_POOLS["fortune-v1"],
+      offeredCount: 3,
+      chooseCount: 1,
+    });
+    expect(mods.actBoon?.poolTemplateIds).toHaveLength(5);
   });
 });
 

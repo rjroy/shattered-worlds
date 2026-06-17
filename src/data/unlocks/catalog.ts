@@ -1,6 +1,7 @@
 import type { FeatsProfile } from "../../game/runtime/featsProfile";
 import type { UnlocksProfile } from "../../game/runtime/unlocksProfile";
 import { computeFragmentBalance, FEAT_CATALOG } from "../feats/catalog";
+import { FORTUNE_BOON_POOLS } from "../worlds/boons/fortune";
 import { DEFAULT_RUN_MODIFIERS, type RunModifiers, type UnlockDefinition } from "./types";
 
 export const UNLOCK_CATALOG: readonly UnlockDefinition[] = [
@@ -87,10 +88,11 @@ export const UNLOCK_CATALOG: readonly UnlockDefinition[] = [
   {
     id: "act-reward",
     name: "Fortune",
-    description: "You've learned to look for useful things in impossible places. (NotImplemented)",
-    cost: 7000,
-    destinyWeight: 6,
-    effect: { type: "actReward", offeredCount: 3 },
+    description:
+      "At the start of each new act, choose 1 of 3 temporary boon cards for your hand.",
+    cost: 70,
+    destinyWeight: 3,
+    effect: { type: "actReward", boonPoolId: "fortune-v1", offeredCount: 3, chooseCount: 1 },
   },
 ];
 
@@ -173,7 +175,24 @@ export function buildRunModifiers(
         mods = { ...mods, keywordDamageBonus: mods.keywordDamageBonus + def.effect.amount };
         break;
       case "starterDeckOverride":
+        break;
       case "actReward":
+        {
+          const poolTemplateIds =
+            FORTUNE_BOON_POOLS[def.effect.boonPoolId as keyof typeof FORTUNE_BOON_POOLS];
+          if (poolTemplateIds === undefined) {
+            throw new Error(`Unknown act reward boon pool: ${def.effect.boonPoolId}`);
+          }
+          mods = {
+            ...mods,
+            actBoon: {
+              poolId: def.effect.boonPoolId,
+              poolTemplateIds,
+              offeredCount: def.effect.offeredCount,
+              chooseCount: def.effect.chooseCount,
+            },
+          };
+        }
         break;
     }
   }

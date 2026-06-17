@@ -1,0 +1,41 @@
+{
+  "worldId": "fortune-boons",
+  "cardTemplates": {
+    "Lucky Break": {
+      "kind": "player",
+      "name": "Lucky Break",
+      "exhaust": true,
+      "effect": { "kind": "Heal", "amount": 2 }
+    },
+    "Second Wind": {
+      "kind": "player",
+      "name": "Second Wind",
+      "exhaust": true,
+      "effect": { "kind": "GainEnergy", "amount": 2 }
+    },
+    "Found Tool": {
+      "kind": "player",
+      "name": "Found Tool",
+      "exhaust": true,
+      "effect": { "kind": "DealProgress", "base": 2 }
+    },
+    "Clear Path": {
+      "kind": "player",
+      "name": "Clear Path",
+      "exhaust": true,
+      "effect": { "kind": "ReturnWorldCards", "min": 0, "max": 2 }
+    },
+    "Steady Nerve": {
+      "kind": "player",
+      "name": "Steady Nerve",
+      "exhaust": true,
+      "effect": {
+        "kind": "Sequence",
+        "steps": [
+          { "kind": "Brace", "amount": 1 },
+          { "kind": "GainLight", "amount": 1 }
+        ]
+      }
+    }
+  }
+}

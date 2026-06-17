@@ -765,3 +765,32 @@ describe("DealProgressScaled playability", () => {
     expect(entry).toBeUndefined();
   });
 });
+
+// ---------------------------------------------------------------------------
+// Act boon pending choice
+// ---------------------------------------------------------------------------
+
+describe("Act boon pending availability", () => {
+  it("exposes no ordinary gameplay actions and no legal targets while pending", () => {
+    const s0 = makeState({ energy: 1 });
+    const [explore, s1] = mintPlayer(s0, "Explore");
+    const [zombie, s2] = mintWorld(s1, "Zombie");
+    const state = {
+      ...s2,
+      hand: [explore, zombie],
+      pendingActBoon: {
+        act: 1,
+        poolId: "fortune-v1",
+        offeredTemplateIds: ["Lucky Break", "Second Wind", "Found Tool"],
+        chooseCount: 1 as const,
+      },
+    };
+
+    const actions = availableActions(state);
+
+    expect(actions.playable).toEqual([]);
+    expect(actions.discardable).toEqual([]);
+    expect(actions.canEndTurn).toBe(false);
+    expect(actions.legalTargets(explore.id, 0)).toEqual([]);
+  });
+});

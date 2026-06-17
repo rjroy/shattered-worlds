@@ -3,6 +3,7 @@ import { describe, expect, it } from "bun:test";
 import { createGame } from "../../core/index";
 import type { Action, WorldData } from "../../core/index";
 import { catalog, worldData } from "../../core/tests/testFixture";
+import { DEFAULT_RUN_MODIFIERS } from "../../data/unlocks/types";
 
 import { createGameplaySession } from "./gameplaySession";
 import {
@@ -85,6 +86,22 @@ function createTwoActWorldData(): WorldData {
     },
   };
 }
+
+const fortuneRunModifiers = {
+  ...DEFAULT_RUN_MODIFIERS,
+  actBoon: {
+    poolId: "fortune-v1",
+    poolTemplateIds: [
+      "Lucky Break",
+      "Second Wind",
+      "Found Tool",
+      "Clear Path",
+      "Steady Nerve",
+    ],
+    offeredCount: 3,
+    chooseCount: 1,
+  },
+};
 
 function expectOwnKeys(value: object, expected: readonly string[]): void {
   expect(Object.keys(value).sort()).toEqual([...expected].sort());
@@ -782,5 +799,66 @@ describe("gameplaySession", () => {
     expect(actAdvancedBatch).toBeDefined();
     const actEvent = actAdvancedBatch!.events.find((e) => e.type === "ActAdvanced");
     expect(actEvent).toEqual({ type: "ActAdvanced", act: 1 });
+  });
+
+  it("emits Fortune act boon offer and chosen grant through gameplay batches", () => {
+    const items: RunStreamItem[] = [];
+    const session = createGameplaySession(catalog, createTwoActWorldData(), 42, {
+      makeSessionId: () => "session-act-boon-stream",
+      runModifiers: fortuneRunModifiers,
+      subscribers: [(item) => items.push(item)],
+    });
+
+    session.dispatch({ type: "EndTurn" });
+
+    const offerBatch = requireGameplayBatch(items.at(-1));
+    const offerEventTypes = offerBatch.events.map((event) => event.type);
+    expect(offerEventTypes).toContain("ActAdvanced");
+    expect(offerEventTypes).toContain("ActBoonOffered");
+    expect(offerBatch.events.find((event) => event.type === "ActAdvanced")).toEqual({
+      type: "ActAdvanced",
+      act: 1,
+    });
+
+    const offerEvent = offerBatch.events.find((event) => event.type === "ActBoonOffered");
+    if (offerEvent?.type !== "ActBoonOffered") {
+      throw new Error("expected ActBoonOffered in act-advancing batch");
+    }
+    const chosenTemplateId = (() => {
+      const templateId = offerEvent.templateIds[0];
+      if (templateId === undefined) {
+        throw new Error("expected ActBoonOffered to include at least one template id");
+      }
+      return templateId;
+    })();
+
+    session.dispatch({ type: "ChooseActBoon", templateId: chosenTemplateId });
+
+    const grantBatch = requireGameplayBatch(items.at(-1));
+    expect(grantBatch.action).toEqual({
+      type: "ChooseActBoon",
+      templateId: chosenTemplateId,
+    });
+    expect(grantBatch.events.map((event) => event.type)).toContain("BoonCardGranted");
+    expect(grantBatch.events.map((event) => event.type)).not.toContain("CardGained");
+    expect(grantBatch.events.find((event) => event.type === "BoonCardGranted")).toMatchObject({
+      type: "BoonCardGranted",
+      templateId: chosenTemplateId,
+    });
+  });
+
+  it("looks up boon templates by template id without minting and returns undefined for unknown ids", () => {
+    const session = createGameplaySession(catalog, worldData, 42, {
+      makeSessionId: () => "session-template-lookup",
+    });
+    const nextId = session.state.nextId;
+
+    expect(session.template("Lucky Break")).toMatchObject({
+      kind: "player",
+      name: "Lucky Break",
+      exhaust: true,
+    });
+    expect(session.template("Unknown Boon")).toBeUndefined();
+    expect(session.state.nextId).toBe(nextId);
   });
 });

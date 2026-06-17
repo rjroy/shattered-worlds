@@ -100,6 +100,7 @@ export function createWorld(
     heat: (world.startHeat ?? 0) + mods.extraStartHeat,
     pendingForceDestroy: 0,
     braceCharges: mods.extraStartBrace,
+    pendingActBoon: null,
     runModifiers: mods,
     status: "playing",
     worldId: "basic",

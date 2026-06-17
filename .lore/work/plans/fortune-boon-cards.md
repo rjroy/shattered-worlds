@@ -172,6 +172,7 @@ Implements [.lore/work/specs/fortune-boon-cards.md](../specs/fortune-boon-cards.
    - After `startTurn(stateAfterDiscard)`, inspect that dispatch's events for `ActAdvanced`.
    - If the run is still `playing`, `state.runModifiers.actBoon !== null`, and an `ActAdvanced` event occurred, create exactly one pending Fortune choice for that transition.
    - Use the act value from the `ActAdvanced` event.
+   - Approved divergence, 2026-06-17: if one refill emits multiple `ActAdvanced` events, Fortune still creates at most one pending choice for that reducer dispatch and uses the first `ActAdvanced.act` in the event batch.
    - Append `ActBoonOffered` to the same event array as the `ActAdvanced` dispatch result.
    - Do this before the post-refill loss guards. If `pendingActBoon` is created, return that pending state immediately or explicitly skip/defer both post-refill loss guards until after `ChooseActBoon` resolves. Do not allow the existing `playerCardsDrawn === 0` guard to mark the run lost while a Fortune choice is pending.
    - Do not trigger during `createWorld` opening deal because no `EndTurn`/real `ActAdvanced` dispatch occurred there.

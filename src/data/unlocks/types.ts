@@ -8,6 +8,12 @@ export type RunModifiers = {
   readonly minLightPerTurn: number;
   readonly minEnergyPerTurn: number;
   readonly keywordDamageBonus: number;
+  readonly actBoon: {
+    readonly poolId: string;
+    readonly poolTemplateIds: readonly string[];
+    readonly offeredCount: number;
+    readonly chooseCount: number;
+  } | null;
 };
 
 export const DEFAULT_RUN_MODIFIERS: RunModifiers = {
@@ -20,6 +26,7 @@ export const DEFAULT_RUN_MODIFIERS: RunModifiers = {
   minLightPerTurn: 0,
   minEnergyPerTurn: 0,
   keywordDamageBonus: 0,
+  actBoon: null,
 };
 
 export type UnlockEffect =
@@ -28,7 +35,12 @@ export type UnlockEffect =
   | { readonly type: "minResourcePerTurn"; readonly resource: "energy" | "light"; readonly floor: number }
   | { readonly type: "keywordDamageBonus"; readonly amount: number }
   | { readonly type: "starterDeckOverride"; readonly starterDeckId: string }
-  | { readonly type: "actReward"; readonly offeredCount: number };
+  | {
+      readonly type: "actReward";
+      readonly boonPoolId: string;
+      readonly offeredCount: number;
+      readonly chooseCount: number;
+    };
 
 export type UnlockDefinition = {
   readonly id: string;

@@ -559,6 +559,6 @@ function effectSummary(def: UnlockDefinition): string {
     case "starterDeckOverride":
       return "Footballer starter deck";
     case "actReward":
-      return `Choose 1 of ${def.effect.offeredCount} after acts`;
+      return `Choose ${def.effect.chooseCount} of ${def.effect.offeredCount} temporary boons`;
   }
 }

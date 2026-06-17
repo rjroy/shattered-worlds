@@ -4,6 +4,8 @@ import { availableActions, checkPlayAction } from "./available";
 import { applyEffect } from "./effects";
 import { startTurn, spendEnergy } from "./energy";
 import { IllegalActionError } from "../model/errors";
+import { mintCard } from "../model/cards";
+import { createActBoonOffer } from "./actBoon";
 
 // ---------------------------------------------------------------------------
 // Result type
@@ -158,10 +160,24 @@ function handleEndTurn(catalog: CardCatalog, state: GameState): ReduceResult {
   const turnStartResult = startTurn(stateAfterDiscard);
   events.push(...turnStartResult.events);
 
+  const afterRefill = turnStartResult.state;
+  // Fortune is intentionally scoped to one offer per reducer dispatch. A single
+  // refill can drain multiple queued acts, so use the first ActAdvanced event as
+  // the transition that owns the pending choice.
+  const firstActAdvanced = turnStartResult.events.find((e) => e.type === "ActAdvanced");
+  const actBoon = afterRefill.runModifiers.actBoon;
+  if (
+    afterRefill.status === "playing" &&
+    actBoon !== null &&
+    firstActAdvanced?.type === "ActAdvanced"
+  ) {
+    const offer = createActBoonOffer(catalog, afterRefill, actBoon, firstActAdvanced.act);
+    events.push(offer.event);
+    return { state: offer.state, events };
+  }
+
   // Livelock guard A: all draw piles and acts exhausted (player cards also
   // gone, e.g. all destroyed by Regroup) — nothing can ever enter the hand.
-  const afterRefill = turnStartResult.state;
-
   // Lose immediately if the draw phase yielded zero player cards. This covers
   // both "no room because hazards filled the hand" and "player deck exhausted".
   if (afterRefill.status === "playing" && turnStartResult.playerCardsDrawn === 0) {
@@ -227,6 +243,47 @@ function handleEndTurn(catalog: CardCatalog, state: GameState): ReduceResult {
 }
 
 // ---------------------------------------------------------------------------
+// ChooseActBoon handler
+// ---------------------------------------------------------------------------
+
+function handleChooseActBoon(
+  catalog: CardCatalog,
+  state: GameState,
+  action: Extract<Action, { type: "ChooseActBoon" }>,
+): ReduceResult {
+  const choice = state.pendingActBoon;
+  if (choice === null) {
+    throw new IllegalActionError(action, state, "No act boon choice is pending");
+  }
+
+  if (!choice.offeredTemplateIds.includes(action.templateId)) {
+    throw new IllegalActionError(
+      action,
+      state,
+      `Template ${action.templateId} was not offered for this act boon choice`,
+    );
+  }
+
+  const [card, afterMint] = mintCard(catalog, state, action.templateId);
+  if (card.kind !== "player" || card.exhaust !== true) {
+    throw new IllegalActionError(
+      action,
+      state,
+      `Act boon template ${action.templateId} must mint a player exhaust card`,
+    );
+  }
+
+  return {
+    state: {
+      ...afterMint,
+      hand: [...afterMint.hand, card],
+      pendingActBoon: null,
+    },
+    events: [{ type: "BoonCardGranted", cardId: card.id, templateId: card.templateId }],
+  };
+}
+
+// ---------------------------------------------------------------------------
 // reduce — public entry point
 // ---------------------------------------------------------------------------
 
@@ -245,6 +302,14 @@ export function reduce(catalog: CardCatalog, state: GameState, action: Action): 
     );
   }
 
+  if (state.pendingActBoon !== null && action.type !== "ChooseActBoon") {
+    throw new IllegalActionError(
+      action,
+      state,
+      `Cannot dispatch ${action.type} while an act boon choice is pending`,
+    );
+  }
+
   switch (action.type) {
     case "PlayCard":
       return handlePlayCard(catalog, state, action);
@@ -252,5 +317,7 @@ export function reduce(catalog: CardCatalog, state: GameState, action: Action): 
       return handleDiscardHazard(catalog, state, action);
     case "EndTurn":
       return handleEndTurn(catalog, state);
+    case "ChooseActBoon":
+      return handleChooseActBoon(catalog, state, action);
   }
 }
