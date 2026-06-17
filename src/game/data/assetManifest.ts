@@ -41,6 +41,7 @@ import insetFortuneSteadyNerveUrl from "../assets/insets/inset-fortune-steady-ne
 import unlockActRewardUrl from "../assets/unlocks/act-reward.webp";
 import unlockExtraBraceUrl from "../assets/unlocks/extra-brace.webp";
 import unlockExtraEnergyUrl from "../assets/unlocks/extra-energy.webp";
+import unlockExtraHeatUrl from "../assets/unlocks/extra-heat.webp";
 import unlockExtraHpUrl from "../assets/unlocks/extra-hp.webp";
 import unlockExtraLightUrl from "../assets/unlocks/extra-light.webp";
 import unlockHandSizePerActUrl from "../assets/unlocks/hand-size-per-act.webp";
@@ -100,6 +101,7 @@ export const assetManifest: Record<string, string> = {
   "unlock/act-reward": unlockActRewardUrl,
   "unlock/extra-brace": unlockExtraBraceUrl,
   "unlock/extra-energy": unlockExtraEnergyUrl,
+  "unlock/extra-heat": unlockExtraHeatUrl,
   "unlock/extra-hp": unlockExtraHpUrl,
   "unlock/extra-light": unlockExtraLightUrl,
   "unlock/hand-size-per-act": unlockHandSizePerActUrl,
