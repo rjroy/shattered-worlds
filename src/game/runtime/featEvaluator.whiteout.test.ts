@@ -47,10 +47,16 @@ function makeCtx(overrides?: Partial<RunRecord>, witness?: WitnessProfile): Eval
 
 describe("Whiteout feats", () => {
   it("first-whiteout-parking-garage requires both win and Whiteout world id", () => {
-    const feat = FEAT_CATALOG.find((definition) => definition.id === "first-whiteout-parking-garage")!;
+    const feat = FEAT_CATALOG.find(
+      (definition) => definition.id === "first-whiteout-parking-garage",
+    )!;
 
-    expect(evaluateFeat(feat, makeCtx({ outcome: "won", worldId: "whiteout-parking-garage" }))).toBe(true);
-    expect(evaluateFeat(feat, makeCtx({ outcome: "lost", worldId: "whiteout-parking-garage" }))).toBe(false);
+    expect(
+      evaluateFeat(feat, makeCtx({ outcome: "won", worldId: "whiteout-parking-garage" })),
+    ).toBe(true);
+    expect(
+      evaluateFeat(feat, makeCtx({ outcome: "lost", worldId: "whiteout-parking-garage" })),
+    ).toBe(false);
     expect(evaluateFeat(feat, makeCtx({ outcome: "won", worldId: "fog-beach-party" }))).toBe(false);
   });
 
@@ -85,13 +91,13 @@ describe("Whiteout feats", () => {
     expect(
       evaluateFeat(
         feat,
-        makeCtx({ outcome: "won", worldId: "whiteout-parking-garage", cardsThawed: 10 }),
+        makeCtx({ outcome: "won", worldId: "whiteout-parking-garage", cardsThawed: 5 }),
       ),
     ).toBe(true);
     expect(
       evaluateFeat(
         feat,
-        makeCtx({ outcome: "won", worldId: "whiteout-parking-garage", cardsThawed: 9 }),
+        makeCtx({ outcome: "won", worldId: "whiteout-parking-garage", cardsThawed: 4 }),
       ),
     ).toBe(false);
   });

@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'bun:test'
+import { FORTUNE_BOON_POOLS } from '../../data/worlds/boons/fortune'
 import { buildWorld, worldManifest } from '../../data/worldManifest'
+import { worldDataRegistry } from '../../data/worlds/registry'
 import type { CardCatalog } from '../model/catalog'
 import type { CardEffect } from '../model/types'
 
@@ -12,6 +14,8 @@ import type { CardEffect } from '../model/types'
 // ---------------------------------------------------------------------------
 
 const worldIds = Object.keys(worldManifest)
+const fortuneBoonIds = FORTUNE_BOON_POOLS['fortune-v1']
+const fortuneBoonIdSet = new Set<string>(fortuneBoonIds)
 
 /** Template ids an effect can name, walking Modal branches and Sequence steps. */
 function templateRefs(effect: CardEffect): string[] {
@@ -43,6 +47,53 @@ function allReferencedTemplates(catalog: CardCatalog): string[] {
     }
   }
   return refs
+}
+
+function catalogWorldTemplateIds(catalog: CardCatalog): Set<string> {
+  return new Set(
+    Object.entries(catalog)
+      .filter(([, template]) => template.kind === 'world')
+      .map(([id]) => id),
+  )
+}
+
+function expectNoForbiddenBoonEffect(effect: CardEffect, worldTemplateIds: ReadonlySet<string>): void {
+  switch (effect.kind) {
+    case 'SurviveWorld':
+    case 'AddWorldCardToDeck':
+    case 'AddThreatToWorldDeck':
+    case 'ExileTopWorldCards':
+      throw new Error(`Forbidden Fortune boon effect: ${effect.kind}`)
+    case 'AddCard':
+      if (
+        effect.dest === 'worldDraw' ||
+        effect.dest === 'worldDrawTop' ||
+        effect.template === 'Door' ||
+        effect.template === 'The Walker' ||
+        worldTemplateIds.has(effect.template)
+      ) {
+        throw new Error(`Forbidden Fortune boon AddCard effect: ${effect.template}`)
+      }
+      return
+    case 'GainCard':
+    case 'AddPlayerCardToTop':
+      if (
+        effect.template === 'Door' ||
+        effect.template === 'The Walker' ||
+        worldTemplateIds.has(effect.template)
+      ) {
+        throw new Error(`Forbidden Fortune boon ${effect.kind} effect: ${effect.template}`)
+      }
+      return
+    case 'Modal':
+      for (const branch of effect.branches) expectNoForbiddenBoonEffect(branch, worldTemplateIds)
+      return
+    case 'Sequence':
+      for (const step of effect.steps) expectNoForbiddenBoonEffect(step, worldTemplateIds)
+      return
+    default:
+      return
+  }
 }
 
 it('registers more than one world', () => {
@@ -82,6 +133,50 @@ describe.each(worldIds)('world "%s"', (worldId) => {
     )
     const missing = deckIds.filter((id) => catalog[id] === undefined)
     expect(missing).toEqual([])
+  })
+
+  it('contains every fortune-v1 boon template in the assembled catalog', () => {
+    const { catalog } = buildWorld(worldId)
+    const missing = fortuneBoonIds.filter((id) => catalog[id] === undefined)
+    expect(missing).toEqual([])
+  })
+})
+
+describe('fortune-v1 boon source', () => {
+  it('keeps every boon template player-only, temporary, and legal for Phase 2', () => {
+    for (const worldId of worldIds) {
+      const { catalog } = buildWorld(worldId)
+      const worldTemplateIds = catalogWorldTemplateIds(catalog)
+
+      for (const id of fortuneBoonIds) {
+        const template = catalog[id]
+        expect(template).toBeDefined()
+        expect(template?.kind).toBe('player')
+        if (template === undefined || template.kind !== 'player') continue
+
+        expect(template.energyCost ?? 0).toBe(0)
+        expect(template.exhaust).toBe(true)
+        expect(() => expectNoForbiddenBoonEffect(template.effect, worldTemplateIds)).not.toThrow()
+      }
+    }
+  })
+
+  it('does not leak boon ids into starter decks, act compositions, or world-authored card effects', () => {
+    for (const worldId of worldIds) {
+      const { worldData } = buildWorld(worldId)
+      const starterIds = worldData.starterDeck.map((card) => card.templateId)
+      const actIds = worldData.deckComposition.acts.flatMap((act) =>
+        act.cards.map((card) => card.templateId),
+      )
+
+      expect(starterIds.filter((id) => fortuneBoonIdSet.has(id))).toEqual([])
+      expect(actIds.filter((id) => fortuneBoonIdSet.has(id))).toEqual([])
+    }
+
+    for (const bundle of worldDataRegistry) {
+      const refs = allReferencedTemplates(bundle.source.cardTemplates)
+      expect(refs.filter((id) => fortuneBoonIdSet.has(id))).toEqual([])
+    }
   })
 })
 

@@ -24,6 +24,7 @@ function makeState(progress: Record<string, number> = {}): GameState {
     heat: 0,
     pendingForceDestroy: 0,
     braceCharges: 0,
+    pendingActBoon: null,
     runModifiers: DEFAULT_RUN_MODIFIERS,
     status: "playing",
     worldId: "zombie-big-box",

@@ -12,8 +12,9 @@ import { mintCard } from "../model/cards";
 import { reduce } from "../engine/reduce";
 import { IllegalActionError } from "../model/errors";
 import { buildWorld } from "../../data/worldManifest";
-import type { GameState, PlayerCard, WorldCard } from "../model/types";
+import type { GameEvent, GameState, PlayerCard, WorldCard } from "../model/types";
 import { catalog, worldData } from "./testFixture";
+import { DEFAULT_RUN_MODIFIERS, type RunModifiers } from "../../data/unlocks/types";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -36,6 +37,84 @@ function makeState(overrides: Partial<GameState>): GameState {
     status: "playing",
     ...overrides,
   };
+}
+
+const fortunePool = [
+  "Lucky Break",
+  "Second Wind",
+  "Found Tool",
+  "Clear Path",
+  "Steady Nerve",
+] as const;
+
+function actBoonModifier(
+  overrides: Partial<NonNullable<RunModifiers["actBoon"]>> = {},
+): NonNullable<RunModifiers["actBoon"]> {
+  return {
+    poolId: "fortune-v1",
+    poolTemplateIds: fortunePool,
+    offeredCount: 3,
+    chooseCount: 1,
+    ...overrides,
+  };
+}
+
+function modsWithActBoon(actBoon: RunModifiers["actBoon"]): RunModifiers {
+  return { ...DEFAULT_RUN_MODIFIERS, actBoon };
+}
+
+function makeActAdvanceState(options: {
+  readonly seed?: number;
+  readonly actBoon?: RunModifiers["actBoon"];
+  readonly queuedActs?: number;
+  readonly cardsPerQueuedAct?: number;
+  readonly playerDrawCount?: number;
+}): GameState {
+  const seed = options.seed ?? 42;
+  const runModifiers = modsWithActBoon(options.actBoon ?? null);
+  const { state: base } = createWorld(catalog, worldData, seed, runModifiers);
+  let acc = base;
+
+  const acts: WorldCard[][] = [];
+  for (let i = 0; i < (options.queuedActs ?? 1); i += 1) {
+    const actCards: WorldCard[] = [];
+    for (let j = 0; j < (options.cardsPerQueuedAct ?? 1); j += 1) {
+      const [worldCard, next] = mintCard(catalog, acc, "Find Baseball Bat");
+      actCards.push(worldCard as WorldCard);
+      acc = next;
+    }
+    acts.push(actCards);
+  }
+
+  const playerDraw: PlayerCard[] = [];
+  for (let i = 0; i < (options.playerDrawCount ?? 8); i += 1) {
+    const [playerCard, next] = mintCard(catalog, acc, "Explore");
+    playerDraw.push(playerCard as PlayerCard);
+    acc = next;
+  }
+
+  return {
+    ...acc,
+    hand: [],
+    playerDraw,
+    playerDiscard: [],
+    worldDraw: [],
+    acts,
+    actIndex: 0,
+    progress: {},
+    energy: 0,
+    status: "playing",
+    runModifiers,
+    pendingActBoon: null,
+  };
+}
+
+function offeredTemplateIds(result: { events: readonly GameEvent[] }) {
+  const event = result.events.find((e) => e.type === "ActBoonOffered");
+  if (event?.type !== "ActBoonOffered") {
+    throw new Error("Expected ActBoonOffered");
+  }
+  return event.templateIds;
 }
 
 // ---------------------------------------------------------------------------
@@ -1497,6 +1576,180 @@ describe("EndTurn draw-phase loss", () => {
 });
 
 // ---------------------------------------------------------------------------
+// Act boon offers on act advancement
+// ---------------------------------------------------------------------------
+
+describe("Act boon offer generation", () => {
+  it("does not create a pending choice or ActBoonOffered when Fortune is inactive", () => {
+    const state = makeActAdvanceState({ actBoon: null });
+
+    const result = reduce(catalog, state, { type: "EndTurn" });
+
+    expect(result.events.map((e) => e.type)).toContain("ActAdvanced");
+    expect(result.events.map((e) => e.type)).not.toContain("ActBoonOffered");
+    expect(result.state.pendingActBoon).toBeNull();
+  });
+
+  it("creates one pending choice and ActBoonOffered in the ActAdvanced event batch", () => {
+    const state = makeActAdvanceState({ actBoon: actBoonModifier() });
+
+    const result = reduce(catalog, state, { type: "EndTurn" });
+    const types = result.events.map((e) => e.type);
+    const offered = offeredTemplateIds(result);
+
+    expect(types).toContain("ActAdvanced");
+    expect(types).toContain("ActBoonOffered");
+    expect(types.filter((type) => type === "ActBoonOffered")).toHaveLength(1);
+    expect(result.state.status).toBe("playing");
+    expect(result.state.pendingActBoon).toEqual({
+      act: 1,
+      poolId: "fortune-v1",
+      offeredTemplateIds: offered,
+      chooseCount: 1,
+    });
+    expect(offered).toHaveLength(3);
+    expect(new Set(offered).size).toBe(offered.length);
+  });
+
+  it("creates one offer for the first ActAdvanced when one refill advances multiple acts", () => {
+    const state = makeActAdvanceState({
+      actBoon: actBoonModifier(),
+      queuedActs: 2,
+      cardsPerQueuedAct: 1,
+    });
+
+    const result = reduce(catalog, state, { type: "EndTurn" });
+    const actAdvancedEvents = result.events.filter((e) => e.type === "ActAdvanced");
+    const actBoonEvents = result.events.filter((e) => e.type === "ActBoonOffered");
+
+    expect(actAdvancedEvents).toHaveLength(2);
+    expect(actAdvancedEvents.map((event) => event.act)).toEqual([1, 2]);
+    expect(actBoonEvents).toHaveLength(1);
+    expect(result.state.pendingActBoon).not.toBeNull();
+    expect(result.state.pendingActBoon?.act).toBe(1);
+    if (actBoonEvents[0]?.type === "ActBoonOffered") {
+      expect(actBoonEvents[0].act).toBe(1);
+      expect(result.state.pendingActBoon?.offeredTemplateIds).toEqual(actBoonEvents[0].templateIds);
+    }
+  });
+
+  it("opening deal never creates a pending act boon choice", () => {
+    const { state, openingEvents } = createWorld(
+      catalog,
+      worldData,
+      42,
+      modsWithActBoon(actBoonModifier()),
+    );
+
+    expect(state.pendingActBoon).toBeNull();
+    expect(openingEvents.map((e) => e.type)).not.toContain("ActBoonOffered");
+  });
+
+  it("multiple real act transitions create one choice each without duplicate offers", () => {
+    let state = makeActAdvanceState({
+      actBoon: actBoonModifier(),
+      queuedActs: 2,
+      cardsPerQueuedAct: 2,
+      playerDrawCount: 12,
+    });
+
+    const first = reduce(catalog, state, { type: "EndTurn" });
+    const firstOffer = offeredTemplateIds(first);
+    expect(first.state.pendingActBoon).not.toBeNull();
+    expect(new Set(firstOffer).size).toBe(firstOffer.length);
+
+    const firstChoice = reduce(catalog, first.state, {
+      type: "ChooseActBoon",
+      templateId: firstOffer[0]!,
+    });
+
+    const second = reduce(catalog, firstChoice.state, { type: "EndTurn" });
+    const secondOffer = offeredTemplateIds(second);
+    expect(second.state.pendingActBoon).not.toBeNull();
+    expect(new Set(secondOffer).size).toBe(secondOffer.length);
+    expect(second.events.filter((e) => e.type === "ActBoonOffered")).toHaveLength(1);
+
+    state = second.state;
+    expect(state.pendingActBoon?.act).toBe(2);
+  });
+
+  it("does not trigger from terminal states", () => {
+    const lostState = { ...makeActAdvanceState({ actBoon: actBoonModifier() }), status: "lost" as const };
+    const wonState = { ...makeActAdvanceState({ actBoon: actBoonModifier() }), status: "won" as const };
+
+    expect(() => reduce(catalog, lostState, { type: "EndTurn" })).toThrow(IllegalActionError);
+    expect(() => reduce(catalog, wonState, { type: "EndTurn" })).toThrow(IllegalActionError);
+  });
+
+  it("is deterministic for the same seed and stays within the pool for another seed", () => {
+    const seed777Offer = ["Steady Nerve", "Second Wind", "Clear Path"];
+    const seed778Offer = ["Steady Nerve", "Found Tool", "Second Wind"];
+    const a = reduce(
+      catalog,
+      makeActAdvanceState({ seed: 777, actBoon: actBoonModifier() }),
+      { type: "EndTurn" },
+    );
+    const b = reduce(
+      catalog,
+      makeActAdvanceState({ seed: 777, actBoon: actBoonModifier() }),
+      { type: "EndTurn" },
+    );
+    const c = reduce(
+      catalog,
+      makeActAdvanceState({ seed: 778, actBoon: actBoonModifier() }),
+      { type: "EndTurn" },
+    );
+
+    const legalPool = new Set<string>(fortunePool);
+    expect(offeredTemplateIds(a)).toEqual(seed777Offer);
+    expect(offeredTemplateIds(b)).toEqual(seed777Offer);
+    expect(offeredTemplateIds(c)).toEqual(seed778Offer);
+    expect(offeredTemplateIds(c)).not.toEqual(offeredTemplateIds(a));
+    for (const templateId of [...offeredTemplateIds(a), ...offeredTemplateIds(c)]) {
+      expect(legalPool.has(templateId)).toBe(true);
+    }
+  });
+
+  it("advances RNG on every trigger when the legal pool has fewer templates than offeredCount", () => {
+    const state = makeActAdvanceState({
+      actBoon: actBoonModifier({
+        poolTemplateIds: ["Lucky Break"],
+        offeredCount: 3,
+      }),
+    });
+
+    const result = reduce(catalog, state, { type: "EndTurn" });
+
+    expect(offeredTemplateIds(result)).toEqual(["Lucky Break"]);
+    expect(result.state.rng).not.toEqual(state.rng);
+  });
+
+  it("rescues zero-player-draw act transitions until ChooseActBoon resolves", () => {
+    const inactive = makeActAdvanceState({
+      actBoon: null,
+      playerDrawCount: 0,
+    });
+    const active = makeActAdvanceState({
+      actBoon: actBoonModifier(),
+      playerDrawCount: 0,
+    });
+
+    const inactiveResult = reduce(catalog, inactive, { type: "EndTurn" });
+    const activeResult = reduce(catalog, active, { type: "EndTurn" });
+
+    expect(inactiveResult.events.map((e) => e.type)).toContain("ActAdvanced");
+    expect(inactiveResult.state.status).toBe("lost");
+    expect(inactiveResult.events.map((e) => e.type)).toContain("WorldLost");
+
+    expect(activeResult.events.map((e) => e.type)).toContain("ActAdvanced");
+    expect(activeResult.events.map((e) => e.type)).toContain("ActBoonOffered");
+    expect(activeResult.state.status).toBe("playing");
+    expect(activeResult.state.pendingActBoon).not.toBeNull();
+    expect(activeResult.events.map((e) => e.type)).not.toContain("WorldLost");
+  });
+});
+
+// ---------------------------------------------------------------------------
 // 14. Brace integration: play Steady → discard Sliding Debris → EndTurn → no snatch
 // ---------------------------------------------------------------------------
 
@@ -1847,5 +2100,108 @@ describe("PlayCard None effect (Spore semantics)", () => {
       energy: 1,
     };
     expect(result.state).toEqual(expected);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Act boon pending choice
+// ---------------------------------------------------------------------------
+
+describe("Act boon choice reducer gates", () => {
+  function pendingBoonState(overrides: Partial<GameState> = {}): GameState {
+    return makeState({
+      ...overrides,
+      pendingActBoon: {
+        act: 1,
+        poolId: "fortune-v1",
+        offeredTemplateIds: ["Lucky Break", "Second Wind", "Found Tool"],
+        chooseCount: 1,
+      },
+    });
+  }
+
+  it("blocks PlayCard, DiscardHazard, and EndTurn while pending", () => {
+    const { state: base } = createWorld(catalog, worldData, 42);
+    const [explore, s1] = mintCard(catalog, base, "Explore");
+    const [rubble, s2] = mintCard(catalog, s1, "Rubble");
+    const state = pendingBoonState({
+      ...s2,
+      hand: [explore as PlayerCard, rubble as WorldCard],
+      energy: 1,
+    });
+
+    expect(() =>
+      reduce(catalog, state, {
+        type: "PlayCard",
+        cardId: explore.id,
+        targetId: rubble.id,
+      }),
+    ).toThrow(IllegalActionError);
+    expect(() => reduce(catalog, state, { type: "DiscardHazard", cardId: rubble.id })).toThrow(
+      IllegalActionError,
+    );
+    expect(() => reduce(catalog, state, { type: "EndTurn" })).toThrow(IllegalActionError);
+  });
+
+  it("valid ChooseActBoon clears pending, grants an exhaust player card into hand, and emits BoonCardGranted", () => {
+    let acc = makeState({});
+    const hand: PlayerCard[] = [];
+    for (let i = 0; i < 6; i += 1) {
+      const [card, next] = mintCard(catalog, acc, "Explore");
+      hand.push(card as PlayerCard);
+      acc = next;
+    }
+
+    const state = pendingBoonState({
+      ...acc,
+      hand,
+    });
+    const nextId = state.nextId;
+
+    const result = reduce(catalog, state, {
+      type: "ChooseActBoon",
+      templateId: "Lucky Break",
+    });
+
+    expect(result.state.pendingActBoon).toBeNull();
+    expect(result.state.hand).toHaveLength(7);
+    expect(result.state.nextId).toBe(nextId + 1);
+
+    const granted = result.state.hand.at(-1);
+    expect(granted).toMatchObject({
+      kind: "player",
+      id: String(nextId),
+      templateId: "Lucky Break",
+      exhaust: true,
+    });
+    expect(result.events).toEqual([
+      { type: "BoonCardGranted", cardId: String(nextId), templateId: "Lucky Break" },
+    ]);
+  });
+
+  it("rejects a non-offered template id without mutating state", () => {
+    const state = pendingBoonState();
+
+    expect(() =>
+      reduce(catalog, state, {
+        type: "ChooseActBoon",
+        templateId: "Steady Nerve",
+      }),
+    ).toThrow(IllegalActionError);
+
+    expect(state).toEqual(pendingBoonState());
+  });
+
+  it("rejects an unknown template id without mutating state", () => {
+    const state = pendingBoonState();
+
+    expect(() =>
+      reduce(catalog, state, {
+        type: "ChooseActBoon",
+        templateId: "Unknown Boon",
+      }),
+    ).toThrow(IllegalActionError);
+
+    expect(state).toEqual(pendingBoonState());
   });
 });

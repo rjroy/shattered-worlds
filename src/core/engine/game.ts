@@ -1,5 +1,6 @@
-import type { Action, AvailableActions, GameEvent, GameState } from "../model/types";
+import type { Action, AvailableActions, CardTemplateId, GameEvent, GameState } from "../model/types";
 import type { CardCatalog, WorldData } from "../model/catalog";
+import type { CardTemplate } from "../model/cards";
 import type { RunModifiers } from "../../data/unlocks/types";
 import { createWorld } from "./world";
 import { availableActions } from "./available";
@@ -12,6 +13,7 @@ export interface GameCore {
   dispatch(action: Action): { state: GameState; events: GameEvent[] };
   availableActions(): AvailableActions;
   intensity(): number;
+  template(templateId: CardTemplateId): Readonly<CardTemplate> | undefined;
 }
 
 /**
@@ -42,6 +44,9 @@ export function createGame(
     },
     intensity() {
       return intensity(current);
+    },
+    template(templateId: CardTemplateId) {
+      return catalog[templateId];
     },
   };
 }

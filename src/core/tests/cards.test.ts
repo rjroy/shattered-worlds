@@ -5,6 +5,7 @@ import { mintCard } from "../model/cards";
 import { UnknownTemplateError } from "../model/errors";
 import { createRng } from "../engine/rng";
 import { DEFAULT_RUN_MODIFIERS } from "../../data/unlocks/types";
+import { FORTUNE_BOON_POOLS } from "../../data/worlds/boons/fortune";
 import { catalog } from "./testFixture";
 
 // ---------------------------------------------------------------------------
@@ -27,6 +28,7 @@ function makeEmptyState(nextId = 0): GameState {
     heat: 0,
     pendingForceDestroy: 0,
     braceCharges: 0,
+    pendingActBoon: null,
     runModifiers: DEFAULT_RUN_MODIFIERS,
     status: "playing",
     worldId: "zombie-big-box",
@@ -35,44 +37,24 @@ function makeEmptyState(nextId = 0): GameState {
   };
 }
 
-const ALL_TEMPLATE_IDS: readonly CardTemplateId[] = [
-  "Sprint",
-  "Explore",
-  "Barricade",
-  "Med Kit",
-  "Panic",
-  "Adrenaline",
-  "Listen",
-  "Baseball Bat",
-  "Shotgun",
-  "Regroup",
-  "Summon Door",
-  "Strange Sounds",
-  "Rubble",
-  "Screams",
-  "Zombie",
-  "Find Baseball Bat",
-  "Find Shotgun",
-  "Shelf Sweep",
-  "Echoing Aisles",
-  "Corpse",
-  "The Walker",
-  "Door",
-];
+const ALL_TEMPLATE_IDS = Object.keys(catalog) as CardTemplateId[];
+const FORTUNE_BOON_IDS = FORTUNE_BOON_POOLS["fortune-v1"];
 
 // ---------------------------------------------------------------------------
 // 1. Catalog completeness
 // ---------------------------------------------------------------------------
 
 describe("catalog completeness", () => {
-  it("all 22 CardTemplateIds mint a card without throwing", () => {
+  it("all assembled CardTemplateIds mint a card without throwing", () => {
     for (const id of ALL_TEMPLATE_IDS) {
       expect(() => mintCard(catalog, makeEmptyState(), id)).not.toThrow();
     }
   });
 
-  it("catalog has exactly 22 entries", () => {
-    expect(Object.keys(catalog)).toHaveLength(22);
+  it("catalog includes every Fortune boon template", () => {
+    for (const id of FORTUNE_BOON_IDS) {
+      expect(catalog[id]).toBeDefined();
+    }
   });
 });
 

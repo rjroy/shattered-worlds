@@ -131,7 +131,8 @@ export type Action =
       discardId?: CardId;
     }
   | { type: "DiscardHazard"; cardId: CardId }
-  | { type: "EndTurn" };
+  | { type: "EndTurn" }
+  | { type: "ChooseActBoon"; templateId: CardTemplateId };
 
 export interface RngState {
   a: number;
@@ -166,12 +167,20 @@ export interface GameState {
   // Charges that absorb ForceDestroy snatches before they destroy player
   // cards. Granted by the Brace effect; consumed in resolveForceDestroy.
   braceCharges: number;
+  pendingActBoon: ActBoonChoice | null;
   readonly runModifiers: RunModifiers;
   status: "playing" | "won" | "lost";
   worldId: string;
   rng: RngState;
   nextId: number;
 }
+
+export type ActBoonChoice = {
+  readonly act: number;
+  readonly poolId: string;
+  readonly offeredTemplateIds: readonly CardTemplateId[];
+  readonly chooseCount: 1;
+};
 
 export type TargetSpec =
   | { kind: "none" }
@@ -216,6 +225,8 @@ export type GameEvent =
   | { type: "CardsDiscarded"; cardIds: readonly CardId[]; templateIds: readonly CardTemplateId[] }
   | { type: "DeckShuffled" }
   | { type: "ActAdvanced"; act: number }
+  | { type: "ActBoonOffered"; act: number; templateIds: readonly CardTemplateId[] }
+  | { type: "BoonCardGranted"; cardId: CardId; templateId: CardTemplateId }
   | { type: "CardsDrawn"; ids: readonly CardId[]; templateIds: readonly CardTemplateId[] }
   | { type: "TurnEnded" }
   | { type: "WorldWon" }

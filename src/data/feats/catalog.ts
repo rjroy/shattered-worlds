@@ -169,13 +169,13 @@ export const FEAT_CATALOG: readonly FeatDefinition[] = [
   {
     id: "master-thaw",
     name: "Master Thaw",
-    description: "Win the Whiteout Parking Garage after thawing 10 or more frozen cards.",
+    description: "Win the Whiteout Parking Garage after thawing 5 or more frozen cards.",
     conditions: [
       { statId: "outcome", operator: "is", value: "won" },
       { statId: "worldId", operator: "is", value: "whiteout-parking-garage" },
-      { statId: "cardsThawed", operator: "gte", value: 10 },
+      { statId: "cardsThawed", operator: "gte", value: 5 },
     ],
-    reward: { items: [{ type: "memoryFragments", amount: 25 }] },
+    reward: { items: [{ type: "memoryFragments", amount: 20 }] },
   },
   {
     id: "zombie-slayer",
@@ -218,8 +218,8 @@ export const FEAT_CATALOG: readonly FeatDefinition[] = [
   },
   {
     id: "freeze-slayer",
-    name: "Garage Breaker",
-    description: "Defeat 25 The Garage Freezes Shut hazards across all runs.",
+    name: "Human Torch",
+    description: "Resolve 25 encounters with The Garage Freezes Shut hazards across all runs.",
     conditions: [
       { statId: "witness.The Garage Freezes Shut.resolvedCount", operator: "gte", value: 25 },
     ],

@@ -204,6 +204,15 @@ export function availableActions(
   state: GameState,
   opts?: { ignoreEnergy?: boolean },
 ): AvailableActions {
+  if (state.pendingActBoon !== null) {
+    return {
+      playable: [],
+      discardable: [],
+      canEndTurn: false,
+      legalTargets: () => [],
+    };
+  }
+
   const playable: { cardId: CardId; spec: TargetSpec }[] = [];
 
   for (const card of state.hand) {
