@@ -99,6 +99,9 @@ function dealProgressOf(
     case "Heal":
     case "GainEnergy":
     case "GainLight":
+    case "GainHeat":
+    case "FreezeCards":
+    case "ThawCards":
     case "ReturnWorldCards":
     case "DestroyCardInHand":
     case "DiscardThenDraw":

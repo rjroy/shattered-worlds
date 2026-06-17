@@ -46,6 +46,7 @@ function makeWorldBuilder(worldSource: RawCardSource): (starterId: string) => As
       // Spread only when present so exactOptionalPropertyTypes stays satisfied
       // (omitted means default 0 in createWorld; non-Fog sources omit it).
       ...(worldSource.startLight !== undefined ? { startLight: worldSource.startLight } : {}),
+      ...(worldSource.startHeat !== undefined ? { startHeat: worldSource.startHeat } : {}),
     };
 
     return { catalog, worldData };

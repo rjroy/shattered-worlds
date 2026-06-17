@@ -1,5 +1,5 @@
 import type { CounterSpec, KeywordName } from "../model/types";
-import type { EffectLine, EffectToken, ValueEmphasis, IconId } from "../view/effectGlyphs";
+import type { EffectLine, EffectToken, IconId, ValueEmphasis } from "../view/effectGlyphs";
 
 export function icon(id: IconId): EffectToken {
   return { kind: "icon", icon: id };
@@ -28,8 +28,20 @@ export function bonusRider(
   return rider([value(`+${bonus.amount}`, emphasis), text("vs"), text(bonus.tag)]);
 }
 
-export function perRider(sign: "+" | "−", amount: number, per: CounterSpec): EffectLine {
-  return rider([value(`${sign}${amount}`), text("per"), text(per.keyword), text("in hand")]);
+export function counterLabel(per: CounterSpec): string {
+  switch (per.kind) {
+    case "KeywordInHand":
+      return `${per.keyword} in hand`;
+    case "FrozenPlayerCards":
+      return "frozen card";
+  }
+}
+
+export function perRider(sign: string, amount: number, per: CounterSpec): EffectLine {
+  if (per.kind === "KeywordInHand") {
+    return rider([value(`${sign}${amount}`), text("per"), text(per.keyword), text("in hand")]);
+  }
+  return rider([value(`${sign}${amount}`), text("per"), text(counterLabel(per))]);
 }
 
 export function rangeText(min: number, max: number): string {

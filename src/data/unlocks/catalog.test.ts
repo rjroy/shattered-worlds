@@ -58,11 +58,15 @@ describe("buildRunModifiers", () => {
 
   it("accumulates all starting stat unlocks", () => {
     expect(
-      buildRunModifiers(["extra-hp", "extra-energy", "extra-light", "extra-brace"], UNLOCK_CATALOG),
+      buildRunModifiers(
+        ["extra-hp", "extra-energy", "extra-light", "extra-heat", "extra-brace"],
+        UNLOCK_CATALOG,
+      ),
     ).toMatchObject({
       extraStartHp: 3,
       extraStartEnergy: 1,
       extraStartLight: 2,
+      extraStartHeat: 2,
       extraStartBrace: 2,
     });
   });

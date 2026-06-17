@@ -34,6 +34,18 @@ export const EFFECT_ICON_TOOLTIPS: Record<IconId, TooltipCopy> = {
     title: "Light",
     body: "Reveals cards that are Concealed.",
   },
+  heat: {
+    title: "Heat",
+    body: "Spend Heat to thaw frozen cards.",
+  },
+  freeze: {
+    title: "Freeze",
+    body: "Frozen cards cannot be played until thawed.",
+  },
+  thaw: {
+    title: "Thaw",
+    body: "Remove frozen state from player cards.",
+  },
   discard: {
     title: "Discard",
     body: "Discard a card from your hand.",

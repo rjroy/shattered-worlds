@@ -67,6 +67,16 @@ export const FEAT_CATALOG: readonly FeatDefinition[] = [
     reward: { items: [{ type: "memoryFragments", amount: 5 }] },
   },
   {
+    id: "first-whiteout-parking-garage",
+    name: "First Thaw",
+    description: "Win your first run of the Whiteout Parking Garage.",
+    conditions: [
+      { statId: "outcome", operator: "is", value: "won" },
+      { statId: "worldId", operator: "is", value: "whiteout-parking-garage" },
+    ],
+    reward: { items: [{ type: "memoryFragments", amount: 5 }] },
+  },
+  {
     id: "swift-clear",
     name: "Swift Clear",
     description: "Win a run in fewer than 10 turns.",
@@ -146,6 +156,28 @@ export const FEAT_CATALOG: readonly FeatDefinition[] = [
     reward: { items: [{ type: "memoryFragments", amount: 20 }] },
   },
   {
+    id: "heat-keeper",
+    name: "Heat Keeper",
+    description: "Win the Whiteout Parking Garage with 10 or more heat.",
+    conditions: [
+      { statId: "outcome", operator: "is", value: "won" },
+      { statId: "worldId", operator: "is", value: "whiteout-parking-garage" },
+      { statId: "heat", operator: "gte", value: 10 },
+    ],
+    reward: { items: [{ type: "memoryFragments", amount: 20 }] },
+  },
+  {
+    id: "master-thaw",
+    name: "Master Thaw",
+    description: "Win the Whiteout Parking Garage after thawing 10 or more frozen cards.",
+    conditions: [
+      { statId: "outcome", operator: "is", value: "won" },
+      { statId: "worldId", operator: "is", value: "whiteout-parking-garage" },
+      { statId: "cardsThawed", operator: "gte", value: 10 },
+    ],
+    reward: { items: [{ type: "memoryFragments", amount: 25 }] },
+  },
+  {
     id: "zombie-slayer",
     name: "Zombie Slayer",
     description: "Defeat 100 Zombies across all runs.",
@@ -181,6 +213,15 @@ export const FEAT_CATALOG: readonly FeatDefinition[] = [
     description: "Defeat 100 Something in the Mist across all runs.",
     conditions: [
       { statId: "witness.Something in the Mist.resolvedCount", operator: "gte", value: 25 },
+    ],
+    reward: { items: [{ type: "memoryFragments", amount: 20 }] },
+  },
+  {
+    id: "freeze-slayer",
+    name: "Garage Breaker",
+    description: "Defeat 25 The Garage Freezes Shut hazards across all runs.",
+    conditions: [
+      { statId: "witness.The Garage Freezes Shut.resolvedCount", operator: "gte", value: 25 },
     ],
     reward: { items: [{ type: "memoryFragments", amount: 20 }] },
   },

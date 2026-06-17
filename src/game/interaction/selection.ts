@@ -18,6 +18,7 @@ import type { Action, CardId, TargetSpec } from "../../core/index";
 export type StepResult =
   | { kind: "hazard"; targetId: CardId }
   | { kind: "destroyHand"; destroyIds: readonly CardId[] } // undefined = skipped optional destroy
+  | { kind: "thawHand"; thawIds: readonly CardId[] }
   | { kind: "returnWorld"; returnIds: readonly CardId[] }
   | { kind: "discardPlayer"; discardId: CardId };
 
@@ -58,6 +59,8 @@ function stepMin(spec: TargetSpec): number {
       return 1;
     case "destroyHand":
       return spec.min;
+    case "thawHand":
+      return 1;
     case "returnWorld":
       return spec.min;
     default:
@@ -74,6 +77,8 @@ export function stepMax(spec: TargetSpec): number {
       return 1;
     case "destroyHand":
       return spec.max;
+    case "thawHand":
+      return spec.amount;
     case "returnWorld":
       return spec.max;
     default:
@@ -87,6 +92,8 @@ export function doesStepResultContain(result: StepResult, target: CardId): boole
       return result.targetId === target;
     case "destroyHand":
       return result.destroyIds.includes(target);
+    case "thawHand":
+      return result.thawIds.includes(target);
     case "returnWorld":
       return result.returnIds.includes(target);
     case "discardPlayer":
@@ -238,6 +245,9 @@ export function advance(sel: SelectionState): SelectionState {
     case "destroyHand":
       result = { kind: "destroyHand", destroyIds: [...current] };
       break;
+    case "thawHand":
+      result = { kind: "thawHand", thawIds: [...current] };
+      break;
     case "returnWorld":
       result = { kind: "returnWorld", returnIds: [...current] };
       break;
@@ -355,6 +365,11 @@ export function hintForSelection(sel: SelectionState): {
           (min === 0 ? "(optional)" : ""),
         visible: true,
       };
+    case "thawHand":
+      return {
+        text: `Select up to ${max} frozen cards to thaw (${sel.current.length} chosen)`,
+        visible: true,
+      };
     case "returnWorld":
       return {
         text: `Select ${min}–${max} world cards to return (${sel.current.length} chosen)`,
@@ -398,6 +413,9 @@ export function buildAction(sel: SelectionState): Action | null {
         break;
       case "destroyHand":
         Object.assign(action, { destroyIds: result.destroyIds });
+        break;
+      case "thawHand":
+        Object.assign(action, { thawIds: result.thawIds });
         break;
     }
   }

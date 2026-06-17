@@ -135,16 +135,18 @@ function handleEndTurn(catalog: CardCatalog, state: GameState): ReduceResult {
     }
   }
 
-  // Discard all player cards from hand; world cards stay
+  // Discard unfrozen player cards from hand; frozen player cards and world cards stay.
   const playerCardsInHand = current.hand.filter((c) => c.kind === "player");
+  const unfrozenPlayerCards = playerCardsInHand.filter((c) => (c.frozen ?? 0) <= 0);
+  const frozenPlayerCards = playerCardsInHand.filter((c) => (c.frozen ?? 0) > 0);
   const worldCardsInHand = current.hand.filter((c) => c.kind === "world");
-  const discardedIds = playerCardsInHand.map((c) => c.id);
-  const templateIds = worldCardsInHand.map((c) => c.templateId);
+  const discardedIds = unfrozenPlayerCards.map((c) => c.id);
+  const templateIds = unfrozenPlayerCards.map((c) => c.templateId);
 
   const stateAfterDiscard: GameState = {
     ...current,
-    hand: worldCardsInHand,
-    playerDiscard: [...playerCardsInHand, ...current.playerDiscard],
+    hand: [...worldCardsInHand, ...frozenPlayerCards],
+    playerDiscard: [...unfrozenPlayerCards, ...current.playerDiscard],
     progress: {},
   };
 

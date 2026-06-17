@@ -97,6 +97,7 @@ export function createWorld(
     // Per-world starting Light. 0 everywhere but Fog (world.startLight unset),
     // which is the invariant keeping decay and concealment no-ops elsewhere.
     light: (world.startLight ?? 0) + mods.extraStartLight,
+    heat: (world.startHeat ?? 0) + mods.extraStartHeat,
     pendingForceDestroy: 0,
     braceCharges: mods.extraStartBrace,
     runModifiers: mods,

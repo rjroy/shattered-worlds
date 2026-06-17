@@ -1,6 +1,7 @@
 import type { GameState } from "../model/types";
 import { refillHand, resolveForceDestroy } from "./draw";
 import type { EffectResult } from "../effects/EffectContext";
+import { thawFrozenCardsAtTurnStart } from "../effects/heat";
 
 // Light dims one step per turn. A constant (not per-world tuning): the decay
 // model is "untended light fades", and the per-world dial is starting Light,
@@ -89,13 +90,11 @@ function decayLight(state: GameState): EffectResult {
 }
 
 /**
- * Compose decayLight, gainEnergy, refillHand, and resolveForceDestroy to
+ * Compose decayLight, thaw frozen cards, gainEnergy, refillHand, and resolveForceDestroy to
  * represent a complete turn start.
  *
- * Order guarantee: Light decay happens FIRST, before +1 energy and before the
- * hand refill, so the turn opens with the fog already crept in over the cards
- * the player kept, and only then are new cards drawn into the dimmer light.
- * Then +1 energy happens BEFORE hand refill (REQ-5). Forced destruction runs
+ * Order guarantee: Light decay happens FIRST, then frozen cards tick down
+ * before +1 energy and before the hand refill. Then +1 energy happens BEFORE hand refill. Forced destruction runs
  * LAST, so it acts on the just-dealt hand. This ordering is FIXED: it
  * determines the event sequence, hence determinism.
  *
@@ -109,8 +108,10 @@ export function startTurn(state: GameState): StartTurnResult {
   const afterDecay = decayLight(state);
   const decayEvents = afterDecay.events;
 
+  const afterThaw = thawFrozenCardsAtTurnStart(afterDecay.state);
+
   // Gain 1 energy
-  const afterGain = gainEnergy(afterDecay.state);
+  const afterGain = gainEnergy(afterThaw.state);
   const stateWithEnergy = afterGain.state;
   const energyEvents = afterGain.events;
 
@@ -127,7 +128,13 @@ export function startTurn(state: GameState): StartTurnResult {
   // draw/shuffle, then destruction.
   return {
     state: destroyResult.state,
-    events: [...decayEvents, ...energyEvents, ...refillResult.events, ...destroyResult.events],
+    events: [
+      ...decayEvents,
+      ...afterThaw.events,
+      ...energyEvents,
+      ...refillResult.events,
+      ...destroyResult.events,
+    ],
     playerCardsDrawn: Math.max(0, playerCountAfterRefill - playerCountBeforeRefill),
   };
 }

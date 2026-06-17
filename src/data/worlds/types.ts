@@ -59,6 +59,11 @@ export interface WorldDataBundle {
    * whether to show the Light indicator from `worldId` alone.
    */
   readonly usesLight?: boolean;
+  /**
+   * Whether this world runs on the Heat economy. Heat may be present on
+   * GameState from unlocks in any world, but only heat-worlds surface the HUD.
+   */
+  readonly usesHeat?: boolean;
 }
 
 // ---------------------------------------------------------------------------

@@ -8,6 +8,7 @@ import type { GameState } from "../../core/index";
 import { TEXT, textStyle } from "./presentation";
 import { HUD_LAYOUT } from "./layout";
 import { worldUsesLightManifest } from "../../data/worldUsesLightManifest";
+import { worldUsesHeatManifest } from "../../data/worldUsesHeatManifest";
 import { addTooltip } from "./TooltipView";
 
 // HUD backing panel geometry. The text-back texture is a 600×600 grunge frame:
@@ -42,6 +43,10 @@ const HUD_TOOLTIPS = {
     title: "Light Level",
     body: "The current level of light. Have a light level creater than the conceal of a card to reveal it.",
   },
+  heat: {
+    title: "Heat",
+    body: "Spendable warmth for thawing frozen cards. Heat does not decay.",
+  },
   brace: {
     title: "Available Brace",
     body: "You can brace your self for grasping attacks which can steal your cards.",
@@ -67,6 +72,7 @@ export class HUDView extends Phaser.GameObjects.Container {
   private braceIndicator: PowerUpIndicator | undefined;
   private forceDestroyIndicator: PowerUpIndicator | undefined;
   private lightIndicator: PowerUpIndicator | undefined;
+  private heatIndicator: PowerUpIndicator | undefined;
   private powerUpPanel: Phaser.GameObjects.NineSlice;
 
   constructor(scene: Phaser.Scene) {
@@ -167,6 +173,15 @@ export class HUDView extends Phaser.GameObjects.Container {
       this.setPowerUpValue(this.lightIndicator, state.light);
     } else if (this.lightIndicator !== undefined) {
       this.lightIndicator.container.setVisible(false);
+    }
+    if (worldUsesHeatManifest[state.worldId] === true) {
+      if (this.heatIndicator === undefined) {
+        this.heatIndicator = this.addPowerUp("effect-icon-heat");
+        addTooltip(this.scene, this.heatIndicator.icon, HUD_TOOLTIPS.heat);
+      }
+      this.setPowerUpValue(this.heatIndicator, state.heat);
+    } else if (this.heatIndicator !== undefined) {
+      this.heatIndicator.container.setVisible(false);
     }
     if (state.braceCharges > 0) {
       if (this.braceIndicator === undefined) {

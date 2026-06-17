@@ -22,9 +22,14 @@ const DIRECT_RUN_FIELDS = new Set([
   'cardsDiscarded',
   'finalHp',
   'healingReceived',
+  'cardsFrozen',
+  'cardsThawed',
+  'heatGained',
+  'heatSpent',
+  'cardsBurnedForHeat',
 ])
 
-const RESOURCE_FIELDS = new Set(['energy', 'light', 'brace'])
+const RESOURCE_FIELDS = new Set(['energy', 'light', 'brace', 'heat'])
 
 // lifetime.version (literal 2) is reachable but harmless — numeric ops on 2 will fail-closed for all real catalog conditions
 function resolveStat(statId: string, ctx: EvaluationContext): unknown {

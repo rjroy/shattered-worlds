@@ -1,6 +1,9 @@
 import { describe, it, expect } from 'bun:test'
-import { RunSummaryView, type RunSummaryData } from './RunSummaryView'
 import type { FeatDefinition } from '../../data/feats/types'
+
+const { RunSummaryView } = await import('./RunSummaryView')
+type RunSummaryViewInstance = InstanceType<typeof RunSummaryView>
+type RunSummaryData = Parameters<RunSummaryViewInstance['show']>[0]
 
 // ---------------------------------------------------------------------------
 // Validations #17, #18, #19 — feats section in RunSummaryView.show()
@@ -89,7 +92,7 @@ function makeFakeScene(): { scene: unknown; trackedTexts: TrackedText[] } {
 // Build a RunSummaryView bypassing the Phaser constructor.
 // The bg stub implements the three methods show() calls on it.
 function makeView(scene: unknown): {
-  view: RunSummaryView & { list: unknown[] }
+  view: RunSummaryViewInstance & { list: unknown[] }
   trackedTexts: TrackedText[]
 } {
   // We need access to trackedTexts from the scene we already built.
@@ -105,7 +108,7 @@ function makeView(scene: unknown): {
     setTint() { return backdropStub },
   }
 
-  const view = Object.create(RunSummaryView.prototype) as RunSummaryView & { list: unknown[] }
+  const view = Object.create(RunSummaryView.prototype) as RunSummaryViewInstance & { list: unknown[] }
 
   // Install the required instance fields.
   Object.defineProperty(view, 'scene', { value: scene, writable: false })
@@ -172,7 +175,7 @@ const firstSurvivorDef: FeatDefinition = {
 // Helper: run show() using a fresh scene and return the tracked texts.
 // ---------------------------------------------------------------------------
 
-function runShow(data: RunSummaryData): { trackedTexts: TrackedText[]; view: RunSummaryView & { list: unknown[] } } {
+function runShow(data: RunSummaryData): { trackedTexts: TrackedText[]; view: RunSummaryViewInstance & { list: unknown[] } } {
   const { scene, trackedTexts } = makeFakeScene()
   const { view } = makeView(scene)
   view.show(data, () => {})

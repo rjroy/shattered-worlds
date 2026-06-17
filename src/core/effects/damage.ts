@@ -2,7 +2,7 @@ import type { CardEffect, GameEvent, GameState } from "../model/types";
 import type { EffectLine } from "../view/effectGlyphs";
 import type { CompileContext, EffectContext, EffectResult } from "./EffectContext";
 import { EffectHandler } from "./EffectHandler";
-import { icon, main, perRider, value } from "./tokens";
+import { counterLabel, icon, main, perRider, value } from "./tokens";
 import { resolveCounter } from "./dealProgress";
 
 type DamageEffect = Extract<CardEffect, { kind: "Damage" }>;
@@ -46,7 +46,7 @@ export class DamageScaledHandler extends EffectHandler<DamageScaledEffect> {
   }
 
   override describe(effect: DamageScaledEffect): string[] {
-    return [`-${effect.base} HP`, `-${effect.amount} per ${effect.per.keyword} in hand`];
+    return [`-${effect.base} HP`, `-${effect.amount} per ${counterLabel(effect.per)}`];
   }
 
   override compile(effect: DamageScaledEffect, _ctx: CompileContext): EffectLine[] {

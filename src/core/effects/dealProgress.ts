@@ -45,7 +45,7 @@ import { applyEffect } from "../engine/effects";
 import type { CompileContext, ConnectorStyle, EffectContext, EffectResult } from "./EffectContext";
 import { EffectHandler, HazardTargetingHandler } from "./EffectHandler";
 import { worldCardsInHand } from "./handState";
-import { bonusRider, icon, main, perRider, text, value } from "./tokens";
+import { bonusRider, counterLabel, icon, main, perRider, text, value } from "./tokens";
 
 type DealProgressEffect = Extract<CardEffect, { kind: "DealProgress" }>;
 type DealProgressScaledEffect = Extract<CardEffect, { kind: "DealProgressScaled" }>;
@@ -114,6 +114,8 @@ export function resolveCounter(state: GameState, spec: CounterSpec): number {
   switch (spec.kind) {
     case "KeywordInHand":
       return state.hand.filter((card) => hasKeyword(card, spec.keyword)).length;
+    case "FrozenPlayerCards":
+      return state.hand.filter((card) => card.kind === "player" && (card.frozen ?? 0) > 0).length;
 
     default:
       return 0;
@@ -197,7 +199,7 @@ export class DealProgressScaledHandler extends HazardTargetingHandler<DealProgre
   }
 
   override describe(effect: DealProgressScaledEffect): string[] {
-    return [`Add ${effect.base} Progress`, `+${effect.amount} per ${effect.per.keyword} in hand`];
+    return [`Add ${effect.base} Progress`, `+${effect.amount} per ${counterLabel(effect.per)}`];
   }
 
   override compile(effect: DealProgressScaledEffect, _ctx: CompileContext): EffectLine[] {

@@ -945,7 +945,7 @@ describe("runStats collector", () => {
 
     const run = collector.history()[0];
     expect(run?.finalHp).toBe(7);
-    expect(run?.finalResources).toEqual({ energy: 3, light: 0, brace: 0 });
+    expect(run?.finalResources).toEqual({ energy: 3, light: 0, brace: 0, heat: 0 });
   });
 
   it("AI #6 — old stored RunRecord without new fields passes isRunRecord", () => {

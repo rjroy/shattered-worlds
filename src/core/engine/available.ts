@@ -149,6 +149,20 @@ function checkSpec(
       return null;
     }
 
+    case "thawHand": {
+      const ids = action.thawIds ?? [];
+      if (ids.length === 0 || ids.length > spec.amount) {
+        return `thawIds count ${ids.length} is outside [1,${spec.amount}] for card ${cardId}`;
+      }
+      const legal = available.legalTargets(cardId, step);
+      for (const id of ids) {
+        if (!legal.includes(id)) {
+          return `thawId ${id} is not a legal thaw target for card ${cardId}`;
+        }
+      }
+      return null;
+    }
+
     case "discardPlayer": {
       const legal = available.legalTargets(cardId, step);
       if (action.discardId === undefined || !legal.includes(action.discardId)) {
@@ -194,6 +208,7 @@ export function availableActions(
 
   for (const card of state.hand) {
     if (card.kind !== "player") continue;
+    if ((card.frozen ?? 0) > 0) continue;
 
     // Energy affordability gate: skip if card costs more than current energy,
     // unless ignoreEnergy is explicitly true (used only by loss guard in Step 6).

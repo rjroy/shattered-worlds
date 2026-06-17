@@ -24,6 +24,7 @@ function makeEmptyState(nextId = 0): GameState {
     hp: 10,
     energy: 0,
     light: 0,
+    heat: 0,
     pendingForceDestroy: 0,
     braceCharges: 0,
     runModifiers: DEFAULT_RUN_MODIFIERS,
