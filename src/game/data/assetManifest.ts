@@ -33,6 +33,11 @@ import insetPanicUrl from "../assets/insets/inset-panic.webp";
 import insetAdrenalineUrl from "../assets/insets/inset-adrenaline.webp";
 import insetDoorUrl from "../assets/insets/inset-door.webp";
 import insetWalkerUrl from "../assets/insets/inset-walker.webp";
+import insetFortuneLuckyBreakUrl from "../assets/insets/inset-fortune-lucky-break.webp";
+import insetFortuneSecondWindUrl from "../assets/insets/inset-fortune-second-wind.webp";
+import insetFortuneFoundToolUrl from "../assets/insets/inset-fortune-found-tool.webp";
+import insetFortuneClearPathUrl from "../assets/insets/inset-fortune-clear-path.webp";
+import insetFortuneSteadyNerveUrl from "../assets/insets/inset-fortune-steady-nerve.webp";
 import unlockActRewardUrl from "../assets/unlocks/act-reward.webp";
 import unlockExtraBraceUrl from "../assets/unlocks/extra-brace.webp";
 import unlockExtraEnergyUrl from "../assets/unlocks/extra-energy.webp";
@@ -87,6 +92,11 @@ export const assetManifest: Record<string, string> = {
   "inset-adrenaline": insetAdrenalineUrl,
   "inset-door": insetDoorUrl,
   "inset-walker": insetWalkerUrl,
+  "fortune-inset-lucky-break": insetFortuneLuckyBreakUrl,
+  "fortune-inset-second-wind": insetFortuneSecondWindUrl,
+  "fortune-inset-found-tool": insetFortuneFoundToolUrl,
+  "fortune-inset-clear-path": insetFortuneClearPathUrl,
+  "fortune-inset-steady-nerve": insetFortuneSteadyNerveUrl,
   "unlock/act-reward": unlockActRewardUrl,
   "unlock/extra-brace": unlockExtraBraceUrl,
   "unlock/extra-energy": unlockExtraEnergyUrl,
