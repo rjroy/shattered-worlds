@@ -7,7 +7,7 @@
   <meta name="status" content="draft">
   <meta name="tags" content="world-design, overgrown-mall, infest, spore, deal-progress-scaled, player-keywords, core-effect">
   <meta name="modules" content="core-engine, world-data, game-view, themes">
-  <meta name="related" content=".lore/work/brainstorm/overgrown-mall-world.html, .lore/work/brainstorm/shard-response-archetypes.html, .lore/work/plans/shard-response-archetypes.html, .lore/reference/theme-authoring.html, .lore/reference/visual-direction.html">
+  <meta name="related" content=".lore/work/brainstorm/overgrown-mall-world.html, .lore/work/brainstorm/shard-response-archetypes.html, .lore/work/plans/shard-response-archetypes.html, .lore/reference/theme-authoring.md, .lore/reference/visual-direction.html">
   <meta name="req-prefix" content="MALL">
   <style>
     :root {
@@ -174,7 +174,7 @@
     <h2>6 · Documentation <span class="count">(REQ-MALL-24 … 25)</span></h2>
 
     <div class="req" id="REQ-MALL-24"><span class="rid"><a href="#REQ-MALL-24">REQ-MALL-24</a></span> Theme-authoring doc amended with the proposal, not after.
-      <p><code>.lore/reference/theme-authoring.html</code> updates: C1 effect vocabulary adds <code>DealProgressScaled</code> (and clears the stale "not yet available" marks on <code>Brace</code>/<code>DealProgressAll</code>/<code>ExileTopWorldCards</code>, which shipped); C2 keyword list adds <code>Spore</code> and documents keywords on player templates; SV1 table gains the Mall row — verbatim: <em>overgrown-mall · prune &amp; profit · self-pruning no-op Spore; Bloom scales per Spore in hand; <code>DealProgressScaled</code> exclusive to this world</em>. Also swap the transposed bird/volcano rows per REQ-MALL-25 in the same edit.</p></div>
+      <p><code>.lore/reference/theme-authoring.md</code> updates: C1 effect vocabulary adds <code>DealProgressScaled</code> (and clears the stale "not yet available" marks on <code>Brace</code>/<code>DealProgressAll</code>/<code>ExileTopWorldCards</code>, which shipped); C2 keyword list adds <code>Spore</code> and documents keywords on player templates; SV1 table gains the Mall row — verbatim: <em>overgrown-mall · prune &amp; profit · self-pruning no-op Spore; Bloom scales per Spore in hand; <code>DealProgressScaled</code> exclusive to this world</em>. Also swap the transposed bird/volcano rows per REQ-MALL-25 in the same edit.</p></div>
 
     <div class="req" id="REQ-MALL-25"><span class="rid"><a href="#REQ-MALL-25">REQ-MALL-25</a></span> Fix the transposed SV1 rows.
       <p>The signature-verb table currently swaps bird-building and highway-volcano ("travel light" / "everything is fuel"). Correct to match the archetype brainstorm: bird = travel light, volcano = everything is fuel.</p></div>
@@ -215,7 +215,7 @@
         <tr><td>Distinct rewards</td><td>Diff reward templates against the other three worlds' JSON — no identical effect+cost pair</td><td>15</td></tr>
         <tr><td>Registrations</td><td>Grep <code>overgrown-mall</code> in <code>assetManifest.ts</code>, <code>worldManifest.ts</code>, <code>themeManifest.ts</code>, <code>worldDisplayManifest.ts</code>, <code>worldHelpManifest.ts</code> — all five hit; every <code>mall-inset-*</code> key referenced in JSON exists in the asset manifest</td><td>18, 19, 22, 23</td></tr>
         <tr><td>Help budget</td><td><code>overgrown-mall</code> help entry has ≤ 6 notes including a Spore note and a Bloom note</td><td>23</td></tr>
-        <tr><td>Docs amended</td><td>theme-authoring.html: C1 lists <code>DealProgressScaled</code> with no stale "not yet available" rows; C2 includes <code>Spore</code> + player-keyword note; SV1 has the Mall row and corrected bird/volcano rows</td><td>24, 25</td></tr>
+        <tr><td>Docs amended</td><td>theme-authoring.md: C1 lists <code>DealProgressScaled</code> with no stale "not yet available" rows; C2 includes <code>Spore</code> + player-keyword note; SV1 has the Mall row and corrected bird/volcano rows</td><td>24, 25</td></tr>
         <tr><td>Runtime smoke</td><td>Launch the game, select Overgrown Mall, play one run: backdrop/cardfront/insets load (no missing-texture magenta), a Spore arrives in discard after triggering a hook, playing it removes it, Bloom is offered and resolves. Confirms reachability only, not line viability — see the REQ-MALL-17 playtest note</td><td>17, 20, 21 (manual / browser-driven)</td></tr>
       </table>
       <p><strong>Both-lines check (REQ-MALL-17):</strong> not AI-verifiable beyond existence (both Bloom and prune rewards reachable in data); dominance balance is explicit human playtest territory.</p>

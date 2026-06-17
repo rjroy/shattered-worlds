@@ -22,6 +22,7 @@ const GRID_TOP = 112;
 const GRID_GAP_X = 28;
 const GRID_GAP_Y = 14;
 const VISIBLE_ROWS = 3;
+const TOUCH_SCROLL_THRESHOLD = 42;
 
 type Button = {
   container: Phaser.GameObjects.Container;
@@ -35,6 +36,8 @@ export class DestinyScene extends Phaser.Scene {
   private messageText?: Phaser.GameObjects.Text;
   private confirmOverlay?: Phaser.GameObjects.Container;
   private scrollOffset = 0;
+  private touchScrollLastY: number | undefined;
+  private touchScrollRemainder = 0;
 
   constructor(featsStore?: FeatsStore, unlocksStore?: UnlocksStore) {
     super({ key: "Destiny" });
@@ -81,11 +84,14 @@ export class DestinyScene extends Phaser.Scene {
     this.input.on(
       "wheel",
       (pointer: Phaser.Input.Pointer, _over: unknown, _dx: number, deltaY: number) => {
-        if (pointer.y < GRID_TOP || pointer.y > GRID_TOP + VISIBLE_ROWS * (CARD_H + GRID_GAP_Y))
-          return;
+        if (!this.pointerInScrollArea(pointer)) return;
         this.scrollBy(deltaY > 0 ? 1 : -1);
       },
     );
+    this.input.on("pointerdown", (pointer: Phaser.Input.Pointer) => this.beginTouchScroll(pointer));
+    this.input.on("pointermove", (pointer: Phaser.Input.Pointer) => this.updateTouchScroll(pointer));
+    this.input.on("pointerup", () => this.endTouchScroll());
+    this.input.on("pointerupoutside", () => this.endTouchScroll());
 
     this.render();
   }
@@ -394,6 +400,34 @@ export class DestinyScene extends Phaser.Scene {
     if (next === this.scrollOffset) return;
     this.scrollOffset = next;
     this.render();
+  }
+
+  private beginTouchScroll(pointer: Phaser.Input.Pointer): void {
+    if (this.confirmOverlay !== undefined || !this.pointerInScrollArea(pointer)) return;
+    this.touchScrollLastY = pointer.y;
+    this.touchScrollRemainder = 0;
+  }
+
+  private updateTouchScroll(pointer: Phaser.Input.Pointer): void {
+    if (this.touchScrollLastY === undefined || !pointer.isDown) return;
+
+    this.touchScrollRemainder += this.touchScrollLastY - pointer.y;
+    this.touchScrollLastY = pointer.y;
+
+    const rows = Math.trunc(this.touchScrollRemainder / TOUCH_SCROLL_THRESHOLD);
+    if (rows === 0) return;
+
+    this.touchScrollRemainder -= rows * TOUCH_SCROLL_THRESHOLD;
+    this.scrollBy(rows);
+  }
+
+  private endTouchScroll(): void {
+    this.touchScrollLastY = undefined;
+    this.touchScrollRemainder = 0;
+  }
+
+  private pointerInScrollArea(pointer: Phaser.Input.Pointer): boolean {
+    return pointer.y >= GRID_TOP && pointer.y <= GRID_TOP + VISIBLE_ROWS * (CARD_H + GRID_GAP_Y);
   }
 
   private createButton(x: number, y: number, label: string, onClick: () => void): Button {
