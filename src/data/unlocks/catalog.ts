@@ -78,6 +78,14 @@ export const UNLOCK_CATALOG: readonly UnlockDefinition[] = [
     effect: { type: "minResourcePerTurn", resource: "energy", floor: 2 },
   },
   {
+    id: "starter-contractor",
+    name: "Builder's Instinct",
+    description: "A muscle memory from a different life. Different strengths, different gaps.",
+    cost: 50,
+    destinyWeight: 3,
+    effect: { type: "starterDeckOverride", starterDeckId: "contractor" },
+  },
+  {
     id: "starter-footballer",
     name: "Athlete's Instinct",
     description: "A muscle memory from a different life. Different strengths, different gaps.",
@@ -88,8 +96,7 @@ export const UNLOCK_CATALOG: readonly UnlockDefinition[] = [
   {
     id: "act-reward",
     name: "Fortune",
-    description:
-      "At the start of each new act, choose 1 of 3 temporary boon cards for your hand.",
+    description: "At the start of each new act, choose 1 of 3 temporary boon cards for your hand.",
     cost: 70,
     destinyWeight: 3,
     effect: { type: "actReward", boonPoolId: "fortune-v1", offeredCount: 3, chooseCount: 1 },
