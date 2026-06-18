@@ -14,11 +14,18 @@ import { createGameplayRuntime, type GameplayRuntime } from "../runtime/gameplay
 import type { GameplaySession } from "../runtime/gameplaySession";
 import { selectTheme } from "../view/themes/themeManifest";
 import type { VisualTheme } from "../view/themes/theme";
-import { availableActions } from "../../core/index";
-import type { Card, Action, TargetSpec } from "../../core/index";
+import {
+  availableActions,
+  effectiveHand,
+  effectivePlayerCard,
+} from "../../core/index";
+import type { Card, Action, PlayerCard, TargetSpec } from "../../core/index";
+import { structuralSpecOf } from "../../core/engine/available";
+import { EFFECTS } from "../../core/effects/registry";
 import {
   IDLE,
   advance,
+  activeModalStep,
   autoAdvances,
   beginTargeting,
   cancel,
@@ -89,6 +96,20 @@ const TABLE_TOOLTIPS = {
   },
 };
 
+function playerCardDisplaySignature(card: Extract<Card, { kind: "player" }>): string {
+  return JSON.stringify({
+    templateId: card.templateId,
+    sourceWorldId: card.sourceWorldId,
+    name: card.name,
+    insetKey: card.insetKey,
+    energyCost: card.energyCost,
+    effect: card.effect,
+    keywords: card.keywords,
+    exhaust: card.exhaust,
+    frozen: card.frozen,
+  });
+}
+
 // ---------------------------------------------------------------------------
 // Scene
 // ---------------------------------------------------------------------------
@@ -100,14 +121,15 @@ export class TableScene extends Phaser.Scene {
 
   /** All live card containers, keyed by card id. */
   private cardObjects: Map<string, CardView> = new Map();
+  private playerCardDisplaySignatures: Map<string, string> = new Map();
 
   /**
    * Id of the card currently under the pointer, or null. Maintained by the
-   * pointerover/out handlers so a later phase (S9) can re-assert the base
-   * transform on every non-hovered card without re-reading the pointer. No
-   * emphasis behavior is attached to it yet; it is wired and kept accurate now.
+   * pointerover/out handlers so the repaint pass can re-assert the base
+   * transform on every non-hovered card without re-reading the pointer.
    */
   private hoveredCardId: string | null = null;
+  private selectedCardSnapshot: PlayerCard | null = null;
 
   // Persistent HUD objects (created once, updated on drawAll)
   private hudView!: HUDView;
@@ -164,6 +186,8 @@ export class TableScene extends Phaser.Scene {
     this.seed_ = data.seed ?? Math.floor(Math.random() * 2 ** 32);
     this.terminalSummaryShown_ = false;
     this.cardObjects = new Map();
+    this.playerCardDisplaySignatures = new Map();
+    this.selectedCardSnapshot = null;
   }
 
   create(): void {
@@ -212,6 +236,7 @@ export class TableScene extends Phaser.Scene {
     )
       .on("pointerdown", () => {
         this.sel = cancel();
+        this.clearSelectedCardSnapshot();
         this.dismissModal();
         this.clearConnector();
         this.drawAll();
@@ -341,11 +366,11 @@ export class TableScene extends Phaser.Scene {
     const playableIds = new Set(available.playable.map((p) => p.cardId));
     const discardableIds = new Set(available.discardable);
 
-    const legalTargetIds = this.currentLegalTargetIds(available);
+    const legalTargetIds = this.currentLegalTargetIds();
 
-    // Seam case (b): if a hovered card is no longer a legal target after this
-    // repaint (e.g. drawAll fired mid-hover and the phase/legal set changed),
-    // S9 owns clearing it here — drop the stored hovered id and restore that
+    // If a hovered card is no longer a legal target after this repaint
+    // (e.g. drawAll fired mid-hover and the phase/legal set changed),
+    // drop the stored hovered id and restore that
     // container's base transform. (Case (a) hover-out and case (c) card-left-hand
     // are handled in the pointerout handler and the destruction pass below.)
     if (this.hoveredCardId !== null && !legalTargetIds.has(this.hoveredCardId)) {
@@ -354,13 +379,15 @@ export class TableScene extends Phaser.Scene {
       this.hoveredCardId = null;
     }
 
-    // Split hand into world row and player row for layout. The hand order is the
-    // desired order; row filtering preserves it, so the per-row layout below
-    // reproduces exactly the positions the old destroy-and-recreate produced.
-    const worldCards = state.hand.filter(
+    // Split hand into world row and effective player row for layout. Effective
+    // cards preserve base ids, so reconciliation and dispatch still address the
+    // durable cards in GameState while the visible player faces show current
+    // read-model modifiers.
+    const visibleHand = effectiveHand(state);
+    const worldCards = visibleHand.filter(
       (c): c is import("../../core/index").WorldCard => c.kind === "world",
     );
-    const playerCards = state.hand.filter((c) => c.kind === "player");
+    const playerCards = visibleHand.filter((c) => c.kind === "player");
 
     // Reconcile each row in place; collect the ids that should still exist after
     // this cycle so anything no longer desired can be destroyed afterward.
@@ -392,6 +419,7 @@ export class TableScene extends Phaser.Scene {
       if (this.hoveredCardId === id) this.hoveredCardId = null;
       container.destroy();
       this.cardObjects.delete(id);
+      this.playerCardDisplaySignatures.delete(id);
     }
 
     // HUD
@@ -508,7 +536,7 @@ export class TableScene extends Phaser.Scene {
       // Re-apply mutable visual state every cycle, reused or freshly created.
       this.applyHighlight(container, card, playableIds, discardableIds, legalTargetIds);
 
-      // Emphasis re-assert (S9): a reused container must never keep stale
+      // Emphasis re-assert: a reused container must never keep stale
       // emphasis. Re-assert the BASE transform (scale 1, glow off) on every card
       // that is NOT the still-legal hovered one; the hovered-and-still-legal card
       // KEEPS its emphasis (re-applied idempotently so the magnitude tracks the
@@ -554,10 +582,24 @@ export class TableScene extends Phaser.Scene {
    */
   private obtainCardContainer(card: Card): CardView {
     const existing = this.cardObjects.get(card.id);
-    if (existing !== undefined) return existing;
+    if (existing !== undefined) {
+      if (card.kind !== "player") return existing;
+
+      const signature = playerCardDisplaySignature(card);
+      if (this.playerCardDisplaySignatures.get(card.id) === signature) return existing;
+
+      this.tweens.killTweensOf(existing);
+      this.tweens.killTweensOf(existing.list);
+      existing.destroy();
+      this.cardObjects.delete(card.id);
+      this.playerCardDisplaySignatures.delete(card.id);
+    }
 
     const container = new CardView(this, card, 0, 0, this.theme_, selectTheme);
     this.cardObjects.set(card.id, container);
+    if (card.kind === "player") {
+      this.playerCardDisplaySignatures.set(card.id, playerCardDisplaySignature(card));
+    }
 
     // Make card interactive
     container.setSize(CARD_FACE.width, CARD_FACE.height);
@@ -578,7 +620,7 @@ export class TableScene extends Phaser.Scene {
       // Connector generalizes across all three targeting phases (the preview
       // text is hazard-only). showConnector gates on phase + legal target.
       this.showConnector(id);
-      // Loud hover emphasis (S9): only a card that is a legal target RIGHT NOW
+      // Hover emphasis: only a card that is a legal target RIGHT NOW
       // gets lifted + ringed. Player cards are never legal targets, so this
       // gate keeps emphasis off them. Magnitude scales with intensity().
       this.emphasizeIfLegalTarget(id, container);
@@ -655,15 +697,18 @@ export class TableScene extends Phaser.Scene {
       const entry = available.playable.find((p) => p.cardId === cardId);
       if (entry === undefined) return; // not playable
 
-      const spec = entry.spec;
-      this.nextSelection(cardId, spec);
+      const baseCard = state.hand.find((c) => c.id === cardId);
+      if (baseCard?.kind !== "player") return;
+
+      const snapshot = effectivePlayerCard(baseCard, state);
+      const spec = structuralSpecOf(snapshot.effect);
+      this.nextSelection(snapshot, spec);
       return;
     }
 
     // ---- Active targeting: check if this is legal for the current step ----
     if (this.sel.phase === "targeting" && !isComplete(this.sel)) {
-      const legalTargets = available.legalTargets(this.sel.cardId, activeStep(this.sel));
-      if (!legalTargets.includes(cardId)) return;
+      if (!this.currentLegalTargetIds().has(cardId)) return;
 
       this.sel = togglePick(this.sel, cardId);
       if (autoAdvances(this.sel)) {
@@ -677,25 +722,21 @@ export class TableScene extends Phaser.Scene {
   }
 
   /** Begin a new selection for a playable card. */
-  private nextSelection(cardId: string, spec: TargetSpec): void {
+  private nextSelection(snapshot: PlayerCard, spec: TargetSpec): void {
+    const cardId = snapshot.id;
+    this.dismissModal();
+    this.selectedCardSnapshot = snapshot;
+
     switch (spec.kind) {
       case "modal": {
         this.sel = { phase: "awaiting-modal", cardId };
-        this.showModalChooser(cardId, spec);
+        this.showModalChooser(snapshot, spec);
         return;
       }
     }
 
     this.sel = beginTargeting(cardId, spec);
-    if (isComplete(this.sel)) {
-      const action = buildAction(this.sel);
-      if (action !== null) {
-        this.dispatch(action);
-        return;
-      }
-    } else {
-      this.drawAll();
-    }
+    this.continueSelection();
   }
 
   private onDiscardClick(cardId: string): void {
@@ -721,6 +762,10 @@ export class TableScene extends Phaser.Scene {
   private advanceSelection(): void {
     this.sel = advance(this.sel);
     this.clearConnector();
+    this.continueSelection();
+  }
+
+  private continueSelection(): void {
     if (isComplete(this.sel)) {
       const action = buildAction(this.sel);
       if (action !== null) {
@@ -728,6 +773,14 @@ export class TableScene extends Phaser.Scene {
         return;
       }
     }
+
+    const modalStep = activeModalStep(this.sel);
+    if (modalStep !== null && this.selectedCardSnapshot !== null) {
+      this.drawAll();
+      this.showModalChooser(this.selectedCardSnapshot, modalStep);
+      return;
+    }
+
     this.drawAll();
   }
 
@@ -735,17 +788,17 @@ export class TableScene extends Phaser.Scene {
   // Modal chooser
   // ---------------------------------------------------------------------------
 
-  private showModalChooser(cardId: string, spec: Extract<TargetSpec, { kind: "modal" }>): void {
+  private showModalChooser(
+    snapshot: PlayerCard,
+    spec: Extract<TargetSpec, { kind: "modal" }>,
+  ): void {
     if (this.game_.state.pendingActBoon !== null) return;
-    this.dismissModal();
 
     const available = availableActions(this.game_.state);
     // Label each branch from the card's actual Modal effect, so the chooser can
     // never drift from what the card does.
-    const card = this.game_.state.hand.find((c) => c.id === cardId);
-    const effectBranches =
-      card?.kind === "player" && card.effect.kind === "Modal" ? card.effect.branches : [];
-    const branches = resolveBranchLabels(spec.branches, effectBranches, available, cardId);
+    const effectBranches = this.effectBranchesForModalStep(snapshot);
+    const branches = resolveBranchLabels(spec.branches, effectBranches, available, snapshot.id);
 
     this.modalChooser = new ModalChooserView(
       this,
@@ -754,6 +807,7 @@ export class TableScene extends Phaser.Scene {
       (idx) => this.onModalChoose(spec, idx),
       () => {
         this.sel = cancel();
+        this.clearSelectedCardSnapshot();
         this.dismissModal();
         this.clearConnector();
         this.drawAll();
@@ -764,7 +818,7 @@ export class TableScene extends Phaser.Scene {
   /** Apply a chosen modal branch: advance selection, or commit if it's a 'none' branch. */
   private onModalChoose(spec: Extract<TargetSpec, { kind: "modal" }>, idx: number): void {
     if (this.game_.state.pendingActBoon !== null) return;
-    this.dismissModal();
+    this.dismissModal(false);
     const newSel = chooseModal(this.sel, idx, spec);
     this.sel = newSel;
 
@@ -777,13 +831,29 @@ export class TableScene extends Phaser.Scene {
       }
     }
 
-    this.drawAll();
+    this.continueSelection();
   }
 
-  private dismissModal(): void {
+  private effectBranchesForModalStep(snapshot: PlayerCard): PlayerCard["effect"][] {
+    if (snapshot.effect.kind === "Modal") {
+      return [...snapshot.effect.branches];
+    }
+
+    if (this.sel.phase !== "targeting" || this.sel.stepIdx >= this.sel.steps.length) {
+      return [];
+    }
+
+    const stepEffect = effectAtStep(snapshot.effect, this.sel.stepIdx);
+    return stepEffect?.kind === "Modal" ? [...stepEffect.branches] : [];
+  }
+
+  private dismissModal(clearSnapshot = true): void {
     if (this.modalChooser !== null) {
       this.modalChooser.destroy();
       this.modalChooser = null;
+    }
+    if (clearSnapshot) {
+      this.clearSelectedCardSnapshot();
     }
   }
 
@@ -794,6 +864,7 @@ export class TableScene extends Phaser.Scene {
   private dispatch(action: Action): void {
     this.game_.dispatch(action);
     this.sel = IDLE;
+    this.clearSelectedCardSnapshot();
     this.dismissModal();
     this.updateActBoonChoiceView();
     // Commit ends targeting; drop the connector so no line survives the action.
@@ -852,19 +923,43 @@ export class TableScene extends Phaser.Scene {
 
   /**
    * The set of legal target card ids for the active targeting phase and its
-   * current step, or an empty set when no targeting phase is active. Single
-   * source of truth for "is this card a legal target right now": the per-cycle
-   * highlight/emphasis pass (drawAll) and the pointerover emphasis hook both
-   * read it, so the two paths can never disagree about legality (the step index
-   * matches the click-gating in onCardClick and showConnector).
+   * captured current step, or an empty set when no targeting phase is active.
+   * Target ids come from the core effect registry for the captured effective
+   * card snapshot, so scene highlighting/click acceptance matches reducer
+   * legality semantics without letting mid-selection card modifier drift reshape
+   * the selected effect path.
    */
-  private currentLegalTargetIds(
-    available: import("../../core/index").AvailableActions,
-  ): Set<string> {
+  private currentLegalTargetIds(): Set<string> {
     if (this.sel.phase !== "targeting" || isComplete(this.sel)) {
       return new Set<string>();
     }
-    return new Set(available.legalTargets(this.sel.cardId, activeStep(this.sel)));
+    const card = this.actingPlayerCardFor(this.sel.cardId);
+    if (card === null) return new Set<string>();
+
+    const effect = this.effectForSelectionStep(card, this.sel);
+    if (effect === null) return new Set<string>();
+
+    const handler = EFFECTS[effect.kind];
+    return new Set(handler.legalTargets(effect as never, card.id, this.game_.state));
+  }
+
+  private effectForSelectionStep(
+    card: PlayerCard,
+    sel: Extract<SelectionState, { phase: "targeting" }>,
+  ): PlayerCard["effect"] | null {
+    if (card.effect.kind === "Modal") {
+      if (sel.choice === undefined) return null;
+      const branch = card.effect.branches[sel.choice];
+      return branch === undefined ? null : effectAtStep(branch, sel.stepIdx);
+    }
+
+    const stepEffect = effectAtStep(card.effect, sel.stepIdx);
+    if (stepEffect?.kind === "Modal") {
+      if (sel.choice === undefined) return null;
+      return stepEffect.branches[sel.choice] ?? null;
+    }
+
+    return stepEffect;
   }
 
   /**
@@ -880,12 +975,11 @@ export class TableScene extends Phaser.Scene {
 
     const state = this.game_.state;
     const branchIndex = sel.choice;
-    const legal = availableActions(state).legalTargets(sel.cardId, activeStep(sel));
-    if (!legal.includes(targetId)) return;
+    if (!this.currentLegalTargetIds().has(targetId)) return;
 
-    const card = state.hand.find((c) => c.id === sel.cardId);
+    const card = this.actingPlayerCardFor(sel.cardId);
     const target = state.hand.find((c) => c.id === targetId);
-    if (card?.kind !== "player" || target?.kind !== "world") return;
+    if (card === null || target?.kind !== "world") return;
 
     const preview = previewPlay(card, target, state, branchIndex);
     if (preview !== null) {
@@ -897,15 +991,14 @@ export class TableScene extends Phaser.Scene {
   }
 
   /**
-   * Apply S9 hover emphasis to a card iff it is a legal target for the active
+   * Apply hover emphasis to a card iff it is a legal target for the active
    * targeting step. Reads the same currentLegalTargetIds set the per-cycle pass
    * uses, so a player card (never a legal target) is never emphasized, and the
    * hover read matches exactly which cards show the `target` border. Magnitude
    * scales with this.game_.intensity() (FEEDBACK-12 emphasis half).
    */
   private emphasizeIfLegalTarget(cardId: string, container: CardView): void {
-    const available = availableActions(this.game_.state);
-    if (!this.currentLegalTargetIds(available).has(cardId)) return;
+    if (!this.currentLegalTargetIds().has(cardId)) return;
     container.emphasize(this.theme_.frameStyle.targetGlow, this.game_.intensity());
   }
 
@@ -944,8 +1037,7 @@ export class TableScene extends Phaser.Scene {
       return;
 
     const step = activeStep(sel);
-    const legal = availableActions(this.game_.state).legalTargets(sel.cardId, step);
-    if (!legal.includes(targetId)) return;
+    if (!this.currentLegalTargetIds().has(targetId)) return;
 
     const source = this.cardObjects.get(sel.cardId);
     const target = this.cardObjects.get(targetId);
@@ -972,10 +1064,27 @@ export class TableScene extends Phaser.Scene {
    * drawConnector then falls back to the plain accent line.
    */
   private stepConnectorStyle(cardId: string, step: number): ConnectorStyle | null {
-    const card = this.game_.state.hand.find((c) => c.id === cardId);
-    if (card === undefined || card.kind !== "player") return null;
+    const card = this.actingPlayerCardFor(cardId);
+    if (card === null) return null;
     const effect = effectAtStep(card.effect, step);
     return effect !== null ? connectorStyleOf(effect) : null;
+  }
+
+  private actingPlayerCardFor(cardId: string): PlayerCard | null {
+    if (
+      this.sel.phase !== "idle" &&
+      this.sel.cardId === cardId &&
+      this.selectedCardSnapshot?.id === cardId
+    ) {
+      return this.selectedCardSnapshot;
+    }
+
+    const card = this.game_.state.hand.find((c) => c.id === cardId);
+    return card?.kind === "player" ? card : null;
+  }
+
+  private clearSelectedCardSnapshot(): void {
+    this.selectedCardSnapshot = null;
   }
 
   /** Remove any drawn connector. Safe to call when nothing is drawn. */
@@ -1001,6 +1110,7 @@ export class TableScene extends Phaser.Scene {
 
     this.dismissModal();
     this.sel = IDLE;
+    this.clearSelectedCardSnapshot();
     this.clearConnector();
     this.dismissActBoonChoiceView();
 

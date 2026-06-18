@@ -628,7 +628,12 @@ describe("gameplaySession", () => {
       "ProgressDealt",
       "HazardPartial",
     ]);
-    expectOwnKeys(firstBatch.events[0]!, ["type", "cardId"]);
+    expectOwnKeys(firstBatch.events[0]!, [
+      "type",
+      "cardId",
+      "templateId",
+      "templateOrdinalThisTurn",
+    ]);
     expectOwnKeys(firstBatch.events[1]!, [
       "type",
       "hazardId",
@@ -652,7 +657,12 @@ describe("gameplaySession", () => {
       "WorldWon",
       "HazardResolved",
     ]);
-    expectOwnKeys(secondBatch.events[0]!, ["type", "cardId"]);
+    expectOwnKeys(secondBatch.events[0]!, [
+      "type",
+      "cardId",
+      "templateId",
+      "templateOrdinalThisTurn",
+    ]);
     expectOwnKeys(secondBatch.events[1]!, [
       "type",
       "hazardId",

@@ -101,6 +101,56 @@ export const UNLOCK_CATALOG: readonly UnlockDefinition[] = [
     destinyWeight: 3,
     effect: { type: "actReward", boonPoolId: "fortune-v1", offeredCount: 3, chooseCount: 1 },
   },
+
+  // Experimental card-modifier unlocks for playtesting effective player cards.
+  {
+    id: "first-sprint-free",
+    name: "Playtest: First Sprint Free",
+    description: "Experimental. The first Sprint you play each turn costs 0 energy.",
+    cost: 30,
+    destinyWeight: 1,
+    effect: {
+      type: "playerCardModifier",
+      modifier: {
+        id: "first-sprint-free",
+        target: { kind: "template", templateId: "Sprint" },
+        condition: { kind: "templatePlayOrdinalThisTurn", ordinal: 1 },
+        patches: [{ kind: "setEnergyCost", energyCost: 0 }],
+      },
+    },
+  },
+  {
+    id: "panic-response",
+    name: "Playtest: Panic Response",
+    description: "Experimental. Panic also deals 1 progress to every world card in hand.",
+    cost: 35,
+    destinyWeight: 2,
+    effect: {
+      type: "playerCardModifier",
+      modifier: {
+        id: "panic-response",
+        target: { kind: "template", templateId: "Panic" },
+        condition: { kind: "always" },
+        patches: [{ kind: "appendEffect", effect: { kind: "DealProgressAll", base: 1 } }],
+      },
+    },
+  },
+  {
+    id: "second-explore-push",
+    name: "Playtest: Second Explore Push",
+    description: "Experimental. The second Explore you play each turn deals 1 progress to every world card in hand.",
+    cost: 30,
+    destinyWeight: 1,
+    effect: {
+      type: "playerCardModifier",
+      modifier: {
+        id: "second-explore-push",
+        target: { kind: "template", templateId: "Explore" },
+        condition: { kind: "templatePlayOrdinalThisTurn", ordinal: 2 },
+        patches: [{ kind: "appendEffect", effect: { kind: "DealProgressAll", base: 1 } }],
+      },
+    },
+  },
 ];
 
 export const DESTINY_BUDGET = 5;
@@ -180,6 +230,12 @@ export function buildRunModifiers(
         break;
       case "keywordDamageBonus":
         mods = { ...mods, keywordDamageBonus: mods.keywordDamageBonus + def.effect.amount };
+        break;
+      case "playerCardModifier":
+        mods = {
+          ...mods,
+          playerCardModifiers: [...mods.playerCardModifiers, def.effect.modifier],
+        };
         break;
       case "starterDeckOverride":
         break;

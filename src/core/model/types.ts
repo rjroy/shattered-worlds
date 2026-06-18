@@ -206,7 +206,12 @@ export interface AvailableActions {
 }
 
 export type GameEvent =
-  | { type: "CardPlayed"; cardId: CardId }
+  | {
+      type: "CardPlayed";
+      cardId: CardId;
+      templateId: CardTemplateId;
+      templateOrdinalThisTurn: number;
+    }
   | {
       type: "ProgressDealt";
       hazardId: CardId;

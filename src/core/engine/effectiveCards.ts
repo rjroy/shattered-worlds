@@ -4,7 +4,7 @@ import type {
   PlayerCardPatch,
   PlayerCardModifierTarget,
 } from "../../data/unlocks/types";
-import type { CardEffect, GameState, Keyword, PlayerCard } from "../model/types";
+import type { Card, CardEffect, GameState, Keyword, PlayerCard } from "../model/types";
 
 export function effectivePlayerCard(card: PlayerCard, state: GameState): PlayerCard {
   let effective: PlayerCard = clonePlayerCard(card);
@@ -25,6 +25,14 @@ export function effectivePlayerCard(card: PlayerCard, state: GameState): PlayerC
     sourceWorldId: card.sourceWorldId,
     energyCost: normalizeEnergyCost(effective.energyCost),
   };
+}
+
+export function effectiveCard(card: Card, state: GameState): Card {
+  return card.kind === "player" ? effectivePlayerCard(card, state) : card;
+}
+
+export function effectiveHand(state: GameState): readonly Card[] {
+  return state.hand.map((card) => effectiveCard(card, state));
 }
 
 function clonePlayerCard(card: PlayerCard): PlayerCard {

@@ -73,7 +73,12 @@ describe("gameplayEventStream contract", () => {
       targetId: hazardId,
     };
     const events: readonly GameEvent[] = [
-      { type: "CardPlayed", cardId: "play-1" },
+      {
+        type: "CardPlayed",
+        cardId: "play-1",
+        templateId: "Sprint",
+        templateOrdinalThisTurn: 1,
+      },
       { type: "ProgressDealt", hazardId, templateId, amount: 2, hazardTurnTotal: 2 },
       { type: "HazardDiscarded", cardId: hazardId, templateId },
       { type: "CardDestroyed", ids: ["spent-1"], templateIds: ["spent-1"] },
@@ -261,7 +266,12 @@ describe("gameplayEventStream contract", () => {
         {
           state,
           events: [
-            { type: "CardPlayed", cardId: "play-1" },
+            {
+              type: "CardPlayed",
+              cardId: "play-1",
+              templateId: "Sprint",
+              templateOrdinalThisTurn: 1,
+            },
             {
               type: "ProgressDealt",
               hazardId: "hazard-1",
@@ -301,7 +311,12 @@ describe("gameplayEventStream contract", () => {
       timestamp: 1_100,
       action: { type: "PlayCard", cardId: "play-1", targetId: "hazard-1" },
       events: [
-        { type: "CardPlayed", cardId: "play-1" },
+        {
+          type: "CardPlayed",
+          cardId: "play-1",
+          templateId: "Sprint",
+          templateOrdinalThisTurn: 1,
+        },
         {
           type: "ProgressDealt",
           hazardId: "hazard-1",

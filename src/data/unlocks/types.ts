@@ -84,6 +84,7 @@ export type UnlockEffect =
   | { readonly type: "handSizeBonus"; readonly amountPerAct: number }
   | { readonly type: "minResourcePerTurn"; readonly resource: "energy" | "light"; readonly floor: number }
   | { readonly type: "keywordDamageBonus"; readonly amount: number }
+  | { readonly type: "playerCardModifier"; readonly modifier: PlayerCardModifier }
   | { readonly type: "starterDeckOverride"; readonly starterDeckId: string }
   | {
       readonly type: "actReward";

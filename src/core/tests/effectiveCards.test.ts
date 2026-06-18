@@ -1,8 +1,8 @@
 import { describe, expect, it } from "bun:test";
 import { DEFAULT_RUN_MODIFIERS, type PlayerCardModifier } from "../../data/unlocks/types";
-import { effectivePlayerCard } from "../engine/effectiveCards";
+import { effectiveHand, effectivePlayerCard } from "../engine/effectiveCards";
 import type { GameState, PlayerCard } from "../model/types";
-import { makePlayerCard, makeState, mintPlayers } from "./testFixture";
+import { makePlayerCard, makeState, makeWorldCard, mintPlayers } from "./testFixture";
 
 function stateWithModifiers(
   playerCardModifiers: readonly PlayerCardModifier[],
@@ -282,5 +282,26 @@ describe("effectivePlayerCard", () => {
 
     expect(cards.map((card) => card.energyCost)).toEqual([1, 1, 1]);
     expect(costs).toEqual([0, 0, 0]);
+  });
+
+  it("derives effective hand cards while preserving world card bases", () => {
+    const player = makePlayerCard({
+      id: "sprint",
+      templateId: "Sprint",
+      name: "Sprint",
+      energyCost: 1,
+    });
+    const world = makeWorldCard({ id: "hazard" });
+    const state = stateWithModifiers(
+      [modifier("sprint-free", "Sprint", [{ kind: "setEnergyCost", energyCost: 0 }])],
+      { hand: [world, player] },
+    );
+
+    const hand = effectiveHand(state);
+
+    expect(hand).toHaveLength(2);
+    expect(hand[0]).toBe(world);
+    expect(hand[1]).toEqual({ ...player, energyCost: 0 });
+    expect(hand[1]).not.toBe(player);
   });
 });

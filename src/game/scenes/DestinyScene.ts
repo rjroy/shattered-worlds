@@ -556,6 +556,8 @@ function effectSummary(def: UnlockDefinition): string {
       return `${def.effect.resource} floor ${def.effect.floor}`;
     case "keywordDamageBonus":
       return `Keyword bonuses +${def.effect.amount}`;
+    case "playerCardModifier":
+      return "Experimental card modifier";
     case "starterDeckOverride":
       return "Footballer starter deck";
     case "actReward":
