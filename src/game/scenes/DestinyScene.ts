@@ -220,17 +220,20 @@ export class DestinyScene extends Phaser.Scene {
         }),
       ),
     );
-    card.add(
-      this.add.text(
-        314,
-        15,
-        "●".repeat(def.destinyWeight),
-        textStyle({
-          fontSize: "13px",
-          color: "#d6b15c",
-        }),
-      ),
-    );
+    const worldUnlock = isWorldUnlock(def);
+    if (!worldUnlock && def.destinyWeight > 0) {
+      card.add(
+        this.add.text(
+          314,
+          15,
+          "●".repeat(def.destinyWeight),
+          textStyle({
+            fontSize: "13px",
+            color: "#d6b15c",
+          }),
+        ),
+      );
+    }
     card.add(
       this.add.text(
         102,
@@ -275,7 +278,7 @@ export class DestinyScene extends Phaser.Scene {
         this.add.text(
           170,
           96,
-          "✓ owned",
+          worldUnlock ? "✓ unlocked" : "✓ owned",
           textStyle({
             fontSize: "12px",
             color: TEXT.textReward,
@@ -283,7 +286,9 @@ export class DestinyScene extends Phaser.Scene {
           }),
         ),
       );
-      this.addActivationToggle(card, def, profile);
+      if (!worldUnlock) {
+        this.addActivationToggle(card, def, profile);
+      }
     } else if (state === "affordable") {
       card.add(this.createCardButton(314, 106, "Buy", () => this.confirmPurchase(def)));
     } else {
@@ -564,5 +569,11 @@ function effectSummary(def: UnlockDefinition): string {
       return "Custom Starter deck";
     case "actReward":
       return `Choose ${def.effect.chooseCount} of ${def.effect.offeredCount} temporary boons`;
+    case "worldUnlock":
+      return "Unlocks world access";
   }
+}
+
+function isWorldUnlock(def: UnlockDefinition): boolean {
+  return def.effect.type === "worldUnlock";
 }

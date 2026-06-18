@@ -177,7 +177,7 @@ describe("gameplaySession integration", () => {
     expect(source).toContain("storage: statsStorage()");
     expect(source).toContain("visibility: () => document.visibilityState === 'visible'");
     expect(source).toContain("document.addEventListener('visibilitychange', onChange)");
-    expect(source).toContain("new WorldSelectScene(gameplayRuntime.runStats)");
+    expect(source).toContain("new WorldSelectScene(gameplayRuntime.runStats, gameplayRuntime.unlocksStore)");
     expect(source).toContain(
       "new ChronicleScene(gameplayRuntime.runStats, gameplayRuntime.statsTransfer, gameplayRuntime.featsStore)",
     );
@@ -194,6 +194,17 @@ describe("gameplaySession integration", () => {
     expect(source).toContain('this.scene.start("Chronicle")');
     expect(source).toContain('this.scene.start("Destiny")');
     expect(source).toContain("private readonly runStats: RunStatsReader | undefined");
+  });
+
+  it("renders world unlock Destiny cards as access purchases instead of activation toggles", async () => {
+    const source = await Bun.file(new URL("../scenes/DestinyScene.ts", import.meta.url)).text();
+
+    expect(source).toContain('case "worldUnlock":');
+    expect(source).toContain('return "Unlocks world access";');
+    expect(source).toContain("const worldUnlock = isWorldUnlock(def);");
+    expect(source).toContain("if (!worldUnlock && def.destinyWeight > 0) {");
+    expect(source).toContain('worldUnlock ? "✓ unlocked" : "✓ owned"');
+    expect(source).toContain("if (!worldUnlock) {\n        this.addActivationToggle(card, def, profile);");
   });
 
   it("provides Chronicle import/export through the stats transfer seam", async () => {

@@ -42,7 +42,7 @@ export const TEXT = {
   dimAlpha: 0.35,
   textWorldTitle: "#d4c8e0",
   textWorldTag: "#c178bc",
-  textWorldStory: "#b69fc7",
+  textWorldStory: "#cbc0d3",
   background: "#2f2931",
 };
 

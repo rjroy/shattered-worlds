@@ -1,5 +1,6 @@
 import { describe, expect, it } from "bun:test";
 
+import { isWorldUnlocked, UNLOCK_CATALOG } from "../../data/unlocks/catalog";
 import type { FeatsStore } from "./featsProfile";
 import type { RunStatsStorage } from "./runStats";
 import {
@@ -120,6 +121,61 @@ describe("createUnlocksStore", () => {
       purchased: ["starter-footballer", "min-energy", "min-light"],
       activated: ["starter-footballer", "min-energy"],
     });
+  });
+
+  it("purchases and persists world unlocks without activating them", () => {
+    const storage = memoryStorage({
+      [UNLOCKS_PROFILE_STORAGE_KEY]: JSON.stringify({
+        version: 1,
+        purchased: ["extra-hp"],
+        activated: ["extra-hp"],
+      }),
+    });
+    const store = createUnlocksStore(storage, richFeats);
+
+    expect(store.purchase("world-fog-beach-party")).toBe("ok");
+    expect(store.getProfile()).toEqual({
+      version: 1,
+      purchased: ["extra-hp", "world-fog-beach-party"],
+      activated: ["extra-hp"],
+    });
+    expect(JSON.parse(storage.dump()[UNLOCKS_PROFILE_STORAGE_KEY]!)).toEqual(store.getProfile());
+  });
+
+  it("bases world access on purchased ids instead of activated ids", () => {
+    const storage = memoryStorage();
+    const store = createUnlocksStore(storage, richFeats);
+
+    expect(store.purchase("world-fog-beach-party")).toBe("ok");
+    expect(store.getProfile().activated).toEqual([]);
+    expect(isWorldUnlocked("fog-beach-party", store.getProfile(), UNLOCK_CATALOG)).toBe(true);
+  });
+
+  it("rejects unowned world unlock activation without mutating the profile", () => {
+    const store = createUnlocksStore(memoryStorage(), richFeats);
+    const before = store.getProfile();
+
+    expect(store.setActive("world-fog-beach-party", true)).toBe("not-owned");
+    expect(store.getProfile()).toEqual(before);
+  });
+
+  it("accepts owned world unlock activation as a no-op", () => {
+    const storage = memoryStorage({
+      [UNLOCKS_PROFILE_STORAGE_KEY]: JSON.stringify({
+        version: 1,
+        purchased: ["world-fog-beach-party"],
+        activated: [],
+      }),
+    });
+    const store = createUnlocksStore(storage, richFeats);
+
+    expect(store.setActive("world-fog-beach-party", true)).toBe("ok");
+    expect(store.getProfile()).toEqual({
+      version: 1,
+      purchased: ["world-fog-beach-party"],
+      activated: [],
+    });
+    expect(JSON.parse(storage.dump()[UNLOCKS_PROFILE_STORAGE_KEY]!)).toEqual(store.getProfile());
   });
 
   it("sets active ids, blocks over-budget activation, and no-ops already-active ids", () => {

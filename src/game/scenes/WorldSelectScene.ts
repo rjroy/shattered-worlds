@@ -1,11 +1,9 @@
 import Phaser from "phaser";
 import { loadAssets } from "../data/assetManifest";
 import { worldManifest } from "../../data/worldManifest";
-import {
-  worldDisplayManifest,
-  type WorldDisplayData,
-} from "../../data/worldDisplayManifest";
+import { worldDisplayManifest, type WorldDisplayData } from "../../data/worldDisplayManifest";
 import type { RunStatsReader } from "../runtime/runStats";
+import type { UnlocksStore } from "../runtime/unlocksProfile";
 import { selectTheme } from "../view/themes/themeManifest";
 import { textStyle, TEXT } from "../view/presentation";
 import { CANVAS_W, CANVAS_H, WORLD_SELECT_LAYOUT } from "../view/layout";
@@ -24,9 +22,7 @@ const ARROW_H = WORLD_SELECT_LAYOUT.arrowHeight;
 const ARROW_GAP = WORLD_SELECT_LAYOUT.arrowGap;
 
 // Common return type for the world card background, which may be either an image or a simple colored rectangle
-type WorldCardBackground =
-  | Phaser.GameObjects.Image
-  | Phaser.GameObjects.Rectangle;
+type WorldCardBackground = Phaser.GameObjects.Image | Phaser.GameObjects.Rectangle;
 type WorldCardView = {
   container: Phaser.GameObjects.Container;
   background: WorldCardBackground;
@@ -44,10 +40,12 @@ export class WorldSelectScene extends Phaser.Scene {
   private rightArrow?: WorldSelectArrow;
   private helpOverlay?: HelpOverlayView;
   private readonly runStats: RunStatsReader | undefined;
+  private readonly unlocksStore: UnlocksStore | undefined;
 
-  constructor(runStats?: RunStatsReader) {
+  constructor(runStats?: RunStatsReader, unlocksStore?: UnlocksStore) {
     super({ key: "WorldSelect" });
     this.runStats = runStats;
+    this.unlocksStore = unlocksStore;
   }
 
   preload(): void {
@@ -166,12 +164,9 @@ export class WorldSelectScene extends Phaser.Scene {
     this.helpOverlay?.destroy(true);
     const buildWorld = worldManifest[worldId];
     if (buildWorld === undefined) {
-      throw new Error(
-        `WorldSelectScene: no world builder found for worldId "${worldId}"`,
-      );
+      throw new Error(`WorldSelectScene: no world builder found for worldId "${worldId}"`);
     }
-    const totalActs =
-      buildWorld("starter").worldData.deckComposition.acts.length;
+    const totalActs = buildWorld("starter").worldData.deckComposition.acts.length;
     this.helpOverlay = new HelpOverlayView(this, worldId, totalActs);
     this.helpOverlay.setVisible(true);
   }
@@ -196,28 +191,19 @@ export class WorldSelectScene extends Phaser.Scene {
       this.visibleStartIndex,
       this.visibleStartIndex + VISIBLE_WORLD_COUNT,
     );
-    const totalW =
-      visibleWorldIds.length * CARD_W + (visibleWorldIds.length - 1) * CARD_GAP;
+    const totalW = visibleWorldIds.length * CARD_W + (visibleWorldIds.length - 1) * CARD_GAP;
     const startX = (CANVAS_W - totalW) / 2 + CARD_W / 2;
 
     visibleWorldIds.forEach((worldId, i) => {
       const display = worldDisplayManifest[worldId];
       if (display === undefined) {
-        throw new Error(
-          `WorldSelectScene: no display entry for worldId "${worldId}"`,
-        );
+        throw new Error(`WorldSelectScene: no display entry for worldId "${worldId}"`);
       }
       const accentColor = Phaser.Display.Color.HexStringToColor(
         selectTheme(worldId).intrusionHue,
       ).color;
       const cardX = startX + i * (CARD_W + CARD_GAP);
-      const newCard = this.createWorldCard(
-        worldId,
-        cardX,
-        CARD_Y,
-        display,
-        accentColor,
-      );
+      const newCard = this.createWorldCard(worldId, cardX, CARD_Y, display, accentColor);
       this.cards.push(newCard);
       const appearTween = this.tweens.add({
         targets: newCard.container,
@@ -233,8 +219,7 @@ export class WorldSelectScene extends Phaser.Scene {
   }
 
   private createArrows(): void {
-    const visibleW =
-      VISIBLE_WORLD_COUNT * CARD_W + (VISIBLE_WORLD_COUNT - 1) * CARD_GAP;
+    const visibleW = VISIBLE_WORLD_COUNT * CARD_W + (VISIBLE_WORLD_COUNT - 1) * CARD_GAP;
     const rowLeft = (CANVAS_W - visibleW) / 2;
     const rowRight = rowLeft + visibleW;
 
@@ -243,28 +228,14 @@ export class WorldSelectScene extends Phaser.Scene {
       this.visibleStartIndex -= 1;
       this.renderVisibleWorlds();
     });
-    this.rightArrow = this.createArrow(
-      rowRight + ARROW_GAP,
-      ARROW_Y,
-      ">",
-      () => {
-        if (
-          this.visibleStartIndex + VISIBLE_WORLD_COUNT >=
-          this.worldIds.length
-        )
-          return;
-        this.visibleStartIndex += 1;
-        this.renderVisibleWorlds();
-      },
-    );
+    this.rightArrow = this.createArrow(rowRight + ARROW_GAP, ARROW_Y, ">", () => {
+      if (this.visibleStartIndex + VISIBLE_WORLD_COUNT >= this.worldIds.length) return;
+      this.visibleStartIndex += 1;
+      this.renderVisibleWorlds();
+    });
   }
 
-  private createArrow(
-    x: number,
-    y: number,
-    label: string,
-    onClick: () => void,
-  ): WorldSelectArrow {
+  private createArrow(x: number, y: number, label: string, onClick: () => void): WorldSelectArrow {
     const container = this.add.container(x, y);
     const hitArea = this.add.rectangle(0, 0, ARROW_W, ARROW_H, 0x160f1f, 0.66);
     hitArea.setStrokeStyle(2, 0xc178bc, 0.9);
@@ -298,10 +269,7 @@ export class WorldSelectScene extends Phaser.Scene {
     );
   }
 
-  private setArrowEnabled(
-    arrow: WorldSelectArrow | undefined,
-    enabled: boolean,
-  ): void {
+  private setArrowEnabled(arrow: WorldSelectArrow | undefined, enabled: boolean): void {
     if (arrow === undefined) return;
     arrow.container.setAlpha(enabled ? 1 : TEXT.dimAlpha);
     arrow.hitArea.setInteractive({ useHandCursor: enabled });
@@ -319,12 +287,10 @@ export class WorldSelectScene extends Phaser.Scene {
       const img = this.add.image(0, 0, display.backgroundKey);
 
       const tintColor = Phaser.Display.Color.Interpolate.ColorWithColor(
-        Phaser.Display.Color.ValueToColor(0x1f1123),
-        Phaser.Display.Color.HexStringToColor(
-          selectTheme(worldId).intrusionHue,
-        ),
+        Phaser.Display.Color.ValueToColor(0x5f4580),
+        Phaser.Display.Color.HexStringToColor(selectTheme(worldId).intrusionHue),
         100,
-        10,
+        20,
       );
       img.setTint(tintColor.color);
 
@@ -389,6 +355,11 @@ export class WorldSelectScene extends Phaser.Scene {
       )
       .setOrigin(0.5, 0);
 
+    const nameBg = this.add
+      .rectangle(nameText.x, nameText.y - 2, nameText.width + 4, nameText.height + 4, 0x0b0710, 0.6)
+      .setOrigin(0.5, 0)
+      .setRounded(4);
+
     const tagLineY = Math.max(
       -CARD_H / 2 + WORLD_SELECT_LAYOUT.tagMinY,
       nameText.y + nameText.height + WORLD_SELECT_LAYOUT.textGap,
@@ -408,6 +379,11 @@ export class WorldSelectScene extends Phaser.Scene {
       )
       .setOrigin(0.5, 0);
 
+    const tagBg = this.add
+      .rectangle(tagText.x, tagText.y - 2, tagText.width + 4, tagText.height + 4, 0x0b0710, 0.6)
+      .setOrigin(0.5, 0)
+      .setRounded(4);
+
     const storyLineY = Math.max(
       -CARD_H / 2 + WORLD_SELECT_LAYOUT.storyMinY,
       tagText.y + tagText.height + WORLD_SELECT_LAYOUT.textGap,
@@ -425,24 +401,31 @@ export class WorldSelectScene extends Phaser.Scene {
         }),
       )
       .setOrigin(0.5, 0);
+    const storyBg = this.add
+      .rectangle(
+        storyText.x,
+        storyText.y - 2,
+        storyText.width + 4,
+        storyText.height + 4,
+        0x0b0710,
+        0.6,
+      )
+      .setOrigin(0.5, 0)
+      .setRounded(4);
 
     const contents: Phaser.GameObjects.GameObject[] = [
       bg,
       border,
+      nameBg,
       nameText,
+      tagBg,
       tagText,
+      storyBg,
       storyText,
     ];
     const badge = worldBadgeLabel(this.runStats?.lifetime().byWorld[worldId]);
     if (badge !== null) {
-      const badgeBg = this.add.rectangle(
-        CARD_W / 2 - 48,
-        CARD_H / 2 - 28,
-        70,
-        26,
-        0x0b0710,
-        0.88,
-      );
+      const badgeBg = this.add.rectangle(CARD_W / 2 - 48, CARD_H / 2 - 28, 70, 26, 0x0b0710, 0.88);
       badgeBg.setStrokeStyle(1, accentColor, 0.8);
       badgeBg.setRounded(8);
       const badgeText = this.add
@@ -462,9 +445,7 @@ export class WorldSelectScene extends Phaser.Scene {
 
     container.add(contents);
 
-    bg.on("pointerover", () =>
-      container.setScale(WORLD_SELECT_LAYOUT.hoverScale),
-    );
+    bg.on("pointerover", () => container.setScale(WORLD_SELECT_LAYOUT.hoverScale));
     bg.on("pointerout", () => container.setScale(1.0));
     bg.on("pointerdown", () => {
       bg.disableInteractive();

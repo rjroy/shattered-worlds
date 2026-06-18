@@ -11,6 +11,7 @@ import {
   computeSpendableBalance,
   computeUnlockSpend,
   DESTINY_BUDGET,
+  isWorldUnlocked,
   UNLOCK_CATALOG,
 } from "./catalog";
 
@@ -45,6 +46,28 @@ describe("UNLOCK_CATALOG", () => {
     });
     expect(fortune?.destinyWeight).toBeLessThanOrEqual(DESTINY_BUDGET);
     expect(fortune?.description).not.toContain(["Not", "Implemented"].join(""));
+  });
+
+  it("defines Fog Beach Party as a world access unlock", () => {
+    expect(UNLOCK_CATALOG.find((def) => def.id === "world-fog-beach-party")).toMatchObject({
+      id: "world-fog-beach-party",
+      name: "Fog Beach Party",
+      cost: 5,
+      destinyWeight: 0,
+      effect: { type: "worldUnlock", worldId: "fog-beach-party" },
+    });
+  });
+
+  it("defines Whiteout Parking Garage as a world access unlock", () => {
+    expect(
+      UNLOCK_CATALOG.find((def) => def.id === "world-whiteout-parking-garage"),
+    ).toMatchObject({
+      id: "world-whiteout-parking-garage",
+      name: "Whiteout Parking Garage",
+      cost: 5,
+      destinyWeight: 0,
+      effect: { type: "worldUnlock", worldId: "whiteout-parking-garage" },
+    });
   });
 });
 
@@ -152,11 +175,48 @@ describe("buildRunModifiers", () => {
     expect(computeUnlockSpend(profile, UNLOCK_CATALOG)).toBe(30);
     expect(buildRunModifiers(profile.activated, UNLOCK_CATALOG).playerCardModifiers).toEqual([]);
   });
+
+  it("does not apply world unlocks as run modifiers", () => {
+    expect(buildRunModifiers(["world-fog-beach-party"], UNLOCK_CATALOG)).toEqual(
+      DEFAULT_RUN_MODIFIERS,
+    );
+  });
+});
+
+describe("isWorldUnlocked", () => {
+  it("returns true for ungated worlds", () => {
+    expect(isWorldUnlocked("zombie-big-box", unlocks([]), UNLOCK_CATALOG)).toBe(true);
+  });
+
+  it("returns false for gated worlds that have not been purchased", () => {
+    expect(isWorldUnlocked("fog-beach-party", unlocks([]), UNLOCK_CATALOG)).toBe(false);
+  });
+
+  it("returns true for gated worlds whose unlock has been purchased", () => {
+    expect(isWorldUnlocked("fog-beach-party", unlocks(["world-fog-beach-party"]), UNLOCK_CATALOG)).toBe(
+      true,
+    );
+  });
+
+  it("ignores unknown purchased ids when checking gated worlds", () => {
+    expect(isWorldUnlocked("whiteout-parking-garage", unlocks(["unknown"]), UNLOCK_CATALOG)).toBe(
+      false,
+    );
+  });
 });
 
 describe("Destiny budget helpers", () => {
   it("sums active weight and ignores unknown ids", () => {
     expect(activeWeight(["extra-hp", "keyword-bonus", "unknown"], UNLOCK_CATALOG)).toBe(3);
+  });
+
+  it("counts world unlocks as zero active weight", () => {
+    expect(
+      activeWeight(
+        ["world-fog-beach-party", "world-whiteout-parking-garage"],
+        UNLOCK_CATALOG,
+      ),
+    ).toBe(0);
   });
 
   it("allows activation that fits, blocks over-budget and already-active ids", () => {
