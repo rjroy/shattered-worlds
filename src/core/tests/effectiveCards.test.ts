@@ -302,7 +302,7 @@ describe("effectivePlayerCard", () => {
 
     expect(hand).toHaveLength(2);
     expect(hand[0]).toBe(world);
-    expect(hand[1]).toEqual({ ...player, energyCost: 0 });
+    expect(hand[1]).toEqual({ ...player, energyCost: 0, modified: true, name: "sprint-free" });
     expect(hand[1]).not.toBe(player);
   });
 });
