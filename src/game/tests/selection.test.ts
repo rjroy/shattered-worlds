@@ -191,6 +191,18 @@ describe("Cut It Loose walk (destroyHand(1,1) + hazard)", () => {
 // ---------------------------------------------------------------------------
 
 describe("'none' step skipping", () => {
+  it("beginTargeting snapshots compound steps so active selection shape stays stable", () => {
+    const steps: TargetSpec[] = [{ kind: "none" }, { kind: "hazard" }];
+    const spec: TargetSpec = { kind: "compound", steps };
+    const sel = beginTargeting("p1", spec);
+
+    steps.splice(0, steps.length, { kind: "discardPlayer" });
+
+    if (sel.phase !== "targeting") throw new Error("expected targeting");
+    expect(sel.steps).toEqual([{ kind: "none" }, { kind: "hazard" }]);
+    expect(sel.stepIdx).toBe(1);
+  });
+
   it("Panic-shape [returnWorld(1,2), none]: stepIdx=0, none not skipped as leading", () => {
     const spec: TargetSpec = {
       kind: "compound",

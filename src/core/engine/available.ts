@@ -10,6 +10,18 @@ import type {
 } from "../model/types";
 import { EFFECTS } from "../effects/registry";
 import { effectAtStep } from "../effects/composite";
+import { effectivePlayerCard } from "./effectiveCards";
+
+type TargetPathSegment =
+  | { kind: "step"; index: number }
+  | { kind: "branch"; index: number };
+
+type LegalTargetsAtPath = (
+  cardId: CardId,
+  path: readonly TargetPathSegment[],
+) => readonly CardId[];
+
+const legalTargetsAtPathByAvailable = new WeakMap<AvailableActions, LegalTargetsAtPath>();
 
 // ---------------------------------------------------------------------------
 // Internal helpers
@@ -71,7 +83,23 @@ function computeLegalTargetsForEffect(
   return h.legalTargets(effect as never, card.id, state);
 }
 
-function computeLegalTargets(card: PlayerCard, step: number, state: GameState): readonly CardId[] {
+function computeLegalTargets(
+  card: PlayerCard,
+  step: number,
+  state: GameState,
+  choice?: number,
+): readonly CardId[] {
+  if (choice !== undefined) {
+    return computeLegalTargetsAtPath(
+      card,
+      [
+        { kind: "step", index: step },
+        { kind: "branch", index: choice },
+      ],
+      state,
+    );
+  }
+
   const effect = card.effect;
   const stepEffect =
     effect.kind === "Modal" || effect.kind === "Sequence"
@@ -80,6 +108,33 @@ function computeLegalTargets(card: PlayerCard, step: number, state: GameState): 
         ? effect
         : null;
   return stepEffect === null ? [] : computeLegalTargetsForEffect(card, stepEffect, state);
+}
+
+function computeLegalTargetsAtPath(
+  card: PlayerCard,
+  path: readonly TargetPathSegment[],
+  state: GameState,
+): readonly CardId[] {
+  const effect = effectAtPath(card.effect, path);
+  return effect === null ? [] : computeLegalTargetsForEffect(card, effect, state);
+}
+
+function effectAtPath(
+  effect: CardEffect,
+  path: readonly TargetPathSegment[],
+): CardEffect | null {
+  let current: CardEffect | null = effect;
+
+  for (const segment of path) {
+    if (current === null) return null;
+    if (segment.kind === "step") {
+      current = current.kind === "Sequence" ? (current.steps[segment.index] ?? null) : null;
+    } else {
+      current = current.kind === "Modal" ? (current.branches[segment.index] ?? null) : null;
+    }
+  }
+
+  return current;
 }
 
 // ---------------------------------------------------------------------------
@@ -103,7 +158,7 @@ export function checkPlayAction(
     return `Card ${action.cardId} is not playable`;
   }
 
-  return checkSpec(entry.spec, action, entry.cardId, available, 0);
+  return checkSpec(entry.spec, action, entry.cardId, available, []);
 }
 
 function checkSpec(
@@ -111,14 +166,14 @@ function checkSpec(
   action: Extract<Action, { type: "PlayCard" }>,
   cardId: CardId,
   available: AvailableActions,
-  step: number,
+  path: readonly TargetPathSegment[],
 ): string | null {
   switch (spec.kind) {
     case "none":
       return null;
 
     case "hazard": {
-      const legal = available.legalTargets(cardId, step);
+      const legal = legalTargetsForCheck(available, cardId, path);
       if (action.targetId === undefined || !legal.includes(action.targetId)) {
         return `targetId ${action.targetId} is not a legal hazard target for card ${cardId}`;
       }
@@ -126,7 +181,7 @@ function checkSpec(
     }
 
     case "returnWorld": {
-      const legal = available.legalTargets(cardId, step);
+      const legal = legalTargetsForCheck(available, cardId, path);
       const ids = action.returnIds ?? [];
       if (ids.length < spec.min || ids.length > spec.max) {
         return `returnIds count ${ids.length} is outside [${spec.min},${spec.max}] for card ${cardId}`;
@@ -142,7 +197,7 @@ function checkSpec(
     case "destroyHand": {
       const length = action.destroyIds === undefined ? 0 : action.destroyIds.length;
       if (length === 0 && spec.min === 0) return null; // min is 0, destruction is optional
-      const legal = available.legalTargets(cardId, step);
+      const legal = legalTargetsForCheck(available, cardId, path);
       if (length === 0 || !legal.some((id) => action.destroyIds?.includes(id))) {
         return `destroyIds ${action.destroyIds} are not a legal destroy target for card ${cardId}`;
       }
@@ -154,7 +209,7 @@ function checkSpec(
       if (ids.length === 0 || ids.length > spec.amount) {
         return `thawIds count ${ids.length} is outside [1,${spec.amount}] for card ${cardId}`;
       }
-      const legal = available.legalTargets(cardId, step);
+      const legal = legalTargetsForCheck(available, cardId, path);
       for (const id of ids) {
         if (!legal.includes(id)) {
           return `thawId ${id} is not a legal thaw target for card ${cardId}`;
@@ -164,7 +219,7 @@ function checkSpec(
     }
 
     case "discardPlayer": {
-      const legal = available.legalTargets(cardId, step);
+      const legal = legalTargetsForCheck(available, cardId, path);
       if (action.discardId === undefined || !legal.includes(action.discardId)) {
         return `discardId ${action.discardId} is not a legal discard target for card ${cardId}`;
       }
@@ -176,17 +231,54 @@ function checkSpec(
       if (choice === undefined || choice < 0 || choice >= spec.branches.length) {
         return `choice ${action.choice} is not a valid branch index for card ${cardId}`;
       }
-      return checkSpec(spec.branches[choice]!, action, cardId, available, choice);
+      return checkSpec(spec.branches[choice]!, action, cardId, available, [
+        ...path,
+        { kind: "branch", index: choice },
+      ]);
     }
 
     case "compound": {
       for (let i = 0; i < spec.steps.length; i++) {
-        const err = checkSpec(spec.steps[i]!, action, cardId, available, i);
+        const err = checkSpec(spec.steps[i]!, action, cardId, available, [
+          ...path,
+          { kind: "step", index: i },
+        ]);
         if (err !== null) return err;
       }
       return null;
     }
   }
+}
+
+function legalTargetsForCheck(
+  available: AvailableActions,
+  cardId: CardId,
+  path: readonly TargetPathSegment[],
+): readonly CardId[] {
+  const legalTargetsAtPath = legalTargetsAtPathByAvailable.get(available);
+  if (legalTargetsAtPath !== undefined) return legalTargetsAtPath(cardId, path);
+
+  const fallback = fallbackPublicSelector(path);
+  return available.legalTargets(cardId, fallback.step, fallback.choice);
+}
+
+function fallbackPublicSelector(path: readonly TargetPathSegment[]): {
+  step: number;
+  choice?: number;
+} {
+  const topLevel = path[0];
+  if (topLevel === undefined) return { step: 0 };
+
+  if (topLevel.kind === "branch") {
+    return { step: topLevel.index };
+  }
+
+  const branch = path[1];
+  if (branch?.kind === "branch") {
+    return { step: topLevel.index, choice: branch.index };
+  }
+
+  return { step: topLevel.index };
 }
 
 // ---------------------------------------------------------------------------
@@ -218,16 +310,17 @@ export function availableActions(
   for (const card of state.hand) {
     if (card.kind !== "player") continue;
     if ((card.frozen ?? 0) > 0) continue;
+    const effectiveCard = effectivePlayerCard(card, state);
 
     // Energy affordability gate: skip if card costs more than current energy,
     // unless ignoreEnergy is explicitly true (used only by loss guard in Step 6).
-    if (opts?.ignoreEnergy !== true && card.energyCost > state.energy) {
+    if (opts?.ignoreEnergy !== true && effectiveCard.energyCost > state.energy) {
       continue;
     }
 
-    const spec = playableSpec(card.effect, state, card.id);
+    const spec = playableSpec(effectiveCard.effect, state, effectiveCard.id);
     if (spec !== null) {
-      playable.push({ cardId: card.id, spec });
+      playable.push({ cardId: effectiveCard.id, spec });
     }
   }
 
@@ -237,11 +330,18 @@ export function availableActions(
 
   const canEndTurn = state.status === "playing";
 
-  function legalTargets(cardId: CardId, step: number): readonly CardId[] {
+  function legalTargets(cardId: CardId, step: number, choice?: number): readonly CardId[] {
     const card = state.hand.find((c) => c.id === cardId);
     if (card === undefined || card.kind !== "player") return [];
-    return computeLegalTargets(card, step, state);
+    return computeLegalTargets(effectivePlayerCard(card, state), step, state, choice);
   }
 
-  return { playable, discardable, canEndTurn, legalTargets };
+  const result: AvailableActions = { playable, discardable, canEndTurn, legalTargets };
+  legalTargetsAtPathByAvailable.set(result, (cardId, path) => {
+    const card = state.hand.find((c) => c.id === cardId);
+    if (card === undefined || card.kind !== "player") return [];
+    return computeLegalTargetsAtPath(effectivePlayerCard(card, state), path, state);
+  });
+
+  return result;
 }

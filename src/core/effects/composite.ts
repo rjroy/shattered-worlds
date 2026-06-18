@@ -133,8 +133,9 @@ export class SequenceHandler extends EffectHandler<SequenceEffect> {
   }
 
   override isPlayable(effect: SequenceEffect, state: GameState, selfId: CardId): boolean {
-    // The first step determines whether the whole sequence is playable.
-    return isPlayableOf(effect.steps[0]!, state, selfId);
+    // Every step must have a legal play; appended effective effects can add
+    // target requirements after an otherwise playable no-target base effect.
+    return effect.steps.every((step) => isPlayableOf(step, state, selfId));
   }
 
   override legalTargets(

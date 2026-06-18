@@ -6,6 +6,7 @@ import { startTurn, spendEnergy } from "./energy";
 import { IllegalActionError } from "../model/errors";
 import { mintCard } from "../model/cards";
 import { createActBoonOffer } from "./actBoon";
+import { effectivePlayerCard } from "./effectiveCards";
 
 // ---------------------------------------------------------------------------
 // Result type
@@ -33,37 +34,55 @@ function handlePlayCard(
 
   const { cardId } = action;
 
-  // Find the card object in hand to get its effect
-  const card = state.hand.find((c) => c.id === cardId);
-  if (card === undefined || card.kind !== "player") {
+  const baseCard = state.hand.find((c) => c.id === cardId);
+  if (baseCard === undefined || baseCard.kind !== "player") {
     throw new IllegalActionError(action, state, `Card ${cardId} not found in hand`);
   }
 
-  // Remove the card from hand. A normal card recycles to playerDiscard; an
-  // exhaust card is destroyed (sent to no zone).
-  const exhaust = card.exhaust === true;
-  const stateAfterPlay: GameState = {
-    ...state,
-    hand: state.hand.filter((c) => c.id !== cardId),
-    playerDiscard: exhaust ? state.playerDiscard : [card, ...state.playerDiscard],
+  const snapshot = effectivePlayerCard(baseCard, state);
+  const templateOrdinalThisTurn =
+    (state.turnPlayHistory.byTemplateId[baseCard.templateId] ?? 0) + 1;
+  const turnPlayHistory = {
+    cardsPlayedThisTurn: state.turnPlayHistory.cardsPlayedThisTurn + 1,
+    byTemplateId: {
+      ...state.turnPlayHistory.byTemplateId,
+      [baseCard.templateId]: templateOrdinalThisTurn,
+    },
   };
 
-  const events: GameEvent[] = [{ type: "CardPlayed", cardId }];
+  // Remove the base card from hand. A normal card recycles to playerDiscard; an
+  // exhaust card is destroyed (sent to no zone).
+  const exhaust = snapshot.exhaust === true;
+  const stateAfterPlay: GameState = {
+    ...state,
+    turnPlayHistory,
+    hand: state.hand.filter((c) => c.id !== cardId),
+    playerDiscard: exhaust ? state.playerDiscard : [baseCard, ...state.playerDiscard],
+  };
+
+  const events: GameEvent[] = [
+    {
+      type: "CardPlayed",
+      cardId,
+      templateId: baseCard.templateId,
+      templateOrdinalThisTurn,
+    },
+  ];
 
   // Deduct energy cost (REQ-ENERGY-10)
   // spendEnergy only emits EnergyChanged when cost > 0; cost-0 cards are silent
-  const spendResult = spendEnergy(stateAfterPlay, card.energyCost);
+  const spendResult = spendEnergy(stateAfterPlay, snapshot.energyCost);
   const stateAfterSpend = spendResult.state;
   events.push(...spendResult.events);
 
   // Apply the card's effect (on the post-spend state)
-  const effectResult = applyEffect(catalog, stateAfterSpend, card.effect, action);
+  const effectResult = applyEffect(catalog, stateAfterSpend, snapshot.effect, action);
   events.push(...effectResult.events);
 
   // CardDestroyed comes AFTER the effect events so the play reads as
   // play → spend → effect → the card vanishes.
   if (exhaust) {
-    events.push({ type: "CardDestroyed", ids: [cardId], templateIds: [card.templateId] });
+    events.push({ type: "CardDestroyed", ids: [cardId], templateIds: [baseCard.templateId] });
   }
 
   return { state: effectResult.state, events };
@@ -150,6 +169,7 @@ function handleEndTurn(catalog: CardCatalog, state: GameState): ReduceResult {
     hand: [...worldCardsInHand, ...frozenPlayerCards],
     playerDiscard: [...unfrozenPlayerCards, ...current.playerDiscard],
     progress: {},
+    turnPlayHistory: { cardsPlayedThisTurn: 0, byTemplateId: {} },
   };
 
   if (discardedIds.length > 0) {

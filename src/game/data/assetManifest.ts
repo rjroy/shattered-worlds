@@ -44,11 +44,16 @@ import unlockExtraEnergyUrl from "../assets/unlocks/extra-energy.webp";
 import unlockExtraHeatUrl from "../assets/unlocks/extra-heat.webp";
 import unlockExtraHpUrl from "../assets/unlocks/extra-hp.webp";
 import unlockExtraLightUrl from "../assets/unlocks/extra-light.webp";
+import unlockFirstSprintFreeUrl from "../assets/unlocks/first-sprint-free.webp";
 import unlockHandSizePerActUrl from "../assets/unlocks/hand-size-per-act.webp";
 import unlockKeywordBonusUrl from "../assets/unlocks/keyword-bonus.webp";
 import unlockMinEnergyUrl from "../assets/unlocks/min-energy.webp";
 import unlockMinLightUrl from "../assets/unlocks/min-light.webp";
+import unlockPanicResponseUrl from "../assets/unlocks/panic-response.webp";
+import unlockSecondExplorePushUrl from "../assets/unlocks/second-explore-push.webp";
+import unlockStarterContractorUrl from "../assets/unlocks/starter-contractor.webp";
 import unlockStarterFootballerUrl from "../assets/unlocks/starter-footballer.webp";
+import unlockStrongBarricadesUrl from "../assets/unlocks/strong-barricades.webp";
 import worldSelectBgUrl from "../assets/world-select.webp";
 import screenChronicleUrl from "../assets/screens/shattered-chronicle.webp";
 import screenDestinyUrl from "../assets/screens/shattered-destiny.webp";
@@ -104,11 +109,16 @@ export const assetManifest: Record<string, string> = {
   "unlock/extra-heat": unlockExtraHeatUrl,
   "unlock/extra-hp": unlockExtraHpUrl,
   "unlock/extra-light": unlockExtraLightUrl,
+  "unlock/first-sprint-free": unlockFirstSprintFreeUrl,
   "unlock/hand-size-per-act": unlockHandSizePerActUrl,
   "unlock/keyword-bonus": unlockKeywordBonusUrl,
   "unlock/min-energy": unlockMinEnergyUrl,
   "unlock/min-light": unlockMinLightUrl,
+  "unlock/panic-response": unlockPanicResponseUrl,
+  "unlock/second-explore-push": unlockSecondExplorePushUrl,
+  "unlock/starter-contractor": unlockStarterContractorUrl,
   "unlock/starter-footballer": unlockStarterFootballerUrl,
+  "unlock/strong-barricades": unlockStrongBarricadesUrl,
   "world-select-bg": worldSelectBgUrl,
   "screen-chronicle": screenChronicleUrl,
   "screen-destiny": screenDestinyUrl,

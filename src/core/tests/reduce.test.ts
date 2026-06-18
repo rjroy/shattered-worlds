@@ -14,7 +14,11 @@ import { IllegalActionError } from "../model/errors";
 import { buildWorld } from "../../data/worldManifest";
 import type { GameEvent, GameState, PlayerCard, WorldCard } from "../model/types";
 import { catalog, worldData } from "./testFixture";
-import { DEFAULT_RUN_MODIFIERS, type RunModifiers } from "../../data/unlocks/types";
+import {
+  DEFAULT_RUN_MODIFIERS,
+  type PlayerCardModifier,
+  type RunModifiers,
+} from "../../data/unlocks/types";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -61,6 +65,25 @@ function actBoonModifier(
 
 function modsWithActBoon(actBoon: RunModifiers["actBoon"]): RunModifiers {
   return { ...DEFAULT_RUN_MODIFIERS, actBoon };
+}
+
+function cardModifier(
+  id: string,
+  templateId: string,
+  patches: PlayerCardModifier["patches"],
+  condition: PlayerCardModifier["condition"] = { kind: "always" },
+): PlayerCardModifier {
+  return {
+    id,
+    displayName: id,
+    target: { kind: "template", templateId },
+    condition,
+    patches,
+  };
+}
+
+function modsWithCardModifiers(playerCardModifiers: readonly PlayerCardModifier[]): RunModifiers {
+  return { ...DEFAULT_RUN_MODIFIERS, playerCardModifiers };
 }
 
 function makeActAdvanceState(options: {
@@ -150,6 +173,239 @@ describe("PlayCard basic", () => {
     expect(result.state.hand.some((c) => c.id === explore.id)).toBe(false);
     // Status still playing
     expect(result.state.status).toBe("playing");
+  });
+});
+
+describe("PlayCard effective card snapshots", () => {
+  it("first Sprint spends 0, second Sprint in the same turn spends normal cost", () => {
+    const { state: base } = createWorld(catalog, worldData, 42);
+    const [sprint1, s1] = mintCard(catalog, base, "Sprint");
+    const [sprint2, s2] = mintCard(catalog, s1, "Sprint");
+    const [draw1, s3] = mintCard(catalog, s2, "Explore");
+    const [draw2, s4] = mintCard(catalog, s3, "Explore");
+    const [draw3, s5] = mintCard(catalog, s4, "Explore");
+    const [draw4, s6] = mintCard(catalog, s5, "Explore");
+    const [worldDraw1, s7] = mintCard(catalog, s6, "Rubble");
+    const [worldDraw2, s8] = mintCard(catalog, s7, "Rubble");
+
+    const state = makeState({
+      ...s8,
+      hand: [sprint1 as PlayerCard, sprint2 as PlayerCard],
+      playerDraw: [draw1, draw2, draw3, draw4],
+      worldDraw: [worldDraw1 as WorldCard, worldDraw2 as WorldCard],
+      energy: 1,
+      runModifiers: modsWithCardModifiers([
+        cardModifier("first-sprint-free", "Sprint", [{ kind: "setEnergyCost", energyCost: 0 }], {
+          kind: "templatePlayOrdinalThisTurn",
+          ordinal: 1,
+        }),
+      ]),
+    });
+
+    const first = reduce(catalog, state, {
+      type: "PlayCard",
+      cardId: sprint1.id,
+      choice: 0,
+    });
+    expect(first.state.energy).toBe(1);
+    expect(first.state.turnPlayHistory).toEqual({
+      cardsPlayedThisTurn: 1,
+      byTemplateId: { Sprint: 1 },
+    });
+    expect(first.events.find((event) => event.type === "EnergyChanged")).toBeUndefined();
+    expect(first.events[0]).toEqual({
+      type: "CardPlayed",
+      cardId: sprint1.id,
+      templateId: "Sprint",
+      templateOrdinalThisTurn: 1,
+    });
+
+    const second = reduce(catalog, first.state, {
+      type: "PlayCard",
+      cardId: sprint2.id,
+      choice: 0,
+    });
+    expect(second.state.energy).toBe(0);
+    expect(second.state.turnPlayHistory).toEqual({
+      cardsPlayedThisTurn: 2,
+      byTemplateId: { Sprint: 2 },
+    });
+    expect(second.events).toContainEqual({ type: "EnergyChanged", energy: 0 });
+    expect(second.events[0]).toEqual({
+      type: "CardPlayed",
+      cardId: sprint2.id,
+      templateId: "Sprint",
+      templateOrdinalThisTurn: 2,
+    });
+  });
+
+  it("resets play history on EndTurn before the next turn is used", () => {
+    const { state: base } = createWorld(catalog, worldData, 42);
+    const [sprint, s1] = mintCard(catalog, base, "Sprint");
+    const [draw1, s2] = mintCard(catalog, s1, "Explore");
+    const [draw2, s3] = mintCard(catalog, s2, "Explore");
+    const [worldDraw, s4] = mintCard(catalog, s3, "Rubble");
+
+    const state = makeState({
+      ...s4,
+      hand: [sprint as PlayerCard],
+      playerDraw: [draw1, draw2],
+      worldDraw: [worldDraw as WorldCard],
+      energy: 1,
+    });
+
+    const afterPlay = reduce(catalog, state, {
+      type: "PlayCard",
+      cardId: sprint.id,
+      choice: 0,
+    });
+    expect(afterPlay.state.turnPlayHistory.cardsPlayedThisTurn).toBe(1);
+
+    const afterEnd = reduce(catalog, afterPlay.state, { type: "EndTurn" });
+    expect(afterEnd.state.turnPlayHistory).toEqual({
+      cardsPlayedThisTurn: 0,
+      byTemplateId: {},
+    });
+  });
+
+  it("does not change play history for an illegal PlayCard", () => {
+    const { state: base } = createWorld(catalog, worldData, 42);
+    const [explore, s1] = mintCard(catalog, base, "Explore");
+    const state = makeState({
+      ...s1,
+      hand: [explore as PlayerCard],
+      turnPlayHistory: {
+        cardsPlayedThisTurn: 1,
+        byTemplateId: { Sprint: 1 },
+      },
+    });
+
+    expect(() =>
+      reduce(catalog, state, {
+        type: "PlayCard",
+        cardId: explore.id,
+        targetId: "missing-world",
+      }),
+    ).toThrow(IllegalActionError);
+    expect(state.turnPlayHistory).toEqual({
+      cardsPlayedThisTurn: 1,
+      byTemplateId: { Sprint: 1 },
+    });
+  });
+
+  it("resolves Panic's original effect and an appended DealProgressAll snapshot effect", () => {
+    const { state: base } = createWorld(catalog, worldData, 42);
+    const [panic, s1] = mintCard(catalog, base, "Panic");
+    const [returned, s2] = mintCard(catalog, s1, "Rubble");
+    const [swept, s3] = mintCard(catalog, s2, "Rubble");
+    const [drawnWorld, s4] = mintCard(catalog, s3, "Rubble");
+
+    const state = makeState({
+      ...s4,
+      hand: [panic as PlayerCard, returned as WorldCard, swept as WorldCard],
+      worldDraw: [drawnWorld as WorldCard],
+      energy: 1,
+      runModifiers: modsWithCardModifiers([
+        cardModifier("panic-sweep", "Panic", [
+          { kind: "appendEffect", effect: { kind: "DealProgressAll", base: 1 } },
+        ]),
+      ]),
+    });
+
+    const result = reduce(catalog, state, {
+      type: "PlayCard",
+      cardId: panic.id,
+      returnIds: [returned.id],
+    });
+
+    expect(result.events).toContainEqual({
+      type: "WorldCardsReturned",
+      ids: [returned.id],
+      templateIds: [returned.templateId],
+    });
+    expect(result.events).toContainEqual({
+      type: "ProgressDealt",
+      hazardId: swept.id,
+      templateId: swept.templateId,
+      amount: 1,
+      hazardTurnTotal: 1,
+    });
+    expect(result.events).toContainEqual({
+      type: "HazardResolved",
+      hazardId: swept.id,
+      templateId: swept.templateId,
+    });
+  });
+
+  it("recycles the base card identity and emits the base template in CardPlayed", () => {
+    const { state: base } = createWorld(catalog, worldData, 42);
+    const [sprint, s1] = mintCard(catalog, base, "Sprint");
+    const [draw1, s2] = mintCard(catalog, s1, "Explore");
+    const [draw2, s3] = mintCard(catalog, s2, "Explore");
+    const [draw3, s4] = mintCard(catalog, s3, "Explore");
+    const [worldDraw, s5] = mintCard(catalog, s4, "Rubble");
+
+    const state = makeState({
+      ...s5,
+      hand: [sprint as PlayerCard],
+      playerDraw: [draw1, draw2, draw3],
+      worldDraw: [worldDraw as WorldCard],
+      energy: 1,
+      runModifiers: modsWithCardModifiers([
+        cardModifier("rename-sprint", "Sprint", [{ kind: "rename", name: "Free Sprint" }]),
+      ]),
+    });
+
+    const result = reduce(catalog, state, {
+      type: "PlayCard",
+      cardId: sprint.id,
+      choice: 0,
+    });
+
+    expect(result.state.playerDiscard[0]).toBe(sprint);
+    expect(result.state.playerDiscard[0]).toMatchObject({
+      id: sprint.id,
+      templateId: "Sprint",
+      name: "Sprint",
+    });
+    expect(result.events[0]).toEqual({
+      type: "CardPlayed",
+      cardId: sprint.id,
+      templateId: "Sprint",
+      templateOrdinalThisTurn: 1,
+    });
+  });
+
+  it("destroys the base card when the effective snapshot exhausts it", () => {
+    const { state: base } = createWorld(catalog, worldData, 42);
+    const [sprint, s1] = mintCard(catalog, base, "Sprint");
+    const [draw1, s2] = mintCard(catalog, s1, "Explore");
+    const [draw2, s3] = mintCard(catalog, s2, "Explore");
+    const [worldDraw, s4] = mintCard(catalog, s3, "Rubble");
+
+    const state = makeState({
+      ...s4,
+      hand: [sprint as PlayerCard],
+      playerDraw: [draw1, draw2],
+      worldDraw: [worldDraw as WorldCard],
+      energy: 1,
+      runModifiers: modsWithCardModifiers([
+        cardModifier("exhaust-sprint", "Sprint", [{ kind: "setExhaust", exhaust: true }]),
+      ]),
+    });
+
+    const result = reduce(catalog, state, {
+      type: "PlayCard",
+      cardId: sprint.id,
+      choice: 0,
+    });
+
+    expect(result.state.playerDiscard.some((card) => card.id === sprint.id)).toBe(false);
+    expect(result.events).toContainEqual({
+      type: "CardDestroyed",
+      ids: [sprint.id],
+      templateIds: ["Sprint"],
+    });
   });
 });
 
@@ -1674,8 +1930,14 @@ describe("Act boon offer generation", () => {
   });
 
   it("does not trigger from terminal states", () => {
-    const lostState = { ...makeActAdvanceState({ actBoon: actBoonModifier() }), status: "lost" as const };
-    const wonState = { ...makeActAdvanceState({ actBoon: actBoonModifier() }), status: "won" as const };
+    const lostState = {
+      ...makeActAdvanceState({ actBoon: actBoonModifier() }),
+      status: "lost" as const,
+    };
+    const wonState = {
+      ...makeActAdvanceState({ actBoon: actBoonModifier() }),
+      status: "won" as const,
+    };
 
     expect(() => reduce(catalog, lostState, { type: "EndTurn" })).toThrow(IllegalActionError);
     expect(() => reduce(catalog, wonState, { type: "EndTurn" })).toThrow(IllegalActionError);
@@ -1684,21 +1946,15 @@ describe("Act boon offer generation", () => {
   it("is deterministic for the same seed and stays within the pool for another seed", () => {
     const seed777Offer = ["Steady Nerve", "Second Wind", "Clear Path"];
     const seed778Offer = ["Steady Nerve", "Found Tool", "Second Wind"];
-    const a = reduce(
-      catalog,
-      makeActAdvanceState({ seed: 777, actBoon: actBoonModifier() }),
-      { type: "EndTurn" },
-    );
-    const b = reduce(
-      catalog,
-      makeActAdvanceState({ seed: 777, actBoon: actBoonModifier() }),
-      { type: "EndTurn" },
-    );
-    const c = reduce(
-      catalog,
-      makeActAdvanceState({ seed: 778, actBoon: actBoonModifier() }),
-      { type: "EndTurn" },
-    );
+    const a = reduce(catalog, makeActAdvanceState({ seed: 777, actBoon: actBoonModifier() }), {
+      type: "EndTurn",
+    });
+    const b = reduce(catalog, makeActAdvanceState({ seed: 777, actBoon: actBoonModifier() }), {
+      type: "EndTurn",
+    });
+    const c = reduce(catalog, makeActAdvanceState({ seed: 778, actBoon: actBoonModifier() }), {
+      type: "EndTurn",
+    });
 
     const legalPool = new Set<string>(fortunePool);
     expect(offeredTemplateIds(a)).toEqual(seed777Offer);
@@ -2087,7 +2343,12 @@ describe("PlayCard None effect (Spore semantics)", () => {
 
     // Standard events, in play → spend → vanish order, and nothing else.
     expect(result.events).toEqual([
-      { type: "CardPlayed", cardId: spore.id },
+      {
+        type: "CardPlayed",
+        cardId: spore.id,
+        templateId: spore.templateId,
+        templateOrdinalThisTurn: 1,
+      },
       { type: "EnergyChanged", energy: 1 },
       { type: "CardDestroyed", ids: [spore.id], templateIds: [spore.templateId] },
     ]);
@@ -2098,6 +2359,10 @@ describe("PlayCard None effect (Spore semantics)", () => {
       ...state,
       hand: state.hand.filter((c) => c.id !== spore.id),
       energy: 1,
+      turnPlayHistory: {
+        cardsPlayedThisTurn: 1,
+        byTemplateId: { [spore.templateId]: 1 },
+      },
     };
     expect(result.state).toEqual(expected);
   });

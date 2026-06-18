@@ -1,11 +1,26 @@
 import { describe, it, expect } from "bun:test";
 import { CardView, applyCardHighlight } from "../view/CardView";
+import { TableScene } from "../scenes/TableScene";
 import { selectTheme } from "../view/themes/themeManifest";
 import { CARD_FACE } from "../view/layout";
 import { mintCard } from "../../core/model/cards";
 import { createRng } from "../../core/engine/rng";
-import { DEFAULT_RUN_MODIFIERS } from "../../data/unlocks/types";
-import type { Card, CardCatalog, GameState, PlayerCard, WorldCard } from "../../core/index";
+import { DEFAULT_RUN_MODIFIERS, type PlayerCardModifier } from "../../data/unlocks/types";
+import type {
+  Action,
+  Card,
+  CardCatalog,
+  GameState,
+  PlayerCard,
+  TargetSpec,
+  WorldCard,
+} from "../../core/index";
+import {
+  makePlayerCard,
+  makeState as makeCoreState,
+  makeWorldCard,
+  mintPlayers as mintCorePlayers,
+} from "../../core/tests/testFixture";
 
 // ---------------------------------------------------------------------------
 // updateCostRing — fill/drain animation (S5)
@@ -18,6 +33,21 @@ import type { Card, CardCatalog, GameState, PlayerCard, WorldCard } from "../../
 // ---------------------------------------------------------------------------
 
 const RING_ACCENT = 0x88aaff;
+
+function playerCardModifier(
+  id: string,
+  templateId: string,
+  patches: PlayerCardModifier["patches"],
+  condition: PlayerCardModifier["condition"] = { kind: "always" },
+): PlayerCardModifier {
+  return {
+    id,
+    displayName: id,
+    target: { kind: "template", templateId },
+    condition,
+    patches,
+  };
+}
 
 interface CapturedTween {
   targets: unknown;
@@ -127,6 +157,571 @@ function nthTween(captured: CapturedTween[], i: number): CapturedTween {
   if (t === undefined) throw new Error(`expected a captured tween at index ${i}`);
   return t;
 }
+
+function makeDrawAllHarness(state: GameState): {
+  scene: { drawAll(): void };
+  playerRows: Card[][];
+} {
+  const scene = Object.create(TableScene.prototype) as Record<string, unknown> & {
+    drawAll(): void;
+  };
+  const playerRows: Card[][] = [];
+  scene.game_ = { state, intensity: () => 0 };
+  scene.theme_ = selectTheme("zombie-big-box");
+  scene.sel = { phase: "idle" };
+  scene.hoveredCardId = null;
+  scene.cardObjects = new Map();
+  scene.backdropLayer = { update(): void {} };
+  scene.hudView = { update(): void {} };
+  scene.pileLayer = { update(): void {} };
+  scene.endTurnBtn = {
+    setAlpha(): unknown {
+      return scene.endTurnBtn;
+    },
+    disableInteractive(): unknown {
+      return scene.endTurnBtn;
+    },
+    setInteractive(): unknown {
+      return scene.endTurnBtn;
+    },
+  };
+  scene.cancelBtn = {
+    setVisible(): unknown {
+      return scene.cancelBtn;
+    },
+  };
+  scene.confirmBtn = {
+    setVisible(): unknown {
+      return scene.confirmBtn;
+    },
+  };
+  scene.runSummary = { visible: false };
+  scene.questionBtn = {
+    disableInteractive(): unknown {
+      return scene.questionBtn;
+    },
+    setVisible(): unknown {
+      return scene.questionBtn;
+    },
+  };
+  scene.exitBtn = {
+    disableInteractive(): unknown {
+      return scene.exitBtn;
+    },
+  };
+  scene.helpOverlay = {
+    setVisible(): unknown {
+      return scene.helpOverlay;
+    },
+  };
+  scene.tweens = { killTweensOf(): void {} };
+  scene.currentLegalTargetIds = () => new Set<string>();
+  scene.layoutRow = (cards: readonly Card[], rowY: number) => {
+    if (rowY > 400) playerRows.push([...cards]);
+  };
+  scene.updateHint = () => {};
+  scene.updateActBoonChoiceView = () => {};
+  return { scene, playerRows };
+}
+
+describe("TableScene effective player-card layout", () => {
+  it("renders visible Sprints from effective cards and updates remaining Sprints after one resolves", () => {
+    const base = makeCoreState({ energy: 9 });
+    const [sprints, minted] = mintCorePlayers(base, "Sprint", 3);
+    const runModifiers = {
+      ...DEFAULT_RUN_MODIFIERS,
+      playerCardModifiers: [
+        playerCardModifier(
+          "first-sprint-free",
+          "Sprint",
+          [{ kind: "setEnergyCost", energyCost: 0 }],
+          {
+            kind: "templatePlayOrdinalThisTurn",
+            ordinal: 1,
+          },
+        ),
+      ],
+    };
+    const before = {
+      ...minted,
+      hand: sprints,
+      energy: 9,
+      runModifiers,
+      turnPlayHistory: { cardsPlayedThisTurn: 0, byTemplateId: {} },
+    };
+    const beforeHarness = makeDrawAllHarness(before);
+    beforeHarness.scene.drawAll();
+
+    const [beforePlayerRow] = beforeHarness.playerRows;
+    expect(beforePlayerRow?.map((card) => card.id)).toEqual(sprints.map((card) => card.id));
+    expect(
+      beforePlayerRow?.map((card) => (card.kind === "player" ? card.energyCost : NaN)),
+    ).toEqual([0, 0, 0]);
+    expect(sprints.map((card) => card.energyCost)).toEqual([1, 1, 1]);
+
+    const after = {
+      ...before,
+      hand: sprints.slice(1),
+      turnPlayHistory: { cardsPlayedThisTurn: 1, byTemplateId: { Sprint: 1 } },
+    };
+    const afterHarness = makeDrawAllHarness(after);
+    afterHarness.scene.drawAll();
+
+    const [afterPlayerRow] = afterHarness.playerRows;
+    expect(afterPlayerRow?.map((card) => card.id)).toEqual(sprints.slice(1).map((card) => card.id));
+    expect(afterPlayerRow?.map((card) => (card.kind === "player" ? card.energyCost : NaN))).toEqual(
+      [1, 1],
+    );
+  });
+});
+
+function makeSelectionHarness(state: GameState): {
+  scene: {
+    onCardClick(cardId: string): void;
+    currentLegalTargetIds(): Set<string>;
+    showTargetPreview(targetId: string): void;
+    stepConnectorStyle(cardId: string, step: number): "progress" | "destroy" | "return" | null;
+    sel: unknown;
+    selectedCardSnapshot: PlayerCard | null;
+    game_: { state: GameState };
+    previewSlot: { text: string; visible: boolean };
+  };
+  drawCount: () => number;
+  dispatched: () => Action[];
+} {
+  const scene = Object.create(TableScene.prototype) as {
+    onCardClick(cardId: string): void;
+    currentLegalTargetIds(): Set<string>;
+    showTargetPreview(targetId: string): void;
+    stepConnectorStyle(cardId: string, step: number): "progress" | "destroy" | "return" | null;
+    sel: unknown;
+    selectedCardSnapshot: PlayerCard | null;
+    game_: { state: GameState; dispatch(action: Action): void };
+    previewSlot: {
+      text: string;
+      visible: boolean;
+      setText(text: string): void;
+      setVisible(visible: boolean): void;
+    };
+    drawAll(): void;
+    clearConnector(): void;
+    dismissModal(): void;
+    dispatch(action: Action): void;
+  };
+  let draws = 0;
+  const dispatched: Action[] = [];
+  scene.game_ = {
+    state,
+    dispatch(action: Action): void {
+      dispatched.push(action);
+    },
+  };
+  scene.sel = { phase: "idle" };
+  scene.selectedCardSnapshot = null;
+  scene.previewSlot = {
+    text: "",
+    visible: false,
+    setText(text: string): void {
+      this.text = text;
+    },
+    setVisible(visible: boolean): void {
+      this.visible = visible;
+    },
+  };
+  scene.drawAll = () => {
+    draws += 1;
+  };
+  scene.clearConnector = () => {};
+  scene.dismissModal = () => {};
+  scene.dispatch = (action: Action) => {
+    scene.game_.dispatch(action);
+    scene.sel = { phase: "idle" };
+  };
+  return { scene, drawCount: () => draws, dispatched: () => [...dispatched] };
+}
+
+describe("TableScene selected effective card snapshots", () => {
+  it("starts selection from an effective appended target step while the base card stays no-target", () => {
+    const survey = makePlayerCard({
+      id: "survey-1",
+      templateId: "Survey",
+      name: "Survey",
+      effect: { kind: "None" },
+      energyCost: 0,
+    });
+    const hazard = makeWorldCard({ id: "hazard-1", discardable: false });
+    const state = makeCoreState({
+      hand: [survey, hazard],
+      energy: 0,
+      runModifiers: {
+        ...DEFAULT_RUN_MODIFIERS,
+        playerCardModifiers: [
+          playerCardModifier("survey-progress", "Survey", [
+            { kind: "appendEffect", effect: { kind: "DealProgress", base: 1 } },
+          ]),
+        ],
+      },
+    });
+    const { scene, drawCount } = makeSelectionHarness(state);
+
+    scene.onCardClick(survey.id);
+
+    expect(drawCount()).toBe(1);
+    expect(scene.selectedCardSnapshot?.id).toBe(survey.id);
+    expect(survey.effect).toEqual({ kind: "None" });
+    expect(scene.selectedCardSnapshot?.effect).toEqual({
+      kind: "Sequence",
+      steps: [{ kind: "None" }, { kind: "DealProgress", base: 1 }],
+    });
+    expect(scene.sel).toMatchObject({
+      phase: "targeting",
+      cardId: survey.id,
+      stepIdx: 1,
+      steps: [{ kind: "none" }, { kind: "hazard" }],
+    });
+  });
+
+  it("keeps an effective appended target step highlightable and clickable after live state loses the modifier", () => {
+    const survey = makePlayerCard({
+      id: "survey-stable",
+      templateId: "Survey",
+      name: "Survey",
+      effect: { kind: "None" },
+      energyCost: 0,
+    });
+    const hazard = makeWorldCard({ id: "hazard-stable", discardable: false });
+    const modifiedState = makeCoreState({
+      hand: [survey, hazard],
+      energy: 0,
+      runModifiers: {
+        ...DEFAULT_RUN_MODIFIERS,
+        playerCardModifiers: [
+          playerCardModifier("survey-progress-stable", "Survey", [
+            { kind: "appendEffect", effect: { kind: "DealProgress", base: 1 } },
+          ]),
+        ],
+      },
+    });
+    const { scene, dispatched } = makeSelectionHarness(modifiedState);
+
+    scene.onCardClick(survey.id);
+    scene.game_.state = makeCoreState({
+      hand: [survey, hazard],
+      energy: 0,
+      runModifiers: DEFAULT_RUN_MODIFIERS,
+    });
+
+    expect(scene.currentLegalTargetIds()).toEqual(new Set([hazard.id]));
+
+    scene.onCardClick(hazard.id);
+
+    expect(dispatched()).toEqual([
+      {
+        type: "PlayCard",
+        cardId: survey.id,
+        targetId: hazard.id,
+      },
+    ]);
+  });
+
+  it("previews hazard progress from the selected effective snapshot", () => {
+    const survey = makePlayerCard({
+      id: "survey-preview",
+      templateId: "Survey",
+      name: "Survey",
+      effect: { kind: "None" },
+      energyCost: 0,
+    });
+    const hazard = makeWorldCard({
+      id: "hazard-preview",
+      name: "Deep Hazard",
+      cost: 3,
+      discardable: false,
+    });
+    const state = makeCoreState({
+      hand: [survey, hazard],
+      energy: 0,
+      runModifiers: {
+        ...DEFAULT_RUN_MODIFIERS,
+        playerCardModifiers: [
+          playerCardModifier("survey-preview-progress", "Survey", [
+            { kind: "appendEffect", effect: { kind: "DealProgress", base: 2 } },
+          ]),
+        ],
+      },
+    });
+    const { scene } = makeSelectionHarness(state);
+
+    scene.onCardClick(survey.id);
+    scene.game_.state = makeCoreState({
+      hand: [survey, hazard],
+      energy: 0,
+      runModifiers: DEFAULT_RUN_MODIFIERS,
+    });
+    scene.showTargetPreview(hazard.id);
+
+    expect(scene.previewSlot.visible).toBe(true);
+    expect(scene.previewSlot.text).toBe("Make 2 Progress → 1 more to clear Deep Hazard");
+  });
+
+  it("styles connectors from appended progress, return, and destroy steps on the selected effective snapshot", () => {
+    const progressCard = makePlayerCard({
+      id: "survey-progress-connector",
+      templateId: "Survey",
+      name: "Survey",
+      effect: { kind: "None" },
+      energyCost: 0,
+    });
+    const progressHazard = makeWorldCard({ id: "hazard-progress-connector", discardable: false });
+    const progressState = makeCoreState({
+      hand: [progressCard, progressHazard],
+      energy: 0,
+      runModifiers: {
+        ...DEFAULT_RUN_MODIFIERS,
+        playerCardModifiers: [
+          playerCardModifier("survey-progress-step", "Survey", [
+            { kind: "appendEffect", effect: { kind: "DealProgress", base: 1 } },
+          ]),
+        ],
+      },
+    });
+    const progressHarness = makeSelectionHarness(progressState);
+
+    progressHarness.scene.onCardClick(progressCard.id);
+    progressHarness.scene.game_.state = makeCoreState({
+      hand: [progressCard, progressHazard],
+      energy: 0,
+      runModifiers: DEFAULT_RUN_MODIFIERS,
+    });
+
+    expect(progressHarness.scene.stepConnectorStyle(progressCard.id, 1)).toBe("progress");
+
+    const returnCard = makePlayerCard({
+      id: "survey-return",
+      templateId: "Survey",
+      name: "Survey",
+      effect: { kind: "None" },
+      energyCost: 0,
+    });
+    const hazard = makeWorldCard({ id: "hazard-return", discardable: false });
+    const returnState = makeCoreState({
+      hand: [returnCard, hazard],
+      energy: 0,
+      runModifiers: {
+        ...DEFAULT_RUN_MODIFIERS,
+        playerCardModifiers: [
+          playerCardModifier("survey-return-step", "Survey", [
+            { kind: "appendEffect", effect: { kind: "ReturnWorldCards", min: 1, max: 1 } },
+          ]),
+        ],
+      },
+    });
+    const returnHarness = makeSelectionHarness(returnState);
+
+    returnHarness.scene.onCardClick(returnCard.id);
+    returnHarness.scene.game_.state = makeCoreState({
+      hand: [returnCard, hazard],
+      energy: 0,
+      runModifiers: DEFAULT_RUN_MODIFIERS,
+    });
+
+    expect(returnHarness.scene.stepConnectorStyle(returnCard.id, 1)).toBe("return");
+
+    const destroyCard = makePlayerCard({
+      id: "survey-destroy",
+      templateId: "Survey",
+      name: "Survey",
+      effect: { kind: "None" },
+      energyCost: 0,
+    });
+    const targetCard = makePlayerCard({
+      id: "target-destroy",
+      templateId: "Target",
+      name: "Target",
+      energyCost: 0,
+    });
+    const destroyState = makeCoreState({
+      hand: [destroyCard, targetCard],
+      energy: 0,
+      runModifiers: {
+        ...DEFAULT_RUN_MODIFIERS,
+        playerCardModifiers: [
+          playerCardModifier("survey-destroy-step", "Survey", [
+            { kind: "appendEffect", effect: { kind: "DestroyCardInHand", min: 1, max: 1 } },
+          ]),
+        ],
+      },
+    });
+    const destroyHarness = makeSelectionHarness(destroyState);
+
+    destroyHarness.scene.onCardClick(destroyCard.id);
+    destroyHarness.scene.game_.state = makeCoreState({
+      hand: [destroyCard, targetCard],
+      energy: 0,
+      runModifiers: DEFAULT_RUN_MODIFIERS,
+    });
+
+    expect(destroyHarness.scene.stepConnectorStyle(destroyCard.id, 1)).toBe("destroy");
+  });
+
+  it("clears the selected card snapshot when a modal is dismissed", () => {
+    const survey = makePlayerCard({ id: "survey-modal", templateId: "Survey" });
+    const scene = Object.create(TableScene.prototype) as {
+      selectedCardSnapshot: PlayerCard | null;
+      modalChooser: { destroy(): void } | null;
+      dismissModal(): void;
+    };
+    let destroyed = 0;
+    scene.selectedCardSnapshot = survey;
+    scene.modalChooser = {
+      destroy(): void {
+        destroyed += 1;
+      },
+    };
+
+    scene.dismissModal();
+
+    expect(destroyed).toBe(1);
+    expect(scene.modalChooser).toBeNull();
+    expect(scene.selectedCardSnapshot).toBeNull();
+  });
+
+  it("preserves the selected effective snapshot after choosing a modal branch", () => {
+    const tactic = makePlayerCard({
+      id: "tactic-modal",
+      templateId: "Tactical Choice",
+      name: "Tactical Choice",
+      effect: {
+        kind: "Modal",
+        branches: [{ kind: "DealProgress", base: 1 }],
+      },
+    });
+    const effectiveTactic: PlayerCard = {
+      ...tactic,
+      effect: {
+        kind: "Modal",
+        branches: [{ kind: "DealProgress", base: 2 }],
+      },
+    };
+    const scene = Object.create(TableScene.prototype) as {
+      selectedCardSnapshot: PlayerCard | null;
+      modalChooser: { destroy(): void } | null;
+      game_: { state: GameState };
+      sel: unknown;
+      onModalChoose(spec: Extract<TargetSpec, { kind: "modal" }>, idx: number): void;
+      drawAll(): void;
+      clearSelectedCardSnapshot(): void;
+      dismissModal(clearSnapshot?: boolean): void;
+      clearConnector(): void;
+    };
+    let destroyed = 0;
+    let draws = 0;
+    scene.game_ = { state: makeCoreState({ hand: [tactic], pendingActBoon: null }) };
+    scene.sel = { phase: "awaiting-modal", cardId: tactic.id };
+    scene.selectedCardSnapshot = effectiveTactic;
+    scene.modalChooser = {
+      destroy(): void {
+        destroyed += 1;
+      },
+    };
+    scene.drawAll = () => {
+      draws += 1;
+    };
+    scene.clearConnector = () => {};
+
+    scene.onModalChoose({ kind: "modal", branches: [{ kind: "hazard" }] }, 0);
+
+    expect(destroyed).toBe(1);
+    expect(draws).toBe(1);
+    expect(scene.modalChooser).toBeNull();
+    expect(scene.selectedCardSnapshot).toBe(effectiveTactic);
+    expect(scene.sel).toMatchObject({
+      phase: "targeting",
+      cardId: tactic.id,
+      choice: 0,
+      steps: [{ kind: "hazard" }],
+    });
+  });
+
+  it("presents a nested modal step from an effective appended target effect and completes after the branch choice", () => {
+    const choiceCard = makePlayerCard({
+      id: "choice-with-rider",
+      templateId: "Choice With Rider",
+      name: "Choice With Rider",
+      effect: {
+        kind: "Modal",
+        branches: [
+          { kind: "GainEnergy", amount: 1 },
+          { kind: "Draw", player: 1 },
+        ],
+      },
+      energyCost: 0,
+    });
+    const hazard = makeWorldCard({ id: "nested-modal-hazard", discardable: false });
+    const state = makeCoreState({
+      hand: [choiceCard, hazard],
+      energy: 0,
+      runModifiers: {
+        ...DEFAULT_RUN_MODIFIERS,
+        playerCardModifiers: [
+          playerCardModifier("choice-rider-progress", "Choice With Rider", [
+            { kind: "appendEffect", effect: { kind: "DealProgress", base: 1 } },
+          ]),
+        ],
+      },
+    });
+    const { scene, dispatched } = makeSelectionHarness(state);
+    const modalSpecs: Extract<TargetSpec, { kind: "modal" }>[] = [];
+    const snapshots: PlayerCard[] = [];
+    const modalScene = scene as typeof scene & {
+      showModalChooser(snapshot: PlayerCard, spec: Extract<TargetSpec, { kind: "modal" }>): void;
+      onModalChoose(spec: Extract<TargetSpec, { kind: "modal" }>, idx: number): void;
+    };
+    modalScene.showModalChooser = (snapshot, spec) => {
+      snapshots.push(snapshot);
+      modalSpecs.push(spec);
+    };
+
+    scene.onCardClick(choiceCard.id);
+
+    expect(modalSpecs).toEqual([{ kind: "modal", branches: [{ kind: "none" }, { kind: "none" }] }]);
+    expect(snapshots[0]?.effect).toEqual({
+      kind: "Sequence",
+      steps: [choiceCard.effect, { kind: "DealProgress", base: 1 }],
+    });
+    expect(scene.sel).toMatchObject({
+      phase: "targeting",
+      cardId: choiceCard.id,
+      stepIdx: 0,
+      steps: [
+        { kind: "modal", branches: [{ kind: "none" }, { kind: "none" }] },
+        { kind: "hazard" },
+      ],
+    });
+
+    modalScene.onModalChoose(modalSpecs[0]!, 0);
+
+    expect(scene.sel).toMatchObject({
+      phase: "targeting",
+      cardId: choiceCard.id,
+      choice: 0,
+      stepIdx: 1,
+      steps: [{ kind: "none" }, { kind: "hazard" }],
+    });
+    expect(scene.currentLegalTargetIds()).toEqual(new Set([hazard.id]));
+
+    scene.onCardClick(hazard.id);
+
+    expect(dispatched()).toEqual([
+      {
+        type: "PlayCard",
+        cardId: choiceCard.id,
+        choice: 0,
+        targetId: hazard.id,
+      },
+    ]);
+  });
+});
 
 describe("updateCostRing", () => {
   it("no-ops on a container without a costRing (player card)", () => {
@@ -426,7 +1021,11 @@ function makeFakeHighlightCardView(): {
       return listRectObj;
     },
   };
-  const noopBadge = { setVisible(): unknown { return noopBadge; } };
+  const noopBadge = {
+    setVisible(): unknown {
+      return noopBadge;
+    },
+  };
   const view = Object.create(CardView.prototype) as HighlightCardViewFake;
   view.highlightRect = rectObj;
   // If CardView regresses to list[1], these assertions will see listRect mutate.
@@ -786,6 +1385,7 @@ function makeMintState(): GameState {
     braceCharges: 0,
     pendingActBoon: null,
     runModifiers: DEFAULT_RUN_MODIFIERS,
+    turnPlayHistory: { cardsPlayedThisTurn: 0, byTemplateId: {} },
     status: "playing",
     worldId: "zombie-big-box",
     rng: createRng(0),
@@ -1161,9 +1761,15 @@ function makeFakePickBadgeView(): {
     },
   };
 
-  const badgeState: PickBadgeState = { visible: false, containerCallCount: 0, setVisibleCallCount: 0 };
+  const badgeState: PickBadgeState = {
+    visible: false,
+    containerCallCount: 0,
+    setVisibleCallCount: 0,
+  };
   const badgeObj = {
-    add(_child: unknown): unknown { return badgeObj; },
+    add(_child: unknown): unknown {
+      return badgeObj;
+    },
     setVisible(v: boolean): unknown {
       badgeState.visible = v;
       badgeState.setVisibleCallCount++;
@@ -1172,7 +1778,11 @@ function makeFakePickBadgeView(): {
   };
 
   const fakeGraphics = { fillStyle(): void {}, fillCircle(): void {}, setAlpha(): void {} };
-  const fakeText = { setOrigin(): unknown { return fakeText; } };
+  const fakeText = {
+    setOrigin(): unknown {
+      return fakeText;
+    },
+  };
 
   const added: unknown[] = [];
   const view = Object.create(CardView.prototype) as PickBadgeViewFake;
@@ -1194,8 +1804,12 @@ function makeFakePickBadgeView(): {
         badgeState.containerCallCount++;
         return badgeObj;
       },
-      graphics(): unknown { return fakeGraphics; },
-      text(): unknown { return fakeText; },
+      graphics(): unknown {
+        return fakeGraphics;
+      },
+      text(): unknown {
+        return fakeText;
+      },
     },
   };
   Object.defineProperty(view, "scene", { value: scene });
@@ -1242,10 +1856,20 @@ describe("CardView applyHighlight pick badge", () => {
   it("applyCardHighlight on a plain container applies pickedBorder stroke/fill without a badge", () => {
     const rect: FakeRect = { strokeWidth: 0, strokeColor: 0, fillColor: 0x000000, fillAlpha: 0 };
     const rectObj = {
-      setStrokeStyle(w: number, c?: number): unknown { rect.strokeWidth = w; rect.strokeColor = c ?? 0; return rectObj; },
-      setFillStyle(c: number, a?: number): unknown { rect.fillColor = c; rect.fillAlpha = a ?? 1; return rectObj; },
+      setStrokeStyle(w: number, c?: number): unknown {
+        rect.strokeWidth = w;
+        rect.strokeColor = c ?? 0;
+        return rectObj;
+      },
+      setFillStyle(c: number, a?: number): unknown {
+        rect.fillColor = c;
+        rect.fillAlpha = a ?? 1;
+        return rectObj;
+      },
     };
-    const plainContainer = { list: [{}, rectObj] } as unknown as import("phaser").GameObjects.Container;
+    const plainContainer = {
+      list: [{}, rectObj],
+    } as unknown as import("phaser").GameObjects.Container;
     // Must not throw even though plainContainer is not a CardView (no badge created).
     expect(() => applyCardHighlight(plainContainer, "picked", fs)).not.toThrow();
     expect(rect.strokeColor).toBe(fs.pickedBorder);

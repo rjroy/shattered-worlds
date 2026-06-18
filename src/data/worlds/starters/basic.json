@@ -59,7 +59,7 @@
         "kind": "Sequence",
         "steps": [
           { "kind": "DiscardThenDraw", "player": 2 },
-          { "kind": "GainEnergy", "amount": 2 }
+          { "kind": "GainEnergy", "amount": 1 }
         ]
       }
     },

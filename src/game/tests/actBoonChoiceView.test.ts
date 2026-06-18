@@ -228,6 +228,7 @@ function pendingState(): GameState {
       chooseCount: 1,
     },
     runModifiers: DEFAULT_RUN_MODIFIERS,
+    turnPlayHistory: { cardsPlayedThisTurn: 0, byTemplateId: {} },
     status: "playing",
     worldId: "zombie-big-box",
     rng: { a: 1, b: 2, c: 3, d: 4 },

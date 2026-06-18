@@ -122,7 +122,7 @@ export function beginTargeting(cardId: CardId, spec: TargetSpec, choice?: number
   let steps: readonly TargetSpec[];
 
   if (spec.kind === "compound") {
-    steps = spec.steps;
+    steps = [...spec.steps];
   } else if (spec.kind === "none") {
     steps = [];
   } else if (spec.kind === "modal") {
@@ -177,10 +177,34 @@ export function chooseModal(
   choice: number,
   spec: Extract<TargetSpec, { kind: "modal" }>,
 ): SelectionState {
-  if (sel.phase !== "awaiting-modal") return sel;
   const branch = spec.branches[choice];
   if (branch === undefined) return sel;
-  return beginTargeting(sel.cardId, branch, choice);
+
+  if (sel.phase === "awaiting-modal") {
+    return beginTargeting(sel.cardId, branch, choice);
+  }
+
+  if (sel.phase !== "targeting") return sel;
+  if (sel.stepIdx >= sel.steps.length) return sel;
+  if (sel.steps[sel.stepIdx]?.kind !== "modal") return sel;
+
+  const steps = [...sel.steps];
+  steps[sel.stepIdx] = branch;
+  return {
+    ...sel,
+    choice,
+    steps,
+    stepIdx: skipNoneSteps(steps, sel.stepIdx),
+    current: [],
+  };
+}
+
+export function activeModalStep(
+  sel: SelectionState,
+): Extract<TargetSpec, { kind: "modal" }> | null {
+  if (sel.phase !== "targeting" || sel.stepIdx >= sel.steps.length) return null;
+  const step = sel.steps[sel.stepIdx];
+  return step?.kind === "modal" ? step : null;
 }
 
 /**
@@ -354,6 +378,8 @@ export function hintForSelection(sel: SelectionState): {
   const max = stepMax(step);
 
   switch (step.kind) {
+    case "modal":
+      return { text: "Choose an option above", visible: true };
     case "hazard":
       return { text: "Select a Hazard target", visible: true };
     case "discardPlayer":

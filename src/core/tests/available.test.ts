@@ -1,5 +1,6 @@
 import { describe, expect, it } from "bun:test";
-import { availableActions } from "../engine/available";
+import { DEFAULT_RUN_MODIFIERS, type PlayerCardModifier } from "../../data/unlocks/types";
+import { availableActions, checkPlayAction } from "../engine/available";
 import { mintCard } from "../model/cards";
 import { createWorld } from "../engine/world";
 import type { GameState, PlayerCard, WorldCard } from "../model/types";
@@ -51,6 +52,33 @@ function explorePlayer(id: string): PlayerCard {
     effect: { kind: "DealProgress", base: 1, bonus: { tag: "Hidden", amount: 1 } },
     energyCost: 1,
   });
+}
+
+function stateWithPlayerCardModifiers(
+  playerCardModifiers: readonly PlayerCardModifier[],
+  overrides: Partial<GameState> = {},
+): GameState {
+  return makeState({
+    ...overrides,
+    runModifiers: {
+      ...DEFAULT_RUN_MODIFIERS,
+      playerCardModifiers,
+    },
+  });
+}
+
+function playerCardModifier(
+  id: string,
+  templateId: string,
+  patches: PlayerCardModifier["patches"],
+): PlayerCardModifier {
+  return {
+    id,
+    displayName: id,
+    target: { kind: "template", templateId },
+    condition: { kind: "always" },
+    patches,
+  };
 }
 
 describe("concealment gating of single-target progress", () => {
@@ -467,6 +495,372 @@ describe("Energy affordability gate", () => {
     const actions = availableActions(state);
     const entry = actions.playable.find((p) => p.cardId === medKit.id);
     expect(entry).toBeDefined();
+  });
+});
+
+describe("effective card modifiers in availableActions", () => {
+  it("uses effective energy cost to decide whether a player card is playable", () => {
+    const costlyNoop = makePlayerCard({
+      id: "boost-1",
+      templateId: "Boost",
+      name: "Boost",
+      energyCost: 2,
+      effect: { kind: "None" },
+    });
+
+    const baseState = makeState({ hand: [costlyNoop], energy: 1 });
+    expect(
+      availableActions(baseState).playable.find((p) => p.cardId === costlyNoop.id),
+    ).toBeUndefined();
+
+    const modifiedState = stateWithPlayerCardModifiers(
+      [playerCardModifier("boost-discount", "Boost", [{ kind: "setEnergyCost", energyCost: 1 }])],
+      { hand: [costlyNoop], energy: 1 },
+    );
+
+    expect(
+      availableActions(modifiedState).playable.find((p) => p.cardId === costlyNoop.id),
+    ).toEqual({
+      cardId: costlyNoop.id,
+      spec: { kind: "none" },
+    });
+  });
+
+  it("uses appended target-requiring effects for TargetSpec and legal targets", () => {
+    const survey = makePlayerCard({
+      id: "survey-1",
+      templateId: "Survey",
+      name: "Survey",
+      energyCost: 0,
+      effect: { kind: "None" },
+    });
+    const hazard = makeWorldCard({ id: "hazard-1", discardable: false });
+    const state = stateWithPlayerCardModifiers(
+      [
+        playerCardModifier("survey-progress", "Survey", [
+          { kind: "appendEffect", effect: { kind: "DealProgress", base: 1 } },
+        ]),
+      ],
+      { hand: [survey, hazard], energy: 0 },
+    );
+
+    const actions = availableActions(state);
+    const entry = actions.playable.find((p) => p.cardId === survey.id);
+
+    expect(entry).toBeDefined();
+    expect(entry!.spec).toEqual({
+      kind: "compound",
+      steps: [{ kind: "none" }, { kind: "hazard" }],
+    });
+    expect(actions.legalTargets(survey.id, 1)).toEqual([hazard.id]);
+  });
+
+  it("validates a modal base branch inside an effective sequence against the branch targets", () => {
+    const tactic = makePlayerCard({
+      id: "tactic-1",
+      templateId: "Tactical Choice",
+      name: "Tactical Choice",
+      energyCost: 0,
+      effect: {
+        kind: "Modal",
+        branches: [
+          { kind: "DealProgress", base: 0, bonus: { tag: "Hidden", amount: 1 } },
+          { kind: "DealProgress", base: 0, bonus: { tag: "Slow", amount: 1 } },
+        ],
+      },
+    });
+    const slowHazard = makeWorldCard({
+      id: "slow-hazard",
+      keywords: [{ name: "Slow" }],
+      discardable: false,
+    });
+    const hiddenHazard = makeWorldCard({
+      id: "hidden-hazard",
+      keywords: [{ name: "Hidden" }],
+      discardable: false,
+    });
+    const state = stateWithPlayerCardModifiers(
+      [
+        playerCardModifier("tactic-returns", "Tactical Choice", [
+          { kind: "appendEffect", effect: { kind: "ReturnWorldCards", min: 1, max: 1 } },
+        ]),
+      ],
+      { hand: [tactic, slowHazard, hiddenHazard], energy: 0 },
+    );
+
+    const actions = availableActions(state);
+    const entry = actions.playable.find((p) => p.cardId === tactic.id);
+
+    expect(entry).toBeDefined();
+    expect(entry!.spec).toEqual({
+      kind: "compound",
+      steps: [
+        {
+          kind: "modal",
+          branches: [
+            { kind: "hazard", tag: "Hidden" },
+            { kind: "hazard", tag: "Slow" },
+          ],
+        },
+        { kind: "returnWorld", min: 1, max: 1 },
+      ],
+    });
+    expect(actions.legalTargets(tactic.id, 0)).toEqual([]);
+    expect(actions.legalTargets(tactic.id, 0, 0)).toEqual([hiddenHazard.id]);
+    expect(actions.legalTargets(tactic.id, 0, 1)).toEqual([slowHazard.id]);
+    expect(actions.legalTargets(tactic.id, 1)).toEqual([slowHazard.id, hiddenHazard.id]);
+
+    expect(
+      checkPlayAction(actions, {
+        type: "PlayCard",
+        cardId: tactic.id,
+        choice: 1,
+        targetId: hiddenHazard.id,
+        returnIds: [hiddenHazard.id],
+      }),
+    ).toBe(`targetId ${hiddenHazard.id} is not a legal hazard target for card ${tactic.id}`);
+    expect(
+      checkPlayAction(actions, {
+        type: "PlayCard",
+        cardId: tactic.id,
+        choice: 1,
+        targetId: slowHazard.id,
+        returnIds: [hiddenHazard.id],
+      }),
+    ).toBeNull();
+  });
+
+  it("exposes prepended step targets and nested modal branch targets through legalTargets", () => {
+    const tactic = makePlayerCard({
+      id: "tactic-3",
+      templateId: "Tactical Choice",
+      name: "Tactical Choice",
+      energyCost: 0,
+      effect: {
+        kind: "Modal",
+        branches: [
+          { kind: "DealProgress", base: 0, bonus: { tag: "Hidden", amount: 1 } },
+          { kind: "DealProgress", base: 0, bonus: { tag: "Slow", amount: 1 } },
+        ],
+      },
+    });
+    const slowHazard = makeWorldCard({
+      id: "slow-hazard-3",
+      keywords: [{ name: "Slow" }],
+      discardable: false,
+    });
+    const hiddenHazard = makeWorldCard({
+      id: "hidden-hazard-3",
+      keywords: [{ name: "Hidden" }],
+      discardable: false,
+    });
+    const state = stateWithPlayerCardModifiers(
+      [
+        playerCardModifier("tactic-prepended-return", "Tactical Choice", [
+          { kind: "prependEffect", effect: { kind: "ReturnWorldCards", min: 1, max: 1 } },
+        ]),
+      ],
+      { hand: [tactic, slowHazard, hiddenHazard], energy: 0 },
+    );
+
+    const actions = availableActions(state);
+
+    expect(actions.playable.find((p) => p.cardId === tactic.id)?.spec).toEqual({
+      kind: "compound",
+      steps: [
+        { kind: "returnWorld", min: 1, max: 1 },
+        {
+          kind: "modal",
+          branches: [
+            { kind: "hazard", tag: "Hidden" },
+            { kind: "hazard", tag: "Slow" },
+          ],
+        },
+      ],
+    });
+    expect(actions.legalTargets(tactic.id, 0)).toEqual([slowHazard.id, hiddenHazard.id]);
+    expect(actions.legalTargets(tactic.id, 1)).toEqual([]);
+    expect(actions.legalTargets(tactic.id, 1, 0)).toEqual([hiddenHazard.id]);
+    expect(actions.legalTargets(tactic.id, 1, 1)).toEqual([slowHazard.id]);
+
+    expect(
+      checkPlayAction(actions, {
+        type: "PlayCard",
+        cardId: tactic.id,
+        choice: 1,
+        targetId: hiddenHazard.id,
+        returnIds: [slowHazard.id],
+      }),
+    ).toBe(`targetId ${hiddenHazard.id} is not a legal hazard target for card ${tactic.id}`);
+    expect(
+      checkPlayAction(actions, {
+        type: "PlayCard",
+        cardId: tactic.id,
+        choice: 1,
+        targetId: slowHazard.id,
+        returnIds: [hiddenHazard.id],
+      }),
+    ).toBeNull();
+  });
+
+  it("enforces appended targets separately from a nested modal branch target", () => {
+    const tactic = makePlayerCard({
+      id: "tactic-2",
+      templateId: "Tactical Choice",
+      name: "Tactical Choice",
+      energyCost: 0,
+      effect: {
+        kind: "Modal",
+        branches: [
+          { kind: "DealProgress", base: 0, bonus: { tag: "Hidden", amount: 1 } },
+          { kind: "DealProgress", base: 0, bonus: { tag: "Slow", amount: 1 } },
+        ],
+      },
+    });
+    const slowHazard = makeWorldCard({
+      id: "slow-hazard-2",
+      keywords: [{ name: "Slow" }],
+      discardable: false,
+    });
+    const hiddenHazard = makeWorldCard({
+      id: "hidden-hazard-2",
+      keywords: [{ name: "Hidden" }],
+      discardable: false,
+    });
+    const otherPlayer = makePlayerCard({ id: "other-player" });
+    const state = stateWithPlayerCardModifiers(
+      [
+        playerCardModifier("tactic-destroys", "Tactical Choice", [
+          { kind: "appendEffect", effect: { kind: "DestroyCardInHand", min: 1, max: 1 } },
+        ]),
+      ],
+      { hand: [tactic, otherPlayer, slowHazard, hiddenHazard], energy: 0 },
+    );
+
+    const actions = availableActions(state);
+
+    expect(actions.playable.find((p) => p.cardId === tactic.id)?.spec).toEqual({
+      kind: "compound",
+      steps: [
+        {
+          kind: "modal",
+          branches: [
+            { kind: "hazard", tag: "Hidden" },
+            { kind: "hazard", tag: "Slow" },
+          ],
+        },
+        { kind: "destroyHand", min: 1, max: 1 },
+      ],
+    });
+    expect(actions.legalTargets(tactic.id, 1)).toEqual([otherPlayer.id]);
+    expect(
+      checkPlayAction(actions, {
+        type: "PlayCard",
+        cardId: tactic.id,
+        choice: 1,
+        targetId: slowHazard.id,
+        destroyIds: [slowHazard.id],
+      }),
+    ).toBe(`destroyIds ${slowHazard.id} are not a legal destroy target for card ${tactic.id}`);
+    expect(
+      checkPlayAction(actions, {
+        type: "PlayCard",
+        cardId: tactic.id,
+        choice: 1,
+        targetId: slowHazard.id,
+        destroyIds: [otherPlayer.id],
+      }),
+    ).toBeNull();
+  });
+
+  it("excludes a base no-target card when an appended target-requiring effect has no legal target", () => {
+    const survey = makePlayerCard({
+      id: "survey-no-target",
+      templateId: "Survey",
+      name: "Survey",
+      energyCost: 0,
+      effect: { kind: "None" },
+    });
+    const state = stateWithPlayerCardModifiers(
+      [
+        playerCardModifier("survey-progress-no-target", "Survey", [
+          { kind: "appendEffect", effect: { kind: "DealProgress", base: 1 } },
+        ]),
+      ],
+      { hand: [survey], energy: 0 },
+    );
+
+    expect(availableActions(state).playable.find((p) => p.cardId === survey.id)).toBeUndefined();
+  });
+
+  it("ignoreEnergy bypasses effective cost but still uses the effective effect tree", () => {
+    const survey = makePlayerCard({
+      id: "survey-2",
+      templateId: "Survey",
+      name: "Survey",
+      energyCost: 0,
+      effect: { kind: "None" },
+    });
+    const hazard = makeWorldCard({ id: "hazard-2", discardable: false });
+    const state = stateWithPlayerCardModifiers(
+      [
+        playerCardModifier("survey-expensive-progress", "Survey", [
+          { kind: "setEnergyCost", energyCost: 3 },
+          { kind: "appendEffect", effect: { kind: "DealProgress", base: 1 } },
+        ]),
+      ],
+      { hand: [survey, hazard], energy: 0 },
+    );
+
+    expect(availableActions(state).playable.find((p) => p.cardId === survey.id)).toBeUndefined();
+
+    const actions = availableActions(state, { ignoreEnergy: true });
+    const entry = actions.playable.find((p) => p.cardId === survey.id);
+
+    expect(entry).toBeDefined();
+    expect(entry!.spec).toEqual({
+      kind: "compound",
+      steps: [{ kind: "none" }, { kind: "hazard" }],
+    });
+    expect(actions.legalTargets(survey.id, 1)).toEqual([hazard.id]);
+  });
+
+  it("ignoreEnergy does not bypass target requirements from appended effective effects", () => {
+    const survey = makePlayerCard({
+      id: "survey-ignore-energy-no-target",
+      templateId: "Survey",
+      name: "Survey",
+      energyCost: 0,
+      effect: { kind: "None" },
+    });
+    const state = stateWithPlayerCardModifiers(
+      [
+        playerCardModifier("survey-expensive-progress-no-target", "Survey", [
+          { kind: "setEnergyCost", energyCost: 3 },
+          { kind: "appendEffect", effect: { kind: "DealProgress", base: 1 } },
+        ]),
+      ],
+      { hand: [survey], energy: 0 },
+    );
+
+    expect(
+      availableActions(state, { ignoreEnergy: true }).playable.find((p) => p.cardId === survey.id),
+    ).toBeUndefined();
+  });
+
+  it("does not change discardable world-card behavior", () => {
+    const discardableWorld = makeWorldCard({ id: "discardable", discardable: true });
+    const lockedWorld = makeWorldCard({ id: "locked", discardable: false });
+    const state = stateWithPlayerCardModifiers(
+      [
+        playerCardModifier("unrelated-player-card-modifier", "Survey", [
+          { kind: "setEnergyCost", energyCost: 0 },
+        ]),
+      ],
+      { hand: [discardableWorld, lockedWorld] },
+    );
+
+    expect(availableActions(state).discardable).toEqual([discardableWorld.id]);
   });
 });
 

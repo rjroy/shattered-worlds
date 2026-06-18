@@ -222,10 +222,12 @@ export class CardView extends Phaser.GameObjects.Container {
       this.add(frame);
     }
 
+    const titleColor = card.kind === "player" && card.modified ? TEXT.textReward : TEXT.textLight;
+
     // Name at top — identical for player and world cards.
     const nameText = addCardText(scene, this, 0, -CARD_H / 2 + 8, card.name, {
       fontSize: "16px",
-      color: TEXT.textLight,
+      color: titleColor,
       bold: true,
       maxWidth: CARD_W - 12,
       originY: 0,

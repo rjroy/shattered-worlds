@@ -78,9 +78,17 @@ export const UNLOCK_CATALOG: readonly UnlockDefinition[] = [
     effect: { type: "minResourcePerTurn", resource: "energy", floor: 2 },
   },
   {
+    id: "starter-contractor",
+    name: "Builder's Instinct",
+    description: "A muscle memory from a different life. More Barricades, No Panic, Less Sprint.",
+    cost: 50,
+    destinyWeight: 3,
+    effect: { type: "starterDeckOverride", starterDeckId: "contractor" },
+  },
+  {
     id: "starter-footballer",
     name: "Athlete's Instinct",
-    description: "A muscle memory from a different life. Different strengths, different gaps.",
+    description: "A muscle memory from a different life. More Sprint, No Barricades.",
     cost: 50,
     destinyWeight: 3,
     effect: { type: "starterDeckOverride", starterDeckId: "footballer" },
@@ -88,11 +96,91 @@ export const UNLOCK_CATALOG: readonly UnlockDefinition[] = [
   {
     id: "act-reward",
     name: "Fortune",
-    description:
-      "At the start of each new act, choose 1 of 3 temporary boon cards for your hand.",
+    description: "At the start of each new act, choose 1 of 3 temporary boon cards for your hand.",
     cost: 70,
     destinyWeight: 3,
     effect: { type: "actReward", boonPoolId: "fortune-v1", offeredCount: 3, chooseCount: 1 },
+  },
+
+  {
+    id: "first-sprint-free",
+    name: "Burst of Speed",
+    description: "The first Sprint you play each turn costs 0 energy.",
+    cost: 30,
+    destinyWeight: 1,
+    effect: {
+      type: "playerCardModifier",
+      modifier: {
+        id: "first-sprint-free",
+        displayName: "Burst of Speed",
+        target: { kind: "template", templateId: "Sprint" },
+        condition: { kind: "templatePlayOrdinalThisTurn", ordinal: 1 },
+        patches: [{ kind: "setEnergyCost", energyCost: 0 }],
+      },
+    },
+  },
+  {
+    id: "panic-response",
+    name: "Panic Response",
+    description: "Panic also deals 1 progress to every world card in hand.",
+    cost: 35,
+    destinyWeight: 2,
+    effect: {
+      type: "playerCardModifier",
+      modifier: {
+        id: "panic-response",
+        displayName: "Panic Response",
+        target: { kind: "template", templateId: "Panic" },
+        condition: { kind: "always" },
+        patches: [{ kind: "appendEffect", effect: { kind: "DealProgressAll", base: 1 } }],
+      },
+    },
+  },
+  {
+    id: "strong-barricades",
+    name: "Strong Barricades",
+    description: "Barricades apply an additional progress and can return more cards.",
+    cost: 30,
+    destinyWeight: 2,
+    effect: {
+      type: "playerCardModifier",
+      modifier: {
+        id: "second-explore-push",
+        displayName: "Strong Barricade",
+        target: { kind: "template", templateId: "Explore" },
+        condition: { kind: "always" },
+        patches: [
+          {
+            kind: "replaceEffect",
+            effect: {
+              kind: "Sequence",
+              steps: [
+                { kind: "DealProgress", base: 2 },
+                { kind: "ReturnWorldCards", min: 0, max: 6 },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  },
+  {
+    id: "second-explore-push",
+    name: "Determined Explorer",
+    description:
+      "The second Explore you play each turn deals 1 progress to every world card in hand.",
+    cost: 30,
+    destinyWeight: 1,
+    effect: {
+      type: "playerCardModifier",
+      modifier: {
+        id: "second-explore-push",
+        displayName: "Determined Exploration",
+        target: { kind: "template", templateId: "Explore" },
+        condition: { kind: "templatePlayOrdinalThisTurn", ordinal: 2 },
+        patches: [{ kind: "appendEffect", effect: { kind: "DealProgressAll", base: 1 } }],
+      },
+    },
   },
 ];
 
@@ -173,6 +261,12 @@ export function buildRunModifiers(
         break;
       case "keywordDamageBonus":
         mods = { ...mods, keywordDamageBonus: mods.keywordDamageBonus + def.effect.amount };
+        break;
+      case "playerCardModifier":
+        mods = {
+          ...mods,
+          playerCardModifiers: [...mods.playerCardModifiers, def.effect.modifier],
+        };
         break;
       case "starterDeckOverride":
         break;

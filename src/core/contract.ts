@@ -7,6 +7,7 @@ export type {
   Action,
   GameEvent,
   GameState,
+  TurnPlayHistory,
   ActBoonChoice,
   TargetSpec,
   AvailableActions,
@@ -20,5 +21,6 @@ export { CatalogError } from './model/errors'
 export type { GameCore } from './engine/game'
 export { createGame } from './engine/game'
 export { availableActions } from './engine/available'
+export { effectiveCard, effectiveHand, effectivePlayerCard } from './engine/effectiveCards'
 export type { AssembledWorld, CardCatalog, WorldData, RawCardSource } from './model/catalog'
 export { assembleCatalog } from './model/catalog'

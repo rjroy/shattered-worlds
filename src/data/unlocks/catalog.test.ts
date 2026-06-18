@@ -114,6 +114,41 @@ describe("buildRunModifiers", () => {
     });
     expect(mods.actBoon?.poolTemplateIds).toHaveLength(5);
   });
+
+  it("appends active card-modifier unlock effects to run modifiers", () => {
+    const mods = buildRunModifiers(
+      ["first-sprint-free", "panic-response", "second-explore-push"],
+      UNLOCK_CATALOG,
+    );
+
+    expect(mods.playerCardModifiers.map((modifier) => modifier.id)).toEqual([
+      "first-sprint-free",
+      "panic-response",
+      "second-explore-push",
+    ]);
+    expect(mods.playerCardModifiers[0]).toMatchObject({
+      target: { kind: "template", templateId: "Sprint" },
+      condition: { kind: "templatePlayOrdinalThisTurn", ordinal: 1 },
+      patches: [{ kind: "setEnergyCost", energyCost: 0 }],
+    });
+    expect(mods.playerCardModifiers[1]).toMatchObject({
+      target: { kind: "template", templateId: "Panic" },
+      condition: { kind: "always" },
+      patches: [{ kind: "appendEffect", effect: { kind: "DealProgressAll", base: 1 } }],
+    });
+    expect(mods.playerCardModifiers[2]).toMatchObject({
+      target: { kind: "template", templateId: "Explore" },
+      condition: { kind: "templatePlayOrdinalThisTurn", ordinal: 2 },
+      patches: [{ kind: "appendEffect", effect: { kind: "DealProgressAll", base: 1 } }],
+    });
+  });
+
+  it("does not apply purchased card-modifier unlocks unless their ids are active", () => {
+    const profile = unlocks(["first-sprint-free"], []);
+
+    expect(computeUnlockSpend(profile, UNLOCK_CATALOG)).toBe(30);
+    expect(buildRunModifiers(profile.activated, UNLOCK_CATALOG).playerCardModifiers).toEqual([]);
+  });
 });
 
 describe("Destiny budget helpers", () => {

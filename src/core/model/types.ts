@@ -87,6 +87,8 @@ export interface PlayerCard {
   sourceWorldId: string;
   effect: CardEffect;
   energyCost: number;
+  // When true, the card is marked as modified due to an unlock.
+  modified?: boolean;
   // When true, the card is destroyed (sent to no zone) on play instead of
   // recycling to playerDiscard.
   exhaust?: boolean;
@@ -141,6 +143,11 @@ export interface RngState {
   d: number;
 }
 
+export type TurnPlayHistory = {
+  readonly cardsPlayedThisTurn: number;
+  readonly byTemplateId: Readonly<Record<CardTemplateId, number>>;
+};
+
 export interface GameState {
   playerDraw: readonly Card[];
   hand: readonly Card[];
@@ -169,6 +176,7 @@ export interface GameState {
   braceCharges: number;
   pendingActBoon: ActBoonChoice | null;
   readonly runModifiers: RunModifiers;
+  readonly turnPlayHistory: TurnPlayHistory;
   status: "playing" | "won" | "lost";
   worldId: string;
   rng: RngState;
@@ -196,11 +204,16 @@ export interface AvailableActions {
   playable: readonly { cardId: CardId; spec: TargetSpec }[];
   discardable: readonly CardId[];
   canEndTurn: boolean;
-  legalTargets(cardId: CardId, step: number): readonly CardId[];
+  legalTargets(cardId: CardId, step: number, choice?: number): readonly CardId[];
 }
 
 export type GameEvent =
-  | { type: "CardPlayed"; cardId: CardId }
+  | {
+      type: "CardPlayed";
+      cardId: CardId;
+      templateId: CardTemplateId;
+      templateOrdinalThisTurn: number;
+    }
   | {
       type: "ProgressDealt";
       hazardId: CardId;
