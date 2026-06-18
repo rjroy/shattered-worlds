@@ -75,6 +75,7 @@ function cardModifier(
 ): PlayerCardModifier {
   return {
     id,
+    displayName: id,
     target: { kind: "template", templateId },
     condition,
     patches,
@@ -1929,8 +1930,14 @@ describe("Act boon offer generation", () => {
   });
 
   it("does not trigger from terminal states", () => {
-    const lostState = { ...makeActAdvanceState({ actBoon: actBoonModifier() }), status: "lost" as const };
-    const wonState = { ...makeActAdvanceState({ actBoon: actBoonModifier() }), status: "won" as const };
+    const lostState = {
+      ...makeActAdvanceState({ actBoon: actBoonModifier() }),
+      status: "lost" as const,
+    };
+    const wonState = {
+      ...makeActAdvanceState({ actBoon: actBoonModifier() }),
+      status: "won" as const,
+    };
 
     expect(() => reduce(catalog, lostState, { type: "EndTurn" })).toThrow(IllegalActionError);
     expect(() => reduce(catalog, wonState, { type: "EndTurn" })).toThrow(IllegalActionError);
@@ -1939,21 +1946,15 @@ describe("Act boon offer generation", () => {
   it("is deterministic for the same seed and stays within the pool for another seed", () => {
     const seed777Offer = ["Steady Nerve", "Second Wind", "Clear Path"];
     const seed778Offer = ["Steady Nerve", "Found Tool", "Second Wind"];
-    const a = reduce(
-      catalog,
-      makeActAdvanceState({ seed: 777, actBoon: actBoonModifier() }),
-      { type: "EndTurn" },
-    );
-    const b = reduce(
-      catalog,
-      makeActAdvanceState({ seed: 777, actBoon: actBoonModifier() }),
-      { type: "EndTurn" },
-    );
-    const c = reduce(
-      catalog,
-      makeActAdvanceState({ seed: 778, actBoon: actBoonModifier() }),
-      { type: "EndTurn" },
-    );
+    const a = reduce(catalog, makeActAdvanceState({ seed: 777, actBoon: actBoonModifier() }), {
+      type: "EndTurn",
+    });
+    const b = reduce(catalog, makeActAdvanceState({ seed: 777, actBoon: actBoonModifier() }), {
+      type: "EndTurn",
+    });
+    const c = reduce(catalog, makeActAdvanceState({ seed: 778, actBoon: actBoonModifier() }), {
+      type: "EndTurn",
+    });
 
     const legalPool = new Set<string>(fortunePool);
     expect(offeredTemplateIds(a)).toEqual(seed777Offer);

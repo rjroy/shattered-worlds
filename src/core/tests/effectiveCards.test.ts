@@ -25,6 +25,7 @@ function modifier(
 ): PlayerCardModifier {
   return {
     id,
+    displayName: id,
     target: { kind: "template", templateId },
     condition,
     patches,

@@ -42,6 +42,7 @@ function playerCardModifier(
 ): PlayerCardModifier {
   return {
     id,
+    displayName: id,
     target: { kind: "template", templateId },
     condition,
     patches,
@@ -174,21 +175,45 @@ function makeDrawAllHarness(state: GameState): {
   scene.hudView = { update(): void {} };
   scene.pileLayer = { update(): void {} };
   scene.endTurnBtn = {
-    setAlpha(): unknown { return scene.endTurnBtn; },
-    disableInteractive(): unknown { return scene.endTurnBtn; },
-    setInteractive(): unknown { return scene.endTurnBtn; },
+    setAlpha(): unknown {
+      return scene.endTurnBtn;
+    },
+    disableInteractive(): unknown {
+      return scene.endTurnBtn;
+    },
+    setInteractive(): unknown {
+      return scene.endTurnBtn;
+    },
   };
-  scene.cancelBtn = { setVisible(): unknown { return scene.cancelBtn; } };
-  scene.confirmBtn = { setVisible(): unknown { return scene.confirmBtn; } };
+  scene.cancelBtn = {
+    setVisible(): unknown {
+      return scene.cancelBtn;
+    },
+  };
+  scene.confirmBtn = {
+    setVisible(): unknown {
+      return scene.confirmBtn;
+    },
+  };
   scene.runSummary = { visible: false };
   scene.questionBtn = {
-    disableInteractive(): unknown { return scene.questionBtn; },
-    setVisible(): unknown { return scene.questionBtn; },
+    disableInteractive(): unknown {
+      return scene.questionBtn;
+    },
+    setVisible(): unknown {
+      return scene.questionBtn;
+    },
   };
   scene.exitBtn = {
-    disableInteractive(): unknown { return scene.exitBtn; },
+    disableInteractive(): unknown {
+      return scene.exitBtn;
+    },
   };
-  scene.helpOverlay = { setVisible(): unknown { return scene.helpOverlay; } };
+  scene.helpOverlay = {
+    setVisible(): unknown {
+      return scene.helpOverlay;
+    },
+  };
   scene.tweens = { killTweensOf(): void {} };
   scene.currentLegalTargetIds = () => new Set<string>();
   scene.layoutRow = (cards: readonly Card[], rowY: number) => {
@@ -244,9 +269,9 @@ describe("TableScene effective player-card layout", () => {
 
     const [afterPlayerRow] = afterHarness.playerRows;
     expect(afterPlayerRow?.map((card) => card.id)).toEqual(sprints.slice(1).map((card) => card.id));
-    expect(
-      afterPlayerRow?.map((card) => (card.kind === "player" ? card.energyCost : NaN)),
-    ).toEqual([1, 1]);
+    expect(afterPlayerRow?.map((card) => (card.kind === "player" ? card.energyCost : NaN))).toEqual(
+      [1, 1],
+    );
   });
 });
 
@@ -625,7 +650,10 @@ describe("TableScene selected effective card snapshots", () => {
       name: "Choice With Rider",
       effect: {
         kind: "Modal",
-        branches: [{ kind: "GainEnergy", amount: 1 }, { kind: "Draw", player: 1 }],
+        branches: [
+          { kind: "GainEnergy", amount: 1 },
+          { kind: "Draw", player: 1 },
+        ],
       },
       energyCost: 0,
     });
@@ -646,10 +674,7 @@ describe("TableScene selected effective card snapshots", () => {
     const modalSpecs: Extract<TargetSpec, { kind: "modal" }>[] = [];
     const snapshots: PlayerCard[] = [];
     const modalScene = scene as typeof scene & {
-      showModalChooser(
-        snapshot: PlayerCard,
-        spec: Extract<TargetSpec, { kind: "modal" }>,
-      ): void;
+      showModalChooser(snapshot: PlayerCard, spec: Extract<TargetSpec, { kind: "modal" }>): void;
       onModalChoose(spec: Extract<TargetSpec, { kind: "modal" }>, idx: number): void;
     };
     modalScene.showModalChooser = (snapshot, spec) => {
@@ -659,15 +684,10 @@ describe("TableScene selected effective card snapshots", () => {
 
     scene.onCardClick(choiceCard.id);
 
-    expect(modalSpecs).toEqual([
-      { kind: "modal", branches: [{ kind: "none" }, { kind: "none" }] },
-    ]);
+    expect(modalSpecs).toEqual([{ kind: "modal", branches: [{ kind: "none" }, { kind: "none" }] }]);
     expect(snapshots[0]?.effect).toEqual({
       kind: "Sequence",
-      steps: [
-        choiceCard.effect,
-        { kind: "DealProgress", base: 1 },
-      ],
+      steps: [choiceCard.effect, { kind: "DealProgress", base: 1 }],
     });
     expect(scene.sel).toMatchObject({
       phase: "targeting",
@@ -1001,7 +1021,11 @@ function makeFakeHighlightCardView(): {
       return listRectObj;
     },
   };
-  const noopBadge = { setVisible(): unknown { return noopBadge; } };
+  const noopBadge = {
+    setVisible(): unknown {
+      return noopBadge;
+    },
+  };
   const view = Object.create(CardView.prototype) as HighlightCardViewFake;
   view.highlightRect = rectObj;
   // If CardView regresses to list[1], these assertions will see listRect mutate.
@@ -1737,9 +1761,15 @@ function makeFakePickBadgeView(): {
     },
   };
 
-  const badgeState: PickBadgeState = { visible: false, containerCallCount: 0, setVisibleCallCount: 0 };
+  const badgeState: PickBadgeState = {
+    visible: false,
+    containerCallCount: 0,
+    setVisibleCallCount: 0,
+  };
   const badgeObj = {
-    add(_child: unknown): unknown { return badgeObj; },
+    add(_child: unknown): unknown {
+      return badgeObj;
+    },
     setVisible(v: boolean): unknown {
       badgeState.visible = v;
       badgeState.setVisibleCallCount++;
@@ -1748,7 +1778,11 @@ function makeFakePickBadgeView(): {
   };
 
   const fakeGraphics = { fillStyle(): void {}, fillCircle(): void {}, setAlpha(): void {} };
-  const fakeText = { setOrigin(): unknown { return fakeText; } };
+  const fakeText = {
+    setOrigin(): unknown {
+      return fakeText;
+    },
+  };
 
   const added: unknown[] = [];
   const view = Object.create(CardView.prototype) as PickBadgeViewFake;
@@ -1770,8 +1804,12 @@ function makeFakePickBadgeView(): {
         badgeState.containerCallCount++;
         return badgeObj;
       },
-      graphics(): unknown { return fakeGraphics; },
-      text(): unknown { return fakeText; },
+      graphics(): unknown {
+        return fakeGraphics;
+      },
+      text(): unknown {
+        return fakeText;
+      },
     },
   };
   Object.defineProperty(view, "scene", { value: scene });
@@ -1818,10 +1856,20 @@ describe("CardView applyHighlight pick badge", () => {
   it("applyCardHighlight on a plain container applies pickedBorder stroke/fill without a badge", () => {
     const rect: FakeRect = { strokeWidth: 0, strokeColor: 0, fillColor: 0x000000, fillAlpha: 0 };
     const rectObj = {
-      setStrokeStyle(w: number, c?: number): unknown { rect.strokeWidth = w; rect.strokeColor = c ?? 0; return rectObj; },
-      setFillStyle(c: number, a?: number): unknown { rect.fillColor = c; rect.fillAlpha = a ?? 1; return rectObj; },
+      setStrokeStyle(w: number, c?: number): unknown {
+        rect.strokeWidth = w;
+        rect.strokeColor = c ?? 0;
+        return rectObj;
+      },
+      setFillStyle(c: number, a?: number): unknown {
+        rect.fillColor = c;
+        rect.fillAlpha = a ?? 1;
+        return rectObj;
+      },
     };
-    const plainContainer = { list: [{}, rectObj] } as unknown as import("phaser").GameObjects.Container;
+    const plainContainer = {
+      list: [{}, rectObj],
+    } as unknown as import("phaser").GameObjects.Container;
     // Must not throw even though plainContainer is not a CardView (no badge created).
     expect(() => applyCardHighlight(plainContainer, "picked", fs)).not.toThrow();
     expect(rect.strokeColor).toBe(fs.pickedBorder);

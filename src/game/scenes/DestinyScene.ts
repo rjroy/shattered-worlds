@@ -559,7 +559,7 @@ function effectSummary(def: UnlockDefinition): string {
     case "keywordDamageBonus":
       return `Keyword bonuses +${def.effect.amount}`;
     case "playerCardModifier":
-      return "During game card modifier";
+      return "Player card modifier";
     case "starterDeckOverride":
       return "Custom Starter deck";
     case "actReward":

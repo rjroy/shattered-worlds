@@ -74,6 +74,7 @@ function playerCardModifier(
 ): PlayerCardModifier {
   return {
     id,
+    displayName: id,
     target: { kind: "template", templateId },
     condition: { kind: "always" },
     patches,
@@ -513,11 +514,7 @@ describe("effective card modifiers in availableActions", () => {
     ).toBeUndefined();
 
     const modifiedState = stateWithPlayerCardModifiers(
-      [
-        playerCardModifier("boost-discount", "Boost", [
-          { kind: "setEnergyCost", energyCost: 1 },
-        ]),
-      ],
+      [playerCardModifier("boost-discount", "Boost", [{ kind: "setEnergyCost", energyCost: 1 }])],
       { hand: [costlyNoop], energy: 1 },
     );
 
