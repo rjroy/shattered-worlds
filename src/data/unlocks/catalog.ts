@@ -122,7 +122,8 @@ export const UNLOCK_CATALOG: readonly UnlockDefinition[] = [
   {
     id: "panic-response",
     name: "Panic Response",
-    description: "Panic also deals 1 progress to every world card in hand.",
+    description:
+      "Panic also deals 2 progress to every world card in hand after its current effect and now exhaust.",
     cost: 35,
     destinyWeight: 2,
     effect: {
@@ -132,22 +133,26 @@ export const UNLOCK_CATALOG: readonly UnlockDefinition[] = [
         displayName: "Panic Response",
         target: { kind: "template", templateId: "Panic" },
         condition: { kind: "always" },
-        patches: [{ kind: "appendEffect", effect: { kind: "DealProgressAll", base: 1 } }],
+        patches: [
+          { kind: "appendEffect", effect: { kind: "DealProgressAll", base: 2 } },
+          { kind: "setExhaust", exhaust: true },
+        ],
       },
     },
   },
   {
     id: "strong-barricades",
     name: "Strong Barricades",
-    description: "Barricades apply an additional progress and can return more cards.",
+    description:
+      "Barricades apply progress to every world card and can return more cards, but have increased cost.",
     cost: 30,
     destinyWeight: 2,
     effect: {
       type: "playerCardModifier",
       modifier: {
-        id: "second-explore-push",
+        id: "strong-barricades",
         displayName: "Strong Barricade",
-        target: { kind: "template", templateId: "Explore" },
+        target: { kind: "template", templateId: "Barricade" },
         condition: { kind: "always" },
         patches: [
           {
@@ -155,11 +160,12 @@ export const UNLOCK_CATALOG: readonly UnlockDefinition[] = [
             effect: {
               kind: "Sequence",
               steps: [
-                { kind: "DealProgress", base: 2 },
+                { kind: "DealProgressAll", base: 1 },
                 { kind: "ReturnWorldCards", min: 0, max: 6 },
               ],
             },
           },
+          { kind: "addEnergyCost", amount: 1 },
         ],
       },
     },
