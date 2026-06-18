@@ -1,12 +1,13 @@
-import type { WorldDisplayData, WorldHelpData } from '../types'
+import type { WorldDisplayData, WorldHelpData } from "../types";
 
 export const OVERGROWN_MALL_DISPLAY: WorldDisplayData = {
   name: "Mall Reclaimnation",
   tagline: "The mall is being reclaimed by nature. As you watch.",
   story:
     "The skylight gave way before the alarms did. Vines move through the concourse faster than evacuation signs can point, turning kiosks and planters into a damp green maze. Somewhere past the food court, the emergency doors are already buried.",
+  difficulty: 2,
   backgroundKey: "overgrown-mall-bg",
-}
+};
 
 export const OVERGROWN_MALL_HELP: WorldHelpData = {
   mechanics: [
@@ -31,4 +32,4 @@ export const OVERGROWN_MALL_HELP: WorldHelpData = {
         "Pruning Shears destroys a card from hand and refunds energy. Use it to clear Spores or convert dead cards into a cleaner turn.",
     },
   ],
-}
+};

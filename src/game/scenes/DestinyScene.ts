@@ -129,10 +129,18 @@ export class DestinyScene extends Phaser.Scene {
     this.addText(64, 80, `✦ ${balance} Fragments`, 14, TEXT.textReward, true);
     this.addText(600, 80, `Destiny ${pips} ${used}/${DESTINY_BUDGET}`, 14, "#d6b15c", true);
 
-    const rows = Math.ceil(UNLOCK_CATALOG.length / 2);
+    const totalUnlocks = UNLOCK_CATALOG.length;
+    const rows = Math.ceil(totalUnlocks / 2);
     const maxOffset = Math.max(0, rows - VISIBLE_ROWS);
     this.scrollOffset = Math.min(this.scrollOffset, maxOffset);
-    const visible = UNLOCK_CATALOG.slice(
+    const sortedUnlock = [...UNLOCK_CATALOG].sort((a, b) => {
+      const costDelta = a.cost - b.cost;
+      if (costDelta != 0) return costDelta;
+      const weightDelta = a.destinyWeight - b.destinyWeight;
+      if (weightDelta != 0) return weightDelta;
+      return a.name.localeCompare(b.name);
+    });
+    const visible = sortedUnlock.slice(
       this.scrollOffset * 2,
       (this.scrollOffset + VISIBLE_ROWS) * 2,
     );
@@ -150,13 +158,10 @@ export class DestinyScene extends Phaser.Scene {
     });
 
     if (maxOffset > 0) {
-      this.addText(
-        780,
-        84,
-        `${this.scrollOffset + 1}-${Math.min(this.scrollOffset + VISIBLE_ROWS, rows)} of ${rows}`,
-        11,
-        TEXT.textMuted,
-      );
+      const pageStart = this.scrollOffset * 2 + 1;
+      const pageEnd = (this.scrollOffset + VISIBLE_ROWS) * 2;
+      const pageLabel = `${pageStart}-${Math.min(pageEnd, totalUnlocks)} of ${totalUnlocks}`;
+      this.addText(775, 82, pageLabel, 11, TEXT.textMuted);
       if (this.scrollOffset > 0) {
         const up = this.add
           .text(842, GRID_TOP, "▲", textStyle({ fontSize: "13px", color: "#d6b15c" }))
@@ -207,19 +212,22 @@ export class DestinyScene extends Phaser.Scene {
       );
     }
 
-    card.add(
-      this.add.text(
-        102,
-        14,
-        def.name,
-        textStyle({
-          fontSize: "15px",
-          color: TEXT.textWorldTitle,
-          fontStyle: "bold",
-          wordWrap: { width: 190 },
-        }),
-      ),
+    const titleText = this.add.text(
+      102,
+      14,
+      def.name,
+      textStyle({
+        fontSize: "15px",
+        color: TEXT.textWorldTitle,
+        fontStyle: "bold",
+      }),
     );
+    if (titleText.width > 190) {
+      const scale = 190 / titleText.width;
+      titleText.setScale(scale);
+    }
+
+    card.add(titleText);
     const worldUnlock = isWorldUnlock(def);
     if (!worldUnlock && def.destinyWeight > 0) {
       card.add(
@@ -234,31 +242,40 @@ export class DestinyScene extends Phaser.Scene {
         ),
       );
     }
-    card.add(
-      this.add.text(
-        102,
-        38,
-        effectSummary(def),
-        textStyle({
-          fontSize: "12px",
-          color: TEXT.textReward,
-          wordWrap: { width: 246 },
-        }),
-      ),
+    const summaryText = this.add.text(
+      102,
+      38,
+      effectSummary(def),
+      textStyle({
+        fontSize: "12px",
+        color: TEXT.textReward,
+        wordWrap: { width: 246 },
+      }),
     );
-    card.add(
-      this.add.text(
-        102,
-        56,
-        def.description,
-        textStyle({
-          fontSize: "11px",
-          color: TEXT.textMuted,
-          fontStyle: "italic",
-          wordWrap: { width: 246 },
-        }),
-      ),
+    if (summaryText.height > 15) {
+      const scale = 15 / summaryText.height;
+      summaryText.setScale(scale);
+    }
+    card.add(summaryText);
+
+    const descriptionText = this.add.text(
+      102,
+      56,
+      def.description,
+      textStyle({
+        fontSize: "11px",
+        color: TEXT.textMuted,
+        fontStyle: "italic",
+        wordWrap: { width: 246 },
+      }),
     );
+    console.log(`${def.name}: ${descriptionText.height}`);
+    if (descriptionText.height > 39) {
+      const scale = 39 / descriptionText.height;
+      descriptionText.setScale(scale);
+      descriptionText.setWordWrapWidth(246 / scale);
+    }
+    card.add(descriptionText);
     card.add(
       this.add.text(
         102,

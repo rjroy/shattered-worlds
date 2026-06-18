@@ -751,6 +751,8 @@ export class HelpOverlayView extends Phaser.GameObjects.Container {
             colWrap,
           );
 
+          addIconRow(page, leftX, 90, "heat", "Heat", "Used to thaw frozen cards.", colWrap);
+
           addIconSectionHeader(page, rightX, 59, "Either Deck");
           addIconRow(
             page,

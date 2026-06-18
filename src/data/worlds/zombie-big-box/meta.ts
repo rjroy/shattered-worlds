@@ -1,12 +1,13 @@
-import type { WorldDisplayData, WorldHelpData } from '../types'
+import type { WorldDisplayData, WorldHelpData } from "../types";
 
 export const ZOMBIE_BIG_BOX_DISPLAY: WorldDisplayData = {
   name: "The Big Box",
   tagline: "The mindless masses shuffle the aisles.",
   story:
     "The store never closes. You're halfway through a shift when the lights start flickering — the kind of flicker that isn't a power surge. The PA goes silent mid-announcement. Something is moving in the stockroom.",
+  difficulty: 1,
   backgroundKey: "bigbox-reality",
-}
+};
 
 export const ZOMBIE_BIG_BOX_HELP: WorldHelpData = {
   mechanics: [
@@ -24,4 +25,4 @@ export const ZOMBIE_BIG_BOX_HELP: WorldHelpData = {
       detail: "Some bonus cards provide the ability to apply progress to all visible hazards.",
     },
   ],
-}
+};

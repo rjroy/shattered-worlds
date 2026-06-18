@@ -1,12 +1,13 @@
-import type { WorldDisplayData, WorldHelpData } from '../types'
+import type { WorldDisplayData, WorldHelpData } from "../types";
 
 export const BIRD_BUILDING_DISPLAY: WorldDisplayData = {
   name: "Last Day at the Office",
   tagline: "You were going to quit anyway.",
   story:
     "The office is eerily quiet. The hum of the fluorescent lights is punctuated by the occasional thud and fluttering sound from the ceiling. A girder sized claw pierces through the side of the building as it is lifted into the air.",
+  difficulty: 1,
   backgroundKey: "bird-building-bg",
-}
+};
 
 export const BIRD_BUILDING_HELP: WorldHelpData = {
   mechanics: [
@@ -26,4 +27,4 @@ export const BIRD_BUILDING_HELP: WorldHelpData = {
         "Steady gives you one Brace charge. When the next ForceDestroy would destroy a card from your hand, Brace absorbs it instead. Stack charges with multiple Steady plays.",
     },
   ],
-}
+};

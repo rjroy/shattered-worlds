@@ -5,6 +5,7 @@ export const FOG_BEACH_PARTY_DISPLAY: WorldDisplayData = {
   tagline: "Golden hour on the sand. Then the fog rolls in, and there is something in it.",
   story:
     "The bonfires were lit, the music was good, and the light held warm and low over the water. Then the fog came off the sea faster than fog should, cold and total, swallowing the party string by string. The shapes moving through it are still close. You just can't see which ones mean to hurt you.",
+  difficulty: 3,
   backgroundKey: "fog-beach-party-bg",
 };
 

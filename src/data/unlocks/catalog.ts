@@ -110,6 +110,14 @@ export const UNLOCK_CATALOG: readonly UnlockDefinition[] = [
     effect: { type: "worldUnlock", worldId: "fog-beach-party" },
   },
   {
+    id: "bird-building",
+    name: "Last Day at the Office",
+    description: "Opens Last Day at the Office in World Select.",
+    cost: 5,
+    destinyWeight: 0,
+    effect: { type: "worldUnlock", worldId: "bird-building" },
+  },
+  {
     id: "world-whiteout-parking-garage",
     name: "Whiteout Parking Garage",
     description: "Opens Whiteout Parking Garage in World Select.",
