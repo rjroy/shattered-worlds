@@ -196,6 +196,44 @@ describe("gameplaySession integration", () => {
     expect(source).toContain("private readonly runStats: RunStatsReader | undefined");
   });
 
+  it("gates locked WorldSelect cards through Destiny without launching a run", async () => {
+    const source = await Bun.file(new URL("../scenes/WorldSelectScene.ts", import.meta.url)).text();
+    const cardClickStart = source.indexOf('bg.on("pointerdown", () => {');
+    const lockedBranchStart = source.indexOf("if (locked) {", cardClickStart);
+    const destinyStart = source.indexOf('this.scene.start("Destiny")', lockedBranchStart);
+    const lockedReturn = source.indexOf("return;", destinyStart);
+    const tableLaunch = source.indexOf('this.scene.launch("Table", { worldId, seed })', lockedReturn);
+
+    expect(source).toContain('import { isWorldUnlocked, UNLOCK_CATALOG } from "../../data/unlocks/catalog";');
+    expect(source).toContain("!isWorldUnlocked(worldId, profile, UNLOCK_CATALOG)");
+    expect(source).toContain("const locked = lockState.locked;");
+    expect(source).toContain('`Locked - Destiny${lockState.cost === null ? "" : ` ${lockState.cost} Fragments`}`');
+    expect(source).toContain("container.setScale(locked ? 1.015 : WORLD_SELECT_LAYOUT.hoverScale)");
+    expect(lockedBranchStart).toBeGreaterThan(cardClickStart);
+    expect(destinyStart).toBeGreaterThan(lockedBranchStart);
+    expect(lockedReturn).toBeGreaterThan(destinyStart);
+    expect(tableLaunch).toBeGreaterThan(lockedReturn);
+    expect(source.indexOf("this.disableCarouselInteractions()", lockedReturn)).toBeLessThan(tableLaunch);
+  });
+
+  it("checks WorldSelect help access before constructing the help overlay", async () => {
+    const source = await Bun.file(new URL("../scenes/WorldSelectScene.ts", import.meta.url)).text();
+    const showHelpStart = source.indexOf("private showHelpOverlay(): void {");
+    const lockCheck = source.indexOf("if (this.getWorldLockState(worldId).locked) {", showHelpStart);
+    const destinyStart = source.indexOf('this.scene.start("Destiny")', lockCheck);
+    const lockedReturn = source.indexOf("return;", destinyStart);
+    const overlayConstruct = source.indexOf(
+      "new HelpOverlayView(this, worldId, totalActs)",
+      showHelpStart,
+    );
+
+    expect(showHelpStart).toBeGreaterThanOrEqual(0);
+    expect(lockCheck).toBeGreaterThan(showHelpStart);
+    expect(destinyStart).toBeGreaterThan(lockCheck);
+    expect(lockedReturn).toBeGreaterThan(destinyStart);
+    expect(overlayConstruct).toBeGreaterThan(lockedReturn);
+  });
+
   it("renders world unlock Destiny cards as access purchases instead of activation toggles", async () => {
     const source = await Bun.file(new URL("../scenes/DestinyScene.ts", import.meta.url)).text();
 

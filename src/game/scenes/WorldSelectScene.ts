@@ -1,5 +1,6 @@
 import Phaser from "phaser";
 import { loadAssets } from "../data/assetManifest";
+import { isWorldUnlocked, UNLOCK_CATALOG } from "../../data/unlocks/catalog";
 import { worldManifest } from "../../data/worldManifest";
 import { worldDisplayManifest, type WorldDisplayData } from "../../data/worldDisplayManifest";
 import type { RunStatsReader } from "../runtime/runStats";
@@ -30,6 +31,10 @@ type WorldCardView = {
 type WorldSelectArrow = {
   container: Phaser.GameObjects.Container;
   hitArea: Phaser.GameObjects.Rectangle;
+};
+type WorldLockState = {
+  locked: boolean;
+  cost: number | null;
 };
 
 export class WorldSelectScene extends Phaser.Scene {
@@ -160,6 +165,11 @@ export class WorldSelectScene extends Phaser.Scene {
   private showHelpOverlay(): void {
     const worldId = this.worldIds[this.visibleStartIndex];
     if (worldId === undefined) return;
+
+    if (this.getWorldLockState(worldId).locked) {
+      this.scene.start("Destiny");
+      return;
+    }
 
     this.helpOverlay?.destroy(true);
     const buildWorld = worldManifest[worldId];
@@ -332,6 +342,8 @@ export class WorldSelectScene extends Phaser.Scene {
     accentColor: number,
   ): WorldCardView {
     const container = this.add.container(cx, cy);
+    const lockState = this.getWorldLockState(worldId);
+    const locked = lockState.locked;
 
     // background + accent border
     const bg = this.createWorldCardBackground(worldId, display);
@@ -443,17 +455,63 @@ export class WorldSelectScene extends Phaser.Scene {
       contents.push(badgeBg, badgeText);
     }
 
+    if (locked) {
+      const overlay = this.add.rectangle(0, 0, CARD_W, CARD_H, 0x050409, 0.52);
+      const lockLabel = this.add
+        .text(
+          0,
+          CARD_H / 2 - 38,
+          `Locked - Destiny${lockState.cost === null ? "" : ` ${lockState.cost} Fragments`}`,
+          textStyle({
+            fontSize: "13px",
+            color: "#f2d68a",
+            fontStyle: "bold",
+            align: "center",
+            wordWrap: { width: CARD_W - 20 },
+          }),
+        )
+        .setOrigin(0.5, 0);
+      const lockBg = this.add
+        .rectangle(0, lockLabel.y - 3, lockLabel.width + 14, lockLabel.height + 6, 0x0b0710, 0.9)
+        .setOrigin(0.5, 0)
+        .setRounded(5);
+      lockBg.setStrokeStyle(1, 0xf2d68a, 0.72);
+      contents.push(overlay, lockBg, lockLabel);
+    }
+
     container.add(contents);
 
-    bg.on("pointerover", () => container.setScale(WORLD_SELECT_LAYOUT.hoverScale));
+    bg.on("pointerover", () =>
+      container.setScale(locked ? 1.015 : WORLD_SELECT_LAYOUT.hoverScale),
+    );
     bg.on("pointerout", () => container.setScale(1.0));
     bg.on("pointerdown", () => {
+      if (locked) {
+        this.scene.start("Destiny");
+        return;
+      }
+
       bg.disableInteractive();
       this.disableCarouselInteractions();
       const seed = Math.floor(Math.random() * 2 ** 32);
       this.scene.launch("Table", { worldId, seed });
     });
     return { container, background: bg };
+  }
+
+  private getWorldLockState(worldId: string): WorldLockState {
+    const gate = UNLOCK_CATALOG.find(
+      (candidate) =>
+        candidate.effect.type === "worldUnlock" && candidate.effect.worldId === worldId,
+    );
+    const profile = this.unlocksStore?.getProfile();
+    const locked =
+      profile === undefined ? false : !isWorldUnlocked(worldId, profile, UNLOCK_CATALOG);
+
+    return {
+      locked,
+      cost: gate?.cost ?? null,
+    };
   }
 
   private disableCarouselInteractions(): void {
