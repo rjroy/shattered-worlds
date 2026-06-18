@@ -134,7 +134,10 @@ describe("buildRunModifiers", () => {
     expect(mods.playerCardModifiers[1]).toMatchObject({
       target: { kind: "template", templateId: "Panic" },
       condition: { kind: "always" },
-      patches: [{ kind: "appendEffect", effect: { kind: "DealProgressAll", base: 1 } }],
+      patches: [
+        { kind: "appendEffect", effect: { kind: "DealProgressAll", base: 2 } },
+        { kind: "setExhaust", exhaust: true },
+      ],
     });
     expect(mods.playerCardModifiers[2]).toMatchObject({
       target: { kind: "template", templateId: "Explore" },
