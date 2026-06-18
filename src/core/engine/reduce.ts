@@ -248,9 +248,21 @@ function handleEndTurn(catalog: CardCatalog, state: GameState): ReduceResult {
         ...afterRefill.playerDiscard,
         ...afterRefill.hand,
       ];
-      const canIntroduceWorld = allPlayerCards.some(
-        (c) => c.kind === "player" && c.effect.kind === "AddWorldCardToDeck",
-      );
+      const canIntroduceWorld = allPlayerCards.some((c) => {
+        if (c.kind === "player") {
+          switch (c.effect.kind) {
+            case "AddWorldCardToDeck":
+              return true;
+            case "Sequence":
+              return c.effect.steps.some((step) => step.kind === "AddWorldCardToDeck");
+            case "Modal":
+              return c.effect.branches.some((branch) => branch.kind === "AddWorldCardToDeck");
+            default:
+              return false;
+          }
+        }
+        return false;
+      });
       if (!canIntroduceWorld) {
         const lostState: GameState = { ...afterRefill, status: "lost" };
         events.push({ type: "WorldLost" });
