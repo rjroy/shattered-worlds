@@ -27,6 +27,7 @@ function makeState(progress: Record<string, number> = {}): GameState {
     braceCharges: 0,
     pendingActBoon: null,
     runModifiers: DEFAULT_RUN_MODIFIERS,
+    turnPlayHistory: { cardsPlayedThisTurn: 0, byTemplateId: {} },
     status: "playing",
     worldId: "zombie-big-box",
     rng: createRng(0),

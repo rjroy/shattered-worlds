@@ -102,6 +102,7 @@ export function createWorld(
     braceCharges: mods.extraStartBrace,
     pendingActBoon: null,
     runModifiers: mods,
+    turnPlayHistory: { cardsPlayedThisTurn: 0, byTemplateId: {} },
     status: "playing",
     worldId: "basic",
     rng,

@@ -7,6 +7,7 @@ export type {
   Action,
   GameEvent,
   GameState,
+  TurnPlayHistory,
   ActBoonChoice,
   TargetSpec,
   AvailableActions,
