@@ -49,6 +49,7 @@ import unlockKeywordBonusUrl from "../assets/unlocks/keyword-bonus.webp";
 import unlockMinEnergyUrl from "../assets/unlocks/min-energy.webp";
 import unlockMinLightUrl from "../assets/unlocks/min-light.webp";
 import unlockStarterFootballerUrl from "../assets/unlocks/starter-footballer.webp";
+import unlockStarterContractorUrl from "../assets/unlocks/starter-contractor.webp";
 import worldSelectBgUrl from "../assets/world-select.webp";
 import screenChronicleUrl from "../assets/screens/shattered-chronicle.webp";
 import screenDestinyUrl from "../assets/screens/shattered-destiny.webp";
@@ -108,6 +109,7 @@ export const assetManifest: Record<string, string> = {
   "unlock/keyword-bonus": unlockKeywordBonusUrl,
   "unlock/min-energy": unlockMinEnergyUrl,
   "unlock/min-light": unlockMinLightUrl,
+  "unlock/starter-contractor": unlockStarterContractorUrl,
   "unlock/starter-footballer": unlockStarterFootballerUrl,
   "world-select-bg": worldSelectBgUrl,
   "screen-chronicle": screenChronicleUrl,

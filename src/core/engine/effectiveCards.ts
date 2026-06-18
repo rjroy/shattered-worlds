@@ -13,6 +13,8 @@ export function effectivePlayerCard(card: PlayerCard, state: GameState): PlayerC
     if (!matchesTarget(card, modifier.target)) continue;
     if (!conditionApplies(card, state, modifier.condition)) continue;
 
+    effective.name = modifier.displayName;
+    effective.modified = true;
     for (const patch of modifier.patches) {
       effective = applyPatch(effective, patch);
     }

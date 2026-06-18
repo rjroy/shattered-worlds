@@ -80,7 +80,7 @@ export const UNLOCK_CATALOG: readonly UnlockDefinition[] = [
   {
     id: "starter-contractor",
     name: "Builder's Instinct",
-    description: "A muscle memory from a different life. Different strengths, different gaps.",
+    description: "A muscle memory from a different life. More Barricades, No Panic, Less Sprint.",
     cost: 50,
     destinyWeight: 3,
     effect: { type: "starterDeckOverride", starterDeckId: "contractor" },
@@ -88,7 +88,7 @@ export const UNLOCK_CATALOG: readonly UnlockDefinition[] = [
   {
     id: "starter-footballer",
     name: "Athlete's Instinct",
-    description: "A muscle memory from a different life. Different strengths, different gaps.",
+    description: "A muscle memory from a different life. More Sprint, No Barricades.",
     cost: 50,
     destinyWeight: 3,
     effect: { type: "starterDeckOverride", starterDeckId: "footballer" },
@@ -102,17 +102,17 @@ export const UNLOCK_CATALOG: readonly UnlockDefinition[] = [
     effect: { type: "actReward", boonPoolId: "fortune-v1", offeredCount: 3, chooseCount: 1 },
   },
 
-  // Experimental card-modifier unlocks for playtesting effective player cards.
   {
     id: "first-sprint-free",
-    name: "Playtest: First Sprint Free",
-    description: "Experimental. The first Sprint you play each turn costs 0 energy.",
+    name: "Burst of Speed",
+    description: "The first Sprint you play each turn costs 0 energy.",
     cost: 30,
     destinyWeight: 1,
     effect: {
       type: "playerCardModifier",
       modifier: {
         id: "first-sprint-free",
+        displayName: "Burst of Speed",
         target: { kind: "template", templateId: "Sprint" },
         condition: { kind: "templatePlayOrdinalThisTurn", ordinal: 1 },
         patches: [{ kind: "setEnergyCost", energyCost: 0 }],
@@ -121,14 +121,15 @@ export const UNLOCK_CATALOG: readonly UnlockDefinition[] = [
   },
   {
     id: "panic-response",
-    name: "Playtest: Panic Response",
-    description: "Experimental. Panic also deals 1 progress to every world card in hand.",
+    name: "Panic Response",
+    description: "Panic also deals 1 progress to every world card in hand.",
     cost: 35,
     destinyWeight: 2,
     effect: {
       type: "playerCardModifier",
       modifier: {
         id: "panic-response",
+        displayName: "Panic Response",
         target: { kind: "template", templateId: "Panic" },
         condition: { kind: "always" },
         patches: [{ kind: "appendEffect", effect: { kind: "DealProgressAll", base: 1 } }],
@@ -136,15 +137,45 @@ export const UNLOCK_CATALOG: readonly UnlockDefinition[] = [
     },
   },
   {
+    id: "strong-barricades",
+    name: "Strong Barricades",
+    description: "Barricades apply an additional progress and can return more cards.",
+    cost: 30,
+    destinyWeight: 2,
+    effect: {
+      type: "playerCardModifier",
+      modifier: {
+        id: "second-explore-push",
+        displayName: "Strong Barricade",
+        target: { kind: "template", templateId: "Explore" },
+        condition: { kind: "always" },
+        patches: [
+          {
+            kind: "replaceEffect",
+            effect: {
+              kind: "Sequence",
+              steps: [
+                { kind: "DealProgress", base: 2 },
+                { kind: "ReturnWorldCards", min: 0, max: 6 },
+              ],
+            },
+          },
+        ],
+      },
+    },
+  },
+  {
     id: "second-explore-push",
-    name: "Playtest: Second Explore Push",
-    description: "Experimental. The second Explore you play each turn deals 1 progress to every world card in hand.",
+    name: "Determined Explorer",
+    description:
+      "The second Explore you play each turn deals 1 progress to every world card in hand.",
     cost: 30,
     destinyWeight: 1,
     effect: {
       type: "playerCardModifier",
       modifier: {
         id: "second-explore-push",
+        displayName: "Determined Exploration",
         target: { kind: "template", templateId: "Explore" },
         condition: { kind: "templatePlayOrdinalThisTurn", ordinal: 2 },
         patches: [{ kind: "appendEffect", effect: { kind: "DealProgressAll", base: 1 } }],

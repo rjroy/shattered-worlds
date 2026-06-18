@@ -3,12 +3,15 @@ import type { CardEffect, CardTemplateId, Keyword } from "../../core/model/types
 export type PlayerCardModifier = {
   readonly id: string;
   readonly target: PlayerCardModifierTarget;
+  readonly displayName: string;
   readonly condition: PlayerCardModifierCondition;
   readonly patches: readonly PlayerCardPatch[];
 };
 
-export type PlayerCardModifierTarget =
-  | { readonly kind: "template"; readonly templateId: CardTemplateId };
+export type PlayerCardModifierTarget = {
+  readonly kind: "template";
+  readonly templateId: CardTemplateId;
+};
 
 export type PlayerCardModifierComparison =
   | "lessThan"
@@ -80,9 +83,17 @@ export const DEFAULT_RUN_MODIFIERS: RunModifiers = {
 };
 
 export type UnlockEffect =
-  | { readonly type: "startingStat"; readonly stat: "hp" | "energy" | "light" | "heat" | "brace"; readonly amount: number }
+  | {
+      readonly type: "startingStat";
+      readonly stat: "hp" | "energy" | "light" | "heat" | "brace";
+      readonly amount: number;
+    }
   | { readonly type: "handSizeBonus"; readonly amountPerAct: number }
-  | { readonly type: "minResourcePerTurn"; readonly resource: "energy" | "light"; readonly floor: number }
+  | {
+      readonly type: "minResourcePerTurn";
+      readonly resource: "energy" | "light";
+      readonly floor: number;
+    }
   | { readonly type: "keywordDamageBonus"; readonly amount: number }
   | { readonly type: "playerCardModifier"; readonly modifier: PlayerCardModifier }
   | { readonly type: "starterDeckOverride"; readonly starterDeckId: string }

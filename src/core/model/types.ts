@@ -87,6 +87,8 @@ export interface PlayerCard {
   sourceWorldId: string;
   effect: CardEffect;
   energyCost: number;
+  // When true, the card is marked as modified due to an unlock.
+  modified?: boolean;
   // When true, the card is destroyed (sent to no zone) on play instead of
   // recycling to playerDiscard.
   exhaust?: boolean;

@@ -89,7 +89,9 @@ export class DestinyScene extends Phaser.Scene {
       },
     );
     this.input.on("pointerdown", (pointer: Phaser.Input.Pointer) => this.beginTouchScroll(pointer));
-    this.input.on("pointermove", (pointer: Phaser.Input.Pointer) => this.updateTouchScroll(pointer));
+    this.input.on("pointermove", (pointer: Phaser.Input.Pointer) =>
+      this.updateTouchScroll(pointer),
+    );
     this.input.on("pointerup", () => this.endTouchScroll());
     this.input.on("pointerupoutside", () => this.endTouchScroll());
 
@@ -557,9 +559,9 @@ function effectSummary(def: UnlockDefinition): string {
     case "keywordDamageBonus":
       return `Keyword bonuses +${def.effect.amount}`;
     case "playerCardModifier":
-      return "Experimental card modifier";
+      return "During game card modifier";
     case "starterDeckOverride":
-      return "Footballer starter deck";
+      return "Custom Starter deck";
     case "actReward":
       return `Choose ${def.effect.chooseCount} of ${def.effect.offeredCount} temporary boons`;
   }
