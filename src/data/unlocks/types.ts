@@ -97,6 +97,7 @@ export type UnlockEffect =
   | { readonly type: "keywordDamageBonus"; readonly amount: number }
   | { readonly type: "playerCardModifier"; readonly modifier: PlayerCardModifier }
   | { readonly type: "starterDeckOverride"; readonly starterDeckId: string }
+  | { readonly type: "worldUnlock"; readonly worldId: string }
   | {
       readonly type: "actReward";
       readonly boonPoolId: string;

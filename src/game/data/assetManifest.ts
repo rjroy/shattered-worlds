@@ -54,6 +54,8 @@ import unlockSecondExplorePushUrl from "../assets/unlocks/second-explore-push.we
 import unlockStarterContractorUrl from "../assets/unlocks/starter-contractor.webp";
 import unlockStarterFootballerUrl from "../assets/unlocks/starter-footballer.webp";
 import unlockStrongBarricadesUrl from "../assets/unlocks/strong-barricades.webp";
+import unlockWorldFogBeachPartyUrl from "../assets/unlocks/world-fog-beach-party.webp";
+import unlockWorldWhiteoutParkingGarageUrl from "../assets/unlocks/world-whiteout-parking-garage.webp";
 import worldSelectBgUrl from "../assets/world-select.webp";
 import screenChronicleUrl from "../assets/screens/shattered-chronicle.webp";
 import screenDestinyUrl from "../assets/screens/shattered-destiny.webp";
@@ -119,6 +121,8 @@ export const assetManifest: Record<string, string> = {
   "unlock/starter-contractor": unlockStarterContractorUrl,
   "unlock/starter-footballer": unlockStarterFootballerUrl,
   "unlock/strong-barricades": unlockStrongBarricadesUrl,
+  "unlock/world-fog-beach-party": unlockWorldFogBeachPartyUrl,
+  "unlock/world-whiteout-parking-garage": unlockWorldWhiteoutParkingGarageUrl,
   "world-select-bg": worldSelectBgUrl,
   "screen-chronicle": screenChronicleUrl,
   "screen-destiny": screenDestinyUrl,

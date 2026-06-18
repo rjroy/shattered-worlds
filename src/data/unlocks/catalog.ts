@@ -101,6 +101,22 @@ export const UNLOCK_CATALOG: readonly UnlockDefinition[] = [
     destinyWeight: 3,
     effect: { type: "actReward", boonPoolId: "fortune-v1", offeredCount: 3, chooseCount: 1 },
   },
+  {
+    id: "world-fog-beach-party",
+    name: "Fog Beach Party",
+    description: "Opens Fog Beach Party in World Select.",
+    cost: 5,
+    destinyWeight: 0,
+    effect: { type: "worldUnlock", worldId: "fog-beach-party" },
+  },
+  {
+    id: "world-whiteout-parking-garage",
+    name: "Whiteout Parking Garage",
+    description: "Opens Whiteout Parking Garage in World Select.",
+    cost: 5,
+    destinyWeight: 0,
+    effect: { type: "worldUnlock", worldId: "whiteout-parking-garage" },
+  },
 
   {
     id: "first-sprint-free",
@@ -276,6 +292,8 @@ export function buildRunModifiers(
         break;
       case "starterDeckOverride":
         break;
+      case "worldUnlock":
+        break;
       case "actReward":
         {
           const poolTemplateIds =
@@ -298,6 +316,18 @@ export function buildRunModifiers(
   }
 
   return mods;
+}
+
+export function isWorldUnlocked(
+  worldId: string,
+  profile: UnlocksProfile,
+  catalog: readonly UnlockDefinition[],
+): boolean {
+  const gate = catalog.find(
+    (candidate) => candidate.effect.type === "worldUnlock" && candidate.effect.worldId === worldId,
+  );
+
+  return gate === undefined || profile.purchased.includes(gate.id);
 }
 
 export function activeWeight(

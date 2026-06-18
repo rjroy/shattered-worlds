@@ -1,4 +1,5 @@
 import { canActivate, computeSpendableBalance, UNLOCK_CATALOG } from "../../data/unlocks/catalog";
+import type { UnlockDefinition } from "../../data/unlocks/types";
 import type { RunStatsStorage } from "./runStats";
 import type { FeatsStore } from "./featsProfile";
 
@@ -30,6 +31,10 @@ function enforceSubset(profile: UnlocksProfile): UnlocksProfile {
     ...profile,
     activated: profile.activated.filter((id) => purchased.has(id)),
   };
+}
+
+function isWorldUnlock(def: UnlockDefinition): boolean {
+  return def.effect.type === "worldUnlock";
 }
 
 export function loadUnlocksProfile(
@@ -102,7 +107,7 @@ export function createUnlocksStore(
       if (def.cost > balance) return "insufficient-fragments";
 
       const purchased = [...profile.purchased, id];
-      const activated = canActivate(def, profile.activated, UNLOCK_CATALOG)
+      const activated = !isWorldUnlock(def) && canActivate(def, profile.activated, UNLOCK_CATALOG)
         ? [...profile.activated, id]
         : profile.activated;
       setProfile({ version: 1, purchased, activated });
@@ -116,6 +121,7 @@ export function createUnlocksStore(
         if (profile.activated.includes(id)) return "ok";
 
         const def = UNLOCK_CATALOG.find((candidate) => candidate.id === id);
+        if (def !== undefined && isWorldUnlock(def)) return "ok";
         if (def === undefined || !canActivate(def, profile.activated, UNLOCK_CATALOG)) {
           return "over-budget";
         }
