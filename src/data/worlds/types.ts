@@ -22,6 +22,7 @@ export interface WorldDisplayData {
   name: string;
   tagline: string;
   story: string;
+  difficulty: number; // 1-5, 5 being the hardest
   backgroundKey?: string;
 }
 

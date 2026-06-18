@@ -78,6 +78,21 @@ export class WorldSelectScene extends Phaser.Scene {
       .setOrigin(0.5, 0.5);
 
     this.worldIds = Object.keys(worldManifest);
+    this.worldIds.sort((a, b) => {
+      const lockA = this.getWorldLockState(a);
+      const lockB = this.getWorldLockState(b);
+      if (lockB.locked && !lockA.locked) return -1;
+      if (lockA.locked && !lockB.locked) return 1;
+
+      if (lockA.locked && lockB.locked) {
+        const costDelta = (lockA.cost ?? 0) - (lockB.cost ?? 0);
+        if (costDelta !== 0) return costDelta;
+      }
+
+      const nameA = worldManifest[a]?.name ?? "";
+      const nameB = worldManifest[b]?.name ?? "";
+      return nameA.localeCompare(nameB);
+    });
     this.visibleStartIndex = 0;
     this.createChronicleButton();
     this.createDestinyButton();
@@ -481,9 +496,7 @@ export class WorldSelectScene extends Phaser.Scene {
 
     container.add(contents);
 
-    bg.on("pointerover", () =>
-      container.setScale(locked ? 1.015 : WORLD_SELECT_LAYOUT.hoverScale),
-    );
+    bg.on("pointerover", () => container.setScale(locked ? 1.015 : WORLD_SELECT_LAYOUT.hoverScale));
     bg.on("pointerout", () => container.setScale(1.0));
     bg.on("pointerdown", () => {
       if (locked) {
