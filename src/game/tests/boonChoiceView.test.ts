@@ -9,6 +9,8 @@ interface FakeGameObject {
   readonly kind: string;
   text?: string;
   list?: unknown[];
+  x: number;
+  y: number;
   width: number;
   height: number;
   displayWidth: number;
@@ -23,14 +25,29 @@ interface FakeGameObject {
   off(event: string, handler?: () => void): FakeGameObject;
   emit(event: string): void;
   setDepth(...args: unknown[]): FakeGameObject;
+  setAlpha(...args: unknown[]): FakeGameObject;
   setTint(...args: unknown[]): FakeGameObject;
+  setFillStyle(...args: unknown[]): FakeGameObject;
   setDisplaySize(width: number, height: number): FakeGameObject;
+  setSize(width: number, height: number): FakeGameObject;
   setScale(scale: number): FakeGameObject;
   setStrokeStyle(...args: unknown[]): FakeGameObject;
   setRounded(...args: unknown[]): FakeGameObject;
   setPosition(x: number, y: number): FakeGameObject;
+  setY(y: number): FakeGameObject;
   setVisible(...args: unknown[]): FakeGameObject;
   setText(text: string): FakeGameObject;
+  setAbove(...args: unknown[]): FakeGameObject;
+  getWrappedText(text: string): string[];
+  clear(): FakeGameObject;
+  lineStyle(...args: unknown[]): FakeGameObject;
+  strokeRoundedRect(...args: unknown[]): FakeGameObject;
+  strokeCircle(...args: unknown[]): FakeGameObject;
+  fillStyle(...args: unknown[]): FakeGameObject;
+  fillCircle(...args: unknown[]): FakeGameObject;
+  beginPath(): FakeGameObject;
+  arc(...args: unknown[]): FakeGameObject;
+  strokePath(): FakeGameObject;
   add(child: unknown): FakeGameObject;
   destroy(): void;
   removeFromDisplayList(): FakeGameObject;
@@ -41,6 +58,8 @@ function makeObject(kind: string, text = ""): FakeGameObject {
   const obj = {
     kind,
     text,
+    x: 0,
+    y: 0,
     width: text.length > 0 ? Math.max(8, text.length * 8) : 32,
     height: 18,
     displayWidth: text.length > 0 ? Math.max(8, text.length * 8) : 32,
@@ -73,10 +92,23 @@ function makeObject(kind: string, text = ""): FakeGameObject {
     setDepth() {
       return this;
     },
+    setAlpha() {
+      return this;
+    },
     setTint() {
       return this;
     },
+    setFillStyle() {
+      return this;
+    },
     setDisplaySize(width: number, height: number) {
+      this.width = width;
+      this.height = height;
+      this.displayWidth = width;
+      this.displayHeight = height;
+      return this;
+    },
+    setSize(width: number, height: number) {
       this.width = width;
       this.height = height;
       this.displayWidth = width;
@@ -94,7 +126,13 @@ function makeObject(kind: string, text = ""): FakeGameObject {
     setRounded() {
       return this;
     },
-    setPosition() {
+    setPosition(x: number, y: number) {
+      this.x = x;
+      this.y = y;
+      return this;
+    },
+    setY(y: number) {
+      this.y = y;
       return this;
     },
     setVisible() {
@@ -104,6 +142,39 @@ function makeObject(kind: string, text = ""): FakeGameObject {
       this.text = textValue;
       this.width = Math.max(8, textValue.length * 8);
       this.displayWidth = this.width;
+      return this;
+    },
+    setAbove() {
+      return this;
+    },
+    getWrappedText(textValue: string) {
+      return [textValue];
+    },
+    clear() {
+      return this;
+    },
+    lineStyle() {
+      return this;
+    },
+    strokeRoundedRect() {
+      return this;
+    },
+    strokeCircle() {
+      return this;
+    },
+    fillStyle() {
+      return this;
+    },
+    fillCircle() {
+      return this;
+    },
+    beginPath() {
+      return this;
+    },
+    arc() {
+      return this;
+    },
+    strokePath() {
       return this;
     },
     add(child: unknown) {
@@ -167,6 +238,16 @@ function makeScene(): Phaser.Scene & { objects: unknown[] } {
       },
       image() {
         const obj = makeObject("image");
+        objects.push(obj);
+        return obj;
+      },
+      graphics() {
+        const obj = makeObject("graphics");
+        objects.push(obj);
+        return obj;
+      },
+      circle() {
+        const obj = makeObject("circle");
         objects.push(obj);
         return obj;
       },
@@ -274,6 +355,36 @@ describe("BoonChoiceView", () => {
       .filter((obj): obj is FakeGameObject => (obj as FakeGameObject).kind === "text")
       .map((obj) => obj.text);
     expect(renderedText).toContain("Pick one temporary card. It goes to your discard pile.");
+  });
+
+  it("formats world template keywords through CardView", () => {
+    const scene = makeScene();
+    const worldTemplate: CardTemplate = {
+      kind: "world",
+      name: "Fog Bank",
+      cost: 3,
+      keywords: ["Concealed:3", "Hidden"],
+      discardable: false,
+      onDiscarded: { kind: "None" },
+      onCleared: { kind: "None" },
+      onEndOfTurn: { kind: "None" },
+      onPartialClear: { kind: "None" },
+    };
+
+    new BoonChoiceView(scene, {
+      theme: selectTheme("zombie-big-box"),
+      source: "act",
+      bToDiscard: false,
+      options: [{ templateId: "Fog Bank", template: worldTemplate }],
+      resolveTheme: selectTheme,
+      onChoose() {},
+    });
+
+    const renderedText = scene.objects
+      .filter((obj): obj is FakeGameObject => (obj as FakeGameObject).kind === "text")
+      .map((obj) => obj.text);
+    expect(renderedText.some((text) => text?.includes("Concealed 3"))).toBe(true);
+    expect(renderedText).not.toContain("Concealed:3 · Hidden");
   });
 
   it("dispatches the selected template from pointer selection", () => {
