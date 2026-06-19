@@ -1,6 +1,5 @@
 import type { Action, CardId, GameState, TargetSpec } from "../core/model/types";
 import { availableActions } from "../core/engine/available";
-import { Actions } from "phaser";
 
 export { catalog, worldData } from "../core/tests/testFixture";
 
