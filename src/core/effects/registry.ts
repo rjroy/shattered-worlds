@@ -3,6 +3,7 @@ import type { CardEffect } from "../model/types";
 import type { EffectHandler } from "./EffectHandler";
 import type { ConnectorStyle } from "./EffectContext";
 import { ModalHandler, SequenceHandler } from "./composite";
+import { OfferBoonHandler } from "./boonChoice";
 import {
   DealProgressHandler,
   DealProgressScaledHandler,
@@ -47,6 +48,7 @@ export const EFFECTS: {
   DamageScaled: new DamageScaledHandler(),
   AddCard: new AddCardHandler(),
   GainCard: new GainCardHandler(),
+  OfferBoon: new OfferBoonHandler(),
   AddPlayerCardToTop: new AddPlayerCardToTopHandler(),
   AddWorldCardToDeck: new AddWorldCardToDeckHandler(),
   AddThreatToWorldDeck: new AddThreatToWorldDeckHandler(),

@@ -11,8 +11,10 @@ import {
 import { mintCard } from "../model/cards";
 import { availableActions } from "../engine/available";
 import { createWorld } from "../engine/world";
-import type { GameState, PlayerCard, WorldCard } from "../model/types";
+import { reduce } from "../engine/reduce";
+import type { CardEffect, GameState, PlayerCard, WorldCard } from "../model/types";
 import { DEFAULT_RUN_MODIFIERS } from "../../data/unlocks/types";
+import type { CardCatalog } from "../model/catalog";
 import { catalog, worldData } from "./testFixture";
 
 // ---------------------------------------------------------------------------
@@ -45,6 +47,35 @@ function mintWorld(state: GameState, name: Parameters<typeof mintCard>[2]): [Wor
   const [card, next] = mintCard(catalog, state, name);
   if (card.kind !== "world") throw new Error(`${name} is not a world card`);
   return [card as WorldCard, next];
+}
+
+function offerBoonHazard(effect: CardEffect): WorldCard {
+  return {
+    kind: "world",
+    id: "offer-boon-hazard",
+    templateId: "Offer Boon Hazard",
+    name: "Offer Boon Hazard",
+    insetKey: undefined,
+    cost: 1,
+    keywords: [],
+    discardable: true,
+    canExile: true,
+    onDiscarded: { kind: "None" },
+    onCleared: effect,
+    onEndOfTurn: { kind: "None" },
+    onPartialClear: { kind: "None" },
+  };
+}
+
+function resolveOfferBoonHazard(effect: CardEffect, cat: CardCatalog = catalog) {
+  const hazard = offerBoonHazard(effect);
+  const state = makeState({ hand: [hazard] });
+  return applyEffect(
+    cat,
+    state,
+    { kind: "DealProgress", base: 1 },
+    { type: "PlayCard", cardId: "progress", targetId: hazard.id },
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -1095,5 +1126,155 @@ describe("HealReceived event", () => {
     // Order: HpChanged comes before HealReceived
     const types = events.map((e) => e.type);
     expect(types.indexOf("HpChanged")).toBeLessThan(types.indexOf("HealReceived"));
+  });
+});
+
+// ---------------------------------------------------------------------------
+// 19. OfferBoon hook rewards
+// ---------------------------------------------------------------------------
+
+describe("OfferBoon", () => {
+  it("creates a pending worldClear choice and emits BoonOffered when a world card clears", () => {
+    const { state, events } = resolveOfferBoonHazard({
+      kind: "OfferBoon",
+      setId: "fortune-v1",
+      offeredCount: 3,
+      chooseCount: 1,
+    });
+
+    expect(state.pendingBoonChoice).toMatchObject({
+      source: "worldClear",
+      setId: "fortune-v1",
+      chooseCount: 1,
+      bToDiscard: false,
+    });
+    expect(state.pendingBoonChoice?.offeredTemplateIds).toHaveLength(3);
+    expect(events).toContainEqual({
+      type: "BoonOffered",
+      source: "worldClear",
+      setId: "fortune-v1",
+      templateIds: state.pendingBoonChoice?.offeredTemplateIds ?? [],
+    });
+  });
+
+  it("defaults chosen boons to hand", () => {
+    const offer = resolveOfferBoonHazard({
+      kind: "OfferBoon",
+      setId: "fortune-v1",
+      offeredCount: 3,
+      chooseCount: 1,
+    });
+    const chosen = offer.state.pendingBoonChoice?.offeredTemplateIds[0];
+    if (chosen === undefined) throw new Error("expected offered boon");
+
+    const result = reduce(catalog, offer.state, { type: "ChooseBoon", templateId: chosen });
+    const granted = result.state.hand.find((card) => card.templateId === chosen);
+    if (granted === undefined) throw new Error("expected granted boon in hand");
+
+    expect(result.state.pendingBoonChoice).toBeNull();
+    expect(result.state.hand.some((card) => card.templateId === chosen)).toBe(true);
+    expect(result.state.playerDiscard.some((card) => card.templateId === chosen)).toBe(false);
+    expect(result.events).toContainEqual({
+      type: "BoonCardGranted",
+      cardId: granted.id,
+      templateId: chosen,
+      dest: "hand",
+    });
+  });
+
+  it("can route chosen boons to player discard", () => {
+    const offer = resolveOfferBoonHazard({
+      kind: "OfferBoon",
+      setId: "fortune-v1",
+      offeredCount: 3,
+      chooseCount: 1,
+      bToDiscard: true,
+    });
+    const chosen = offer.state.pendingBoonChoice?.offeredTemplateIds[0];
+    if (chosen === undefined) throw new Error("expected offered boon");
+
+    const result = reduce(catalog, offer.state, { type: "ChooseBoon", templateId: chosen });
+    const granted = result.state.playerDiscard.find((card) => card.templateId === chosen);
+    if (granted === undefined) throw new Error("expected granted boon in discard");
+
+    expect(result.state.pendingBoonChoice).toBeNull();
+    expect(result.state.hand.some((card) => card.templateId === chosen)).toBe(false);
+    expect(result.state.playerDiscard.some((card) => card.templateId === chosen)).toBe(true);
+    expect(result.events).toContainEqual({
+      type: "BoonCardGranted",
+      cardId: granted.id,
+      templateId: chosen,
+      dest: "playerDiscard",
+    });
+  });
+
+  it("fails closed without replacing an existing pending choice", () => {
+    const pending = {
+      source: "worldClear" as const,
+      setId: "fortune-v1",
+      offeredTemplateIds: ["Lucky Break"],
+      chooseCount: 1 as const,
+      bToDiscard: false,
+    };
+    const state = makeState({ pendingBoonChoice: pending });
+
+    const result = applyEffect(catalog, state, {
+      kind: "OfferBoon",
+      setId: "fortune-v1",
+      offeredCount: 3,
+      chooseCount: 1,
+    });
+
+    expect(result.state).toBe(state);
+    expect(result.events).toEqual([]);
+  });
+
+  it("fails closed for an unknown boon set without opening a pending choice", () => {
+    const effect: CardEffect = {
+      kind: "OfferBoon",
+      setId: "missing-set",
+      offeredCount: 3,
+      chooseCount: 1,
+    };
+
+    const first = resolveOfferBoonHazard(effect);
+    const second = resolveOfferBoonHazard(effect);
+
+    expect(first.state.pendingBoonChoice).toBeNull();
+    expect(first.events.map((event) => event.type)).not.toContain("BoonOffered");
+    expect(second.state.pendingBoonChoice).toBeNull();
+    expect(second.events.map((event) => event.type)).not.toContain("BoonOffered");
+    expect(first.state).toEqual(second.state);
+    expect(first.events).toEqual(second.events);
+  });
+
+  it("fails closed when the referenced set has no legal exhaust player options", () => {
+    const illegalCatalog: CardCatalog = { ...catalog };
+    for (const templateId of [
+      "Lucky Break",
+      "Second Wind",
+      "Found Tool",
+      "Clear Path",
+      "Steady Nerve",
+    ]) {
+      const template = illegalCatalog[templateId];
+      if (template === undefined || template.kind !== "player") {
+        throw new Error(`expected ${templateId} player template`);
+      }
+      illegalCatalog[templateId] = { ...template, exhaust: false };
+    }
+
+    const { state, events } = resolveOfferBoonHazard(
+      {
+        kind: "OfferBoon",
+        setId: "fortune-v1",
+        offeredCount: 3,
+        chooseCount: 1,
+      },
+      illegalCatalog,
+    );
+
+    expect(state.pendingBoonChoice).toBeNull();
+    expect(events.map((event) => event.type)).not.toContain("BoonOffered");
   });
 });

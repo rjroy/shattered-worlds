@@ -5,7 +5,7 @@ import basicJson from "./worlds/starters/basic.json";
 import starterJson from "./worlds/starters/starter.json";
 import footballerJson from "./worlds/starters/footballer.json";
 import { worldDataRegistry } from "./worlds/registry";
-import { FORTUNE_BOON_SOURCE } from "./worlds/boons/fortune";
+import { BOON_SETS } from "./worlds/boons/fortune";
 
 const BASIC_SOURCE = basicJson as unknown as RawCardSource;
 
@@ -13,6 +13,8 @@ const STARTER_SOURCES = [
   starterJson as unknown as RawCardSource,
   footballerJson as unknown as RawCardSource,
 ];
+
+const BOON_SET_SOURCES = Object.values(BOON_SETS).map((set) => set.source);
 
 /**
  * Build a world by merging the shared starter source with one world-specific
@@ -39,7 +41,7 @@ function makeWorldBuilder(worldSource: RawCardSource): (starterId: string) => As
       throw new CatalogError(`world "${worldSource.worldId}" is missing deckComposition`);
     }
 
-    const catalog = assembleCatalog([BASIC_SOURCE, FORTUNE_BOON_SOURCE, worldSource]);
+    const catalog = assembleCatalog([BASIC_SOURCE, ...BOON_SET_SOURCES, worldSource]);
     const worldData: WorldData = {
       worldId: worldSource.worldId,
       starterDeck: starterSource.starterDeck,

@@ -1,7 +1,8 @@
 import { describe, expect, it } from "bun:test";
 import type { CardEffect } from "../index";
 import { effectAtStep } from "../effects/composite";
-import { connectorStyleOf } from "../effects/registry";
+import { connectorStyleOf, EFFECTS } from "../effects/registry";
+import { makeState } from "./testFixture";
 
 describe("connectorStyleOf", () => {
   it("maps DealProgress -> progress", () => {
@@ -54,6 +55,14 @@ describe("connectorStyleOf", () => {
     expect(connectorStyleOf({ kind: "None" })).toBeNull();
     expect(
       connectorStyleOf({
+        kind: "OfferBoon",
+        setId: "fortune-v1",
+        offeredCount: 3,
+        chooseCount: 1,
+      }),
+    ).toBeNull();
+    expect(
+      connectorStyleOf({
         kind: "Modal",
         branches: [
           { kind: "Draw", player: 1 },
@@ -61,6 +70,32 @@ describe("connectorStyleOf", () => {
         ],
       }),
     ).toBeNull();
+  });
+
+  it("treats OfferBoon as hook-only, not playable from hand", () => {
+    const effect: CardEffect = {
+      kind: "OfferBoon",
+      setId: "fortune-v1",
+      offeredCount: 3,
+      chooseCount: 1,
+    };
+    expect(EFFECTS.OfferBoon.isPlayable(effect, makeState(), "boon-card")).toBe(false);
+  });
+
+  it("surfaces missing lazy child handlers from composites", () => {
+    const mutableEffects = EFFECTS as unknown as Record<string, unknown>;
+    const healHandler = mutableEffects.Heal;
+    const effect: CardEffect = {
+      kind: "Sequence",
+      steps: [{ kind: "Heal", amount: 1 }],
+    };
+
+    try {
+      delete mutableEffects.Heal;
+      expect(() => EFFECTS.Sequence.describe(effect)).toThrow();
+    } finally {
+      mutableEffects.Heal = healHandler;
+    }
   });
 });
 

@@ -180,7 +180,7 @@ function handleEndTurn(catalog: CardCatalog, state: GameState): ReduceResult {
   const turnStartResult = startTurn(stateAfterDiscard);
   events.push(...turnStartResult.events);
 
-  const afterRefill = turnStartResult.state;
+  let afterRefill = turnStartResult.state;
   // Fortune is intentionally scoped to one offer per reducer dispatch. A single
   // refill can drain multiple queued acts, so use the first ActAdvanced event as
   // the transition that owns the pending choice.
@@ -192,8 +192,11 @@ function handleEndTurn(catalog: CardCatalog, state: GameState): ReduceResult {
     firstActAdvanced?.type === "ActAdvanced"
   ) {
     const offer = createActBoonOffer(catalog, afterRefill, actBoon, firstActAdvanced.act);
-    events.push(offer.event);
-    return { state: offer.state, events };
+    afterRefill = offer.state;
+    if (offer.event !== null) {
+      events.push(offer.event);
+      return { state: afterRefill, events };
+    }
   }
 
   // Livelock guard A: all draw piles and acts exhausted (player cards also
@@ -275,24 +278,24 @@ function handleEndTurn(catalog: CardCatalog, state: GameState): ReduceResult {
 }
 
 // ---------------------------------------------------------------------------
-// ChooseActBoon handler
+// ChooseBoon handler
 // ---------------------------------------------------------------------------
 
-function handleChooseActBoon(
+function handleChooseBoon(
   catalog: CardCatalog,
   state: GameState,
-  action: Extract<Action, { type: "ChooseActBoon" }>,
+  action: Extract<Action, { type: "ChooseBoon" }>,
 ): ReduceResult {
-  const choice = state.pendingActBoon;
+  const choice = state.pendingBoonChoice;
   if (choice === null) {
-    throw new IllegalActionError(action, state, "No act boon choice is pending");
+    throw new IllegalActionError(action, state, "No boon choice is pending");
   }
 
   if (!choice.offeredTemplateIds.includes(action.templateId)) {
     throw new IllegalActionError(
       action,
       state,
-      `Template ${action.templateId} was not offered for this act boon choice`,
+      `Template ${action.templateId} was not offered for this boon choice`,
     );
   }
 
@@ -301,17 +304,20 @@ function handleChooseActBoon(
     throw new IllegalActionError(
       action,
       state,
-      `Act boon template ${action.templateId} must mint a player exhaust card`,
+      `Boon template ${action.templateId} must mint a player exhaust card`,
     );
   }
 
+  const dest = choice.bToDiscard ? "playerDiscard" : "hand";
   return {
     state: {
       ...afterMint,
-      hand: [...afterMint.hand, card],
-      pendingActBoon: null,
+      hand: dest === "hand" ? [...afterMint.hand, card] : afterMint.hand,
+      playerDiscard:
+        dest === "playerDiscard" ? [card, ...afterMint.playerDiscard] : afterMint.playerDiscard,
+      pendingBoonChoice: null,
     },
-    events: [{ type: "BoonCardGranted", cardId: card.id, templateId: card.templateId }],
+    events: [{ type: "BoonCardGranted", cardId: card.id, templateId: card.templateId, dest }],
   };
 }
 
@@ -334,11 +340,11 @@ export function reduce(catalog: CardCatalog, state: GameState, action: Action): 
     );
   }
 
-  if (state.pendingActBoon !== null && action.type !== "ChooseActBoon") {
+  if (state.pendingBoonChoice !== null && action.type !== "ChooseBoon") {
     throw new IllegalActionError(
       action,
       state,
-      `Cannot dispatch ${action.type} while an act boon choice is pending`,
+      `Cannot dispatch ${action.type} while a boon choice is pending`,
     );
   }
 
@@ -349,7 +355,7 @@ export function reduce(catalog: CardCatalog, state: GameState, action: Action): 
       return handleDiscardHazard(catalog, state, action);
     case "EndTurn":
       return handleEndTurn(catalog, state);
-    case "ChooseActBoon":
-      return handleChooseActBoon(catalog, state, action);
+    case "ChooseBoon":
+      return handleChooseBoon(catalog, state, action);
   }
 }

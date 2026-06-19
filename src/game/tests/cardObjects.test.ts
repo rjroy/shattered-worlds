@@ -220,7 +220,7 @@ function makeDrawAllHarness(state: GameState): {
     if (rowY > 400) playerRows.push([...cards]);
   };
   scene.updateHint = () => {};
-  scene.updateActBoonChoiceView = () => {};
+  scene.updateBoonChoiceView = () => {};
   return { scene, playerRows };
 }
 
@@ -616,7 +616,7 @@ describe("TableScene selected effective card snapshots", () => {
     };
     let destroyed = 0;
     let draws = 0;
-    scene.game_ = { state: makeCoreState({ hand: [tactic], pendingActBoon: null }) };
+    scene.game_ = { state: makeCoreState({ hand: [tactic], pendingBoonChoice: null }) };
     scene.sel = { phase: "awaiting-modal", cardId: tactic.id };
     scene.selectedCardSnapshot = effectiveTactic;
     scene.modalChooser = {
@@ -1383,7 +1383,7 @@ function makeMintState(): GameState {
     heat: 0,
     pendingForceDestroy: 0,
     braceCharges: 0,
-    pendingActBoon: null,
+    pendingBoonChoice: null,
     runModifiers: DEFAULT_RUN_MODIFIERS,
     turnPlayHistory: { cardsPlayedThisTurn: 0, byTemplateId: {} },
     status: "playing",

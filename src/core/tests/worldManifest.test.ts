@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test'
-import { FORTUNE_BOON_POOLS } from '../../data/worlds/boons/fortune'
+import { BOON_SETS, FORTUNE_BOON_POOLS } from '../../data/worlds/boons/fortune'
 import { buildWorld, worldManifest } from '../../data/worldManifest'
 import { worldDataRegistry } from '../../data/worlds/registry'
 import type { CardCatalog } from '../model/catalog'
@@ -16,6 +16,9 @@ import type { CardEffect } from '../model/types'
 const worldIds = Object.keys(worldManifest)
 const fortuneBoonIds = FORTUNE_BOON_POOLS['fortune-v1']
 const fortuneBoonIdSet = new Set<string>(fortuneBoonIds)
+const boonSetEntries = Object.entries(BOON_SETS)
+const boonSetIds = new Set(boonSetEntries.map(([setId]) => setId))
+const allBoonSetTemplateIds = boonSetEntries.flatMap(([, set]) => [...set.templateIds])
 
 /** Template ids an effect can name, walking Modal branches and Sequence steps. */
 function templateRefs(effect: CardEffect): string[] {
@@ -34,6 +37,19 @@ function templateRefs(effect: CardEffect): string[] {
   }
 }
 
+function offerBoonSetRefs(effect: CardEffect): string[] {
+  switch (effect.kind) {
+    case 'OfferBoon':
+      return [effect.setId]
+    case 'Modal':
+      return effect.branches.flatMap(offerBoonSetRefs)
+    case 'Sequence':
+      return effect.steps.flatMap(offerBoonSetRefs)
+    default:
+      return []
+  }
+}
+
 /** Every template id referenced by any effect across the whole catalog. */
 function allReferencedTemplates(catalog: CardCatalog): string[] {
   const refs: string[] = []
@@ -44,6 +60,22 @@ function allReferencedTemplates(catalog: CardCatalog): string[] {
       refs.push(...templateRefs(template.onDiscarded))
       refs.push(...templateRefs(template.onCleared))
       refs.push(...templateRefs(template.onEndOfTurn))
+      refs.push(...templateRefs(template.onPartialClear))
+    }
+  }
+  return refs
+}
+
+function allReferencedOfferBoonSets(catalog: CardCatalog): string[] {
+  const refs: string[] = []
+  for (const template of Object.values(catalog)) {
+    if (template.kind === 'player') {
+      refs.push(...offerBoonSetRefs(template.effect))
+    } else {
+      refs.push(...offerBoonSetRefs(template.onDiscarded))
+      refs.push(...offerBoonSetRefs(template.onCleared))
+      refs.push(...offerBoonSetRefs(template.onEndOfTurn))
+      refs.push(...offerBoonSetRefs(template.onPartialClear))
     }
   }
   return refs
@@ -135,14 +167,29 @@ describe.each(worldIds)('world "%s"', (worldId) => {
     expect(missing).toEqual([])
   })
 
-  it('contains every fortune-v1 boon template in the assembled catalog', () => {
+  it('contains every registered boon set template in the assembled catalog', () => {
     const { catalog } = buildWorld(worldId)
-    const missing = fortuneBoonIds.filter((id) => catalog[id] === undefined)
+    const missing = allBoonSetTemplateIds.filter((id) => catalog[id] === undefined)
+    expect(missing).toEqual([])
+  })
+
+  it('resolves every authored OfferBoon setId to a registered boon set', () => {
+    const { catalog } = buildWorld(worldId)
+    const missing = allReferencedOfferBoonSets(catalog).filter((setId) => !boonSetIds.has(setId))
     expect(missing).toEqual([])
   })
 })
 
 describe('fortune-v1 boon source', () => {
+  it('keeps each boon set templateIds in sync with its authored source templates', () => {
+    for (const [, set] of boonSetEntries) {
+      const authoredTemplateIds: string[] = Object.keys(set.source.cardTemplates).sort()
+      const registeredTemplateIds: string[] = [...set.templateIds].sort()
+
+      expect(registeredTemplateIds).toEqual(authoredTemplateIds)
+    }
+  })
+
   it('keeps every boon template player-only, temporary, and legal for Phase 2', () => {
     for (const worldId of worldIds) {
       const { catalog } = buildWorld(worldId)

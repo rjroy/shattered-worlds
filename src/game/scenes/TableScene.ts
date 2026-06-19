@@ -53,7 +53,7 @@ import { connectorStyleOf } from "../../core/effects/registry";
 import { drawConnector } from "../view/connector";
 import { resolveBranchLabels } from "../../core/view/branchLabels";
 import { ModalChooserView } from "../view/ModalChooserView";
-import { ActBoonChoiceView, type ActBoonChoiceOption } from "../view/ActBoonChoiceView";
+import { BoonChoiceView, type BoonChoiceOption } from "../view/BoonChoiceView";
 import { CommonLabel, CommonButton } from "../view/components";
 import { previewPlay } from "../../core/view/describe";
 import { PileLayer } from "../view/PileLayer";
@@ -143,9 +143,9 @@ export class TableScene extends Phaser.Scene {
 
   // Modal chooser UI (created/destroyed per card play)
   private modalChooser: ModalChooserView | null = null;
-  private actBoonChoiceView: ActBoonChoiceView | null = null;
-  private actBoonChoiceKey: string | null = null;
-  private loggedActBoonMissingKey: string | null = null;
+  private boonChoiceView: BoonChoiceView | null = null;
+  private boonChoiceKey: string | null = null;
+  private loggedBoonMissingKey: string | null = null;
   private worldMusic: Phaser.Sound.BaseSound | null = null;
 
   // Pile layer — persistent containers for player draw and world draw stacks
@@ -294,7 +294,7 @@ export class TableScene extends Phaser.Scene {
     });
     this.input.keyboard?.on("keydown", (event: KeyboardEvent) => {
       if (event.key !== "1" && event.key !== "2" && event.key !== "3") return;
-      this.chooseVisibleActBoonOption(Number(event.key) - 1);
+      this.chooseVisibleBoonOption(Number(event.key) - 1);
     });
 
     this.selectionHint = new CommonLabel(
@@ -463,7 +463,7 @@ export class TableScene extends Phaser.Scene {
       this.helpOverlay.setVisible(false);
     }
 
-    this.updateActBoonChoiceView();
+    this.updateBoonChoiceView();
   }
 
   private buildRunSummaryData(): RunSummaryData | null {
@@ -682,7 +682,7 @@ export class TableScene extends Phaser.Scene {
   private onCardClick(cardId: string): void {
     const state = this.game_.state;
     if (state.status !== "playing") return;
-    if (state.pendingActBoon !== null) return;
+    if (state.pendingBoonChoice !== null) return;
 
     const available = availableActions(state);
 
@@ -740,7 +740,7 @@ export class TableScene extends Phaser.Scene {
   }
 
   private onDiscardClick(cardId: string): void {
-    if (this.game_.state.pendingActBoon !== null) return;
+    if (this.game_.state.pendingBoonChoice !== null) return;
     const available = availableActions(this.game_.state);
     if (available.discardable.includes(cardId)) {
       this.dispatch({ type: "DiscardHazard", cardId });
@@ -748,13 +748,13 @@ export class TableScene extends Phaser.Scene {
   }
 
   private onEndTurnClick(): void {
-    if (this.game_.state.pendingActBoon !== null) return;
+    if (this.game_.state.pendingBoonChoice !== null) return;
     if (this.sel.phase !== "idle") return;
     this.dispatch({ type: "EndTurn" });
   }
 
   private onConfirmClick(): void {
-    if (this.game_.state.pendingActBoon !== null) return;
+    if (this.game_.state.pendingBoonChoice !== null) return;
     if (!stepSatisfied(this.sel)) return;
     this.advanceSelection();
   }
@@ -792,7 +792,7 @@ export class TableScene extends Phaser.Scene {
     snapshot: PlayerCard,
     spec: Extract<TargetSpec, { kind: "modal" }>,
   ): void {
-    if (this.game_.state.pendingActBoon !== null) return;
+    if (this.game_.state.pendingBoonChoice !== null) return;
 
     const available = availableActions(this.game_.state);
     // Label each branch from the card's actual Modal effect, so the chooser can
@@ -817,7 +817,7 @@ export class TableScene extends Phaser.Scene {
 
   /** Apply a chosen modal branch: advance selection, or commit if it's a 'none' branch. */
   private onModalChoose(spec: Extract<TargetSpec, { kind: "modal" }>, idx: number): void {
-    if (this.game_.state.pendingActBoon !== null) return;
+    if (this.game_.state.pendingBoonChoice !== null) return;
     this.dismissModal(false);
     const newSel = chooseModal(this.sel, idx, spec);
     this.sel = newSel;
@@ -866,7 +866,7 @@ export class TableScene extends Phaser.Scene {
     this.sel = IDLE;
     this.clearSelectedCardSnapshot();
     this.dismissModal();
-    this.updateActBoonChoiceView();
+    this.updateBoonChoiceView();
     // Commit ends targeting; drop the connector so no line survives the action.
     this.clearConnector();
     this.drawAll();
@@ -1098,56 +1098,58 @@ export class TableScene extends Phaser.Scene {
     this.selectionHint.setVisible(visible);
   }
 
-  private updateActBoonChoiceView(): void {
-    const pending = this.game_.state.pendingActBoon;
+  private updateBoonChoiceView(): void {
+    const pending = this.game_.state.pendingBoonChoice;
     if (pending === null) {
-      this.dismissActBoonChoiceView();
+      this.dismissBoonChoiceView();
       return;
     }
 
-    const key = pending.offeredTemplateIds.join("\u0000");
-    if (this.actBoonChoiceView !== null && this.actBoonChoiceKey === key) return;
+    const key = `${pending.source}\u0000${pending.setId}\u0000${pending.bToDiscard}\u0000${pending.offeredTemplateIds.join("\u0000")}`;
+    if (this.boonChoiceView !== null && this.boonChoiceKey === key) return;
 
     this.dismissModal();
     this.sel = IDLE;
     this.clearSelectedCardSnapshot();
     this.clearConnector();
-    this.dismissActBoonChoiceView();
+    this.dismissBoonChoiceView();
 
-    const options: ActBoonChoiceOption[] = pending.offeredTemplateIds.map((templateId) => ({
+    const options: BoonChoiceOption[] = pending.offeredTemplateIds.map((templateId) => ({
       templateId,
       template: this.game_.template(templateId),
     }));
     const missing = options.filter((option) => option.template === undefined).map((option) => option.templateId);
-    if (missing.length > 0 && this.loggedActBoonMissingKey !== key) {
-      this.loggedActBoonMissingKey = key;
+    if (missing.length > 0 && this.loggedBoonMissingKey !== key) {
+      this.loggedBoonMissingKey = key;
       console.error(
-        `[TableScene] Pending Fortune boon references missing template(s): ${missing.join(", ")}`,
+        `[TableScene] Pending boon choice references missing template(s): ${missing.join(", ")}`,
       );
     }
 
-    this.actBoonChoiceView = new ActBoonChoiceView(this, {
+    this.boonChoiceView = new BoonChoiceView(this, {
       theme: this.theme_,
+      source: pending.source,
+      bToDiscard: pending.bToDiscard,
       options,
       resolveTheme: selectTheme,
-      onChoose: (templateId) => this.dispatch({ type: "ChooseActBoon", templateId }),
+      onChoose: (templateId: string) => this.dispatch({ type: "ChooseBoon", templateId }),
     });
-    this.actBoonChoiceKey = key;
+    this.boonChoiceKey = key;
   }
 
-  private dismissActBoonChoiceView(): void {
-    if (this.actBoonChoiceView === null) return;
-    this.actBoonChoiceView.destroy();
-    this.actBoonChoiceView = null;
-    this.actBoonChoiceKey = null;
+  private dismissBoonChoiceView(): void {
+    if (this.boonChoiceView === null) return;
+    this.boonChoiceView.destroy();
+    this.boonChoiceView = null;
+    this.boonChoiceKey = null;
   }
 
-  private chooseVisibleActBoonOption(index: number): void {
-    const pending = this.game_.state.pendingActBoon;
+  private chooseVisibleBoonOption(index: number): void {
+    const pending = this.game_.state.pendingBoonChoice;
     if (pending === null) return;
     const templateId = pending.offeredTemplateIds[index];
     if (templateId === undefined) return;
     if (this.game_.template(templateId) === undefined) return;
-    this.dispatch({ type: "ChooseActBoon", templateId });
+    this.dispatch({ type: "ChooseBoon", templateId });
   }
 }

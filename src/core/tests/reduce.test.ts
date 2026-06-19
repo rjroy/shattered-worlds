@@ -128,14 +128,14 @@ function makeActAdvanceState(options: {
     energy: 0,
     status: "playing",
     runModifiers,
-    pendingActBoon: null,
+    pendingBoonChoice: null,
   };
 }
 
 function offeredTemplateIds(result: { events: readonly GameEvent[] }) {
-  const event = result.events.find((e) => e.type === "ActBoonOffered");
-  if (event?.type !== "ActBoonOffered") {
-    throw new Error("Expected ActBoonOffered");
+  const event = result.events.find((e) => e.type === "BoonOffered");
+  if (event?.type !== "BoonOffered") {
+    throw new Error("Expected BoonOffered");
   }
   return event.templateIds;
 }
@@ -1835,18 +1835,18 @@ describe("EndTurn draw-phase loss", () => {
 // Act boon offers on act advancement
 // ---------------------------------------------------------------------------
 
-describe("Act boon offer generation", () => {
-  it("does not create a pending choice or ActBoonOffered when Fortune is inactive", () => {
+describe("Boon offer generation", () => {
+  it("does not create a pending choice or BoonOffered when Fortune is inactive", () => {
     const state = makeActAdvanceState({ actBoon: null });
 
     const result = reduce(catalog, state, { type: "EndTurn" });
 
     expect(result.events.map((e) => e.type)).toContain("ActAdvanced");
-    expect(result.events.map((e) => e.type)).not.toContain("ActBoonOffered");
-    expect(result.state.pendingActBoon).toBeNull();
+    expect(result.events.map((e) => e.type)).not.toContain("BoonOffered");
+    expect(result.state.pendingBoonChoice).toBeNull();
   });
 
-  it("creates one pending choice and ActBoonOffered in the ActAdvanced event batch", () => {
+  it("creates one pending choice and BoonOffered in the ActAdvanced event batch", () => {
     const state = makeActAdvanceState({ actBoon: actBoonModifier() });
 
     const result = reduce(catalog, state, { type: "EndTurn" });
@@ -1854,14 +1854,16 @@ describe("Act boon offer generation", () => {
     const offered = offeredTemplateIds(result);
 
     expect(types).toContain("ActAdvanced");
-    expect(types).toContain("ActBoonOffered");
-    expect(types.filter((type) => type === "ActBoonOffered")).toHaveLength(1);
+    expect(types).toContain("BoonOffered");
+    expect(types.filter((type) => type === "BoonOffered")).toHaveLength(1);
     expect(result.state.status).toBe("playing");
-    expect(result.state.pendingActBoon).toEqual({
+    expect(result.state.pendingBoonChoice).toEqual({
+      source: "act",
       act: 1,
-      poolId: "fortune-v1",
+      setId: "fortune-v1",
       offeredTemplateIds: offered,
       chooseCount: 1,
+      bToDiscard: false,
     });
     expect(offered).toHaveLength(3);
     expect(new Set(offered).size).toBe(offered.length);
@@ -1876,16 +1878,18 @@ describe("Act boon offer generation", () => {
 
     const result = reduce(catalog, state, { type: "EndTurn" });
     const actAdvancedEvents = result.events.filter((e) => e.type === "ActAdvanced");
-    const actBoonEvents = result.events.filter((e) => e.type === "ActBoonOffered");
+    const boonEvents = result.events.filter((e) => e.type === "BoonOffered");
 
     expect(actAdvancedEvents).toHaveLength(2);
     expect(actAdvancedEvents.map((event) => event.act)).toEqual([1, 2]);
-    expect(actBoonEvents).toHaveLength(1);
-    expect(result.state.pendingActBoon).not.toBeNull();
-    expect(result.state.pendingActBoon?.act).toBe(1);
-    if (actBoonEvents[0]?.type === "ActBoonOffered") {
-      expect(actBoonEvents[0].act).toBe(1);
-      expect(result.state.pendingActBoon?.offeredTemplateIds).toEqual(actBoonEvents[0].templateIds);
+    expect(boonEvents).toHaveLength(1);
+    expect(result.state.pendingBoonChoice).not.toBeNull();
+    expect(result.state.pendingBoonChoice?.act).toBe(1);
+    if (boonEvents[0]?.type === "BoonOffered") {
+      expect(boonEvents[0].source).toBe("act");
+      expect(boonEvents[0].setId).toBe("fortune-v1");
+      expect(boonEvents[0].act).toBe(1);
+      expect(result.state.pendingBoonChoice?.offeredTemplateIds).toEqual(boonEvents[0].templateIds);
     }
   });
 
@@ -1897,8 +1901,8 @@ describe("Act boon offer generation", () => {
       modsWithActBoon(actBoonModifier()),
     );
 
-    expect(state.pendingActBoon).toBeNull();
-    expect(openingEvents.map((e) => e.type)).not.toContain("ActBoonOffered");
+    expect(state.pendingBoonChoice).toBeNull();
+    expect(openingEvents.map((e) => e.type)).not.toContain("BoonOffered");
   });
 
   it("multiple real act transitions create one choice each without duplicate offers", () => {
@@ -1911,22 +1915,22 @@ describe("Act boon offer generation", () => {
 
     const first = reduce(catalog, state, { type: "EndTurn" });
     const firstOffer = offeredTemplateIds(first);
-    expect(first.state.pendingActBoon).not.toBeNull();
+    expect(first.state.pendingBoonChoice).not.toBeNull();
     expect(new Set(firstOffer).size).toBe(firstOffer.length);
 
     const firstChoice = reduce(catalog, first.state, {
-      type: "ChooseActBoon",
+      type: "ChooseBoon",
       templateId: firstOffer[0]!,
     });
 
     const second = reduce(catalog, firstChoice.state, { type: "EndTurn" });
     const secondOffer = offeredTemplateIds(second);
-    expect(second.state.pendingActBoon).not.toBeNull();
+    expect(second.state.pendingBoonChoice).not.toBeNull();
     expect(new Set(secondOffer).size).toBe(secondOffer.length);
-    expect(second.events.filter((e) => e.type === "ActBoonOffered")).toHaveLength(1);
+    expect(second.events.filter((e) => e.type === "BoonOffered")).toHaveLength(1);
 
     state = second.state;
-    expect(state.pendingActBoon?.act).toBe(2);
+    expect(state.pendingBoonChoice?.act).toBe(2);
   });
 
   it("does not trigger from terminal states", () => {
@@ -1980,7 +1984,30 @@ describe("Act boon offer generation", () => {
     expect(result.state.rng).not.toEqual(state.rng);
   });
 
-  it("rescues zero-player-draw act transitions until ChooseActBoon resolves", () => {
+  it("filters invalid duplicate non-player and non-exhaust boon templates", () => {
+    const state = makeActAdvanceState({
+      actBoon: actBoonModifier({
+        poolTemplateIds: [
+          "Rubble",
+          "Lucky Break",
+          "Explore",
+          "Lucky Break",
+          "Missing Template",
+          "Second Wind",
+          "Second Wind",
+        ],
+        offeredCount: 5,
+      }),
+    });
+
+    const result = reduce(catalog, state, { type: "EndTurn" });
+    const offered = offeredTemplateIds(result);
+
+    expect([...offered].sort()).toEqual(["Lucky Break", "Second Wind"]);
+    expect(result.state.pendingBoonChoice?.offeredTemplateIds).toEqual(offered);
+  });
+
+  it("rescues zero-player-draw act transitions until ChooseBoon resolves", () => {
     const inactive = makeActAdvanceState({
       actBoon: null,
       playerDrawCount: 0,
@@ -1998,10 +2025,28 @@ describe("Act boon offer generation", () => {
     expect(inactiveResult.events.map((e) => e.type)).toContain("WorldLost");
 
     expect(activeResult.events.map((e) => e.type)).toContain("ActAdvanced");
-    expect(activeResult.events.map((e) => e.type)).toContain("ActBoonOffered");
+    expect(activeResult.events.map((e) => e.type)).toContain("BoonOffered");
     expect(activeResult.state.status).toBe("playing");
-    expect(activeResult.state.pendingActBoon).not.toBeNull();
+    expect(activeResult.state.pendingBoonChoice).not.toBeNull();
     expect(activeResult.events.map((e) => e.type)).not.toContain("WorldLost");
+  });
+
+  it("falls through to zero-player-draw loss when Fortune has no legal boon templates", () => {
+    const state = makeActAdvanceState({
+      actBoon: actBoonModifier({
+        poolTemplateIds: ["Rubble", "Explore", "Missing Template", "Rubble", "Explore"],
+      }),
+      playerDrawCount: 0,
+    });
+
+    const result = reduce(catalog, state, { type: "EndTurn" });
+    const types = result.events.map((e) => e.type);
+
+    expect(types).toContain("ActAdvanced");
+    expect(types).not.toContain("BoonOffered");
+    expect(types).toContain("WorldLost");
+    expect(result.state.status).toBe("lost");
+    expect(result.state.pendingBoonChoice).toBeNull();
   });
 });
 
@@ -2376,11 +2421,13 @@ describe("Act boon choice reducer gates", () => {
   function pendingBoonState(overrides: Partial<GameState> = {}): GameState {
     return makeState({
       ...overrides,
-      pendingActBoon: {
+      pendingBoonChoice: {
+        source: "act",
         act: 1,
-        poolId: "fortune-v1",
+        setId: "fortune-v1",
         offeredTemplateIds: ["Lucky Break", "Second Wind", "Found Tool"],
         chooseCount: 1,
+        bToDiscard: false,
       },
     });
   }
@@ -2408,7 +2455,7 @@ describe("Act boon choice reducer gates", () => {
     expect(() => reduce(catalog, state, { type: "EndTurn" })).toThrow(IllegalActionError);
   });
 
-  it("valid ChooseActBoon clears pending, grants an exhaust player card into hand, and emits BoonCardGranted", () => {
+  it("valid ChooseBoon clears pending, grants an exhaust player card into hand, and emits BoonCardGranted", () => {
     let acc = makeState({});
     const hand: PlayerCard[] = [];
     for (let i = 0; i < 6; i += 1) {
@@ -2424,11 +2471,11 @@ describe("Act boon choice reducer gates", () => {
     const nextId = state.nextId;
 
     const result = reduce(catalog, state, {
-      type: "ChooseActBoon",
+      type: "ChooseBoon",
       templateId: "Lucky Break",
     });
 
-    expect(result.state.pendingActBoon).toBeNull();
+    expect(result.state.pendingBoonChoice).toBeNull();
     expect(result.state.hand).toHaveLength(7);
     expect(result.state.nextId).toBe(nextId + 1);
 
@@ -2440,7 +2487,42 @@ describe("Act boon choice reducer gates", () => {
       exhaust: true,
     });
     expect(result.events).toEqual([
-      { type: "BoonCardGranted", cardId: String(nextId), templateId: "Lucky Break" },
+      { type: "BoonCardGranted", cardId: String(nextId), templateId: "Lucky Break", dest: "hand" },
+    ]);
+  });
+
+  it("valid ChooseBoon can grant an exhaust player card into discard", () => {
+    const state: GameState = {
+      ...pendingBoonState(),
+      pendingBoonChoice: {
+        source: "worldClear",
+        setId: "fortune-v1",
+        offeredTemplateIds: ["Second Wind"],
+        chooseCount: 1,
+        bToDiscard: true,
+      },
+    };
+    const nextId = state.nextId;
+
+    const result = reduce(catalog, state, {
+      type: "ChooseBoon",
+      templateId: "Second Wind",
+    });
+
+    expect(result.state.pendingBoonChoice).toBeNull();
+    expect(result.state.playerDiscard[0]).toMatchObject({
+      kind: "player",
+      id: String(nextId),
+      templateId: "Second Wind",
+      exhaust: true,
+    });
+    expect(result.events).toEqual([
+      {
+        type: "BoonCardGranted",
+        cardId: String(nextId),
+        templateId: "Second Wind",
+        dest: "playerDiscard",
+      },
     ]);
   });
 
@@ -2449,7 +2531,7 @@ describe("Act boon choice reducer gates", () => {
 
     expect(() =>
       reduce(catalog, state, {
-        type: "ChooseActBoon",
+        type: "ChooseBoon",
         templateId: "Steady Nerve",
       }),
     ).toThrow(IllegalActionError);
@@ -2462,7 +2544,7 @@ describe("Act boon choice reducer gates", () => {
 
     expect(() =>
       reduce(catalog, state, {
-        type: "ChooseActBoon",
+        type: "ChooseBoon",
         templateId: "Unknown Boon",
       }),
     ).toThrow(IllegalActionError);

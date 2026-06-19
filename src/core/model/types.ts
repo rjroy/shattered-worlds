@@ -50,6 +50,13 @@ export type CardEffect =
   // Fog's exclusive signature effect: the only way to lift concealment.
   | { kind: "GainLight"; amount: number }
   | { kind: "GainCard"; template: CardTemplateId }
+  | {
+      kind: "OfferBoon";
+      setId: string;
+      offeredCount: number;
+      chooseCount: 1;
+      bToDiscard?: boolean;
+    }
   | { kind: "AddPlayerCardToTop"; template: CardTemplateId }
   | { kind: "SurviveWorld" }
   // Queues a forced destruction of a random player card from the *next* hand.
@@ -134,7 +141,7 @@ export type Action =
     }
   | { type: "DiscardHazard"; cardId: CardId }
   | { type: "EndTurn" }
-  | { type: "ChooseActBoon"; templateId: CardTemplateId };
+  | { type: "ChooseBoon"; templateId: CardTemplateId };
 
 export interface RngState {
   a: number;
@@ -174,7 +181,7 @@ export interface GameState {
   // Charges that absorb ForceDestroy snatches before they destroy player
   // cards. Granted by the Brace effect; consumed in resolveForceDestroy.
   braceCharges: number;
-  pendingActBoon: ActBoonChoice | null;
+  pendingBoonChoice: PendingBoonChoice | null;
   readonly runModifiers: RunModifiers;
   readonly turnPlayHistory: TurnPlayHistory;
   status: "playing" | "won" | "lost";
@@ -183,11 +190,31 @@ export interface GameState {
   nextId: number;
 }
 
-export type ActBoonChoice = {
-  readonly act: number;
-  readonly poolId: string;
+export type BoonChoiceSource = "act" | "worldClear";
+
+export type BoonOffered =
+  | {
+      readonly type: "BoonOffered";
+      readonly source: "act";
+      readonly setId: string;
+      readonly templateIds: readonly CardTemplateId[];
+      readonly act: number;
+    }
+  | {
+      readonly type: "BoonOffered";
+      readonly source: "worldClear";
+      readonly setId: string;
+      readonly templateIds: readonly CardTemplateId[];
+      readonly act?: never;
+    };
+
+export type PendingBoonChoice = {
+  readonly source: BoonChoiceSource;
+  readonly act?: number;
+  readonly setId: string;
   readonly offeredTemplateIds: readonly CardTemplateId[];
   readonly chooseCount: 1;
+  readonly bToDiscard: boolean;
 };
 
 export type TargetSpec =
@@ -238,8 +265,8 @@ export type GameEvent =
   | { type: "CardsDiscarded"; cardIds: readonly CardId[]; templateIds: readonly CardTemplateId[] }
   | { type: "DeckShuffled" }
   | { type: "ActAdvanced"; act: number }
-  | { type: "ActBoonOffered"; act: number; templateIds: readonly CardTemplateId[] }
-  | { type: "BoonCardGranted"; cardId: CardId; templateId: CardTemplateId }
+  | BoonOffered
+  | { type: "BoonCardGranted"; cardId: CardId; templateId: CardTemplateId; dest: "hand" | "playerDiscard" }
   | { type: "CardsDrawn"; ids: readonly CardId[]; templateIds: readonly CardTemplateId[] }
   | { type: "TurnEnded" }
   | { type: "WorldWon" }

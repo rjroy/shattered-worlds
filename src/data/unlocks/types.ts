@@ -64,6 +64,7 @@ export type RunModifiers = {
     readonly poolTemplateIds: readonly string[];
     readonly offeredCount: number;
     readonly chooseCount: number;
+    readonly bToDiscard?: boolean;
   } | null;
   readonly playerCardModifiers: readonly PlayerCardModifier[];
 };
