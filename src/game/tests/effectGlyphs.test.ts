@@ -411,7 +411,7 @@ describe("compileEffect (composites)", () => {
         "zombie-big-box",
       ),
     ).toStrictEqual([
-      line([i("addCard"), v("1/3", "reward")]),
+      line([i("addCard"), v("1 of 3", "reward")]),
       line([t("boon"), t("to"), t("hand")], "rider"),
     ]);
     expect(
@@ -426,7 +426,7 @@ describe("compileEffect (composites)", () => {
         "zombie-big-box",
       ),
     ).toStrictEqual([
-      line([i("addCard"), v("1/2", "reward")]),
+      line([i("addCard"), v("1 of 2", "reward")]),
       line([t("boon"), t("to"), t("discard")], "rider"),
     ]);
   });

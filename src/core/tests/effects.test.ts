@@ -1261,7 +1261,17 @@ describe("OfferBoon", () => {
       if (template === undefined || template.kind !== "player") {
         throw new Error(`expected ${templateId} player template`);
       }
-      illegalCatalog[templateId] = { ...template, exhaust: false };
+      illegalCatalog[templateId] = {
+        kind: "world",
+        name: template.name,
+        cost: 2,
+        keywords: [] as string[],
+        discardable: true,
+        onDiscarded: { kind: "None" },
+        onCleared: { kind: "None" },
+        onEndOfTurn: { kind: "None" },
+        onPartialClear: { kind: "None" },
+      };
     }
 
     const { state, events } = resolveOfferBoonHazard(

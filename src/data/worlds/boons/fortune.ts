@@ -18,7 +18,7 @@ export const BOON_SETS = {
   },
   "big-box-boons": {
     source: BIG_BOX_BOON_SOURCE,
-    templateIds: ["React to Noise", "Fast Sweep", "Regroup", "Listen"],
+    templateIds: ["React to Noise", "Fast Sweep", "Listen"],
   },
 } as const satisfies Record<string, BoonSetDefinition>;
 

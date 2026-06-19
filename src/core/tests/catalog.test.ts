@@ -15,7 +15,7 @@ const ZOMBIE_SOURCE = zombieJson as unknown as RawCardSource;
 describe("assembleCatalog merge completeness", () => {
   it("merging starter and zombie-big-box sources produces 22 templates", () => {
     const catalog = assembleCatalog([BASIC_SOURCE, ZOMBIE_SOURCE]);
-    expect(Object.keys(catalog)).toHaveLength(22);
+    expect(Object.keys(catalog)).toHaveLength(21);
   });
 
   it("merged catalog contains all expected template ids", () => {
@@ -27,7 +27,6 @@ describe("assembleCatalog merge completeness", () => {
       "Med Kit",
       "Panic",
       "Adrenaline",
-      "Listen",
       "Baseball Bat",
       "Shotgun",
       "Regroup",

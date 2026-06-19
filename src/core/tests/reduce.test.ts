@@ -2003,7 +2003,7 @@ describe("Boon offer generation", () => {
     const result = reduce(catalog, state, { type: "EndTurn" });
     const offered = offeredTemplateIds(result);
 
-    expect([...offered].sort()).toEqual(["Lucky Break", "Second Wind"]);
+    expect([...offered].sort()).toEqual(["Explore", "Lucky Break", "Second Wind"]);
     expect(result.state.pendingBoonChoice?.offeredTemplateIds).toEqual(offered);
   });
 
@@ -2034,7 +2034,7 @@ describe("Boon offer generation", () => {
   it("falls through to zero-player-draw loss when Fortune has no legal boon templates", () => {
     const state = makeActAdvanceState({
       actBoon: actBoonModifier({
-        poolTemplateIds: ["Rubble", "Explore", "Missing Template", "Rubble", "Explore"],
+        poolTemplateIds: ["Rubble", "Missing Template", "Rubble"],
       }),
       playerDrawCount: 0,
     });

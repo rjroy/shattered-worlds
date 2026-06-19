@@ -102,20 +102,6 @@
       "onPartialClear": { "kind": "None" },
       "onEndOfTurn": { "kind": "None" }
     },
-    "Listen": {
-      "kind": "player",
-      "name": "Listen",
-      "insetKey": "zombie-inset-listen",
-      "energyCost": 1,
-      "effect": {
-        "kind": "DealProgress",
-        "base": 2,
-        "bonus": {
-          "tag": "Hidden",
-          "amount": 2
-        }
-      }
-    },
     "Baseball Bat": {
       "kind": "player",
       "name": "Baseball Bat",

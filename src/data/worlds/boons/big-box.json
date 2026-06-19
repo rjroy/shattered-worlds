@@ -16,6 +16,20 @@
         }
       }
     },
+    "Listen": {
+      "kind": "player",
+      "name": "Listen",
+      "insetKey": "zombie-inset-listen",
+      "energyCost": 1,
+      "effect": {
+        "kind": "DealProgress",
+        "base": 2,
+        "bonus": {
+          "tag": "Hidden",
+          "amount": 2
+        }
+      }
+    },
     "Fast Sweep": {
       "kind": "player",
       "name": "Fast Sweep",

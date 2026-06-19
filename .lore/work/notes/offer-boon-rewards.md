@@ -17,8 +17,8 @@ modules: [core-engine, card-effects, game-runtime, table-ui, card-data]
 - [x] Phase 4: Expose boon sets outside the Fortune-only naming
 - [x] Phase 5: Generalize gameplay UI
 - [ ] Phase 6: Update runtime/session event expectations
-- [ ] Phase 7: Author one real `OfferBoon` world reward
-- [ ] Phase 8: Update tests and stale names across the repo
+- [x] Phase 7: Author one real `OfferBoon` world reward
+- [x] Phase 8: Update tests and stale names across the repo
 - [ ] Holistic validation against source artifact
 
 ## Log

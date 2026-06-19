@@ -1,10 +1,6 @@
-import type {
-  Action,
-  CardId,
-  GameState,
-  TargetSpec,
-} from "../core/model/types";
+import type { Action, CardId, GameState, TargetSpec } from "../core/model/types";
 import { availableActions } from "../core/engine/available";
+import { Actions } from "phaser";
 
 export { catalog, worldData } from "../core/tests/testFixture";
 
@@ -82,10 +78,7 @@ function buildPlayAction(
       // min is always 0 — destruction is optional. Flip a coin.
       if (rng() < 0.5) return base;
       const targets = legalTargets(cardId, 0);
-      const count = Math.min(
-        pickCount(spec.min, spec.max, rng),
-        targets.length,
-      );
+      const count = Math.min(pickCount(spec.min, spec.max, rng), targets.length);
       const chosen = pickSubset(targets, count, rng);
       return { ...base, destroyIds: chosen };
     }
@@ -99,10 +92,7 @@ function buildPlayAction(
 
     case "returnWorld": {
       const targets = legalTargets(cardId, 0);
-      const count = Math.min(
-        pickCount(spec.min, spec.max, rng),
-        targets.length,
-      );
+      const count = Math.min(pickCount(spec.min, spec.max, rng), targets.length);
       const chosen = pickSubset(targets, count, rng);
       return { ...base, returnIds: chosen };
     }
@@ -162,18 +152,12 @@ function buildPlayAction(
           }
         } else if (stepSpec.kind === "returnWorld") {
           const targets = legalTargets(cardId, stepIdx);
-          const count = Math.min(
-            pickCount(stepSpec.min, stepSpec.max, rng),
-            targets.length,
-          );
+          const count = Math.min(pickCount(stepSpec.min, stepSpec.max, rng), targets.length);
           const chosen = pickSubset(targets, count, rng);
           action = { ...action, returnIds: chosen };
         } else if (stepSpec.kind === "destroyHand") {
           const targets = legalTargets(cardId, stepIdx);
-          const count = Math.min(
-            pickCount(stepSpec.min, stepSpec.max, rng),
-            targets.length,
-          );
+          const count = Math.min(pickCount(stepSpec.min, stepSpec.max, rng), targets.length);
           const chosen = pickSubset(targets, count, rng);
           action = { ...action, destroyIds: chosen };
         } else if (stepSpec.kind === "thawHand") {
@@ -200,15 +184,20 @@ function buildPlayAction(
  * Pass `() => Math.random()` for live play, or a seeded closure for tests.
  */
 export function pickAction(state: GameState, rng: Rng): Action {
+  if (state.pendingBoonChoice !== null) {
+    return {
+      type: "ChooseBoon",
+      templateId: pick(state.pendingBoonChoice.offeredTemplateIds, rng),
+    };
+  }
+
   const available = availableActions(state);
   const nameById = new Map(state.hand.map((card) => [card.id, card.name]));
 
   const actions: Action[] = [];
 
   for (const { cardId, spec } of available.playable) {
-    actions.push(
-      buildPlayAction(cardId, spec, nameById, available.legalTargets, rng),
-    );
+    actions.push(buildPlayAction(cardId, spec, nameById, available.legalTargets, rng));
   }
 
   for (const cardId of available.discardable) {
@@ -226,24 +215,17 @@ export function pickAction(state: GameState, rng: Rng): Action {
 
   const objectiveAction =
     actions.find(
-      (action) =>
-        action.type === "DiscardHazard" &&
-        nameById.get(action.cardId) === "The Walker",
+      (action) => action.type === "DiscardHazard" && nameById.get(action.cardId) === "The Walker",
+    ) ??
+    actions.find(
+      (action) => action.type === "PlayCard" && nameById.get(action.targetId ?? "") === "Door",
+    ) ??
+    actions.find(
+      (action) => action.type === "PlayCard" && nameById.get(action.cardId) === "Summon Door",
     ) ??
     actions.find(
       (action) =>
-        action.type === "PlayCard" &&
-        nameById.get(action.targetId ?? "") === "Door",
-    ) ??
-    actions.find(
-      (action) =>
-        action.type === "PlayCard" &&
-        nameById.get(action.cardId) === "Summon Door",
-    ) ??
-    actions.find(
-      (action) =>
-        action.type === "PlayCard" &&
-        nameById.get(action.targetId ?? "") === "The Walker",
+        action.type === "PlayCard" && nameById.get(action.targetId ?? "") === "The Walker",
     );
 
   if (objectiveAction !== undefined) return objectiveAction;
