@@ -249,6 +249,21 @@ class TemplateCardFace extends Phaser.GameObjects.Container {
         costText.setOrigin(0.5, 0.5);
         this.add(costText);
       }
+
+      if (template.exhaust === true) {
+        const exhaustText = scene.add.text(
+          0,
+          CARD_FACE.height / 2 - 8,
+          "Exhaust",
+          textStyle({
+            fontSize: "9px",
+            color: TEXT.textKeyword,
+            fontStyle: "bold",
+          }),
+        );
+        exhaustText.setOrigin(0.5, 1);
+        this.add(exhaustText);
+      }
     } else {
       this.addCenteredText(0, "World card", "13px", TEXT.textLight, true);
     }
