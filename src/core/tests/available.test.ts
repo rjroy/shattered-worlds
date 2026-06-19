@@ -1177,7 +1177,7 @@ describe("Act boon pending availability", () => {
         act: 1,
         setId: "fortune-v1",
         offeredTemplateIds: ["Lucky Break", "Second Wind", "Found Tool"],
-        chooseCount: 1 as const,
+        chooseCount: 1,
         bToDiscard: false,
       },
     };

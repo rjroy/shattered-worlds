@@ -9,7 +9,12 @@
       "keywords": [],
       "discardable": true,
       "onDiscarded": { "kind": "None" },
-      "onCleared": { "kind": "GainCard", "template": "Listen" },
+      "onCleared": {
+        "kind": "OfferBoon",
+        "setId": "big-box-boons",
+        "offeredCount": 3,
+        "chooseCount": 1
+      },
       "onPartialClear": { "kind": "None" },
       "onEndOfTurn": { "kind": "DestroySelf" }
     },

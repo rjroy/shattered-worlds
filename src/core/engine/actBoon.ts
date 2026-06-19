@@ -18,7 +18,7 @@ type BoonOfferConfig =
       readonly setId: string;
       readonly poolTemplateIds: readonly CardTemplateId[];
       readonly offeredCount: number;
-      readonly chooseCount: 1;
+      readonly chooseCount: number;
       readonly bToDiscard?: boolean;
     }
   | {
@@ -26,7 +26,7 @@ type BoonOfferConfig =
       readonly setId: string;
       readonly poolTemplateIds: readonly CardTemplateId[];
       readonly offeredCount: number;
-      readonly chooseCount: 1;
+      readonly chooseCount: number;
       readonly bToDiscard?: boolean;
     };
 
@@ -43,7 +43,7 @@ export function createBoonOffer(
     seen.add(templateId);
 
     const template = catalog[templateId];
-    if (template?.kind === "player" && template.exhaust === true) {
+    if (template?.kind === "player") {
       legalIds.push(templateId);
     }
   }
@@ -124,7 +124,7 @@ export function createActBoonOffer(
     setId: actBoon.poolId,
     poolTemplateIds: actBoon.poolTemplateIds,
     offeredCount: actBoon.offeredCount,
-    chooseCount: 1,
+    chooseCount: actBoon.chooseCount,
     bToDiscard: actBoon.bToDiscard ?? false,
   });
 }

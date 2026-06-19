@@ -42,7 +42,7 @@ export class OfferBoonHandler extends EffectHandler<OfferBoonEffect> {
   override compile(effect: OfferBoonEffect, _ctx: CompileContext): EffectLine[] {
     const dest = effect.bToDiscard === true ? "discard" : "hand";
     return [
-      main([icon("addCard"), value(`${effect.chooseCount}/${effect.offeredCount}`, "reward")]),
+      main([icon("addCard"), value(`${effect.chooseCount} of ${effect.offeredCount}`, "reward")]),
       rider([text("boon"), text("to"), text(dest)]),
     ];
   }

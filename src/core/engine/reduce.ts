@@ -300,11 +300,11 @@ function handleChooseBoon(
   }
 
   const [card, afterMint] = mintCard(catalog, state, action.templateId);
-  if (card.kind !== "player" || card.exhaust !== true) {
+  if (card.kind !== "player") {
     throw new IllegalActionError(
       action,
       state,
-      `Boon template ${action.templateId} must mint a player exhaust card`,
+      `Boon template ${action.templateId} must mint a player card`,
     );
   }
 

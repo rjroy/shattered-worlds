@@ -1,0 +1,32 @@
+{
+  "worldId": "big-box-boons",
+  "cardTemplates": {
+    "React to Noise": {
+      "kind": "player",
+      "name": "React to Noise",
+      "insetKey": "zombie-inset-listen",
+      "energyCost": 0,
+      "exhaust": true,
+      "effect": {
+        "kind": "DealProgress",
+        "base": 2,
+        "bonus": {
+          "tag": "Hidden",
+          "amount": 2
+        }
+      }
+    },
+    "Fast Sweep": {
+      "kind": "player",
+      "name": "Fast Sweep",
+      "insetKey": "zombie-inset-shelf-sweep",
+      "energyCost": 0,
+      "exhaust": true,
+      "effect": {
+        "kind": "DealProgressAll",
+        "base": 1,
+        "bonus": { "tag": "Creature", "amount": 1 }
+      }
+    }
+  }
+}

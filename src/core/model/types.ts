@@ -54,7 +54,7 @@ export type CardEffect =
       kind: "OfferBoon";
       setId: string;
       offeredCount: number;
-      chooseCount: 1;
+      chooseCount: number;
       bToDiscard?: boolean;
     }
   | { kind: "AddPlayerCardToTop"; template: CardTemplateId }
@@ -213,7 +213,7 @@ export type PendingBoonChoice = {
   readonly act?: number;
   readonly setId: string;
   readonly offeredTemplateIds: readonly CardTemplateId[];
-  readonly chooseCount: 1;
+  readonly chooseCount: number;
   readonly bToDiscard: boolean;
 };
 
@@ -266,7 +266,12 @@ export type GameEvent =
   | { type: "DeckShuffled" }
   | { type: "ActAdvanced"; act: number }
   | BoonOffered
-  | { type: "BoonCardGranted"; cardId: CardId; templateId: CardTemplateId; dest: "hand" | "playerDiscard" }
+  | {
+      type: "BoonCardGranted";
+      cardId: CardId;
+      templateId: CardTemplateId;
+      dest: "hand" | "playerDiscard";
+    }
   | { type: "CardsDrawn"; ids: readonly CardId[]; templateIds: readonly CardTemplateId[] }
   | { type: "TurnEnded" }
   | { type: "WorldWon" }

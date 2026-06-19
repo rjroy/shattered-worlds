@@ -197,12 +197,27 @@ class TemplateCardFace extends Phaser.GameObjects.Container {
       this.add(insetImg);
     }
 
-    this.addCenteredText(-CARD_FACE.height / 2 + 8, template.name, "16px", TEXT.textLight, true);
+    const titleText = this.addCenteredText(
+      -CARD_FACE.height / 2 + 8,
+      template.name,
+      "16px",
+      TEXT.textLight,
+      true,
+    );
+    if (titleText.width > CARD_FACE.width - 12) {
+      const scale = (CARD_FACE.width - 12) / titleText.width;
+      titleText.setScale(scale);
+    }
 
     if (template.kind === "player") {
       const keywords = template.keywords ?? [];
       if (keywords.length > 0) {
-        this.addCenteredText(-CARD_FACE.height / 2 + 24, keywords.join(" · "), "9px", TEXT.textKeyword);
+        this.addCenteredText(
+          -CARD_FACE.height / 2 + 24,
+          keywords.join(" · "),
+          "9px",
+          TEXT.textKeyword,
+        );
       }
 
       const effectBlock = addEffectLines(scene, compileEffect(template.effect, theme.worldId), {
@@ -215,14 +230,25 @@ class TemplateCardFace extends Phaser.GameObjects.Container {
       this.add(effectBlock.container);
 
       const cost = template.energyCost ?? 0;
-      const costText = scene.add.text(
-        -CARD_FACE.width / 2 + 16,
-        CARD_FACE.height / 2 - 22,
-        String(cost),
-        textStyle({ fontSize: "20px", color: TEXT.textLight, fontStyle: "bold" }),
-      );
-      costText.setOrigin(0.5, 0.5);
-      this.add(costText);
+      if (cost > 0) {
+        const badgeBg = scene.add.image(
+          CARD_FACE.width / 2 - 16,
+          -CARD_FACE.height / 2 + 16,
+          "effect-icon-energy",
+        );
+        badgeBg.setDisplaySize(28, 28);
+        badgeBg.setOrigin(0.5, 0.5);
+        this.add(badgeBg);
+
+        const costText = scene.add.text(
+          CARD_FACE.width / 2 - 16,
+          -CARD_FACE.height / 2 + 16,
+          String(cost),
+          textStyle({ fontSize: "16px", color: TEXT.textLight, fontStyle: "bold" }),
+        );
+        costText.setOrigin(0.5, 0.5);
+        this.add(costText);
+      }
     } else {
       this.addCenteredText(0, "World card", "13px", TEXT.textLight, true);
     }
