@@ -305,6 +305,16 @@ function handleChooseBoon(
     );
   }
 
+  // Choices after the current choice.
+  const remainingPendingBoonChoices = afterMint.pendingBoonChoices.slice(1);
+  // Update the current choice.
+  const afterChoice = { ...choice, chooseCount: choice.chooseCount - 1 };
+  // Reconstruct the list of choices based on the changes.
+  const afterPendingBoonChoices =
+    afterChoice.chooseCount > 0
+      ? [afterChoice, ...remainingPendingBoonChoices]
+      : remainingPendingBoonChoices;
+
   const dest = choice.bToDiscard ? "playerDiscard" : "hand";
   return {
     state: {
@@ -312,7 +322,7 @@ function handleChooseBoon(
       hand: dest === "hand" ? [...afterMint.hand, card] : afterMint.hand,
       playerDiscard:
         dest === "playerDiscard" ? [card, ...afterMint.playerDiscard] : afterMint.playerDiscard,
-      pendingBoonChoices: afterMint.pendingBoonChoices.slice(1),
+      pendingBoonChoices: afterPendingBoonChoices,
     },
     events: [{ type: "BoonCardGranted", cardId: card.id, templateId: card.templateId, dest }],
   };
