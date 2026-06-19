@@ -181,20 +181,17 @@ function handleEndTurn(catalog: CardCatalog, state: GameState): ReduceResult {
   events.push(...turnStartResult.events);
 
   let afterRefill = turnStartResult.state;
-  // Fortune is intentionally scoped to one offer per reducer dispatch. A single
-  // refill can drain multiple queued acts, so use the first ActAdvanced event as
-  // the transition that owns the pending choice.
-  const firstActAdvanced = turnStartResult.events.find((e) => e.type === "ActAdvanced");
   const actBoon = afterRefill.runModifiers.actBoon;
-  if (
-    afterRefill.status === "playing" &&
-    actBoon !== null &&
-    firstActAdvanced?.type === "ActAdvanced"
-  ) {
-    const offer = createActBoonOffer(catalog, afterRefill, actBoon, firstActAdvanced.act);
-    afterRefill = offer.state;
-    if (offer.event !== null) {
-      events.push(offer.event);
+  if (afterRefill.status === "playing" && actBoon !== null) {
+    for (const event of turnStartResult.events) {
+      if (event.type !== "ActAdvanced") continue;
+      const offer = createActBoonOffer(catalog, afterRefill, actBoon, event.act);
+      afterRefill = offer.state;
+      if (offer.event !== null) {
+        events.push(offer.event);
+      }
+    }
+    if (afterRefill.pendingBoonChoices.length > 0) {
       return { state: afterRefill, events };
     }
   }
@@ -286,8 +283,8 @@ function handleChooseBoon(
   state: GameState,
   action: Extract<Action, { type: "ChooseBoon" }>,
 ): ReduceResult {
-  const choice = state.pendingBoonChoice;
-  if (choice === null) {
+  const choice = state.pendingBoonChoices[0];
+  if (choice === undefined) {
     throw new IllegalActionError(action, state, "No boon choice is pending");
   }
 
@@ -308,6 +305,16 @@ function handleChooseBoon(
     );
   }
 
+  // Choices after the current choice.
+  const remainingPendingBoonChoices = afterMint.pendingBoonChoices.slice(1);
+  // Update the current choice.
+  const afterChoice = { ...choice, chooseCount: choice.chooseCount - 1 };
+  // Reconstruct the list of choices based on the changes.
+  const afterPendingBoonChoices =
+    afterChoice.chooseCount > 0
+      ? [afterChoice, ...remainingPendingBoonChoices]
+      : remainingPendingBoonChoices;
+
   const dest = choice.bToDiscard ? "playerDiscard" : "hand";
   return {
     state: {
@@ -315,7 +322,7 @@ function handleChooseBoon(
       hand: dest === "hand" ? [...afterMint.hand, card] : afterMint.hand,
       playerDiscard:
         dest === "playerDiscard" ? [card, ...afterMint.playerDiscard] : afterMint.playerDiscard,
-      pendingBoonChoice: null,
+      pendingBoonChoices: afterPendingBoonChoices,
     },
     events: [{ type: "BoonCardGranted", cardId: card.id, templateId: card.templateId, dest }],
   };
@@ -340,7 +347,7 @@ export function reduce(catalog: CardCatalog, state: GameState, action: Action): 
     );
   }
 
-  if (state.pendingBoonChoice !== null && action.type !== "ChooseBoon") {
+  if (state.pendingBoonChoices.length > 0 && action.type !== "ChooseBoon") {
     throw new IllegalActionError(
       action,
       state,

@@ -682,7 +682,7 @@ export class TableScene extends Phaser.Scene {
   private onCardClick(cardId: string): void {
     const state = this.game_.state;
     if (state.status !== "playing") return;
-    if (state.pendingBoonChoice !== null) return;
+    if (state.pendingBoonChoices.length > 0) return;
 
     const available = availableActions(state);
 
@@ -740,7 +740,7 @@ export class TableScene extends Phaser.Scene {
   }
 
   private onDiscardClick(cardId: string): void {
-    if (this.game_.state.pendingBoonChoice !== null) return;
+    if (this.game_.state.pendingBoonChoices.length > 0) return;
     const available = availableActions(this.game_.state);
     if (available.discardable.includes(cardId)) {
       this.dispatch({ type: "DiscardHazard", cardId });
@@ -748,13 +748,13 @@ export class TableScene extends Phaser.Scene {
   }
 
   private onEndTurnClick(): void {
-    if (this.game_.state.pendingBoonChoice !== null) return;
+    if (this.game_.state.pendingBoonChoices.length > 0) return;
     if (this.sel.phase !== "idle") return;
     this.dispatch({ type: "EndTurn" });
   }
 
   private onConfirmClick(): void {
-    if (this.game_.state.pendingBoonChoice !== null) return;
+    if (this.game_.state.pendingBoonChoices.length > 0) return;
     if (!stepSatisfied(this.sel)) return;
     this.advanceSelection();
   }
@@ -792,7 +792,7 @@ export class TableScene extends Phaser.Scene {
     snapshot: PlayerCard,
     spec: Extract<TargetSpec, { kind: "modal" }>,
   ): void {
-    if (this.game_.state.pendingBoonChoice !== null) return;
+    if (this.game_.state.pendingBoonChoices.length > 0) return;
 
     const available = availableActions(this.game_.state);
     // Label each branch from the card's actual Modal effect, so the chooser can
@@ -817,7 +817,7 @@ export class TableScene extends Phaser.Scene {
 
   /** Apply a chosen modal branch: advance selection, or commit if it's a 'none' branch. */
   private onModalChoose(spec: Extract<TargetSpec, { kind: "modal" }>, idx: number): void {
-    if (this.game_.state.pendingBoonChoice !== null) return;
+    if (this.game_.state.pendingBoonChoices.length > 0) return;
     this.dismissModal(false);
     const newSel = chooseModal(this.sel, idx, spec);
     this.sel = newSel;
@@ -1099,8 +1099,8 @@ export class TableScene extends Phaser.Scene {
   }
 
   private updateBoonChoiceView(): void {
-    const pending = this.game_.state.pendingBoonChoice;
-    if (pending === null) {
+    const pending = this.game_.state.pendingBoonChoices[0];
+    if (pending === undefined) {
       this.dismissBoonChoiceView();
       return;
     }
@@ -1145,8 +1145,8 @@ export class TableScene extends Phaser.Scene {
   }
 
   private chooseVisibleBoonOption(index: number): void {
-    const pending = this.game_.state.pendingBoonChoice;
-    if (pending === null) return;
+    const pending = this.game_.state.pendingBoonChoices[0];
+    if (pending === undefined) return;
     const templateId = pending.offeredTemplateIds[index];
     if (templateId === undefined) return;
     if (this.game_.template(templateId) === undefined) return;

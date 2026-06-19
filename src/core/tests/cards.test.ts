@@ -28,7 +28,7 @@ function makeEmptyState(nextId = 0): GameState {
     heat: 0,
     pendingForceDestroy: 0,
     braceCharges: 0,
-    pendingBoonChoice: null,
+    pendingBoonChoices: [],
     runModifiers: DEFAULT_RUN_MODIFIERS,
     turnPlayHistory: { cardsPlayedThisTurn: 0, byTemplateId: {} },
     status: "playing",
