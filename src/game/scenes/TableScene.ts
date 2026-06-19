@@ -9,6 +9,7 @@
  *  - Show win / loss screens when the game ends
  */
 import Phaser from "phaser";
+import { stopMainTheme } from "../audio/menuMusic";
 import { worldMusicManifest } from "../data/audioManifest";
 import { createGameplayRuntime, type GameplayRuntime } from "../runtime/gameplayRuntime";
 import type { GameplaySession } from "../runtime/gameplaySession";
@@ -191,6 +192,8 @@ export class TableScene extends Phaser.Scene {
   }
 
   create(): void {
+    stopMainTheme(this);
+
     // Effect-icon placeholder textures are generated (not loaded), so they
     // register here rather than in preload — before any CardView renders.
     ensureEffectIconTextures(this);

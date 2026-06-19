@@ -1,5 +1,6 @@
 import Phaser from "phaser";
 
+import { startMainTheme } from "../audio/menuMusic";
 import {
   activeWeight,
   canActivate,
@@ -46,6 +47,7 @@ export class DestinyScene extends Phaser.Scene {
   }
 
   create(): void {
+    void startMainTheme(this);
     this.scrollOffset = 0;
     addScreenBackdrop(this, {
       key: "screen-destiny",

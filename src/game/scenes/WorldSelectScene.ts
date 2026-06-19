@@ -1,4 +1,5 @@
 import Phaser from "phaser";
+import { startMainTheme } from "../audio/menuMusic";
 import { loadAssets } from "../data/assetManifest";
 import { isWorldUnlocked, UNLOCK_CATALOG } from "../../data/unlocks/catalog";
 import { worldManifest } from "../../data/worldManifest";
@@ -58,6 +59,8 @@ export class WorldSelectScene extends Phaser.Scene {
   }
 
   create(): void {
+    void startMainTheme(this);
+
     // title image fills canvas
     this.add
       .image(CANVAS_W / 2, CANVAS_H / 2, "world-select-bg")
