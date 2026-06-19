@@ -1869,6 +1869,22 @@ describe("Boon offer generation", () => {
     expect(new Set(offered).size).toBe(offered.length);
   });
 
+  it("preserves act boon chooseCount greater than one in the pending choice", () => {
+    const state = makeActAdvanceState({ actBoon: actBoonModifier({ chooseCount: 2 }) });
+
+    const result = reduce(catalog, state, { type: "EndTurn" });
+    const offered = offeredTemplateIds(result);
+
+    expect(result.state.pendingBoonChoices).toEqual([{
+      source: "act",
+      act: 1,
+      setId: "fortune-v1",
+      offeredTemplateIds: offered,
+      chooseCount: 2,
+      bToDiscard: false,
+    }]);
+  });
+
   it("creates one queued offer per ActAdvanced when one refill advances multiple acts", () => {
     const state = makeActAdvanceState({
       actBoon: actBoonModifier(),
@@ -2524,6 +2540,96 @@ describe("Act boon choice reducer gates", () => {
 
     expect(result.state.pendingBoonChoices).toEqual([laterChoice]);
     expect(result.state.hand.at(-1)?.templateId).toBe("Lucky Break");
+  });
+
+  it("valid ChooseBoon decrements chooseCount greater than one and keeps the same choice pending", () => {
+    const pending = {
+      ...pendingBoonState().pendingBoonChoices[0]!,
+      chooseCount: 2,
+    };
+    const state = {
+      ...pendingBoonState(),
+      pendingBoonChoices: [pending],
+    };
+    const nextId = state.nextId;
+
+    const first = reduce(catalog, state, {
+      type: "ChooseBoon",
+      templateId: "Lucky Break",
+    });
+
+    expect(first.state.pendingBoonChoices).toEqual([{ ...pending, chooseCount: 1 }]);
+    expect(first.state.hand.at(-1)).toMatchObject({
+      id: String(nextId),
+      templateId: "Lucky Break",
+    });
+    expect(first.events).toEqual([
+      {
+        type: "BoonCardGranted",
+        cardId: String(nextId),
+        templateId: "Lucky Break",
+        dest: "hand",
+      },
+    ]);
+
+    const second = reduce(catalog, first.state, {
+      type: "ChooseBoon",
+      templateId: "Second Wind",
+    });
+
+    expect(second.state.pendingBoonChoices).toEqual([]);
+    expect(second.state.hand.at(-1)).toMatchObject({
+      id: String(nextId + 1),
+      templateId: "Second Wind",
+    });
+    expect(second.events).toEqual([
+      {
+        type: "BoonCardGranted",
+        cardId: String(nextId + 1),
+        templateId: "Second Wind",
+        dest: "hand",
+      },
+    ]);
+  });
+
+  it("keeps a multi-pick choice ahead of later queued choices until all picks are used", () => {
+    const firstChoice = {
+      ...pendingBoonState().pendingBoonChoices[0]!,
+      chooseCount: 2,
+    };
+    const laterChoice = {
+      source: "worldClear" as const,
+      setId: "fortune-v1",
+      offeredTemplateIds: ["Clear Path"],
+      chooseCount: 1,
+      bToDiscard: false,
+    };
+    const state = {
+      ...pendingBoonState(),
+      pendingBoonChoices: [firstChoice, laterChoice],
+    };
+
+    const first = reduce(catalog, state, {
+      type: "ChooseBoon",
+      templateId: "Lucky Break",
+    });
+    expect(first.state.pendingBoonChoices).toEqual([
+      { ...firstChoice, chooseCount: 1 },
+      laterChoice,
+    ]);
+
+    expect(() =>
+      reduce(catalog, first.state, {
+        type: "ChooseBoon",
+        templateId: "Clear Path",
+      }),
+    ).toThrow(IllegalActionError);
+
+    const second = reduce(catalog, first.state, {
+      type: "ChooseBoon",
+      templateId: "Second Wind",
+    });
+    expect(second.state.pendingBoonChoices).toEqual([laterChoice]);
   });
 
   it("rejects choosing a template offered only by a later queued choice", () => {
