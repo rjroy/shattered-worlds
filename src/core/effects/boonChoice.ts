@@ -10,10 +10,6 @@ type OfferBoonEffect = Extract<CardEffect, { kind: "OfferBoon" }>;
 
 export class OfferBoonHandler extends EffectHandler<OfferBoonEffect> {
   override apply(ctx: EffectContext, effect: OfferBoonEffect): EffectResult {
-    if (ctx.state.pendingBoonChoice !== null) {
-      return { state: ctx.state, events: [] };
-    }
-
     const boonSet = BOON_SETS[effect.setId as keyof typeof BOON_SETS];
     if (boonSet === undefined) {
       return { state: ctx.state, events: [] };

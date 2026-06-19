@@ -183,10 +183,11 @@ function buildPlayAction(
  * Pass `() => Math.random()` for live play, or a seeded closure for tests.
  */
 export function pickAction(state: GameState, rng: Rng): Action {
-  if (state.pendingBoonChoice !== null) {
+  const pendingBoonChoice = state.pendingBoonChoices[0];
+  if (pendingBoonChoice !== undefined) {
     return {
       type: "ChooseBoon",
-      templateId: pick(state.pendingBoonChoice.offeredTemplateIds, rng),
+      templateId: pick(pendingBoonChoice.offeredTemplateIds, rng),
     };
   }
 

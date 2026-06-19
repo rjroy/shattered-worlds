@@ -221,14 +221,14 @@ function pendingState(): GameState {
     heat: 0,
     pendingForceDestroy: 0,
     braceCharges: 0,
-    pendingBoonChoice: {
+    pendingBoonChoices: [{
       source: "act",
       act: 2,
       setId: "fortune-v1",
       offeredTemplateIds: ["Lucky Break", "Second Wind", "Found Tool"],
       chooseCount: 1,
       bToDiscard: false,
-    },
+    }],
     runModifiers: DEFAULT_RUN_MODIFIERS,
     turnPlayHistory: { cardsPlayedThisTurn: 0, byTemplateId: {} },
     status: "playing",

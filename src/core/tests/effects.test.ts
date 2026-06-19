@@ -1142,18 +1142,19 @@ describe("OfferBoon", () => {
       chooseCount: 1,
     });
 
-    expect(state.pendingBoonChoice).toMatchObject({
+    expect(state.pendingBoonChoices).toHaveLength(1);
+    expect(state.pendingBoonChoices[0]).toMatchObject({
       source: "worldClear",
       setId: "fortune-v1",
       chooseCount: 1,
       bToDiscard: false,
     });
-    expect(state.pendingBoonChoice?.offeredTemplateIds).toHaveLength(3);
+    expect(state.pendingBoonChoices[0]?.offeredTemplateIds).toHaveLength(3);
     expect(events).toContainEqual({
       type: "BoonOffered",
       source: "worldClear",
       setId: "fortune-v1",
-      templateIds: state.pendingBoonChoice?.offeredTemplateIds ?? [],
+      templateIds: state.pendingBoonChoices[0]?.offeredTemplateIds ?? [],
     });
   });
 
@@ -1164,14 +1165,14 @@ describe("OfferBoon", () => {
       offeredCount: 3,
       chooseCount: 1,
     });
-    const chosen = offer.state.pendingBoonChoice?.offeredTemplateIds[0];
+    const chosen = offer.state.pendingBoonChoices[0]?.offeredTemplateIds[0];
     if (chosen === undefined) throw new Error("expected offered boon");
 
     const result = reduce(catalog, offer.state, { type: "ChooseBoon", templateId: chosen });
     const granted = result.state.hand.find((card) => card.templateId === chosen);
     if (granted === undefined) throw new Error("expected granted boon in hand");
 
-    expect(result.state.pendingBoonChoice).toBeNull();
+    expect(result.state.pendingBoonChoices).toEqual([]);
     expect(result.state.hand.some((card) => card.templateId === chosen)).toBe(true);
     expect(result.state.playerDiscard.some((card) => card.templateId === chosen)).toBe(false);
     expect(result.events).toContainEqual({
@@ -1190,14 +1191,14 @@ describe("OfferBoon", () => {
       chooseCount: 1,
       bToDiscard: true,
     });
-    const chosen = offer.state.pendingBoonChoice?.offeredTemplateIds[0];
+    const chosen = offer.state.pendingBoonChoices[0]?.offeredTemplateIds[0];
     if (chosen === undefined) throw new Error("expected offered boon");
 
     const result = reduce(catalog, offer.state, { type: "ChooseBoon", templateId: chosen });
     const granted = result.state.playerDiscard.find((card) => card.templateId === chosen);
     if (granted === undefined) throw new Error("expected granted boon in discard");
 
-    expect(result.state.pendingBoonChoice).toBeNull();
+    expect(result.state.pendingBoonChoices).toEqual([]);
     expect(result.state.hand.some((card) => card.templateId === chosen)).toBe(false);
     expect(result.state.playerDiscard.some((card) => card.templateId === chosen)).toBe(true);
     expect(result.events).toContainEqual({
@@ -1208,7 +1209,7 @@ describe("OfferBoon", () => {
     });
   });
 
-  it("fails closed without replacing an existing pending choice", () => {
+  it("appends a new offer without replacing an existing pending choice", () => {
     const pending = {
       source: "worldClear" as const,
       setId: "fortune-v1",
@@ -1216,7 +1217,7 @@ describe("OfferBoon", () => {
       chooseCount: 1 as const,
       bToDiscard: false,
     };
-    const state = makeState({ pendingBoonChoice: pending });
+    const state = makeState({ pendingBoonChoices: [pending] });
 
     const result = applyEffect(catalog, state, {
       kind: "OfferBoon",
@@ -1225,8 +1226,15 @@ describe("OfferBoon", () => {
       chooseCount: 1,
     });
 
-    expect(result.state).toBe(state);
-    expect(result.events).toEqual([]);
+    expect(result.state.pendingBoonChoices).toHaveLength(2);
+    expect(result.state.pendingBoonChoices[0]).toEqual(pending);
+    expect(result.state.pendingBoonChoices[1]).toMatchObject({
+      source: "worldClear",
+      setId: "fortune-v1",
+      chooseCount: 1,
+      bToDiscard: false,
+    });
+    expect(result.events.map((event) => event.type)).toContain("BoonOffered");
   });
 
   it("fails closed for an unknown boon set without opening a pending choice", () => {
@@ -1240,9 +1248,9 @@ describe("OfferBoon", () => {
     const first = resolveOfferBoonHazard(effect);
     const second = resolveOfferBoonHazard(effect);
 
-    expect(first.state.pendingBoonChoice).toBeNull();
+    expect(first.state.pendingBoonChoices).toEqual([]);
     expect(first.events.map((event) => event.type)).not.toContain("BoonOffered");
-    expect(second.state.pendingBoonChoice).toBeNull();
+    expect(second.state.pendingBoonChoices).toEqual([]);
     expect(second.events.map((event) => event.type)).not.toContain("BoonOffered");
     expect(first.state).toEqual(second.state);
     expect(first.events).toEqual(second.events);
@@ -1284,7 +1292,53 @@ describe("OfferBoon", () => {
       illegalCatalog,
     );
 
-    expect(state.pendingBoonChoice).toBeNull();
+    expect(state.pendingBoonChoices).toEqual([]);
     expect(events.map((event) => event.type)).not.toContain("BoonOffered");
+  });
+
+  it("preserves an existing queue when the referenced set has no legal options", () => {
+    const illegalCatalog: CardCatalog = { ...catalog };
+    for (const templateId of [
+      "Lucky Break",
+      "Second Wind",
+      "Found Tool",
+      "Clear Path",
+      "Steady Nerve",
+    ]) {
+      const template = illegalCatalog[templateId];
+      if (template === undefined || template.kind !== "player") {
+        throw new Error(`expected ${templateId} player template`);
+      }
+      illegalCatalog[templateId] = {
+        kind: "world",
+        name: template.name,
+        cost: 2,
+        keywords: [] as string[],
+        discardable: true,
+        onDiscarded: { kind: "None" },
+        onCleared: { kind: "None" },
+        onEndOfTurn: { kind: "None" },
+        onPartialClear: { kind: "None" },
+      };
+    }
+    const pending = {
+      source: "worldClear" as const,
+      setId: "fortune-v1",
+      offeredTemplateIds: ["Lucky Break"],
+      chooseCount: 1,
+      bToDiscard: false,
+    };
+    const state = makeState({ pendingBoonChoices: [pending] });
+
+    const result = applyEffect(illegalCatalog, state, {
+      kind: "OfferBoon",
+      setId: "fortune-v1",
+      offeredCount: 3,
+      chooseCount: 1,
+    });
+
+    expect(result.state.pendingBoonChoices).toEqual([pending]);
+    expect(result.state.rng).not.toEqual(state.rng);
+    expect(result.events.map((event) => event.type)).not.toContain("BoonOffered");
   });
 });

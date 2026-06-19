@@ -181,7 +181,7 @@ export interface GameState {
   // Charges that absorb ForceDestroy snatches before they destroy player
   // cards. Granted by the Brace effect; consumed in resolveForceDestroy.
   braceCharges: number;
-  pendingBoonChoice: PendingBoonChoice | null;
+  pendingBoonChoices: readonly PendingBoonChoice[];
   readonly runModifiers: RunModifiers;
   readonly turnPlayHistory: TurnPlayHistory;
   status: "playing" | "won" | "lost";

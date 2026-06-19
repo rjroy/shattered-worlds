@@ -60,7 +60,7 @@ export function createBoonOffer(
   }
 
   if (legalIds.length === 0) {
-    return { state: { ...state, rng: nextRng, pendingBoonChoice: null }, event: null };
+    return { state: { ...state, rng: nextRng }, event: null };
   }
 
   const offeredTemplateIds =
@@ -106,7 +106,7 @@ export function createBoonOffer(
     state: {
       ...state,
       rng: nextRng,
-      pendingBoonChoice: pending,
+      pendingBoonChoices: [...state.pendingBoonChoices, pending],
     },
     event,
   };

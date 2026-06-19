@@ -100,7 +100,7 @@ export function createWorld(
     heat: (world.startHeat ?? 0) + mods.extraStartHeat,
     pendingForceDestroy: 0,
     braceCharges: mods.extraStartBrace,
-    pendingBoonChoice: null,
+    pendingBoonChoices: [],
     runModifiers: mods,
     turnPlayHistory: { cardsPlayedThisTurn: 0, byTemplateId: {} },
     status: "playing",
