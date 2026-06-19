@@ -1,11 +1,10 @@
 import Phaser from "phaser";
 import type { BoonChoiceSource, Card, CardTemplate, CardTemplateId } from "../../core/index";
-import { compileEffect } from "../../core/view/effectGlyphs";
 import { parseKeyword } from "../../core/index";
-import { addEffectLines } from "./effectLineView";
 import { CARD_FACE, CANVAS_H, CANVAS_W, TABLE_LAYOUT } from "./layout";
-import { TEXT, textStyle, getRealityPalette, selectCardFrontKey } from "./presentation";
+import { textStyle, getRealityPalette } from "./presentation";
 import type { VisualTheme } from "./themes/theme";
+import { CardView } from "./CardView";
 
 export interface BoonChoiceOption {
   readonly templateId: CardTemplateId;
@@ -25,6 +24,43 @@ export interface BoonChoiceViewConfig {
 
 const CARD_GAP = 26;
 const OPTION_Y = 326;
+
+function previewCardFromTemplate(
+  templateId: CardTemplateId,
+  template: Readonly<CardTemplate>,
+  worldId: string,
+): Card {
+  if (template.kind === "player") {
+    return {
+      kind: "player",
+      id: `template:${templateId}`,
+      templateId,
+      name: template.name,
+      insetKey: template.insetKey,
+      sourceWorldId: worldId,
+      effect: template.effect,
+      energyCost: template.energyCost ?? 0,
+      exhaust: template.exhaust ?? false,
+      keywords: (template.keywords ?? []).map(parseKeyword),
+    };
+  }
+
+  return {
+    kind: "world",
+    id: `template:${templateId}`,
+    templateId,
+    name: template.name,
+    insetKey: template.insetKey,
+    cost: template.cost,
+    keywords: template.keywords.map(parseKeyword),
+    discardable: template.discardable,
+    canExile: template.canExile ?? true,
+    onDiscarded: template.onDiscarded,
+    onCleared: template.onCleared,
+    onEndOfTurn: template.onEndOfTurn,
+    onPartialClear: template.onPartialClear,
+  };
+}
 
 export class BoonChoiceView extends Phaser.GameObjects.Container {
   readonly missingTemplateIds: readonly CardTemplateId[];
@@ -102,15 +138,21 @@ export class BoonChoiceView extends Phaser.GameObjects.Container {
     config.options.forEach((option, index) => {
       if (option.template === undefined) return;
       const x = startX + index * (CARD_FACE.width + CARD_GAP);
-      const face = new TemplateCardFace(
-        scene,
-        x,
-        OPTION_Y,
+      const previewCard = previewCardFromTemplate(
         option.templateId,
         option.template,
+        config.theme.worldId,
+      );
+      const face = new CardView(
+        scene,
+        previewCard,
+        x,
+        OPTION_Y,
         config.theme,
         config.resolveTheme,
       );
+      face.setDepth(0);
+      face.setSize(CARD_FACE.width, CARD_FACE.height);
       face.setInteractive({ useHandCursor: true });
       face.on("pointerdown", () => config.onChoose(option.templateId));
       this.add(face);
@@ -130,160 +172,5 @@ export class BoonChoiceView extends Phaser.GameObjects.Container {
     });
 
     scene.children.bringToTop(this);
-  }
-}
-
-class TemplateCardFace extends Phaser.GameObjects.Container {
-  constructor(
-    scene: Phaser.Scene,
-    x: number,
-    y: number,
-    templateId: CardTemplateId,
-    template: Readonly<CardTemplate>,
-    theme: VisualTheme,
-    resolveTheme: (worldId: string) => VisualTheme,
-  ) {
-    super(scene, x, y);
-    scene.add.existing(this);
-    this.setSize(CARD_FACE.width, CARD_FACE.height);
-
-    const previewCard: Card =
-      template.kind === "player"
-        ? {
-            kind: "player",
-            id: `template:${templateId}`,
-            templateId,
-            name: template.name,
-            insetKey: template.insetKey,
-            sourceWorldId: theme.worldId,
-            effect: template.effect,
-            energyCost: template.energyCost ?? 0,
-            keywords: (template.keywords ?? []).map(parseKeyword),
-            ...(template.exhaust === undefined ? {} : { exhaust: template.exhaust }),
-          }
-        : {
-            kind: "world",
-            id: `template:${templateId}`,
-            templateId,
-            name: template.name,
-            insetKey: template.insetKey,
-            cost: template.cost,
-            keywords: template.keywords.map(parseKeyword),
-            discardable: template.discardable,
-            canExile: template.canExile ?? true,
-            onDiscarded: template.onDiscarded,
-            onCleared: template.onCleared,
-            onEndOfTurn: template.onEndOfTurn,
-            onPartialClear: template.onPartialClear,
-          };
-
-    const cardImg = scene.add.image(0, 0, selectCardFrontKey(previewCard, theme, resolveTheme));
-    cardImg.setDisplaySize(CARD_FACE.width, CARD_FACE.height);
-    this.add(cardImg);
-
-    const frame = scene.add.rectangle(1, 1, CARD_FACE.width - 2, CARD_FACE.height - 2, 0x000000, 0);
-    frame.setStrokeStyle(2, 0xf3d180, 0.8);
-    frame.setRounded(10);
-    this.add(frame);
-
-    if (template.insetKey !== undefined && template.insetKey !== "") {
-      const insetImg = scene.add.image(CARD_FACE.inset.x, CARD_FACE.inset.y, template.insetKey);
-      insetImg.setOrigin(0.5, 1);
-      const ratio = Math.max(
-        CARD_FACE.inset.width / Math.max(1, insetImg.width),
-        CARD_FACE.inset.height / Math.max(1, insetImg.height),
-      );
-      insetImg.setDisplaySize(insetImg.width * ratio, insetImg.height * ratio);
-      this.add(insetImg);
-    }
-
-    const titleText = this.addCenteredText(
-      -CARD_FACE.height / 2 + 8,
-      template.name,
-      "16px",
-      TEXT.textLight,
-      true,
-    );
-    if (titleText.width > CARD_FACE.width - 12) {
-      const scale = (CARD_FACE.width - 12) / titleText.width;
-      titleText.setScale(scale);
-    }
-
-    if (template.kind === "player") {
-      const keywords = template.keywords ?? [];
-      if (keywords.length > 0) {
-        this.addCenteredText(
-          -CARD_FACE.height / 2 + 24,
-          keywords.join(" · "),
-          "9px",
-          TEXT.textKeyword,
-        );
-      }
-
-      const effectBlock = addEffectLines(scene, compileEffect(template.effect, theme.worldId), {
-        maxWidth: CARD_FACE.width - 18,
-        baseColor: TEXT.textLight,
-        background: { color: 0x000000, alpha: 0.8 },
-        warnLabel: template.name,
-      });
-      effectBlock.container.setPosition(0, -CARD_FACE.height / 2 + (keywords.length > 0 ? 38 : 30));
-      this.add(effectBlock.container);
-
-      const cost = template.energyCost ?? 0;
-      if (cost > 0) {
-        const badgeBg = scene.add.image(
-          CARD_FACE.width / 2 - 16,
-          -CARD_FACE.height / 2 + 16,
-          "effect-icon-energy",
-        );
-        badgeBg.setDisplaySize(28, 28);
-        badgeBg.setOrigin(0.5, 0.5);
-        this.add(badgeBg);
-
-        const costText = scene.add.text(
-          CARD_FACE.width / 2 - 16,
-          -CARD_FACE.height / 2 + 16,
-          String(cost),
-          textStyle({ fontSize: "16px", color: TEXT.textLight, fontStyle: "bold" }),
-        );
-        costText.setOrigin(0.5, 0.5);
-        this.add(costText);
-      }
-
-      if (template.exhaust === true) {
-        const exhaustText = scene.add.text(
-          0,
-          CARD_FACE.height / 2 - 8,
-          "Exhaust",
-          textStyle({
-            fontSize: "9px",
-            color: TEXT.textKeyword,
-            fontStyle: "bold",
-          }),
-        );
-        exhaustText.setOrigin(0.5, 1);
-        this.add(exhaustText);
-      }
-    } else {
-      this.addCenteredText(0, "World card", "13px", TEXT.textLight, true);
-    }
-  }
-
-  private addCenteredText(
-    y: number,
-    content: string,
-    fontSize: string,
-    color: string,
-    bold = false,
-  ): Phaser.GameObjects.Text {
-    const style: Phaser.Types.GameObjects.Text.TextStyle = { fontSize, color };
-    if (bold) style.fontStyle = "bold";
-    const text = this.scene.add.text(0, y, content, textStyle(style));
-    text.setOrigin(0.5, 0);
-    if (text.width > CARD_FACE.width - 12) {
-      text.setScale((CARD_FACE.width - 12) / text.width);
-    }
-    this.add(text);
-    return text;
   }
 }
