@@ -107,7 +107,6 @@ import zombieInsetListenUrl from "../assets/themes/zombie-big-box/insets/inset-l
 // World music imports
 // ---------------------------------------------------------------------------
 
-import mainThemeUrl from "../assets/audio/main-theme.mp3?url";
 import zombieBigBoxMusicUrl from "../assets/audio/zombie-big-box-music.mp3?url";
 import birdBuildingMusicUrl from "../assets/audio/bird-building-music.mp3?url";
 import highwayVolcanoMusicUrl from "../assets/audio/highway-volcano-music.mp3?url";
@@ -117,9 +116,6 @@ import fogBeachPartyMusicUrl from "../assets/audio/fog-beach-party-music.mp3?url
 // ---------------------------------------------------------------------------
 // Exports
 // ---------------------------------------------------------------------------
-
-/** The main theme URL */
-export const MAIN_THEME_URL = mainThemeUrl;
 
 /** All asset keys for world-scoped images, keyed the same as assetManifest. */
 export const worldAssetUrls: Record<string, string> = {

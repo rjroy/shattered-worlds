@@ -1,5 +1,6 @@
 import Phaser from "phaser";
 
+import { startMainTheme } from "../audio/menuMusic";
 import { worldManifest } from "../../data/worldManifest";
 import { worldDisplayManifest } from "../../data/worldDisplayManifest";
 import { FEAT_CATALOG, computeFragmentBalance } from "../../data/feats/catalog";
@@ -50,6 +51,7 @@ export class ChronicleScene extends Phaser.Scene {
   }
 
   create(): void {
+    void startMainTheme(this);
     this.worldsScrollOffset = 0;
     this.featsScrollOffset = 0;
     addScreenBackdrop(this, {
