@@ -2,7 +2,7 @@ import { describe, expect, it } from "bun:test";
 
 import type { FeatsProfile } from "../../game/runtime/featsProfile";
 import type { UnlocksProfile } from "../../game/runtime/unlocksProfile";
-import { FORTUNE_BOON_POOLS } from "../worlds/boons/fortune";
+import { BOON_SETS } from "../worlds/boons/fortune";
 import { DEFAULT_RUN_MODIFIERS } from "./types";
 import {
   activeWeight,
@@ -131,7 +131,7 @@ describe("buildRunModifiers", () => {
 
     expect(mods.actBoon).toEqual({
       poolId: "fortune-v1",
-      poolTemplateIds: FORTUNE_BOON_POOLS["fortune-v1"],
+      poolTemplateIds: BOON_SETS["fortune-v1"].templateIds,
       offeredCount: 3,
       chooseCount: 1,
     });

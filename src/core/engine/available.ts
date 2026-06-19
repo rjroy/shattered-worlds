@@ -296,7 +296,7 @@ export function availableActions(
   state: GameState,
   opts?: { ignoreEnergy?: boolean },
 ): AvailableActions {
-  if (state.pendingActBoon !== null) {
+  if (state.pendingBoonChoice !== null) {
     return {
       playable: [],
       discardable: [],

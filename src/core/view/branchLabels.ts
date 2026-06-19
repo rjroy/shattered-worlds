@@ -20,7 +20,7 @@ function branchIsLegal(
   available: AvailableActions,
   cardId: string,
 ): boolean {
-  if (spec.kind === "hazard") {
+  if (["hazard", "thawHand"].includes(spec.kind)) {
     return available.legalTargets(cardId, idx).length > 0;
   }
   return true;

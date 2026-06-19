@@ -3,8 +3,7 @@ import type { CardEffect, CardId, GameState, TargetSpec } from "../model/types";
 import type { EffectLine } from "../view/effectGlyphs";
 import type { CompileContext, EffectContext, EffectResult } from "./EffectContext";
 import { EffectHandler } from "./EffectHandler";
-import { describeEffect } from "../view/describe";
-import { isPlayableOf, structuralSpecOf } from "../engine/available";
+import { EFFECTS } from "./registry";
 import { main, text } from "./tokens";
 
 type ModalEffect = Extract<CardEffect, { kind: "Modal" }>;
@@ -28,7 +27,10 @@ export class ModalHandler extends EffectHandler<ModalEffect> {
   }
 
   override describe(effect: ModalEffect): string[] {
-    return ["Choose one:", ...effect.branches.map((b) => `• ${describeEffect(b).join(", ")}`)];
+    return [
+      "Choose one:",
+      ...effect.branches.map((branch) => `• ${describeChild(branch).join(", ")}`),
+    ];
   }
 
   override compile(effect: ModalEffect, ctx: CompileContext): EffectLine[] {
@@ -48,12 +50,12 @@ export class ModalHandler extends EffectHandler<ModalEffect> {
   }
 
   override structuralSpec(effect: ModalEffect): TargetSpec {
-    return { kind: "modal", branches: effect.branches.map(structuralSpecOf) };
+    return { kind: "modal", branches: effect.branches.map(structuralSpecChild) };
   }
 
   override isPlayable(effect: ModalEffect, state: GameState, selfId: CardId): boolean {
     // Playable as long as at least one branch is viable.
-    return effect.branches.some((branch) => isPlayableOf(branch, state, selfId));
+    return effect.branches.some((branch) => isPlayableChild(branch, state, selfId));
   }
 
   override legalTargets(
@@ -93,7 +95,7 @@ export class SequenceHandler extends EffectHandler<SequenceEffect> {
 
   override describe(effect: SequenceEffect): string[] {
     return effect.steps.flatMap((step, i) =>
-      describeEffect(step).map((line, j) => (i > 0 && j === 0 ? `then ${lowerFirst(line)}` : line)),
+      describeChild(step).map((line, j) => (i > 0 && j === 0 ? `then ${lowerFirst(line)}` : line)),
     );
   }
 
@@ -129,13 +131,13 @@ export class SequenceHandler extends EffectHandler<SequenceEffect> {
   }
 
   override structuralSpec(effect: SequenceEffect): TargetSpec {
-    return { kind: "compound", steps: effect.steps.map(structuralSpecOf) };
+    return { kind: "compound", steps: effect.steps.map(structuralSpecChild) };
   }
 
   override isPlayable(effect: SequenceEffect, state: GameState, selfId: CardId): boolean {
     // Every step must have a legal play; appended effective effects can add
     // target requirements after an otherwise playable no-target base effect.
-    return effect.steps.every((step) => isPlayableOf(step, state, selfId));
+    return effect.steps.every((step) => isPlayableChild(step, state, selfId));
   }
 
   override legalTargets(
@@ -170,4 +172,19 @@ export function effectAtStep(effect: CardEffect, step: number): CardEffect | nul
 
 function lowerFirst(s: string): string {
   return s.length > 0 ? s[0]!.toLowerCase() + s.slice(1) : s;
+}
+
+function describeChild(effect: CardEffect): string[] {
+  const handler = EFFECTS[effect.kind];
+  return handler.describe(effect as never);
+}
+
+function structuralSpecChild(effect: CardEffect): TargetSpec {
+  const handler = EFFECTS[effect.kind];
+  return handler.structuralSpec(effect as never);
+}
+
+function isPlayableChild(effect: CardEffect, state: GameState, selfId: CardId): boolean {
+  const handler = EFFECTS[effect.kind];
+  return handler.isPlayable(effect as never, state, selfId);
 }

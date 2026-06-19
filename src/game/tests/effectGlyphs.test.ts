@@ -398,6 +398,38 @@ describe("compileEffect (composites)", () => {
       line([i("draw"), v("1", "reward")], "branch"),
     ]);
   });
+
+  it("compiles OfferBoon with offer and destination tokens", () => {
+    expect(
+      compileEffect(
+        {
+          kind: "OfferBoon",
+          setId: "fortune-v1",
+          offeredCount: 3,
+          chooseCount: 1,
+        },
+        "zombie-big-box",
+      ),
+    ).toStrictEqual([
+      line([i("addCard"), v("1 of 3", "reward")]),
+      line([t("boon"), t("to"), t("hand")], "rider"),
+    ]);
+    expect(
+      compileEffect(
+        {
+          kind: "OfferBoon",
+          setId: "fortune-v1",
+          offeredCount: 2,
+          chooseCount: 1,
+          bToDiscard: true,
+        },
+        "zombie-big-box",
+      ),
+    ).toStrictEqual([
+      line([i("addCard"), v("1 of 2", "reward")]),
+      line([t("boon"), t("to"), t("discard")], "rider"),
+    ]);
+  });
 });
 
 // ---------------------------------------------------------------------------

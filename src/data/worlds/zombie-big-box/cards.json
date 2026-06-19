@@ -9,7 +9,12 @@
       "keywords": [],
       "discardable": true,
       "onDiscarded": { "kind": "None" },
-      "onCleared": { "kind": "GainCard", "template": "Listen" },
+      "onCleared": {
+        "kind": "OfferBoon",
+        "setId": "big-box-boons",
+        "offeredCount": 3,
+        "chooseCount": 1
+      },
       "onPartialClear": { "kind": "None" },
       "onEndOfTurn": { "kind": "DestroySelf" }
     },
@@ -96,20 +101,6 @@
       "onCleared": { "kind": "GainCard", "template": "Shotgun" },
       "onPartialClear": { "kind": "None" },
       "onEndOfTurn": { "kind": "None" }
-    },
-    "Listen": {
-      "kind": "player",
-      "name": "Listen",
-      "insetKey": "zombie-inset-listen",
-      "energyCost": 1,
-      "effect": {
-        "kind": "DealProgress",
-        "base": 2,
-        "bonus": {
-          "tag": "Hidden",
-          "amount": 2
-        }
-      }
     },
     "Baseball Bat": {
       "kind": "player",

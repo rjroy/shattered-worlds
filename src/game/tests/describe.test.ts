@@ -24,7 +24,7 @@ function makeState(progress: Record<string, number> = {}): GameState {
     heat: 0,
     pendingForceDestroy: 0,
     braceCharges: 0,
-    pendingActBoon: null,
+    pendingBoonChoice: null,
     runModifiers: DEFAULT_RUN_MODIFIERS,
     turnPlayHistory: { cardsPlayedThisTurn: 0, byTemplateId: {} },
     status: "playing",
@@ -175,6 +175,26 @@ describe("describeEffect (hazard effect kinds)", () => {
 
   it("describes None as no effect", () => {
     expect(describeEffect({ kind: "None" })).toEqual(["no effect"]);
+  });
+
+  it("describes OfferBoon destinations", () => {
+    expect(
+      describeEffect({
+        kind: "OfferBoon",
+        setId: "fortune-v1",
+        offeredCount: 3,
+        chooseCount: 1,
+      }),
+    ).toEqual(["Offer 3 boons; choose 1 to hand"]);
+    expect(
+      describeEffect({
+        kind: "OfferBoon",
+        setId: "fortune-v1",
+        offeredCount: 2,
+        chooseCount: 1,
+        bToDiscard: true,
+      }),
+    ).toEqual(["Offer 2 boons; choose 1 to discard pile"]);
   });
 });
 

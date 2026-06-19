@@ -1,14 +1,28 @@
 import type { RawCardSource } from "../../../core/model/catalog";
+import type { CardTemplateId } from "../../../core/model/types";
 import fortuneJson from "./fortune.json";
+import bigBoxJson from "./big-box.json";
 
 export const FORTUNE_BOON_SOURCE = fortuneJson as unknown as RawCardSource;
+export const BIG_BOX_BOON_SOURCE = bigBoxJson as unknown as RawCardSource;
+
+export type BoonSetDefinition = {
+  readonly source: RawCardSource;
+  readonly templateIds: readonly CardTemplateId[];
+};
+
+export const BOON_SETS = {
+  "fortune-v1": {
+    source: FORTUNE_BOON_SOURCE,
+    templateIds: ["Lucky Break", "Second Wind", "Found Tool", "Clear Path", "Steady Nerve"],
+  },
+  "big-box-boons": {
+    source: BIG_BOX_BOON_SOURCE,
+    templateIds: ["React to Noise", "Fast Sweep", "Listen"],
+  },
+} as const satisfies Record<string, BoonSetDefinition>;
 
 export const FORTUNE_BOON_POOLS = {
-  "fortune-v1": [
-    "Lucky Break",
-    "Second Wind",
-    "Found Tool",
-    "Clear Path",
-    "Steady Nerve",
-  ],
+  "fortune-v1": BOON_SETS["fortune-v1"].templateIds,
+  "big-box-boons": BOON_SETS["big-box-boons"].templateIds,
 } as const;

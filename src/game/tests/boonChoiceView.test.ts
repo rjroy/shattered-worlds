@@ -1,5 +1,5 @@
 import { describe, expect, it } from "bun:test";
-import { ActBoonChoiceView } from "../view/ActBoonChoiceView";
+import { BoonChoiceView } from "../view/BoonChoiceView";
 import { TableScene } from "../scenes/TableScene";
 import { selectTheme } from "../view/themes/themeManifest";
 import { DEFAULT_RUN_MODIFIERS } from "../../data/unlocks/types";
@@ -221,11 +221,13 @@ function pendingState(): GameState {
     heat: 0,
     pendingForceDestroy: 0,
     braceCharges: 0,
-    pendingActBoon: {
+    pendingBoonChoice: {
+      source: "act",
       act: 2,
-      poolId: "fortune-v1",
+      setId: "fortune-v1",
       offeredTemplateIds: ["Lucky Break", "Second Wind", "Found Tool"],
       chooseCount: 1,
+      bToDiscard: false,
     },
     runModifiers: DEFAULT_RUN_MODIFIERS,
     turnPlayHistory: { cardsPlayedThisTurn: 0, byTemplateId: {} },
@@ -236,11 +238,13 @@ function pendingState(): GameState {
   };
 }
 
-describe("ActBoonChoiceView", () => {
+describe("BoonChoiceView", () => {
   it("renders all offered choices without minting cards", () => {
     const scene = makeScene();
-    new ActBoonChoiceView(scene, {
+    new BoonChoiceView(scene, {
       theme: selectTheme("zombie-big-box"),
+      source: "act",
+      bToDiscard: false,
       options: Object.entries(templates).map(([templateId, template]) => ({ templateId, template })),
       resolveTheme: selectTheme,
       onChoose() {},
@@ -255,11 +259,30 @@ describe("ActBoonChoiceView", () => {
     expect(renderedText).toContain("Pick one temporary card. It goes directly to your hand.");
   });
 
+  it("renders discard destination copy", () => {
+    const scene = makeScene();
+    new BoonChoiceView(scene, {
+      theme: selectTheme("zombie-big-box"),
+      source: "worldClear",
+      bToDiscard: true,
+      options: Object.entries(templates).map(([templateId, template]) => ({ templateId, template })),
+      resolveTheme: selectTheme,
+      onChoose() {},
+    });
+
+    const renderedText = scene.objects
+      .filter((obj): obj is FakeGameObject => (obj as FakeGameObject).kind === "text")
+      .map((obj) => obj.text);
+    expect(renderedText).toContain("Pick one temporary card. It goes to your discard pile.");
+  });
+
   it("dispatches the selected template from pointer selection", () => {
     const scene = makeScene();
     let chosen: string | undefined;
-    new ActBoonChoiceView(scene, {
+    new BoonChoiceView(scene, {
       theme: selectTheme("zombie-big-box"),
+      source: "act",
+      bToDiscard: false,
       options: Object.entries(templates).map(([templateId, template]) => ({ templateId, template })),
       resolveTheme: selectTheme,
       onChoose(templateId) {
@@ -279,13 +302,13 @@ describe("ActBoonChoiceView", () => {
   });
 });
 
-describe("TableScene pending Act boon input", () => {
+describe("TableScene pending boon input", () => {
   interface TableHarness {
     game_: { state: GameState; template(id: string): CardTemplate | undefined };
     sel: { phase: "idle" };
     dispatch(action: Action): void;
     actions: Action[];
-    chooseVisibleActBoonOption(index: number): void;
+    chooseVisibleBoonOption(index: number): void;
     onCardClick(cardId: string): void;
     onEndTurnClick(): void;
   }
@@ -309,9 +332,9 @@ describe("TableScene pending Act boon input", () => {
   it("dispatches the matching visible template ID for number-key selection", () => {
     const scene = makeTableHarness();
 
-    (scene as unknown as { chooseVisibleActBoonOption(index: number): void }).chooseVisibleActBoonOption(1);
+    (scene as unknown as { chooseVisibleBoonOption(index: number): void }).chooseVisibleBoonOption(1);
 
-    expect(scene.actions).toEqual([{ type: "ChooseActBoon", templateId: "Second Wind" }]);
+    expect(scene.actions).toEqual([{ type: "ChooseBoon", templateId: "Second Wind" }]);
   });
 
   it("blocks table card clicks and End Turn while the overlay is present", () => {

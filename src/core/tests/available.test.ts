@@ -1172,11 +1172,13 @@ describe("Act boon pending availability", () => {
     const state = {
       ...s2,
       hand: [explore, zombie],
-      pendingActBoon: {
+      pendingBoonChoice: {
+        source: "act" as const,
         act: 1,
-        poolId: "fortune-v1",
+        setId: "fortune-v1",
         offeredTemplateIds: ["Lucky Break", "Second Wind", "Found Tool"],
-        chooseCount: 1 as const,
+        chooseCount: 1,
+        bToDiscard: false,
       },
     };
 

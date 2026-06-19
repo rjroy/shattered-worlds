@@ -824,29 +824,30 @@ describe("gameplaySession", () => {
     const offerBatch = requireGameplayBatch(items.at(-1));
     const offerEventTypes = offerBatch.events.map((event) => event.type);
     expect(offerEventTypes).toContain("ActAdvanced");
-    expect(offerEventTypes).toContain("ActBoonOffered");
+    expect(offerEventTypes).toContain("BoonOffered");
     expect(offerBatch.events.find((event) => event.type === "ActAdvanced")).toEqual({
       type: "ActAdvanced",
       act: 1,
     });
 
-    const offerEvent = offerBatch.events.find((event) => event.type === "ActBoonOffered");
-    if (offerEvent?.type !== "ActBoonOffered") {
-      throw new Error("expected ActBoonOffered in act-advancing batch");
+    const offerEvent = offerBatch.events.find((event) => event.type === "BoonOffered");
+    if (offerEvent?.type !== "BoonOffered") {
+      throw new Error("expected BoonOffered in act-advancing batch");
     }
+    expect(offerEvent).toMatchObject({ source: "act", setId: "fortune-v1", act: 1 });
     const chosenTemplateId = (() => {
       const templateId = offerEvent.templateIds[0];
       if (templateId === undefined) {
-        throw new Error("expected ActBoonOffered to include at least one template id");
+        throw new Error("expected BoonOffered to include at least one template id");
       }
       return templateId;
     })();
 
-    session.dispatch({ type: "ChooseActBoon", templateId: chosenTemplateId });
+    session.dispatch({ type: "ChooseBoon", templateId: chosenTemplateId });
 
     const grantBatch = requireGameplayBatch(items.at(-1));
     expect(grantBatch.action).toEqual({
-      type: "ChooseActBoon",
+      type: "ChooseBoon",
       templateId: chosenTemplateId,
     });
     expect(grantBatch.events.map((event) => event.type)).toContain("BoonCardGranted");
@@ -854,6 +855,7 @@ describe("gameplaySession", () => {
     expect(grantBatch.events.find((event) => event.type === "BoonCardGranted")).toMatchObject({
       type: "BoonCardGranted",
       templateId: chosenTemplateId,
+      dest: "hand",
     });
   });
 

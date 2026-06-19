@@ -1,5 +1,5 @@
 import Phaser from "phaser";
-import type { Card, CardTemplate, CardTemplateId } from "../../core/index";
+import type { BoonChoiceSource, Card, CardTemplate, CardTemplateId } from "../../core/index";
 import { compileEffect } from "../../core/view/effectGlyphs";
 import { parseKeyword } from "../../core/index";
 import { addEffectLines } from "./effectLineView";
@@ -7,14 +7,18 @@ import { CARD_FACE, CANVAS_H, CANVAS_W, TABLE_LAYOUT } from "./layout";
 import { TEXT, textStyle, getRealityPalette, selectCardFrontKey } from "./presentation";
 import type { VisualTheme } from "./themes/theme";
 
-export interface ActBoonChoiceOption {
+export interface BoonChoiceOption {
   readonly templateId: CardTemplateId;
   readonly template: Readonly<CardTemplate> | undefined;
 }
 
-export interface ActBoonChoiceViewConfig {
+export interface BoonChoiceViewConfig {
   readonly theme: VisualTheme;
-  readonly options: readonly ActBoonChoiceOption[];
+  readonly source: BoonChoiceSource;
+  readonly bToDiscard: boolean;
+  readonly options: readonly BoonChoiceOption[];
+  readonly title?: string;
+  readonly copy?: string;
   readonly onChoose: (templateId: CardTemplateId) => void;
   readonly resolveTheme: (worldId: string) => VisualTheme;
 }
@@ -22,10 +26,10 @@ export interface ActBoonChoiceViewConfig {
 const CARD_GAP = 26;
 const OPTION_Y = 326;
 
-export class ActBoonChoiceView extends Phaser.GameObjects.Container {
+export class BoonChoiceView extends Phaser.GameObjects.Container {
   readonly missingTemplateIds: readonly CardTemplateId[];
 
-  constructor(scene: Phaser.Scene, config: ActBoonChoiceViewConfig) {
+  constructor(scene: Phaser.Scene, config: BoonChoiceViewConfig) {
     super(scene, 0, 0);
     scene.add.existing(this);
     this.setDepth(TABLE_LAYOUT.modalDepth + 20);
@@ -43,7 +47,7 @@ export class ActBoonChoiceView extends Phaser.GameObjects.Container {
     const title = scene.add.text(
       CANVAS_W / 2,
       108,
-      "Choose a Fortune boon",
+      config.title ?? "Choose a boon",
       textStyle({
         fontSize: "24px",
         color: getRealityPalette(config.theme, "title"),
@@ -56,7 +60,10 @@ export class ActBoonChoiceView extends Phaser.GameObjects.Container {
     const copy = scene.add.text(
       CANVAS_W / 2,
       141,
-      "Pick one temporary card. It goes directly to your hand.",
+      config.copy ??
+        (config.bToDiscard
+          ? "Pick one temporary card. It goes to your discard pile."
+          : "Pick one temporary card. It goes directly to your hand."),
       textStyle({
         fontSize: "14px",
         color: getRealityPalette(config.theme, "text"),
@@ -74,7 +81,7 @@ export class ActBoonChoiceView extends Phaser.GameObjects.Container {
       const error = scene.add.text(
         CANVAS_W / 2,
         CANVAS_H / 2,
-        `Fortune boon templates are missing:\n${missing.join(", ")}`,
+        `Boon templates are missing:\n${missing.join(", ")}`,
         textStyle({
           fontSize: "16px",
           color: getRealityPalette(config.theme, "cancel"),
@@ -190,12 +197,27 @@ class TemplateCardFace extends Phaser.GameObjects.Container {
       this.add(insetImg);
     }
 
-    this.addCenteredText(-CARD_FACE.height / 2 + 8, template.name, "16px", TEXT.textLight, true);
+    const titleText = this.addCenteredText(
+      -CARD_FACE.height / 2 + 8,
+      template.name,
+      "16px",
+      TEXT.textLight,
+      true,
+    );
+    if (titleText.width > CARD_FACE.width - 12) {
+      const scale = (CARD_FACE.width - 12) / titleText.width;
+      titleText.setScale(scale);
+    }
 
     if (template.kind === "player") {
       const keywords = template.keywords ?? [];
       if (keywords.length > 0) {
-        this.addCenteredText(-CARD_FACE.height / 2 + 24, keywords.join(" · "), "9px", TEXT.textKeyword);
+        this.addCenteredText(
+          -CARD_FACE.height / 2 + 24,
+          keywords.join(" · "),
+          "9px",
+          TEXT.textKeyword,
+        );
       }
 
       const effectBlock = addEffectLines(scene, compileEffect(template.effect, theme.worldId), {
@@ -208,14 +230,25 @@ class TemplateCardFace extends Phaser.GameObjects.Container {
       this.add(effectBlock.container);
 
       const cost = template.energyCost ?? 0;
-      const costText = scene.add.text(
-        -CARD_FACE.width / 2 + 16,
-        CARD_FACE.height / 2 - 22,
-        String(cost),
-        textStyle({ fontSize: "20px", color: TEXT.textLight, fontStyle: "bold" }),
-      );
-      costText.setOrigin(0.5, 0.5);
-      this.add(costText);
+      if (cost > 0) {
+        const badgeBg = scene.add.image(
+          CARD_FACE.width / 2 - 16,
+          -CARD_FACE.height / 2 + 16,
+          "effect-icon-energy",
+        );
+        badgeBg.setDisplaySize(28, 28);
+        badgeBg.setOrigin(0.5, 0.5);
+        this.add(badgeBg);
+
+        const costText = scene.add.text(
+          CARD_FACE.width / 2 - 16,
+          -CARD_FACE.height / 2 + 16,
+          String(cost),
+          textStyle({ fontSize: "16px", color: TEXT.textLight, fontStyle: "bold" }),
+        );
+        costText.setOrigin(0.5, 0.5);
+        this.add(costText);
+      }
     } else {
       this.addCenteredText(0, "World card", "13px", TEXT.textLight, true);
     }
