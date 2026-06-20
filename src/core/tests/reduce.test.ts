@@ -1998,8 +1998,8 @@ describe("Boon offer generation", () => {
     // Captured by running each seed and reading the emitted BoonOffered
     // event, per this plan's fixture-regeneration discipline (never
     // hand-patched).
-    const seed777Offer = ["Found Tool", "Steady Nerve", "Second Wind"];
-    const seed778Offer = ["Found Tool", "Second Wind", "Lucky Break"];
+    const seed777Offer = ["Clear Path", "Steady Nerve", "Found Tool"];
+    const seed778Offer = ["Clear Path", "Lucky Break", "Steady Nerve"];
     const a = reduce(catalog, makeActAdvanceState({ seed: 777, actBoon: actBoonModifier() }), {
       type: "EndTurn",
     });
@@ -2048,8 +2048,8 @@ describe("Boon offer generation", () => {
       throw new Error("Expected BoonOffered");
     }
 
-    expect(boonOffered.templateIds).toEqual(["Steady Nerve", "Second Wind", "Clear Path"]);
-    expect(boonOffered.rarities).toEqual(["uncommon", "common", "rare"]);
+    expect(boonOffered.templateIds).toEqual(["Steady Nerve", "Lucky Break", "Found Tool"]);
+    expect(boonOffered.rarities).toEqual(["uncommon", "common", "uncommon"]);
     expect(boonOffered.rarities.some((tier) => tier !== "common")).toBe(true);
   });
 
@@ -2665,7 +2665,7 @@ describe("Act boon choice reducer gates", () => {
         cardId: String(nextId + 1),
         templateId: "Second Wind",
         dest: "hand",
-        rarity: "common",
+        rarity: "rare",
       },
     ]);
   });
@@ -2769,7 +2769,7 @@ describe("Act boon choice reducer gates", () => {
         cardId: String(nextId),
         templateId: "Second Wind",
         dest: "playerDiscard",
-        rarity: "common",
+        rarity: "rare",
       },
     ]);
   });
