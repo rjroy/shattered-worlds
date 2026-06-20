@@ -21,6 +21,7 @@ export interface RarityStyle {
   glyph?: string;
   /** Human-readable tier name for tooltips/labels. */
   label: string;
+  glowStrength: number;
 }
 
 /**
@@ -30,10 +31,10 @@ export interface RarityStyle {
  * (which varies per world) so a rarity stroke reads the same in every world.
  */
 const RARITY_STYLES: Record<RarityTier, RarityStyle> = {
-  common: { color: 0x9a958c, glyph: "C", label: "Common" },
-  uncommon: { color: 0x4caf50, glyph: "U", label: "Uncommon" },
-  rare: { color: 0x4a90d9, glyph: "R", label: "Rare" },
-  legendary: { color: 0xe0a526, glyph: "L", label: "Legendary" },
+  common: { color: 0x9a958c, glyph: "C", label: "Common", glowStrength: 1 },
+  uncommon: { color: 0x4caf50, glyph: "U", label: "Uncommon", glowStrength: 3 },
+  rare: { color: 0x4a90d9, glyph: "R", label: "Rare", glowStrength: 5 },
+  legendary: { color: 0xe0a526, glyph: "L", label: "Legendary", glowStrength: 7 },
 };
 
 /** Common is the fallback treatment for any unknown/missing tier (REQ-RARITY-40). */
