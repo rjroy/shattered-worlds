@@ -1,12 +1,7 @@
 /**
- * TableScene — the main Phaser scene that owns a GameCore instance and drives
- * the full interaction loop.
- *
- * Responsibilities:
- *  - Create / destroy card objects on every drawAll() cycle
- *  - Route pointer clicks through the selection state machine
- *  - Dispatch completed Actions to GameCore and repaint
- *  - Show win / loss screens when the game ends
+ * TableScene — the main Phaser scene that owns a GameplaySession and drives
+ * the full interaction loop: card layout, the selection state machine,
+ * dispatch to the core, and the surrounding HUD/overlay chrome.
  */
 import Phaser from "phaser";
 import { stopMainTheme } from "../audio/menuMusic";
@@ -75,38 +70,22 @@ import { CONCEALED_HOOK_WARNING } from "../../core/view/actionPreview";
 // Layout constants
 // ---------------------------------------------------------------------------
 
-/** Vertical centre of the world cards (hazard) row. */
 const WORLD_ROW_Y = TABLE_LAYOUT.worldRowY;
-/** Vertical centre of the player hand row. */
 const HAND_ROW_Y = TABLE_LAYOUT.handRowY;
-/**
- * Depth for the targeting connector. Cards live at the default depth 0 and the
- * win/loss overlays at 1000; 500 draws the connector over the (possibly dimmed)
- * cards while staying below the end-game screens. The connector is decorative
- * and never interactive, so this depth only affects draw order, not input.
- */
+// Between the default card depth (0) and the win/loss overlay (1000), so the
+// connector draws over cards but never covers the end-game screens.
 const CONNECTOR_DEPTH = TABLE_LAYOUT.connectorDepth;
-// ROW_LEFT reserved for future fixed-layout mode
-// const ROW_LEFT = 80
 
-/**
- * Separator that folds the unified preview's multi-line `summaryLines` into the
- * single-line previewSlot label. previewSlot is sized to its text and sits in a
- * tight band above selectionHint, so a compact inline join reads better than
- * stacking newlines there.
- */
+// previewSlot is a single-line label, so multi-line summaries fold into one
+// line with this separator rather than stacking newlines.
 const PREVIEW_LINE_SEP = "\n";
 
 /** Hover warning for a concealed hazard in the partial-intent fallback. */
 const CONCEALED_HOVER_WARNING = "Target is concealed. Beware.";
 
-/**
- * Trim a unified preview down to the minimal form shown when
- * `detailedHoverPreviews` is off: the first substantive consequence line, plus
- * every concealment warning (which must survive the trim so a hidden hook is
- * never silently dropped). Concealment lines are matched by exact constant via
- * isConcealmentWarning, not by guessing at wording.
- */
+// Minimal preview mode (detailedHoverPreviews off) keeps only the first
+// consequence line plus any concealment warning — a hidden hook must never be
+// silently dropped, even when the rest of the preview is trimmed.
 function minimalPreviewLines(summaryLines: readonly string[]): readonly string[] {
   const warnings = summaryLines.filter(isConcealmentWarning);
   const firstSubstantive = summaryLines.find((line) => !isConcealmentWarning(line));
@@ -137,6 +116,9 @@ const TABLE_TOOLTIPS = {
   },
 };
 
+// A modifier (e.g. a buff changing energyCost or effect) can change how a
+// player card displays without changing its id, so reconciliation needs this
+// signature to detect "same card, different face" and rebuild the container.
 function playerCardDisplaySignature(card: Extract<Card, { kind: "player" }>): string {
   return JSON.stringify({
     templateId: card.templateId,
@@ -164,11 +146,8 @@ export class TableScene extends Phaser.Scene {
   private cardObjects: Map<string, CardView> = new Map();
   private playerCardDisplaySignatures: Map<string, string> = new Map();
 
-  /**
-   * Id of the card currently under the pointer, or null. Maintained by the
-   * pointerover/out handlers so the repaint pass can re-assert the base
-   * transform on every non-hovered card without re-reading the pointer.
-   */
+  // Tracked outside Phaser's pointer events so drawAll can re-assert the base
+  // transform on every non-hovered card during a repaint, not just on pointerout.
   private hoveredCardId: string | null = null;
   private selectedCardSnapshot: PlayerCard | null = null;
 
@@ -180,8 +159,7 @@ export class TableScene extends Phaser.Scene {
   private runSummary!: RunSummaryView;
   private helpOverlay!: HelpOverlayView;
   private settingsOverlay!: SettingsOverlayView;
-  // Phase 8: the confirmation modal is instantiated and ready, but not yet
-  // routed to real dispatch. Phase 9 adds maybeConfirmOrDispatch to drive it.
+  // Gates every committed action (play/discard/end-turn); see maybeConfirmOrDispatch.
   private actionConfirmation!: ActionConfirmationView;
   private questionBtn!: CommonButton;
   private settingsBtn!: CommonButton;
@@ -207,11 +185,8 @@ export class TableScene extends Phaser.Scene {
   // instruction so the two never overwrite each other.
   private previewSlot!: CommonLabel;
 
-  // Targeting connector: a single persistent Graphics that draws a line from the
-  // acting card to the hovered legal target. Created once, redrawn on hover,
-  // cleared on hover-out / commit / cancel. It is NEVER made interactive — it
-  // draws only and must not hit-test (the open clicking bug forbids any new
-  // pointer-eating object over the cards).
+  // Never call setInteractive on this — it must not hit-test, or it would
+  // steal pointer events from the cards beneath it.
   private connectorGfx!: Phaser.GameObjects.Graphics;
 
   private worldId_: string = "zombie-big-box";
@@ -227,6 +202,9 @@ export class TableScene extends Phaser.Scene {
     this.runtime_ = runtime ?? createGameplayRuntime();
   }
 
+  // Phaser reuses the scene instance across runs (WorldSelect restarts Table
+  // with a new seed), so per-run state must be reset here rather than relying
+  // on field initializers, which only run once.
   init(data: { worldId?: string; seed?: number }): void {
     this.worldId_ = data.worldId ?? "zombie-big-box";
     this.seed_ = data.seed ?? Math.floor(Math.random() * 2 ** 32);
@@ -239,20 +217,16 @@ export class TableScene extends Phaser.Scene {
   create(): void {
     stopMainTheme(this);
 
-    // Effect-icon placeholder textures are generated (not loaded), so they
-    // register here rather than in preload — before any CardView renders.
+    // Effect-icon textures are generated, not loaded, so they must register
+    // here rather than in preload — before any CardView renders.
     ensureEffectIconTextures(this);
 
     this.game_ = this.runtime_.startSession(this.worldId_, this.seed_);
-    // Registered before any other create() work can throw, so a session that
-    // emitted RunStarted always gets its closing RunEnded on shutdown. Closes
-    // the run as 'abandoned' when the player exits mid-run; no-op if the run
-    // already ended in a win or loss.
+    // Registered immediately so RunStarted always gets a matching RunEnded,
+    // even if later create() work throws. abandon() no-ops if the run already
+    // ended in a win or loss.
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
       this.stopWorldMusic();
-      // Dismiss the confirmation modal so a mid-confirmation shutdown leaves no
-      // dangling callback. Also the one read of actionConfirmation in Phase 8;
-      // Phase 9 wires it into the dispatch path.
       this.actionConfirmation?.hide();
       this.game_.abandon();
     });
@@ -274,9 +248,6 @@ export class TableScene extends Phaser.Scene {
       endTurnStyle,
     )
       .on("pointerdown", () => this.onEndTurnClick())
-      // Hovering End Turn previews the EndTurn action's consequences. Attached
-      // only to the existing button (no new interactive overlay), so it can
-      // never steal card clicks. showEndTurnPreview self-gates on availability.
       .on("pointerover", () => this.showEndTurnPreview())
       .on("pointerout", () => this.clearPreviewSlot());
     addTooltip(this, this.endTurnBtn, TABLE_TOOLTIPS.endTurn);
@@ -335,12 +306,9 @@ export class TableScene extends Phaser.Scene {
       "?",
       questionStyle,
     ).on("pointerup", () => {
-      // While a confirmation modal is open it is the top-most surface; help and
-      // settings cannot be opened behind it (its depth-2500 backdrop already
-      // blocks pointer clicks, but guarding here keeps the rule explicit and
-      // consistent across every open path).
+      // The confirmation modal is the top-most surface; help/settings must
+      // never open behind it.
       if (this.actionConfirmation.isOpen) return;
-      // Help and settings must not sit open at once fighting for input.
       this.settingsOverlay.close();
       this.helpOverlay.setVisible(true);
     });
@@ -353,11 +321,7 @@ export class TableScene extends Phaser.Scene {
       "S",
       questionStyle,
     ).on("pointerup", () => {
-      // Same rule as the help button: a confirmation modal is top-most, so
-      // settings cannot be opened behind it.
       if (this.actionConfirmation.isOpen) return;
-      // Opening settings hides help; open() re-syncs highlights from the store.
-      // This only toggles the overlay — it never dispatches or clears the run.
       this.helpOverlay.setVisible(false);
       this.settingsOverlay.open();
     });
@@ -377,17 +341,13 @@ export class TableScene extends Phaser.Scene {
     addTooltip(this, this.exitBtn, TABLE_TOOLTIPS.exit);
 
     this.input.keyboard?.on("keydown-ESC", () => {
-      // The confirmation modal is the top-most surface. When it is open ESC
-      // CANCELS it (the same path the modal's Cancel button uses: dispatch
-      // nothing, reset selection to idle) and does nothing else — help/settings
-      // can never be open behind it (gap C), so there is nothing else to close.
+      // The confirmation modal is top-most, so ESC only cancels it when open;
+      // help/settings can never be open behind it.
       if (this.actionConfirmation.isOpen) {
         this.actionConfirmation.hide();
         this.cancelConfirmation();
         return;
       }
-      // Otherwise ESC closes whichever overlay is visible; neither dispatches or
-      // clears the run.
       if (this.helpOverlay.visible) this.helpOverlay.setVisible(false);
       if (this.settingsOverlay.visible) this.settingsOverlay.close();
     });
@@ -407,11 +367,8 @@ export class TableScene extends Phaser.Scene {
       }),
     ).setVisible(false);
 
-    // Sits in a dedicated slot directly above selectionHint. selectionHint has
-    // origin (0.5, 1) at y=568, so with 12px text + 2px vertical padding it
-    // tops out around y=552; anchoring previewSlot's bottom edge at y=550 keeps
-    // the two surfaces from ever overlapping. Degrades fine on touch (no hover
-    // means this slot simply stays empty).
+    // A separate label from selectionHint, positioned just above it, so the
+    // live preview and the phase instruction never overwrite each other.
     this.previewSlot = new CommonLabel(
       this,
       TABLE_LAYOUT.previewSlot.x,
@@ -426,9 +383,6 @@ export class TableScene extends Phaser.Scene {
     this.previewSlot.setDepth(TABLE_LAYOUT.previewDepth);
     this.previewSlot.setVisible(false);
 
-    // Persistent connector graphic. setDepth controls draw order only; we never
-    // call setInteractive on it, so Phaser keeps it out of the input hit-test
-    // list and it cannot intercept clicks meant for the cards beneath it.
     this.connectorGfx = this.add.graphics();
     this.connectorGfx.setDepth(CONNECTOR_DEPTH);
 
@@ -443,55 +397,42 @@ export class TableScene extends Phaser.Scene {
   // ---------------------------------------------------------------------------
 
   /**
-   * Reconcile card objects against the current hand, apply highlights derived
-   * from availableActions, and update the HUD.
+   * Full repaint: reconciles card containers against the current hand,
+   * re-applies highlights, and updates the HUD. Called after every dispatch
+   * and every selection-state change that affects highlights.
    *
-   * Containers persist across cycles: a card still in hand keeps its container
-   * (re-positioned and re-styled), only newly-drawn cards are created, and only
-   * cards that left the hand are destroyed. This is the precondition for the
-   * later per-card animations — destroying/recreating every cycle would race
-   * any in-flight tween. See task S3.
-   *
-   * Called after every dispatch and after every selection-state change that
-   * affects highlights.
+   * Containers persist across cycles — a card still in hand keeps its
+   * container instead of being destroyed and recreated, so an in-flight tween
+   * is never raced by a recycled object.
    */
   private drawAll(): void {
     const state = this.game_.state;
 
-    // Update backdrop intensity before reconciling cards
     this.backdropLayer.update(state, this.game_.intensity());
 
     const available = availableActions(state);
-
-    // Determine sets for highlight computation
     const playableIds = new Set(available.playable.map((p) => p.cardId));
     const discardableIds = new Set(available.discardable);
-
     const legalTargetIds = this.currentLegalTargetIds();
 
-    // If a hovered card is no longer a legal target after this repaint
-    // (e.g. drawAll fired mid-hover and the phase/legal set changed),
-    // drop the stored hovered id and restore that
-    // container's base transform. (Case (a) hover-out and case (c) card-left-hand
-    // are handled in the pointerout handler and the destruction pass below.)
+    // drawAll can fire mid-hover with the legal-target set changed underneath
+    // the pointer (e.g. a step advanced); drop a hover that's no longer legal
+    // so its emphasis doesn't linger.
     if (this.hoveredCardId !== null && !legalTargetIds.has(this.hoveredCardId)) {
       const stale = this.cardObjects.get(this.hoveredCardId);
       if (stale !== undefined) stale.clearEmphasis();
       this.hoveredCardId = null;
     }
 
-    // Split hand into world row and effective player row for layout. Effective
-    // cards preserve base ids, so reconciliation and dispatch still address the
-    // durable cards in GameState while the visible player faces show current
-    // read-model modifiers.
+    // effectiveHand applies live modifiers to player cards but preserves base
+    // ids, so reconciliation/dispatch still address the durable GameState card
+    // while the face shown reflects current buffs/debuffs.
     const visibleHand = effectiveHand(state);
     const worldCards = visibleHand.filter(
       (c): c is import("../../core/index").WorldCard => c.kind === "world",
     );
     const playerCards = visibleHand.filter((c) => c.kind === "player");
 
-    // Reconcile each row in place; collect the ids that should still exist after
-    // this cycle so anything no longer desired can be destroyed afterward.
     const desiredIds = new Set<string>();
     this.layoutRow(
       worldCards,
@@ -510,9 +451,7 @@ export class TableScene extends Phaser.Scene {
       desiredIds,
     );
 
-    // Destroy containers whose card left the hand. Never touches a card still in
-    // state.hand — only ids absent from desiredIds. Kill any tweens on the
-    // container first so a recycled Tween can never retarget a live object.
+    // Kill tweens before destroy so a recycled Tween never retargets a freed object.
     for (const [id, container] of this.cardObjects) {
       if (desiredIds.has(id)) continue;
       this.tweens.killTweensOf(container);
@@ -573,6 +512,8 @@ export class TableScene extends Phaser.Scene {
     this.updateBoonChoiceView();
   }
 
+  // null when no run has completed yet (lifetime stats are empty) — the
+  // caller treats that as "nothing to show" rather than an error.
   private buildRunSummaryData(): RunSummaryData | null {
     const lifetime = this.runtime_.runStats.lifetime();
     const lastRun = lifetime.lastRun;
@@ -652,49 +593,33 @@ export class TableScene extends Phaser.Scene {
       // Re-apply mutable visual state every cycle, reused or freshly created.
       this.applyHighlight(container, card, playableIds, discardableIds, legalTargetIds);
 
-      // Emphasis re-assert: a reused container must never keep stale
-      // emphasis. Re-assert the BASE transform (scale 1, glow off) on every card
-      // that is NOT the still-legal hovered one; the hovered-and-still-legal card
-      // KEEPS its emphasis (re-applied idempotently so the magnitude tracks the
-      // current intensity without jitter). drawAll already cleared hoveredCardId
-      // for any hovered card that is no longer legal (seam case b), so reaching
-      // here with hoveredCardId === card.id means the card is still a legal
-      // target.
+      // A reused container must not keep stale emphasis from a previous cycle;
+      // only the still-hovered, still-legal card (drawAll already cleared
+      // hoveredCardId otherwise) keeps it, re-applied so its magnitude tracks
+      // the current intensity.
       if (this.hoveredCardId === card.id) {
         container.emphasize(this.theme_.frameStyle.targetGlow, this.game_.intensity());
       } else {
         container.clearEmphasis();
       }
 
-      // World cards carry a progress ring around the cost digit. Animate it
-      // toward the current accumulated progress every cycle (idempotent on an
-      // unchanged target). Banking raises the target (ring fills); the
-      // end-of-turn progress wipe drops it to 0 (the same ring drains) — one
-      // clock. Player cards have no ring; updateCostRing no-ops on them, but
-      // only world cards reach here with a costRing so guard by kind to keep
-      // intent explicit.
+      // Only world cards have a progress ring/fog-back; re-read state.progress
+      // and state.light every cycle since neither has its own change event.
       if (card.kind === "world") {
         const progress = this.game_.state.progress[card.id] ?? 0;
         const fraction = ringFraction(progress, card.cost);
         container.updateCostRing(fraction, this.theme_.frameStyle.ringAccent);
-
-        // Fog-back reconcile: re-read Light every cycle so a card concealed at
-        // the current depth shows its fog-back and identity stays hidden. This
-        // is the LightChanged transition — EndTurn decay and a played GainLight
-        // both repaint via drawAll, so the fog-back tracks Light with no event
-        // subscription. Purely cosmetic; never feeds back into core state.
         container.applyConcealment(this.game_.state.light);
       }
     });
   }
 
   /**
-   * Return the persistent container for a card, reusing the existing one if the
-   * card is already on the table. A newly-created container gets its interactive
-   * size and pointer handlers wired exactly once — the handlers capture only the
-   * stable card id and read live scene state (`this.sel`) at call time, so they
-   * stay correct across cycles and must never be re-bound on reuse (re-binding
-   * accumulates duplicate listeners — the suspected input bug from the rollout).
+   * Return the persistent container for a card, reusing the existing one if
+   * already on the table. Pointer handlers are wired exactly once per
+   * container, on creation — they capture only the stable card id and read
+   * live scene state (`this.sel`) at call time, so re-binding on reuse would
+   * only accumulate duplicate listeners, never fix anything.
    */
   private obtainCardContainer(card: Card): CardView {
     const existing = this.cardObjects.get(card.id);
@@ -717,40 +642,26 @@ export class TableScene extends Phaser.Scene {
       this.playerCardDisplaySignatures.set(card.id, playerCardDisplaySignature(card));
     }
 
-    // Make card interactive
     container.setSize(CARD_FACE.width, CARD_FACE.height);
     container.setInteractive({ useHandCursor: true });
 
     const id = card.id;
 
-    // Main card click — player and world cards both route through onCardClick,
-    // which decides play / target / discard from availableActions live.
     container.on("pointerdown", () => this.onCardClick(id));
 
-    // Hovering a legal Hazard target during targeting shows the live preview
-    // (Progress dealt, and whether it clears the Hazard). Track the hovered id
-    // so a later phase can re-assert base transform on non-hovered cards.
     container.on("pointerover", () => {
       // No hover preview behind an open confirmation modal.
       if (this.actionConfirmation.isOpen) return;
       this.hoveredCardId = id;
       this.showTargetPreview(id);
-      // when no selection is active:
       if (this.sel.phase === "idle") {
         if (card.kind === "world") {
-          // hovering a world card summarizes its discard effect.
           this.showIdleWorldPreview(card);
         } else if (card.kind === "player") {
-          // hovering a player card summarizes its play effect if it would not trigger targeting.
           this.showIdlePlayerPreview(card);
         }
       }
-      // Connector generalizes across all three targeting phases (the preview
-      // text is hazard-only). showConnector gates on phase + legal target.
       this.showConnector(id);
-      // Hover emphasis: only a card that is a legal target RIGHT NOW
-      // gets lifted + ringed. Player cards are never legal targets, so this
-      // gate keeps emphasis off them. Magnitude scales with intensity().
       this.emphasizeIfLegalTarget(id, container);
       this.emphasizeIfPlayable(id, container);
       this.cardObjects.forEach((obj) => {
@@ -761,25 +672,22 @@ export class TableScene extends Phaser.Scene {
     });
     container.on("pointerout", (pointer: Phaser.Input.Pointer) => {
       // Interactive children (effect icons/tooltips) can become the top hit
-      // target while the cursor is still visually over the card. In that case
-      // keep the card lifted; clearing here would shrink the icon out from
-      // under the cursor and produce hover bounce.
+      // target while the cursor is still visually over the card; keep the
+      // card lifted then, or the icon shrinks out from under the cursor.
       if (this.pointerInsideCardVisual(pointer, container)) return;
 
-      // Seam case (a): pointer-out clears the stored hovered id AND restores
-      // this container's base transform (scale 1, glow off).
       if (this.hoveredCardId === id) this.hoveredCardId = null;
       container.clearEmphasis();
-      // Instruction stays stable in its own slot; clear only the preview slot.
       this.updateHint();
       this.clearPreviewSlot();
-      // No stale line may survive hover-out.
       this.clearConnector();
     });
 
     return container;
   }
 
+  // Falls back to screen coords if worldX/Y are unset; half-extents scale
+  // with the container so this still matches the card during hover-grow tweens.
   private pointerInsideCardVisual(pointer: Phaser.Input.Pointer, container: CardView): boolean {
     const x = pointer.worldX ?? pointer.x;
     const y = pointer.worldY ?? pointer.y;
@@ -811,18 +719,19 @@ export class TableScene extends Phaser.Scene {
   // Interaction handlers
   // ---------------------------------------------------------------------------
 
+  // Single entry point for every card click; routes to play/target/discard
+  // based on the current selection phase rather than the card's own kind,
+  // since the same card behaves differently while idle vs. mid-targeting.
   private onCardClick(cardId: string): void {
-    // While the confirmation modal is open all table input is inert.
     if (this.actionConfirmation.isOpen) return;
     const state = this.game_.state;
     if (state.status !== "playing") return;
+    // A pending boon choice has its own modal and must own all input until resolved.
     if (state.pendingBoonChoices.length > 0) return;
 
     const available = availableActions(state);
 
-    // ---- Idle: check what this card can do ----
     if (this.sel.phase === "idle") {
-      // Check if it's a discardable world card
       if (available.discardable.includes(cardId)) {
         this.onDiscardClick(cardId);
         return;
@@ -840,7 +749,6 @@ export class TableScene extends Phaser.Scene {
       return;
     }
 
-    // ---- Active targeting: check if this is legal for the current step ----
     if (this.sel.phase === "targeting" && !isComplete(this.sel)) {
       if (!this.currentLegalTargetIds().has(cardId)) return;
 
@@ -903,6 +811,8 @@ export class TableScene extends Phaser.Scene {
     this.continueSelection();
   }
 
+  // Dispatches if the selection is now complete, opens the next modal chooser
+  // if a Modal step is next, or just repaints to show the next targeting step.
   private continueSelection(): void {
     if (isComplete(this.sel)) {
       const action = buildAction(this.sel);
@@ -978,6 +888,9 @@ export class TableScene extends Phaser.Scene {
     this.continueSelection();
   }
 
+  // Modal branches can appear either as the card's whole effect or nested at
+  // the current targeting step (e.g. a compound card whose second step
+  // branches); look in whichever place applies to this snapshot.
   private effectBranchesForModalStep(snapshot: PlayerCard): PlayerCard["effect"][] {
     if (snapshot.effect.kind === "Modal") {
       return [...snapshot.effect.branches];
@@ -1006,32 +919,24 @@ export class TableScene extends Phaser.Scene {
   // ---------------------------------------------------------------------------
 
   /**
-   * The single entry point for every user-initiated COMMITTED action (play a
-   * card, discard a hazard, end the turn). It consults the confirmation mode and
-   * the action preview, then either commits the action immediately or opens the
-   * ActionConfirmationView. Boon choices are NOT routed here — choosing a boon is
-   * already a modal commitment, so those call this.dispatch directly.
+   * Single entry point for every user-initiated committed action (play,
+   * discard, end turn) — consults confirmation mode + the action preview, then
+   * either dispatches immediately or opens the confirmation modal. Boon
+   * choices skip this and call dispatch directly; choosing a boon is already
+   * a modal commitment.
    *
-   * Revalidation: while the confirmation modal is open the underlying table input
-   * is fully blocked (every input handler early-returns on
-   * actionConfirmation.isOpen), and the core never mutates state on its own — it
-   * is deterministic and only changes on dispatch. So no timer, async callback,
-   * or background path can alter the game state between building `action` here
-   * and committing it on confirm. The stored action therefore stays valid and we
-   * do not re-run availability checks at commit time.
+   * No re-validation happens at commit time: while the modal is open every
+   * input handler early-returns on actionConfirmation.isOpen, and the core
+   * only mutates on dispatch, so the action built here is still valid
+   * whenever onCommit fires.
    */
   private maybeConfirmOrDispatch(action: Action): void {
-    // Never stack a second confirmation on top of an open one.
     if (this.actionConfirmation.isOpen) return;
 
     const preview = this.game_.preview(action);
 
-    // A non-previewable action has no consequence lines, so a confirmation modal
-    // would render blank. Callers here only ever build legal actions, and the
-    // preview engine (not the modal) is the surface that would have shown
-    // nothing; dispatch directly and let the core reducer stay the authority
-    // (it throws if the action is truly illegal). Previewable actions are
-    // unaffected.
+    // A non-previewable action has no lines to show, so go straight to
+    // dispatch — the core reducer remains the authority on legality.
     if (!preview.previewable) {
       this.dispatch(action);
       return;
@@ -1048,9 +953,6 @@ export class TableScene extends Phaser.Scene {
       return;
     }
 
-    // Capture the exact action and preview in the commit closure so the modal
-    // commits precisely what was previewed. The view guards onCommit to fire at
-    // most once per show.
     this.actionConfirmation.show({
       title: this.confirmationTitle(action),
       lines: preview.summaryLines,
@@ -1060,11 +962,8 @@ export class TableScene extends Phaser.Scene {
   }
 
   /**
-   * Human-readable title for the confirmation modal. Concealment-safe: when the
-   * action names a world card that is concealed at the current Light level, the
-   * title uses a generic name (CONCEALED_HAZARD) instead of the real one so a
-   * hidden hazard's identity never leaks through the modal title. Uses the same
-   * isConcealed check the preview/describe layer uses.
+   * Human-readable title for the confirmation modal. Routes through
+   * safeCardName so a concealed hazard's identity never leaks through the title.
    */
   private confirmationTitle(action: Action): string {
     const state = this.game_.state;
@@ -1084,11 +983,8 @@ export class TableScene extends Phaser.Scene {
     }
   }
 
-  /**
-   * Resolve a card's display name, masking it to CONCEALED_HAZARD when the card
-   * is a world card concealed at the current Light. Falls back to the generic
-   * concealed name when the card is missing.
-   */
+  // Masks the name to CONCEALED_HAZARD for a world card concealed at the
+  // current Light, and for a missing card (defensive — should not happen).
   private safeCardName(card: Card | undefined): string {
     if (card === undefined) return CONCEALED_HAZARD;
     if (card.kind === "world" && isConcealed(card, this.game_.state.light)) {
@@ -1097,13 +993,9 @@ export class TableScene extends Phaser.Scene {
     return card.name;
   }
 
-  /**
-   * Cancel an open confirmation: dispatch NOTHING, and fully reset any stale
-   * selection UI back to idle so no half-cleared selection survives. Mirrors the
-   * cleanup the Cancel button performs (Assumption 6: a cancelled confirmation
-   * returns to idle rather than back to mid-selection). The Phase-8 view auto-
-   * hides itself before invoking this callback.
-   */
+  // Cancelling a confirmation dispatches nothing and returns to idle rather
+  // than back to mid-selection — same cleanup as the Cancel button. The view
+  // hides itself before invoking this callback.
   private cancelConfirmation(): void {
     this.sel = IDLE;
     this.clearSelectedCardSnapshot();
@@ -1130,6 +1022,8 @@ export class TableScene extends Phaser.Scene {
     this.drawAll();
   }
 
+  // Loads the world's music track on first play and reuses the cached asset on
+  // later runs/restarts, since Phaser's audio cache persists across scene restarts.
   private startWorldMusic(worldId: string): Promise<void> {
     this.stopWorldMusic();
 
@@ -1179,14 +1073,9 @@ export class TableScene extends Phaser.Scene {
   // Helpers
   // ---------------------------------------------------------------------------
 
-  /**
-   * The set of legal target card ids for the active targeting phase and its
-   * captured current step, or an empty set when no targeting phase is active.
-   * Target ids come from the core effect registry for the captured effective
-   * card snapshot, so scene highlighting/click acceptance matches reducer
-   * legality semantics without letting mid-selection card modifier drift reshape
-   * the selected effect path.
-   */
+  // Resolves legality through the same EFFECTS registry the reducer uses, off
+  // the captured card snapshot rather than live state, so a buff that lands
+  // mid-selection can't reshape which targets are legal for the chosen effect.
   private currentLegalTargetIds(): Set<string> {
     if (this.sel.phase !== "targeting" || isComplete(this.sel)) {
       return new Set<string>();
@@ -1205,6 +1094,8 @@ export class TableScene extends Phaser.Scene {
     card: PlayerCard,
     sel: Extract<SelectionState, { phase: "targeting" }>,
   ): PlayerCard["effect"] | null {
+    // Mirrors effectBranchesForModalStep: a Modal can be the card's whole
+    // effect or nested at the current step, so check both shapes.
     if (card.effect.kind === "Modal") {
       if (sel.choice === undefined) return null;
       const branch = card.effect.branches[sel.choice];
@@ -1220,8 +1111,8 @@ export class TableScene extends Phaser.Scene {
     return stepEffect;
   }
 
-  /**
-   */
+  // Hover preview for a legal targeting candidate: simulates picking it to
+  // get the resulting preview, without mutating the real selection state.
   private showTargetPreview(targetId: string): void {
     const sel = this.sel;
     if (sel.phase !== "targeting" || isComplete(sel)) return;
@@ -1270,12 +1161,8 @@ export class TableScene extends Phaser.Scene {
     this.showPreviewSlot(lines.join(PREVIEW_LINE_SEP), preview.severity);
   }
 
-  /**
-   * Partial-intent fallback for a hazard step that is not the final step of a
-   * compound selection (so no complete action can be previewed yet). Names the
-   * hovered hazard, or warns when it is concealed. Kept minimal on purpose; it
-   * does NOT reconstruct the full per-event summary.
-   */
+  // Called when no complete action exists yet to preview (an earlier step of
+  // a compound selection); names the target instead of reconstructing a full summary.
   private renderPartialTargetPreview(target: WorldCard, light: number): void {
     const text = isConcealed(target, light)
       ? `${CONCEALED_HOVER_WARNING} (needs Light ${concealOf(target)})`
@@ -1283,18 +1170,8 @@ export class TableScene extends Phaser.Scene {
     this.showPreviewSlot(text, "warning");
   }
 
-  /**
-   * Idle (no-selection) hover preview for a world card: previews the
-   * `DiscardHazard` action against the unified `game_.preview` engine — the same
-   * engine the targeted and End Turn previews use, so the wording can never
-   * disagree. A discardable card surfaces its discard consequence; a
-   * non-discardable card has no discard to preview and renders nothing (its
-   * end-of-turn threat is read off the card face). A concealed card yields only
-   * the generic warning rather than leaking its hidden math.
-   *
-   * Only meaningful in the idle phase; the caller already gates on that, so this
-   * stays out of the targeting preview's way (targeted preview keeps priority).
-   */
+  // Previews DiscardHazard via the same game_.preview engine the targeted and
+  // End Turn previews use, so wording can never disagree between them.
   private showIdleWorldPreview(card: WorldCard): void {
     if (this.sel.phase !== "idle") return;
 
@@ -1307,6 +1184,10 @@ export class TableScene extends Phaser.Scene {
     }
   }
 
+  // Only previews a play that wouldn't trigger targeting — narrows down to the
+  // first compound step / first modal branch and bails (spec.kind != "none")
+  // if that step itself needs a target, since hovering can't preview a play
+  // whose action depends on a target the player hasn't chosen yet.
   private showIdlePlayerPreview(card: PlayerCard): void {
     if (this.sel.phase !== "idle") return;
     if (card.frozen ?? 0 > 0) return;
@@ -1316,7 +1197,7 @@ export class TableScene extends Phaser.Scene {
 
     const available = availableActions(state);
     const entry = available.playable.find((p) => p.cardId === card.id);
-    if (entry === undefined) return; // not playable
+    if (entry === undefined) return;
 
     const snapshot = effectivePlayerCard(card, state);
     let spec: TargetSpec = structuralSpecOf(snapshot.effect);
@@ -1334,38 +1215,24 @@ export class TableScene extends Phaser.Scene {
     }
   }
 
-  /**
-   * Hover preview for the End Turn button: surface the consequences of ending
-   * the turn now (world hooks firing, decay, refill) via the same unified
-   * `game_.preview` engine the confirmation flow uses. Only shown when ending
-   * the turn is actually available — the button is non-interactive while a
-   * selection is mid-flight or when canEndTurn is false, and previewing then
-   * would advertise an action the player cannot take. Concealment survival and
-   * off-mode trimming match the targeted preview.
-   */
   private showEndTurnPreview(): void {
-    // No preview behind an open confirmation modal.
     if (this.actionConfirmation.isOpen) return;
-    // Mirror the interactive gate from drawAll: no preview while a selection is
-    // active (the button is dimmed and disabled then).
+    // Mirrors the interactive gate in drawAll — the button is disabled outside
+    // idle, so previewing then would advertise an action the player can't take.
     if (this.sel.phase !== "idle") return;
 
     const preview = this.game_.preview({ type: "EndTurn" });
     this.renderPreview(preview);
   }
 
-  /**
-   * Apply hover emphasis to a card iff it is a legal target for the active
-   * targeting step. Reads the same currentLegalTargetIds set the per-cycle pass
-   * uses, so a player card (never a legal target) is never emphasized, and the
-   * hover read matches exactly which cards show the `target` border. Magnitude
-   * scales with this.game_.intensity() (FEEDBACK-12 emphasis half).
-   */
+  // Reads the same currentLegalTargetIds set the per-cycle repaint uses, so
+  // hover emphasis always matches which cards show the `target` border.
   private emphasizeIfLegalTarget(cardId: string, container: CardView): void {
     if (!this.currentLegalTargetIds().has(cardId)) return;
     container.emphasize(this.theme_.frameStyle.targetGlow, this.game_.intensity());
   }
 
+  // Only idle: mid-targeting, "playable" no longer reflects what a click does.
   private emphasizeIfPlayable(cardId: string, container: CardView): void {
     if (this.sel.phase !== "idle") return;
     const available = availableActions(this.game_.state);
@@ -1373,20 +1240,10 @@ export class TableScene extends Phaser.Scene {
     container.emphasize(this.theme_.frameStyle.playableGlow, this.game_.intensity());
   }
 
-  /**
-   * Draw a connector from the acting card to the legal target currently under
-   * the pointer. Active for targeting steps that use visible card-to-card
-   * targeting; any other phase no-ops. The target must be legal for the current step, and both
-   * the acting and target containers must still exist (they persist across
-   * cycles since S3). Redraws from a clean slate every call so the previous
-   * frame's line never lingers.
-   *
-   * S8 decorates the line by ConnectorStyle (progress / destroy / return). The
-   * style is resolved from the acting card's effect *for the current step* — a
-   * compound card (Barricade) deals progress in step 0 and returns world cards
-   * in step 1, so the connector must follow the active targeting phase, not the
-   * card as a whole. See stepConnectorStyle() for the per-step style lookup.
-   */
+  // Draws a line from the acting card to the hovered legal target, styled by
+  // the acting card's effect at the CURRENT step (not the card as a whole) —
+  // a compound card like Barricade deals progress in step 0 and returns world
+  // cards in step 1, so the connector must follow the active step.
   private showConnector(targetId: string): void {
     const sel = this.sel;
     if (sel.phase !== "targeting" || isComplete(sel)) {
@@ -1408,7 +1265,6 @@ export class TableScene extends Phaser.Scene {
     if (source === undefined || target === undefined) return;
 
     const { from, to } = connectorLine(source, target);
-    // Resolve the style from the acting card's effect for THIS step, then render.
     const style = this.stepConnectorStyle(sel.cardId, step);
     this.connectorGfx.clear();
     drawConnector(
@@ -1434,6 +1290,8 @@ export class TableScene extends Phaser.Scene {
     return effect !== null ? connectorStyleOf(effect) : null;
   }
 
+  // Mid-selection, returns the captured snapshot rather than the live hand
+  // card so a buff landing during targeting can't reshape the acting effect.
   private actingPlayerCardFor(cardId: string): PlayerCard | null {
     if (
       this.sel.phase !== "idle" &&
@@ -1485,6 +1343,8 @@ export class TableScene extends Phaser.Scene {
     this.selectionHint.setVisible(visible);
   }
 
+  // Called on every drawAll, so the identity key lets a re-render with the
+  // same pending choice skip rebuilding the view (and losing its UI state).
   private updateBoonChoiceView(): void {
     const pending = this.game_.state.pendingBoonChoices[0];
     if (pending === undefined) {
