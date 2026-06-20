@@ -78,7 +78,7 @@ describe("describeEffect", () => {
     expect(describeEffect({ kind: "DealProgress", base: 1 })).toEqual(["Add 1 Progress"]);
     expect(
       describeEffect({ kind: "DealProgress", base: 1, bonus: { tag: "Obstructed", amount: 2 } }),
-    ).toEqual(["Add 1 Progress\n(+2 vs Hidden)"]);
+    ).toEqual(["Add 1 Progress\n(+2 vs Obstructed)"]);
   });
 
   it("describes DealProgressScaled as static rule text", () => {

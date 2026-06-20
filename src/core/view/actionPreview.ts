@@ -481,7 +481,6 @@ function isHarmfulEvent(event: GameEvent): boolean {
   switch (event.type) {
     case "DamageDealt":
     case "WorldLost":
-    case "CardDestroyed":
     case "CardsDiscarded":
     case "CardsFrozen":
     case "CardsBurnedForHeat":
@@ -495,6 +494,7 @@ function isHarmfulEvent(event: GameEvent): boolean {
 
 function isAttentionEvent(event: GameEvent): boolean {
   switch (event.type) {
+    case "CardDestroyed":
     case "HazardResolved":
     case "HazardPartial":
     case "WorldCardsReturned":

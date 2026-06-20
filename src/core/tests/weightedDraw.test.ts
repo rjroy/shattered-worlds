@@ -3,7 +3,7 @@ import { weightedDraw } from "../engine/weightedDraw";
 import { createRng, nextFloat } from "../engine/rng";
 import type { CardCatalog } from "../model/catalog";
 import type { PlayerCardTemplate } from "../model/cards";
-import type { RarityTier } from "../model/rarity";
+import { RARITY_WEIGHTS, type RarityTier } from "../model/rarity";
 
 // ---------------------------------------------------------------------------
 // Test helpers
@@ -19,7 +19,12 @@ function makeTemplate(rarity: RarityTier): PlayerCardTemplate {
 }
 
 /** Build a catalog with `count` templates of a single rarity, ids prefixed. */
-function makeTier(catalog: CardCatalog, prefix: string, rarity: RarityTier, count: number): string[] {
+function makeTier(
+  catalog: CardCatalog,
+  prefix: string,
+  rarity: RarityTier,
+  count: number,
+): string[] {
   const ids: string[] = [];
   for (let i = 0; i < count; i++) {
     const id = `${prefix}${i}`;
@@ -66,7 +71,7 @@ describe("weightedDraw present-tier renormalization", () => {
 // ---------------------------------------------------------------------------
 
 describe("weightedDraw statistical tier weighting", () => {
-  it("draws a single Legendary among many Commons at ~ renormalized weight, not 1/population", () => {
+  it("draws an expected low numnber Legendary among many Commons at ~ renormalized weight, not 1/population", () => {
     const catalog: CardCatalog = {};
     const commonIds = makeTier(catalog, "common", "common", 50);
     const legendaryIds = makeTier(catalog, "legendary", "legendary", 1);
@@ -75,7 +80,8 @@ describe("weightedDraw statistical tier weighting", () => {
     // Renormalized: common = 60/63 ≈ 0.9524, legendary = 3/63 ≈ 0.0476.
     // 1/population would be 1/51 ≈ 0.0196 — far lower, so this distinguishes
     // tier-weighted draw from naive uniform draw.
-    const expectedLegendaryShare = 3 / 63;
+    const expectedLegendaryShare =
+      RARITY_WEIGHTS.legendary / (RARITY_WEIGHTS.common + RARITY_WEIGHTS.legendary);
     const naiveUniformShare = 1 / candidates.length;
     expect(expectedLegendaryShare).toBeGreaterThan(naiveUniformShare * 2);
 

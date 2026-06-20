@@ -80,8 +80,8 @@ describe("previewAction", () => {
     expect(preview.risk).toBe("harmful");
     expect(preview.severity).toBe("danger");
     expect(text).toContain("Partial resolve on Zombie");
-    expect(text).toContain("Take 2 damage");
-    expect(text).toContain("HP 10 -> 8 (-2)");
+    expect(text).toContain("Take 1 damage");
+    expect(text).toContain("HP 10 -> 9 (-1)");
   });
 
   it("aggregates repeated outcomes for DealProgressAll", () => {

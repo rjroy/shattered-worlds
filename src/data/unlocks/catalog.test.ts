@@ -151,7 +151,13 @@ describe("buildRunModifiers", () => {
     expect(mods.playerCardModifiers[0]).toMatchObject({
       target: { kind: "template", templateId: "Sprint" },
       condition: { kind: "templatePlayOrdinalThisTurn", ordinal: 1 },
-      patches: [{ kind: "setEnergyCost", energyCost: 0 }],
+      patches: [
+        { kind: "setEnergyCost", energyCost: 0 },
+        {
+          kind: "replaceEffect",
+          effect: { kind: "Draw", player: 2, world: 1 },
+        },
+      ],
     });
     expect(mods.playerCardModifiers[1]).toMatchObject({
       target: { kind: "template", templateId: "Panic" },
