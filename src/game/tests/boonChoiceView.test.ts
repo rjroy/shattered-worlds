@@ -195,7 +195,13 @@ function makeScene(): Phaser.Scene & { objects: unknown[] } {
   const objects: unknown[] = [];
   const scene = {
     sys: {
-      displayList: { add() {}, remove() {}, exists() { return false; } },
+      displayList: {
+        add() {},
+        remove() {},
+        exists() {
+          return false;
+        },
+      },
       updateList: { add() {}, remove() {} },
       input: {
         enable(obj: unknown) {
@@ -289,7 +295,19 @@ const templates: Record<string, CardTemplate> = {
 function pendingState(): GameState {
   return {
     playerDraw: [],
-    hand: [{ kind: "player", id: "p1", templateId: "Sprint", name: "Sprint", insetKey: undefined, sourceWorldId: "zombie-big-box", effect: { kind: "Draw", player: 1 }, energyCost: 0, keywords: [] }],
+    hand: [
+      {
+        kind: "player",
+        id: "p1",
+        templateId: "Sprint",
+        name: "Sprint",
+        insetKey: undefined,
+        sourceWorldId: "zombie-big-box",
+        effect: { kind: "Draw", player: 1 },
+        energyCost: 0,
+        keywords: [],
+      },
+    ],
     playerDiscard: [],
     worldDraw: [],
     acts: [],
@@ -302,14 +320,17 @@ function pendingState(): GameState {
     heat: 0,
     pendingForceDestroy: 0,
     braceCharges: 0,
-    pendingBoonChoices: [{
-      source: "act",
-      act: 2,
-      setId: "fortune-v1",
-      offeredTemplateIds: ["Lucky Break", "Second Wind", "Found Tool"],
-      chooseCount: 1,
-      bToDiscard: false,
-    }],
+    pendingBoonChoices: [
+      {
+        source: "act",
+        act: 2,
+        setId: "fortune-v1",
+        setName: "fortune-v1",
+        offeredTemplateIds: ["Lucky Break", "Second Wind", "Found Tool"],
+        chooseCount: 1,
+        bToDiscard: false,
+      },
+    ],
     runModifiers: DEFAULT_RUN_MODIFIERS,
     turnPlayHistory: { cardsPlayedThisTurn: 0, byTemplateId: {} },
     status: "playing",
@@ -326,7 +347,10 @@ describe("BoonChoiceView", () => {
       theme: selectTheme("zombie-big-box"),
       source: "act",
       bToDiscard: false,
-      options: Object.entries(templates).map(([templateId, template]) => ({ templateId, template })),
+      options: Object.entries(templates).map(([templateId, template]) => ({
+        templateId,
+        template,
+      })),
       resolveTheme: selectTheme,
       onChoose() {},
     });
@@ -346,7 +370,10 @@ describe("BoonChoiceView", () => {
       theme: selectTheme("zombie-big-box"),
       source: "worldClear",
       bToDiscard: true,
-      options: Object.entries(templates).map(([templateId, template]) => ({ templateId, template })),
+      options: Object.entries(templates).map(([templateId, template]) => ({
+        templateId,
+        template,
+      })),
       resolveTheme: selectTheme,
       onChoose() {},
     });
@@ -394,7 +421,10 @@ describe("BoonChoiceView", () => {
       theme: selectTheme("zombie-big-box"),
       source: "act",
       bToDiscard: false,
-      options: Object.entries(templates).map(([templateId, template]) => ({ templateId, template })),
+      options: Object.entries(templates).map(([templateId, template]) => ({
+        templateId,
+        template,
+      })),
       resolveTheme: selectTheme,
       onChoose(templateId) {
         chosen = templateId;
@@ -417,6 +447,7 @@ describe("TableScene pending boon input", () => {
   interface TableHarness {
     game_: { state: GameState; template(id: string): CardTemplate | undefined };
     sel: { phase: "idle" };
+    actionConfirmation: { isOpen: boolean };
     dispatch(action: Action): void;
     actions: Action[];
     chooseVisibleBoonOption(index: number): void;
@@ -434,6 +465,7 @@ describe("TableScene pending boon input", () => {
       },
     };
     scene.sel = { phase: "idle" };
+    scene.actionConfirmation = { isOpen: false };
     scene.dispatch = (action: Action) => {
       scene.actions.push(action);
     };
@@ -443,7 +475,9 @@ describe("TableScene pending boon input", () => {
   it("dispatches the matching visible template ID for number-key selection", () => {
     const scene = makeTableHarness();
 
-    (scene as unknown as { chooseVisibleBoonOption(index: number): void }).chooseVisibleBoonOption(1);
+    (scene as unknown as { chooseVisibleBoonOption(index: number): void }).chooseVisibleBoonOption(
+      1,
+    );
 
     expect(scene.actions).toEqual([{ type: "ChooseBoon", templateId: "Second Wind" }]);
   });

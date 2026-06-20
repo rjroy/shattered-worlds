@@ -56,6 +56,7 @@ function actBoonModifier(
 ): NonNullable<RunModifiers["actBoon"]> {
   return {
     poolId: "fortune-v1",
+    poolName: "fortune-v1",
     poolTemplateIds: fortunePool,
     offeredCount: 3,
     chooseCount: 1,
@@ -1857,14 +1858,17 @@ describe("Boon offer generation", () => {
     expect(types).toContain("BoonOffered");
     expect(types.filter((type) => type === "BoonOffered")).toHaveLength(1);
     expect(result.state.status).toBe("playing");
-    expect(result.state.pendingBoonChoices).toEqual([{
-      source: "act",
-      act: 1,
-      setId: "fortune-v1",
-      offeredTemplateIds: offered,
-      chooseCount: 1,
-      bToDiscard: false,
-    }]);
+    expect(result.state.pendingBoonChoices).toEqual([
+      {
+        source: "act",
+        act: 1,
+        setId: "fortune-v1",
+        setName: "fortune-v1",
+        offeredTemplateIds: offered,
+        chooseCount: 1,
+        bToDiscard: false,
+      },
+    ]);
     expect(offered).toHaveLength(3);
     expect(new Set(offered).size).toBe(offered.length);
   });
@@ -1875,14 +1879,17 @@ describe("Boon offer generation", () => {
     const result = reduce(catalog, state, { type: "EndTurn" });
     const offered = offeredTemplateIds(result);
 
-    expect(result.state.pendingBoonChoices).toEqual([{
-      source: "act",
-      act: 1,
-      setId: "fortune-v1",
-      offeredTemplateIds: offered,
-      chooseCount: 2,
-      bToDiscard: false,
-    }]);
+    expect(result.state.pendingBoonChoices).toEqual([
+      {
+        source: "act",
+        act: 1,
+        setId: "fortune-v1",
+        setName: "fortune-v1",
+        offeredTemplateIds: offered,
+        chooseCount: 2,
+        bToDiscard: false,
+      },
+    ]);
   });
 
   it("creates one queued offer per ActAdvanced when one refill advances multiple acts", () => {
@@ -1904,6 +1911,7 @@ describe("Boon offer generation", () => {
     if (boonEvents[0]?.type === "BoonOffered") {
       expect(boonEvents[0].source).toBe("act");
       expect(boonEvents[0].setId).toBe("fortune-v1");
+      expect(boonEvents[0].setName).toBe("fortune-v1");
       expect(boonEvents[0].act).toBe(1);
       expect(result.state.pendingBoonChoices[0]?.offeredTemplateIds).toEqual(
         boonEvents[0].templateIds,
@@ -2447,14 +2455,17 @@ describe("Act boon choice reducer gates", () => {
   function pendingBoonState(overrides: Partial<GameState> = {}): GameState {
     return makeState({
       ...overrides,
-      pendingBoonChoices: [{
-        source: "act",
-        act: 1,
-        setId: "fortune-v1",
-        offeredTemplateIds: ["Lucky Break", "Second Wind", "Found Tool"],
-        chooseCount: 1,
-        bToDiscard: false,
-      }],
+      pendingBoonChoices: [
+        {
+          source: "act",
+          act: 1,
+          setId: "fortune-v1",
+          setName: "fortune-v1",
+          offeredTemplateIds: ["Lucky Break", "Second Wind", "Found Tool"],
+          chooseCount: 1,
+          bToDiscard: false,
+        },
+      ],
     });
   }
 
@@ -2521,16 +2532,14 @@ describe("Act boon choice reducer gates", () => {
     const laterChoice = {
       source: "worldClear" as const,
       setId: "fortune-v1",
+      setName: "fortune-v1",
       offeredTemplateIds: ["Clear Path"],
       chooseCount: 1,
       bToDiscard: false,
     };
     const state = {
       ...pendingBoonState(),
-      pendingBoonChoices: [
-        pendingBoonState().pendingBoonChoices[0]!,
-        laterChoice,
-      ],
+      pendingBoonChoices: [pendingBoonState().pendingBoonChoices[0]!, laterChoice],
     };
 
     const result = reduce(catalog, state, {
@@ -2600,6 +2609,7 @@ describe("Act boon choice reducer gates", () => {
     const laterChoice = {
       source: "worldClear" as const,
       setId: "fortune-v1",
+      setName: "fortune-v1",
       offeredTemplateIds: ["Clear Path"],
       chooseCount: 1,
       bToDiscard: false,
@@ -2640,6 +2650,7 @@ describe("Act boon choice reducer gates", () => {
         {
           source: "worldClear" as const,
           setId: "fortune-v1",
+          setName: "fortune-v1",
           offeredTemplateIds: ["Clear Path"],
           chooseCount: 1,
           bToDiscard: false,
@@ -2658,13 +2669,16 @@ describe("Act boon choice reducer gates", () => {
   it("valid ChooseBoon can grant an exhaust player card into discard", () => {
     const state: GameState = {
       ...pendingBoonState(),
-      pendingBoonChoices: [{
-        source: "worldClear",
-        setId: "fortune-v1",
-        offeredTemplateIds: ["Second Wind"],
-        chooseCount: 1,
-        bToDiscard: true,
-      }],
+      pendingBoonChoices: [
+        {
+          source: "worldClear",
+          setId: "fortune-v1",
+          setName: "fortune-v1",
+          offeredTemplateIds: ["Second Wind"],
+          chooseCount: 1,
+          bToDiscard: true,
+        },
+      ],
     };
     const nextId = state.nextId;
 

@@ -123,7 +123,15 @@ function handleDiscardHazard(
   const handAfterDiscard = state.hand.filter((c) => c.id !== cardId);
   const stateAfterRemove: GameState = { ...state, hand: handAfterDiscard };
 
-  const penaltyResult = applyEffect(catalog, stateAfterRemove, (card as WorldCard).onDiscarded);
+  // Pass card.id as selfId so the discarded card's onDiscarded hook events
+  // carry its provenance (preview masking for concealed discards).
+  const penaltyResult = applyEffect(
+    catalog,
+    stateAfterRemove,
+    (card as WorldCard).onDiscarded,
+    undefined,
+    card.id,
+  );
 
   const events: GameEvent[] = [
     { type: "HazardDiscarded", cardId, templateId: card.templateId },

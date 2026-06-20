@@ -12,6 +12,7 @@
       "onCleared": {
         "kind": "OfferBoon",
         "setId": "big-box-boons",
+        "setName": "Sound Reactions",
         "offeredCount": 3,
         "chooseCount": 1
       },

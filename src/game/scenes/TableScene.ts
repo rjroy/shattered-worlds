@@ -15,12 +15,16 @@ import { createGameplayRuntime, type GameplayRuntime } from "../runtime/gameplay
 import type { GameplaySession } from "../runtime/gameplaySession";
 import { selectTheme } from "../view/themes/themeManifest";
 import type { VisualTheme } from "../view/themes/theme";
-import {
-  availableActions,
-  effectiveHand,
-  effectivePlayerCard,
+import { availableActions, effectiveHand, effectivePlayerCard } from "../../core/index";
+import type {
+  Card,
+  Action,
+  PlayerCard,
+  TargetSpec,
+  WorldCard,
+  ActionPreviewSeverity,
+  ActionPreview,
 } from "../../core/index";
-import type { Card, Action, PlayerCard, TargetSpec } from "../../core/index";
 import { structuralSpecOf } from "../../core/engine/available";
 import { EFFECTS } from "../../core/effects/registry";
 import {
@@ -46,6 +50,8 @@ import { ensureEffectIconTextures } from "../view/effectLineView";
 import { HUDView } from "../view/HUDView";
 import { RunSummaryView, type RunSummaryData } from "../view/RunSummaryView";
 import { HelpOverlayView } from "../view/HelpOverlayView";
+import { ActionConfirmationView } from "../view/ActionConfirmationView";
+import { SettingsOverlayView } from "../view/SettingsOverlayView";
 import { textStyle, TEXT, getRealityPalette } from "../view/presentation";
 import { ringFraction, connectorLine } from "../interaction/feedback";
 import type { ConnectorStyle } from "../interaction/feedback";
@@ -56,13 +62,14 @@ import { resolveBranchLabels } from "../../core/view/branchLabels";
 import { ModalChooserView } from "../view/ModalChooserView";
 import { BoonChoiceView, type BoonChoiceOption } from "../view/BoonChoiceView";
 import { CommonLabel, CommonButton } from "../view/components";
-import { previewPlay } from "../../core/view/describe";
+import { isConcealmentWarning, concealOf, isConcealed, CONCEALED_HAZARD } from "../../core/index";
 import { PileLayer } from "../view/PileLayer";
 import { BackdropLayer } from "../view/backdrop";
 import { worldDisplayManifest } from "../../data/worldDisplayManifest";
 import { CARD_FACE, TABLE_LAYOUT } from "../view/layout";
 import { rowCardPositions } from "../view/tableLayout";
 import { addTooltip } from "../view/TooltipView";
+import { CONCEALED_HOOK_WARNING } from "../../core/view/actionPreview";
 
 // ---------------------------------------------------------------------------
 // Layout constants
@@ -82,6 +89,35 @@ const CONNECTOR_DEPTH = TABLE_LAYOUT.connectorDepth;
 // ROW_LEFT reserved for future fixed-layout mode
 // const ROW_LEFT = 80
 
+/**
+ * Separator that folds the unified preview's multi-line `summaryLines` into the
+ * single-line previewSlot label. previewSlot is sized to its text and sits in a
+ * tight band above selectionHint, so a compact inline join reads better than
+ * stacking newlines there.
+ */
+const PREVIEW_LINE_SEP = "\n";
+
+/** Hover warning for a concealed hazard in the partial-intent fallback. */
+const CONCEALED_HOVER_WARNING = "Target is concealed. Beware.";
+
+/**
+ * Trim a unified preview down to the minimal form shown when
+ * `detailedHoverPreviews` is off: the first substantive consequence line, plus
+ * every concealment warning (which must survive the trim so a hidden hook is
+ * never silently dropped). Concealment lines are matched by exact constant via
+ * isConcealmentWarning, not by guessing at wording.
+ */
+function minimalPreviewLines(summaryLines: readonly string[]): readonly string[] {
+  const warnings = summaryLines.filter(isConcealmentWarning);
+  const firstSubstantive = summaryLines.find((line) => !isConcealmentWarning(line));
+  const lines: string[] = [];
+  if (firstSubstantive !== undefined) lines.push(firstSubstantive);
+  for (const warning of warnings) {
+    if (!lines.includes(warning)) lines.push(warning);
+  }
+  return lines;
+}
+
 const TABLE_TOOLTIPS = {
   endTurn: {
     title: "End Turn",
@@ -94,6 +130,10 @@ const TABLE_TOOLTIPS = {
   exit: {
     title: "Exit",
     body: "Abandon this run and exit to the main menu.",
+  },
+  settings: {
+    title: "Settings",
+    body: "Adjust confirmation and preview options.",
   },
 };
 
@@ -139,7 +179,12 @@ export class TableScene extends Phaser.Scene {
   private confirmBtn!: CommonButton;
   private runSummary!: RunSummaryView;
   private helpOverlay!: HelpOverlayView;
+  private settingsOverlay!: SettingsOverlayView;
+  // Phase 8: the confirmation modal is instantiated and ready, but not yet
+  // routed to real dispatch. Phase 9 adds maybeConfirmOrDispatch to drive it.
+  private actionConfirmation!: ActionConfirmationView;
   private questionBtn!: CommonButton;
+  private settingsBtn!: CommonButton;
   private exitBtn!: CommonButton;
 
   // Modal chooser UI (created/destroyed per card play)
@@ -205,6 +250,10 @@ export class TableScene extends Phaser.Scene {
     // already ended in a win or loss.
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
       this.stopWorldMusic();
+      // Dismiss the confirmation modal so a mid-confirmation shutdown leaves no
+      // dangling callback. Also the one read of actionConfirmation in Phase 8;
+      // Phase 9 wires it into the dispatch path.
+      this.actionConfirmation?.hide();
       this.game_.abandon();
     });
     this.theme_ = selectTheme(this.game_.state.worldId);
@@ -223,7 +272,13 @@ export class TableScene extends Phaser.Scene {
       TABLE_LAYOUT.buttons.endTurn.y,
       "[ End Turn ]",
       endTurnStyle,
-    ).on("pointerdown", () => this.onEndTurnClick());
+    )
+      .on("pointerdown", () => this.onEndTurnClick())
+      // Hovering End Turn previews the EndTurn action's consequences. Attached
+      // only to the existing button (no new interactive overlay), so it can
+      // never steal card clicks. showEndTurnPreview self-gates on availability.
+      .on("pointerover", () => this.showEndTurnPreview())
+      .on("pointerout", () => this.clearPreviewSlot());
     addTooltip(this, this.endTurnBtn, TABLE_TOOLTIPS.endTurn);
 
     const cancelStyle = textStyle({
@@ -242,6 +297,7 @@ export class TableScene extends Phaser.Scene {
         this.clearSelectedCardSnapshot();
         this.dismissModal();
         this.clearConnector();
+        this.clearPreviewSlot();
         this.drawAll();
       })
       .setVisible(false);
@@ -264,6 +320,8 @@ export class TableScene extends Phaser.Scene {
     this.runSummary = new RunSummaryView(this);
 
     this.helpOverlay = new HelpOverlayView(this, this.worldId_, this.game_.state.totalActs);
+    this.settingsOverlay = new SettingsOverlayView(this, this.runtime_.userSettings);
+    this.actionConfirmation = new ActionConfirmationView(this);
 
     const questionStyle = textStyle({
       fontSize: "16px",
@@ -276,8 +334,34 @@ export class TableScene extends Phaser.Scene {
       TABLE_LAYOUT.buttons.help.y,
       "?",
       questionStyle,
-    ).on("pointerup", () => this.helpOverlay.setVisible(true));
+    ).on("pointerup", () => {
+      // While a confirmation modal is open it is the top-most surface; help and
+      // settings cannot be opened behind it (its depth-2500 backdrop already
+      // blocks pointer clicks, but guarding here keeps the rule explicit and
+      // consistent across every open path).
+      if (this.actionConfirmation.isOpen) return;
+      // Help and settings must not sit open at once fighting for input.
+      this.settingsOverlay.close();
+      this.helpOverlay.setVisible(true);
+    });
     addTooltip(this, this.questionBtn, TABLE_TOOLTIPS.question);
+
+    this.settingsBtn = new CommonButton(
+      this,
+      TABLE_LAYOUT.buttons.settings.x,
+      TABLE_LAYOUT.buttons.settings.y,
+      "S",
+      questionStyle,
+    ).on("pointerup", () => {
+      // Same rule as the help button: a confirmation modal is top-most, so
+      // settings cannot be opened behind it.
+      if (this.actionConfirmation.isOpen) return;
+      // Opening settings hides help; open() re-syncs highlights from the store.
+      // This only toggles the overlay — it never dispatches or clears the run.
+      this.helpOverlay.setVisible(false);
+      this.settingsOverlay.open();
+    });
+    addTooltip(this, this.settingsBtn, TABLE_TOOLTIPS.settings);
 
     this.exitBtn = new CommonButton(
       this,
@@ -293,7 +377,19 @@ export class TableScene extends Phaser.Scene {
     addTooltip(this, this.exitBtn, TABLE_TOOLTIPS.exit);
 
     this.input.keyboard?.on("keydown-ESC", () => {
+      // The confirmation modal is the top-most surface. When it is open ESC
+      // CANCELS it (the same path the modal's Cancel button uses: dispatch
+      // nothing, reset selection to idle) and does nothing else — help/settings
+      // can never be open behind it (gap C), so there is nothing else to close.
+      if (this.actionConfirmation.isOpen) {
+        this.actionConfirmation.hide();
+        this.cancelConfirmation();
+        return;
+      }
+      // Otherwise ESC closes whichever overlay is visible; neither dispatches or
+      // clears the run.
       if (this.helpOverlay.visible) this.helpOverlay.setVisible(false);
+      if (this.settingsOverlay.visible) this.settingsOverlay.close();
     });
     this.input.keyboard?.on("keydown", (event: KeyboardEvent) => {
       if (event.key !== "1" && event.key !== "2" && event.key !== "3") return;
@@ -324,8 +420,10 @@ export class TableScene extends Phaser.Scene {
       textStyle({
         fontSize: "12px",
         color: getRealityPalette(this.theme_, "title"),
+        wordWrap: { width: 400 },
       }),
     );
+    this.previewSlot.setDepth(TABLE_LAYOUT.previewDepth);
     this.previewSlot.setVisible(false);
 
     // Persistent connector graphic. setDepth controls draw order only; we never
@@ -462,8 +560,14 @@ export class TableScene extends Phaser.Scene {
     if (state.status !== "playing" || this.runSummary.visible) {
       this.questionBtn.disableInteractive();
       this.questionBtn.setVisible(false);
+      this.settingsBtn.disableInteractive();
+      this.settingsBtn.setVisible(false);
       this.exitBtn.disableInteractive();
       this.helpOverlay.setVisible(false);
+      this.settingsOverlay.close();
+      // A confirmation modal must never survive into the terminal/cleanup state;
+      // hide() drops it without firing its commit/cancel callbacks.
+      this.actionConfirmation.hide();
     }
 
     this.updateBoonChoiceView();
@@ -502,9 +606,18 @@ export class TableScene extends Phaser.Scene {
     if (data === null) return;
 
     this.terminalSummaryShown_ = true;
+    // Drop any lingering targeting feedback before the summary covers the table.
+    this.clearConnector();
+    this.clearPreviewSlot();
+    // The terminal run summary must never appear with a confirmation modal still
+    // on top of it; hide() drops it without firing its callbacks.
+    this.actionConfirmation.hide();
     this.helpOverlay.setVisible(false);
+    this.settingsOverlay.close();
     this.questionBtn.disableInteractive();
     this.questionBtn.setVisible(false);
+    this.settingsBtn.disableInteractive();
+    this.settingsBtn.setVisible(false);
     this.exitBtn.disableInteractive();
     this.runSummary.show(data, () => {
       this.scene.start("WorldSelect");
@@ -618,8 +731,17 @@ export class TableScene extends Phaser.Scene {
     // (Progress dealt, and whether it clears the Hazard). Track the hovered id
     // so a later phase can re-assert base transform on non-hovered cards.
     container.on("pointerover", () => {
+      // No hover preview behind an open confirmation modal.
+      if (this.actionConfirmation.isOpen) return;
       this.hoveredCardId = id;
       this.showTargetPreview(id);
+      // Idle world-card preview: when no selection is active, hovering a world
+      // card summarizes its own hooks (end-of-turn, and on-discard if
+      // discardable). Gated on the idle phase, so targeting preview keeps
+      // priority and the two never both render.
+      if (this.sel.phase === "idle" && card.kind === "world") {
+        this.showIdleWorldPreview(card);
+      }
       // Connector generalizes across all three targeting phases (the preview
       // text is hazard-only). showConnector gates on phase + legal target.
       this.showConnector(id);
@@ -642,8 +764,7 @@ export class TableScene extends Phaser.Scene {
       container.clearEmphasis();
       // Instruction stays stable in its own slot; clear only the preview slot.
       this.updateHint();
-      this.previewSlot.setText("");
-      this.previewSlot.setVisible(false);
+      this.clearPreviewSlot();
       // No stale line may survive hover-out.
       this.clearConnector();
     });
@@ -683,6 +804,8 @@ export class TableScene extends Phaser.Scene {
   // ---------------------------------------------------------------------------
 
   private onCardClick(cardId: string): void {
+    // While the confirmation modal is open all table input is inert.
+    if (this.actionConfirmation.isOpen) return;
     const state = this.game_.state;
     if (state.status !== "playing") return;
     if (state.pendingBoonChoices.length > 0) return;
@@ -743,20 +866,23 @@ export class TableScene extends Phaser.Scene {
   }
 
   private onDiscardClick(cardId: string): void {
+    if (this.actionConfirmation.isOpen) return;
     if (this.game_.state.pendingBoonChoices.length > 0) return;
     const available = availableActions(this.game_.state);
     if (available.discardable.includes(cardId)) {
-      this.dispatch({ type: "DiscardHazard", cardId });
+      this.maybeConfirmOrDispatch({ type: "DiscardHazard", cardId });
     }
   }
 
   private onEndTurnClick(): void {
+    if (this.actionConfirmation.isOpen) return;
     if (this.game_.state.pendingBoonChoices.length > 0) return;
     if (this.sel.phase !== "idle") return;
-    this.dispatch({ type: "EndTurn" });
+    this.maybeConfirmOrDispatch({ type: "EndTurn" });
   }
 
   private onConfirmClick(): void {
+    if (this.actionConfirmation.isOpen) return;
     if (this.game_.state.pendingBoonChoices.length > 0) return;
     if (!stepSatisfied(this.sel)) return;
     this.advanceSelection();
@@ -765,6 +891,7 @@ export class TableScene extends Phaser.Scene {
   private advanceSelection(): void {
     this.sel = advance(this.sel);
     this.clearConnector();
+    this.clearPreviewSlot();
     this.continueSelection();
   }
 
@@ -772,7 +899,7 @@ export class TableScene extends Phaser.Scene {
     if (isComplete(this.sel)) {
       const action = buildAction(this.sel);
       if (action !== null) {
-        this.dispatch(action);
+        this.maybeConfirmOrDispatch(action);
         return;
       }
     }
@@ -813,6 +940,7 @@ export class TableScene extends Phaser.Scene {
         this.clearSelectedCardSnapshot();
         this.dismissModal();
         this.clearConnector();
+        this.clearPreviewSlot();
         this.drawAll();
       },
     );
@@ -820,16 +948,21 @@ export class TableScene extends Phaser.Scene {
 
   /** Apply a chosen modal branch: advance selection, or commit if it's a 'none' branch. */
   private onModalChoose(spec: Extract<TargetSpec, { kind: "modal" }>, idx: number): void {
+    // A confirmation can only open after the chooser is dismissed, so they never
+    // coexist; this guard keeps that invariant explicit if the order ever shifts.
+    if (this.actionConfirmation.isOpen) return;
     if (this.game_.state.pendingBoonChoices.length > 0) return;
     this.dismissModal(false);
     const newSel = chooseModal(this.sel, idx, spec);
     this.sel = newSel;
 
-    // If the branch is 'none' after modal, dispatch immediately with choice.
+    // If the branch is 'none' after modal, commit immediately with choice. The
+    // chooser has already been dismissed above, so the confirmation modal (if
+    // one opens) never overlaps the chooser.
     if (isComplete(newSel)) {
       const action = buildAction(newSel);
       if (action !== null) {
-        this.dispatch(action);
+        this.maybeConfirmOrDispatch(action);
         return;
       }
     }
@@ -861,6 +994,118 @@ export class TableScene extends Phaser.Scene {
   }
 
   // ---------------------------------------------------------------------------
+  // Confirmation gate
+  // ---------------------------------------------------------------------------
+
+  /**
+   * The single entry point for every user-initiated COMMITTED action (play a
+   * card, discard a hazard, end the turn). It consults the confirmation mode and
+   * the action preview, then either commits the action immediately or opens the
+   * ActionConfirmationView. Boon choices are NOT routed here — choosing a boon is
+   * already a modal commitment, so those call this.dispatch directly.
+   *
+   * Revalidation: while the confirmation modal is open the underlying table input
+   * is fully blocked (every input handler early-returns on
+   * actionConfirmation.isOpen), and the core never mutates state on its own — it
+   * is deterministic and only changes on dispatch. So no timer, async callback,
+   * or background path can alter the game state between building `action` here
+   * and committing it on confirm. The stored action therefore stays valid and we
+   * do not re-run availability checks at commit time.
+   */
+  private maybeConfirmOrDispatch(action: Action): void {
+    // Never stack a second confirmation on top of an open one.
+    if (this.actionConfirmation.isOpen) return;
+
+    const preview = this.game_.preview(action);
+
+    // A non-previewable action has no consequence lines, so a confirmation modal
+    // would render blank. Callers here only ever build legal actions, and the
+    // preview engine (not the modal) is the surface that would have shown
+    // nothing; dispatch directly and let the core reducer stay the authority
+    // (it throws if the action is truly illegal). Previewable actions are
+    // unaffected.
+    if (!preview.previewable) {
+      this.dispatch(action);
+      return;
+    }
+
+    const mode = this.runtime_.userSettings.get().confirmationMode;
+
+    const shouldConfirm =
+      mode === "always" ||
+      (mode === "risk-only" && (preview.risk === "attention" || preview.risk === "harmful"));
+
+    if (!shouldConfirm) {
+      this.dispatch(action);
+      return;
+    }
+
+    // Capture the exact action and preview in the commit closure so the modal
+    // commits precisely what was previewed. The view guards onCommit to fire at
+    // most once per show.
+    this.actionConfirmation.show({
+      title: this.confirmationTitle(action),
+      lines: preview.summaryLines,
+      onCommit: () => this.dispatch(action),
+      onCancel: () => this.cancelConfirmation(),
+    });
+  }
+
+  /**
+   * Human-readable title for the confirmation modal. Concealment-safe: when the
+   * action names a world card that is concealed at the current Light level, the
+   * title uses a generic name (CONCEALED_HAZARD) instead of the real one so a
+   * hidden hazard's identity never leaks through the modal title. Uses the same
+   * isConcealed check the preview/describe layer uses.
+   */
+  private confirmationTitle(action: Action): string {
+    const state = this.game_.state;
+    switch (action.type) {
+      case "EndTurn":
+        return "End Turn";
+      case "PlayCard": {
+        const card = state.hand.find((c) => c.id === action.cardId);
+        return `Play ${this.safeCardName(card)}`;
+      }
+      case "DiscardHazard": {
+        const card = state.hand.find((c) => c.id === action.cardId);
+        return `Discard ${this.safeCardName(card)}`;
+      }
+      default:
+        return "Confirm";
+    }
+  }
+
+  /**
+   * Resolve a card's display name, masking it to CONCEALED_HAZARD when the card
+   * is a world card concealed at the current Light. Falls back to the generic
+   * concealed name when the card is missing.
+   */
+  private safeCardName(card: Card | undefined): string {
+    if (card === undefined) return CONCEALED_HAZARD;
+    if (card.kind === "world" && isConcealed(card, this.game_.state.light)) {
+      return CONCEALED_HAZARD;
+    }
+    return card.name;
+  }
+
+  /**
+   * Cancel an open confirmation: dispatch NOTHING, and fully reset any stale
+   * selection UI back to idle so no half-cleared selection survives. Mirrors the
+   * cleanup the Cancel button performs (Assumption 6: a cancelled confirmation
+   * returns to idle rather than back to mid-selection). The Phase-8 view auto-
+   * hides itself before invoking this callback.
+   */
+  private cancelConfirmation(): void {
+    this.sel = IDLE;
+    this.clearSelectedCardSnapshot();
+    this.dismissModal();
+    this.clearConnector();
+    this.clearPreviewSlot();
+    this.drawAll();
+  }
+
+  // ---------------------------------------------------------------------------
   // Dispatch
   // ---------------------------------------------------------------------------
 
@@ -870,8 +1115,10 @@ export class TableScene extends Phaser.Scene {
     this.clearSelectedCardSnapshot();
     this.dismissModal();
     this.updateBoonChoiceView();
-    // Commit ends targeting; drop the connector so no line survives the action.
+    // Commit ends targeting; drop the connector and preview so nothing survives
+    // the action.
     this.clearConnector();
+    this.clearPreviewSlot();
     this.drawAll();
   }
 
@@ -967,9 +1214,20 @@ export class TableScene extends Phaser.Scene {
 
   /**
    * While targeting a Hazard, write the live preview for the Hazard under the
-   * pointer into its own slot (previewSlot): how much Progress the play deals
-   * and whether it clears the Hazard. The phase instruction in selectionHint is
-   * untouched. No-ops unless this card is a legal target right now.
+   * pointer into its own slot (previewSlot): the consequence summary of applying
+   * the hovered target to the current step. The phase instruction in
+   * selectionHint is untouched. No-ops unless this card is a legal target right
+   * now.
+   *
+   * The preview is the SAME unified engine the confirmation flow uses
+   * (game_.preview). We synthesise a CANDIDATE selection — "the player picked the
+   * hovered target for the current step" — via the real selection helpers
+   * (togglePick + advance), so the action built is byte-identical to the one a
+   * click would dispatch, and modifiers carried by the acting snapshot are
+   * reflected. For a single-target hazard step that completes the selection, so
+   * buildAction returns a full PlayCard we can preview. For a compound card whose
+   * hazard step is not last, the candidate is still incomplete; we fall back to a
+   * concise targeted line rather than failing silently.
    */
   private showTargetPreview(targetId: string): void {
     const sel = this.sel;
@@ -977,20 +1235,102 @@ export class TableScene extends Phaser.Scene {
     if (sel.steps[sel.stepIdx]?.kind !== "hazard") return;
 
     const state = this.game_.state;
-    const branchIndex = sel.choice;
     if (!this.currentLegalTargetIds().has(targetId)) return;
 
     const card = this.actingPlayerCardFor(sel.cardId);
     const target = state.hand.find((c) => c.id === targetId);
     if (card === null || target?.kind !== "world") return;
 
-    const preview = previewPlay(card, target, state, branchIndex);
-    if (preview !== null) {
-      this.previewSlot.setText(preview);
-      this.previewSlot.setVisible(true);
-    } else {
-      this.previewSlot.setVisible(false);
+    // Fold the hovered target into the current step exactly as a click would,
+    // then advance. For the common single-target hazard step this completes the
+    // selection; buildAction then yields the real PlayCard action.
+    const candidate = advance(togglePick(sel, targetId));
+    const action = buildAction(candidate);
+
+    if (action === null) {
+      // Partial-intent fallback: the hazard step is one of several (compound
+      // card), so no full action exists yet. Surface a concise targeted line
+      // rather than nothing. A concealed target hides its math, so warn instead.
+      this.renderPartialTargetPreview(target, state.light);
+      return;
     }
+
+    const preview = this.game_.preview(action);
+    this.renderPreview(preview, card.name);
+  }
+
+  private renderPreview(preview: ActionPreview, cardName?: string): void {
+    // Drop the leading "Play <card>" line: the hover slot already sits beside the
+    // acting card, so restating which card is played is noise. The consequence
+    // lines (Progress, clears, warnings) are what previewPlay surfaced.
+    const consequences = cardName
+      ? preview.summaryLines.filter((line) => line !== `Play ${cardName}`)
+      : preview.summaryLines;
+    if (!preview.previewable || consequences.length === 0) {
+      this.previewSlot.setVisible(false);
+      return;
+    }
+
+    const detailed = this.runtime_.userSettings.get().detailedHoverPreviews;
+    const lines = detailed ? consequences : minimalPreviewLines(consequences);
+    this.showPreviewSlot(lines.join(PREVIEW_LINE_SEP), preview.severity);
+  }
+
+  /**
+   * Partial-intent fallback for a hazard step that is not the final step of a
+   * compound selection (so no complete action can be previewed yet). Names the
+   * hovered hazard, or warns when it is concealed. Kept minimal on purpose; it
+   * does NOT reconstruct the full per-event summary.
+   */
+  private renderPartialTargetPreview(target: WorldCard, light: number): void {
+    const text = isConcealed(target, light)
+      ? `${CONCEALED_HOVER_WARNING} (needs Light ${concealOf(target)})`
+      : `Target ${target.name}`;
+    this.showPreviewSlot(text, "warning");
+  }
+
+  /**
+   * Idle (no-selection) hover preview for a world card: previews the
+   * `DiscardHazard` action against the unified `game_.preview` engine — the same
+   * engine the targeted and End Turn previews use, so the wording can never
+   * disagree. A discardable card surfaces its discard consequence; a
+   * non-discardable card has no discard to preview and renders nothing (its
+   * end-of-turn threat is read off the card face). A concealed card yields only
+   * the generic warning rather than leaking its hidden math.
+   *
+   * Only meaningful in the idle phase; the caller already gates on that, so this
+   * stays out of the targeting preview's way (targeted preview keeps priority).
+   */
+  private showIdleWorldPreview(card: WorldCard): void {
+    if (this.sel.phase !== "idle") return;
+
+    if (isConcealed(card, this.game_.state.light)) {
+      this.showPreviewSlot(CONCEALED_HOOK_WARNING, "warning");
+    } else {
+      const action: Action = { type: "DiscardHazard", cardId: card.id };
+      const preview = this.game_.preview(action);
+      this.renderPreview(preview);
+    }
+  }
+
+  /**
+   * Hover preview for the End Turn button: surface the consequences of ending
+   * the turn now (world hooks firing, decay, refill) via the same unified
+   * `game_.preview` engine the confirmation flow uses. Only shown when ending
+   * the turn is actually available — the button is non-interactive while a
+   * selection is mid-flight or when canEndTurn is false, and previewing then
+   * would advertise an action the player cannot take. Concealment survival and
+   * off-mode trimming match the targeted preview.
+   */
+  private showEndTurnPreview(): void {
+    // No preview behind an open confirmation modal.
+    if (this.actionConfirmation.isOpen) return;
+    // Mirror the interactive gate from drawAll: no preview while a selection is
+    // active (the button is dimmed and disabled then).
+    if (this.sel.phase !== "idle") return;
+
+    const preview = this.game_.preview({ type: "EndTurn" });
+    this.renderPreview(preview);
   }
 
   /**
@@ -1095,6 +1435,29 @@ export class TableScene extends Phaser.Scene {
     this.connectorGfx.clear();
   }
 
+  private showPreviewSlot(message: string, severity: ActionPreviewSeverity): void {
+    this.previewSlot.setText(message);
+    this.previewSlot.setVisible(true);
+    this.previewSlot.setY(TABLE_LAYOUT.previewSlot.y - this.previewSlot.getBgHeight() / 2);
+    switch (severity) {
+      case "danger":
+        this.previewSlot.setTint(this.theme_.realityPalette.cancel);
+        break;
+      case "warning":
+        this.previewSlot.setTint(this.theme_.intrusionHue);
+        break;
+      default:
+        this.previewSlot.setTint("#FFFFFF");
+        break;
+    }
+  }
+
+  /** Hide and blank the targeted-hover preview. Safe to call when already empty. */
+  private clearPreviewSlot(): void {
+    this.previewSlot.setText("");
+    this.previewSlot.setVisible(false);
+  }
+
   private updateHint(): void {
     const { text, visible } = hintForSelection(this.sel);
     this.selectionHint.setText(text);
@@ -1121,7 +1484,9 @@ export class TableScene extends Phaser.Scene {
       templateId,
       template: this.game_.template(templateId),
     }));
-    const missing = options.filter((option) => option.template === undefined).map((option) => option.templateId);
+    const missing = options
+      .filter((option) => option.template === undefined)
+      .map((option) => option.templateId);
     if (missing.length > 0 && this.loggedBoonMissingKey !== key) {
       this.loggedBoonMissingKey = key;
       console.error(

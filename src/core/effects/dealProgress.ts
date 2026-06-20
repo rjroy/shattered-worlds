@@ -95,7 +95,9 @@ export function dealProgress(
       hand: current.hand.filter((c) => c.id !== hazardId),
     };
 
-    const rewardResult = applyEffect(catalog, current, hazard.onCleared);
+    // Pass hazardId as selfId so the cleared hazard's onCleared hook events
+    // carry its provenance (preview masking for concealed clears).
+    const rewardResult = applyEffect(catalog, current, hazard.onCleared, undefined, hazardId);
     current = rewardResult.state;
     events.push(...rewardResult.events);
     events.push({ type: "HazardResolved", hazardId, templateId: hazard.templateId });

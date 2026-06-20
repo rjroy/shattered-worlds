@@ -99,7 +99,13 @@ export const UNLOCK_CATALOG: readonly UnlockDefinition[] = [
     description: "At the start of each new act, choose 1 of 3 temporary boon cards for your hand.",
     cost: 70,
     destinyWeight: 3,
-    effect: { type: "actReward", boonPoolId: "fortune-v1", offeredCount: 3, chooseCount: 1 },
+    effect: {
+      type: "actReward",
+      boonPoolId: "fortune-v1",
+      boonPoolName: "Instant Fortune",
+      offeredCount: 3,
+      chooseCount: 1,
+    },
   },
   {
     id: "world-fog-beach-party",
@@ -312,6 +318,7 @@ export function buildRunModifiers(
             ...mods,
             actBoon: {
               poolId: def.effect.boonPoolId,
+              poolName: def.effect.boonPoolName,
               poolTemplateIds: boonSet.templateIds,
               offeredCount: def.effect.offeredCount,
               chooseCount: def.effect.chooseCount,

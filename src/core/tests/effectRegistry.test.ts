@@ -57,6 +57,7 @@ describe("connectorStyleOf", () => {
       connectorStyleOf({
         kind: "OfferBoon",
         setId: "fortune-v1",
+        setName: "fortune-v1",
         offeredCount: 3,
         chooseCount: 1,
       }),
@@ -76,6 +77,7 @@ describe("connectorStyleOf", () => {
     const effect: CardEffect = {
       kind: "OfferBoon",
       setId: "fortune-v1",
+      setName: "fortune-v1",
       offeredCount: 3,
       chooseCount: 1,
     };

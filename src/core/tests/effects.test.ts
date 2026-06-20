@@ -1138,6 +1138,7 @@ describe("OfferBoon", () => {
     const { state, events } = resolveOfferBoonHazard({
       kind: "OfferBoon",
       setId: "fortune-v1",
+      setName: "fortune-v1",
       offeredCount: 3,
       chooseCount: 1,
     });
@@ -1146,22 +1147,29 @@ describe("OfferBoon", () => {
     expect(state.pendingBoonChoices[0]).toMatchObject({
       source: "worldClear",
       setId: "fortune-v1",
+      setName: "fortune-v1",
       chooseCount: 1,
       bToDiscard: false,
     });
     expect(state.pendingBoonChoices[0]?.offeredTemplateIds).toHaveLength(3);
-    expect(events).toContainEqual({
-      type: "BoonOffered",
-      source: "worldClear",
-      setId: "fortune-v1",
-      templateIds: state.pendingBoonChoices[0]?.offeredTemplateIds ?? [],
-    });
+    expect(events).toContainEqual(
+      expect.objectContaining({
+        type: "BoonOffered",
+        source: "worldClear",
+        setId: "fortune-v1",
+        setName: "fortune-v1",
+        templateIds: state.pendingBoonChoices[0]?.offeredTemplateIds ?? [],
+        // onCleared hook events now carry provenance to the clearing hazard.
+        sourceCardId: "offer-boon-hazard",
+      }),
+    );
   });
 
   it("defaults chosen boons to hand", () => {
     const offer = resolveOfferBoonHazard({
       kind: "OfferBoon",
       setId: "fortune-v1",
+      setName: "fortune-v1",
       offeredCount: 3,
       chooseCount: 1,
     });
@@ -1187,6 +1195,7 @@ describe("OfferBoon", () => {
     const offer = resolveOfferBoonHazard({
       kind: "OfferBoon",
       setId: "fortune-v1",
+      setName: "fortune-v1",
       offeredCount: 3,
       chooseCount: 1,
       bToDiscard: true,
@@ -1213,6 +1222,7 @@ describe("OfferBoon", () => {
     const pending = {
       source: "worldClear" as const,
       setId: "fortune-v1",
+      setName: "fortune-v1",
       offeredTemplateIds: ["Lucky Break"],
       chooseCount: 1 as const,
       bToDiscard: false,
@@ -1222,6 +1232,7 @@ describe("OfferBoon", () => {
     const result = applyEffect(catalog, state, {
       kind: "OfferBoon",
       setId: "fortune-v1",
+      setName: "fortune-v1",
       offeredCount: 3,
       chooseCount: 1,
     });
@@ -1231,6 +1242,7 @@ describe("OfferBoon", () => {
     expect(result.state.pendingBoonChoices[1]).toMatchObject({
       source: "worldClear",
       setId: "fortune-v1",
+      setName: "fortune-v1",
       chooseCount: 1,
       bToDiscard: false,
     });
@@ -1241,6 +1253,7 @@ describe("OfferBoon", () => {
     const effect: CardEffect = {
       kind: "OfferBoon",
       setId: "missing-set",
+      setName: "fortune-v1",
       offeredCount: 3,
       chooseCount: 1,
     };
@@ -1286,6 +1299,7 @@ describe("OfferBoon", () => {
       {
         kind: "OfferBoon",
         setId: "fortune-v1",
+        setName: "fortune-v1",
         offeredCount: 3,
         chooseCount: 1,
       },
@@ -1324,6 +1338,7 @@ describe("OfferBoon", () => {
     const pending = {
       source: "worldClear" as const,
       setId: "fortune-v1",
+      setName: "fortune-v1",
       offeredTemplateIds: ["Lucky Break"],
       chooseCount: 1,
       bToDiscard: false,
@@ -1333,6 +1348,7 @@ describe("OfferBoon", () => {
     const result = applyEffect(illegalCatalog, state, {
       kind: "OfferBoon",
       setId: "fortune-v1",
+      setName: "fortune-v1",
       offeredCount: 3,
       chooseCount: 1,
     });

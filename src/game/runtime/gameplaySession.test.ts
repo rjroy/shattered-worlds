@@ -91,13 +91,8 @@ const fortuneRunModifiers = {
   ...DEFAULT_RUN_MODIFIERS,
   actBoon: {
     poolId: "fortune-v1",
-    poolTemplateIds: [
-      "Lucky Break",
-      "Second Wind",
-      "Found Tool",
-      "Clear Path",
-      "Steady Nerve",
-    ],
+    poolName: "fortune-v1",
+    poolTemplateIds: ["Lucky Break", "Second Wind", "Found Tool", "Clear Path", "Steady Nerve"],
     offeredCount: 3,
     chooseCount: 1,
   },
@@ -670,7 +665,9 @@ describe("gameplaySession", () => {
       "amount",
       "hazardTurnTotal",
     ]);
-    expectOwnKeys(secondBatch.events[2]!, ["type"]);
+    // WorldWon here is emitted by the cleared hazard's onCleared hook
+    // (SurviveWorld), so it carries provenance back to that hazard.
+    expectOwnKeys(secondBatch.events[2]!, ["type", "sourceCardId"]);
     expectOwnKeys(secondBatch.events[3]!, ["type", "hazardId", "templateId"]);
 
     expect(runEnded?.kind).toBe("RunEnded");
@@ -857,6 +854,80 @@ describe("gameplaySession", () => {
       templateId: chosenTemplateId,
       dest: "hand",
     });
+  });
+
+  it("previews a legal action with populated events and summary lines", () => {
+    const session = createGameplaySession(catalog, worldData, 42, {
+      makeSessionId: () => "session-preview",
+    });
+
+    const preview = session.preview({
+      type: "PlayCard",
+      cardId: requireHandCardId(session, "player", "Explore"),
+      targetId: requireHandCardId(session, "world", "Screams"),
+    });
+
+    expect(preview.previewable).toBe(true);
+    expect(preview.events.length).toBeGreaterThan(0);
+    expect(preview.summaryLines.length).toBeGreaterThan(0);
+  });
+
+  it("does not mutate session state when previewing", () => {
+    const session = createGameplaySession(catalog, worldData, 42, {
+      makeSessionId: () => "session-preview-no-mutate",
+    });
+
+    const stateBefore = session.state;
+
+    session.preview({
+      type: "PlayCard",
+      cardId: requireHandCardId(session, "player", "Explore"),
+      targetId: requireHandCardId(session, "world", "Screams"),
+    });
+
+    // Pure read: same reference, no resolution applied.
+    expect(session.state).toBe(stateBefore);
+  });
+
+  it("does not emit any stream item when previewing, only when dispatching", () => {
+    const items: RunStreamItem[] = [];
+    const session = createGameplaySession(catalog, worldData, 42, {
+      makeSessionId: () => "session-preview-no-emit",
+    });
+
+    // Subscribe after RunStarted so the spy starts empty.
+    session.subscribe((item) => items.push(item));
+
+    const action: Action = {
+      type: "PlayCard",
+      cardId: requireHandCardId(session, "player", "Explore"),
+      targetId: requireHandCardId(session, "world", "Screams"),
+    };
+
+    session.preview(action);
+
+    // No GameplayBatch, RunEnded, or any other item from a preview.
+    expect(items).toHaveLength(0);
+
+    // The spy works: dispatching the same action emits exactly one batch.
+    session.dispatch(action);
+
+    expect(items).toHaveLength(1);
+    expect(requireGameplayBatch(items[0]).action).toEqual(action);
+  });
+
+  it("returns a non-previewable result for an illegal action without throwing", () => {
+    const session = createGameplaySession(catalog, worldData, 42, {
+      makeSessionId: () => "session-preview-illegal",
+    });
+
+    const preview = session.preview({
+      type: "PlayCard",
+      cardId: "not-a-real-card-id",
+      targetId: requireHandCardId(session, "world", "Screams"),
+    });
+
+    expect(preview.previewable).toBe(false);
   });
 
   it("looks up boon templates by template id without minting and returns undefined for unknown ids", () => {

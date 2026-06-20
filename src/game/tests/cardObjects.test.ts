@@ -2,6 +2,7 @@ import { describe, it, expect } from "bun:test";
 import { CardView, applyCardHighlight } from "../view/CardView";
 import { TableScene } from "../scenes/TableScene";
 import { selectTheme } from "../view/themes/themeManifest";
+import type { VisualTheme } from "../view/themes/theme";
 import { CARD_FACE } from "../view/layout";
 import { mintCard } from "../../core/model/cards";
 import { createRng } from "../../core/engine/rng";
@@ -16,11 +17,15 @@ import type {
   WorldCard,
 } from "../../core/index";
 import {
+  catalog as coreCatalog,
   makePlayerCard,
   makeState as makeCoreState,
   makeWorldCard,
   mintPlayers as mintCorePlayers,
 } from "../../core/tests/testFixture";
+import { previewAction } from "../../core/index";
+import type { ActionPreview } from "../../core/index";
+import type { UserSettings } from "../runtime/userSettings";
 
 // ---------------------------------------------------------------------------
 // updateCostRing — fill/drain animation (S5)
@@ -275,39 +280,110 @@ describe("TableScene effective player-card layout", () => {
   });
 });
 
-function makeSelectionHarness(state: GameState): {
-  scene: {
-    onCardClick(cardId: string): void;
-    currentLegalTargetIds(): Set<string>;
-    showTargetPreview(targetId: string): void;
-    stepConnectorStyle(cardId: string, step: number): "progress" | "destroy" | "return" | null;
-    sel: unknown;
-    selectedCardSnapshot: PlayerCard | null;
-    game_: { state: GameState };
-    previewSlot: { text: string; visible: boolean };
+/**
+ * Fake ActionConfirmationView for the selection harness. Captures the most
+ * recent show() options so tests can assert the title/lines and drive the
+ * stored onCommit / onCancel exactly as the real view's Commit / Cancel buttons
+ * would (the real view nulls its callbacks on fire; this fake mirrors that
+ * exactly-once contract).
+ */
+interface FakeActionConfirmation {
+  isOpen: boolean;
+  lastShow: ActionConfirmationOptions | null;
+  show(opts: ActionConfirmationOptions): void;
+  hide(): void;
+  commit(): void;
+  cancel(): void;
+}
+
+interface ActionConfirmationOptions {
+  readonly title: string;
+  readonly lines: readonly string[];
+  readonly onCommit: () => void;
+  readonly onCancel: () => void;
+}
+
+function makeFakeActionConfirmation(): FakeActionConfirmation {
+  return {
+    isOpen: false,
+    lastShow: null,
+    show(opts: ActionConfirmationOptions): void {
+      this.lastShow = opts;
+      this.isOpen = true;
+    },
+    hide(): void {
+      this.isOpen = false;
+    },
+    commit(): void {
+      const opts = this.lastShow;
+      if (opts === null) return;
+      this.lastShow = null;
+      this.isOpen = false;
+      opts.onCommit();
+    },
+    cancel(): void {
+      const opts = this.lastShow;
+      if (opts === null) return;
+      this.lastShow = null;
+      this.isOpen = false;
+      opts.onCancel();
+    },
   };
+}
+
+interface SelectionHarnessScene {
+  onCardClick(cardId: string): void;
+  onEndTurnClick(): void;
+  onDiscardClick(cardId: string): void;
+  currentLegalTargetIds(): Set<string>;
+  showTargetPreview(targetId: string): void;
+  showIdleWorldPreview(card: WorldCard): void;
+  showEndTurnPreview(): void;
+  stepConnectorStyle(cardId: string, step: number): "progress" | "destroy" | "return" | null;
+  sel: unknown;
+  selectedCardSnapshot: PlayerCard | null;
+  theme_: VisualTheme;
+  game_: {
+    state: GameState;
+    dispatch(action: Action): void;
+    preview(action: Action): ActionPreview;
+  };
+  runtime_: { userSettings: { get(): UserSettings } };
+  actionConfirmation: FakeActionConfirmation;
+  previewSlot: {
+    text: string;
+    visible: boolean;
+    tint: string;
+    setText(text: string): void;
+    setVisible(visible: boolean): void;
+    setY(y: number): void;
+    setTint(tint: string): void;
+    getBgHeight(): number;
+  };
+  drawAll(): void;
+  clearConnector(): void;
+  clearPreviewSlot(): void;
+  dismissModal(): void;
+  dispatch(action: Action): void;
+}
+
+// Default to "off" so existing tests exercise the direct-dispatch path on
+// selection completion. Phase 9 confirmation tests set the mode they need.
+const DEFAULT_HARNESS_SETTINGS: UserSettings = {
+  version: 1,
+  confirmationMode: "off",
+  detailedHoverPreviews: true,
+};
+
+function makeSelectionHarness(
+  state: GameState,
+  settings: UserSettings = DEFAULT_HARNESS_SETTINGS,
+): {
+  scene: SelectionHarnessScene;
   drawCount: () => number;
   dispatched: () => Action[];
 } {
-  const scene = Object.create(TableScene.prototype) as {
-    onCardClick(cardId: string): void;
-    currentLegalTargetIds(): Set<string>;
-    showTargetPreview(targetId: string): void;
-    stepConnectorStyle(cardId: string, step: number): "progress" | "destroy" | "return" | null;
-    sel: unknown;
-    selectedCardSnapshot: PlayerCard | null;
-    game_: { state: GameState; dispatch(action: Action): void };
-    previewSlot: {
-      text: string;
-      visible: boolean;
-      setText(text: string): void;
-      setVisible(visible: boolean): void;
-    };
-    drawAll(): void;
-    clearConnector(): void;
-    dismissModal(): void;
-    dispatch(action: Action): void;
-  };
+  const scene = Object.create(TableScene.prototype) as SelectionHarnessScene;
   let draws = 0;
   const dispatched: Action[] = [];
   scene.game_ = {
@@ -315,23 +391,50 @@ function makeSelectionHarness(state: GameState): {
     dispatch(action: Action): void {
       dispatched.push(action);
     },
+    // Real unified preview against the shared catalog, so hover previews exercise
+    // the same engine the confirmation flow uses. Reads scene.game_.state each
+    // call so tests can swap the live state after selection begins.
+    preview(action: Action): ActionPreview {
+      return previewAction(coreCatalog, scene.game_.state, action);
+    },
   };
+  scene.runtime_ = { userSettings: { get: () => settings } };
+  scene.actionConfirmation = makeFakeActionConfirmation();
   scene.sel = { phase: "idle" };
   scene.selectedCardSnapshot = null;
+  // Mirror production: the scene picks its theme from the run's world so
+  // severity tinting (which reads theme_.intrusionHue / realityPalette.cancel)
+  // has a real palette to resolve against.
+  scene.theme_ = selectTheme(state.worldId);
+  // Faithful stand-in for the CommonLabel previewSlot: records the surface
+  // showPreviewSlot drives (text/visibility/tint) and answers the geometry
+  // query it makes (getBgHeight) so positioning does not throw.
   scene.previewSlot = {
     text: "",
     visible: false,
+    tint: "#FFFFFF",
     setText(text: string): void {
       this.text = text;
     },
     setVisible(visible: boolean): void {
       this.visible = visible;
     },
+    setY(): void {},
+    setTint(tint: string): void {
+      this.tint = tint;
+    },
+    getBgHeight(): number {
+      return 0;
+    },
   };
   scene.drawAll = () => {
     draws += 1;
   };
   scene.clearConnector = () => {};
+  scene.clearPreviewSlot = () => {
+    scene.previewSlot.setText("");
+    scene.previewSlot.setVisible(false);
+  };
   scene.dismissModal = () => {};
   scene.dispatch = (action: Action) => {
     scene.game_.dispatch(action);
@@ -424,7 +527,7 @@ describe("TableScene selected effective card snapshots", () => {
     ]);
   });
 
-  it("previews hazard progress from the selected effective snapshot", () => {
+  it("previews hazard progress from the selected effective snapshot via the unified engine", () => {
     const survey = makePlayerCard({
       id: "survey-preview",
       templateId: "Survey",
@@ -453,15 +556,154 @@ describe("TableScene selected effective card snapshots", () => {
     const { scene } = makeSelectionHarness(state);
 
     scene.onCardClick(survey.id);
-    scene.game_.state = makeCoreState({
+    scene.showTargetPreview(hazard.id);
+
+    // The unified summary surfaces the same information the legacy previewPlay
+    // gave: the Progress amount and the running total against cost (2/3, so it
+    // does not yet clear). The previewed action resolves through the live
+    // effective card (base 2 from the modifier), so the math reflects the
+    // modifier exactly as a real dispatch would.
+    expect(scene.previewSlot.visible).toBe(true);
+    expect(scene.previewSlot.text).toContain("Make 2 Progress on Deep Hazard");
+    expect(scene.previewSlot.text).toContain("(2/3)");
+  });
+
+  it("previews a clear when the play meets the hazard cost", () => {
+    const survey = makePlayerCard({
+      id: "survey-clear",
+      templateId: "Survey",
+      name: "Survey",
+      effect: { kind: "None" },
+      energyCost: 0,
+    });
+    const hazard = makeWorldCard({
+      id: "hazard-clear",
+      name: "Shallow Hazard",
+      cost: 2,
+      discardable: false,
+    });
+    const state = makeCoreState({
       hand: [survey, hazard],
       energy: 0,
-      runModifiers: DEFAULT_RUN_MODIFIERS,
+      runModifiers: {
+        ...DEFAULT_RUN_MODIFIERS,
+        playerCardModifiers: [
+          playerCardModifier("survey-clear-progress", "Survey", [
+            { kind: "appendEffect", effect: { kind: "DealProgress", base: 2 } },
+          ]),
+        ],
+      },
     });
+    const { scene } = makeSelectionHarness(state);
+
+    scene.onCardClick(survey.id);
     scene.showTargetPreview(hazard.id);
 
     expect(scene.previewSlot.visible).toBe(true);
-    expect(scene.previewSlot.text).toBe("Make 2 Progress → 1 more to clear Deep Hazard");
+    expect(scene.previewSlot.text).toContain("Clear Shallow Hazard");
+  });
+
+  it("clears the preview on hover-out and on cancel", () => {
+    const survey = makePlayerCard({
+      id: "survey-clearing",
+      templateId: "Survey",
+      name: "Survey",
+      effect: { kind: "None" },
+      energyCost: 0,
+    });
+    const hazard = makeWorldCard({
+      id: "hazard-clearing",
+      name: "Clearing Hazard",
+      cost: 3,
+      discardable: false,
+    });
+    const state = makeCoreState({
+      hand: [survey, hazard],
+      energy: 0,
+      runModifiers: {
+        ...DEFAULT_RUN_MODIFIERS,
+        playerCardModifiers: [
+          playerCardModifier("survey-clearing-progress", "Survey", [
+            { kind: "appendEffect", effect: { kind: "DealProgress", base: 1 } },
+          ]),
+        ],
+      },
+    });
+    const { scene } = makeSelectionHarness(state);
+
+    scene.onCardClick(survey.id);
+    scene.showTargetPreview(hazard.id);
+    expect(scene.previewSlot.visible).toBe(true);
+
+    // Hover-out and cancel both reset the slot through clearPreviewSlot.
+    scene.clearPreviewSlot();
+    expect(scene.previewSlot.visible).toBe(false);
+    expect(scene.previewSlot.text).toBe("");
+  });
+
+  it("trims to a minimal preview when detailedHoverPreviews is off but keeps the concealment warning", () => {
+    // Clearing the visible hazard fires its onCleared (DealProgressAll), which
+    // touches the concealed hazard sitting in hand. The unified preview then
+    // surfaces a concealment warning alongside the visible clear line. With the
+    // detailed setting off we keep only the first substantive line plus the
+    // concealment warning — the warning must never be trimmed away.
+    const survey = makePlayerCard({
+      id: "survey-conceal",
+      templateId: "Survey",
+      name: "Survey",
+      effect: { kind: "DealProgress", base: 1 },
+      energyCost: 0,
+    });
+    const visible = makeWorldCard({
+      id: "hazard-visible",
+      name: "Visible Hazard",
+      cost: 1,
+      discardable: false,
+      onCleared: { kind: "DealProgressAll", base: 1 },
+    });
+    const concealed = makeWorldCard({
+      id: "hazard-concealed",
+      name: "Concealed Hazard",
+      cost: 5,
+      discardable: false,
+      keywords: [{ name: "Concealed", value: 3 }],
+    });
+    const state = makeCoreState({
+      hand: [survey, visible, concealed],
+      energy: 0,
+      light: 0, // 0 < 3 → the concealed hazard stays hidden
+    });
+    const { scene } = makeSelectionHarness(state, {
+      version: 1,
+      confirmationMode: "always",
+      detailedHoverPreviews: false,
+    });
+
+    scene.onCardClick(survey.id);
+    // Hover the VISIBLE hazard (concealed cards are never legal hazard targets).
+    scene.showTargetPreview(visible.id);
+
+    expect(scene.previewSlot.visible).toBe(true);
+    // The concealment warning survives the off-mode trim.
+    expect(scene.previewSlot.text).toContain("concealed");
+    // Minimal mode keeps only the first substantive line plus concealment
+    // warnings: the visible clear detail line is trimmed away.
+    expect(scene.previewSlot.text).not.toContain("Clear Visible Hazard");
+    // The leading substantive consequence line is still present.
+    expect(scene.previewSlot.text).toContain("Make 1 total Progress");
+
+    // For contrast, the SAME hover with detailed previews on keeps the clear line.
+    const detailed = makeSelectionHarness(
+      makeCoreState({
+        hand: [survey, visible, concealed],
+        energy: 0,
+        light: 0,
+      }),
+    );
+    detailed.scene.onCardClick(survey.id);
+    detailed.scene.showTargetPreview(visible.id);
+    expect(detailed.scene.previewSlot.text).toContain("Clear Visible Hazard");
+    expect(detailed.scene.previewSlot.text).toContain("concealed");
   });
 
   it("styles connectors from appended progress, return, and destroy steps on the selected effective snapshot", () => {
@@ -608,6 +850,7 @@ describe("TableScene selected effective card snapshots", () => {
       modalChooser: { destroy(): void } | null;
       game_: { state: GameState };
       sel: unknown;
+      actionConfirmation: { isOpen: boolean };
       onModalChoose(spec: Extract<TargetSpec, { kind: "modal" }>, idx: number): void;
       drawAll(): void;
       clearSelectedCardSnapshot(): void;
@@ -617,6 +860,7 @@ describe("TableScene selected effective card snapshots", () => {
     let destroyed = 0;
     let draws = 0;
     scene.game_ = { state: makeCoreState({ hand: [tactic], pendingBoonChoices: [] }) };
+    scene.actionConfirmation = { isOpen: false };
     scene.sel = { phase: "awaiting-modal", cardId: tactic.id };
     scene.selectedCardSnapshot = effectiveTactic;
     scene.modalChooser = {
@@ -1875,5 +2119,471 @@ describe("CardView applyHighlight pick badge", () => {
     expect(rect.strokeColor).toBe(fs.pickedBorder);
     expect(rect.fillColor).toBe(fs.pickedBorder);
     expect(rect.fillAlpha).toBeGreaterThan(0);
+  });
+});
+
+describe("TableScene idle world-card and End Turn previews", () => {
+  it("shows no idle preview for a non-discardable world card", () => {
+    // Idle hover previews the DiscardHazard action. A non-discardable card has
+    // no discard to preview, so the slot stays hidden — its end-of-turn threat
+    // is read off the card face, not this slot.
+    const hazard = makeWorldCard({
+      id: "idle-eot",
+      name: "Decaying Wreck",
+      discardable: false,
+      onEndOfTurn: { kind: "Damage", amount: 3 },
+    });
+    const state = makeCoreState({ hand: [hazard], light: 0 });
+    const { scene } = makeSelectionHarness(state);
+
+    scene.showIdleWorldPreview(hazard);
+
+    expect(scene.previewSlot.visible).toBe(false);
+  });
+
+  it("previews the discard consequence of a discardable world card on idle hover", () => {
+    const hazard = makeWorldCard({
+      id: "idle-discard",
+      name: "Brittle Debris",
+      discardable: true,
+      onEndOfTurn: { kind: "None" },
+      onDiscarded: { kind: "Damage", amount: 4 },
+    });
+    const state = makeCoreState({ hand: [hazard], light: 0 });
+    const { scene } = makeSelectionHarness(state);
+
+    scene.showIdleWorldPreview(hazard);
+
+    expect(scene.previewSlot.visible).toBe(true);
+    expect(scene.previewSlot.text).toContain("Discard Brittle Debris");
+    expect(scene.previewSlot.text).toContain("Take 4 damage");
+  });
+
+  it("previews only the discard consequence, not the end-of-turn hook, on idle hover", () => {
+    // The unified discard preview surfaces what discarding does (6 damage). The
+    // end-of-turn hook (2 damage) is the card's own behaviour, not part of the
+    // discard action, so it is not folded into this slot.
+    const hazard = makeWorldCard({
+      id: "idle-both",
+      name: "Volatile Pile",
+      discardable: true,
+      onEndOfTurn: { kind: "Damage", amount: 2 },
+      onDiscarded: { kind: "Damage", amount: 6 },
+    });
+    const state = makeCoreState({ hand: [hazard], light: 0 });
+    const { scene } = makeSelectionHarness(state);
+
+    scene.showIdleWorldPreview(hazard);
+
+    expect(scene.previewSlot.visible).toBe(true);
+    expect(scene.previewSlot.text).toContain("Take 6 damage");
+    expect(scene.previewSlot.text).not.toContain("Take 2 damage");
+  });
+
+  it("shows only the concealment warning for a fogged world card on idle hover", () => {
+    const hazard = makeWorldCard({
+      id: "idle-fog",
+      name: "Hidden Terror",
+      keywords: [{ name: "Concealed", value: 2 }],
+      onEndOfTurn: { kind: "Damage", amount: 9 },
+      onDiscarded: { kind: "Damage", amount: 9 },
+    });
+    // Light 0 < depth 2 → concealed.
+    const state = makeCoreState({ hand: [hazard], light: 0 });
+    const { scene } = makeSelectionHarness(state);
+
+    scene.showIdleWorldPreview(hazard);
+
+    expect(scene.previewSlot.visible).toBe(true);
+    expect(scene.previewSlot.text).toContain("concealed");
+    expect(scene.previewSlot.text).not.toContain("Hidden Terror");
+    expect(scene.previewSlot.text).not.toContain("End of turn");
+    expect(scene.previewSlot.text).not.toContain("9");
+  });
+
+  it("hides the idle preview for a world card with no meaningful hooks", () => {
+    const hazard = makeWorldCard({
+      id: "idle-inert",
+      name: "Inert Rubble",
+      discardable: false,
+      onEndOfTurn: { kind: "None" },
+      onDiscarded: { kind: "None" },
+    });
+    const state = makeCoreState({ hand: [hazard], light: 0 });
+    const { scene } = makeSelectionHarness(state);
+
+    scene.showIdleWorldPreview(hazard);
+
+    expect(scene.previewSlot.visible).toBe(false);
+  });
+
+  it("does not render an idle preview while targeting (targeted preview keeps priority)", () => {
+    // Drive a real targeting selection, then call showIdleWorldPreview directly:
+    // it must no-op because the phase is no longer idle, leaving the targeted
+    // preview untouched. This proves the idle/targeted priority split.
+    const survey = makePlayerCard({
+      id: "priority-survey",
+      templateId: "Survey",
+      name: "Survey",
+      effect: { kind: "None" },
+      energyCost: 0,
+    });
+    const hazard = makeWorldCard({
+      id: "priority-hazard",
+      name: "Targeted Hazard",
+      cost: 3,
+      discardable: true,
+      onEndOfTurn: { kind: "Damage", amount: 7 },
+    });
+    const state = makeCoreState({
+      hand: [survey, hazard],
+      energy: 0,
+      light: 0,
+      runModifiers: {
+        ...DEFAULT_RUN_MODIFIERS,
+        playerCardModifiers: [
+          playerCardModifier("priority-survey-progress", "Survey", [
+            { kind: "appendEffect", effect: { kind: "DealProgress", base: 2 } },
+          ]),
+        ],
+      },
+    });
+    const { scene } = makeSelectionHarness(state);
+
+    scene.onCardClick(survey.id);
+    scene.showTargetPreview(hazard.id);
+    const targetedText = scene.previewSlot.text;
+    expect(targetedText).toContain("Make 2 Progress on Targeted Hazard");
+
+    // Now the idle hook preview is gated out by the active targeting phase.
+    scene.showIdleWorldPreview(hazard);
+    expect(scene.previewSlot.text).toBe(targetedText);
+    expect(scene.previewSlot.text).not.toContain("End of turn:");
+  });
+
+  it("previews the EndTurn action's consequences on End Turn hover", () => {
+    const hazard = makeWorldCard({
+      id: "endturn-eot",
+      name: "Ticking Hazard",
+      discardable: false,
+      onEndOfTurn: { kind: "Damage", amount: 3 },
+    });
+    const state = makeCoreState({ hand: [hazard], light: 0 });
+    const { scene } = makeSelectionHarness(state);
+
+    // Idle phase: ending the turn is available, so the preview surfaces the
+    // end-of-turn hook firing (3 damage).
+    scene.showEndTurnPreview();
+
+    expect(scene.previewSlot.visible).toBe(true);
+    expect(scene.previewSlot.text).toContain("Take 3 damage");
+  });
+
+  it("does not preview End Turn while a selection is active", () => {
+    const survey = makePlayerCard({
+      id: "endturn-gate-survey",
+      templateId: "Survey",
+      name: "Survey",
+      effect: { kind: "None" },
+      energyCost: 0,
+    });
+    const hazard = makeWorldCard({
+      id: "endturn-gate-hazard",
+      name: "Gate Hazard",
+      cost: 3,
+      discardable: false,
+      onEndOfTurn: { kind: "Damage", amount: 3 },
+    });
+    const state = makeCoreState({
+      hand: [survey, hazard],
+      energy: 0,
+      light: 0,
+      runModifiers: {
+        ...DEFAULT_RUN_MODIFIERS,
+        playerCardModifiers: [
+          playerCardModifier("endturn-gate-progress", "Survey", [
+            { kind: "appendEffect", effect: { kind: "DealProgress", base: 1 } },
+          ]),
+        ],
+      },
+    });
+    const { scene } = makeSelectionHarness(state);
+
+    // Begin a selection so the End Turn button would be non-interactive.
+    scene.onCardClick(survey.id);
+    scene.clearPreviewSlot();
+
+    scene.showEndTurnPreview();
+    expect(scene.previewSlot.visible).toBe(false);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Phase 9: maybeConfirmOrDispatch — confirmation gate routing
+// ---------------------------------------------------------------------------
+
+function settings(mode: UserSettings["confirmationMode"]): UserSettings {
+  return { version: 1, confirmationMode: mode, detailedHoverPreviews: true };
+}
+
+/** A no-target player card that gains energy: a deterministic risk-NONE play. */
+function gainEnergyCard(id: string): PlayerCard {
+  return makePlayerCard({
+    id,
+    templateId: id,
+    name: id,
+    effect: { kind: "GainEnergy", amount: 1 },
+    energyCost: 0,
+  });
+}
+
+describe("TableScene confirmation gate (Phase 9)", () => {
+  it("mode 'always': EndTurn opens the modal and does not dispatch yet", () => {
+    const hazard = makeWorldCard({ id: "always-eot", discardable: false });
+    const state = makeCoreState({ hand: [hazard], light: 5 });
+    const { scene, dispatched } = makeSelectionHarness(state, settings("always"));
+
+    scene.onEndTurnClick();
+
+    expect(scene.actionConfirmation.isOpen).toBe(true);
+    expect(scene.actionConfirmation.lastShow?.title).toBe("End Turn");
+    expect(dispatched()).toEqual([]);
+  });
+
+  it("mode 'always': DiscardHazard opens the modal and does not dispatch yet", () => {
+    const hazard = makeWorldCard({ id: "always-discard", name: "Trash", discardable: true });
+    const state = makeCoreState({ hand: [hazard], light: 5 });
+    const { scene, dispatched } = makeSelectionHarness(state, settings("always"));
+
+    scene.onDiscardClick(hazard.id);
+
+    expect(scene.actionConfirmation.isOpen).toBe(true);
+    expect(scene.actionConfirmation.lastShow?.title).toBe("Discard Trash");
+    expect(dispatched()).toEqual([]);
+  });
+
+  it("mode 'always': completing a PlayCard opens the modal and does not dispatch yet", () => {
+    const card = gainEnergyCard("always-play");
+    const state = makeCoreState({ hand: [card], energy: 0, light: 5 });
+    const { scene, dispatched } = makeSelectionHarness(state, settings("always"));
+
+    // No-target card: the click completes the selection and routes to the gate.
+    scene.onCardClick(card.id);
+
+    expect(scene.actionConfirmation.isOpen).toBe(true);
+    expect(scene.actionConfirmation.lastShow?.title).toBe("Play always-play");
+    expect(dispatched()).toEqual([]);
+  });
+
+  it("mode 'off': EndTurn dispatches immediately and the modal never opens", () => {
+    const hazard = makeWorldCard({ id: "off-eot", discardable: false });
+    const state = makeCoreState({ hand: [hazard], light: 5 });
+    const { scene, dispatched } = makeSelectionHarness(state, settings("off"));
+
+    scene.onEndTurnClick();
+
+    expect(scene.actionConfirmation.isOpen).toBe(false);
+    expect(dispatched()).toEqual([{ type: "EndTurn" }]);
+  });
+
+  it("mode 'risk-only': a risk-NONE play dispatches directly with no modal", () => {
+    const card = gainEnergyCard("risk-none-play");
+    const state = makeCoreState({ hand: [card], energy: 0, light: 5 });
+    // Confirm the action really is risk none through the real engine.
+    expect(
+      previewAction(coreCatalog, state, { type: "PlayCard", cardId: card.id }).risk,
+    ).toBe("none");
+
+    const { scene, dispatched } = makeSelectionHarness(state, settings("risk-only"));
+    scene.onCardClick(card.id);
+
+    expect(scene.actionConfirmation.isOpen).toBe(false);
+    expect(dispatched()).toEqual([{ type: "PlayCard", cardId: card.id }]);
+  });
+
+  it("mode 'risk-only': a RISK EndTurn (concealed card in hand) opens the modal", () => {
+    const concealed = makeWorldCard({
+      id: "risk-eot-concealed",
+      name: "Hidden Menace",
+      cost: 5,
+      discardable: false,
+      keywords: [{ name: "Concealed", value: 3 }],
+    });
+    const state = makeCoreState({ hand: [concealed], light: 0 });
+    // The engine classifies EndTurn with a concealed world card in hand as harmful.
+    expect(previewAction(coreCatalog, state, { type: "EndTurn" }).risk).toBe("harmful");
+
+    const { scene, dispatched } = makeSelectionHarness(state, settings("risk-only"));
+    scene.onEndTurnClick();
+
+    expect(scene.actionConfirmation.isOpen).toBe(true);
+    expect(dispatched()).toEqual([]);
+  });
+
+  it("commit fires the stored action exactly once", () => {
+    const hazard = makeWorldCard({ id: "commit-once", discardable: false });
+    const state = makeCoreState({ hand: [hazard], light: 5 });
+    const { scene, dispatched } = makeSelectionHarness(state, settings("always"));
+
+    scene.onEndTurnClick();
+    scene.actionConfirmation.commit();
+    // A second commit (e.g. a double click) must not fire again.
+    scene.actionConfirmation.commit();
+
+    expect(dispatched()).toEqual([{ type: "EndTurn" }]);
+    expect(scene.actionConfirmation.isOpen).toBe(false);
+  });
+
+  it("cancel dispatches nothing and resets the selection to idle", () => {
+    const card = gainEnergyCard("cancel-play");
+    const state = makeCoreState({ hand: [card], energy: 0, light: 5 });
+    const { scene, dispatched } = makeSelectionHarness(state, settings("always"));
+
+    scene.onCardClick(card.id);
+    expect(scene.actionConfirmation.isOpen).toBe(true);
+
+    scene.actionConfirmation.cancel();
+
+    expect(dispatched()).toEqual([]);
+    expect(scene.sel).toEqual({ phase: "idle" });
+    expect(scene.previewSlot.visible).toBe(false);
+  });
+
+  it("while the modal is open, table input is inert (no dispatch)", () => {
+    const card = gainEnergyCard("inert-play");
+    const hazard = makeWorldCard({ id: "inert-haz", discardable: true });
+    const state = makeCoreState({ hand: [card, hazard], energy: 0, light: 5 });
+    const { scene, dispatched } = makeSelectionHarness(state, settings("always"));
+
+    // Open the modal via a play.
+    scene.onCardClick(card.id);
+    expect(scene.actionConfirmation.isOpen).toBe(true);
+
+    // Every committed entry point no-ops while the modal is up.
+    scene.onCardClick(hazard.id);
+    scene.onEndTurnClick();
+    scene.onDiscardClick(hazard.id);
+
+    expect(dispatched()).toEqual([]);
+  });
+
+  it("title is concealment-safe for a concealed DiscardHazard", () => {
+    const concealed = makeWorldCard({
+      id: "conceal-discard",
+      name: "Real Secret Name",
+      discardable: true,
+      keywords: [{ name: "Concealed", value: 3 }],
+    });
+    const state = makeCoreState({ hand: [concealed], light: 0 });
+    const { scene } = makeSelectionHarness(state, settings("always"));
+
+    scene.onDiscardClick(concealed.id);
+
+    expect(scene.actionConfirmation.isOpen).toBe(true);
+    const title = scene.actionConfirmation.lastShow?.title ?? "";
+    expect(title).not.toContain("Real Secret Name");
+    expect(title).toBe("Discard a concealed hazard");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Phase 10: overlay/modal lifecycle cleanup at terminal, ESC, and the
+// non-previewable defensive guard.
+// ---------------------------------------------------------------------------
+
+describe("TableScene confirmation lifecycle (Phase 10)", () => {
+  it("dismisses an open confirmation modal when the terminal run summary shows", () => {
+    // showRunSummaryFromStats reaches into many collaborators; stub exactly the
+    // ones the cleanup path touches so the assertion is about the modal hide.
+    const scene = Object.create(TableScene.prototype) as Record<string, unknown> & {
+      showRunSummaryFromStats(): void;
+    };
+    let summaryShown = false;
+    const data = { outcome: "won" } as unknown;
+    scene.terminalSummaryShown_ = false;
+    scene.buildRunSummaryData = () => data;
+    scene.clearConnector = () => {};
+    scene.clearPreviewSlot = () => {};
+    scene.actionConfirmation = makeFakeActionConfirmation();
+    (scene.actionConfirmation as FakeActionConfirmation).isOpen = true;
+    scene.helpOverlay = { setVisible(): void {} };
+    scene.settingsOverlay = { close(): void {} };
+    scene.questionBtn = {
+      disableInteractive(): unknown {
+        return scene.questionBtn;
+      },
+      setVisible(): unknown {
+        return scene.questionBtn;
+      },
+    };
+    scene.settingsBtn = {
+      disableInteractive(): unknown {
+        return scene.settingsBtn;
+      },
+      setVisible(): unknown {
+        return scene.settingsBtn;
+      },
+    };
+    scene.exitBtn = {
+      disableInteractive(): unknown {
+        return scene.exitBtn;
+      },
+    };
+    scene.runSummary = {
+      show(_d: unknown, _cb: () => void): void {
+        summaryShown = true;
+      },
+    };
+
+    scene.showRunSummaryFromStats();
+
+    // The confirmation modal is gone, and the run summary is up.
+    expect((scene.actionConfirmation as FakeActionConfirmation).isOpen).toBe(false);
+    expect(summaryShown).toBe(true);
+  });
+
+  it("ESC while the confirmation modal is open cancels it: no dispatch, idle, hidden", () => {
+    const card = gainEnergyCard("esc-cancel-play");
+    const state = makeCoreState({ hand: [card], energy: 0, light: 5 });
+    const { scene, dispatched } = makeSelectionHarness(state, settings("always"));
+
+    // Open the modal via a completed play.
+    scene.onCardClick(card.id);
+    expect(scene.actionConfirmation.isOpen).toBe(true);
+
+    // Drive the same ESC path the keydown handler runs while the modal is open:
+    // hide the view, then cancel (dispatch nothing, reset selection to idle).
+    scene.actionConfirmation.hide();
+    (scene as unknown as { cancelConfirmation(): void }).cancelConfirmation();
+
+    expect(dispatched()).toEqual([]);
+    expect(scene.sel).toEqual({ phase: "idle" });
+    expect(scene.actionConfirmation.isOpen).toBe(false);
+    expect(scene.previewSlot.visible).toBe(false);
+  });
+
+  it("a non-previewable action dispatches directly without opening the modal", () => {
+    const card = gainEnergyCard("nonpreviewable-play");
+    const state = makeCoreState({ hand: [card], energy: 0, light: 5 });
+    // mode 'always' would normally open the modal — the previewable:false guard
+    // must short-circuit that and dispatch directly instead.
+    const { scene, dispatched } = makeSelectionHarness(state, settings("always"));
+
+    // Point preview at a non-previewable result (illegal action surface).
+    scene.game_.preview = (): ActionPreview => ({
+      action: { type: "EndTurn" },
+      events: [],
+      summaryLines: [],
+      severity: "info",
+      risk: "none",
+      previewable: false,
+    });
+
+    (scene as unknown as { maybeConfirmOrDispatch(action: Action): void }).maybeConfirmOrDispatch({
+      type: "EndTurn",
+    });
+
+    expect(scene.actionConfirmation.isOpen).toBe(false);
+    expect(dispatched()).toEqual([{ type: "EndTurn" }]);
   });
 });

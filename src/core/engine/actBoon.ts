@@ -16,6 +16,7 @@ type BoonOfferConfig =
       readonly source: "act";
       readonly act: number;
       readonly setId: string;
+      readonly setName: string;
       readonly poolTemplateIds: readonly CardTemplateId[];
       readonly offeredCount: number;
       readonly chooseCount: number;
@@ -24,6 +25,7 @@ type BoonOfferConfig =
   | {
       readonly source: Exclude<BoonChoiceSource, "act">;
       readonly setId: string;
+      readonly setName: string;
       readonly poolTemplateIds: readonly CardTemplateId[];
       readonly offeredCount: number;
       readonly chooseCount: number;
@@ -74,6 +76,7 @@ export function createBoonOffer(
           source: "act",
           act: config.act,
           setId: config.setId,
+          setName: config.setName,
           offeredTemplateIds,
           chooseCount: config.chooseCount,
           bToDiscard: config.bToDiscard ?? false,
@@ -81,6 +84,7 @@ export function createBoonOffer(
       : {
           source: config.source,
           setId: config.setId,
+          setName: config.setName,
           offeredTemplateIds,
           chooseCount: config.chooseCount,
           bToDiscard: config.bToDiscard ?? false,
@@ -92,6 +96,7 @@ export function createBoonOffer(
           type: "BoonOffered",
           source: "act",
           setId: config.setId,
+          setName: config.setName,
           act: config.act,
           templateIds: offeredTemplateIds,
         }
@@ -99,6 +104,7 @@ export function createBoonOffer(
           type: "BoonOffered",
           source: config.source,
           setId: config.setId,
+          setName: config.setName,
           templateIds: offeredTemplateIds,
         };
 
@@ -122,6 +128,7 @@ export function createActBoonOffer(
     source: "act",
     act,
     setId: actBoon.poolId,
+    setName: actBoon.poolName,
     poolTemplateIds: actBoon.poolTemplateIds,
     offeredCount: actBoon.offeredCount,
     chooseCount: actBoon.chooseCount,

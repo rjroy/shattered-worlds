@@ -1,5 +1,5 @@
 import { createGame } from '../../core/index'
-import type { Action, CardCatalog, GameCore, WorldData } from '../../core/index'
+import type { Action, ActionPreview, CardCatalog, GameCore, WorldData } from '../../core/index'
 import type { RunModifiers } from '../../data/unlocks/types'
 
 import {
@@ -174,6 +174,12 @@ export function createGameplaySession(
 
     intensity() {
       return core.intensity()
+    },
+
+    // Pure read: delegates straight to the core. Emits nothing and never closes
+    // the run, so it is safe to call even after the run has ended.
+    preview(action: Action): ActionPreview {
+      return core.preview(action)
     },
 
     template(templateId) {

@@ -18,6 +18,7 @@ export class OfferBoonHandler extends EffectHandler<OfferBoonEffect> {
     const result = createBoonOffer(ctx.catalog, ctx.state, {
       source: "worldClear",
       setId: effect.setId,
+      setName: effect.setName,
       poolTemplateIds: boonSet.templateIds,
       offeredCount: effect.offeredCount,
       chooseCount: effect.chooseCount,

@@ -6,11 +6,15 @@ import { createWorld } from "./world";
 import { availableActions } from "./available";
 import { reduce } from "./reduce";
 import { intensity } from "./intensity";
+import { previewAction } from "../view/actionPreview";
+import type { ActionPreview } from "../view/actionPreview";
 
 export interface GameCore {
   readonly state: GameState;
   readonly openingEvents: readonly GameEvent[];
   dispatch(action: Action): { state: GameState; events: GameEvent[] };
+  /** Pure read: summarize an action against current state without mutating it. */
+  preview(action: Action): ActionPreview;
   availableActions(): AvailableActions;
   intensity(): number;
   template(templateId: CardTemplateId): Readonly<CardTemplate> | undefined;
@@ -38,6 +42,9 @@ export function createGame(
       const result = reduce(catalog, current, action);
       current = result.state;
       return result;
+    },
+    preview(action: Action) {
+      return previewAction(catalog, current, action);
     },
     availableActions() {
       return availableActions(current);

@@ -61,6 +61,7 @@ export type RunModifiers = {
   readonly keywordDamageBonus: number;
   readonly actBoon: {
     readonly poolId: string;
+    readonly poolName: string;
     readonly poolTemplateIds: readonly string[];
     readonly offeredCount: number;
     readonly chooseCount: number;
@@ -102,6 +103,7 @@ export type UnlockEffect =
   | {
       readonly type: "actReward";
       readonly boonPoolId: string;
+      readonly boonPoolName: string;
       readonly offeredCount: number;
       readonly chooseCount: number;
     };

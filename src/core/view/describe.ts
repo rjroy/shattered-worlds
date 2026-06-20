@@ -27,6 +27,17 @@ export function describeEffect(effect: CardEffect): string[] {
 }
 
 // ---------------------------------------------------------------------------
+// Idle world-card hook summary
+// ---------------------------------------------------------------------------
+
+/**
+ * Concealment-safe copy for an idle world-card hover. Exported so the renderer
+ * (and tests) can recognise this exact line, mirroring `previewAction`'s
+ * concealment warnings. A concealed card never reveals its name or hook text.
+ */
+export const CONCEALED_WORLD_HOOK_WARNING = "Effect is concealed. Beware.";
+
+// ---------------------------------------------------------------------------
 // Live target preview
 // ---------------------------------------------------------------------------
 

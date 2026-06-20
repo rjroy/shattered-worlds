@@ -99,6 +99,8 @@ export function createWorld(
     light: (world.startLight ?? 0) + mods.extraStartLight,
     heat: (world.startHeat ?? 0) + mods.extraStartHeat,
     pendingForceDestroy: 0,
+    // pendingForceDestroySource is omitted (undefined): no destroy queued yet.
+    // exactOptionalPropertyTypes forbids an explicit `undefined` literal here.
     braceCharges: mods.extraStartBrace,
     pendingBoonChoices: [],
     runModifiers: mods,

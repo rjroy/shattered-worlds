@@ -53,6 +53,7 @@ export type CardEffect =
   | {
       kind: "OfferBoon";
       setId: string;
+      setName: string;
       offeredCount: number;
       chooseCount: number;
       bToDiscard?: boolean;
@@ -178,6 +179,14 @@ export interface GameState {
   // Count of random player cards to destroy from the next refilled hand.
   // Queued by the ForceDestroy effect; drained at turn start.
   pendingForceDestroy: number;
+  // Id of a world card that queued the pending destroy. ForceDestroy defers its
+  // CardDestroyed/BraceConsumed events to turn start (resolveForceDestroy), past
+  // the applyEffect provenance boundary, so the queuing card's id is carried
+  // here and stamped onto those deferred events. The first queuing card wins;
+  // the preview decides whether that source is concealed. Cleared (set back to
+  // undefined) whenever pendingForceDestroy resets to 0, so the `| undefined` is
+  // explicit to allow that reset under exactOptionalPropertyTypes.
+  pendingForceDestroySource?: CardId | undefined;
   // Charges that absorb ForceDestroy snatches before they destroy player
   // cards. Granted by the Brace effect; consumed in resolveForceDestroy.
   braceCharges: number;
@@ -197,6 +206,7 @@ export type BoonOffered =
       readonly type: "BoonOffered";
       readonly source: "act";
       readonly setId: string;
+      readonly setName: string;
       readonly templateIds: readonly CardTemplateId[];
       readonly act: number;
     }
@@ -204,6 +214,7 @@ export type BoonOffered =
       readonly type: "BoonOffered";
       readonly source: "worldClear";
       readonly setId: string;
+      readonly setName: string;
       readonly templateIds: readonly CardTemplateId[];
       readonly act?: never;
     };
@@ -212,6 +223,7 @@ export type PendingBoonChoice = {
   readonly source: BoonChoiceSource;
   readonly act?: number;
   readonly setId: string;
+  readonly setName: string;
   readonly offeredTemplateIds: readonly CardTemplateId[];
   readonly chooseCount: number;
   readonly bToDiscard: boolean;
@@ -234,7 +246,15 @@ export interface AvailableActions {
   legalTargets(cardId: CardId, step: number, choice?: number): readonly CardId[];
 }
 
-export type GameEvent =
+// Every GameEvent variant gains an optional `sourceCardId` via the trailing
+// intersection. Intersection distributes over the union — `(A | B) & P` is
+// `(A & P) | (B & P)` — so each variant keeps its `type` discriminant and also
+// carries optional provenance. It is stamped at the applyEffect boundary
+// (effects.ts) with the id of the world card whose hook emitted the event, so
+// the preview layer can mask events that come from concealed sources without
+// re-deriving the reducer's emission pattern. Player-played effects leave it
+// undefined.
+export type GameEvent = (
   | {
       type: "CardPlayed";
       cardId: CardId;
@@ -272,7 +292,12 @@ export type GameEvent =
       templateId: CardTemplateId;
       dest: "hand" | "playerDiscard";
     }
-  | { type: "CardsDrawn"; ids: readonly CardId[]; templateIds: readonly CardTemplateId[] }
+  | {
+      type: "CardsDrawn";
+      ids: readonly CardId[];
+      templateIds: readonly CardTemplateId[];
+      bHazard: boolean;
+    }
   | { type: "TurnEnded" }
   | { type: "WorldWon" }
   | { type: "WorldLost" }
@@ -280,4 +305,5 @@ export type GameEvent =
   | { type: "BraceConsumed"; absorbed: number; remaining: number }
   | { type: "WorldCardsExiled"; ids: readonly CardId[]; templateIds: readonly CardTemplateId[] }
   | { type: "HealReceived"; amount: number }
-  | { type: "HazardAdded"; templateId: CardTemplateId };
+  | { type: "HazardAdded"; templateId: CardTemplateId }
+) & { readonly sourceCardId?: CardId };
