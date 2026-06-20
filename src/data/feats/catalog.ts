@@ -180,28 +180,28 @@ export const FEAT_CATALOG: readonly FeatDefinition[] = [
   {
     id: "zombie-slayer",
     name: "Zombie Slayer",
-    description: "Defeat 100 Zombies across all runs.",
+    description: "Defeat 25 Zombies across all runs.",
     conditions: [{ statId: "witness.Zombie.resolvedCount", operator: "gte", value: 25 }],
     reward: { items: [{ type: "memoryFragments", amount: 20 }] },
   },
   {
     id: "bird-slayer",
     name: "Talon Stomper",
-    description: "Fight back 100 Gripping Talons across all runs.",
+    description: "Fight back 25 Gripping Talons across all runs.",
     conditions: [{ statId: "witness.Gripping Talons.resolvedCount", operator: "gte", value: 25 }],
     reward: { items: [{ type: "memoryFragments", amount: 20 }] },
   },
   {
     id: "lava-slayer",
     name: "Lava Racer",
-    description: "Speed past 100 Lava Flows across all runs.",
+    description: "Speed past 25 Lava Flows across all runs.",
     conditions: [{ statId: "witness.Lava Flow.resolvedCount", operator: "gte", value: 25 }],
     reward: { items: [{ type: "memoryFragments", amount: 20 }] },
   },
   {
     id: "plant-slayer",
     name: "Human Pesticide",
-    description: "Defeat 100 Something in the Atrium across all runs.",
+    description: "Defeat 25 Something in the Atrium across all runs.",
     conditions: [
       { statId: "witness.Something in the Atrium.resolvedCount", operator: "gte", value: 25 },
     ],
@@ -210,7 +210,7 @@ export const FEAT_CATALOG: readonly FeatDefinition[] = [
   {
     id: "mist-slayer",
     name: "Personal Lighthouse",
-    description: "Defeat 100 Something in the Mist across all runs.",
+    description: "Defeat 25 Something in the Mist across all runs.",
     conditions: [
       { statId: "witness.Something in the Mist.resolvedCount", operator: "gte", value: 25 },
     ],
