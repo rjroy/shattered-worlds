@@ -4,6 +4,7 @@
     "Sprint": {
       "kind": "player",
       "name": "Sprint",
+      "rarity": "common",
       "insetKey": "inset-sprint",
       "energyCost": 1,
       "effect": {
@@ -17,12 +18,14 @@
     "Explore": {
       "kind": "player",
       "name": "Explore",
+      "rarity": "common",
       "insetKey": "inset-explore",
       "effect": { "kind": "DealProgress", "base": 1, "bonus": { "tag": "Hidden", "amount": 1 } }
     },
     "Barricade": {
       "kind": "player",
       "name": "Barricade",
+      "rarity": "common",
       "insetKey": "inset-barricade",
       "energyCost": 1,
       "effect": {
@@ -36,12 +39,14 @@
     "Med Kit": {
       "kind": "player",
       "name": "Med Kit",
+      "rarity": "uncommon",
       "insetKey": "inset-medkit",
       "effect": { "kind": "Heal", "amount": 2 }
     },
     "Panic": {
       "kind": "player",
       "name": "Panic",
+      "rarity": "common",
       "insetKey": "inset-panic",
       "effect": {
         "kind": "Sequence",
@@ -54,6 +59,7 @@
     "Adrenaline": {
       "kind": "player",
       "name": "Adrenaline",
+      "rarity": "uncommon",
       "insetKey": "inset-adrenaline",
       "effect": {
         "kind": "Sequence",
@@ -68,6 +74,7 @@
       "name": "The Walker",
       "insetKey": "inset-walker",
       "cost": 10,
+      "rarity": "legendary",
       "keywords": [],
       "discardable": true,
       "canExile": false,
@@ -81,6 +88,8 @@
       "name": "Summon Door",
       "insetKey": "inset-door",
       "energyCost": 6,
+      "rarity": "legendary",
+      "exhaust": true,
       "effect": { "kind": "AddWorldCardToDeck", "template": "Door" }
     },
     "Door": {
@@ -88,6 +97,7 @@
       "name": "Door",
       "insetKey": "inset-door",
       "cost": 4,
+      "rarity": "legendary",
       "keywords": ["Hidden"],
       "discardable": false,
       "canExile": false,
