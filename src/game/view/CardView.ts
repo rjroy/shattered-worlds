@@ -487,6 +487,10 @@ export class CardView extends Phaser.GameObjects.Container {
     }
   }
 
+  public getCardId(): string {
+    return this.cardId;
+  }
+
   /**
    * Build the fog-back: a translucent fog panel over the card face plus the
    * `Concealed:N` depth chip. Cosmetic only — it reads no GameState and feeds
