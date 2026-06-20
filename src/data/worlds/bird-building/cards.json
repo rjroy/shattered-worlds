@@ -4,6 +4,7 @@
     "Shadow Overhead": {
       "kind": "world",
       "name": "Shadow Overhead",
+      "rarity": "common",
       "insetKey": "bird-inset-shadow-overhead",
       "cost": 2,
       "keywords": ["Hidden"],
@@ -16,6 +17,7 @@
     "Sliding Debris": {
       "kind": "world",
       "name": "Sliding Debris",
+      "rarity": "common",
       "insetKey": "bird-inset-sliding-debris",
       "cost": 2,
       "keywords": ["Hidden"],
@@ -32,6 +34,7 @@
     "Groaning Girders": {
       "kind": "world",
       "name": "Groaning Girders",
+      "rarity": "uncommon",
       "insetKey": "bird-inset-groaning-girders",
       "cost": 1,
       "keywords": [],
@@ -44,6 +47,7 @@
     "Gripping Talon": {
       "kind": "world",
       "name": "Gripping Talon",
+      "rarity": "common",
       "insetKey": "bird-inset-gripping-talon",
       "cost": 3,
       "keywords": ["Hidden", "Creature"],
@@ -56,6 +60,7 @@
     "Find Fire Axe": {
       "kind": "world",
       "name": "Find Fire Axe",
+      "rarity": "uncommon",
       "insetKey": "bird-inset-fire-axe-find",
       "cost": 2,
       "keywords": ["Hidden"],
@@ -68,6 +73,7 @@
     "Find Footing": {
       "kind": "player",
       "name": "Find Footing",
+      "rarity": "uncommon",
       "insetKey": "bird-inset-find-footing",
       "energyCost": 1,
       "effect": { "kind": "DealProgress", "base": 2, "bonus": { "tag": "Hidden", "amount": 2 } }
@@ -75,12 +81,14 @@
     "Fire Axe": {
       "kind": "player",
       "name": "Fire Axe",
+      "rarity": "uncommon",
       "insetKey": "bird-inset-fire-axe",
       "effect": { "kind": "DealProgress", "base": 1, "bonus": { "tag": "Creature", "amount": 3 } }
     },
     "Steady": {
       "kind": "player",
       "name": "Steady",
+      "rarity": "uncommon",
       "insetKey": "bird-inset-steady",
       "energyCost": 1,
       "effect": { "kind": "Brace", "amount": 1 }
@@ -88,6 +96,7 @@
     "Cut It Loose": {
       "kind": "player",
       "name": "Cut It Loose",
+      "rarity": "common",
       "insetKey": "bird-inset-cut-it-loose",
       "energyCost": 0,
       "effect": {
