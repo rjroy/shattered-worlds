@@ -405,6 +405,7 @@ describe("compileEffect (composites)", () => {
         {
           kind: "OfferBoon",
           setId: "fortune-v1",
+          setName: "fortune-v1",
           offeredCount: 3,
           chooseCount: 1,
         },
@@ -419,6 +420,7 @@ describe("compileEffect (composites)", () => {
         {
           kind: "OfferBoon",
           setId: "fortune-v1",
+          setName: "fortune-v1",
           offeredCount: 2,
           chooseCount: 1,
           bToDiscard: true,

@@ -177,6 +177,17 @@ function summarizeEvents(
     lines.push(...summarizeEvent(event, context));
   }
 
+  if (after.pendingForceDestroy > 0) {
+    const finalDestroy = Math.max(0, after.pendingForceDestroy - after.braceCharges);
+    const usedBrace = Math.min(after.pendingForceDestroy, after.braceCharges);
+    if (finalDestroy > 0) {
+      lines.push(`Destroy ${finalDestroy} player card at the start of the next turn.`);
+    }
+    if (usedBrace > 0) {
+      lines.push(updateResource(context, "braceCharges", "Brace", after.braceCharges - usedBrace));
+    }
+  }
+
   // A concealed hazard touched by a broad effect (DealProgressAll) is named only
   // generically; flag that hidden hooks may have fired, once.
   if (anyConcealed) pushUnique(lines, CONCEALED_HOOK_WARNING);
@@ -384,11 +395,7 @@ function summarizeEvent(event: GameEvent, context: PreviewContext): readonly str
         )}`,
       ];
     case "CardsFrozen":
-      return [
-        `Freeze ${event.ids.length} ${plural("card", event.ids.length)}: ${listNames(
-          namesFromIds(event.ids, event.templateIds, context),
-        )}`,
-      ];
+      return [`Freeze ${event.ids.length} ${plural("card", event.ids.length)} at random`];
     case "CardsThawed":
       return [
         `Thaw ${event.ids.length} ${plural("card", event.ids.length)}: ${listNames(
@@ -450,7 +457,8 @@ function classifyRisk(
     (action.type === "EndTurn" && hasConcealedWorldCard(before)) ||
     events.some(
       (event) => isHarmfulEvent(event) || eventTouchesConcealedHazard(event, before, after),
-    )
+    ) ||
+    after.pendingForceDestroy > after.braceCharges
   ) {
     return "harmful";
   }

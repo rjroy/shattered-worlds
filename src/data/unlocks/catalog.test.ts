@@ -59,9 +59,7 @@ describe("UNLOCK_CATALOG", () => {
   });
 
   it("defines Whiteout Parking Garage as a world access unlock", () => {
-    expect(
-      UNLOCK_CATALOG.find((def) => def.id === "world-whiteout-parking-garage"),
-    ).toMatchObject({
+    expect(UNLOCK_CATALOG.find((def) => def.id === "world-whiteout-parking-garage")).toMatchObject({
       id: "world-whiteout-parking-garage",
       name: "Whiteout Parking Garage",
       cost: 5,
@@ -131,6 +129,7 @@ describe("buildRunModifiers", () => {
 
     expect(mods.actBoon).toEqual({
       poolId: "fortune-v1",
+      poolName: "fortune-v1",
       poolTemplateIds: BOON_SETS["fortune-v1"].templateIds,
       offeredCount: 3,
       chooseCount: 1,
@@ -193,9 +192,9 @@ describe("isWorldUnlocked", () => {
   });
 
   it("returns true for gated worlds whose unlock has been purchased", () => {
-    expect(isWorldUnlocked("fog-beach-party", unlocks(["world-fog-beach-party"]), UNLOCK_CATALOG)).toBe(
-      true,
-    );
+    expect(
+      isWorldUnlocked("fog-beach-party", unlocks(["world-fog-beach-party"]), UNLOCK_CATALOG),
+    ).toBe(true);
   });
 
   it("ignores unknown purchased ids when checking gated worlds", () => {
@@ -212,10 +211,7 @@ describe("Destiny budget helpers", () => {
 
   it("counts world unlocks as zero active weight", () => {
     expect(
-      activeWeight(
-        ["world-fog-beach-party", "world-whiteout-parking-garage"],
-        UNLOCK_CATALOG,
-      ),
+      activeWeight(["world-fog-beach-party", "world-whiteout-parking-garage"], UNLOCK_CATALOG),
     ).toBe(0);
   });
 

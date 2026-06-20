@@ -91,13 +91,8 @@ const fortuneRunModifiers = {
   ...DEFAULT_RUN_MODIFIERS,
   actBoon: {
     poolId: "fortune-v1",
-    poolTemplateIds: [
-      "Lucky Break",
-      "Second Wind",
-      "Found Tool",
-      "Clear Path",
-      "Steady Nerve",
-    ],
+    poolName: "fortune-v1",
+    poolTemplateIds: ["Lucky Break", "Second Wind", "Found Tool", "Clear Path", "Steady Nerve"],
     offeredCount: 3,
     chooseCount: 1,
   },
