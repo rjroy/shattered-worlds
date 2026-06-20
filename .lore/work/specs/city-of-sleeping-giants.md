@@ -14,7 +14,17 @@ The City of Sleeping Giants is a violet-cyan metropolis built across bodies too 
 
 Threat verb: **stir**. The world attacks through accumulating disturbance. Hazards start as civic tremors, surveys, relocation orders, and infrastructure failures, then return, repeat, or transform as the body beneath the city begins remembering the player's path.
 
-This spec targets a complete first implementation using existing engine vocabulary. It does not require a new shared awareness counter. The authored expression of **Stirring** is top-decked body-reflex hazards, returned world cards, partial-clear penalties, draw/discard disruption, and reward cards that trade immediate tempo for repeated future pressure.
+This spec targets a complete first implementation using existing engine vocabulary. It does not require a new shared awareness counter. The authored expression of **Stirring** is top-decked body-reflex hazards, recurring (top-decked) world cards, partial-clear penalties, draw/discard disruption, and reward cards that trade immediate tempo for repeated future pressure.
+
+## Ratified decisions (2026-06-20)
+
+Resolved with the user during planning and folded into the requirements below (trail: `.lore/work/plans/city-of-sleeping-giants.md`):
+
+- **`Hidden` → `Obstructed`** everywhere. The engine has no `Hidden` keyword (`KeywordName = "Obstructed" | "Creature" | "Slow" | "Spore" | "Concealed"`). REQ-GIANTS-19/22/24/25/27 now read `Obstructed`.
+- **Recurrence is top-decked, not returned** (REQ-GIANTS-23/27/28/46). `ReturnWorldCards` is inert on world auto-hooks (it reads a player selection auto-hooks never supply), is boon-signed where it does fire, and there is no world discard pile to pull from. Every recurrence hook is re-expressed as `AddWorldCardToDeck { bTop: true }` of the relevant escalation hazard.
+- **Surveyors Mark A Pulse gives a boon choice, not a five-card dump** (REQ-GIANTS-24). Its `onCleared` runs `OfferBoon` over the five tools instead of `Sequence[GainCard ×5]`.
+- **Tremor / giant-movement hazards snatch cards** (REQ-GIANTS-23/28). Fingerquake Ward and The Giant Turns In Sleep use `ForceDestroy` rather than `Damage` so the `Brace` rewards (Brace The Ward, Bone Pin) have something to absorb; without a snatch source `Brace` is inert. City has no `Creature` cards, so the snatch reads as the body's movement shaking a card loose.
+- **Vocabulary** (REQ-GIANTS-9): adds `ForceDestroy` and `OfferBoon`, both existing engine effects.
 
 ## World Contract
 
@@ -50,7 +60,7 @@ This spec targets a complete first implementation using existing engine vocabula
 
 <div id="REQ-GIANTS-7"></div>
 
-**REQ-GIANTS-7:** The exclusive signature verb is `stir`: unresolved or exploited hazards make the same body movement return at a larger or worse scale. Giants reward cards may use draw, deck control, top-deck placement, progress, and returns, but their identity must be quieting, surveying, bracing, or exploiting body motion rather than Light, Heat, freezing, Spore scaling, concealment, or incubation.
+**REQ-GIANTS-7:** The exclusive signature verb is `stir`: unresolved or exploited hazards make the same body movement return at a larger or worse scale. Giants reward cards may use draw, deck control, top-deck placement, progress, and bracing, but their identity must be quieting, surveying, bracing, or exploiting body motion rather than Light, Heat, freezing, Spore scaling, concealment, or incubation.
 
 <div id="REQ-GIANTS-8"></div>
 
@@ -60,7 +70,7 @@ This spec targets a complete first implementation using existing engine vocabula
 
 <div id="REQ-GIANTS-9"></div>
 
-**REQ-GIANTS-9:** The first implementation must express Stirring using existing effects only: `AddWorldCardToDeck`, `AddThreatToWorldDeck`, `ReturnWorldCards`, `AddPlayerCardToTop`, `DiscardThenDraw`, `Draw`, `GainCard`, `GainEnergy`, `DealProgress`, `DealProgressAll`, `Damage`, `DamageScaled`, `Brace`, `DestroySelf`, `Modal`, `Sequence`, `ExileTopWorldCards`, and `None`.
+**REQ-GIANTS-9:** The first implementation must express Stirring using existing effects only: `AddWorldCardToDeck`, `AddThreatToWorldDeck`, `AddPlayerCardToTop`, `DiscardThenDraw`, `Draw`, `GainCard`, `OfferBoon`, `GainEnergy`, `DealProgress`, `DealProgressAll`, `Damage`, `DamageScaled`, `ForceDestroy`, `Brace`, `DestroySelf`, `Modal`, `Sequence`, `ExileTopWorldCards`, and `None`. (`ReturnWorldCards` is intentionally **not** used: it is inert on world auto-hooks, which never supply the player selection it reads, and there is no world discard pile for it to draw from.)
 
 <div id="REQ-GIANTS-10"></div>
 
@@ -92,7 +102,7 @@ The following numbers are initial tuning. Costs, counts, progress values, and ex
 
 <div id="REQ-GIANTS-16"></div>
 
-**REQ-GIANTS-16:** `Brace The Ward` must be a player reward card that answers body-reflex hazards and suppresses returns. Initial effect: `Sequence` of `DealProgress base 2 bonus Slow +2` and `Brace amount 1`, `energyCost 1`. Its role is keeping one neighborhood physically quiet.
+**REQ-GIANTS-16:** `Brace The Ward` must be a player reward card that answers body-reflex hazards and braces against the snatch when the body shakes a card loose. Initial effect: `Sequence` of `DealProgress base 2 bonus Slow +2` and `Brace amount 1`, `energyCost 1`. Its role is keeping one neighborhood physically quiet.
 
 <div id="REQ-GIANTS-17"></div>
 
@@ -104,7 +114,7 @@ The following numbers are initial tuning. Costs, counts, progress values, and ex
 
 <div id="REQ-GIANTS-19"></div>
 
-**REQ-GIANTS-19:** `Contour Map` must be a player reward card that handles a cluster by reading city-as-body topology. Initial effect: `DealProgressAll base 1 bonus Hidden +1`, `energyCost 2`, `exhaust: true`. Its role is broad but modest stabilization against civic hazards.
+**REQ-GIANTS-19:** `Contour Map` must be a player reward card that handles a cluster by reading city-as-body topology. Initial effect: `DealProgressAll base 1 bonus Obstructed +1`, `energyCost 2`, `exhaust: true`. Its role is broad but modest stabilization against civic hazards.
 
 <div id="REQ-GIANTS-20"></div>
 
@@ -118,19 +128,19 @@ The following numbers are initial tuning. Costs, counts, progress values, and ex
 
 <div id="REQ-GIANTS-22"></div>
 
-**REQ-GIANTS-22:** `Relocation Order` must be an act-1 civic hazard that teaches top-of-player-deck disruption. Initial shape: cost 2, `Hidden`, discardable, `onCleared: GainCard "Quiet Survey"`, `onDiscarded: AddPlayerCardToTop "Panic"`, `onPartialClear: None`, `onEndOfTurn: AddPlayerCardToTop "Panic"`.
+**REQ-GIANTS-22:** `Relocation Order` must be an act-1 civic hazard that teaches top-of-player-deck disruption. Initial shape: cost 2, `Obstructed`, discardable, `onCleared: GainCard "Quiet Survey"`, `onDiscarded: AddPlayerCardToTop "Panic"`, `onPartialClear: None`, `onEndOfTurn: AddPlayerCardToTop "Panic"`.
 
 <div id="REQ-GIANTS-23"></div>
 
-**REQ-GIANTS-23:** `Fingerquake Ward` must be an act-1/2 body-reflex hazard. Initial shape: cost 3, `Slow`, discardable, `onCleared: GainCard "Brace The Ward"`, `onDiscarded: Damage 1`, `onPartialClear: AddWorldCardToDeck { template: "Minor Tremor", bTop: true }`, `onEndOfTurn: Sequence` of `Damage 1` and `ReturnWorldCards min 0 max 1`.
+**REQ-GIANTS-23:** `Fingerquake Ward` must be an act-1/2 body-reflex hazard, and the tremor shakes a card loose rather than dealing HP damage. Initial shape: cost 3, `Slow`, discardable, `onCleared: GainCard "Brace The Ward"`, `onDiscarded: ForceDestroy 1`, `onPartialClear: AddWorldCardToDeck { template: "Minor Tremor", bTop: true }`, `onEndOfTurn: Sequence` of `ForceDestroy 1` and `AddWorldCardToDeck { template: "Minor Tremor", bTop: true }`. *(Ratified 2026-06-20: `Damage` → `ForceDestroy` so Brace The Ward — this card's own clear reward — has a snatch to absorb; the `onEndOfTurn` `ReturnWorldCards` half is re-expressed as a `Minor Tremor` top-deck since `ReturnWorldCards` is inert on auto-hooks.)*
 
 <div id="REQ-GIANTS-24"></div>
 
-**REQ-GIANTS-24:** `Surveyors Mark A Pulse` must be the tool-fetch hazard. Initial shape: cost 6, `Hidden`, discardable, `onCleared: Sequence` granting `Quiet Survey`, `Brace The Ward`, `Follow The Vein`, `Bone Pin`, and `Contour Map`, `onDiscarded: AddWorldCardToDeck { template: "Minor Tremor", bTop: true }`, `onPartialClear: None`, `onEndOfTurn: AddWorldCardToDeck { template: "Vein-Road Surge", bTop: true }`.
+**REQ-GIANTS-24:** `Surveyors Mark A Pulse` must be the tool-fetch hazard. Initial shape: cost 6, `Obstructed`, discardable, `onCleared: OfferBoon { setId: "giants-boons", offeredCount: 3, chooseCount: 1 }` (offers three of the five tools — `Quiet Survey`, `Brace The Ward`, `Follow The Vein`, `Bone Pin`, `Contour Map` — and the player keeps one), `onDiscarded: AddWorldCardToDeck { template: "Minor Tremor", bTop: true }`, `onPartialClear: None`, `onEndOfTurn: AddWorldCardToDeck { template: "Vein-Road Surge", bTop: true }`. *(Ratified 2026-06-20: was `Sequence[GainCard ×5]`, which floods a starter-sized deck across this card's copies; the boon set is authored as a single source shared with the hazards' fixed `GainCard` grants.)*
 
 <div id="REQ-GIANTS-25"></div>
 
-**REQ-GIANTS-25:** `Vein-Road Surge` must be an act-2 transit/circulation hazard. Initial shape: cost 3, `Hidden`, discardable, `onCleared: GainEnergy 1`, `onDiscarded: DiscardThenDraw player 1`, `onPartialClear: DiscardThenDraw player 1`, `onEndOfTurn: Sequence` of `DiscardThenDraw player 1`, `AddWorldCardToDeck { template: "Bone Anchor Failure", bTop: true }`, and `DestroySelf`.
+**REQ-GIANTS-25:** `Vein-Road Surge` must be an act-2 transit/circulation hazard. Initial shape: cost 3, `Obstructed`, discardable, `onCleared: GainEnergy 1`, `onDiscarded: DiscardThenDraw player 1`, `onPartialClear: DiscardThenDraw player 1`, `onEndOfTurn: Sequence` of `DiscardThenDraw player 1`, `AddWorldCardToDeck { template: "Bone Anchor Failure", bTop: true }`, and `DestroySelf`.
 
 <div id="REQ-GIANTS-26"></div>
 
@@ -138,11 +148,11 @@ The following numbers are initial tuning. Costs, counts, progress values, and ex
 
 <div id="REQ-GIANTS-27"></div>
 
-**REQ-GIANTS-27:** `District Recall` must be an act-2/3 recurrence hazard that represents neighborhoods being recalled into the body. Initial shape: cost 4, `Hidden` and `Slow`, discardable, `onCleared: GainCard "Contour Map"`, `onDiscarded: ReturnWorldCards min 1 max 1`, `onPartialClear: AddWorldCardToDeck { template: "Vein-Road Surge", bTop: true }`, `onEndOfTurn: ReturnWorldCards min 1 max 2`.
+**REQ-GIANTS-27:** `District Recall` must be an act-2/3 recurrence hazard that represents neighborhoods being recalled into the body. Initial shape: cost 4, `Obstructed` and `Slow`, discardable, `onCleared: GainCard "Contour Map"`, `onDiscarded: AddWorldCardToDeck { template: "Vein-Road Surge", bTop: true }`, `onPartialClear: AddWorldCardToDeck { template: "Vein-Road Surge", bTop: true }`, `onEndOfTurn: Sequence` of `AddWorldCardToDeck { template: "Vein-Road Surge", bTop: true }` and `AddWorldCardToDeck { template: "Bone Anchor Failure", bTop: true }`. *(Ratified 2026-06-20: both `ReturnWorldCards` hooks re-expressed as top-decked recurrence hazards — `ReturnWorldCards` is inert on auto-hooks and there is no world discard pile.)*
 
 <div id="REQ-GIANTS-28"></div>
 
-**REQ-GIANTS-28:** `The Giant Turns In Sleep` must be the act-3 signature threat. Initial shape: cost 6, `Slow`, discardable only with a high penalty, `onCleared: None`, `onDiscarded: Damage 3`, `onPartialClear: AddThreatToWorldDeck`, `onEndOfTurn: Sequence` of `Damage 2`, `ReturnWorldCards min 1 max 2`, and `AddThreatToWorldDeck`. It should make the player relive the same movement at a larger scale.
+**REQ-GIANTS-28:** `The Giant Turns In Sleep` must be the act-3 signature threat. Initial shape: cost 6, `Slow`, discardable only with a high penalty, `onCleared: None`, `onDiscarded: ForceDestroy 2`, `onPartialClear: AddThreatToWorldDeck`, `onEndOfTurn: Sequence` of `Damage 2`, `AddWorldCardToDeck { template: "Bone Anchor Failure", bTop: true }`, and `AddThreatToWorldDeck`. It should make the player relive the same movement at a larger scale. *(Ratified 2026-06-20: `onDiscarded` `Damage 3` → `ForceDestroy 2` — the giant's shift buries a card — while `onEndOfTurn` keeps `Damage 2` for HP pressure; the `ReturnWorldCards` half is re-expressed as a `Bone Anchor Failure` top-deck.)*
 
 <div id="REQ-GIANTS-29"></div>
 
@@ -232,7 +242,7 @@ Counts are tuning values; act roles and the fixed Walker closer are not.
 
 <div id="REQ-GIANTS-46"></div>
 
-**REQ-GIANTS-46:** Effect/data tests must cover the shipped Stirring patterns: `Minor Tremor` top-decks `Fingerquake Ward`, `Surveyors Mark A Pulse` grants the reward kit when cleared and top-decks `Vein-Road Surge` if ignored, `Vein-Road Surge` creates `Bone Anchor Failure`, `District Recall` returns world cards, and `The Giant Turns In Sleep` uses `AddThreatToWorldDeck` through the Giants threat mapping.
+**REQ-GIANTS-46:** Effect/data tests must cover the shipped Stirring patterns: `Minor Tremor` top-decks `Fingerquake Ward`, `Surveyors Mark A Pulse` creates a boon offer from the `giants-boons` pool when cleared (not a five-card grant) and top-decks `Vein-Road Surge` if ignored, `Vein-Road Surge` creates `Bone Anchor Failure`, `District Recall` top-decks recurrence hazards (`Vein-Road Surge`; and `Vein-Road Surge` + `Bone Anchor Failure` at end of turn), `Fingerquake Ward` `onEndOfTurn` queues `ForceDestroy` (not HP `Damage`) with a `Brace` charge absorbing the snatch end-to-end, and `The Giant Turns In Sleep` uses `AddThreatToWorldDeck` through the Giants threat mapping.
 
 <div id="REQ-GIANTS-47"></div>
 
@@ -244,7 +254,7 @@ Counts are tuning values; act roles and the fixed Walker closer are not.
 
 <div id="REQ-GIANTS-49"></div>
 
-**REQ-GIANTS-49:** A seeded gameplay test must demonstrate the three-act identity: Act 1 creates manageable civic tremors, Act 2 hazards repeatedly top-deck or return related reflex cards, and Act 3 can chain `The Giant Turns In Sleep` until the player clears it, quiets the deck, or reaches the Door.
+**REQ-GIANTS-49:** A seeded gameplay test must demonstrate the three-act identity: Act 1 creates manageable civic tremors, Act 2 hazards repeatedly top-deck related reflex cards, and Act 3 can chain `The Giant Turns In Sleep` until the player clears it, quiets the deck, or reaches the Door.
 
 ## AI Validation
 

@@ -16,6 +16,16 @@ Threat verb: **incubate**. The world attacks tempo through delayed consequences.
 
 This spec targets a complete first implementation using the current engine vocabulary. It does not require a new timed card-state system. The authored expression of **Dormant Stars** is a world-specific player card plus top-decked world threats, self-transforming hazards, partial-clear punishments, and rewards that deliberately borrow warmth at a known future cost.
 
+## Ratified decisions (2026-06-20)
+
+Resolved with the user during planning and folded into the requirements below (trail: `.lore/work/plans/the-ember-orchard.md`):
+
+- **`Hidden` → `Obstructed`** everywhere. The engine has no `Hidden` keyword (`KeywordName = "Obstructed" | "Creature" | "Slow" | "Spore" | "Concealed"`). REQ-EMBER-12/18/22/23/25/26 now read `Obstructed`.
+- **Hatchery Cellar gives a boon choice, not a five-card dump** (REQ-EMBER-26). Its `onCleared` runs `OfferBoon` over the five tools instead of `Sequence[GainCard ×5]`, which floods the deck across the card's copies.
+- **Creatures snatch cards** (REQ-EMBER-27/29). Ember Moth and Ground Constellation use `ForceDestroy` rather than `Damage` so the `Brace` reward cards (REQ-EMBER-11/17/19) have something to absorb; without a snatch source `Brace` is inert.
+- **Ember Moth drops `ReturnWorldCards`** (REQ-EMBER-27): inert on world auto-hooks (needs player selection input that auto-hooks never supply) and boon-signed where it does fire.
+- **Vocabulary** (REQ-EMBER-9): adds `ForceDestroy` and `OfferBoon`, both existing engine effects.
+
 ## World Contract
 
 <div id="REQ-EMBER-1"></div>
@@ -60,7 +70,7 @@ This spec targets a complete first implementation using the current engine vocab
 
 <div id="REQ-EMBER-9"></div>
 
-**REQ-EMBER-9:** The first implementation must express incubation using existing effects only: `AddWorldCardToDeck`, `AddPlayerCardToTop`, `AddThreatToWorldDeck`, `GainCard`, `Draw`, `DiscardThenDraw`, `ReturnWorldCards`, `ExileTopWorldCards`, `DestroySelf`, `DealProgress`, `DealProgressAll`, `Damage`, `DamageScaled`, `GainEnergy`, `Brace`, `Modal`, `Sequence`, and `None`.
+**REQ-EMBER-9:** The first implementation must express incubation using existing effects only: `AddWorldCardToDeck`, `AddPlayerCardToTop`, `AddThreatToWorldDeck`, `GainCard`, `OfferBoon`, `Draw`, `DiscardThenDraw`, `ExileTopWorldCards`, `DestroySelf`, `DealProgress`, `DealProgressAll`, `Damage`, `DamageScaled`, `ForceDestroy`, `GainEnergy`, `Brace`, `Modal`, `Sequence`, and `None`. (`ReturnWorldCards` is intentionally **not** used: it is inert on world auto-hooks, which never supply the player selection it reads.)
 
 <div id="REQ-EMBER-10"></div>
 
@@ -72,7 +82,7 @@ This spec targets a complete first implementation using the current engine vocab
 
 <div id="REQ-EMBER-12"></div>
 
-**REQ-EMBER-12:** The world must not add a new `Dormant`, `Incubating`, or timer keyword in the first implementation. Valid authored keywords are only current engine keywords: `Hidden`, `Creature`, and `Slow` for Ember Orchard cards.
+**REQ-EMBER-12:** The world must not add a new `Dormant`, `Incubating`, or timer keyword in the first implementation. Valid authored keywords are only current engine keywords: `Obstructed`, `Creature`, and `Slow` for Ember Orchard cards.
 
 <div id="REQ-EMBER-13"></div>
 
@@ -100,7 +110,7 @@ The following numbers are initial tuning. Costs, counts, and exact progress valu
 
 <div id="REQ-EMBER-18"></div>
 
-**REQ-EMBER-18:** `Star-Pruner` must be a player reward card that answers Orchard hazards without becoming another world's signature. Initial effect: `DealProgress base 2` with bonus `{ tag: "Hidden", amount: 2 }` or `{ tag: "Slow", amount: 2 }` after playtest. Its role is pruning planted stars and rooted hazards.
+**REQ-EMBER-18:** `Star-Pruner` must be a player reward card that answers Orchard hazards without becoming another world's signature. Initial effect: `DealProgress base 2` with bonus `{ tag: "Obstructed", amount: 2 }` or `{ tag: "Slow", amount: 2 }` after playtest. Its role is pruning planted stars and rooted hazards.
 
 <div id="REQ-EMBER-19"></div>
 
@@ -118,11 +128,11 @@ The following numbers are initial tuning. Costs, counts, and exact progress valu
 
 <div id="REQ-EMBER-22"></div>
 
-**REQ-EMBER-22:** `Cracked Hearth-Star` must be an act-1 stored-star hazard. Initial shape: cost 2, `Hidden`, discardable, `onCleared: GainCard "Dormant Star"`, `onDiscarded: None`, `onPartialClear: None`, `onEndOfTurn: Sequence` of `AddWorldCardToDeck { template: "Ember Moth", bTop: true }` and `DestroySelf`.
+**REQ-EMBER-22:** `Cracked Hearth-Star` must be an act-1 stored-star hazard. Initial shape: cost 2, `Obstructed`, discardable, `onCleared: GainCard "Dormant Star"`, `onDiscarded: None`, `onPartialClear: None`, `onEndOfTurn: Sequence` of `AddWorldCardToDeck { template: "Ember Moth", bTop: true }` and `DestroySelf`.
 
 <div id="REQ-EMBER-23"></div>
 
-**REQ-EMBER-23:** `Falling Fruit` must be an act-1/2 falling-star hazard. Initial shape: cost 2, `Hidden`, discardable, `onCleared: GainEnergy 1`, `onDiscarded: AddPlayerCardToTop "Dormant Star"`, `onPartialClear: AddPlayerCardToTop "Dormant Star"`, `onEndOfTurn: AddWorldCardToDeck { template: "Rooted Meteor", bTop: true }`.
+**REQ-EMBER-23:** `Falling Fruit` must be an act-1/2 falling-star hazard. Initial shape: cost 2, `Obstructed`, discardable, `onCleared: GainEnergy 1`, `onDiscarded: AddPlayerCardToTop "Dormant Star"`, `onPartialClear: AddPlayerCardToTop "Dormant Star"`, `onEndOfTurn: AddWorldCardToDeck { template: "Rooted Meteor", bTop: true }`.
 
 <div id="REQ-EMBER-24"></div>
 
@@ -130,15 +140,15 @@ The following numbers are initial tuning. Costs, counts, and exact progress valu
 
 <div id="REQ-EMBER-25"></div>
 
-**REQ-EMBER-25:** `The Orchard Counts Wrong` must be an act-2 rule-pressure hazard. Initial shape: cost 4, `Hidden`, discardable, `onCleared: GainCard "Star-Pruner"`, `onDiscarded: Damage 2`, `onPartialClear: AddPlayerCardToTop "Dormant Star"`, `onEndOfTurn: Sequence` of `Draw player 1` and `AddPlayerCardToTop "Dormant Star"`. It should feel like extra draw is advancing incubation.
+**REQ-EMBER-25:** `The Orchard Counts Wrong` must be an act-2 rule-pressure hazard. Initial shape: cost 4, `Obstructed`, discardable, `onCleared: GainCard "Star-Pruner"`, `onDiscarded: Damage 2`, `onPartialClear: AddPlayerCardToTop "Dormant Star"`, `onEndOfTurn: Sequence` of `Draw player 1` and `AddPlayerCardToTop "Dormant Star"`. It should feel like extra draw is advancing incubation.
 
 <div id="REQ-EMBER-26"></div>
 
-**REQ-EMBER-26:** `Hatchery Cellar` must be the tool-fetch hazard. Initial shape: cost 6, `Hidden`, discardable, `onCleared: Sequence` granting `Take One`, `Leave One`, `Star-Pruner`, `Glasshouse Lantern`, and `Constellation Shears`, `onDiscarded: None`, `onPartialClear: None`, `onEndOfTurn: Sequence` adding `Ember Moth` and `Falling Fruit` to the top of the world deck, with the last-added card order verified by tests or adjusted to match engine semantics.
+**REQ-EMBER-26:** `Hatchery Cellar` must be the tool-fetch hazard. Initial shape: cost 6, `Obstructed`, discardable, `onCleared: OfferBoon { setId: "ember-boons", offeredCount: 3, chooseCount: 1 }` (offers three of the five tools — `Take One`, `Leave One`, `Star-Pruner`, `Glasshouse Lantern`, `Constellation Shears` — and the player keeps one), `onDiscarded: None`, `onPartialClear: None`, `onEndOfTurn: Sequence` adding `Ember Moth` and `Falling Fruit` to the top of the world deck, with the last-added card order verified by tests or adjusted to match engine semantics. *(Ratified 2026-06-20: was `Sequence[GainCard ×5]`, which floods a starter-sized deck across this card's copies; the boon set is authored as a single source shared with the hazards' fixed `GainCard` grants.)*
 
 <div id="REQ-EMBER-27"></div>
 
-**REQ-EMBER-27:** `Ember Moth` must be the basic hatched creature. Initial shape: cost 4, `Creature`, discardable, `onCleared: None`, `onDiscarded: Damage 2`, `onPartialClear: Damage 1`, `onEndOfTurn: Sequence` of `Damage 1` and `ReturnWorldCards min 0 max 1`.
+**REQ-EMBER-27:** `Ember Moth` must be the basic hatched creature, and as a `Creature` it snatches cards rather than dealing HP damage. Initial shape: cost 4, `Creature`, discardable, `onCleared: None`, `onDiscarded: ForceDestroy 2`, `onPartialClear: ForceDestroy 1`, `onEndOfTurn: ForceDestroy 1`. *(Ratified 2026-06-20: damage hooks converted from `Damage` to `ForceDestroy` so the `Brace` rewards have a snatch to absorb — matching the `bird-building` creature-snatch language; the spec's `onEndOfTurn` `ReturnWorldCards` half is dropped as inert and boon-signed.)*
 
 <div id="REQ-EMBER-28"></div>
 
@@ -146,7 +156,7 @@ The following numbers are initial tuning. Costs, counts, and exact progress valu
 
 <div id="REQ-EMBER-29"></div>
 
-**REQ-EMBER-29:** `Ground Constellation` must be the act-3 signature threat. Initial shape: cost 6, `Creature` and `Slow`, discardable only with a high penalty, `onCleared: GainCard "Constellation Shears"`, `onDiscarded: Damage 3`, `onPartialClear: AddWorldCardToDeck { template: "Ember Moth", bTop: true }`, `onEndOfTurn: Sequence` of `DamageScaled { base: 0, per: { kind: "KeywordInHand", keyword: "Creature" }, amount: 1 }` and `AddThreatToWorldDeck`. If Creature-in-hand scaling is too weak or unavailable for visible board pressure, replace the scaled damage with `Damage 2` plus top-decking `Falling Fruit`.
+**REQ-EMBER-29:** `Ground Constellation` must be the act-3 signature threat. Initial shape: cost 6, `Creature` and `Slow`, discardable only with a high penalty, `onCleared: GainCard "Constellation Shears"`, `onDiscarded: ForceDestroy 2`, `onPartialClear: AddWorldCardToDeck { template: "Ember Moth", bTop: true }`, `onEndOfTurn: Sequence` of `DamageScaled { base: 0, per: { kind: "KeywordInHand", keyword: "Creature" }, amount: 1 }` and `AddThreatToWorldDeck`. If Creature-in-hand scaling is too weak or unavailable for visible board pressure, replace the scaled damage with `Damage 2` plus top-decking `Falling Fruit`. *(Ratified 2026-06-20: `onDiscarded` converted from `Damage 3` to `ForceDestroy 2` — the boss creature grips the hand when ignored — while the scaling `onEndOfTurn` keeps real HP pressure so loss stays a fail state.)*
 
 <div id="REQ-EMBER-30"></div>
 
@@ -236,7 +246,7 @@ Counts are tuning values; act roles and the fixed Walker closer are not.
 
 <div id="REQ-EMBER-47"></div>
 
-**REQ-EMBER-47:** Effect/data tests must cover the shipped incubation patterns: `Dormant Star` adds `Ember Moth` to the top of the world deck, `Cracked Hearth-Star` self-transforms into `Ember Moth`, `Falling Fruit` can plant a `Dormant Star`, and `Ground Constellation` uses `AddThreatToWorldDeck` through the Ember threat mapping.
+**REQ-EMBER-47:** Effect/data tests must cover the shipped incubation patterns: `Dormant Star` adds `Ember Moth` to the top of the world deck, `Cracked Hearth-Star` self-transforms into `Ember Moth`, `Falling Fruit` can plant a `Dormant Star`, `Ground Constellation` uses `AddThreatToWorldDeck` through the Ember threat mapping, `Hatchery Cellar` `onCleared` creates a boon offer from the `ember-boons` pool (not a five-card grant), `Ember Moth` `onEndOfTurn` queues `ForceDestroy` (not HP `Damage`), and a `Brace` charge absorbs a creature snatch end-to-end.
 
 <div id="REQ-EMBER-48"></div>
 

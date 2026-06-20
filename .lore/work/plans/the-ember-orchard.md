@@ -15,11 +15,13 @@ The canonical template for this work is `whiteout-parking-garage` (most recent w
 
 ## Key decisions (resolved before drafting)
 
-These three were ambiguous in the spec or contradicted the code; resolved with the user:
+These five were ambiguous in the spec, contradicted the code, or were reconsidered after newer effects landed; resolved with the user:
 
 1. **`Hidden` → `Obstructed`.** The engine has no `Hidden` keyword. `KeywordName = "Obstructed" | "Creature" | "Slow" | "Spore" | "Concealed"` (`src/core/model/types.ts:12`). `Hidden` is the stale pre-rename name still used by the spec and by `theme-authoring.md`. **Every `Hidden` in REQ-EMBER-12/18/22/25/26 is authored as `Obstructed`.** The doc update (REQ-EMBER-44) also corrects this stale naming.
 2. **Generate real inset art now.** All 14 card insets are produced via art-gen to the whiteout quality bar (REQ-EMBER-40/48). None exist yet — only the 3 base assets are present.
 3. **Gate via the unlock system.** Ember is added to `UNLOCK_CATALOG` as a `worldUnlock` (like fog/whiteout), requiring an unlock + unlock art to appear in World Select. `buildWorld`/`selectTheme` still work in tests regardless (REQ-EMBER-43).
+4. **Reward delivery is a boon choice, not a five-card dump.** REQ-EMBER-26's initial shape has `Hatchery Cellar` `onCleared` grant all five tools via `Sequence`[`GainCard` ×5]. With Hatchery Cellar at ×2 (Act 1) + ×1 (Act 2), that floods a starter-sized deck with up to **15 cards** across a run — pool-destroying dilution. **Decision: `onCleared` instead runs `OfferBoon { setId: "ember-boons", offeredCount: 3, chooseCount: 1 }`** — each clear offers three of the five tools and the player keeps one. Caps dilution at one chosen card per clear, adds player agency, and uses the `OfferBoon` effect that landed **after** this plan was drafted (commit #84; `src/core/effects/boonChoice.ts`). All six player rewards are **single-sourced** in a new boon source (Slice A8) so `OfferBoon` and the hazards' `GainCard`/`AddPlayerCardToTop`/`Modal` grants resolve from one definition — no duplicated card state. The `ember-boons` pool is the five Hatchery tools (Take One, Leave One, Star-Pruner, Glasshouse Lantern, Constellation Shears); `Dormant Star` lives in the same source for its `GainCard`/`AddPlayerCardToTop` refs but is **not** in the offer pool. This is a **deliberate spec deviation on REQ-EMBER-26** (effect-kind change, not just tuning) and changes REQ-EMBER-47's Hatchery test; flagged in the pre-flight table, A1, A8, C2, and risks. (Mirrors the same fix applied to the City of Sleeping Giants plan.)
+5. **`Brace` needs a snatch source: creatures `ForceDestroy` instead of `Damage`.** The spec grants `Brace` on three reward cards (Dormant Star, Leave One, Glasshouse Lantern — REQ-EMBER-11/17/19) but **no hazard ever produces a snatch** — `ForceDestroy` is not even in REQ-EMBER-9's effect list. `Brace` only absorbs `ForceDestroy` snatches (`resources.ts:75` ↔ `worldCards.ts:171`), so **as specced, Brace is inert** — the player gains a defense against nothing. **Decision: the Ember *creatures* deal `ForceDestroy` (snatch cards) rather than `Damage`,** following the established `bird-building` language (Gripping Talon, a `Creature`: `onEndOfTurn ForceDestroy 1`, `onDiscarded ForceDestroy 2`; `Steady` grants the `Brace` counter). This revives Brace and reads better — the hatched swarm *eats your hand*. **Two cards change (A1):** **Ember Moth** (all three `Damage` hooks → `ForceDestroy`; it is Ember's Gripping Talon and is top-decked constantly, so Brace matters from act 1) and **Ground Constellation** (`onDiscarded Damage 3 → ForceDestroy 2`; keeps its signature `DamageScaled` end-of-turn for real HP pressure). Non-creature hazards (Rooted Meteor, The Orchard Counts Wrong) keep `Damage` so HP loss stays a real fail state. `ForceDestroy` is an existing engine effect, so REQ-EMBER-15's no-core-slice holds; it is an addition to REQ-EMBER-9's vocabulary list (existing effect, consistent with its spirit). Deliberate deviation on REQ-EMBER-27/29; flagged in the pre-flight table, A1, C2, and risks.
 
 **No core-engine slice.** Confirmed every effect/keyword/scaling the spec names already exists: `AddWorldCardToDeck` (with `bTop`), `AddThreatToWorldDeck`, `DamageScaled` with `per.kind: "KeywordInHand"`, `ExileTopWorldCards`, `Brace`, `DealProgressAll`, `DestroySelf`. Per REQ-EMBER-45, a core slice is only required if we add true timed incubation, which we are not.
 
@@ -32,9 +34,11 @@ These three were ambiguous in the spec or contradicted the code; resolved with t
 | world threat mapping | `WORLD_THREAT_BY_WORLD_ID` lives in `src/core/effects/gainCard.ts` | add `the-ember-orchard: "Ground Constellation"` there |
 | music per world | whiteout reuses fog's music URL | reuse an existing track; dedicated track optional |
 | world insets | file `insets/inset-<card>.webp`, key `<prefix>-inset-<card>` | files `inset-<card>.webp`, keys `ember-inset-<card>` |
-| Ember Moth `onEndOfTurn` `ReturnWorldCards` (REQ-EMBER-27) | wrong-signed: `ReturnWorldCards` pulls a hazard *out of the player's hand* back to the deck — a **boon**, not pressure; also inert on auto-hooks (`ctx.returnIds` always `undefined`) | **Resolved:** drop it; Ember Moth `onEndOfTurn` is `Damage` only |
+| Ember Moth `onEndOfTurn` `ReturnWorldCards` + `Damage` (REQ-EMBER-27) | `ReturnWorldCards` boon-signed & inert on auto-hooks; `Damage` leaves the spec's `Brace` rewards with nothing to absorb | **drop `ReturnWorldCards`; convert Ember Moth's `Damage` → `ForceDestroy`** (creature snatch — decision §5) |
+| `Brace` rewards with no `ForceDestroy` anywhere (REQ-EMBER-11/17/19) | `Brace` only absorbs `ForceDestroy` snatches; spec has no snatch source (`ForceDestroy` not in REQ-EMBER-9 list) | **add `ForceDestroy` to the creatures** (Ember Moth, Ground Constellation `onDiscarded`); existing effect, no core slice |
+| `Sequence`[`GainCard` ×5] reward dump on Hatchery Cellar `onCleared` (REQ-EMBER-26) | floods a starter-sized deck (×3 copies → up to 15 cards/run); `OfferBoon` now exists (commit #84) | **replace with `OfferBoon { setId: "ember-boons", offeredCount 3, chooseCount 1 }`**; single-source the rewards in a boon source (A8) |
 
-> ✅ **Ember Moth resolved (REQ-EMBER-27).** The spec's `Sequence[Damage 1, ReturnWorldCards min 0 max 1]` is wrong on two counts: (1) `ReturnWorldCards` returns a *player-selected* world card from hand to the deck, removing a hazard from the player's hand — a benefit to the player, backwards for a threat creature; and (2) it is inert on an unattended `onEndOfTurn` hook anyway (no selection input). **Decision (confirmed with user): drop the return entirely; Ember Moth's `onEndOfTurn` is `Damage` only.** It is the "basic" hatched creature — flat damage is the right shape, and moth recurrence already comes from Cracked Hearth-Star, Lantern Brood, and Ground Constellation via working effects. No core change. `Damage 1` ships as the initial value, with room to tune up (e.g. `Damage 2`) if it reads weak in the C5 gameplay test.
+> ✅ **Ember Moth resolved (REQ-EMBER-27).** The spec's `Sequence[Damage 1, ReturnWorldCards min 0 max 1]` is wrong on two counts: (1) `ReturnWorldCards` returns a *player-selected* world card from hand to the deck, removing a hazard from the player's hand — a benefit to the player, backwards for a threat creature; and (2) it is inert on an unattended `onEndOfTurn` hook anyway (no selection input). **Decision (confirmed with user): drop the return entirely, and convert Ember Moth's remaining `Damage` to `ForceDestroy`** (decision §5 — it is the basic hatched *creature*, and creatures snatch cards so the spec's `Brace` rewards have something to absorb). Moth recurrence already comes from Cracked Hearth-Star, Lantern Brood, and Ground Constellation via working effects. No core change (`ForceDestroy` is an existing effect). Initial values per the A1 table, tunable in the C5 gameplay test.
 
 ## Slices (REQ-EMBER-45: at least three reviewable slices)
 
@@ -55,7 +59,7 @@ Goal: `buildWorld("the-ember-orchard")` and `selectTheme("the-ember-orchard")` a
 
 `worldId: "the-ember-orchard"`. No `startHeat` / Light fields (Ember uses neither economy). Full roster below — exact effects from the spec, `Hidden`→`Obstructed`. Every world card defines all four hooks (REQ-EMBER-30); use `{ "kind": "None" }` for unused.
 
-**Player cards** (`kind: "player"`; not in `deckComposition` — granted via `GainCard`/`AddPlayerCardToTop`):
+**Player cards** (`kind: "player"`; not in `deckComposition`). Per decision §4 these are authored **not** in `cards.json` but in the new boon source `src/data/worlds/boons/ember.json` (Slice A8), so a single definition serves both `Hatchery Cellar`'s `OfferBoon` and the hazards' `GainCard`/`AddPlayerCardToTop` grants. They resolve from the merged catalog (boon sources merge into every world — `worldManifest.ts:17,44`), so all references below still work. Effects/costs unchanged:
 
 | Card | REQ | Cost | exhaust | effect |
 |---|---|---|---|---|
@@ -76,10 +80,10 @@ Cost column `—` means the `energyCost` field is **omitted** (engine defaults i
 | Falling Fruit | 23 | 2 | Obstructed | `GainEnergy` 1 | `AddPlayerCardToTop` Dormant Star | `AddPlayerCardToTop` Dormant Star | `AddWorldCardToDeck`{Rooted Meteor, bTop} |
 | Rooted Meteor | 24 | 3 | Slow | None | `Damage` 1 | `AddWorldCardToDeck`{Falling Fruit, bTop} | `Damage` 1 |
 | The Orchard Counts Wrong | 25 | 4 | Obstructed | `GainCard` Star-Pruner | `Damage` 2 | `AddPlayerCardToTop` Dormant Star | `Sequence`[`Draw` player 1, `AddPlayerCardToTop` Dormant Star] |
-| Hatchery Cellar | 26 | 6 | Obstructed | `Sequence`[`GainCard` ×5: Take One, Leave One, Star-Pruner, Glasshouse Lantern, Constellation Shears] | None | None | `Sequence`[`AddWorldCardToDeck`{Ember Moth, bTop}, `AddWorldCardToDeck`{Falling Fruit, bTop}] |
-| Ember Moth | 27 | 4 | Creature | None | `Damage` 2 | `Damage` 1 | `Damage` 1 *(spec's `ReturnWorldCards` half dropped — boon-signed and inert on auto-hooks; see ✅ above)* |
+| Hatchery Cellar | 26 | 6 | Obstructed | `OfferBoon`{setId "ember-boons", offeredCount 3, chooseCount 1} *(decision §4: was `Sequence`[`GainCard` ×5]; offers 3 of the five tools, keep 1 — caps dilution, adds agency)* | None | None | `Sequence`[`AddWorldCardToDeck`{Ember Moth, bTop}, `AddWorldCardToDeck`{Falling Fruit, bTop}] |
+| Ember Moth | 27 | 4 | Creature | None | `ForceDestroy` 2 | `ForceDestroy` 1 | `ForceDestroy` 1 *(decision §5: creature snatches cards so `Brace` rewards matter; was `Damage`; spec's `ReturnWorldCards` half dropped — see ✅ above)* |
 | Lantern Brood | 28 | 4 | Creature, Slow | `GainCard` Leave One | `AddWorldCardToDeck`{Ember Moth, bTop} | `AddWorldCardToDeck`{Ember Moth, bTop} | `AddThreatToWorldDeck` |
-| Ground Constellation | 29 | 6 | Creature, Slow | `GainCard` Constellation Shears | `Damage` 3 | `AddWorldCardToDeck`{Ember Moth, bTop} | `Sequence`[`DamageScaled`{base 0, per `{kind:"KeywordInHand", keyword:"Creature"}`, amount 1}, `AddThreatToWorldDeck`] |
+| Ground Constellation | 29 | 6 | Creature, Slow | `GainCard` Constellation Shears | `ForceDestroy` 2 | `AddWorldCardToDeck`{Ember Moth, bTop} | `Sequence`[`DamageScaled`{base 0, per `{kind:"KeywordInHand", keyword:"Creature"}`, amount 1}, `AddThreatToWorldDeck`] *(decision §5: `onDiscarded` `Damage 3`→`ForceDestroy 2`; keeps scaling-HP end-of-turn for a real fail state)* |
 
 Self-transform pattern (REQ-EMBER-13) is satisfied by **Cracked Hearth-Star** and the **Falling Fruit → Rooted Meteor** end-of-turn chain (≥2 hazards using `AddWorldCardToDeck{bTop}` + the seed disappearing). Soft-lock safety (REQ-EMBER-31): Cracked Hearth-Star and Falling Fruit deal no discard damage; The Orchard Counts Wrong makes clear-vs-discard a real choice.
 
@@ -119,7 +123,13 @@ Add `"the-ember-orchard": "Ground Constellation"` to `WORLD_THREAT_BY_WORLD_ID` 
 
 Add an `UnlockDefinition` to `UNLOCK_CATALOG`, mirroring `world-whiteout-parking-garage`: `id: "world-the-ember-orchard"`, name/description, low `cost`, `destinyWeight: 0`, `effect: { type: "worldUnlock", worldId: "the-ember-orchard" }`. `isWorldUnlocked` and World Select gating then pick it up automatically.
 
-> ✅ **Gate A.** `bun run test` passes existing suites; the parametrized `worldRegistry.test.ts` now includes Ember and its `buildWorld` succeeds with all template refs resolving. Asset-key tests will fail until Slice B — expected; do not paper over by removing `insetKey`s.
+### A8. Boon source + `BOON_SET` registration (decision §4)
+
+Author `src/data/worlds/boons/ember.json` — a boon/reward card source mirroring `big-box.json`: `worldId: "ember-boons"`, `cardTemplates` holding **all six** player-reward cards (Dormant Star, Take One, Leave One, Star-Pruner, Glasshouse Lantern, Constellation Shears) with the exact effects/costs from the A1 player table and their `ember-inset-*` keys. These are the **single** definition of the rewards — `cards.json` (A1) does not redefine them.
+
+Register in `src/data/worlds/boons/fortune.ts`: import the JSON, export `EMBER_BOON_SOURCE`, and add an `"ember-boons"` entry to `BOON_SETS` (`{ source: EMBER_BOON_SOURCE, templateIds: ["Take One", "Leave One", "Star-Pruner", "Glasshouse Lantern", "Constellation Shears"] }`) plus the matching `FORTUNE_BOON_POOLS` line. **`Dormant Star` is in the source but not in `templateIds`** — it is granted only by `Cracked Hearth-Star`/`Falling Fruit`/`The Orchard Counts Wrong`, never offered by Hatchery. `worldManifest.ts:17` derives `BOON_SET_SOURCES` from `BOON_SETS` automatically, so the new source merges into every catalog with no further wiring — that is what makes the hazards' `GainCard`/`AddPlayerCardToTop` refs and Hatchery's `OfferBoon` both resolve. Pick a `setName` for the offer UI (e.g. "Hatchery Harvest").
+
+> ✅ **Gate A.** `bun run test` passes existing suites; the parametrized `worldRegistry.test.ts` now includes Ember and its `buildWorld` succeeds with all template refs (**rewards resolved from the `ember-boons` source**) resolving, and `OfferBoon { setId: "ember-boons" }` resolves its pool via `resolvePool`. Asset-key tests will fail until Slice B — expected; do not paper over by removing `insetKey`s.
 
 ---
 
@@ -174,7 +184,7 @@ New `src/core/tests/` file (or extend `worldRegistry.test.ts` coverage). Assert 
 
 ### C2. Incubation-pattern effect tests (REQ-EMBER-47)
 
-Drive the reducer with assembled Ember catalog: `Dormant Star` adds `Ember Moth` to top of world deck; `Cracked Hearth-Star` end-of-turn self-transforms into `Ember Moth` (and removes itself); `Falling Fruit` discard/partial plants `Dormant Star` on player draw top; `Ground Constellation` end-of-turn `AddThreatToWorldDeck` resolves to `Ground Constellation` via A6 mapping. **Also verify Hatchery Cellar end-of-turn top-of-deck order** (resolves the REQ-EMBER-26 ordering note). Ember Moth's `onEndOfTurn` is `Damage` only (the spec's `ReturnWorldCards` half was dropped, see pre-flight) — no return assertion needed.
+Drive the reducer with assembled Ember catalog: `Dormant Star` adds `Ember Moth` to top of world deck; `Cracked Hearth-Star` end-of-turn self-transforms into `Ember Moth` (and removes itself); `Falling Fruit` discard/partial plants `Dormant Star` on player draw top; `Ground Constellation` end-of-turn `AddThreatToWorldDeck` resolves to `Ground Constellation` via A6 mapping. **Also verify Hatchery Cellar end-of-turn top-of-deck order** (resolves the REQ-EMBER-26 ordering note). **Hatchery Cellar `onCleared` creates a `worldClear` boon offer from the `ember-boons` pool** (offeredCount 3, chooseCount 1) — assert the offer is drawn from the five-tool pool, *not* that five cards land in the deck. *This is the decision-§4 deviation test: REQ-EMBER-26/47's initial shape grants all five via `GainCard`; we assert an `OfferBoon`.* Mirror `big-box`'s existing OfferBoon-on-clear test for the assertion shape. **Ember Moth `onEndOfTurn` queues `ForceDestroy 1`** (decision §5; assert `pendingForceDestroy` increments — not HP `Damage`), and **Ground Constellation `onDiscarded` queues `ForceDestroy 2`**; the spec's `ReturnWorldCards` half stays dropped. **Add a `Brace`→snatch absorption test end-to-end** (play a Brace reward, let a moth's `ForceDestroy` resolve at turn start, assert the brace charge absorbs the snatch instead of a card being destroyed) so the revived mechanic is actually covered.
 
 ### C3. Asset validation (REQ-EMBER-48)
 
@@ -192,7 +202,7 @@ A seeded run demonstrating: early Dormant Stars give immediate benefit; mid-game
 
 `bun run test` green, then a local run: start/select `the-ember-orchard`, clear `Hatchery Cellar`, gain a reward card, play `Take One` or `Glasshouse Lantern`, observe a future Orchard hazard placed on top of the world deck; confirm warm orchard backdrop + Counterfall overlay + cardfront render without obscuring central play or card text.
 
-> ✅ **Gate C (final).** All six spec AI-validation items pass. Run the full `bun run test` (project convention — never `bun test`). Then validate this implementation against the spec: walk REQ-EMBER-1..50 against the coverage map below and confirm none were dropped.
+> ✅ **Gate C (final).** All six spec AI-validation items pass. Run the full `bun run test` (project convention — never `bun test`). Then validate this implementation against the spec: walk REQ-EMBER-1..50 against the coverage map below and confirm none were dropped, with both deliberate deviations explicitly acknowledged: (a) Ember Moth's dropped `ReturnWorldCards` half (REQ-EMBER-27), and (b) the Hatchery Cellar `GainCard` ×5 → `OfferBoon` deviation (REQ-EMBER-26; changes REQ-EMBER-47's test).
 
 ---
 
@@ -208,15 +218,17 @@ A seeded run demonstrating: early Dormant Stars give immediate benefit; mid-game
 | 6 (Walker/Door/Summon shared) | A1 (not redefined) |
 | 7 (signature verb incubate) | A1 roster |
 | 8 (identity everywhere) | A1, A3, B1, B3, B6 |
-| 9, 10 (existing effects, current names) | A1 |
+| 9, 10 (existing effects, current names) | A1 (incl. `ForceDestroy`, an existing effect added to the vocabulary — decision §5) |
 | 11 (Dormant Star) | A1 |
 | 12 (no new keyword; Obstructed/Creature/Slow) | A1, decision §1 |
 | 13 (≥2 self-transform hazards) | A1 (Cracked Hearth-Star, Falling Fruit chain) |
 | 14 (threat mapping) | A6 |
 | 15 (complete without timed state) | whole plan; no core slice |
-| 16–20 (reward recipe) | A1 player table |
+| 16–20 (reward recipe) | A1 player table (authored in boon source, A8) |
 | 21 (no other-world mechanics) | A1 (no GainLight/Heat/Freeze/Spore/Concealed/DealProgressScaled) |
 | 22–29 (world card recipe) | A1 world table |
+| 26, 47 (Hatchery reward delivery) | A1, A8, C2 — **`GainCard` ×5 → `OfferBoon` deviation, decision §4** |
+| 27, 29 (creatures: `Damage` → `ForceDestroy`) | A1, C2 — **decision §5, revives `Brace`** |
 | 30 (all four hooks) | A1 |
 | 31 (soft-lock safety) | A1 (Cracked/Falling no discard dmg; Orchard Counts choice) |
 | 32–35 (deck composition) | A1 acts |
@@ -230,6 +242,8 @@ A seeded run demonstrating: early Dormant Stars give immediate benefit; mid-game
 
 ## Risks / watch items
 
+- **Spec deviation: `GainCard` ×5 → `OfferBoon` on Hatchery Cellar** (decision §4). Effect-kind change, not just tuning, so it is a real departure from REQ-EMBER-26's initial shape and changes REQ-EMBER-47's Hatchery test. Driven by dilution math (×3 copies × 5 cards = up to 15 cards into a starter deck) and the now-available `OfferBoon` effect. The six player rewards are single-sourced in `ember.json` (A8) to avoid duplicating card state; that source merges into every catalog (same precedent as `big-box-boons`), reachable only by the Ember cards that reference it. Recorded in decision §4, the pre-flight table, A1, A8, C2, and the coverage map.
+- **`ForceDestroy` ↔ `Brace` balance (decision §5).** Ember Moth recurs heavily, so its `ForceDestroy` is the main hand pressure; amounts (Moth 2/1/1, Ground Constellation discard 2) are initial tuning. Watch in C5: (a) Brace supply (three reward cards at amount 1, plus boon offers) keeps pace with snatch volume; (b) `ForceDestroy` on a thin hand does not soft-lock by eating the player's only progress cards — if it does, drop Moth to `ForceDestroy 1` on every hook or restore one `Damage` hook. HP-loss fail state is preserved by the surviving `Damage`/`DamageScaled` on Rooted Meteor, The Orchard Counts Wrong, and Ground Constellation's end-of-turn.
 - **Inset volume.** 14 generated images is the schedule risk; keep the violet-on-orange keynote consistent (B1).
 - **Hatchery Cellar top-deck order** is an engine-semantics detail — pin it with C2, adjust step order only (never add effects).
 - **Star-Pruner bonus tag** ships as `Obstructed`; spec allows a `Slow` swap after playtest (REQ-EMBER-18). Tuning, not structural.
