@@ -4,8 +4,9 @@
   "cardTemplates": {
     "Flashlight": {
       "kind": "player",
-      "name": "Flashlight",
+      "name": "Half-Dead Flashlight",
       "insetKey": "fog-inset-flashlight",
+      "exhaust": true,
       "effect": { "kind": "GainLight", "amount": 2 }
     },
     "Flare Gun": {
@@ -44,23 +45,29 @@
       "exhaust": true,
       "effect": { "kind": "DealProgressAll", "base": 1, "bonus": { "tag": "Hidden", "amount": 2 } }
     },
-    "Half-Melted Ice": {
+    "Half-Dead Spotlight": {
       "kind": "player",
-      "name": "Half-Melted Ice",
-      "rarity": "common",
-      "effect": { "kind": "GainLight", "amount": 2 }
-    },
-    "Cooler Snack": {
-      "kind": "player",
-      "name": "Cooler Snack",
-      "rarity": "common",
-      "effect": { "kind": "Heal", "amount": 2 }
-    },
-    "Tide Pool Find": {
-      "kind": "player",
-      "name": "Tide Pool Find",
+      "name": "Half-Dead Spotlight",
+      "insetKey": "fog-inset-flashlight",
       "rarity": "uncommon",
-      "effect": { "kind": "DealProgress", "base": 1, "bonus": { "tag": "Hidden", "amount": 2 } }
+      "exhaust": true,
+      "effect": { "kind": "GainLight", "amount": 4 }
+    },
+    "Cooler Snacks": {
+      "kind": "player",
+      "name": "Cooler Snacks",
+      "insetKey": "fortune-inset-lucky-break",
+      "rarity": "rare",
+      "exhaust": true,
+      "effect": { "kind": "Heal", "amount": 4 }
+    },
+    "Loaded Shotgun": {
+      "kind": "player",
+      "name": "Loaded Shotgun",
+      "rarity": "legendary",
+      "insetKey": "zombie-inset-find-shotgun",
+      "exhaust": true,
+      "effect": { "kind": "DealProgressAll", "base": 2, "bonus": { "tag": "Hidden", "amount": 2 } }
     },
     "Rolling Fog": {
       "kind": "world",
@@ -82,7 +89,11 @@
       "keywords": ["Concealed:1", "Hidden"],
       "discardable": true,
       "onDiscarded": { "kind": "None" },
-      "onCleared": { "kind": "GainRandomCard", "setId": "fog-cooler-loot-v1", "setName": "the cooler" },
+      "onCleared": {
+        "kind": "GainRandomCard",
+        "setId": "fog-cooler-loot-v1",
+        "setName": "the cooler"
+      },
       "onPartialClear": { "kind": "None" },
       "onEndOfTurn": { "kind": "None" }
     },

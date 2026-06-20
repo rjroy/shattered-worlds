@@ -29,7 +29,7 @@ export const LOOT_POOLS = {
   // ordinary fog-beach-party player cards in that world's own cards.json —
   // they need no paired RawCardSource since the world source is already
   // merged into the catalog by worldManifest.ts.
-  "fog-cooler-loot-v1": ["Half-Melted Ice", "Cooler Snack", "Tide Pool Find"],
+  "fog-cooler-loot-v1": ["Barricade", "Half-Melted Ice", "Cooler Snack", "Tide Pool Find"],
 } as const satisfies Record<string, readonly CardTemplateId[]>;
 
 /**
