@@ -149,7 +149,7 @@ export function createWitnessCollector(storage: RunStatsStorage | undefined): Wi
             setThreat(event.templateId, {
               encounterCount: existing?.encounterCount ?? 0,
               discardedCount: existing?.discardedCount ?? 0,
-              resolvedCount: existing?.resolvedCount ?? 0 + 1,
+              resolvedCount: (existing?.resolvedCount ?? 0) + 1,
               diedTo: existing?.diedTo ?? false,
             });
           }
@@ -159,7 +159,7 @@ export function createWitnessCollector(storage: RunStatsStorage | undefined): Wi
             const existing = profile.threats[event.templateId];
             setThreat(event.templateId, {
               encounterCount: existing?.encounterCount ?? 0,
-              discardedCount: existing?.discardedCount ?? 0 + 1,
+              discardedCount: (existing?.discardedCount ?? 0) + 1,
               resolvedCount: existing?.resolvedCount ?? 0,
               diedTo: existing?.diedTo ?? false,
             });
