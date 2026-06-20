@@ -119,3 +119,51 @@ describe("assembleCatalog collision detection", () => {
     expect(() => assembleCatalog([source])).not.toThrow();
   });
 });
+
+// ---------------------------------------------------------------------------
+// 3. Rarity validation
+// ---------------------------------------------------------------------------
+
+describe("assembleCatalog rarity validation", () => {
+  it("throws CatalogError when a template authors an invalid rarity value", () => {
+    const source: RawCardSource = {
+      worldId: "world-a",
+      cardTemplates: {
+        Sprint: {
+          kind: "player",
+          name: "Sprint",
+          effect: { kind: "Heal", amount: 1 },
+          // JSON-authored data isn't compile-time type-checked, so this cast
+          // simulates a bad value reaching assembleCatalog at runtime.
+          rarity: "mythic" as never,
+        },
+      },
+    };
+    expect(() => assembleCatalog([source])).toThrow(CatalogError);
+  });
+
+  it("does not throw when rarity is omitted", () => {
+    const source: RawCardSource = {
+      worldId: "world-a",
+      cardTemplates: {
+        Sprint: { kind: "player", name: "Sprint", effect: { kind: "Heal", amount: 1 } },
+      },
+    };
+    expect(() => assembleCatalog([source])).not.toThrow();
+  });
+
+  it("does not throw when rarity is a valid tier", () => {
+    const source: RawCardSource = {
+      worldId: "world-a",
+      cardTemplates: {
+        Sprint: {
+          kind: "player",
+          name: "Sprint",
+          effect: { kind: "Heal", amount: 1 },
+          rarity: "uncommon",
+        },
+      },
+    };
+    expect(() => assembleCatalog([source])).not.toThrow();
+  });
+});

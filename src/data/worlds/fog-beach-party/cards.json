@@ -44,6 +44,24 @@
       "exhaust": true,
       "effect": { "kind": "DealProgressAll", "base": 1, "bonus": { "tag": "Hidden", "amount": 2 } }
     },
+    "Half-Melted Ice": {
+      "kind": "player",
+      "name": "Half-Melted Ice",
+      "rarity": "common",
+      "effect": { "kind": "GainLight", "amount": 2 }
+    },
+    "Cooler Snack": {
+      "kind": "player",
+      "name": "Cooler Snack",
+      "rarity": "common",
+      "effect": { "kind": "Heal", "amount": 2 }
+    },
+    "Tide Pool Find": {
+      "kind": "player",
+      "name": "Tide Pool Find",
+      "rarity": "uncommon",
+      "effect": { "kind": "DealProgress", "base": 1, "bonus": { "tag": "Hidden", "amount": 2 } }
+    },
     "Rolling Fog": {
       "kind": "world",
       "name": "Rolling Fog",
@@ -64,7 +82,7 @@
       "keywords": ["Concealed:1", "Hidden"],
       "discardable": true,
       "onDiscarded": { "kind": "None" },
-      "onCleared": { "kind": "GainCard", "template": "Barricade" },
+      "onCleared": { "kind": "GainRandomCard", "setId": "fog-cooler-loot-v1", "setName": "the cooler" },
       "onPartialClear": { "kind": "None" },
       "onEndOfTurn": { "kind": "None" }
     },

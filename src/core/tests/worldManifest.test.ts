@@ -2,6 +2,9 @@ import { describe, expect, it } from 'bun:test'
 import { BOON_SETS, FORTUNE_BOON_POOLS } from '../../data/worlds/boons/fortune'
 import { buildWorld, worldManifest } from '../../data/worldManifest'
 import { worldDataRegistry } from '../../data/worlds/registry'
+import { LOOT_POOLS } from '../effects/pools'
+import { applyEffect } from '../engine/effects'
+import { createWorld } from '../engine/world'
 import type { CardCatalog } from '../model/catalog'
 import type { CardEffect } from '../model/types'
 
@@ -50,6 +53,19 @@ function offerBoonSetRefs(effect: CardEffect): string[] {
   }
 }
 
+function lootPoolSetRefs(effect: CardEffect): string[] {
+  switch (effect.kind) {
+    case 'GainRandomCard':
+      return [effect.setId]
+    case 'Modal':
+      return effect.branches.flatMap(lootPoolSetRefs)
+    case 'Sequence':
+      return effect.steps.flatMap(lootPoolSetRefs)
+    default:
+      return []
+  }
+}
+
 /** Every template id referenced by any effect across the whole catalog. */
 function allReferencedTemplates(catalog: CardCatalog): string[] {
   const refs: string[] = []
@@ -76,6 +92,21 @@ function allReferencedOfferBoonSets(catalog: CardCatalog): string[] {
       refs.push(...offerBoonSetRefs(template.onCleared))
       refs.push(...offerBoonSetRefs(template.onEndOfTurn))
       refs.push(...offerBoonSetRefs(template.onPartialClear))
+    }
+  }
+  return refs
+}
+
+function allReferencedLootPoolSets(catalog: CardCatalog): string[] {
+  const refs: string[] = []
+  for (const template of Object.values(catalog)) {
+    if (template.kind === 'player') {
+      refs.push(...lootPoolSetRefs(template.effect))
+    } else {
+      refs.push(...lootPoolSetRefs(template.onDiscarded))
+      refs.push(...lootPoolSetRefs(template.onCleared))
+      refs.push(...lootPoolSetRefs(template.onEndOfTurn))
+      refs.push(...lootPoolSetRefs(template.onPartialClear))
     }
   }
   return refs
@@ -178,6 +209,14 @@ describe.each(worldIds)('world "%s"', (worldId) => {
     const missing = allReferencedOfferBoonSets(catalog).filter((setId) => !boonSetIds.has(setId))
     expect(missing).toEqual([])
   })
+
+  it('resolves every authored GainRandomCard setId to a registered loot pool', () => {
+    const { catalog } = buildWorld(worldId)
+    const missing = allReferencedLootPoolSets(catalog).filter(
+      (setId) => !Object.prototype.hasOwnProperty.call(LOOT_POOLS, setId),
+    )
+    expect(missing).toEqual([])
+  })
 })
 
 describe('fortune-v1 boon source', () => {
@@ -253,5 +292,60 @@ describe('zombie-big-box Corpse card', () => {
     const refs = eot.steps.flatMap(templateRefs)
     expect(refs).toContain('Zombie')
     expect(refs.filter((id) => catalog[id] === undefined)).toEqual([])
+  })
+})
+
+// ---------------------------------------------------------------------------
+// fog-cooler-loot-v1: the Step 7 GainRandomCard example (REQ-RARITY-30, D2).
+// "Abandoned Cooler" is a generic cache-style world card — its grant is not
+// load-bearing world identity (unlike Fire Axe/Nitro elsewhere), so it is the
+// one onCleared converted from fixed GainCard to a rolled GainRandomCard.
+// ---------------------------------------------------------------------------
+
+describe('fog-cooler-loot-v1 loot pool', () => {
+  const lootPoolTemplateIds = LOOT_POOLS['fog-cooler-loot-v1']
+
+  it('is registered with three templates across at least two rarity tiers', () => {
+    expect(lootPoolTemplateIds).toHaveLength(3)
+  })
+
+  it('every pool template mints as a legal player card with its authored rarity', () => {
+    const { catalog } = buildWorld('fog-beach-party')
+    const rarities = lootPoolTemplateIds.map((id) => {
+      const template = catalog[id]
+      expect(template).toBeDefined()
+      expect(template?.kind).toBe('player')
+      return template?.rarity
+    })
+
+    expect(rarities).toContain('common')
+    expect(rarities).toContain('uncommon')
+  })
+
+  it('"Abandoned Cooler" onCleared rolls a card from fog-cooler-loot-v1 instead of a fixed grant', () => {
+    const { catalog, worldData } = buildWorld('fog-beach-party')
+
+    const abandonedCooler = catalog['Abandoned Cooler']
+    expect(abandonedCooler).toBeDefined()
+    if (abandonedCooler === undefined || abandonedCooler.kind !== 'world') return
+    expect(abandonedCooler.onCleared).toEqual({
+      kind: 'GainRandomCard',
+      setId: 'fog-cooler-loot-v1',
+      setName: 'the cooler',
+    })
+
+    const { state } = createWorld(catalog, worldData, 7)
+    const result = applyEffect(catalog, state, abandonedCooler.onCleared)
+
+    expect(result.state.playerDiscard).toHaveLength(1)
+    const granted = result.state.playerDiscard[0]!
+    expect([...lootPoolTemplateIds] as string[]).toContain(granted.templateId)
+
+    const grantedEvent = result.events.find((event) => event.type === 'CardGained')
+    expect(grantedEvent).toBeDefined()
+    if (grantedEvent?.type === 'CardGained') {
+      expect(grantedEvent.setName).toBe('the cooler')
+      expect(grantedEvent.templateId).toBe(granted.templateId)
+    }
   })
 })

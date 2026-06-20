@@ -332,7 +332,9 @@ function handleChooseBoon(
         dest === "playerDiscard" ? [card, ...afterMint.playerDiscard] : afterMint.playerDiscard,
       pendingBoonChoices: afterPendingBoonChoices,
     },
-    events: [{ type: "BoonCardGranted", cardId: card.id, templateId: card.templateId, dest }],
+    events: [
+      { type: "BoonCardGranted", cardId: card.id, templateId: card.templateId, dest, rarity: card.rarity },
+    ],
   };
 }
 

@@ -17,6 +17,7 @@ function playerWith(keywords: PlayerCard["keywords"]): PlayerCard {
     effect: { kind: "None" },
     energyCost: 0,
     keywords,
+    rarity: "common",
   };
 }
 
@@ -35,6 +36,7 @@ function worldWith(keywords: WorldCard["keywords"]): WorldCard {
     onCleared: { kind: "None" },
     onEndOfTurn: { kind: "None" },
     onPartialClear: { kind: "None" },
+    rarity: "common",
   };
 }
 

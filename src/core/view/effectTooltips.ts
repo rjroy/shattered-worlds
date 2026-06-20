@@ -66,6 +66,10 @@ export const EFFECT_ICON_TOOLTIPS: Record<IconId, TooltipCopy> = {
     title: "Gain card",
     body: "Add a named card to the associated deck.",
   },
+  randomCard: {
+    title: "Random card",
+    body: "Gain a random card from a named pool — the reward, not a specific card or tier, is guaranteed.",
+  },
   brace: {
     title: "Brace",
     body: "Prevent random card destroy effects.",

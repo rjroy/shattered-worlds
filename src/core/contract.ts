@@ -18,6 +18,8 @@ export type {
   KeywordName,
 } from "./model/types";
 export type { CardTemplate } from "./model/cards";
+export type { RarityTier } from "./model/rarity";
+export { RARITY_ORDER, RARITY_WEIGHTS } from "./model/rarity";
 export { parseKeyword, keywordNames, hasKeyword, concealOf, isConcealed } from "./model/keywords";
 export { CatalogError } from "./model/errors";
 export type { GameCore } from "./engine/game";

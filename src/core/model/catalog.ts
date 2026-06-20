@@ -1,4 +1,5 @@
 import type { CardTemplate } from "./cards";
+import { RARITY_ORDER } from "./rarity";
 import { CatalogError } from "./errors";
 
 // ---------------------------------------------------------------------------
@@ -46,7 +47,10 @@ export interface RawCardSource {
  * Merges card templates from one or more RawCardSource objects into a single
  * catalog. Throws CatalogError if the same templateId appears in more than
  * one source — duplicate ids indicate a data authoring mistake and must not
- * be silently resolved by last-writer-wins.
+ * be silently resolved by last-writer-wins. Also throws CatalogError if a
+ * template authors a `rarity` value outside the four valid RarityTiers —
+ * JSON-authored templates aren't compile-time type-checked, so this guards
+ * against bad data reaching mintCard.
  */
 export function assembleCatalog(sources: RawCardSource[]): CardCatalog {
   const catalog: CardCatalog = {};
@@ -56,6 +60,11 @@ export function assembleCatalog(sources: RawCardSource[]): CardCatalog {
       if (Object.prototype.hasOwnProperty.call(catalog, templateId)) {
         throw new CatalogError(
           `Duplicate templateId "${templateId}" found in world "${source.worldId}"`,
+        );
+      }
+      if (template.rarity !== undefined && !RARITY_ORDER.includes(template.rarity)) {
+        throw new CatalogError(
+          `Invalid rarity "${template.rarity}" for templateId "${templateId}" found in world "${source.worldId}"`,
         );
       }
       catalog[templateId] = template;

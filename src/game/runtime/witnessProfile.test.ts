@@ -61,6 +61,7 @@ function makeWorldCard(name: string): WorldCard {
     onCleared: { kind: "None" },
     onEndOfTurn: { kind: "None" },
     onPartialClear: { kind: "None" },
+    rarity: "common",
   };
 }
 

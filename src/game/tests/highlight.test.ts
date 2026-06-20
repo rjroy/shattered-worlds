@@ -14,6 +14,7 @@ function player(id: string): PlayerCard {
     effect: { kind: "Draw", player: 1 },
     energyCost: 0,
     keywords: [],
+    rarity: "common",
   };
 }
 
@@ -32,6 +33,7 @@ function world(id: string, discardable = false): WorldCard {
     onCleared: { kind: "None" },
     onEndOfTurn: { kind: "None" },
     onPartialClear: { kind: "None" },
+    rarity: "common",
   };
 }
 

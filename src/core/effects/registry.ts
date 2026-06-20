@@ -17,6 +17,7 @@ import {
   AddThreatToWorldDeckHandler,
   AddWorldCardToDeckHandler,
   GainCardHandler,
+  GainRandomCardHandler,
 } from "./gainCard";
 import { FreezeCardsHandler, GainHeatHandler, ThawCardsHandler } from "./heat";
 import { NoneHandler } from "./none";
@@ -48,6 +49,7 @@ export const EFFECTS: {
   DamageScaled: new DamageScaledHandler(),
   AddCard: new AddCardHandler(),
   GainCard: new GainCardHandler(),
+  GainRandomCard: new GainRandomCardHandler(),
   OfferBoon: new OfferBoonHandler(),
   AddPlayerCardToTop: new AddPlayerCardToTopHandler(),
   AddWorldCardToDeck: new AddWorldCardToDeckHandler(),

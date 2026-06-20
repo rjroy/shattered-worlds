@@ -42,6 +42,7 @@ function previewCardFromTemplate(
       energyCost: template.energyCost ?? 0,
       exhaust: template.exhaust ?? false,
       keywords: (template.keywords ?? []).map(parseKeyword),
+      rarity: template.rarity ?? "common",
     };
   }
 
@@ -59,6 +60,7 @@ function previewCardFromTemplate(
     onCleared: template.onCleared,
     onEndOfTurn: template.onEndOfTurn,
     onPartialClear: template.onPartialClear,
+    rarity: template.rarity ?? "common",
   };
 }
 

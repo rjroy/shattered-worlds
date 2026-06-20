@@ -109,6 +109,7 @@ export function makeWorldCard(overrides: Partial<WorldCard> & Pick<WorldCard, "i
     onCleared: { kind: "None" },
     onEndOfTurn: { kind: "None" },
     onPartialClear: { kind: "None" },
+    rarity: "common",
     ...overrides,
   };
 }
@@ -126,6 +127,7 @@ export function makePlayerCard(
     effect: { kind: "None" },
     energyCost: 0,
     keywords: [],
+    rarity: "common",
     ...overrides,
   };
 }

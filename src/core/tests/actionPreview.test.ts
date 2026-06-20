@@ -666,4 +666,57 @@ describe("previewAction", () => {
     expect(text).toContain("concealed hazard effects may trigger");
     expect(text).not.toContain("Mist Snatcher");
   });
+
+  it("masks a GainRandomCard roll: names the pool, never the rolled template or its rarity (D3)", () => {
+    const [explore, s1] = mintPlayer(makeState(), "Explore");
+    const cache = makeWorldCard({
+      id: "cache-hazard",
+      templateId: "Cache Hazard",
+      name: "Cache Hazard",
+      cost: 1,
+      onCleared: { kind: "GainRandomCard", setId: "fortune-v1", setName: "the cache" },
+    });
+    const state = { ...s1, hand: [explore, cache], progress: {} };
+
+    const preview = previewAction(catalog, state, {
+      type: "PlayCard",
+      cardId: explore.id,
+      targetId: cache.id,
+    });
+    const text = preview.summaryLines.join("\n");
+
+    expect(preview.events.some((event) => event.type === "CardGained")).toBe(true);
+    expect(text).toContain("Gain a random card from the cache");
+    // None of the pool's templates, nor any rarity word, leak into the preview.
+    for (const templateId of [
+      "Lucky Break",
+      "Second Wind",
+      "Found Tool",
+      "Clear Path",
+      "Steady Nerve",
+    ]) {
+      expect(text).not.toContain(templateId);
+    }
+    expect(text.toLowerCase()).not.toMatch(/common|uncommon|\brare\b|legendary/);
+  });
+
+  it("still names the template for a fixed GainCard grant (regression)", () => {
+    const [explore, s1] = mintPlayer(makeState(), "Explore");
+    const stash = makeWorldCard({
+      id: "stash-hazard",
+      templateId: "Stash Hazard",
+      name: "Stash Hazard",
+      cost: 1,
+      onCleared: { kind: "GainCard", template: "Sprint" },
+    });
+    const state = { ...s1, hand: [explore, stash], progress: {} };
+
+    const text = linesText(state, {
+      type: "PlayCard",
+      cardId: explore.id,
+      targetId: stash.id,
+    });
+
+    expect(text).toContain("Gain Sprint to discard");
+  });
 });

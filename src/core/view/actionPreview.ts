@@ -435,7 +435,14 @@ function summarizeEvent(event: GameEvent, context: PreviewContext): readonly str
     case "WorldLost":
       return ["Lose the world"];
     case "CardGained":
-      return [`Gain ${event.templateId} to ${destLabel(event.dest)}`];
+      // GainRandomCard stamps setName on its grant event (D3): the roll is
+      // unrevealed until commit, so name the pool, never the rolled
+      // template or its rarity. Fixed grants (GainCard and friends) leave
+      // setName undefined and keep naming the template — they were always
+      // authored/revealed, not a blind roll.
+      return event.setName !== undefined
+        ? [`Gain a random card from ${event.setName}`]
+        : [`Gain ${event.templateId} to ${destLabel(event.dest)}`];
     case "CardsDrawn":
       return [
         `Draw ${event.ids.length} ${event.bHazard ? "world" : "player"} ${plural("card", event.ids.length)}`,

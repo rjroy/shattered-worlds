@@ -45,6 +45,7 @@ function player(effect: CardEffect): PlayerCard {
     effect,
     energyCost: 0,
     keywords: [],
+    rarity: "common",
   };
 }
 
@@ -63,6 +64,7 @@ function hazard(over: Partial<WorldCard>): WorldCard {
     onCleared: { kind: "None" },
     onEndOfTurn: { kind: "None" },
     onPartialClear: { kind: "None" },
+    rarity: "common",
     ...over,
   };
 }

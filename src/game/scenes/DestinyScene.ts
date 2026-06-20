@@ -271,7 +271,6 @@ export class DestinyScene extends Phaser.Scene {
         wordWrap: { width: 246 },
       }),
     );
-    console.log(`${def.name}: ${descriptionText.height}`);
     if (descriptionText.height > 39) {
       const scale = 39 / descriptionText.height;
       descriptionText.setScale(scale);

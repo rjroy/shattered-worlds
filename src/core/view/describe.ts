@@ -122,6 +122,7 @@ function dealProgressOf(
     case "Damage":
     case "DamageScaled":
     case "GainCard":
+    case "GainRandomCard":
     case "OfferBoon":
     case "AddPlayerCardToTop":
     case "SurviveWorld":
