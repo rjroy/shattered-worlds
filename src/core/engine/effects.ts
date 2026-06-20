@@ -81,7 +81,20 @@ export function applyEffect(
     apply: dispatch,
   };
 
-  return dispatch(ctx, effect);
+  const result = dispatch(ctx, effect);
+
+  // Stamp provenance for world-card hook firings. When `selfId` is set, every
+  // event this effect produced came (directly or via a nested hook) from that
+  // card's hook. Tag only events whose `sourceCardId` is still undefined so an
+  // inner hook's provenance is never overwritten — the innermost source wins.
+  // Player-played effects (no selfId) pass through unchanged.
+  if (selfId === undefined) return result;
+  return {
+    state: result.state,
+    events: result.events.map((event) =>
+      event.sourceCardId === undefined ? { ...event, sourceCardId: selfId } : event,
+    ),
+  };
 }
 
 /**

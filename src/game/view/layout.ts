@@ -36,6 +36,9 @@ export const TABLE_LAYOUT = {
   cardHoverDepth: 200,
   connectorDepth: 500,
   modalDepth: 1000,
+  // Action-confirmation modal sits above tooltips (2000) so the consequence
+  // panel and its blocking backdrop are never occluded by a hover tooltip.
+  confirmDepth: 2500,
   selectionHint: { x: CANVAS_W / 2, y: 578 },
   previewSlot: { x: CANVAS_W / 2, y: 550 },
   buttons: {
@@ -43,6 +46,7 @@ export const TABLE_LAYOUT = {
     endTurn: { x: 820, y: 560 },
     cancel: { x: 740, y: 570 },
     confirm: { x: 740, y: 540 },
+    settings: { x: 818, y: 22 },
     help: { x: 860, y: 22 },
   },
 } as const;

@@ -12,6 +12,7 @@ import { createRunStatsCollector, type RunStatsReader, type RunStatsStorage } fr
 import { createStatsTransfer, type StatsTransfer } from './statsTransfer'
 import { createFeatsStore, type FeatsStore } from './featsProfile'
 import { createUnlocksStore, type UnlocksStore } from './unlocksProfile'
+import { createUserSettingsStore, type UserSettingsStore } from './userSettings'
 import { createWitnessCollector, type WitnessStore } from './witnessProfile'
 import { createFeatEvaluator, type FeatEvaluator } from './featEvaluator'
 import { FEAT_CATALOG } from '../../data/feats/catalog'
@@ -39,6 +40,7 @@ export interface GameplayRuntime {
   readonly witnessStore: WitnessStore
   readonly featsStore: FeatsStore
   readonly unlocksStore: UnlocksStore
+  readonly userSettings: UserSettingsStore
   readonly featEvaluator: FeatEvaluator
   /** Runtime-wide observation: receives items from every session, correlated by sessionId. */
   subscribe(subscriber: RunStreamSubscriber): () => void
@@ -76,6 +78,7 @@ export function createGameplayRuntime(options: GameplayRuntimeOptions = {}): Gam
   const witnessStore = createWitnessCollector(options.storage)
   const featsStore = createFeatsStore(options.storage)
   const unlocksStore = createUnlocksStore(options.storage, featsStore)
+  const userSettings = createUserSettingsStore(options.storage)
   const featEvaluator = createFeatEvaluator(FEAT_CATALOG, featsStore, runStats, witnessStore, options.clock ?? Date.now)
   const statsTransfer = createStatsTransfer({
     runStats,
@@ -101,6 +104,7 @@ export function createGameplayRuntime(options: GameplayRuntimeOptions = {}): Gam
     witnessStore,
     featsStore,
     unlocksStore,
+    userSettings,
     featEvaluator,
 
     subscribe(subscriber) {

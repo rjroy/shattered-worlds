@@ -417,6 +417,7 @@ describe("TableScene pending boon input", () => {
   interface TableHarness {
     game_: { state: GameState; template(id: string): CardTemplate | undefined };
     sel: { phase: "idle" };
+    actionConfirmation: { isOpen: boolean };
     dispatch(action: Action): void;
     actions: Action[];
     chooseVisibleBoonOption(index: number): void;
@@ -434,6 +435,7 @@ describe("TableScene pending boon input", () => {
       },
     };
     scene.sel = { phase: "idle" };
+    scene.actionConfirmation = { isOpen: false };
     scene.dispatch = (action: Action) => {
       scene.actions.push(action);
     };

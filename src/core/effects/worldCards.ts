@@ -173,6 +173,13 @@ export class ForceDestroyHandler extends EffectHandler<ForceDestroyEffect> {
     const current: GameState = {
       ...ctx.state,
       pendingForceDestroy: ctx.state.pendingForceDestroy + effect.amount,
+      // Carry the queuing card's id so the deferred CardDestroyed/BraceConsumed
+      // events (emitted at turn start, past the provenance boundary) can be
+      // stamped. Keep the first contributor; the preview decides concealment.
+      ...(ctx.selfId !== undefined &&
+        ctx.state.pendingForceDestroySource === undefined && {
+          pendingForceDestroySource: ctx.selfId,
+        }),
     };
     return { state: current, events: [] };
   }

@@ -208,6 +208,13 @@ export function resolveForceDestroy(state: GameState): {
   const events: GameEvent[] = [];
   let current = state;
 
+  // Provenance for the deferred events: if a (concealed) world card queued this
+  // destroy, its id rides along so the preview can mask the snatch. Stamped onto
+  // BraceConsumed and CardDestroyed; the preview decides if the source is hidden.
+  const source = state.pendingForceDestroySource;
+  const withSource = (event: GameEvent): GameEvent =>
+    source !== undefined ? { ...event, sourceCardId: source } : event;
+
   // Absorb brace charges first (D3): each charge cancels one pending snatch.
   const absorbed = Math.min(current.braceCharges, current.pendingForceDestroy);
   if (absorbed > 0) {
@@ -217,11 +224,12 @@ export function resolveForceDestroy(state: GameState): {
       braceCharges: current.braceCharges - absorbed,
       pendingForceDestroy: remaining,
     };
-    events.push({ type: "BraceConsumed", absorbed, remaining });
+    events.push(withSource({ type: "BraceConsumed", absorbed, remaining }));
   }
 
   if (current.pendingForceDestroy <= 0) {
-    return { state: current, events };
+    // Fully absorbed: clear the carried source alongside the drained counter.
+    return { state: { ...current, pendingForceDestroySource: undefined }, events };
   }
 
   const playerCards = current.hand.filter((c) => c.kind === "player");
@@ -229,7 +237,10 @@ export function resolveForceDestroy(state: GameState): {
 
   if (takeCount === 0) {
     // Nothing to grab — consume the charge so it does not carry over.
-    return { state: { ...current, pendingForceDestroy: 0 }, events };
+    return {
+      state: { ...current, pendingForceDestroy: 0, pendingForceDestroySource: undefined },
+      events,
+    };
   }
 
   const [shuffled, nextRng] = shuffle(playerCards, current.rng);
@@ -242,13 +253,14 @@ export function resolveForceDestroy(state: GameState): {
     rng: nextRng,
     hand: current.hand.filter((c) => !doomedIds.has(c.id)),
     pendingForceDestroy: 0,
+    pendingForceDestroySource: undefined,
   };
 
-  const destroyEvent: GameEvent = {
+  const destroyEvent: GameEvent = withSource({
     type: "CardDestroyed",
     ids: [...doomedIds],
     templateIds,
-  };
+  });
 
   return { state: final, events: [...events, destroyEvent] };
 }

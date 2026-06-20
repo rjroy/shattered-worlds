@@ -1150,12 +1150,16 @@ describe("OfferBoon", () => {
       bToDiscard: false,
     });
     expect(state.pendingBoonChoices[0]?.offeredTemplateIds).toHaveLength(3);
-    expect(events).toContainEqual({
-      type: "BoonOffered",
-      source: "worldClear",
-      setId: "fortune-v1",
-      templateIds: state.pendingBoonChoices[0]?.offeredTemplateIds ?? [],
-    });
+    expect(events).toContainEqual(
+      expect.objectContaining({
+        type: "BoonOffered",
+        source: "worldClear",
+        setId: "fortune-v1",
+        templateIds: state.pendingBoonChoices[0]?.offeredTemplateIds ?? [],
+        // onCleared hook events now carry provenance to the clearing hazard.
+        sourceCardId: "offer-boon-hazard",
+      }),
+    );
   });
 
   it("defaults chosen boons to hand", () => {
