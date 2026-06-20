@@ -129,7 +129,7 @@ describe("buildRunModifiers", () => {
 
     expect(mods.actBoon).toEqual({
       poolId: "fortune-v1",
-      poolName: "fortune-v1",
+      poolName: "Instant Fortune",
       poolTemplateIds: BOON_SETS["fortune-v1"].templateIds,
       offeredCount: 3,
       chooseCount: 1,
