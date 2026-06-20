@@ -56,11 +56,13 @@ describe("previewAction", () => {
 
     expect(text).toContain("Clear Strange Sounds");
     expect(text).toContain("Boon offered");
-    expect(previewAction(catalog, state, {
-      type: "PlayCard",
-      cardId: explore.id,
-      targetId: strangeSounds.id,
-    }).risk).toBe("attention");
+    expect(
+      previewAction(catalog, state, {
+        type: "PlayCard",
+        cardId: explore.id,
+        targetId: strangeSounds.id,
+      }).risk,
+    ).toBe("attention");
   });
 
   it("summarizes partial hooks and marks damage as harmful", () => {
@@ -77,7 +79,7 @@ describe("previewAction", () => {
 
     expect(preview.risk).toBe("harmful");
     expect(preview.severity).toBe("danger");
-    expect(text).toContain("Partial effect triggers on Zombie");
+    expect(text).toContain("Partial resolve on Zombie");
     expect(text).toContain("Take 2 damage");
     expect(text).toContain("HP 10 -> 8 (-2)");
   });
@@ -118,11 +120,7 @@ describe("previewAction", () => {
       templateId: "Something in the Mist",
       name: "Something in the Mist",
       cost: 9,
-      keywords: [
-        { name: "Concealed", value: 5 },
-        { name: "Hidden" },
-        { name: "Creature" },
-      ],
+      keywords: [{ name: "Concealed", value: 5 }, { name: "Hidden" }, { name: "Creature" }],
       onPartialClear: { kind: "Damage", amount: 7 },
     });
     const state = makeState({ hand: [sweep, concealed], hp: 10, light: 0 });
@@ -167,10 +165,7 @@ describe("previewAction", () => {
       templateId: "Something in the Mist",
       name: "Something in the Mist",
       cost: 9,
-      keywords: [
-        { name: "Concealed", value: 5 },
-        { name: "Hidden" },
-      ],
+      keywords: [{ name: "Concealed", value: 5 }, { name: "Hidden" }],
       onPartialClear: { kind: "Damage", amount: 4 },
     });
     const state = makeState({ hand: [sweep, visible, concealed], hp: 10, light: 0 });
@@ -182,7 +177,7 @@ describe("previewAction", () => {
     const text = preview.summaryLines.join("\n");
 
     expect(text).toContain("Make 1 total Progress across 1 hazard");
-    expect(text).toContain("Partial effect triggers on Zombie");
+    expect(text).toContain("Partial resolve on Zombie");
     expect(text).toContain("Make Progress on a concealed hazard");
     expect(text).toContain("concealed hazard effects may trigger");
     expect(text).not.toContain("Something in the Mist");
@@ -203,10 +198,7 @@ describe("previewAction", () => {
       templateId: "Something in the Mist",
       name: "Something in the Mist",
       cost: 3,
-      keywords: [
-        { name: "Concealed", value: 5 },
-        { name: "Hidden" },
-      ],
+      keywords: [{ name: "Concealed", value: 5 }, { name: "Hidden" }],
       onCleared: { kind: "Damage", amount: 6 },
     });
     const state = makeState({ hand: [sweep, concealed], hp: 10, light: 0 });
@@ -298,7 +290,7 @@ describe("previewAction", () => {
     expect(text).toContain("Take 1 damage");
     expect(text).toContain("Discard 1 card: Explore");
     expect(text).toContain("Energy 0 -> 1 (+1)");
-    expect(text).toContain("Draw 3 cards");
+    expect(text).toContain("Draw 3 player cards");
   });
 
   it("keeps visible EndTurn hook consequences while masking concealed hooks", () => {
@@ -326,7 +318,7 @@ describe("previewAction", () => {
     expect(text).toContain("Light 0 -> 2 (+2)");
     expect(text).toContain("concealed hazard effects may trigger");
     expect(text).toContain("Energy 0 -> 1 (+1)");
-    expect(text).toContain("Draw 4 cards");
+    expect(text).toContain("Draw 4 player cards");
     expect(text).not.toContain("Something in the Mist");
     expect(text).not.toContain("Take 4 damage");
     expect(text).not.toContain("HP 10 -> 6 (-4)");
@@ -349,7 +341,7 @@ describe("previewAction", () => {
     expect(preview.previewable).toBe(true);
     expect(text).toContain("concealed hazard effects may trigger");
     expect(text).toContain("Energy changes");
-    expect(text).toContain("Draw 5 cards");
+    expect(text).toContain("Draw 5 player cards");
     expect(text).not.toContain("Hidden Generator");
     expect(text).not.toContain("Energy 0 -> 5 (+5)");
     expect(text).not.toContain("Energy 0 -> 6 (+6)");
@@ -629,7 +621,7 @@ describe("previewAction", () => {
 
     expect(preview.previewable).toBe(true);
     // The visible card's draw is named specifically, not generic-masked.
-    expect(text).toContain("Draw 2 cards");
+    expect(text).toContain("Draw 2 player cards");
     // The concealed destroy is masked.
     expect(text).toContain("concealed hazard effects may trigger");
     expect(text).not.toContain("Mist Snatcher");
