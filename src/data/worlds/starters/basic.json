@@ -20,7 +20,7 @@
       "name": "Explore",
       "rarity": "common",
       "insetKey": "inset-explore",
-      "effect": { "kind": "DealProgress", "base": 1, "bonus": { "tag": "Hidden", "amount": 1 } }
+      "effect": { "kind": "DealProgress", "base": 1, "bonus": { "tag": "Obstructed", "amount": 1 } }
     },
     "Barricade": {
       "kind": "player",
@@ -98,7 +98,7 @@
       "insetKey": "inset-door",
       "cost": 4,
       "rarity": "legendary",
-      "keywords": ["Hidden"],
+      "keywords": ["Obstructed"],
       "discardable": false,
       "canExile": false,
       "onDiscarded": { "kind": "None" },

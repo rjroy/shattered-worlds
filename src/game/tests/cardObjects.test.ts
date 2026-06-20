@@ -1905,7 +1905,7 @@ describe("CardView fog-back concealment", () => {
       kind: "world",
       name: "Something in the Mist",
       cost: 3,
-      keywords: ["Concealed:3", "Hidden"],
+      keywords: ["Concealed:3", "Obstructed"],
       discardable: false,
       onEndOfTurn: { kind: "Damage", amount: 2 },
       onDiscarded: { kind: "None" },
@@ -2531,9 +2531,9 @@ describe("TableScene confirmation gate (Phase 9)", () => {
     const card = gainEnergyCard("risk-none-play");
     const state = makeCoreState({ hand: [card], energy: 0, light: 5 });
     // Confirm the action really is risk none through the real engine.
-    expect(
-      previewAction(coreCatalog, state, { type: "PlayCard", cardId: card.id }).risk,
-    ).toBe("none");
+    expect(previewAction(coreCatalog, state, { type: "PlayCard", cardId: card.id }).risk).toBe(
+      "none",
+    );
 
     const { scene, dispatched } = makeSelectionHarness(state, settings("risk-only"));
     scene.onCardClick(card.id);

@@ -113,14 +113,14 @@ describe("previewAction", () => {
       templateId: "Searchlight",
       name: "Searchlight",
       energyCost: 0,
-      effect: { kind: "DealProgressAll", base: 1, bonus: { tag: "Hidden", amount: 2 } },
+      effect: { kind: "DealProgressAll", base: 1, bonus: { tag: "Obstructed", amount: 2 } },
     });
     const concealed = makeWorldCard({
       id: "mist",
       templateId: "Something in the Mist",
       name: "Something in the Mist",
       cost: 9,
-      keywords: [{ name: "Concealed", value: 5 }, { name: "Hidden" }, { name: "Creature" }],
+      keywords: [{ name: "Concealed", value: 5 }, { name: "Obstructed" }, { name: "Creature" }],
       onPartialClear: { kind: "Damage", amount: 7 },
     });
     const state = makeState({ hand: [sweep, concealed], hp: 10, light: 0 });
@@ -138,7 +138,7 @@ describe("previewAction", () => {
     expect(text).toContain("Make Progress on a concealed hazard");
     expect(text).toContain("concealed hazard effects may trigger");
     expect(text).not.toContain("Something in the Mist");
-    expect(text).not.toContain("Hidden");
+    expect(text).not.toContain("Obstructed");
     expect(text).not.toContain("Creature");
     expect(text).not.toContain("(3/9)");
     expect(text).not.toContain("Take 7 damage");
@@ -151,7 +151,7 @@ describe("previewAction", () => {
       templateId: "Searchlight",
       name: "Searchlight",
       energyCost: 0,
-      effect: { kind: "DealProgressAll", base: 1, bonus: { tag: "Hidden", amount: 2 } },
+      effect: { kind: "DealProgressAll", base: 1, bonus: { tag: "Obstructed", amount: 2 } },
     });
     const visible = makeWorldCard({
       id: "visible-zombie",
@@ -165,7 +165,7 @@ describe("previewAction", () => {
       templateId: "Something in the Mist",
       name: "Something in the Mist",
       cost: 9,
-      keywords: [{ name: "Concealed", value: 5 }, { name: "Hidden" }],
+      keywords: [{ name: "Concealed", value: 5 }, { name: "Obstructed" }],
       onPartialClear: { kind: "Damage", amount: 4 },
     });
     const state = makeState({ hand: [sweep, visible, concealed], hp: 10, light: 0 });
@@ -191,14 +191,14 @@ describe("previewAction", () => {
       templateId: "Searchlight",
       name: "Searchlight",
       energyCost: 0,
-      effect: { kind: "DealProgressAll", base: 1, bonus: { tag: "Hidden", amount: 2 } },
+      effect: { kind: "DealProgressAll", base: 1, bonus: { tag: "Obstructed", amount: 2 } },
     });
     const concealed = makeWorldCard({
       id: "mist",
       templateId: "Something in the Mist",
       name: "Something in the Mist",
       cost: 3,
-      keywords: [{ name: "Concealed", value: 5 }, { name: "Hidden" }],
+      keywords: [{ name: "Concealed", value: 5 }, { name: "Obstructed" }],
       onCleared: { kind: "Damage", amount: 6 },
     });
     const state = makeState({ hand: [sweep, concealed], hp: 10, light: 0 });

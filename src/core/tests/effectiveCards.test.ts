@@ -246,7 +246,7 @@ describe("effectivePlayerCard", () => {
       modifier("upgrade", "Barricade", [
         { kind: "prependEffect", effect: { kind: "GainEnergy", amount: 1 } },
         { kind: "appendEffect", effect: { kind: "Brace", amount: 1 } },
-        { kind: "addKeyword", keyword: { name: "Hidden" } },
+        { kind: "addKeyword", keyword: { name: "Obstructed" } },
       ]),
     ]);
 

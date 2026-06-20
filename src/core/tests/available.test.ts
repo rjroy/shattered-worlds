@@ -49,7 +49,7 @@ function explorePlayer(id: string): PlayerCard {
     id,
     name: "Explore",
     sourceWorldId: "fog",
-    effect: { kind: "DealProgress", base: 1, bonus: { tag: "Hidden", amount: 1 } },
+    effect: { kind: "DealProgress", base: 1, bonus: { tag: "Obstructed", amount: 1 } },
     energyCost: 1,
   });
 }
@@ -119,7 +119,7 @@ describe("concealment gating of single-target progress", () => {
     // light 2 it reveals, and because Light never touches keywords it is still
     // Hidden, so an Explore-style "+1 vs Hidden" snipe still lands.
     const explore = explorePlayer("explore");
-    const lurker = concealedWorld("lurker", 2, [{ name: "Hidden" }]);
+    const lurker = concealedWorld("lurker", 2, [{ name: "Obstructed" }]);
 
     const dim = makeState({ hand: [explore, lurker], light: 1, energy: 3 });
     expect(availableActions(dim).legalTargets("explore", 0)).not.toContain("lurker");
@@ -127,7 +127,7 @@ describe("concealment gating of single-target progress", () => {
     const lit = makeState({ hand: [explore, lurker], light: 2, energy: 3 });
     expect(availableActions(lit).legalTargets("explore", 0)).toContain("lurker");
     // Hidden survives the reveal — the keyword is intact for the snipe bonus.
-    expect(lurker.keywords.some((k) => k.name === "Hidden")).toBe(true);
+    expect(lurker.keywords.some((k) => k.name === "Obstructed")).toBe(true);
   });
 });
 
@@ -568,7 +568,7 @@ describe("effective card modifiers in availableActions", () => {
       effect: {
         kind: "Modal",
         branches: [
-          { kind: "DealProgress", base: 0, bonus: { tag: "Hidden", amount: 1 } },
+          { kind: "DealProgress", base: 0, bonus: { tag: "Obstructed", amount: 1 } },
           { kind: "DealProgress", base: 0, bonus: { tag: "Slow", amount: 1 } },
         ],
       },
@@ -580,7 +580,7 @@ describe("effective card modifiers in availableActions", () => {
     });
     const hiddenHazard = makeWorldCard({
       id: "hidden-hazard",
-      keywords: [{ name: "Hidden" }],
+      keywords: [{ name: "Obstructed" }],
       discardable: false,
     });
     const state = stateWithPlayerCardModifiers(
@@ -602,7 +602,7 @@ describe("effective card modifiers in availableActions", () => {
         {
           kind: "modal",
           branches: [
-            { kind: "hazard", tag: "Hidden" },
+            { kind: "hazard", tag: "Obstructed" },
             { kind: "hazard", tag: "Slow" },
           ],
         },
@@ -643,7 +643,7 @@ describe("effective card modifiers in availableActions", () => {
       effect: {
         kind: "Modal",
         branches: [
-          { kind: "DealProgress", base: 0, bonus: { tag: "Hidden", amount: 1 } },
+          { kind: "DealProgress", base: 0, bonus: { tag: "Obstructed", amount: 1 } },
           { kind: "DealProgress", base: 0, bonus: { tag: "Slow", amount: 1 } },
         ],
       },
@@ -655,7 +655,7 @@ describe("effective card modifiers in availableActions", () => {
     });
     const hiddenHazard = makeWorldCard({
       id: "hidden-hazard-3",
-      keywords: [{ name: "Hidden" }],
+      keywords: [{ name: "Obstructed" }],
       discardable: false,
     });
     const state = stateWithPlayerCardModifiers(
@@ -676,7 +676,7 @@ describe("effective card modifiers in availableActions", () => {
         {
           kind: "modal",
           branches: [
-            { kind: "hazard", tag: "Hidden" },
+            { kind: "hazard", tag: "Obstructed" },
             { kind: "hazard", tag: "Slow" },
           ],
         },
@@ -716,7 +716,7 @@ describe("effective card modifiers in availableActions", () => {
       effect: {
         kind: "Modal",
         branches: [
-          { kind: "DealProgress", base: 0, bonus: { tag: "Hidden", amount: 1 } },
+          { kind: "DealProgress", base: 0, bonus: { tag: "Obstructed", amount: 1 } },
           { kind: "DealProgress", base: 0, bonus: { tag: "Slow", amount: 1 } },
         ],
       },
@@ -728,7 +728,7 @@ describe("effective card modifiers in availableActions", () => {
     });
     const hiddenHazard = makeWorldCard({
       id: "hidden-hazard-2",
-      keywords: [{ name: "Hidden" }],
+      keywords: [{ name: "Obstructed" }],
       discardable: false,
     });
     const otherPlayer = makePlayerCard({ id: "other-player" });
@@ -749,7 +749,7 @@ describe("effective card modifiers in availableActions", () => {
         {
           kind: "modal",
           branches: [
-            { kind: "hazard", tag: "Hidden" },
+            { kind: "hazard", tag: "Obstructed" },
             { kind: "hazard", tag: "Slow" },
           ],
         },
