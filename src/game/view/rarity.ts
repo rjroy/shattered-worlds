@@ -48,3 +48,12 @@ export function rarityStyle(tier: RarityTier | undefined): RarityStyle {
   if (tier === undefined) return FALLBACK_STYLE;
   return RARITY_STYLES[tier] ?? FALLBACK_STYLE;
 }
+
+export function rarityTierShift(tier: RarityTier | undefined, delta: number): RarityTier {
+  const rarityKeys = Object.keys(RARITY_STYLES) as RarityTier[];
+  const index = rarityKeys.indexOf(tier ?? "uncommon");
+  if (index === -1) return "uncommon";
+  const newIndex = Math.min(Math.max(0, index + delta), rarityKeys.length - 1);
+  if (!rarityKeys[newIndex]) return "uncommon";
+  return rarityKeys[newIndex];
+}

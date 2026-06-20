@@ -4,6 +4,7 @@
     "React to Noise": {
       "kind": "player",
       "name": "React to Noise",
+      "rarity": "uncommon",
       "insetKey": "zombie-inset-listen",
       "energyCost": 0,
       "exhaust": true,
@@ -19,6 +20,7 @@
     "Listen": {
       "kind": "player",
       "name": "Listen",
+      "rarity": "common",
       "insetKey": "zombie-inset-listen",
       "energyCost": 1,
       "effect": {
@@ -33,6 +35,7 @@
     "Fast Sweep": {
       "kind": "player",
       "name": "Fast Sweep",
+      "rarity": "uncommon",
       "insetKey": "zombie-inset-shelf-sweep",
       "energyCost": 0,
       "exhaust": true,

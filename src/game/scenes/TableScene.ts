@@ -1221,33 +1221,17 @@ export class TableScene extends Phaser.Scene {
   }
 
   /**
-   * While targeting a Hazard, write the live preview for the Hazard under the
-   * pointer into its own slot (previewSlot): the consequence summary of applying
-   * the hovered target to the current step. The phase instruction in
-   * selectionHint is untouched. No-ops unless this card is a legal target right
-   * now.
-   *
-   * The preview is the SAME unified engine the confirmation flow uses
-   * (game_.preview). We synthesise a CANDIDATE selection — "the player picked the
-   * hovered target for the current step" — via the real selection helpers
-   * (togglePick + advance), so the action built is byte-identical to the one a
-   * click would dispatch, and modifiers carried by the acting snapshot are
-   * reflected. For a single-target hazard step that completes the selection, so
-   * buildAction returns a full PlayCard we can preview. For a compound card whose
-   * hazard step is not last, the candidate is still incomplete; we fall back to a
-   * concise targeted line rather than failing silently.
    */
   private showTargetPreview(targetId: string): void {
     const sel = this.sel;
     if (sel.phase !== "targeting" || isComplete(sel)) return;
-    if (sel.steps[sel.stepIdx]?.kind !== "hazard") return;
 
     const state = this.game_.state;
     if (!this.currentLegalTargetIds().has(targetId)) return;
 
     const card = this.actingPlayerCardFor(sel.cardId);
     const target = state.hand.find((c) => c.id === targetId);
-    if (card === null || target?.kind !== "world") return;
+    if (card === null) return;
 
     // Fold the hovered target into the current step exactly as a click would,
     // then advance. For the common single-target hazard step this completes the
@@ -1259,7 +1243,9 @@ export class TableScene extends Phaser.Scene {
       // Partial-intent fallback: the hazard step is one of several (compound
       // card), so no full action exists yet. Surface a concise targeted line
       // rather than nothing. A concealed target hides its math, so warn instead.
-      this.renderPartialTargetPreview(target, state.light);
+      if (target?.kind == "world") {
+        this.renderPartialTargetPreview(target, state.light);
+      }
       return;
     }
 
