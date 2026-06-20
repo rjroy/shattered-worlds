@@ -37,10 +37,15 @@ export function thawFrozenCardsAtTurnStart(state: GameState): EffectResult {
   const hand = state.hand.map((card) => {
     if (card.kind !== "player" || (card.frozen ?? 0) <= 0) return card;
     const nextFrozen = (card.frozen ?? 0) - 1;
-    if (nextFrozen > 0) return { ...card, frozen: nextFrozen };
-    const { frozen: _frozen, ...thawedCard } = card;
-    thawed.push(thawedCard);
-    return thawedCard;
+    if (nextFrozen > 0) {
+      const partialThawedCard = { ...card, frozen: nextFrozen };
+      thawed.push(partialThawedCard);
+      return partialThawedCard;
+    } else {
+      const { frozen: _frozen, ...thawedCard } = card;
+      thawed.push(thawedCard);
+      return thawedCard;
+    }
   });
 
   if (thawed.length === 0) return { state, events: [] };

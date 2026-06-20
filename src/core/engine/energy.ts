@@ -109,6 +109,9 @@ export function startTurn(state: GameState): StartTurnResult {
   const decayEvents = afterDecay.events;
 
   const afterThaw = thawFrozenCardsAtTurnStart(afterDecay.state);
+  console.log(
+    `afterThaw?: ${afterThaw.state.hand.map((c) => `${c.name} ${c.kind == "player" ? (c.frozen ?? 0) : 0}`).join(", ")}`,
+  );
 
   // Gain 1 energy
   const afterGain = gainEnergy(afterThaw.state);
