@@ -2,6 +2,7 @@ import { describe, it, expect } from "bun:test";
 import { CardView, applyCardHighlight } from "../view/CardView";
 import { TableScene } from "../scenes/TableScene";
 import { selectTheme } from "../view/themes/themeManifest";
+import type { VisualTheme } from "../view/themes/theme";
 import { CARD_FACE } from "../view/layout";
 import { mintCard } from "../../core/model/cards";
 import { createRng } from "../../core/engine/rng";
@@ -341,6 +342,7 @@ interface SelectionHarnessScene {
   stepConnectorStyle(cardId: string, step: number): "progress" | "destroy" | "return" | null;
   sel: unknown;
   selectedCardSnapshot: PlayerCard | null;
+  theme_: VisualTheme;
   game_: {
     state: GameState;
     dispatch(action: Action): void;
@@ -351,8 +353,12 @@ interface SelectionHarnessScene {
   previewSlot: {
     text: string;
     visible: boolean;
+    tint: string;
     setText(text: string): void;
     setVisible(visible: boolean): void;
+    setY(y: number): void;
+    setTint(tint: string): void;
+    getBgHeight(): number;
   };
   drawAll(): void;
   clearConnector(): void;
@@ -396,14 +402,29 @@ function makeSelectionHarness(
   scene.actionConfirmation = makeFakeActionConfirmation();
   scene.sel = { phase: "idle" };
   scene.selectedCardSnapshot = null;
+  // Mirror production: the scene picks its theme from the run's world so
+  // severity tinting (which reads theme_.intrusionHue / realityPalette.cancel)
+  // has a real palette to resolve against.
+  scene.theme_ = selectTheme(state.worldId);
+  // Faithful stand-in for the CommonLabel previewSlot: records the surface
+  // showPreviewSlot drives (text/visibility/tint) and answers the geometry
+  // query it makes (getBgHeight) so positioning does not throw.
   scene.previewSlot = {
     text: "",
     visible: false,
+    tint: "#FFFFFF",
     setText(text: string): void {
       this.text = text;
     },
     setVisible(visible: boolean): void {
       this.visible = visible;
+    },
+    setY(): void {},
+    setTint(tint: string): void {
+      this.tint = tint;
+    },
+    getBgHeight(): number {
+      return 0;
     },
   };
   scene.drawAll = () => {
@@ -2102,7 +2123,10 @@ describe("CardView applyHighlight pick badge", () => {
 });
 
 describe("TableScene idle world-card and End Turn previews", () => {
-  it("previews a visible world card's end-of-turn hook on idle hover", () => {
+  it("shows no idle preview for a non-discardable world card", () => {
+    // Idle hover previews the DiscardHazard action. A non-discardable card has
+    // no discard to preview, so the slot stays hidden — its end-of-turn threat
+    // is read off the card face, not this slot.
     const hazard = makeWorldCard({
       id: "idle-eot",
       name: "Decaying Wreck",
@@ -2112,15 +2136,12 @@ describe("TableScene idle world-card and End Turn previews", () => {
     const state = makeCoreState({ hand: [hazard], light: 0 });
     const { scene } = makeSelectionHarness(state);
 
-    // Idle phase (no selection): hovering the world card summarizes its hook.
     scene.showIdleWorldPreview(hazard);
 
-    expect(scene.previewSlot.visible).toBe(true);
-    expect(scene.previewSlot.text).toContain("End of turn:");
-    expect(scene.previewSlot.text).toContain("3");
+    expect(scene.previewSlot.visible).toBe(false);
   });
 
-  it("previews a discardable world card's on-discard hook on idle hover", () => {
+  it("previews the discard consequence of a discardable world card on idle hover", () => {
     const hazard = makeWorldCard({
       id: "idle-discard",
       name: "Brittle Debris",
@@ -2134,11 +2155,14 @@ describe("TableScene idle world-card and End Turn previews", () => {
     scene.showIdleWorldPreview(hazard);
 
     expect(scene.previewSlot.visible).toBe(true);
-    expect(scene.previewSlot.text).toContain("If discarded:");
-    expect(scene.previewSlot.text).toContain("4");
+    expect(scene.previewSlot.text).toContain("Discard Brittle Debris");
+    expect(scene.previewSlot.text).toContain("Take 4 damage");
   });
 
-  it("shows both hooks when both matter on idle hover", () => {
+  it("previews only the discard consequence, not the end-of-turn hook, on idle hover", () => {
+    // The unified discard preview surfaces what discarding does (6 damage). The
+    // end-of-turn hook (2 damage) is the card's own behaviour, not part of the
+    // discard action, so it is not folded into this slot.
     const hazard = makeWorldCard({
       id: "idle-both",
       name: "Volatile Pile",
@@ -2152,8 +2176,8 @@ describe("TableScene idle world-card and End Turn previews", () => {
     scene.showIdleWorldPreview(hazard);
 
     expect(scene.previewSlot.visible).toBe(true);
-    expect(scene.previewSlot.text).toContain("End of turn:");
-    expect(scene.previewSlot.text).toContain("If discarded:");
+    expect(scene.previewSlot.text).toContain("Take 6 damage");
+    expect(scene.previewSlot.text).not.toContain("Take 2 damage");
   });
 
   it("shows only the concealment warning for a fogged world card on idle hover", () => {

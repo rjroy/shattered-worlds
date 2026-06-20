@@ -1290,12 +1290,13 @@ export class TableScene extends Phaser.Scene {
   }
 
   /**
-   * Idle (no-selection) hover preview for a world card: summarize what the card
-   * will do on its own — its end-of-turn hook, and its on-discard hook when it
-   * is discardable — into previewSlot. Reads from `describeWorldCardHooks`, the
-   * same core source the card face and target preview read, so the wording can
-   * never disagree; that source is concealment-safe (a fogged card yields only
-   * the generic warning). Renders nothing when the card has no meaningful hooks.
+   * Idle (no-selection) hover preview for a world card: previews the
+   * `DiscardHazard` action against the unified `game_.preview` engine — the same
+   * engine the targeted and End Turn previews use, so the wording can never
+   * disagree. A discardable card surfaces its discard consequence; a
+   * non-discardable card has no discard to preview and renders nothing (its
+   * end-of-turn threat is read off the card face). A concealed card yields only
+   * the generic warning rather than leaking its hidden math.
    *
    * Only meaningful in the idle phase; the caller already gates on that, so this
    * stays out of the targeting preview's way (targeted preview keeps priority).
