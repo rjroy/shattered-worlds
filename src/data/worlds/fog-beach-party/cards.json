@@ -100,7 +100,7 @@
       "onCleared": {
         "kind": "GainRandomCard",
         "setId": "fog-cooler-loot-v1",
-        "setName": "the cooler"
+        "setName": "Cooler Stash"
       },
       "onPartialClear": { "kind": "None" },
       "onEndOfTurn": { "kind": "None" }
@@ -109,17 +109,16 @@
       "kind": "world",
       "name": "The Bonfire",
       "insetKey": "fog-inset-the-bonfire",
-      "cost": 6,
+      "cost": 4,
       "keywords": ["Obstructed"],
       "discardable": true,
       "onDiscarded": { "kind": "None" },
       "onCleared": {
         "kind": "Sequence",
         "steps": [
-          { "kind": "GainCard", "template": "Flashlight" },
-          { "kind": "GainCard", "template": "Flare Gun" },
-          { "kind": "GainCard", "template": "Bonfire" },
-          { "kind": "GainCard", "template": "Searchlight" }
+          { "kind": "GainRandomCard", "setId": "bonfire-loot-v1", "setName": "Bonfire Stash" },
+          { "kind": "GainRandomCard", "setId": "bonfire-loot-v1", "setName": "Bonfire Stash" },
+          { "kind": "GainLight", "amount": 2 }
         ]
       },
       "onPartialClear": { "kind": "None" },
