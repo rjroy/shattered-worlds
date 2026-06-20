@@ -135,7 +135,7 @@ export const UNLOCK_CATALOG: readonly UnlockDefinition[] = [
   {
     id: "first-sprint-free",
     name: "Burst of Speed",
-    description: "The first Sprint you play each turn costs 0 energy.",
+    description: "The first Sprint you play each turn costs 0 energy, but isn't as effective.",
     cost: 30,
     destinyWeight: 1,
     effect: {
@@ -145,7 +145,13 @@ export const UNLOCK_CATALOG: readonly UnlockDefinition[] = [
         displayName: "Burst of Speed",
         target: { kind: "template", templateId: "Sprint" },
         condition: { kind: "templatePlayOrdinalThisTurn", ordinal: 1 },
-        patches: [{ kind: "setEnergyCost", energyCost: 0 }],
+        patches: [
+          { kind: "setEnergyCost", energyCost: 0 },
+          {
+            kind: "replaceEffect",
+            effect: { kind: "Draw", player: 2, world: 1 },
+          },
+        ],
       },
     },
   },
