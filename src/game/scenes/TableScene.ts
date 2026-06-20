@@ -15,11 +15,7 @@ import { createGameplayRuntime, type GameplayRuntime } from "../runtime/gameplay
 import type { GameplaySession } from "../runtime/gameplaySession";
 import { selectTheme } from "../view/themes/themeManifest";
 import type { VisualTheme } from "../view/themes/theme";
-import {
-  availableActions,
-  effectiveHand,
-  effectivePlayerCard,
-} from "../../core/index";
+import { availableActions, effectiveHand, effectivePlayerCard } from "../../core/index";
 import type { Card, Action, PlayerCard, TargetSpec, WorldCard } from "../../core/index";
 import { structuralSpecOf } from "../../core/engine/available";
 import { EFFECTS } from "../../core/effects/registry";
@@ -96,7 +92,7 @@ const CONNECTOR_DEPTH = TABLE_LAYOUT.connectorDepth;
  * tight band above selectionHint, so a compact inline join reads better than
  * stacking newlines there.
  */
-const PREVIEW_LINE_SEP = "  ·  ";
+const PREVIEW_LINE_SEP = "\n";
 
 /** Hover warning for a concealed hazard in the partial-intent fallback. */
 const CONCEALED_HOVER_WARNING = "Target is concealed. Beware.";
@@ -421,8 +417,10 @@ export class TableScene extends Phaser.Scene {
       textStyle({
         fontSize: "12px",
         color: getRealityPalette(this.theme_, "title"),
+        wordWrap: { width: 400 },
       }),
     );
+    this.previewSlot.setDepth(TABLE_LAYOUT.previewDepth);
     this.previewSlot.setVisible(false);
 
     // Persistent connector graphic. setDepth controls draw order only; we never
@@ -1266,8 +1264,7 @@ export class TableScene extends Phaser.Scene {
 
     const detailed = this.runtime_.userSettings.get().detailedHoverPreviews;
     const lines = detailed ? consequences : minimalPreviewLines(consequences);
-    this.previewSlot.setText(lines.join(PREVIEW_LINE_SEP));
-    this.previewSlot.setVisible(true);
+    this.showPreviewSlot(lines.join(PREVIEW_LINE_SEP));
   }
 
   /**
@@ -1280,8 +1277,7 @@ export class TableScene extends Phaser.Scene {
     const text = isConcealed(target, light)
       ? `${CONCEALED_HOVER_WARNING} (needs Light ${concealOf(target)})`
       : `Target ${target.name}`;
-    this.previewSlot.setText(text);
-    this.previewSlot.setVisible(true);
+    this.showPreviewSlot(text);
   }
 
   /**
@@ -1306,8 +1302,7 @@ export class TableScene extends Phaser.Scene {
 
     const detailed = this.runtime_.userSettings.get().detailedHoverPreviews;
     const lines = detailed ? hooks : minimalPreviewLines(hooks);
-    this.previewSlot.setText(lines.join(PREVIEW_LINE_SEP));
-    this.previewSlot.setVisible(true);
+    this.showPreviewSlot(lines.join(PREVIEW_LINE_SEP));
   }
 
   /**
@@ -1334,8 +1329,7 @@ export class TableScene extends Phaser.Scene {
 
     const detailed = this.runtime_.userSettings.get().detailedHoverPreviews;
     const lines = detailed ? preview.summaryLines : minimalPreviewLines(preview.summaryLines);
-    this.previewSlot.setText(lines.join(PREVIEW_LINE_SEP));
-    this.previewSlot.setVisible(true);
+    this.showPreviewSlot(lines.join(PREVIEW_LINE_SEP));
   }
 
   /**
@@ -1440,6 +1434,12 @@ export class TableScene extends Phaser.Scene {
     this.connectorGfx.clear();
   }
 
+  private showPreviewSlot(message: string): void {
+    this.previewSlot.setText(message);
+    this.previewSlot.setVisible(true);
+    this.previewSlot.setY(TABLE_LAYOUT.previewSlot.y - this.previewSlot.getBgHeight() / 2);
+  }
+
   /** Hide and blank the targeted-hover preview. Safe to call when already empty. */
   private clearPreviewSlot(): void {
     this.previewSlot.setText("");
@@ -1472,7 +1472,9 @@ export class TableScene extends Phaser.Scene {
       templateId,
       template: this.game_.template(templateId),
     }));
-    const missing = options.filter((option) => option.template === undefined).map((option) => option.templateId);
+    const missing = options
+      .filter((option) => option.template === undefined)
+      .map((option) => option.templateId);
     if (missing.length > 0 && this.loggedBoonMissingKey !== key) {
       this.loggedBoonMissingKey = key;
       console.error(

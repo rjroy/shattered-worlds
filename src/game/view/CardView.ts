@@ -115,9 +115,17 @@ function addCardText(
     lineText.setText(line);
     lineText.setOrigin(0.5, opts.originY);
     if (opts.maxWidth !== undefined) {
-      const scale = opts.maxWidth / lineText.width;
-      if (scale < 1.0) {
-        lineText.setScale(scale);
+      if (opts.maxWidth * 2 < lineText.width) {
+        lineText.setWordWrapWidth(opts.maxWidth * 2);
+        const scale = Math.min(0.5, opts.maxWidth / lineText.width);
+        if (scale < 1.0) {
+          lineText.setScale(scale);
+        }
+      } else {
+        const scale = opts.maxWidth / lineText.width;
+        if (scale < 1.0) {
+          lineText.setScale(scale);
+        }
       }
     }
     currY += lineText.height;
@@ -229,7 +237,7 @@ export class CardView extends Phaser.GameObjects.Container {
       fontSize: "16px",
       color: titleColor,
       bold: true,
-      maxWidth: CARD_W - 12,
+      maxWidth: CARD_W - 48,
       originY: 0,
     });
 

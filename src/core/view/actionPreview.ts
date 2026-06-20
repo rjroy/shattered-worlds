@@ -330,7 +330,8 @@ function summarizeEvent(event: GameEvent, context: PreviewContext): readonly str
       if (isConcealedEventHazard(event, context)) {
         return [CONCEALED_EFFECT_WARNING, `Make Progress on ${CONCEALED_HAZARD}`];
       }
-      const card = context.beforeCards.get(event.hazardId) ?? context.afterCards.get(event.hazardId);
+      const card =
+        context.beforeCards.get(event.hazardId) ?? context.afterCards.get(event.hazardId);
       const cost = card?.kind === "world" ? card.cost : undefined;
       const progress =
         cost !== undefined ? ` (${Math.min(event.hazardTurnTotal, cost)}/${cost})` : "";
@@ -413,9 +414,10 @@ function summarizeEvent(event: GameEvent, context: PreviewContext): readonly str
         )}`,
       ];
     case "HazardAdded":
-      return [`Add ${event.templateId} to the world`];
+      // Hide the details of this action. Don't review hidden information.
+      return ["Add Hazard to the world"];
     case "BoonOffered":
-      return [`Boon offered: ${listNames([...event.templateIds])}`];
+      return [`Boon offered from ${event.setName}`];
     case "BoonCardGranted":
       return [`Gain boon ${event.templateId} to ${destLabel(event.dest)}`];
     case "ActAdvanced":
@@ -427,7 +429,9 @@ function summarizeEvent(event: GameEvent, context: PreviewContext): readonly str
     case "CardGained":
       return [`Gain ${event.templateId} to ${destLabel(event.dest)}`];
     case "CardsDrawn":
-      return [`Draw ${event.ids.length} ${plural("card", event.ids.length)}`];
+      return [
+        `Draw ${event.ids.length} ${event.bHazard ? "world" : "player"} ${plural("card", event.ids.length)}`,
+      ];
     case "DeckShuffled":
       return ["Shuffle the deck"];
     case "TurnEnded":

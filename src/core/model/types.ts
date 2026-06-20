@@ -53,6 +53,7 @@ export type CardEffect =
   | {
       kind: "OfferBoon";
       setId: string;
+      setName: string;
       offeredCount: number;
       chooseCount: number;
       bToDiscard?: boolean;
@@ -205,6 +206,7 @@ export type BoonOffered =
       readonly type: "BoonOffered";
       readonly source: "act";
       readonly setId: string;
+      readonly setName: string;
       readonly templateIds: readonly CardTemplateId[];
       readonly act: number;
     }
@@ -212,6 +214,7 @@ export type BoonOffered =
       readonly type: "BoonOffered";
       readonly source: "worldClear";
       readonly setId: string;
+      readonly setName: string;
       readonly templateIds: readonly CardTemplateId[];
       readonly act?: never;
     };
@@ -220,6 +223,7 @@ export type PendingBoonChoice = {
   readonly source: BoonChoiceSource;
   readonly act?: number;
   readonly setId: string;
+  readonly setName: string;
   readonly offeredTemplateIds: readonly CardTemplateId[];
   readonly chooseCount: number;
   readonly bToDiscard: boolean;
@@ -288,7 +292,12 @@ export type GameEvent = (
       templateId: CardTemplateId;
       dest: "hand" | "playerDiscard";
     }
-  | { type: "CardsDrawn"; ids: readonly CardId[]; templateIds: readonly CardTemplateId[] }
+  | {
+      type: "CardsDrawn";
+      ids: readonly CardId[];
+      templateIds: readonly CardTemplateId[];
+      bHazard: boolean;
+    }
   | { type: "TurnEnded" }
   | { type: "WorldWon" }
   | { type: "WorldLost" }

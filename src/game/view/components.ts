@@ -42,6 +42,10 @@ export class CommonLabel extends Phaser.GameObjects.Container {
     this.txtBg.setSize(this.label.width + 24, this.label.height + 14);
   }
 
+  getBgHeight(): number {
+    return this.txtBg.height;
+  }
+
   setTooltip(copy: TooltipCopy): void {
     addTooltip(this.scene, this.txtBg, copy);
   }

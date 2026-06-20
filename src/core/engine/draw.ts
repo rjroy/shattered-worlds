@@ -58,7 +58,7 @@ export function drawPlayer(state: GameState, n: number): { state: GameState; eve
   }
 
   if (drawnIds.length > 0) {
-    events.push({ type: "CardsDrawn", ids: drawnIds, templateIds });
+    events.push({ type: "CardsDrawn", ids: drawnIds, templateIds, bHazard: false });
   }
 
   return { state: current, events };
@@ -115,7 +115,7 @@ export function drawWorld(state: GameState, n: number): { state: GameState; even
   }
 
   if (drawnIds.length > 0) {
-    events.push({ type: "CardsDrawn", ids: drawnIds, templateIds });
+    events.push({ type: "CardsDrawn", ids: drawnIds, templateIds, bHazard: true });
   }
 
   return { state: current, events };
