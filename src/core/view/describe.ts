@@ -37,37 +37,6 @@ export function describeEffect(effect: CardEffect): string[] {
  */
 export const CONCEALED_WORLD_HOOK_WARNING = "Effect is concealed. Beware.";
 
-/**
- * Summarize what a world card will do on its own, for an idle (no-selection)
- * hover. Combines its end-of-turn hook and, when the card can be discarded, its
- * on-discard hook — both read through `describeEffect`, so the wording can never
- * disagree with the card face or the live target preview.
- *
- * Concealment-safe: a card hidden by fog at the current Light returns ONLY the
- * generic warning (never its name, keywords, or hook text). A card with no
- * meaningful hooks returns an empty array, letting the caller render nothing.
- *
- * Discardability is the card's own `discardable` flag (the single source the
- * engine gates `DiscardHazard` on); a non-discardable card never surfaces its
- * `onDiscarded` hook because the player can never trigger it.
- *
- * Pure core — no Phaser, no DOM — so it stays unit-testable headless.
- */
-export function describeWorldCardHooks(card: WorldCard, state: GameState): string[] {
-  if (isConcealed(card, state.light)) {
-    return [CONCEALED_WORLD_HOOK_WARNING];
-  }
-
-  const lines: string[] = [];
-  if (card.onEndOfTurn.kind !== "None") {
-    lines.push(`End of turn: ${describeEffect(card.onEndOfTurn).join(", ")}`);
-  }
-  if (card.discardable && card.onDiscarded.kind !== "None") {
-    lines.push(`If discarded: ${describeEffect(card.onDiscarded).join(", ")}`);
-  }
-  return lines;
-}
-
 // ---------------------------------------------------------------------------
 // Live target preview
 // ---------------------------------------------------------------------------

@@ -181,7 +181,7 @@ function summarizeEvents(
   // generically; flag that hidden hooks may have fired, once.
   if (anyConcealed) pushUnique(lines, CONCEALED_HOOK_WARNING);
 
-  return dedupeAdjacent(lines);
+  return lines;
 }
 
 /**
@@ -303,12 +303,12 @@ function summarizeAggregatedProgress(
     if (visiblePartial.length > 0) {
       lines.push(
         visiblePartial.length === 1
-          ? `Partial effect triggers on ${cardName(
+          ? `Partial resolve on ${cardName(
               visiblePartial[0]!.hazardId,
               visiblePartial[0]!.templateId,
               context,
             )}`
-          : `Partial effects trigger on ${visiblePartial.length} ${plural(
+          : `Partial resolves on ${visiblePartial.length} ${plural(
               "hazard",
               visiblePartial.length,
             )}`,
@@ -350,7 +350,7 @@ function summarizeEvent(event: GameEvent, context: PreviewContext): readonly str
     case "HazardPartial":
       return isConcealedEventHazard(event, context)
         ? [CONCEALED_HOOK_WARNING]
-        : [`Partial effect triggers on ${cardName(event.hazardId, event.templateId, context)}`];
+        : [`Partial resolve on ${cardName(event.hazardId, event.templateId, context)}`];
     case "HazardDiscarded":
       return isConcealedEventHazard(event, context)
         ? [CONCEALED_EFFECT_WARNING, `Discard ${CONCEALED_HAZARD}`]
@@ -414,8 +414,9 @@ function summarizeEvent(event: GameEvent, context: PreviewContext): readonly str
         )}`,
       ];
     case "HazardAdded":
-      // Hide the details of this action. Don't review hidden information.
-      return ["Add Hazard to the world"];
+      // Hide the details of this action.
+      // Don't review hidden information. Also its a duplicate of CardsDrawn.
+      return [];
     case "BoonOffered":
       return [`Boon offered from ${event.setName}`];
     case "BoonCardGranted":
@@ -698,10 +699,6 @@ function plural(word: string, count: number): string {
 
 function sum(values: readonly number[]): number {
   return values.reduce((total, value) => total + value, 0);
-}
-
-function dedupeAdjacent(lines: readonly string[]): readonly string[] {
-  return lines.filter((line, index) => index === 0 || line !== lines[index - 1]);
 }
 
 function pushUnique(lines: string[], line: string): void {

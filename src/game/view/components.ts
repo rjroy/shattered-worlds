@@ -42,6 +42,29 @@ export class CommonLabel extends Phaser.GameObjects.Container {
     this.txtBg.setSize(this.label.width + 24, this.label.height + 14);
   }
 
+  setTint(tint: string): void {
+    const tintColor = Phaser.Display.Color.HexStringToColor(tint);
+    const colorWheel = Phaser.Display.Color.HSVColorWheel(tintColor.s, tintColor.v);
+
+    if (colorWheel.length > 0) {
+      const bgIdx = Math.floor(tintColor.h * colorWheel.length);
+      const txtIdx = Math.floor((tintColor.h + 0.33) * colorWheel.length) % colorWheel.length;
+      if (colorWheel[bgIdx] && colorWheel[txtIdx]) {
+        const bgColor = Phaser.Display.Color.IntegerToColor(colorWheel[bgIdx].color).darken(
+          75,
+        ).color;
+        const txtColor = Phaser.Display.Color.IntegerToColor(colorWheel[txtIdx].color).lighten(
+          50,
+        ).color;
+        this.txtBg.setTint(bgColor);
+        this.label.setTint(txtColor);
+        return;
+      }
+    }
+    this.txtBg.setTint(0x777777);
+    this.label.setTint(0xffffff);
+  }
+
   getBgHeight(): number {
     return this.txtBg.height;
   }

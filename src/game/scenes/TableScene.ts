@@ -16,7 +16,15 @@ import type { GameplaySession } from "../runtime/gameplaySession";
 import { selectTheme } from "../view/themes/themeManifest";
 import type { VisualTheme } from "../view/themes/theme";
 import { availableActions, effectiveHand, effectivePlayerCard } from "../../core/index";
-import type { Card, Action, PlayerCard, TargetSpec, WorldCard } from "../../core/index";
+import type {
+  Card,
+  Action,
+  PlayerCard,
+  TargetSpec,
+  WorldCard,
+  ActionPreviewSeverity,
+  ActionPreview,
+} from "../../core/index";
 import { structuralSpecOf } from "../../core/engine/available";
 import { EFFECTS } from "../../core/effects/registry";
 import {
@@ -54,19 +62,14 @@ import { resolveBranchLabels } from "../../core/view/branchLabels";
 import { ModalChooserView } from "../view/ModalChooserView";
 import { BoonChoiceView, type BoonChoiceOption } from "../view/BoonChoiceView";
 import { CommonLabel, CommonButton } from "../view/components";
-import {
-  isConcealmentWarning,
-  concealOf,
-  isConcealed,
-  describeWorldCardHooks,
-  CONCEALED_HAZARD,
-} from "../../core/index";
+import { isConcealmentWarning, concealOf, isConcealed, CONCEALED_HAZARD } from "../../core/index";
 import { PileLayer } from "../view/PileLayer";
 import { BackdropLayer } from "../view/backdrop";
 import { worldDisplayManifest } from "../../data/worldDisplayManifest";
 import { CARD_FACE, TABLE_LAYOUT } from "../view/layout";
 import { rowCardPositions } from "../view/tableLayout";
 import { addTooltip } from "../view/TooltipView";
+import { CONCEALED_HOOK_WARNING } from "../../core/view/actionPreview";
 
 // ---------------------------------------------------------------------------
 // Layout constants
@@ -1253,10 +1256,16 @@ export class TableScene extends Phaser.Scene {
     }
 
     const preview = this.game_.preview(action);
+    this.renderPreview(preview, card.name);
+  }
+
+  private renderPreview(preview: ActionPreview, cardName?: string): void {
     // Drop the leading "Play <card>" line: the hover slot already sits beside the
     // acting card, so restating which card is played is noise. The consequence
     // lines (Progress, clears, warnings) are what previewPlay surfaced.
-    const consequences = preview.summaryLines.filter((line) => line !== `Play ${card.name}`);
+    const consequences = cardName
+      ? preview.summaryLines.filter((line) => line !== `Play ${cardName}`)
+      : preview.summaryLines;
     if (!preview.previewable || consequences.length === 0) {
       this.previewSlot.setVisible(false);
       return;
@@ -1264,7 +1273,7 @@ export class TableScene extends Phaser.Scene {
 
     const detailed = this.runtime_.userSettings.get().detailedHoverPreviews;
     const lines = detailed ? consequences : minimalPreviewLines(consequences);
-    this.showPreviewSlot(lines.join(PREVIEW_LINE_SEP));
+    this.showPreviewSlot(lines.join(PREVIEW_LINE_SEP), preview.severity);
   }
 
   /**
@@ -1277,7 +1286,7 @@ export class TableScene extends Phaser.Scene {
     const text = isConcealed(target, light)
       ? `${CONCEALED_HOVER_WARNING} (needs Light ${concealOf(target)})`
       : `Target ${target.name}`;
-    this.showPreviewSlot(text);
+    this.showPreviewSlot(text, "warning");
   }
 
   /**
@@ -1294,15 +1303,13 @@ export class TableScene extends Phaser.Scene {
   private showIdleWorldPreview(card: WorldCard): void {
     if (this.sel.phase !== "idle") return;
 
-    const hooks = describeWorldCardHooks(card, this.game_.state);
-    if (hooks.length === 0) {
-      this.previewSlot.setVisible(false);
-      return;
+    if (isConcealed(card, this.game_.state.light)) {
+      this.showPreviewSlot(CONCEALED_HOOK_WARNING, "warning");
+    } else {
+      const action: Action = { type: "DiscardHazard", cardId: card.id };
+      const preview = this.game_.preview(action);
+      this.renderPreview(preview);
     }
-
-    const detailed = this.runtime_.userSettings.get().detailedHoverPreviews;
-    const lines = detailed ? hooks : minimalPreviewLines(hooks);
-    this.showPreviewSlot(lines.join(PREVIEW_LINE_SEP));
   }
 
   /**
@@ -1322,14 +1329,7 @@ export class TableScene extends Phaser.Scene {
     if (this.sel.phase !== "idle") return;
 
     const preview = this.game_.preview({ type: "EndTurn" });
-    if (!preview.previewable || preview.summaryLines.length === 0) {
-      this.previewSlot.setVisible(false);
-      return;
-    }
-
-    const detailed = this.runtime_.userSettings.get().detailedHoverPreviews;
-    const lines = detailed ? preview.summaryLines : minimalPreviewLines(preview.summaryLines);
-    this.showPreviewSlot(lines.join(PREVIEW_LINE_SEP));
+    this.renderPreview(preview);
   }
 
   /**
@@ -1434,10 +1434,21 @@ export class TableScene extends Phaser.Scene {
     this.connectorGfx.clear();
   }
 
-  private showPreviewSlot(message: string): void {
+  private showPreviewSlot(message: string, severity: ActionPreviewSeverity): void {
     this.previewSlot.setText(message);
     this.previewSlot.setVisible(true);
     this.previewSlot.setY(TABLE_LAYOUT.previewSlot.y - this.previewSlot.getBgHeight() / 2);
+    switch (severity) {
+      case "danger":
+        this.previewSlot.setTint(this.theme_.realityPalette.cancel);
+        break;
+      case "warning":
+        this.previewSlot.setTint(this.theme_.intrusionHue);
+        break;
+      default:
+        this.previewSlot.setTint("#FFFFFF");
+        break;
+    }
   }
 
   /** Hide and blank the targeted-hover preview. Safe to call when already empty. */
