@@ -291,3 +291,47 @@ describe("player card keywords", () => {
     }
   });
 });
+
+// ---------------------------------------------------------------------------
+// 10. Rarity stamping
+// ---------------------------------------------------------------------------
+
+describe("rarity stamping", () => {
+  it("a template without rarity mints as common", () => {
+    // No template in the zombie-big-box catalog authors a rarity
+    const [card] = mintCard(catalog, makeEmptyState(), "Sprint");
+    expect(card.rarity).toBe("common");
+  });
+
+  it("a player template with an authored rarity mints that exact tier", () => {
+    const legendaryCatalog: CardCatalog = {
+      "Rare Find": {
+        kind: "player",
+        name: "Rare Find",
+        effect: { kind: "DealProgress", base: 1 },
+        rarity: "legendary",
+      },
+    };
+    const [card] = mintCard(legendaryCatalog, makeEmptyState(), "Rare Find");
+    expect(card.rarity).toBe("legendary");
+  });
+
+  it("a world template with an authored rarity mints that exact tier", () => {
+    const rareCatalog: CardCatalog = {
+      "Rare Hazard": {
+        kind: "world",
+        name: "Rare Hazard",
+        cost: 5,
+        keywords: [],
+        discardable: true,
+        onDiscarded: { kind: "None" },
+        onCleared: { kind: "None" },
+        onEndOfTurn: { kind: "None" },
+        onPartialClear: { kind: "None" },
+        rarity: "rare",
+      },
+    };
+    const [card] = mintCard(rareCatalog, makeEmptyState(), "Rare Hazard");
+    expect(card.rarity).toBe("rare");
+  });
+});

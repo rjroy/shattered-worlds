@@ -2,6 +2,8 @@ import { describe, expect, it } from "bun:test";
 import { BoonChoiceView } from "../view/BoonChoiceView";
 import { TableScene } from "../scenes/TableScene";
 import { selectTheme } from "../view/themes/themeManifest";
+import { rarityStyle } from "../view/rarity";
+import { RARITY_STROKE_WIDTH } from "../view/CardView";
 import { DEFAULT_RUN_MODIFIERS } from "../../data/unlocks/types";
 import type { Action, CardTemplate, GameState } from "../../core/index";
 
@@ -15,6 +17,8 @@ interface FakeGameObject {
   height: number;
   displayWidth: number;
   displayHeight: number;
+  strokeWidth: number;
+  strokeColor: number;
   handlers: Record<string, () => void>;
   parentContainer?: unknown;
   setOrigin(...args: unknown[]): FakeGameObject;
@@ -31,7 +35,7 @@ interface FakeGameObject {
   setDisplaySize(width: number, height: number): FakeGameObject;
   setSize(width: number, height: number): FakeGameObject;
   setScale(scale: number): FakeGameObject;
-  setStrokeStyle(...args: unknown[]): FakeGameObject;
+  setStrokeStyle(width?: number, color?: number): FakeGameObject;
   setRounded(...args: unknown[]): FakeGameObject;
   setPosition(x: number, y: number): FakeGameObject;
   setY(y: number): FakeGameObject;
@@ -64,6 +68,8 @@ function makeObject(kind: string, text = ""): FakeGameObject {
     height: 18,
     displayWidth: text.length > 0 ? Math.max(8, text.length * 8) : 32,
     displayHeight: 18,
+    strokeWidth: 0,
+    strokeColor: 0,
     handlers: {},
     setOrigin() {
       return this;
@@ -120,7 +126,9 @@ function makeObject(kind: string, text = ""): FakeGameObject {
       this.displayHeight = this.height * scale;
       return this;
     },
-    setStrokeStyle() {
+    setStrokeStyle(width?: number, color?: number) {
+      this.strokeWidth = width ?? 0;
+      this.strokeColor = color ?? 0;
       return this;
     },
     setRounded() {
@@ -306,6 +314,7 @@ function pendingState(): GameState {
         effect: { kind: "Draw", player: 1 },
         energyCost: 0,
         keywords: [],
+        rarity: "common",
       },
     ],
     playerDiscard: [],
@@ -440,6 +449,105 @@ describe("BoonChoiceView", () => {
     expect(clickable).toBeDefined();
     clickable?.emit("pointerdown");
     expect(chosen).toBe("Lucky Break");
+  });
+
+  // -------------------------------------------------------------------------
+  // Rarity coloring (REQ-RARITY-37, 38, 39) — colored from the catalog
+  // template's `rarity` field (`option.template.rarity`), never from a
+  // `BoonOffered.rarities` event field: this view's input (`BoonChoiceOption`)
+  // doesn't carry an event at all, only `{ templateId, template }`, so there
+  // is no event-shaped data for an event→render bridge to read in the first
+  // place. previewCardFromTemplate stamps `template.rarity ?? "common"` onto
+  // the preview Card exactly like a real mint does, and CardView reads that
+  // stamped field to draw its rarity stroke — the same mechanism a card
+  // landing on the table via a real GainCard/GainRandomCard grant uses.
+  // -------------------------------------------------------------------------
+  describe("rarity coloring", () => {
+    const rarityTemplates: Record<string, CardTemplate> = {
+      "Common Boon": {
+        kind: "player",
+        name: "Common Boon",
+        energyCost: 0,
+        exhaust: true,
+        effect: { kind: "Heal", amount: 1 },
+        rarity: "common",
+      },
+      "Uncommon Boon": {
+        kind: "player",
+        name: "Uncommon Boon",
+        energyCost: 0,
+        exhaust: true,
+        effect: { kind: "Heal", amount: 1 },
+        rarity: "uncommon",
+      },
+      "Rare Boon": {
+        kind: "player",
+        name: "Rare Boon",
+        energyCost: 0,
+        exhaust: true,
+        effect: { kind: "Heal", amount: 1 },
+        rarity: "rare",
+      },
+      "Unstamped Boon": {
+        kind: "player",
+        name: "Unstamped Boon",
+        energyCost: 0,
+        exhaust: true,
+        effect: { kind: "Heal", amount: 1 },
+        // No rarity authored — previewCardFromTemplate defaults to "common",
+        // mirroring mintCard's own `template.rarity ?? "common"` stamping.
+      },
+    };
+
+    // Each option's CardView constructs exactly two rectangles, in order:
+    // highlightRect (selection/target overlay, stroke width 0 until a
+    // selection state is applied) then rarityRect (the always-visible rarity
+    // stroke, width RARITY_STROKE_WIDTH from construction). Filtering on that
+    // exact width isolates the rarity strokes from every other rectangle on
+    // the scene — the shield/panel backdrop, the unstroked highlight
+    // rectangles, and TooltipView's own lazily-constructed 1px-stroke
+    // background (built as a side effect of the first effect-icon tooltip).
+    function rarityStrokeColors(scene: Phaser.Scene & { objects: unknown[] }): number[] {
+      return (scene.objects as FakeGameObject[])
+        .filter((obj) => obj.kind === "rectangle" && obj.strokeWidth === RARITY_STROKE_WIDTH)
+        .map((obj) => obj.strokeColor);
+    }
+
+    it("colors each offered option's card face from option.template.rarity", () => {
+      const scene = makeScene();
+      new BoonChoiceView(scene, {
+        theme: selectTheme("zombie-big-box"),
+        source: "act",
+        bToDiscard: false,
+        options: [
+          { templateId: "Common Boon", template: rarityTemplates["Common Boon"]! },
+          { templateId: "Uncommon Boon", template: rarityTemplates["Uncommon Boon"]! },
+          { templateId: "Rare Boon", template: rarityTemplates["Rare Boon"]! },
+        ],
+        resolveTheme: selectTheme,
+        onChoose() {},
+      });
+
+      expect(rarityStrokeColors(scene)).toEqual([
+        rarityStyle("common").color,
+        rarityStyle("uncommon").color,
+        rarityStyle("rare").color,
+      ]);
+    });
+
+    it("defaults an unstamped template's option to the Common rarity treatment", () => {
+      const scene = makeScene();
+      new BoonChoiceView(scene, {
+        theme: selectTheme("zombie-big-box"),
+        source: "act",
+        bToDiscard: false,
+        options: [{ templateId: "Unstamped Boon", template: rarityTemplates["Unstamped Boon"]! }],
+        resolveTheme: selectTheme,
+        onChoose() {},
+      });
+
+      expect(rarityStrokeColors(scene)).toEqual([rarityStyle("common").color]);
+    });
   });
 });
 

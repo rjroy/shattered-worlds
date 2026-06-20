@@ -10,12 +10,15 @@ import type { CardCatalog } from "../model/catalog";
 import type { EffectLine } from "../view/effectGlyphs";
 import { mintCard } from "../model/cards";
 import { shuffle } from "../engine/rng";
+import { filterLegalPlayerCandidates, weightedDraw } from "../engine/weightedDraw";
 import type { CompileContext, EffectContext, EffectResult } from "./EffectContext";
 import { EffectHandler } from "./EffectHandler";
+import { resolvePool } from "./pools";
 import { icon, main, rider, text, value } from "./tokens";
 
 type AddCardEffect = Extract<CardEffect, { kind: "AddCard" }>;
 type GainCardEffect = Extract<CardEffect, { kind: "GainCard" }>;
+type GainRandomCardEffect = Extract<CardEffect, { kind: "GainRandomCard" }>;
 type AddPlayerCardToTopEffect = Extract<CardEffect, { kind: "AddPlayerCardToTop" }>;
 type AddWorldCardToDeckEffect = Extract<CardEffect, { kind: "AddWorldCardToDeck" }>;
 type AddThreatToWorldDeckEffect = Extract<CardEffect, { kind: "AddThreatToWorldDeck" }>;
@@ -77,7 +80,7 @@ export function gainCard(
   }
 
   const events: GameEvent[] = [
-    { type: "CardGained", id: card.id, templateId: card.templateId, dest },
+    { type: "CardGained", id: card.id, templateId: card.templateId, dest, rarity: card.rarity },
   ];
   return { state: current, events };
 }
@@ -107,6 +110,56 @@ export class GainCardHandler extends EffectHandler<GainCardEffect> {
 
   override compile(effect: GainCardEffect, _ctx: CompileContext): EffectLine[] {
     return [main([icon("addCard"), value(effect.template, "reward")])];
+  }
+
+  override isPlayable(): boolean {
+    return false;
+  }
+}
+
+// The rolled sibling of GainCard (REQ-RARITY-27: the two coexist
+// permanently). Resolves the pool, rolls exactly one template via the
+// weighted-draw kernel, mints/grants it through the same gainCard() helper
+// every fixed-reward handler uses, then stamps setName onto the single
+// CardGained event gainCard() returns so the action-preview layer (D3) can
+// mask the rolled template's identity before the player commits.
+export class GainRandomCardHandler extends EffectHandler<GainRandomCardEffect> {
+  override apply(ctx: EffectContext, effect: GainRandomCardEffect): EffectResult {
+    const poolTemplateIds = resolvePool(effect.setId);
+    const legalIds = filterLegalPlayerCandidates(ctx.catalog, poolTemplateIds ?? []);
+
+    const { templateIds: drawn, rng: nextRng } = weightedDraw(
+      ctx.catalog,
+      ctx.state.rng,
+      legalIds,
+      1,
+    );
+
+    const drawnId = drawn[0];
+    if (drawnId === undefined) {
+      // Fail closed (REQ-RARITY-29): missing pool or no legal candidate.
+      // weightedDraw already advanced the RNG by its empty-pool guard.
+      return { state: { ...ctx.state, rng: nextRng }, events: [] };
+    }
+
+    // bToDiscard is reserved for future destination flexibility (REQ-RARITY-26);
+    // no alternate destination is specified yet, so this always grants to
+    // playerDiscard, matching GainCard's default.
+    const result = gainCard(ctx.catalog, { ...ctx.state, rng: nextRng }, drawnId, "playerDiscard");
+    return {
+      state: result.state,
+      events: result.events.map((event) =>
+        event.type === "CardGained" ? { ...event, setName: effect.setName } : event,
+      ),
+    };
+  }
+
+  override describe(effect: GainRandomCardEffect): string[] {
+    return [`gain a random card from ${effect.setName}`];
+  }
+
+  override compile(effect: GainRandomCardEffect, _ctx: CompileContext): EffectLine[] {
+    return [main([icon("randomCard"), value("random", "reward")]), rider([text(effect.setName)])];
   }
 
   override isPlayable(): boolean {

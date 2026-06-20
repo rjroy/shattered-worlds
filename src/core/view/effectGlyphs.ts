@@ -35,6 +35,7 @@ export type IconId =
   | "exile"
   | "return"
   | "addCard"
+  | "randomCard"
   | "brace"
   | "survive"
   | "vanish"

@@ -1,4 +1,5 @@
 import type { RunModifiers } from "../../data/unlocks/types";
+import type { RarityTier } from "./rarity";
 
 export type CardId = string;
 
@@ -50,6 +51,12 @@ export type CardEffect =
   // Fog's exclusive signature effect: the only way to lift concealment.
   | { kind: "GainLight"; amount: number }
   | { kind: "GainCard"; template: CardTemplateId }
+  // The rolled sibling of GainCard: draws one template from a named pool via
+  // the weighted-draw kernel at resolution time and grants it to
+  // playerDiscard by default. setName is authored per-effect-instance (not
+  // derived from the pool) — it is the human label the action-preview layer
+  // shows in place of the rolled card's identity (see D3 in the rarity plan).
+  | { kind: "GainRandomCard"; setId: string; setName: string; bToDiscard?: boolean }
   | {
       kind: "OfferBoon";
       setId: string;
@@ -106,6 +113,8 @@ export interface PlayerCard {
   // Always present on minted cards (empty when the template omits keywords),
   // matching WorldCard so consumers never need undefined checks.
   keywords: readonly Keyword[];
+  // Always concrete on minted cards (template.rarity ?? "common").
+  rarity: RarityTier;
 }
 
 export interface WorldCard {
@@ -125,6 +134,8 @@ export interface WorldCard {
   onCleared: CardEffect;
   onEndOfTurn: CardEffect;
   onPartialClear: CardEffect;
+  // Always concrete on minted cards (template.rarity ?? "common").
+  rarity: RarityTier;
 }
 
 export type Card = PlayerCard | WorldCard;
@@ -208,6 +219,8 @@ export type BoonOffered =
       readonly setId: string;
       readonly setName: string;
       readonly templateIds: readonly CardTemplateId[];
+      // Index-aligned with templateIds: rarities[i] is the rarity of templateIds[i].
+      readonly rarities: readonly RarityTier[];
       readonly act: number;
     }
   | {
@@ -216,6 +229,8 @@ export type BoonOffered =
       readonly setId: string;
       readonly setName: string;
       readonly templateIds: readonly CardTemplateId[];
+      // Index-aligned with templateIds: rarities[i] is the rarity of templateIds[i].
+      readonly rarities: readonly RarityTier[];
       readonly act?: never;
     };
 
@@ -272,7 +287,19 @@ export type GameEvent = (
   | { type: "HazardPartial"; hazardId: CardId; templateId: CardTemplateId }
   | { type: "HazardDiscarded"; cardId: CardId; templateId: CardTemplateId }
   | { type: "DamageDealt"; amount: number }
-  | { type: "CardGained"; id: CardId; templateId: CardTemplateId; dest: Dest }
+  | {
+      type: "CardGained";
+      id: CardId;
+      templateId: CardTemplateId;
+      dest: Dest;
+      rarity: RarityTier;
+      // Set only by GainRandomCardHandler, naming the pool the card was
+      // rolled from. Every fixed-reward source (AddCard, GainCard,
+      // AddPlayerCardToTop, AddWorldCardToDeck, AddThreatToWorldDeck) leaves
+      // this undefined. The action-preview layer (D3) branches on its
+      // presence to mask the rolled template's identity before commit.
+      setName?: string;
+    }
   | { type: "CardDestroyed"; ids: readonly CardId[]; templateIds: readonly CardTemplateId[] }
   | { type: "WorldCardsReturned"; ids: readonly CardId[]; templateIds: readonly CardTemplateId[] }
   | { type: "HpChanged"; hp: number }
@@ -291,6 +318,7 @@ export type GameEvent = (
       cardId: CardId;
       templateId: CardTemplateId;
       dest: "hand" | "playerDiscard";
+      rarity: RarityTier;
     }
   | {
       type: "CardsDrawn";

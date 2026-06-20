@@ -12,6 +12,7 @@ import { mintCard } from "../model/cards";
 import { availableActions } from "../engine/available";
 import { createWorld } from "../engine/world";
 import { reduce } from "../engine/reduce";
+import { EFFECTS } from "../effects/registry";
 import type { CardEffect, GameState, PlayerCard, WorldCard } from "../model/types";
 import { DEFAULT_RUN_MODIFIERS } from "../../data/unlocks/types";
 import type { CardCatalog } from "../model/catalog";
@@ -64,11 +65,42 @@ function offerBoonHazard(effect: CardEffect): WorldCard {
     onCleared: effect,
     onEndOfTurn: { kind: "None" },
     onPartialClear: { kind: "None" },
+    rarity: "common",
   };
 }
 
 function resolveOfferBoonHazard(effect: CardEffect, cat: CardCatalog = catalog) {
   const hazard = offerBoonHazard(effect);
+  const state = makeState({ hand: [hazard] });
+  return applyEffect(
+    cat,
+    state,
+    { kind: "DealProgress", base: 1 },
+    { type: "PlayCard", cardId: "progress", targetId: hazard.id },
+  );
+}
+
+function gainRandomCardHazard(effect: CardEffect): WorldCard {
+  return {
+    kind: "world",
+    id: "gain-random-card-hazard",
+    templateId: "Gain Random Card Hazard",
+    name: "Gain Random Card Hazard",
+    insetKey: undefined,
+    cost: 1,
+    keywords: [],
+    discardable: true,
+    canExile: true,
+    onDiscarded: { kind: "None" },
+    onCleared: effect,
+    onEndOfTurn: { kind: "None" },
+    onPartialClear: { kind: "None" },
+    rarity: "common",
+  };
+}
+
+function resolveGainRandomCardHazard(effect: CardEffect, cat: CardCatalog = catalog) {
+  const hazard = gainRandomCardHazard(effect);
   const state = makeState({ hand: [hazard] });
   return applyEffect(
     cat,
@@ -266,6 +298,7 @@ describe("gainCard destinations", () => {
     if (event?.type === "CardGained") {
       expect(event.dest).toBe("playerDiscard");
       expect(after.playerDiscard[0]!.id).toBe(event.id);
+      expect(event.rarity).toBe(after.playerDiscard[0]!.rarity);
     }
   });
 
@@ -283,6 +316,7 @@ describe("gainCard destinations", () => {
     if (event?.type === "CardGained") {
       expect(event.dest).toBe("playerDrawTop");
       expect(after.playerDraw[0]!.id).toBe(event.id);
+      expect(event.rarity).toBe(after.playerDraw[0]!.rarity);
     }
   });
 
@@ -299,6 +333,7 @@ describe("gainCard destinations", () => {
     if (event?.type === "CardGained") {
       expect(event.dest).toBe("worldDrawTop");
       expect(after.worldDraw[0]!.id).toBe(event.id);
+      expect(event.rarity).toBe(after.worldDraw[0]!.rarity);
     }
   });
 });
@@ -386,6 +421,7 @@ describe("applyEffect GainLight", () => {
       effect: { kind: "GainLight", amount: 2 },
       energyCost: 1,
       keywords: [],
+      rarity: "common",
     };
     const state = makeState({ hand: [card], energy: 3 });
     const available = availableActions(state);
@@ -744,6 +780,7 @@ describe("DealProgressAll", () => {
       onCleared: { kind: "None" },
       onEndOfTurn: { kind: "None" },
       onPartialClear: { kind: "None" },
+      rarity: "common",
     };
     // light 0: the card is concealed (5 > 0) and not single-targetable, yet the
     // sweep still lands on it.
@@ -878,6 +915,7 @@ function exilable(id: string): WorldCard {
     onCleared: { kind: "None" },
     onEndOfTurn: { kind: "None" },
     onPartialClear: { kind: "None" },
+    rarity: "common",
   };
 }
 
@@ -989,6 +1027,7 @@ function playerCarrier(
     effect: { kind: "None" },
     energyCost: 0,
     keywords,
+    rarity: "common",
   };
 }
 
@@ -1152,13 +1191,15 @@ describe("OfferBoon", () => {
       bToDiscard: false,
     });
     expect(state.pendingBoonChoices[0]?.offeredTemplateIds).toHaveLength(3);
+    const offeredTemplateIds = state.pendingBoonChoices[0]?.offeredTemplateIds ?? [];
     expect(events).toContainEqual(
       expect.objectContaining({
         type: "BoonOffered",
         source: "worldClear",
         setId: "fortune-v1",
         setName: "fortune-v1",
-        templateIds: state.pendingBoonChoices[0]?.offeredTemplateIds ?? [],
+        templateIds: offeredTemplateIds,
+        rarities: offeredTemplateIds.map((id) => catalog[id]?.rarity ?? "common"),
         // onCleared hook events now carry provenance to the clearing hazard.
         sourceCardId: "offer-boon-hazard",
       }),
@@ -1188,6 +1229,7 @@ describe("OfferBoon", () => {
       cardId: granted.id,
       templateId: chosen,
       dest: "hand",
+      rarity: granted.rarity,
     });
   });
 
@@ -1215,6 +1257,7 @@ describe("OfferBoon", () => {
       cardId: granted.id,
       templateId: chosen,
       dest: "playerDiscard",
+      rarity: granted.rarity,
     });
   });
 
@@ -1356,5 +1399,110 @@ describe("OfferBoon", () => {
     expect(result.state.pendingBoonChoices).toEqual([pending]);
     expect(result.state.rng).not.toEqual(state.rng);
     expect(result.events.map((event) => event.type)).not.toContain("BoonOffered");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// 18. GainRandomCard (roll mode)
+// ---------------------------------------------------------------------------
+
+describe("GainRandomCard", () => {
+  it("mints exactly one card from the pool to playerDiscard, tagged with setName", () => {
+    const { state, events } = resolveGainRandomCardHazard({
+      kind: "GainRandomCard",
+      setId: "fortune-v1",
+      setName: "the cache",
+    });
+
+    expect(state.playerDiscard).toHaveLength(1);
+    const granted = state.playerDiscard[0]!;
+    expect(["Lucky Break", "Second Wind", "Found Tool", "Clear Path", "Steady Nerve"]).toContain(
+      granted.templateId,
+    );
+
+    const event = events.find((e) => e.type === "CardGained");
+    expect(event).toBeDefined();
+    if (event?.type === "CardGained") {
+      expect(event.id).toBe(granted.id);
+      expect(event.templateId).toBe(granted.templateId);
+      expect(event.dest).toBe("playerDiscard");
+      expect(event.rarity).toBe(granted.rarity);
+      expect(event.setName).toBe("the cache");
+      // Provenance auto-stamped generically by applyEffect (PR #89), since
+      // this fired through the hazard's onCleared hook (selfId set).
+      expect(event.sourceCardId).toBe("gain-random-card-hazard");
+    }
+  });
+
+  it("is not a playable player-card action (REQ-RARITY-28)", () => {
+    const effect: CardEffect = {
+      kind: "GainRandomCard",
+      setId: "fortune-v1",
+      setName: "the cache",
+    };
+    expect(EFFECTS.GainRandomCard.isPlayable(effect, makeState(), "world-card")).toBe(false);
+  });
+
+  it("fails closed for an unknown pool: no card granted, RNG advanced, no crash", () => {
+    const effect: CardEffect = {
+      kind: "GainRandomCard",
+      setId: "missing-pool",
+      setName: "the cache",
+    };
+    const before = makeState();
+    const result = applyEffect(catalog, before, effect);
+
+    expect(result.state.playerDiscard).toEqual([]);
+    expect(result.events).toEqual([]);
+    expect(result.state.rng).not.toEqual(before.rng);
+  });
+
+  it("fails closed when the pool resolves but has no legal player candidates", () => {
+    const illegalCatalog: CardCatalog = { ...catalog };
+    for (const templateId of [
+      "Lucky Break",
+      "Second Wind",
+      "Found Tool",
+      "Clear Path",
+      "Steady Nerve",
+    ]) {
+      const template = illegalCatalog[templateId];
+      if (template === undefined || template.kind !== "player") {
+        throw new Error(`expected ${templateId} player template`);
+      }
+      illegalCatalog[templateId] = {
+        kind: "world",
+        name: template.name,
+        cost: 2,
+        keywords: [] as string[],
+        discardable: true,
+        onDiscarded: { kind: "None" },
+        onCleared: { kind: "None" },
+        onEndOfTurn: { kind: "None" },
+        onPartialClear: { kind: "None" },
+      };
+    }
+    const before = makeState();
+    const result = applyEffect(
+      illegalCatalog,
+      before,
+      { kind: "GainRandomCard", setId: "fortune-v1", setName: "the cache" } as CardEffect,
+    );
+
+    expect(result.state.playerDiscard).toEqual([]);
+    expect(result.events).toEqual([]);
+    expect(result.state.rng).not.toEqual(before.rng);
+  });
+
+  it("fixed GainCard still grants its single template with setName left undefined (regression)", () => {
+    const state = makeState();
+    const { events } = gainCard(catalog, state, "Sprint", "playerDiscard");
+
+    const event = events.find((e) => e.type === "CardGained");
+    expect(event).toBeDefined();
+    if (event?.type === "CardGained") {
+      expect(event.templateId).toBe("Sprint");
+      expect(event.setName).toBeUndefined();
+    }
   });
 });

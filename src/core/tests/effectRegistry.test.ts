@@ -101,6 +101,34 @@ describe("connectorStyleOf", () => {
   });
 });
 
+describe("GainRandomCard registration", () => {
+  const effect: CardEffect = { kind: "GainRandomCard", setId: "fortune-v1", setName: "the cache" };
+
+  it("is recognized in the effect registry", () => {
+    expect(EFFECTS.GainRandomCard).toBeDefined();
+  });
+
+  it("describes the pool and that the reward is randomized, not a specific card", () => {
+    const lines = EFFECTS.GainRandomCard.describe(effect);
+    expect(lines.join(" ")).toContain("the cache");
+    expect(lines.join(" ").toLowerCase()).toContain("random");
+  });
+
+  it("compiles a glyph naming the pool, not a specific template", () => {
+    const lines = EFFECTS.GainRandomCard.compile(effect, {
+      worldId: "test-world",
+      compactSequences: false,
+      compile: (e, ctx) => EFFECTS[e.kind].compile(e as never, ctx),
+    });
+    const text = lines.flatMap((line) => line.tokens.map((t) => ("text" in t ? t.text : ""))).join(" ");
+    expect(text).toContain("the cache");
+  });
+
+  it("is not playable as a player action", () => {
+    expect(EFFECTS.GainRandomCard.isPlayable(effect, makeState(), "world-card")).toBe(false);
+  });
+});
+
 describe("effectAtStep", () => {
   const deal: CardEffect = { kind: "DealProgress", base: 1 };
   const ret: CardEffect = { kind: "ReturnWorldCards", min: 1, max: 2 };

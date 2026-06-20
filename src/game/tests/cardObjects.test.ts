@@ -7,12 +7,14 @@ import { CARD_FACE } from "../view/layout";
 import { mintCard } from "../../core/model/cards";
 import { createRng } from "../../core/engine/rng";
 import { DEFAULT_RUN_MODIFIERS, type PlayerCardModifier } from "../../data/unlocks/types";
+import { rarityStyle } from "../view/rarity";
 import type {
   Action,
   Card,
   CardCatalog,
   GameState,
   PlayerCard,
+  RarityTier,
   TargetSpec,
   WorldCard,
 } from "../../core/index";
@@ -1470,10 +1472,16 @@ function makeFakeRect(x: number, y: number): unknown {
     ...childProtocol,
     x,
     y,
+    strokeWidth: 0,
+    strokeColor: 0,
     setOrigin: (): unknown => rect,
     setRounded: (): unknown => rect,
     setAlpha: (): unknown => rect,
-    setStrokeStyle: (): unknown => rect,
+    setStrokeStyle(width: number, color?: number): unknown {
+      rect.strokeWidth = width;
+      rect.strokeColor = color ?? 0;
+      return rect;
+    },
     setFillStyle: (): unknown => rect,
   };
   return rect;
@@ -1526,6 +1534,11 @@ function makeFakeGraphics(): unknown {
   const g = {
     ...childProtocol,
     setPosition: (): unknown => g,
+    // obtainPickBadge's circle draw calls (fillStyle/fillCircle/setAlpha) —
+    // no-ops here since these tests assert on stroke colors, not pixels.
+    fillStyle: (): unknown => g,
+    fillCircle: (): unknown => g,
+    setAlpha: (): unknown => g,
   };
   return g;
 }
@@ -2119,6 +2132,134 @@ describe("CardView applyHighlight pick badge", () => {
     expect(rect.strokeColor).toBe(fs.pickedBorder);
     expect(rect.fillColor).toBe(fs.pickedBorder);
     expect(rect.fillAlpha).toBeGreaterThan(0);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// CardView rarity stroke (REQ-RARITY-37, 38, 39, 40)
+//
+// The rarity stroke is drawn once at construction from the minted card's
+// `rarity` field and is always visible (no toggle, unlike the selection
+// highlight). These tests render real CardView instances via the same
+// real-constructor harness the keyword/trigger-block tests above use, then
+// read the rarity Rectangle's stroke color straight off `view.list` — a real
+// Phaser Container's list, populated by the real `Container.add` calls the
+// constructor makes against the fake `scene.add.rectangle`.
+// ---------------------------------------------------------------------------
+
+const rarityCatalog: CardCatalog = {
+  "Common Card": {
+    kind: "player",
+    name: "Common Card",
+    effect: { kind: "DealProgress", base: 1 },
+    rarity: "common",
+  },
+  "Uncommon Card": {
+    kind: "player",
+    name: "Uncommon Card",
+    effect: { kind: "DealProgress", base: 1 },
+    rarity: "uncommon",
+  },
+  "Rare Card": {
+    kind: "player",
+    name: "Rare Card",
+    effect: { kind: "DealProgress", base: 1 },
+    rarity: "rare",
+  },
+  "Legendary Card": {
+    kind: "player",
+    name: "Legendary Card",
+    effect: { kind: "DealProgress", base: 1 },
+    rarity: "legendary",
+  },
+  "Unstamped Card": {
+    kind: "player",
+    name: "Unstamped Card",
+    effect: { kind: "DealProgress", base: 1 },
+    // No rarity field — mintCard stamps "common" (template.rarity ?? "common").
+  },
+};
+
+function mintRarityPlayer(templateId: string): PlayerCard {
+  const [card] = mintCard(rarityCatalog, makeMintState(), templateId);
+  if (card.kind !== "player") throw new Error(`expected ${templateId} to mint a player card`);
+  return card;
+}
+
+/**
+ * The card-face Rectangles in construction order: [0] is `highlightRect`
+ * (selection/target overlay, list[1] on the real container — index 0 here
+ * because the cardfront `image` and the inset frame are filtered out), [1] is
+ * the rarity stroke. Both must exist simultaneously and independently.
+ */
+function faceRectangles(view: CardView): { strokeWidth: number; strokeColor: number }[] {
+  return (view as unknown as { list: unknown[] }).list.filter(
+    (child): child is { strokeWidth: number; strokeColor: number } =>
+      typeof (child as { strokeWidth?: unknown }).strokeWidth === "number",
+  );
+}
+
+describe("CardView rarity stroke", () => {
+  const tiers: RarityTier[] = ["common", "uncommon", "rare", "legendary"];
+  const templateIdByTier: Record<RarityTier, string> = {
+    common: "Common Card",
+    uncommon: "Uncommon Card",
+    rare: "Rare Card",
+    legendary: "Legendary Card",
+  };
+
+  it("each tier renders a distinct stroke color matching rarityStyle", () => {
+    const colors = tiers.map((tier) => {
+      const rendered = renderCard(mintRarityPlayer(templateIdByTier[tier]));
+      const [, rarityRect] = faceRectangles(rendered.view);
+      return rarityRect?.strokeColor;
+    });
+
+    // Every tier resolves to its own rarityStyle color.
+    tiers.forEach((tier, i) => {
+      expect(colors[i]).toBe(rarityStyle(tier).color);
+    });
+
+    // And the four colors are pairwise distinct — no two tiers collide.
+    expect(new Set(colors).size).toBe(tiers.length);
+  });
+
+  it("a card minted without an authored rarity falls back to Common (mint-time default)", () => {
+    const rendered = renderCard(mintRarityPlayer("Unstamped Card"));
+    const [, rarityRect] = faceRectangles(rendered.view);
+    expect(rendered.view.cardId).toBeDefined();
+    expect(rarityRect?.strokeColor).toBe(rarityStyle("common").color);
+  });
+
+  it("an unknown tier value falls back to the Common treatment without throwing", () => {
+    // Simulates data drift (e.g. a persisted card from before a tier existed):
+    // rarityStyle must never throw and must render exactly as Common.
+    const unknownTier = "mythic" as unknown as RarityTier;
+    expect(() => rarityStyle(unknownTier)).not.toThrow();
+    expect(rarityStyle(unknownTier)).toEqual(rarityStyle("common"));
+  });
+
+  it("missing/undefined tier falls back to the Common treatment without throwing", () => {
+    expect(() => rarityStyle(undefined)).not.toThrow();
+    expect(rarityStyle(undefined)).toEqual(rarityStyle("common"));
+  });
+
+  it("the rarity stroke coexists with the highlight stroke: both render simultaneously", () => {
+    const rendered = renderCard(mintRarityPlayer("Rare Card"));
+    const [highlightRect, rarityRect] = faceRectangles(rendered.view);
+    expect(highlightRect).toBeDefined();
+    expect(rarityRect).toBeDefined();
+    expect(highlightRect).not.toBe(rarityRect); // distinct Graphics/Rectangle objects
+
+    // Applying a selection highlight (e.g. 'target') changes only the
+    // highlight rectangle's stroke; the rarity rectangle's stroke is
+    // untouched, proving neither object clobbers the other's state.
+    const fs = selectTheme("zombie-big-box").frameStyle;
+    rendered.view.applyHighlight("target", fs);
+
+    const [highlightAfter, rarityAfter] = faceRectangles(rendered.view);
+    expect(highlightAfter?.strokeColor).toBe(fs.targetBorder);
+    expect(rarityAfter?.strokeColor).toBe(rarityStyle("rare").color);
   });
 });
 

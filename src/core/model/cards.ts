@@ -1,5 +1,6 @@
 import type { CardEffect, CardTemplateId, GameState, PlayerCard, WorldCard } from "./types";
 import type { CardCatalog } from "./catalog";
+import type { RarityTier } from "./rarity";
 import { parseKeyword } from "./keywords";
 import { UnknownTemplateError } from "./errors";
 
@@ -10,6 +11,9 @@ import { UnknownTemplateError } from "./errors";
 export interface BasicCardTemplate {
   name: string;
   insetKey?: string;
+  // Authored tier; optional so existing JSON catalogs load unchanged. Minted
+  // cards always carry a concrete tier (template.rarity ?? "common").
+  rarity?: RarityTier;
 }
 
 export interface PlayerCardTemplate extends BasicCardTemplate {
@@ -73,6 +77,7 @@ export function mintCard(
       energyCost: template.energyCost ?? 0,
       exhaust: template.exhaust ?? false,
       keywords: (template.keywords ?? []).map(parseKeyword),
+      rarity: template.rarity ?? "common",
     };
     return [card, next];
   }
@@ -91,6 +96,7 @@ export function mintCard(
     onCleared: template.onCleared,
     onEndOfTurn: template.onEndOfTurn,
     onPartialClear: template.onPartialClear,
+    rarity: template.rarity ?? "common",
   };
   return [card, next];
 }

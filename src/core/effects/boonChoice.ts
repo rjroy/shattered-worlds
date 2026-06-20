@@ -1,17 +1,17 @@
 import { createBoonOffer } from "../engine/actBoon";
 import type { CardEffect, GameState } from "../model/types";
 import type { EffectLine } from "../view/effectGlyphs";
-import { BOON_SETS } from "../../data/worlds/boons/fortune";
 import type { CompileContext, EffectContext, EffectResult } from "./EffectContext";
 import { EffectHandler } from "./EffectHandler";
+import { resolvePool } from "./pools";
 import { icon, main, rider, text, value } from "./tokens";
 
 type OfferBoonEffect = Extract<CardEffect, { kind: "OfferBoon" }>;
 
 export class OfferBoonHandler extends EffectHandler<OfferBoonEffect> {
   override apply(ctx: EffectContext, effect: OfferBoonEffect): EffectResult {
-    const boonSet = BOON_SETS[effect.setId as keyof typeof BOON_SETS];
-    if (boonSet === undefined) {
+    const poolTemplateIds = resolvePool(effect.setId);
+    if (poolTemplateIds === undefined) {
       return { state: ctx.state, events: [] };
     }
 
@@ -19,7 +19,7 @@ export class OfferBoonHandler extends EffectHandler<OfferBoonEffect> {
       source: "worldClear",
       setId: effect.setId,
       setName: effect.setName,
-      poolTemplateIds: boonSet.templateIds,
+      poolTemplateIds,
       offeredCount: effect.offeredCount,
       chooseCount: effect.chooseCount,
       bToDiscard: effect.bToDiscard ?? false,

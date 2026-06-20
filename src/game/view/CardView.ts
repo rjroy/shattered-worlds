@@ -14,6 +14,7 @@ import type { FrameStyle, VisualTheme } from "./themes/theme";
 import { compileEffect, type IconId } from "../../core/view/effectGlyphs";
 import { ENERGY_COST_TOOLTIP, PROGRESS_RING_TOOLTIP } from "../../core/view/effectTooltips";
 import { addEffectLines } from "./effectLineView";
+import { rarityStyle, rarityTierShift } from "./rarity";
 import type { HighlightKind } from "../interaction/highlight";
 import {
   TEXT,
@@ -77,6 +78,21 @@ function drawGlow(glow: Phaser.GameObjects.Graphics, color: number, alpha: numbe
   glow.lineStyle(EMPHASIS_GLOW_LINE, color, alpha);
   glow.strokeRoundedRect(-w / 2, -h / 2, w, h, EMPHASIS_GLOW_RADIUS);
 }
+
+// ---------------------------------------------------------------------------
+// Rarity stroke (REQ-RARITY-38, 39) — always-visible, intrinsic to the card
+// ---------------------------------------------------------------------------
+
+// A few px INSIDE the highlight rectangle's edge so the two strokes never
+// overlap pixel-for-pixel: a selection/target stroke (highlightRect, list[1])
+// can render at full strength on the card's outer edge while the rarity ring
+// stays visible as a slightly inset second border. Both are real, distinct
+// Phaser objects — neither overwrites the other's Graphics/Rectangle.
+const RARITY_STROKE_INSET = 3;
+// Exported so tests can distinguish the rarity stroke from any other
+// rectangle on the scene (e.g. TooltipView's own background rectangle) by
+// its stroke width, without duplicating the geometry constant.
+export const RARITY_STROKE_WIDTH = 2;
 
 // ---------------------------------------------------------------------------
 // Card object factory
@@ -157,6 +173,7 @@ export class CardView extends Phaser.GameObjects.Container {
   readonly worldId: string;
 
   private highlightRect: Phaser.GameObjects.Rectangle;
+  private rarityRect: Phaser.GameObjects.Rectangle;
   private costRing?: CostRing;
   private targetGlow?: Phaser.GameObjects.Graphics;
   private emphasized = false;
@@ -190,6 +207,8 @@ export class CardView extends Phaser.GameObjects.Container {
     this.worldId = theme.worldId;
     this.setDepth(TABLE_LAYOUT.cardDepth);
 
+    const isModifled = card.kind === "player" && card.modified;
+
     // Card frame image: world cards use the theme-specific front if available.
     const cardfrontKey = selectCardFrontKey(card, theme, resolveTheme);
     const cardImg = scene.add.image(0, 0, cardfrontKey);
@@ -203,6 +222,28 @@ export class CardView extends Phaser.GameObjects.Container {
     bg.setAlpha(0.4);
     this.highlightRect = bg;
     this.add(bg);
+
+    // Rarity stroke: always-visible (rarity is intrinsic to the minted card,
+    // not a selection state), so it is drawn once at construction from
+    // card.rarity and never toggled. A distinct Rectangle, inset from
+    // highlightRect's edge, so a simultaneous selection/target stroke on
+    // highlightRect coexists without either clobbering the other.
+    const rarityInset = 1 + RARITY_STROKE_INSET;
+    const rarity = scene.add
+      .rectangle(0, 0, CARD_W - rarityInset * 2, CARD_H - rarityInset * 2, 0x000000, 0)
+      .setOrigin(0.5, 0.5);
+    if (isModifled) {
+      rarity.setStrokeStyle(
+        RARITY_STROKE_WIDTH,
+        rarityStyle(rarityTierShift(card.rarity, 1)).color,
+      );
+    } else {
+      rarity.setStrokeStyle(RARITY_STROKE_WIDTH, rarityStyle(card.rarity).color);
+    }
+    rarity.setRounded(10);
+    rarity.setAlpha(0.8);
+    this.rarityRect = rarity;
+    this.add(rarity);
 
     // Card inset image: if the template defines an insetKey, render the
     // corresponding image on top of the cardfront. Both player and world cards
@@ -230,7 +271,7 @@ export class CardView extends Phaser.GameObjects.Container {
       this.add(frame);
     }
 
-    const titleColor = card.kind === "player" && card.modified ? TEXT.textReward : TEXT.textLight;
+    const titleColor = isModifled ? TEXT.textReward : TEXT.textLight;
 
     // Name at top — identical for player and world cards.
     const nameText = addCardText(scene, this, 0, -CARD_H / 2 + 8, card.name, {
@@ -449,6 +490,10 @@ export class CardView extends Phaser.GameObjects.Container {
       // flicker (the table draws once, synchronously, right after creation).
       this.setObjectsVisible(this.fogObjects, false);
     }
+  }
+
+  public getCardId(): string {
+    return this.cardId;
   }
 
   /**

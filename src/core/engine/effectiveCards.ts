@@ -199,6 +199,8 @@ function cloneEffect(effect: CardEffect): CardEffect {
       return { ...effect };
     case "GainCard":
       return { ...effect };
+    case "GainRandomCard":
+      return { ...effect };
     case "OfferBoon":
       return { ...effect };
     case "AddPlayerCardToTop":

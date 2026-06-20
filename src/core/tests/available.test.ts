@@ -328,6 +328,7 @@ describe("legalTargets Sprint (modal)", () => {
       onCleared: { kind: "None" },
       onEndOfTurn: { kind: "None" },
       onPartialClear: { kind: "None" },
+      rarity: "common",
     };
     const otherCard: WorldCard = {
       kind: "world",
@@ -343,6 +344,7 @@ describe("legalTargets Sprint (modal)", () => {
       onCleared: { kind: "None" },
       onEndOfTurn: { kind: "None" },
       onPartialClear: { kind: "None" },
+      rarity: "common",
     };
     const state = { ...s1, hand: [sprint, slowCard, otherCard], energy: 1 };
 
@@ -406,6 +408,7 @@ describe("DealProgressAll playability", () => {
       sourceWorldId: "zombie-big-box",
       energyCost: 0,
       keywords: [],
+      rarity: "common",
       effect: { kind: "DealProgressAll", base: 1, bonus: { tag: "Creature", amount: 1 } },
     };
     const state = { ...s1, hand: [explore, shelfSweep] };
@@ -427,6 +430,7 @@ describe("DealProgressAll playability", () => {
       sourceWorldId: "zombie-big-box",
       energyCost: 0,
       keywords: [],
+      rarity: "common",
       effect: { kind: "DealProgressAll", base: 1, bonus: { tag: "Creature", amount: 1 } },
     };
     const state = { ...s1, hand: [zombie, shelfSweep] };
@@ -884,6 +888,7 @@ function makeExilable(id: string): WorldCard {
     onCleared: { kind: "None" },
     onEndOfTurn: { kind: "None" },
     onPartialClear: { kind: "None" },
+    rarity: "common",
   };
 }
 
@@ -904,6 +909,7 @@ function makeFloorIt(id: string): PlayerCard {
     energyCost: 0,
     exhaust: true,
     keywords: [],
+    rarity: "common",
     effect: { kind: "ExileTopWorldCards", amount: 2 },
   };
 }
@@ -1123,6 +1129,7 @@ describe("DealProgressScaled playability", () => {
       energyCost: 1,
       exhaust: false,
       keywords: [],
+      rarity: "common",
     };
   }
 

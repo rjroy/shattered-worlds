@@ -7,7 +7,7 @@ import type {
   GameState,
   PendingBoonChoice,
 } from "../model/types";
-import { nextFloat, shuffle } from "./rng";
+import { filterLegalPlayerCandidates, weightedDraw } from "./weightedDraw";
 
 type ActBoonModifier = NonNullable<RunModifiers["actBoon"]>;
 
@@ -37,38 +37,22 @@ export function createBoonOffer(
   state: GameState,
   config: BoonOfferConfig,
 ): { state: GameState; event: GameEvent | null } {
-  const legalIds: CardTemplateId[] = [];
-  const seen = new Set<CardTemplateId>();
+  const legalIds = filterLegalPlayerCandidates(catalog, config.poolTemplateIds);
 
-  for (const templateId of config.poolTemplateIds) {
-    if (seen.has(templateId)) continue;
-    seen.add(templateId);
-
-    const template = catalog[templateId];
-    if (template?.kind === "player") {
-      legalIds.push(templateId);
-    }
-  }
-
-  const [shuffledIds, shuffledRng] = shuffle(legalIds, state.rng);
-  const rngWasAdvanced =
-    shuffledRng.a !== state.rng.a ||
-    shuffledRng.b !== state.rng.b ||
-    shuffledRng.c !== state.rng.c ||
-    shuffledRng.d !== state.rng.d;
-  let nextRng = shuffledRng;
-  if (!rngWasAdvanced) {
-    [, nextRng] = nextFloat(shuffledRng);
-  }
+  const { templateIds: offeredTemplateIds, rng: nextRng } = weightedDraw(
+    catalog,
+    state.rng,
+    legalIds,
+    config.offeredCount,
+  );
 
   if (legalIds.length === 0) {
     return { state: { ...state, rng: nextRng }, event: null };
   }
 
-  const offeredTemplateIds =
-    shuffledIds.length >= config.offeredCount
-      ? shuffledIds.slice(0, config.offeredCount)
-      : shuffledIds;
+  const offeredRarities = offeredTemplateIds.map(
+    (id) => catalog[id]?.rarity ?? "common",
+  );
 
   const pending: PendingBoonChoice =
     config.source === "act"
@@ -99,6 +83,7 @@ export function createBoonOffer(
           setName: config.setName,
           act: config.act,
           templateIds: offeredTemplateIds,
+          rarities: offeredRarities,
         }
       : {
           type: "BoonOffered",
@@ -106,6 +91,7 @@ export function createBoonOffer(
           setId: config.setId,
           setName: config.setName,
           templateIds: offeredTemplateIds,
+          rarities: offeredRarities,
         };
 
   return {

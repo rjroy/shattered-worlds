@@ -33,6 +33,7 @@ const playerCardZombie: PlayerCard = {
   effect: { kind: "Draw", player: 1 },
   energyCost: 0,
   keywords: [],
+  rarity: "common",
 };
 
 const playerCardUnknown: PlayerCard = {
@@ -45,6 +46,7 @@ const playerCardUnknown: PlayerCard = {
   effect: { kind: "Draw", player: 1 },
   energyCost: 0,
   keywords: [],
+  rarity: "common",
 };
 
 const worldCard: WorldCard = {
@@ -61,6 +63,7 @@ const worldCard: WorldCard = {
   onCleared: { kind: "None" },
   onEndOfTurn: { kind: "None" },
   onPartialClear: { kind: "None" },
+  rarity: "common",
 };
 
 const activeThemeWithFront: VisualTheme = {
