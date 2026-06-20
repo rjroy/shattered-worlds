@@ -47,7 +47,7 @@ function worldWith(keywords: WorldCard["keywords"]): WorldCard {
 describe("parseKeyword", () => {
   it("parses a bare keyword to { name }", () => {
     expect(parseKeyword("Spore")).toEqual({ name: "Spore" });
-    expect(parseKeyword("Hidden")).toEqual({ name: "Hidden" });
+    expect(parseKeyword("Obstructed")).toEqual({ name: "Obstructed" });
   });
 
   it("parses Name:N to { name, value }", () => {
@@ -80,7 +80,7 @@ describe("hasKeyword", () => {
 
   it("is false when the keyword is absent", () => {
     const card: Card = playerWith([{ name: "Spore" }]);
-    expect(hasKeyword(card, "Hidden")).toBe(false);
+    expect(hasKeyword(card, "Obstructed")).toBe(false);
   });
 });
 
@@ -101,7 +101,7 @@ describe("concealOf", () => {
   });
 
   it("is 0 when the card has no Concealed keyword", () => {
-    expect(concealOf(worldWith([{ name: "Hidden" }]))).toBe(0);
+    expect(concealOf(worldWith([{ name: "Obstructed" }]))).toBe(0);
     expect(concealOf(worldWith([]))).toBe(0);
   });
 
@@ -124,7 +124,7 @@ describe("isConcealed", () => {
   });
 
   it("is never concealed for a card with no Concealed keyword, even at light 0", () => {
-    expect(isConcealed(worldWith([{ name: "Hidden" }]), 0)).toBe(false);
+    expect(isConcealed(worldWith([{ name: "Obstructed" }]), 0)).toBe(false);
     expect(isConcealed(worldWith([]), 0)).toBe(false);
   });
 });

@@ -4,6 +4,7 @@
     "Strange Sounds": {
       "kind": "world",
       "name": "Strange Sounds",
+      "rarity": "uncommon",
       "insetKey": "zombie-inset-strange-sounds",
       "cost": 2,
       "keywords": [],
@@ -22,6 +23,7 @@
     "Rubble": {
       "kind": "world",
       "name": "Rubble",
+      "rarity": "common",
       "insetKey": "zombie-inset-rubble",
       "cost": 1,
       "keywords": [],
@@ -34,11 +36,18 @@
     "Screams": {
       "kind": "world",
       "name": "Screams",
+      "rarity": "common",
       "insetKey": "zombie-inset-screams",
       "cost": 1,
       "keywords": [],
       "discardable": true,
-      "onDiscarded": { "kind": "GainCard", "template": "Panic" },
+      "onDiscarded": {
+        "kind": "Sequence",
+        "steps": [
+          { "kind": "GainCard", "template": "Panic" },
+          { "kind": "GainCard", "template": "Panic" }
+        ]
+      },
       "onCleared": { "kind": "GainCard", "template": "Regroup" },
       "onPartialClear": { "kind": "None" },
       "onEndOfTurn": { "kind": "DestroySelf" }
@@ -46,13 +55,14 @@
     "Zombie": {
       "kind": "world",
       "name": "Zombie",
+      "rarity": "common",
       "insetKey": "zombie-inset-zombie",
       "cost": 3,
       "keywords": ["Creature"],
       "discardable": true,
       "onDiscarded": { "kind": "Damage", "amount": 5 },
       "onCleared": { "kind": "GainEnergy", "amount": 1 },
-      "onPartialClear": { "kind": "Damage", "amount": 2 },
+      "onPartialClear": { "kind": "Damage", "amount": 1 },
       "onEndOfTurn": {
         "kind": "Sequence",
         "steps": [
@@ -64,9 +74,10 @@
     "Find Baseball Bat": {
       "kind": "world",
       "name": "Find Baseball Bat",
+      "rarity": "uncommon",
       "insetKey": "zombie-inset-baseball",
       "cost": 2,
-      "keywords": ["Hidden"],
+      "keywords": ["Obstructed"],
       "discardable": true,
       "onDiscarded": { "kind": "None" },
       "onCleared": { "kind": "GainCard", "template": "Baseball Bat" },
@@ -76,6 +87,7 @@
     "Corpse": {
       "kind": "world",
       "name": "Corpse",
+      "rarity": "common",
       "insetKey": "zombie-inset-corpse",
       "cost": 2,
       "keywords": [],
@@ -94,9 +106,10 @@
     "Find Shotgun": {
       "kind": "world",
       "name": "Find Shotgun",
+      "rarity": "rare",
       "insetKey": "zombie-inset-find-shotgun",
       "cost": 2,
-      "keywords": ["Hidden"],
+      "keywords": ["Obstructed"],
       "discardable": true,
       "onDiscarded": { "kind": "None" },
       "onCleared": { "kind": "GainCard", "template": "Shotgun" },
@@ -106,6 +119,7 @@
     "Baseball Bat": {
       "kind": "player",
       "name": "Baseball Bat",
+      "rarity": "uncommon",
       "insetKey": "zombie-inset-baseball",
       "effect": {
         "kind": "DealProgress",
@@ -116,6 +130,7 @@
     "Shotgun": {
       "kind": "player",
       "name": "Shotgun",
+      "rarity": "rare",
       "insetKey": "zombie-inset-shotgun",
       "energyCost": 2,
       "effect": {
@@ -133,6 +148,7 @@
     "Regroup": {
       "kind": "player",
       "name": "Regroup",
+      "rarity": "common",
       "insetKey": "zombie-inset-regroup",
       "energyCost": 0,
       "exhaust": true,
@@ -141,6 +157,7 @@
     "Shelf Sweep": {
       "kind": "player",
       "name": "Shelf Sweep",
+      "rarity": "rare",
       "insetKey": "zombie-inset-shelf-sweep",
       "energyCost": 2,
       "effect": {
@@ -152,9 +169,10 @@
     "Echoing Aisles": {
       "kind": "world",
       "name": "Echoing Aisles",
+      "rarity": "rare",
       "insetKey": "zombie-inset-echoing-aisles",
       "cost": 2,
-      "keywords": ["Hidden"],
+      "keywords": ["Obstructed"],
       "discardable": true,
       "onDiscarded": { "kind": "None" },
       "onCleared": { "kind": "GainCard", "template": "Shelf Sweep" },

@@ -88,7 +88,7 @@ function drawGlow(glow: Phaser.GameObjects.Graphics, color: number, alpha: numbe
 // can render at full strength on the card's outer edge while the rarity ring
 // stays visible as a slightly inset second border. Both are real, distinct
 // Phaser objects — neither overwrites the other's Graphics/Rectangle.
-const RARITY_STROKE_INSET = 3;
+const RARITY_STROKE_INSET = 5;
 // Exported so tests can distinguish the rarity stroke from any other
 // rectangle on the scene (e.g. TooltipView's own background rectangle) by
 // its stroke width, without duplicating the geometry constant.
@@ -228,20 +228,15 @@ export class CardView extends Phaser.GameObjects.Container {
     // card.rarity and never toggled. A distinct Rectangle, inset from
     // highlightRect's edge, so a simultaneous selection/target stroke on
     // highlightRect coexists without either clobbering the other.
-    const rarityInset = 1 + RARITY_STROKE_INSET;
+    const rarityInset = RARITY_STROKE_INSET;
     const rarity = scene.add
       .rectangle(0, 0, CARD_W - rarityInset * 2, CARD_H - rarityInset * 2, 0x000000, 0)
       .setOrigin(0.5, 0.5);
-    if (isModifled) {
-      rarity.setStrokeStyle(
-        RARITY_STROKE_WIDTH,
-        rarityStyle(rarityTierShift(card.rarity, 1)).color,
-      );
-    } else {
-      rarity.setStrokeStyle(RARITY_STROKE_WIDTH, rarityStyle(card.rarity).color);
-    }
+    const style = rarityStyle(isModifled ? rarityTierShift(card.rarity, 1) : card.rarity);
+    rarity.setStrokeStyle(RARITY_STROKE_WIDTH, style.color);
+    rarity.postFX?.addGlow(style.color, style.glowStrength);
     rarity.setRounded(10);
-    rarity.setAlpha(0.8);
+    rarity.setAlpha(0.5);
     this.rarityRect = rarity;
     this.add(rarity);
 

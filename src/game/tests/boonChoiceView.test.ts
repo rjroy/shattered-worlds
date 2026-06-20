@@ -399,7 +399,7 @@ describe("BoonChoiceView", () => {
       kind: "world",
       name: "Fog Bank",
       cost: 3,
-      keywords: ["Concealed:3", "Hidden"],
+      keywords: ["Concealed:3", "Obstructed"],
       discardable: false,
       onDiscarded: { kind: "None" },
       onCleared: { kind: "None" },

@@ -11,7 +11,13 @@ import type { Card, Keyword, KeywordName } from "./types";
 
 // The closed set of valid keyword names. Kept in sync with `KeywordName`;
 // used at parse time to reject unknown authoring strings.
-const KEYWORD_NAMES: readonly KeywordName[] = ["Hidden", "Creature", "Slow", "Spore", "Concealed"];
+const KEYWORD_NAMES: readonly KeywordName[] = [
+  "Obstructed",
+  "Creature",
+  "Slow",
+  "Spore",
+  "Concealed",
+];
 
 function isKeywordName(s: string): s is KeywordName {
   return (KEYWORD_NAMES as readonly string[]).includes(s);

@@ -17,8 +17,8 @@ export const RARITY_ORDER: readonly RarityTier[] = ["common", "uncommon", "rare"
  * world, surface, or effect may override them.
  */
 export const RARITY_WEIGHTS: Record<RarityTier, number> = {
-  common: 60,
-  uncommon: 25,
-  rare: 12,
-  legendary: 3,
+  common: 50,
+  uncommon: 30,
+  rare: 13,
+  legendary: 7,
 };

@@ -34,13 +34,21 @@ function firstFogWorldTemplateIdMatching(
   return entry![0];
 }
 
-function mintPlayer(catalog: CardCatalog, state: GameState, templateId: string): [PlayerCard, GameState] {
+function mintPlayer(
+  catalog: CardCatalog,
+  state: GameState,
+  templateId: string,
+): [PlayerCard, GameState] {
   const [card, next] = mintCard(catalog, state, templateId);
   expect(card.kind).toBe("player");
   return [card as PlayerCard, next];
 }
 
-function mintWorld(catalog: CardCatalog, state: GameState, templateId: string): [WorldCard, GameState] {
+function mintWorld(
+  catalog: CardCatalog,
+  state: GameState,
+  templateId: string,
+): [WorldCard, GameState] {
   const [card, next] = mintCard(catalog, state, templateId);
   expect(card.kind).toBe("world");
   return [card as WorldCard, next];
@@ -70,7 +78,11 @@ describe("fog-beach-party integration", () => {
       if (card.effect.kind !== "GainLight") continue;
 
       const beforeLight = 2;
-      const { state: after, events } = applyEffect(catalog, { ...next, light: beforeLight }, card.effect);
+      const { state: after, events } = applyEffect(
+        catalog,
+        { ...next, light: beforeLight },
+        card.effect,
+      );
 
       expect(after.light).toBe(beforeLight + card.effect.amount);
       expect(events).toContainEqual({ type: "LightChanged", light: after.light });
@@ -102,7 +114,8 @@ describe("fog-beach-party integration", () => {
       (effect) => effect.kind === "DealProgressAll",
     )[0];
     const hiddenConcealedTemplateId = firstFogWorldTemplateIdMatching(
-      (t) => t.keywords.includes("Hidden") && t.keywords.some((k) => k.startsWith("Concealed:")),
+      (t) =>
+        t.keywords.includes("Obstructed") && t.keywords.some((k) => k.startsWith("Concealed:")),
     );
 
     expect(sweepTemplateId, "expected a fog sweep card for this integration test").toBeDefined();

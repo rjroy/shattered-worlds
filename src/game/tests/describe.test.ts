@@ -77,8 +77,8 @@ describe("describeEffect", () => {
   it("describes DealProgress with and without a keyword bonus", () => {
     expect(describeEffect({ kind: "DealProgress", base: 1 })).toEqual(["Add 1 Progress"]);
     expect(
-      describeEffect({ kind: "DealProgress", base: 1, bonus: { tag: "Hidden", amount: 2 } }),
-    ).toEqual(["Add 1 Progress\n(+2 vs Hidden)"]);
+      describeEffect({ kind: "DealProgress", base: 1, bonus: { tag: "Obstructed", amount: 2 } }),
+    ).toEqual(["Add 1 Progress\n(+2 vs Obstructed)"]);
   });
 
   it("describes DealProgressScaled as static rule text", () => {
@@ -230,7 +230,11 @@ describe("previewPlay", () => {
   });
 
   it("omits the bonus when the target lacks the tag", () => {
-    const explore = player({ kind: "DealProgress", base: 1, bonus: { tag: "Hidden", amount: 1 } });
+    const explore = player({
+      kind: "DealProgress",
+      base: 1,
+      bonus: { tag: "Obstructed", amount: 1 },
+    });
     const zombie = hazard({ name: "Zombie", cost: 1, keywords: [{ name: "Creature" }] });
     expect(previewPlay(explore, zombie, makeState())).toBe("Make 1 Progress → clears Zombie");
   });
@@ -285,11 +289,15 @@ describe("previewPlay", () => {
   it("shows the fog string (only the needed Light) for a concealed target", () => {
     // Concealed:3 with light 1 → lost in the fog; identity (cost/effect math) is
     // suppressed in favor of the required Light. Threshold reveals at light 3.
-    const explore = player({ kind: "DealProgress", base: 1, bonus: { tag: "Hidden", amount: 1 } });
+    const explore = player({
+      kind: "DealProgress",
+      base: 1,
+      bonus: { tag: "Obstructed", amount: 1 },
+    });
     const mist = hazard({
       name: "Something in the Mist",
       cost: 3,
-      keywords: [{ name: "Concealed", value: 3 }, { name: "Hidden" }],
+      keywords: [{ name: "Concealed", value: 3 }, { name: "Obstructed" }],
     });
     const fogged = { ...makeState(), light: 1 };
     expect(previewPlay(explore, mist, fogged)).toBe("lost in the fog (needs Light 3)");

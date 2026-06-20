@@ -276,7 +276,7 @@ export class HelpOverlayView extends Phaser.GameObjects.Container {
           {
             kind: "DealProgress",
             base: 1,
-            bonus: { tag: "Hidden", amount: 1 },
+            bonus: { tag: "Obstructed", amount: 1 },
           },
           x,
           y - 62,

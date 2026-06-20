@@ -9,7 +9,7 @@ export type CardId = string;
 // 'Zombie' | 'Find Baseball Bat' | 'The Walker' | 'Door'
 export type CardTemplateId = string;
 
-export type KeywordName = "Hidden" | "Creature" | "Slow" | "Spore" | "Concealed";
+export type KeywordName = "Obstructed" | "Creature" | "Slow" | "Spore" | "Concealed";
 
 // A keyword as it lives on a minted card: a name plus an optional numeric
 // value (e.g. "Concealed:3" authors as { name: "Concealed", value: 3 }).

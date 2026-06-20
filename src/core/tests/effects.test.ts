@@ -145,15 +145,15 @@ describe("dealProgress keyword math", () => {
     });
     const [hidden, s1] = mintWorld(state, "Zombie");
     const [plain, s2] = mintWorld(s1, "Strange Sounds");
-    const hiddenWithKeyword: WorldCard = { ...hidden, keywords: [{ name: "Hidden" }] };
+    const hiddenWithKeyword: WorldCard = { ...hidden, keywords: [{ name: "Obstructed" }] };
     state = { ...s2, hand: [hiddenWithKeyword, plain] };
 
     const matching = dealProgress(catalog, state, hiddenWithKeyword.id, 1, {
-      tag: "Hidden",
+      tag: "Obstructed",
       amount: 1,
     });
     const nonMatching = dealProgress(catalog, state, plain.id, 1, {
-      tag: "Hidden",
+      tag: "Obstructed",
       amount: 1,
     });
 
@@ -178,7 +178,7 @@ describe("dealProgress no keyword bonus", () => {
 
     // Explore: base 1, bonus { tag: 'Hidden', amount: 1 } — Strange Sounds has no keywords
     const { state: after, events } = dealProgress(catalog, state, ss.id, 1, {
-      tag: "Hidden",
+      tag: "Obstructed",
       amount: 1,
     });
 
@@ -773,7 +773,7 @@ describe("DealProgressAll", () => {
       name: "Something in the Mist",
       insetKey: undefined,
       cost: 3,
-      keywords: [{ name: "Concealed", value: 5 }, { name: "Hidden" }],
+      keywords: [{ name: "Concealed", value: 5 }, { name: "Obstructed" }],
       discardable: true,
       canExile: true,
       onDiscarded: { kind: "None" },
@@ -789,7 +789,7 @@ describe("DealProgressAll", () => {
     const { events } = applyEffect(catalog, state, {
       kind: "DealProgressAll",
       base: 1,
-      bonus: { tag: "Hidden", amount: 1 },
+      bonus: { tag: "Obstructed", amount: 1 },
     });
 
     const progress = events.find(
@@ -1049,7 +1049,7 @@ describe("DealProgressScaled", () => {
     });
 
     expect(resolveCounter(state, { kind: "KeywordInHand", keyword: "Spore" })).toBe(3);
-    expect(resolveCounter(state, { kind: "KeywordInHand", keyword: "Hidden" })).toBe(0);
+    expect(resolveCounter(state, { kind: "KeywordInHand", keyword: "Obstructed" })).toBe(0);
   });
 
   it("KeywordInHand counts by name, ignoring keyword values, across both carriers", () => {
@@ -1483,11 +1483,11 @@ describe("GainRandomCard", () => {
       };
     }
     const before = makeState();
-    const result = applyEffect(
-      illegalCatalog,
-      before,
-      { kind: "GainRandomCard", setId: "fortune-v1", setName: "the cache" } as CardEffect,
-    );
+    const result = applyEffect(illegalCatalog, before, {
+      kind: "GainRandomCard",
+      setId: "fortune-v1",
+      setName: "the cache",
+    } as CardEffect);
 
     expect(result.state.playerDiscard).toEqual([]);
     expect(result.events).toEqual([]);

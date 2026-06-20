@@ -8,11 +8,11 @@
       "energyCost": 1,
       "exhaust": true,
       "keywords": ["Spore"],
-      "effect": { 
-        "kind": "DamageScaled", 
-        "base": 0, 
+      "effect": {
+        "kind": "DamageScaled",
+        "base": 0,
         "per": { "kind": "KeywordInHand", "keyword": "Spore" },
-        "amount": 1 
+        "amount": 1
       }
     },
     "Burst Planter": {
@@ -86,7 +86,7 @@
       "name": "The Garden Center",
       "insetKey": "mall-inset-garden-center",
       "cost": 6,
-      "keywords": ["Hidden"],
+      "keywords": ["Obstructed"],
       "discardable": true,
       "onDiscarded": { "kind": "None" },
       "onCleared": {

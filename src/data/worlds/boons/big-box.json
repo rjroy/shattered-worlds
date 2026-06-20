@@ -12,7 +12,7 @@
         "kind": "DealProgress",
         "base": 2,
         "bonus": {
-          "tag": "Hidden",
+          "tag": "Obstructed",
           "amount": 2
         }
       }
@@ -27,7 +27,7 @@
         "kind": "DealProgress",
         "base": 2,
         "bonus": {
-          "tag": "Hidden",
+          "tag": "Obstructed",
           "amount": 2
         }
       }

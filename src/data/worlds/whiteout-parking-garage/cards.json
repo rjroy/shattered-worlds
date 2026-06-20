@@ -39,7 +39,7 @@
         "steps": [
           { "kind": "DestroyCardInHand", "min": 1, "max": 1 },
           { "kind": "GainHeat", "amount": 2 },
-          { "kind": "DealProgressAll", "base": 1, "bonus": { "tag": "Hidden", "amount": 1 } }
+          { "kind": "DealProgressAll", "base": 1, "bonus": { "tag": "Obstructed", "amount": 1 } }
         ]
       }
     },
@@ -54,7 +54,7 @@
         "branches": [
           { "kind": "ThawCards", "amount": 2, "heatCost": 1 },
           { "kind": "GainHeat", "amount": 4 },
-          { "kind": "DealProgressAll", "base": 2, "bonus": { "tag": "Hidden", "amount": 2 } }
+          { "kind": "DealProgressAll", "base": 2, "bonus": { "tag": "Obstructed", "amount": 2 } }
         ]
       }
     },
@@ -77,7 +77,7 @@
       "name": "Maintenance Closet",
       "insetKey": "whiteout-inset-maintenance-closet",
       "cost": 5,
-      "keywords": ["Hidden"],
+      "keywords": ["Obstructed"],
       "discardable": true,
       "onDiscarded": { "kind": "None" },
       "onCleared": {
@@ -98,7 +98,7 @@
       "name": "Powder Drift",
       "insetKey": "whiteout-inset-powder-drift",
       "cost": 2,
-      "keywords": ["Hidden"],
+      "keywords": ["Obstructed"],
       "discardable": true,
       "onDiscarded": { "kind": "None" },
       "onCleared": { "kind": "None" },
@@ -110,7 +110,7 @@
       "name": "Frozen Puddle",
       "insetKey": "whiteout-inset-frozen-puddle",
       "cost": 3,
-      "keywords": ["Hidden"],
+      "keywords": ["Obstructed"],
       "discardable": true,
       "onDiscarded": { "kind": "Damage", "amount": 1 },
       "onCleared": { "kind": "None" },
@@ -122,7 +122,7 @@
       "name": "Dead Battery",
       "insetKey": "whiteout-inset-dead-battery",
       "cost": 3,
-      "keywords": ["Hidden"],
+      "keywords": ["Obstructed"],
       "discardable": true,
       "onDiscarded": { "kind": "Damage", "amount": 1 },
       "onCleared": { "kind": "GainCard", "template": "Hand Warmers" },
@@ -134,7 +134,7 @@
       "name": "Black Ice Ramp",
       "insetKey": "whiteout-inset-black-ice-ramp",
       "cost": 3,
-      "keywords": ["Slow", "Hidden"],
+      "keywords": ["Slow", "Obstructed"],
       "discardable": true,
       "onDiscarded": { "kind": "Damage", "amount": 2 },
       "onCleared": { "kind": "None" },
@@ -146,7 +146,7 @@
       "name": "Snowblind Headlights",
       "insetKey": "whiteout-inset-snowblind-headlights",
       "cost": 3,
-      "keywords": ["Hidden"],
+      "keywords": ["Obstructed"],
       "discardable": true,
       "onDiscarded": { "kind": "Damage", "amount": 1 },
       "onCleared": { "kind": "GainHeat", "amount": 1 },
@@ -158,7 +158,7 @@
       "name": "Ice-Locked Door",
       "insetKey": "whiteout-inset-ice-locked-door",
       "cost": 4,
-      "keywords": ["Hidden"],
+      "keywords": ["Obstructed"],
       "discardable": true,
       "onDiscarded": { "kind": "Damage", "amount": 2 },
       "onCleared": { "kind": "GainHeat", "amount": 2 },
@@ -170,7 +170,7 @@
       "name": "Plow Buried In Snow",
       "insetKey": "whiteout-inset-plow-buried-in-snow",
       "cost": 5,
-      "keywords": ["Slow", "Hidden"],
+      "keywords": ["Slow", "Obstructed"],
       "discardable": true,
       "onDiscarded": { "kind": "Damage", "amount": 2 },
       "onCleared": { "kind": "GainHeat", "amount": 5 },
@@ -182,7 +182,7 @@
       "name": "The Garage Freezes Shut",
       "insetKey": "whiteout-inset-the-garage-freezes-shut",
       "cost": 6,
-      "keywords": ["Slow", "Hidden"],
+      "keywords": ["Slow", "Obstructed"],
       "discardable": true,
       "onDiscarded": { "kind": "Damage", "amount": 3 },
       "onCleared": { "kind": "None" },

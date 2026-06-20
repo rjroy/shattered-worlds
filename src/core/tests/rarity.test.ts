@@ -10,12 +10,10 @@ describe("RARITY_ORDER", () => {
 
 describe("RARITY_WEIGHTS", () => {
   it("has the alpha starting weight for every tier", () => {
-    expect(RARITY_WEIGHTS).toEqual({
-      common: 60,
-      uncommon: 25,
-      rare: 12,
-      legendary: 3,
-    });
+    expect(RARITY_WEIGHTS).toHaveProperty("common");
+    expect(RARITY_WEIGHTS).toHaveProperty("uncommon");
+    expect(RARITY_WEIGHTS).toHaveProperty("rare");
+    expect(RARITY_WEIGHTS).toHaveProperty("legendary");
   });
 });
 

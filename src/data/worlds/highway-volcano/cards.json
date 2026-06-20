@@ -60,7 +60,7 @@
       "name": "Find a Vehicle",
       "insetKey": "volcano-inset-vehicle",
       "cost": 2,
-      "keywords": ["Hidden"],
+      "keywords": ["Obstructed"],
       "discardable": true,
       "onDiscarded": { "kind": "None" },
       "onCleared": { "kind": "GainCard", "template": "Floor It" },
