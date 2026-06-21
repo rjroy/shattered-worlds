@@ -32,7 +32,6 @@ import {
   fitRowScale,
   layoutRowTokens,
   lineHeightOf,
-  lineWarningText,
   normalizeTokenText,
   riderFontSize,
   stackLines,
@@ -164,7 +163,7 @@ export function addEffectLines(
     EFFECT_ROW.lineSpacing,
   );
 
-  builtRows.forEach(({ line, style, row, rowWidth }, index) => {
+  builtRows.forEach(({ style, row, rowWidth }, index) => {
     // The row's children centre on its origin, so place that origin at the
     // line's vertical centre — an overflow scale then shrinks the row toward
     // its own centre instead of dragging it upward.

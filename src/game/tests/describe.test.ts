@@ -132,6 +132,32 @@ describe("describeEffect", () => {
     ]);
   });
 
+  it("describes ReturnPlayerDiscardToTop as a recall to the top of the deck", () => {
+    expect(describeEffect({ kind: "ReturnPlayerDiscardToTop", min: 1, max: 1 })).toEqual([
+      "Return 1 discard to the top of your deck",
+    ]);
+    expect(describeEffect({ kind: "ReturnPlayerDiscardToTop", min: 0, max: 2 })).toEqual([
+      "Return 0–2 discards to the top of your deck",
+      "(optional)",
+    ]);
+  });
+
+  it("describes RecallPlayerDiscard with its automatic policy surfaced", () => {
+    expect(describeEffect({ kind: "RecallPlayerDiscard", policy: "latest" })).toEqual([
+      "Recall 1 discard (newest) to the top of your deck",
+    ]);
+    expect(describeEffect({ kind: "RecallPlayerDiscard", policy: "lowestCost" })).toEqual([
+      "Recall 1 discard (cheapest) to the top of your deck",
+    ]);
+    expect(describeEffect({ kind: "RecallPlayerDiscard", policy: "panicFirst" })).toEqual([
+      "Recall 1 discard (Panic first) to the top of your deck",
+    ]);
+    // Default policy is "latest" when omitted.
+    expect(describeEffect({ kind: "RecallPlayerDiscard" })).toEqual([
+      "Recall 1 discard (newest) to the top of your deck",
+    ]);
+  });
+
   it("recurses into Modal — header plus a bullet per branch (Sprint)", () => {
     const sprint: CardEffect = {
       kind: "Modal",

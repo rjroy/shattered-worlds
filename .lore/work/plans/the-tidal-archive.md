@@ -1,7 +1,7 @@
 ---
 title: "Implementation plan: The Tidal Archive world"
 date: 2026-06-20
-status: draft
+status: executed
 tags: [plan, world-design, the-tidal-archive, core-effect, displacement, discard-recall]
 modules: [core-engine, world-data, game-view, themes]
 related: [.lore/work/specs/the-tidal-archive.md, .lore/reference/theme-authoring.md, src/game/assets/themes/the-tidal-archive/CATACLYSM.md]

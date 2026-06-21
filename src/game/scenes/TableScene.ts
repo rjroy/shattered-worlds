@@ -56,6 +56,7 @@ import { drawConnector } from "../view/connector";
 import { resolveBranchLabels } from "../../core/view/branchLabels";
 import { ModalChooserView } from "../view/ModalChooserView";
 import { BoonChoiceView, type BoonChoiceOption } from "../view/BoonChoiceView";
+import { DiscardChooserView } from "../view/DiscardChooserView";
 import { CommonLabel, CommonButton } from "../view/components";
 import { isConcealmentWarning, concealOf, isConcealed, CONCEALED_HAZARD } from "../../core/index";
 import { PileLayer } from "../view/PileLayer";
@@ -168,6 +169,7 @@ export class TableScene extends Phaser.Scene {
   // Modal chooser UI (created/destroyed per card play)
   private modalChooser: ModalChooserView | null = null;
   private boonChoiceView: BoonChoiceView | null = null;
+  private discardChooser: DiscardChooserView | null = null;
   private boonChoiceKey: string | null = null;
   private loggedBoonMissingKey: string | null = null;
   private worldMusic: Phaser.Sound.BaseSound | null = null;
@@ -267,6 +269,7 @@ export class TableScene extends Phaser.Scene {
         this.sel = cancel();
         this.clearSelectedCardSnapshot();
         this.dismissModal();
+        this.dismissDiscardChooser();
         this.clearConnector();
         this.clearPreviewSlot();
         this.drawAll();
@@ -829,7 +832,77 @@ export class TableScene extends Phaser.Scene {
       return;
     }
 
+    const recallStep = this.activeRecallStep();
+    if (recallStep !== null) {
+      this.beginRecallStep(recallStep);
+      return;
+    }
+
     this.drawAll();
+  }
+
+  // The current targeting step when it is a Tidal discard-recall step, else null.
+  private activeRecallStep(): Extract<TargetSpec, { kind: "recallTarget" }> | null {
+    if (this.sel.phase !== "targeting" || isComplete(this.sel)) return null;
+    const step = this.sel.steps[this.sel.stepIdx];
+    return step?.kind === "recallTarget" ? step : null;
+  }
+
+  // Open the discard chooser for a recallTarget step — or auto-skip it when the
+  // discard pile is empty and the step is optional (min:0, e.g. Shelf Map). A
+  // min>0 step with an empty pile never reaches here: the card is unplayable
+  // (core ReturnPlayerDiscardToTopHandler.isPlayable). See selection.ts §
+  // empty-pile flow for why this skip lives in the scene, not the state machine.
+  private beginRecallStep(step: Extract<TargetSpec, { kind: "recallTarget" }>): void {
+    const discard = this.game_.state.playerDiscard;
+    if (discard.length === 0) {
+      // Optional step over an empty pile: confirm zero picks and move on.
+      this.advanceSelection();
+      return;
+    }
+    this.drawAll();
+    this.showDiscardChooser(step, discard);
+  }
+
+  private showDiscardChooser(
+    step: Extract<TargetSpec, { kind: "recallTarget" }>,
+    cards: readonly Card[],
+  ): void {
+    this.dismissDiscardChooser();
+    this.discardChooser = new DiscardChooserView(this, {
+      theme: this.theme_,
+      cards,
+      min: step.min,
+      max: step.max,
+      onConfirm: (ids) => this.onRecallConfirm(ids),
+      onCancel: () => this.onRecallCancel(),
+    });
+  }
+
+  private onRecallConfirm(ids: readonly string[]): void {
+    this.dismissDiscardChooser();
+    // Fold the chosen ids into the current step exactly as togglePick would,
+    // then advance — buildAction then sets PlayCard.recallIds.
+    for (const id of ids) {
+      this.sel = togglePick(this.sel, id);
+    }
+    this.advanceSelection();
+  }
+
+  private onRecallCancel(): void {
+    this.dismissDiscardChooser();
+    this.sel = cancel();
+    this.clearSelectedCardSnapshot();
+    this.clearConnector();
+    this.clearPreviewSlot();
+    this.drawAll();
+  }
+
+  private dismissDiscardChooser(): void {
+    if (this.discardChooser !== null) {
+      this.discardChooser.destroy();
+      this.discardChooser = null;
+    }
   }
 
   // ---------------------------------------------------------------------------
@@ -1014,6 +1087,7 @@ export class TableScene extends Phaser.Scene {
     this.sel = IDLE;
     this.clearSelectedCardSnapshot();
     this.dismissModal();
+    this.dismissDiscardChooser();
     this.updateBoonChoiceView();
     // Commit ends targeting; drop the connector and preview so nothing survives
     // the action.

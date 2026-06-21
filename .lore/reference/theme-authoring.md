@@ -72,6 +72,7 @@ Map the world's fiction onto these roles.
 | `overgrown-mall` | prune and profit | Self-pruning `Spore`; `Bloom` scales from Spores; owns `DealProgressScaled` |
 | `fog-beach-party` | reveal and endure | Light economy; owns `GainLight`; reveals `Concealed` hazards |
 | `whiteout-parking-garage` | freeze | Heat economy; owns `GainHeat`, `FreezeCards`, `ThawCards`, frozen cards stop hand usability |
+| `the-tidal-archive` | displace | Owns discard/deck-order recall; rewards set up the top of the player deck deliberately (`ReturnPlayerDiscardToTop`); hazards/passive recall discards automatically (`RecallPlayerDiscard`) |
 
 This is a living registry — each new world adds an entry. The verb captures the exclusive mechanical identity of that world; no two worlds should feel interchangeable.
 
@@ -123,6 +124,7 @@ Theme-owned exclusive effects — reuse across worlds requires coordination:
 | `DealProgressScaled` | `overgrown-mall` | Exclusive now; others may use it with design review |
 | `GainLight` | `fog-beach-party` | The only way to lift `Concealed:N` depth — tied to Light resource |
 | `GainHeat`, `FreezeCards`, `ThawCards` | `whiteout-parking-garage` | Heat/freeze/thaw economy suite
+| `ReturnPlayerDiscardToTop`, `RecallPlayerDiscard` | `the-tidal-archive` | Owns discard/deck-order recall — moving real player card instances from `playerDiscard` to the top of `playerDraw`
 
 **C1a:** `DestroySelf` removes the firing world card from hand. It is only meaningful in `onEndOfTurn`, where the engine has a `selfId`.
 
@@ -131,6 +133,8 @@ Theme-owned exclusive effects — reuse across worlds requires coordination:
 **C2a:** Keywords are authored as strings in `keywords`: `"Name"` or `"Name:N"`. A bare keyword has no value; a numeric keyword parses to `{ name, value }`. Currently only `Concealed` uses a value (Light depth); future keywords can adopt other structures with engine support.
 
 **C3:** Every world card defines `onDiscarded`, `onCleared`, and `onEndOfTurn`; use `{ "kind": "None" }` when a hook does nothing. Player cards define `effect`.
+
+**C3a:** A world may define a per-world **end-turn passive** via the optional root field `onEndOfTurnPassive: CardEffect` on the card source (default `{ "kind": "None" }`). It runs once each turn after unretained player cards are discarded and before the turn-start refill, threaded onto `GameState.endOfTurnPassive` at `createWorld` time (the reducer never sees `WorldData`). The Tidal Archive uses it for Tidal Memory: `{ "kind": "RecallPlayerDiscard", "policy": "latest" }` recalls the most recent discard to the top of the deck every turn. Worlds that omit it are byte-identical to before — the `None` passive emits no events.
 
 **C4:** Player cards may set `exhaust: true` to destroy themselves after play instead of going to discard. Default is false.
 

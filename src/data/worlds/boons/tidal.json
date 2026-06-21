@@ -1,0 +1,59 @@
+{
+  "worldId": "tidal-boons",
+  "cardTemplates": {
+    "Mark the Shelf": {
+      "kind": "player",
+      "name": "Mark the Shelf",
+      "rarity": "common",
+      "energyCost": 1,
+      "effect": { "kind": "ReturnPlayerDiscardToTop", "min": 1, "max": 1 }
+    },
+    "Cross-Reference": {
+      "kind": "player",
+      "name": "Cross-Reference",
+      "rarity": "common",
+      "energyCost": 1,
+      "effect": { "kind": "DiscardThenDraw", "player": 2 }
+    },
+    "Waterproof Notes": {
+      "kind": "player",
+      "name": "Waterproof Notes",
+      "rarity": "uncommon",
+      "energyCost": 1,
+      "effect": {
+        "kind": "Sequence",
+        "steps": [
+          { "kind": "DealProgress", "base": 3 },
+          { "kind": "ReturnWorldCards", "min": 0, "max": 1 }
+        ]
+      }
+    },
+    "Anchor the Memory": {
+      "kind": "player",
+      "name": "Anchor the Memory",
+      "rarity": "uncommon",
+      "energyCost": 1,
+      "exhaust": true,
+      "effect": {
+        "kind": "Sequence",
+        "steps": [
+          { "kind": "Brace", "amount": 1 },
+          { "kind": "Draw", "player": 1 }
+        ]
+      }
+    },
+    "Shelf Map": {
+      "kind": "player",
+      "name": "Shelf Map",
+      "rarity": "uncommon",
+      "energyCost": 1,
+      "effect": {
+        "kind": "Sequence",
+        "steps": [
+          { "kind": "DealProgress", "base": 1 },
+          { "kind": "ReturnPlayerDiscardToTop", "min": 0, "max": 1 }
+        ]
+      }
+    }
+  }
+}

@@ -26,12 +26,30 @@ import type { EffectLine } from "../view/effectGlyphs";
 import { nextFloat } from "../engine/rng";
 import type { CompileContext, ConnectorStyle, EffectContext, EffectResult } from "./EffectContext";
 import { EffectHandler } from "./EffectHandler";
-import { icon, main, rangeText, text, value } from "./tokens";
+import { icon, main, rangeText, rider, text, value } from "./tokens";
 
 type ReturnPlayerDiscardToTopEffect = Extract<CardEffect, { kind: "ReturnPlayerDiscardToTop" }>;
 type RecallPlayerDiscardEffect = Extract<CardEffect, { kind: "RecallPlayerDiscard" }>;
 
 type RecallSource = Extract<GameEvent, { type: "PlayerDiscardRecalled" }>["source"];
+
+type RecallPolicy = NonNullable<RecallPlayerDiscardEffect["policy"]>;
+
+/** Human-readable label for an automatic recall policy (chooser/glyph text). */
+function policyLabel(policy: RecallPolicy): string {
+  switch (policy) {
+    case "latest":
+      return "newest";
+    case "random":
+      return "random";
+    case "lowestCost":
+      return "cheapest";
+    case "highestCost":
+      return "priciest";
+    case "panicFirst":
+      return "Panic first";
+  }
+}
 
 /**
  * The single zone-move entry point. For each id found in playerDiscard, remove
@@ -91,7 +109,7 @@ function playerCardsInDiscard(state: GameState): PlayerCard[] {
 function resolveAutoRecall(
   state: GameState,
   count: number,
-  policy: NonNullable<RecallPlayerDiscardEffect["policy"]>,
+  policy: RecallPolicy,
 ): { ids: readonly CardId[]; rng: GameState["rng"] } {
   const candidates = playerCardsInDiscard(state);
   if (candidates.length === 0) return { ids: [], rng: state.rng };
@@ -201,11 +219,16 @@ export class RecallPlayerDiscardHandler extends EffectHandler<RecallPlayerDiscar
   override describe(effect: RecallPlayerDiscardEffect): string[] {
     const count = effect.count ?? 1;
     const noun = count === 1 ? "discard" : "discards";
-    return [`Recall ${count} ${noun} to the top of your deck`];
+    const policy = effect.policy ?? "latest";
+    return [`Recall ${count} ${noun} (${policyLabel(policy)}) to the top of your deck`];
   }
 
   override compile(effect: RecallPlayerDiscardEffect, _ctx: CompileContext): EffectLine[] {
-    return [main([icon("return"), value(`${effect.count ?? 1}`, "penalty"), text("from discard")])];
+    const policy = effect.policy ?? "latest";
+    return [
+      main([icon("return"), value(`${effect.count ?? 1}`, "penalty"), text("from discard")]),
+      rider([text(policyLabel(policy))]),
+    ];
   }
 
   override isPlayable(): boolean {

@@ -30,6 +30,7 @@ const WORLD_THREAT_BY_WORLD_ID: Record<string, CardTemplateId> = {
   "overgrown-mall": "Something in the Atrium",
   "fog-beach-party": "Something in the Mist",
   "whiteout-parking-garage": "The Garage Freezes Shut",
+  "the-tidal-archive": "The Same Footprint",
 };
 
 export function worldThreatByWorldId(worldId: string): string {

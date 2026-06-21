@@ -28,6 +28,10 @@ import whiteoutRealityUrl from "../assets/themes/whiteout-parking-garage/whiteou
 import whiteoutOverlayUrl from "../assets/themes/whiteout-parking-garage/intrusion-overlay.webp";
 import whiteoutCardfrontUrl from "../assets/themes/whiteout-parking-garage/whiteout-parking-garage-cardfront.webp";
 
+import tidalRealityUrl from "../assets/themes/the-tidal-archive/the-tidal-archive-reality.webp";
+import tidalOverlayUrl from "../assets/themes/the-tidal-archive/intrusion-overlay.webp";
+import tidalCardfrontUrl from "../assets/themes/the-tidal-archive/the-tidal-archive-cardfront.webp";
+
 // ---------------------------------------------------------------------------
 // World inset imports
 // ---------------------------------------------------------------------------
@@ -208,6 +212,9 @@ export const worldAssetUrls: Record<string, string> = {
   "whiteout-inset-ice-locked-door": whiteoutInsetIceLockedDoorUrl,
   "whiteout-inset-plow-buried-in-snow": whiteoutInsetPlowBuriedInSnowUrl,
   "whiteout-inset-the-garage-freezes-shut": whiteoutInsetTheGarageFreezesShutUrl,
+  "the-tidal-archive-bg": tidalRealityUrl,
+  "the-tidal-archive-overlay": tidalOverlayUrl,
+  "the-tidal-archive-cardfront": tidalCardfrontUrl,
 };
 
 export interface WorldMusicAsset {
@@ -223,4 +230,5 @@ export const worldMusicManifest: Record<string, WorldMusicAsset> = {
   "overgrown-mall": { key: "music-overgrown-mall", url: overgrownMallMusicUrl },
   "fog-beach-party": { key: "music-fog-beach-party", url: fogBeachPartyMusicUrl },
   "whiteout-parking-garage": { key: "music-whiteout-parking-garage", url: fogBeachPartyMusicUrl },
+  "the-tidal-archive": { key: "music-the-tidal-archive", url: fogBeachPartyMusicUrl },
 };

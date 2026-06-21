@@ -1,7 +1,7 @@
 ---
 title: The Tidal Archive world
 date: 2026-06-19
-status: draft
+status: implemented
 tags: [world-design, the-tidal-archive, displacement, discard-memory, deck-control, core-effect]
 modules: [core-engine, world-data, game-view, themes]
 related: [.lore/reference/theme-authoring.md, src/game/assets/themes/the-tidal-archive/CATACLYSM.md]
@@ -42,7 +42,7 @@ Found during a cross-plan review and folded into the requirements below (trail: 
 
 <div id="REQ-TIDAL-3"></div>
 
-**REQ-TIDAL-3:** The implementation must add one inset asset per Tidal card under `src/game/assets/themes/the-tidal-archive/insets/`, use a `tidal-inset-*` key namespace, and register every referenced inset key in `src/game/worlds/assetBindings.ts`.
+**REQ-TIDAL-3:** *(DEFERRED — follow-up art pass; tracked in `.lore/work/issues/the-tidal-archive-card-insets.md`.)* The implementation must add one inset asset per Tidal card under `src/game/assets/themes/the-tidal-archive/insets/`, use a `tidal-inset-*` key namespace, and register every referenced inset key in `src/game/worlds/assetBindings.ts`. Cards ship with no `insetKey` until the art lands; the base assets (reality/intrusion/cardfront/music) are wired and tests pass without insets.
 
 <div id="REQ-TIDAL-4"></div>
 
@@ -254,7 +254,7 @@ Counts are tuning values; act roles and the fixed Walker closer are not.
 
 <div id="REQ-TIDAL-46"></div>
 
-**REQ-TIDAL-46:** Card insets must make displacement legible. Hazards should show places out of order, maps pointing to wrong districts, books chained to water, and repeated footprints. Reward insets should show deliberate indexing, marked shelves, waterproof notes, and anchored memories.
+**REQ-TIDAL-46:** *(DEFERRED — follow-up art pass; tracked in `.lore/work/issues/the-tidal-archive-card-insets.md`.)* Card insets must make displacement legible. Hazards should show places out of order, maps pointing to wrong districts, books chained to water, and repeated footprints. Reward insets should show deliberate indexing, marked shelves, waterproof notes, and anchored memories. The discard chooser renders an empty inset slot until the art lands.
 
 ## Display And Help
 
@@ -300,7 +300,7 @@ Counts are tuning values; act roles and the fixed Walker closer are not.
 
 <div id="REQ-TIDAL-56"></div>
 
-**REQ-TIDAL-56:** Asset validation must verify every Tidal `insetKey`, `worldCardfrontKey`, backdrop key, display background key, and intrusion key has a matching manifest binding and loads without falling back to starter art.
+**REQ-TIDAL-56:** Asset validation must verify every Tidal `worldCardfrontKey`, backdrop key, display background key, and intrusion key has a matching manifest binding and loads without falling back to starter art. *(The `insetKey` clause is DEFERRED with REQ-TIDAL-3 — no `insetKey` is referenced yet, so `referencedAssetKeys(bundle)` returns only the base keys and validation passes without inset bindings; tracked in `.lore/work/issues/the-tidal-archive-card-insets.md`.)*
 
 <div id="REQ-TIDAL-57"></div>
 

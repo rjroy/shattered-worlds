@@ -11,6 +11,7 @@ import { textStyle, TEXT } from "../view/presentation";
 import { CANVAS_W, CANVAS_H, WORLD_SELECT_LAYOUT } from "../view/layout";
 import { worldBadgeLabel } from "../view/worldBadge";
 import { HelpOverlayView } from "../view/HelpOverlayView";
+import { canPageLeft, canPageRight, pageLeft, pageRight } from "./worldSelectPaging";
 
 const CARD_W = WORLD_SELECT_LAYOUT.cardWidth;
 const CARD_H = WORLD_SELECT_LAYOUT.cardHeight;
@@ -252,13 +253,15 @@ export class WorldSelectScene extends Phaser.Scene {
     const rowRight = rowLeft + visibleW;
 
     this.leftArrow = this.createArrow(rowLeft - ARROW_GAP, ARROW_Y, "<", () => {
-      if (this.visibleStartIndex <= 0) return;
-      this.visibleStartIndex -= 1;
+      const next = pageLeft(this.visibleStartIndex);
+      if (next === this.visibleStartIndex) return;
+      this.visibleStartIndex = next;
       this.renderVisibleWorlds();
     });
     this.rightArrow = this.createArrow(rowRight + ARROW_GAP, ARROW_Y, ">", () => {
-      if (this.visibleStartIndex + VISIBLE_WORLD_COUNT >= this.worldIds.length) return;
-      this.visibleStartIndex += 1;
+      const next = pageRight(this.visibleStartIndex, this.worldIds.length, VISIBLE_WORLD_COUNT);
+      if (next === this.visibleStartIndex) return;
+      this.visibleStartIndex = next;
       this.renderVisibleWorlds();
     });
   }
@@ -290,10 +293,10 @@ export class WorldSelectScene extends Phaser.Scene {
   }
 
   private updateArrowState(): void {
-    this.setArrowEnabled(this.leftArrow, this.visibleStartIndex > 0);
+    this.setArrowEnabled(this.leftArrow, canPageLeft(this.visibleStartIndex));
     this.setArrowEnabled(
       this.rightArrow,
-      this.visibleStartIndex + VISIBLE_WORLD_COUNT < this.worldIds.length,
+      canPageRight(this.visibleStartIndex, this.worldIds.length, VISIBLE_WORLD_COUNT),
     );
   }
 
