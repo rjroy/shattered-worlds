@@ -1,7 +1,10 @@
 # The City of Sleeping Giants Inset Art Guidance
 
 Thumbnail-first inset assets (13). Filename = `inset-<kebab-name>.webp`, asset
-key = `giants-inset-<kebab-name>` (see `cards.json` and `boons/giants.json`).
+key = `giants-inset-<kebab-name>` (see `cards.json` and `boons/giants.json`). All
+13 art files exist and their imports/manifest entries in
+`worlds/assetBindings.ts` are wired; the `insetKey` fields were already authored
+in `cards.json` and `boons/giants.json`.
 
 Hazards and world cards:
 

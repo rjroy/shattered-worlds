@@ -145,6 +145,20 @@ import emberInsetKeepVigilUrl from "../assets/themes/the-ember-orchard/insets/in
 import emberInsetLeaveOneUrl from "../assets/themes/the-ember-orchard/insets/inset-leave-one.webp";
 import emberInsetStarPrunerUrl from "../assets/themes/the-ember-orchard/insets/inset-star-pruner.webp";
 
+import giantsInsetMinorTremorUrl from "../assets/themes/city-of-sleeping-giants/insets/inset-minor-tremor.webp";
+import giantsInsetRelocationOrderUrl from "../assets/themes/city-of-sleeping-giants/insets/inset-relocation-order.webp";
+import giantsInsetFingerquakeWardUrl from "../assets/themes/city-of-sleeping-giants/insets/inset-fingerquake-ward.webp";
+import giantsInsetSurveyorsMarkAPulseUrl from "../assets/themes/city-of-sleeping-giants/insets/inset-surveyors-mark-a-pulse.webp";
+import giantsInsetVeinRoadSurgeUrl from "../assets/themes/city-of-sleeping-giants/insets/inset-vein-road-surge.webp";
+import giantsInsetBoneAnchorFailureUrl from "../assets/themes/city-of-sleeping-giants/insets/inset-bone-anchor-failure.webp";
+import giantsInsetDistrictRecallUrl from "../assets/themes/city-of-sleeping-giants/insets/inset-district-recall.webp";
+import giantsInsetTheGiantTurnsInSleepUrl from "../assets/themes/city-of-sleeping-giants/insets/inset-the-giant-turns-in-sleep.webp";
+import giantsInsetFollowTheVeinUrl from "../assets/themes/city-of-sleeping-giants/insets/inset-follow-the-vein.webp";
+import giantsInsetQuietSurveyUrl from "../assets/themes/city-of-sleeping-giants/insets/inset-quiet-survey.webp";
+import giantsInsetBraceTheWardUrl from "../assets/themes/city-of-sleeping-giants/insets/inset-brace-the-ward.webp";
+import giantsInsetBonePinUrl from "../assets/themes/city-of-sleeping-giants/insets/inset-bone-pin.webp";
+import giantsInsetContourMapUrl from "../assets/themes/city-of-sleeping-giants/insets/inset-contour-map.webp";
+
 // ---------------------------------------------------------------------------
 // World music imports
 // ---------------------------------------------------------------------------
@@ -285,10 +299,23 @@ export const worldAssetUrls: Record<string, string> = {
   "ember-inset-keep-vigil": emberInsetKeepVigilUrl,
   "ember-inset-leave-one": emberInsetLeaveOneUrl,
   "ember-inset-star-pruner": emberInsetStarPrunerUrl,
-  // city-of-sleeping-giants — base assets wired now; insets wired once art is generated.
+  // city-of-sleeping-giants
   "city-of-sleeping-giants-bg": giantsRealityUrl,
   "city-of-sleeping-giants-overlay": giantsOverlayUrl,
   "city-of-sleeping-giants-cardfront": giantsCardfrontUrl,
+  "giants-inset-minor-tremor": giantsInsetMinorTremorUrl,
+  "giants-inset-relocation-order": giantsInsetRelocationOrderUrl,
+  "giants-inset-fingerquake-ward": giantsInsetFingerquakeWardUrl,
+  "giants-inset-surveyors-mark-a-pulse": giantsInsetSurveyorsMarkAPulseUrl,
+  "giants-inset-vein-road-surge": giantsInsetVeinRoadSurgeUrl,
+  "giants-inset-bone-anchor-failure": giantsInsetBoneAnchorFailureUrl,
+  "giants-inset-district-recall": giantsInsetDistrictRecallUrl,
+  "giants-inset-the-giant-turns-in-sleep": giantsInsetTheGiantTurnsInSleepUrl,
+  "giants-inset-follow-the-vein": giantsInsetFollowTheVeinUrl,
+  "giants-inset-quiet-survey": giantsInsetQuietSurveyUrl,
+  "giants-inset-brace-the-ward": giantsInsetBraceTheWardUrl,
+  "giants-inset-bone-pin": giantsInsetBonePinUrl,
+  "giants-inset-contour-map": giantsInsetContourMapUrl,
 };
 
 export interface WorldMusicAsset {
