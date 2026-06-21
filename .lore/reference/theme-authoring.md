@@ -73,6 +73,7 @@ Map the world's fiction onto these roles.
 | `fog-beach-party` | reveal and endure | Light economy; owns `GainLight`; reveals `Concealed` hazards |
 | `whiteout-parking-garage` | freeze | Heat economy; owns `GainHeat`, `FreezeCards`, `ThawCards`, frozen cards stop hand usability |
 | `the-tidal-archive` | displace | Owns discard/deck-order recall; rewards set up the top of the player deck deliberately (`ReturnPlayerDiscardToTop`); hazards/passive recall discards automatically (`RecallPlayerDiscard`) |
+| `the-ember-orchard` | incubate | Owns incubation-as-delayed-known-cost: warmth/benefit now that seeds a known future hazard; rewards trade immediate gain for top-decked threats that hatch into stronger cards at end of turn |
 
 This is a living registry — each new world adds an entry. The verb captures the exclusive mechanical identity of that world; no two worlds should feel interchangeable.
 

@@ -131,6 +131,14 @@ export const UNLOCK_CATALOG: readonly UnlockDefinition[] = [
     destinyWeight: 0,
     effect: { type: "worldUnlock", worldId: "whiteout-parking-garage" },
   },
+  {
+    id: "world-the-ember-orchard",
+    name: "The Ember Orchard",
+    description: "Opens The Ember Orchard in World Select.",
+    cost: 5,
+    destinyWeight: 0,
+    effect: { type: "worldUnlock", worldId: "the-ember-orchard" },
+  },
 
   {
     id: "first-sprint-free",

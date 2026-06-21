@@ -31,6 +31,7 @@ const WORLD_THREAT_BY_WORLD_ID: Record<string, CardTemplateId> = {
   "fog-beach-party": "Something in the Mist",
   "whiteout-parking-garage": "The Garage Freezes Shut",
   "the-tidal-archive": "The Same Footprint",
+  "the-ember-orchard": "Ground Constellation",
 };
 
 export function worldThreatByWorldId(worldId: string): string {

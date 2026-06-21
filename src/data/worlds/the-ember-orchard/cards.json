@@ -1,0 +1,211 @@
+{
+  "worldId": "the-ember-orchard",
+  "cardTemplates": {
+    "Dormant Star": {
+      "kind": "player",
+      "name": "Dormant Star",
+      "insetKey": "ember-inset-dormant-star",
+      "energyCost": 0,
+      "exhaust": true,
+      "effect": {
+        "kind": "Sequence",
+        "steps": [
+          { "kind": "Draw", "player": 1 },
+          { "kind": "Brace", "amount": 1 },
+          { "kind": "AddWorldCardToDeck", "template": "Ember Moth", "bTop": true }
+        ]
+      }
+    },
+    "Take One": {
+      "kind": "player",
+      "name": "Take One",
+      "insetKey": "ember-inset-take-one",
+      "effect": {
+        "kind": "Sequence",
+        "steps": [
+          { "kind": "DealProgress", "base": 4 },
+          { "kind": "AddWorldCardToDeck", "template": "Falling Fruit", "bTop": true }
+        ]
+      }
+    },
+    "Glasshouse Lantern": {
+      "kind": "player",
+      "name": "Glasshouse Lantern",
+      "insetKey": "ember-inset-glasshouse-lantern",
+      "exhaust": true,
+      "effect": {
+        "kind": "Sequence",
+        "steps": [
+          { "kind": "Draw", "player": 2 },
+          { "kind": "Brace", "amount": 1 },
+          { "kind": "AddWorldCardToDeck", "template": "Cracked Hearth-Star", "bTop": true }
+        ]
+      }
+    },
+    "Cracked Hearth-Star": {
+      "kind": "world",
+      "name": "Cracked Hearth-Star",
+      "insetKey": "ember-inset-cracked-hearth-star",
+      "cost": 2,
+      "keywords": ["Obstructed"],
+      "discardable": true,
+      "onCleared": { "kind": "GainCard", "template": "Dormant Star" },
+      "onDiscarded": { "kind": "None" },
+      "onPartialClear": { "kind": "None" },
+      "onEndOfTurn": {
+        "kind": "Sequence",
+        "steps": [
+          { "kind": "AddWorldCardToDeck", "template": "Ember Moth", "bTop": true },
+          { "kind": "DestroySelf" }
+        ]
+      }
+    },
+    "Falling Fruit": {
+      "kind": "world",
+      "name": "Falling Fruit",
+      "insetKey": "ember-inset-falling-fruit",
+      "cost": 2,
+      "keywords": ["Obstructed"],
+      "discardable": true,
+      "onCleared": {
+        "kind": "Sequence",
+        "steps": [
+          { "kind": "GainEnergy", "amount": 1 },
+          { "kind": "GainCard", "template": "Take One" }
+        ]
+      },
+      "onDiscarded": { "kind": "AddPlayerCardToTop", "template": "Dormant Star" },
+      "onPartialClear": { "kind": "AddPlayerCardToTop", "template": "Dormant Star" },
+      "onEndOfTurn": { "kind": "AddWorldCardToDeck", "template": "Rooted Meteor", "bTop": true }
+    },
+    "Rooted Meteor": {
+      "kind": "world",
+      "name": "Rooted Meteor",
+      "insetKey": "ember-inset-rooted-meteor",
+      "cost": 3,
+      "keywords": ["Slow"],
+      "discardable": true,
+      "onCleared": { "kind": "GainCard", "template": "Glasshouse Lantern" },
+      "onDiscarded": { "kind": "Damage", "amount": 1 },
+      "onPartialClear": { "kind": "AddWorldCardToDeck", "template": "Falling Fruit", "bTop": true },
+      "onEndOfTurn": { "kind": "Damage", "amount": 1 }
+    },
+    "The Orchard Counts Wrong": {
+      "kind": "world",
+      "name": "The Orchard Counts Wrong",
+      "insetKey": "ember-inset-the-orchard-counts-wrong",
+      "cost": 4,
+      "keywords": ["Obstructed"],
+      "discardable": true,
+      "onCleared": { "kind": "GainCard", "template": "Star-Pruner" },
+      "onDiscarded": { "kind": "Damage", "amount": 2 },
+      "onPartialClear": { "kind": "AddPlayerCardToTop", "template": "Dormant Star" },
+      "onEndOfTurn": {
+        "kind": "Sequence",
+        "steps": [
+          { "kind": "Draw", "player": 1 },
+          { "kind": "AddPlayerCardToTop", "template": "Dormant Star" }
+        ]
+      }
+    },
+    "Hatchery Cellar": {
+      "kind": "world",
+      "name": "Hatchery Cellar",
+      "insetKey": "ember-inset-hatchery-cellar",
+      "cost": 6,
+      "keywords": ["Obstructed"],
+      "discardable": true,
+      "onCleared": {
+        "kind": "OfferBoon",
+        "setId": "ember-boons",
+        "setName": "Hatchery Harvest",
+        "offeredCount": 3,
+        "chooseCount": 1
+      },
+      "onDiscarded": { "kind": "None" },
+      "onPartialClear": { "kind": "None" },
+      "onEndOfTurn": {
+        "kind": "Sequence",
+        "steps": [
+          { "kind": "AddWorldCardToDeck", "template": "Ember Moth", "bTop": true },
+          { "kind": "AddWorldCardToDeck", "template": "Falling Fruit", "bTop": true }
+        ]
+      }
+    },
+    "Ember Moth": {
+      "kind": "world",
+      "name": "Ember Moth",
+      "insetKey": "ember-inset-ember-moth",
+      "cost": 4,
+      "keywords": ["Creature"],
+      "discardable": true,
+      "onCleared": { "kind": "None" },
+      "onDiscarded": { "kind": "ForceDestroy", "amount": 2 },
+      "onPartialClear": { "kind": "ForceDestroy", "amount": 1 },
+      "onEndOfTurn": { "kind": "ForceDestroy", "amount": 1 }
+    },
+    "Lantern Brood": {
+      "kind": "world",
+      "name": "Lantern Brood",
+      "insetKey": "ember-inset-lantern-brood",
+      "cost": 4,
+      "keywords": ["Creature", "Slow"],
+      "discardable": true,
+      "onCleared": { "kind": "GainCard", "template": "Leave One" },
+      "onDiscarded": { "kind": "AddWorldCardToDeck", "template": "Ember Moth", "bTop": true },
+      "onPartialClear": { "kind": "AddWorldCardToDeck", "template": "Ember Moth", "bTop": true },
+      "onEndOfTurn": { "kind": "AddThreatToWorldDeck" }
+    },
+    "Ground Constellation": {
+      "kind": "world",
+      "name": "Ground Constellation",
+      "insetKey": "ember-inset-ground-constellation",
+      "cost": 6,
+      "keywords": ["Creature", "Slow"],
+      "discardable": true,
+      "onCleared": { "kind": "GainCard", "template": "Constellation Shears" },
+      "onDiscarded": { "kind": "ForceDestroy", "amount": 2 },
+      "onPartialClear": { "kind": "AddWorldCardToDeck", "template": "Ember Moth", "bTop": true },
+      "onEndOfTurn": {
+        "kind": "Sequence",
+        "steps": [
+          {
+            "kind": "DamageScaled",
+            "base": 0,
+            "per": { "kind": "KeywordInHand", "keyword": "Creature" },
+            "amount": 1
+          },
+          { "kind": "AddThreatToWorldDeck" }
+        ]
+      }
+    }
+  },
+  "deckComposition": {
+    "acts": [
+      {
+        "cards": [
+          { "templateId": "Cracked Hearth-Star", "count": 3 },
+          { "templateId": "Falling Fruit", "count": 3 },
+          { "templateId": "Hatchery Cellar", "count": 2 }
+        ]
+      },
+      {
+        "cards": [
+          { "templateId": "Rooted Meteor", "count": 3 },
+          { "templateId": "The Orchard Counts Wrong", "count": 2 },
+          { "templateId": "Ember Moth", "count": 2 },
+          { "templateId": "Hatchery Cellar", "count": 1 }
+        ]
+      },
+      {
+        "cards": [
+          { "templateId": "Lantern Brood", "count": 2 },
+          { "templateId": "Rooted Meteor", "count": 2 },
+          { "templateId": "Ember Moth", "count": 2 },
+          { "templateId": "Ground Constellation", "count": 2 },
+          { "templateId": "The Walker", "count": 1 }
+        ]
+      }
+    ]
+  }
+}

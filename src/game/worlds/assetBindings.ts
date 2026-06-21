@@ -32,6 +32,10 @@ import tidalRealityUrl from "../assets/themes/the-tidal-archive/the-tidal-archiv
 import tidalOverlayUrl from "../assets/themes/the-tidal-archive/intrusion-overlay.webp";
 import tidalCardfrontUrl from "../assets/themes/the-tidal-archive/the-tidal-archive-cardfront.webp";
 
+import emberRealityUrl from "../assets/themes/the-ember-orchard/the-ember-orchard-reality.webp";
+import emberOverlayUrl from "../assets/themes/the-ember-orchard/intrusion-overlay.webp";
+import emberCardfrontUrl from "../assets/themes/the-ember-orchard/the-ember-orchard-cardfront.webp";
+
 // ---------------------------------------------------------------------------
 // World inset imports
 // ---------------------------------------------------------------------------
@@ -215,6 +219,25 @@ export const worldAssetUrls: Record<string, string> = {
   "the-tidal-archive-bg": tidalRealityUrl,
   "the-tidal-archive-overlay": tidalOverlayUrl,
   "the-tidal-archive-cardfront": tidalCardfrontUrl,
+  // the-ember-orchard — base assets wired now; insets wired once art is generated.
+  "the-ember-orchard-bg": emberRealityUrl,
+  "the-ember-orchard-overlay": emberOverlayUrl,
+  "the-ember-orchard-cardfront": emberCardfrontUrl,
+  // TODO(ember art): wire the 16 Ember card insets once the .webp files exist at
+  // ../assets/themes/the-ember-orchard/insets/inset-<kebab-name>.webp.
+  // Add one import per file and one map entry per key below. Until then the
+  // worldAssetBindings test for the-ember-orchard stays red on these keys.
+  // Keys (from cards.json — 11):
+  //   "ember-inset-cracked-hearth-star", "ember-inset-dormant-star",
+  //   "ember-inset-ember-moth", "ember-inset-falling-fruit",
+  //   "ember-inset-glasshouse-lantern", "ember-inset-ground-constellation",
+  //   "ember-inset-hatchery-cellar", "ember-inset-lantern-brood",
+  //   "ember-inset-rooted-meteor", "ember-inset-take-one",
+  //   "ember-inset-the-orchard-counts-wrong"
+  // Keys (from boons/ember.json — 5):
+  //   "ember-inset-bank-the-heat", "ember-inset-constellation-shears",
+  //   "ember-inset-keep-vigil", "ember-inset-leave-one",
+  //   "ember-inset-star-pruner"
 };
 
 export interface WorldMusicAsset {
@@ -231,4 +254,5 @@ export const worldMusicManifest: Record<string, WorldMusicAsset> = {
   "fog-beach-party": { key: "music-fog-beach-party", url: fogBeachPartyMusicUrl },
   "whiteout-parking-garage": { key: "music-whiteout-parking-garage", url: fogBeachPartyMusicUrl },
   "the-tidal-archive": { key: "music-the-tidal-archive", url: fogBeachPartyMusicUrl },
+  "the-ember-orchard": { key: "music-the-ember-orchard", url: fogBeachPartyMusicUrl },
 };

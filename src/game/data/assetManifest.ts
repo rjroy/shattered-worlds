@@ -130,6 +130,10 @@ export const assetManifest: Record<string, string> = {
   "unlock/strong-barricades": unlockStrongBarricadesUrl,
   "unlock/world-fog-beach-party": unlockWorldFogBeachPartyUrl,
   "unlock/world-whiteout-parking-garage": unlockWorldWhiteoutParkingGarageUrl,
+  // TODO(ember art): add "unlock/world-the-ember-orchard" -> unlockWorldTheEmberOrchardUrl
+  // (mirroring the whiteout entry above) once
+  // ../assets/unlocks/world-the-ember-orchard.webp is generated. The Ember base,
+  // cardfront, and overlay keys are already reachable via ...worldAssetUrls below.
   "world-select-bg": worldSelectBgUrl,
   "screen-chronicle": screenChronicleUrl,
   "screen-destiny": screenDestinyUrl,
