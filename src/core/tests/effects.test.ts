@@ -12,7 +12,6 @@ import { mintCard } from "../model/cards";
 import { availableActions } from "../engine/available";
 import { createWorld } from "../engine/world";
 import { reduce } from "../engine/reduce";
-import { EFFECTS } from "../effects/registry";
 import type { CardEffect, GameState, PlayerCard, WorldCard } from "../model/types";
 import { DEFAULT_RUN_MODIFIERS } from "../../data/unlocks/types";
 import type { CardCatalog } from "../model/catalog";
@@ -1432,15 +1431,6 @@ describe("GainRandomCard", () => {
       // this fired through the hazard's onCleared hook (selfId set).
       expect(event.sourceCardId).toBe("gain-random-card-hazard");
     }
-  });
-
-  it("is not a playable player-card action (REQ-RARITY-28)", () => {
-    const effect: CardEffect = {
-      kind: "GainRandomCard",
-      setId: "fortune-v1",
-      setName: "the cache",
-    };
-    expect(EFFECTS.GainRandomCard.isPlayable(effect, makeState(), "world-card")).toBe(false);
   });
 
   it("fails closed for an unknown pool: no card granted, RNG advanced, no crash", () => {

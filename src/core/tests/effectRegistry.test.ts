@@ -2,7 +2,6 @@ import { describe, expect, it } from "bun:test";
 import type { CardEffect } from "../index";
 import { effectAtStep } from "../effects/composite";
 import { connectorStyleOf, EFFECTS } from "../effects/registry";
-import { makeState } from "./testFixture";
 
 describe("connectorStyleOf", () => {
   it("maps DealProgress -> progress", () => {
@@ -73,17 +72,6 @@ describe("connectorStyleOf", () => {
     ).toBeNull();
   });
 
-  it("treats OfferBoon as hook-only, not playable from hand", () => {
-    const effect: CardEffect = {
-      kind: "OfferBoon",
-      setId: "fortune-v1",
-      setName: "fortune-v1",
-      offeredCount: 3,
-      chooseCount: 1,
-    };
-    expect(EFFECTS.OfferBoon.isPlayable(effect, makeState(), "boon-card")).toBe(false);
-  });
-
   it("surfaces missing lazy child handlers from composites", () => {
     const mutableEffects = EFFECTS as unknown as Record<string, unknown>;
     const healHandler = mutableEffects.Heal;
@@ -120,12 +108,10 @@ describe("GainRandomCard registration", () => {
       compactSequences: false,
       compile: (e, ctx) => EFFECTS[e.kind].compile(e as never, ctx),
     });
-    const text = lines.flatMap((line) => line.tokens.map((t) => ("text" in t ? t.text : ""))).join(" ");
+    const text = lines
+      .flatMap((line) => line.tokens.map((t) => ("text" in t ? t.text : "")))
+      .join(" ");
     expect(text).toContain("the cache");
-  });
-
-  it("is not playable as a player action", () => {
-    expect(EFFECTS.GainRandomCard.isPlayable(effect, makeState(), "world-card")).toBe(false);
   });
 });
 

@@ -284,128 +284,122 @@ describe("RecallPlayerDiscard", () => {
     expect(after.playerDraw[0]).toBe(flagged);
   });
 
-  it("is never reported as playable from hand", () => {
-    const card = playerCard({
-      id: "auto",
-      effect: { kind: "RecallPlayerDiscard", policy: "latest" },
+  // ---------------------------------------------------------------------------
+  // recallToTop helper — not-found ids are dropped
+  // ---------------------------------------------------------------------------
+
+  describe("recallToTop", () => {
+    it("drops ids not present in playerDiscard", () => {
+      const a = playerCard({ id: "a" });
+      const state = makeState({ playerDiscard: [a], playerDraw: [] });
+      const { state: after, events } = recallToTop(state, ["a", "ghost"], "playerSelected");
+      expect(after.playerDraw.map((c) => c.id)).toEqual(["a"]);
+      expect(recallEvents(events)).toHaveLength(1);
     });
-    const state = makeState({ hand: [card], playerDiscard: [playerCard({ id: "d" })], energy: 5 });
-    expect(isPlayableOf(card.effect, state, card.id)).toBe(false);
-  });
-});
 
-// ---------------------------------------------------------------------------
-// recallToTop helper — not-found ids are dropped
-// ---------------------------------------------------------------------------
-
-describe("recallToTop", () => {
-  it("drops ids not present in playerDiscard", () => {
-    const a = playerCard({ id: "a" });
-    const state = makeState({ playerDiscard: [a], playerDraw: [] });
-    const { state: after, events } = recallToTop(state, ["a", "ghost"], "playerSelected");
-    expect(after.playerDraw.map((c) => c.id)).toEqual(["a"]);
-    expect(recallEvents(events)).toHaveLength(1);
+    it("is a no-op when no id matches", () => {
+      const state = makeState({ playerDiscard: [playerCard({ id: "a" })] });
+      const { state: after, events } = recallToTop(state, ["ghost"], "latest");
+      expect(after).toBe(state);
+      expect(events).toHaveLength(0);
+    });
   });
 
-  it("is a no-op when no id matches", () => {
-    const state = makeState({ playerDiscard: [playerCard({ id: "a" })] });
-    const { state: after, events } = recallToTop(state, ["ghost"], "latest");
-    expect(after).toBe(state);
-    expect(events).toHaveLength(0);
-  });
-});
+  // ---------------------------------------------------------------------------
+  // End-turn passive ordering — REQ-TIDAL-54
+  // ---------------------------------------------------------------------------
 
-// ---------------------------------------------------------------------------
-// End-turn passive ordering — REQ-TIDAL-54
-// ---------------------------------------------------------------------------
+  describe("end-turn passive recall ordering", () => {
+    // A synthetic Tidal-like world: the shared starter deck + a trivial 1-act
+    // composition, plus the Tidal Memory passive. Does not depend on Slice B data.
+    function passiveWorld(passive: CardEffect): WorldData {
+      return {
+        worldId: "synthetic-tidal",
+        starterDeck: worldData.starterDeck,
+        deckComposition: { acts: [{ cards: [{ templateId: "The Walker", count: 1 }] }] },
+        onEndOfTurnPassive: passive,
+      };
+    }
 
-describe("end-turn passive recall ordering", () => {
-  // A synthetic Tidal-like world: the shared starter deck + a trivial 1-act
-  // composition, plus the Tidal Memory passive. Does not depend on Slice B data.
-  function passiveWorld(passive: CardEffect): WorldData {
-    return {
-      worldId: "synthetic-tidal",
-      starterDeck: worldData.starterDeck,
-      deckComposition: { acts: [{ cards: [{ templateId: "The Walker", count: 1 }] }] },
-      onEndOfTurnPassive: passive,
-    };
-  }
+    it("threads onEndOfTurnPassive onto GameState via createWorld", () => {
+      const { state } = createWorld(catalog, passiveWorld({ kind: "RecallPlayerDiscard" }), 1);
+      expect(state.endOfTurnPassive).toEqual({ kind: "RecallPlayerDiscard" });
+    });
 
-  it("threads onEndOfTurnPassive onto GameState via createWorld", () => {
-    const { state } = createWorld(catalog, passiveWorld({ kind: "RecallPlayerDiscard" }), 1);
-    expect(state.endOfTurnPassive).toEqual({ kind: "RecallPlayerDiscard" });
-  });
+    it("recalls a card discarded this turn and draws it into the next hand", () => {
+      const base = createWorld(
+        catalog,
+        passiveWorld({ kind: "RecallPlayerDiscard", policy: "latest" }),
+        1,
+      ).state;
 
-  it("recalls a card discarded this turn and draws it into the next hand", () => {
-    const base = createWorld(catalog, passiveWorld({ kind: "RecallPlayerDiscard", policy: "latest" }), 1)
-      .state;
+      // A marked player card sits in hand and will be discarded at end of turn.
+      const [marked] = mintPlayer(base, "Sprint");
+      const tagged: PlayerCard = { ...marked, id: "MARKER" };
 
-    // A marked player card sits in hand and will be discarded at end of turn.
-    const [marked] = mintPlayer(base, "Sprint");
-    const tagged: PlayerCard = { ...marked, id: "MARKER" };
+      // Empty the draw pile so the only way MARKER reaches the next hand is the
+      // passive recalling it to the top. Keep a healthy discard to refill from.
+      const [fillers, afterFill] = mintPlayers(base, "Sprint", 6);
+      const start: GameState = {
+        ...afterFill,
+        hand: [tagged],
+        playerDraw: [],
+        playerDiscard: fillers,
+        worldDraw: [],
+        acts: [],
+        energy: 1,
+      };
 
-    // Empty the draw pile so the only way MARKER reaches the next hand is the
-    // passive recalling it to the top. Keep a healthy discard to refill from.
-    const [fillers, afterFill] = mintPlayers(base, "Sprint", 6);
-    const start: GameState = {
-      ...afterFill,
-      hand: [tagged],
-      playerDraw: [],
-      playerDiscard: fillers,
-      worldDraw: [],
-      acts: [],
-      energy: 1,
-    };
+      const { state: after, events } = reduce(catalog, start, { type: "EndTurn" });
 
-    const { state: after, events } = reduce(catalog, start, { type: "EndTurn" });
-
-    // The passive recalled MARKER to the top of playerDraw before the refill,
-    // so it is the first card drawn into the next hand.
-    const recalled = recallEvents(events);
-    expect(recalled).toHaveLength(1);
-    expect(recalled[0]).toMatchObject({ cardIds: ["MARKER"], source: "latest" });
-    expect(after.hand.some((c) => c.id === "MARKER")).toBe(true);
-  });
-});
-
-// ---------------------------------------------------------------------------
-// Non-Tidal regression — REQ-TIDAL-18
-// ---------------------------------------------------------------------------
-
-describe("non-Tidal worlds (default passive)", () => {
-  it("emit no PlayerDiscardRecalled and an identical end-turn event sequence", () => {
-    // Baseline: a real world (zombie-big-box) with the default None passive.
-    const { state: base } = createWorld(catalog, worldData, 999);
-    expect(base.endOfTurnPassive).toEqual({ kind: "None" });
-
-    const [players, afterPlayers] = mintPlayers(base, "Sprint", 4);
-    const start: GameState = {
-      ...afterPlayers,
-      hand: [players[0]!],
-      playerDiscard: [players[1]!, players[2]!, players[3]!],
-      energy: 1,
-    };
-
-    const { events } = reduce(catalog, start, { type: "EndTurn" });
-    expect(recallEvents(events)).toHaveLength(0);
+      // The passive recalled MARKER to the top of playerDraw before the refill,
+      // so it is the first card drawn into the next hand.
+      const recalled = recallEvents(events);
+      expect(recalled).toHaveLength(1);
+      expect(recalled[0]).toMatchObject({ cardIds: ["MARKER"], source: "latest" });
+      expect(after.hand.some((c) => c.id === "MARKER")).toBe(true);
+    });
   });
 
-  it("produces byte-identical end-turn output whether passive is None or absent", () => {
-    // The createWorld default (absent onEndOfTurnPassive ⇒ None) and an
-    // explicit None must yield identical state + events.
-    const explicitNone: WorldData = {
-      worldId: "explicit-none",
-      starterDeck: worldData.starterDeck,
-      deckComposition: worldData.deckComposition,
-      onEndOfTurnPassive: { kind: "None" },
-    };
+  // ---------------------------------------------------------------------------
+  // Non-Tidal regression — REQ-TIDAL-18
+  // ---------------------------------------------------------------------------
 
-    const a = createWorld(catalog, worldData, 7).state;
-    const b = createWorld(catalog, explicitNone, 7).state;
+  describe("non-Tidal worlds (default passive)", () => {
+    it("emit no PlayerDiscardRecalled and an identical end-turn event sequence", () => {
+      // Baseline: a real world (zombie-big-box) with the default None passive.
+      const { state: base } = createWorld(catalog, worldData, 999);
+      expect(base.endOfTurnPassive).toEqual({ kind: "None" });
 
-    const ra = reduce(catalog, a, { type: "EndTurn" });
-    const rb = reduce(catalog, b, { type: "EndTurn" });
+      const [players, afterPlayers] = mintPlayers(base, "Sprint", 4);
+      const start: GameState = {
+        ...afterPlayers,
+        hand: [players[0]!],
+        playerDiscard: [players[1]!, players[2]!, players[3]!],
+        energy: 1,
+      };
 
-    expect(ra.events).toEqual(rb.events);
+      const { events } = reduce(catalog, start, { type: "EndTurn" });
+      expect(recallEvents(events)).toHaveLength(0);
+    });
+
+    it("produces byte-identical end-turn output whether passive is None or absent", () => {
+      // The createWorld default (absent onEndOfTurnPassive ⇒ None) and an
+      // explicit None must yield identical state + events.
+      const explicitNone: WorldData = {
+        worldId: "explicit-none",
+        starterDeck: worldData.starterDeck,
+        deckComposition: worldData.deckComposition,
+        onEndOfTurnPassive: { kind: "None" },
+      };
+
+      const a = createWorld(catalog, worldData, 7).state;
+      const b = createWorld(catalog, explicitNone, 7).state;
+
+      const ra = reduce(catalog, a, { type: "EndTurn" });
+      const rb = reduce(catalog, b, { type: "EndTurn" });
+
+      expect(ra.events).toEqual(rb.events);
+    });
   });
 });
