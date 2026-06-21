@@ -54,7 +54,7 @@ export const FEAT_CATALOG: readonly FeatDefinition[] = [
       { statId: "outcome", operator: "is", value: "won" },
       { statId: "worldId", operator: "is", value: "overgrown-mall" },
     ],
-    reward: { items: [{ type: "memoryFragments", amount: 5 }] },
+    reward: { items: [{ type: "memoryFragments", amount: 10 }] },
   },
   {
     id: "first-fog-beach-party",
@@ -64,7 +64,7 @@ export const FEAT_CATALOG: readonly FeatDefinition[] = [
       { statId: "outcome", operator: "is", value: "won" },
       { statId: "worldId", operator: "is", value: "fog-beach-party" },
     ],
-    reward: { items: [{ type: "memoryFragments", amount: 5 }] },
+    reward: { items: [{ type: "memoryFragments", amount: 10 }] },
   },
   {
     id: "first-whiteout-parking-garage",
@@ -74,7 +74,37 @@ export const FEAT_CATALOG: readonly FeatDefinition[] = [
       { statId: "outcome", operator: "is", value: "won" },
       { statId: "worldId", operator: "is", value: "whiteout-parking-garage" },
     ],
-    reward: { items: [{ type: "memoryFragments", amount: 5 }] },
+    reward: { items: [{ type: "memoryFragments", amount: 10 }] },
+  },
+  {
+    id: "first-the-tidal-archive",
+    name: "First Flood",
+    description: "Win your first run of The Tidal Archive.",
+    conditions: [
+      { statId: "outcome", operator: "is", value: "won" },
+      { statId: "worldId", operator: "is", value: "the-tidal-archive" },
+    ],
+    reward: { items: [{ type: "memoryFragments", amount: 15 }] },
+  },
+  {
+    id: "first-the-ember-orcharc",
+    name: "First Harvest",
+    description: "Win your first run of The Ember Orchard.",
+    conditions: [
+      { statId: "outcome", operator: "is", value: "won" },
+      { statId: "worldId", operator: "is", value: "the-ember-orchard" },
+    ],
+    reward: { items: [{ type: "memoryFragments", amount: 15 }] },
+  },
+  {
+    id: "first-city-of-sleeping-giants",
+    name: "First Thaw",
+    description: "Win your first run of the City of Sleeping Giants.",
+    conditions: [
+      { statId: "outcome", operator: "is", value: "won" },
+      { statId: "worldId", operator: "is", value: "city-of-sleeping-giants" },
+    ],
+    reward: { items: [{ type: "memoryFragments", amount: 15 }] },
   },
   {
     id: "swift-clear",

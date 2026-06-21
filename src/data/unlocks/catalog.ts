@@ -137,7 +137,7 @@ export const UNLOCK_CATALOG: readonly UnlockDefinition[] = [
     description: "Opens The Tidal Archive in World Select.",
     cost: 10,
     destinyWeight: 0,
-    effect: { type: "worldUnlock", worldId: "the-ember-orchard" },
+    effect: { type: "worldUnlock", worldId: "the-tidal-archive" },
   },
   {
     id: "world-the-ember-orchard",
