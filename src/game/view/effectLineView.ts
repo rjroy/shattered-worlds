@@ -175,10 +175,6 @@ export function addEffectLines(
     const scale = fitRowScale(rowWidth, available);
     if (scale < 1) {
       row.setScale(scale);
-      console.warn(
-        `[effectLineView] effect line wider than ${available}px on ${opts.warnLabel ?? "card"}: ` +
-          `"${lineWarningText(line)}" (${Math.ceil(rowWidth)}px) — scaled to fit`,
-      );
     }
 
     container.add(row);

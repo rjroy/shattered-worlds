@@ -171,6 +171,8 @@ function addCardText(
 export class CardView extends Phaser.GameObjects.Container {
   readonly cardId: string;
   readonly worldId: string;
+  readonly visibleFx?: string;
+  private activeFx?: Phaser.Sound.BaseSound;
 
   private highlightRect: Phaser.GameObjects.Rectangle;
   private rarityRect: Phaser.GameObjects.Rectangle;
@@ -206,6 +208,11 @@ export class CardView extends Phaser.GameObjects.Container {
     this.cardId = card.id;
     this.worldId = theme.worldId;
     this.setDepth(TABLE_LAYOUT.cardDepth);
+
+    // TODO turn this into a real card property, this is a POC test.
+    if (card.templateId === "Door") {
+      this.visibleFx = "the-door-fx";
+    }
 
     const isModifled = card.kind === "player" && card.modified;
 
@@ -484,6 +491,16 @@ export class CardView extends Phaser.GameObjects.Container {
       // with the live Light, so a card concealed at spawn snaps to fog with no
       // flicker (the table draws once, synchronously, right after creation).
       this.setObjectsVisible(this.fogObjects, false);
+    }
+
+    if (this.visibleFx) {
+      this.activeFx = this.scene.sound.add(this.visibleFx, { volume: 0.5, loop: true });
+      this.activeFx.play();
+      this.scene.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+        if (this.activeFx) {
+          this.activeFx.stop();
+        }
+      });
     }
   }
 

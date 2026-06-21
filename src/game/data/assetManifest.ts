@@ -63,6 +63,7 @@ import worldSelectBgUrl from "../assets/world-select.webp";
 import screenChronicleUrl from "../assets/screens/shattered-chronicle.webp";
 import screenDestinyUrl from "../assets/screens/shattered-destiny.webp";
 import screenLoseUrl from "../assets/screens/shattered-lose.webp";
+import theDoorFxUrl from "../assets/audio/fx/mystical-lightning.mp3";
 import { worldAssetUrls } from "../worlds/assetBindings";
 
 export const assetManifest: Record<string, string> = {
@@ -136,14 +137,24 @@ export const assetManifest: Record<string, string> = {
   ...worldAssetUrls,
 };
 
+export const fxManifest: Record<string, string> = {
+  "the-door-fx": theDoorFxUrl,
+};
+
 export function loadAssets(scene: Phaser.Scene) {
+  scene.load.on("loaderror", (file: Phaser.Loader.File) => {
+    console.warn(`Asset failed to load: ${file.key}`);
+  });
+
   for (const [key, url] of Object.entries(assetManifest)) {
     if (url !== undefined) {
       scene.load.image(key, url);
     }
   }
 
-  scene.load.on("loaderror", (file: Phaser.Loader.File) => {
-    console.warn(`Asset failed to load: ${file.key}`);
-  });
+  for (const [key, url] of Object.entries(fxManifest)) {
+    if (url !== undefined) {
+      scene.load.audio(key, url);
+    }
+  }
 }
