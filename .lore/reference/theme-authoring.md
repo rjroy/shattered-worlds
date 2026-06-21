@@ -11,6 +11,8 @@ related: .lore/reference/visual-direction.html, .lore/reference/vision.html
 
 Use this when adding or reviewing a world theme. A theme is one `worldId` plus coordinated data, presentation, assets, and registration. The canonical model is `zombie-big-box`, but do not copy its palette verbatim.
 
+This document blends structural contracts (rules the engine enforces) with conventions, patterns, and workflow guidance. Contract-level constraints are labeled **RULE**, **N**, **D**, **C**, **V** (when describing API shape), or **W**. Conventions marked **SV** are quality heuristics — strong recommendations that keep worlds distinct but aren't enforced by code. Unlabeled pattern recipes are techniques, not requirements.
+
 ## Theme Contract
 
 | Layer | Current location | Holds |
@@ -56,7 +58,7 @@ Every world is a variation on the same three-beat arc:
 Map the world's fiction onto these roles.
 
 1. **Ambient foreshadow** - cheap world cards, often discardable. They set mood and may seed reaction cards. Example: `Strange Sounds` -> `Listen`.
-2. **Obstacle** - cheap world card that punishes neglect. Example: `Rubble` -> `SkipDrawNextTurn` on discard.
+2. **Obstacle** - cheap world card that punishes neglect. Example: `Rubble` -> `Damage 1 on end-of-turn (if not cleared).`.
 3. **Signature threat creature** - costly world card, usually `Creature` + `Slow`, with end-of-turn pressure and a discard penalty.
 4. **Tool fetch** - `Obstructed` world card that grants the weapon/tool countering the threat.
 5. **Reaction player cards** - rewards gained mid-run, tuned to the threat.
@@ -69,9 +71,15 @@ Map the world's fiction onto these roles.
 | `bird-building` | travel light | Trim hand size, recycle cheap cards, prefer efficiency over force |
 | `overgrown-mall` | prune and profit | Self-pruning `Spore`; `Bloom` scales from Spores; owns `DealProgressScaled` |
 | `fog-beach-party` | reveal and endure | Light economy; owns `GainLight`; reveals `Concealed` hazards |
-| `whiteout-parking-garage` | freeze | Heat economy; owns `GainHeat`, `FreezeCards`, `ThawCards`, and `BurnForHeat`; frozen cards stop hand usability |
+| `whiteout-parking-garage` | freeze | Heat economy; owns `GainHeat`, `FreezeCards`, `ThawCards`, frozen cards stop hand usability |
 
-**SV1:** Enforce the signature verb at authorship time. If a reward card would fit another world's verb, redesign it.
+This is a living registry — each new world adds an entry. The verb captures the exclusive mechanical identity of that world; no two worlds should feel interchangeable.
+
+**SV1:** Enforce the signature verb at authorship time. If a reward card would fit another world's verb, reconsider whether it adds something genuinely new or just duplicates mechanical territory.
+
+---
+
+The sections that follow are **authoring patterns** — techniques that have proven effective and are worth reaching for. They are not engine-enforced rules; use them when they serve the theme, ignore them when you have a better idea.
 
 ## Self-Transform Pattern
 
@@ -81,7 +89,7 @@ Use this for a world card that worsens if ignored. It spawns its successor on to
 "onEndOfTurn": {
   "kind": "Sequence",
   "steps": [
-    { "kind": "AddWorldCardToTop", "template": "<worse-card>" },
+    { "kind": "AddWorldCardToDeck", "bTop": true, "template": "<worse-card>" },
     { "kind": "DestroySelf" }
   ]
 }
@@ -91,29 +99,42 @@ The threat resurfaces next turn rather than replacing the card in hand. Canonica
 
 ## Effects, Keywords, And Card Fields
 
-**C1:** Stay inside the existing effect vocabulary unless the change is explicitly a core feature:
+**C1:** The effect vocabulary is defined by the `CardEffect` union type in [`src/core/model/types.ts`](../../src/core/model/types.ts). This list below is organized by domain for readability. Add new kinds only when a theme needs mechanics that don't map to any existing one; that requires wiring an engine handler.
 
-`DealProgress`, `Draw`, `Heal`, `ReturnWorldCards`, `DestroyCardInHand`, `DiscardThenDraw`, `AddCard`, `AddWorldCardToTop`, `AddPlayerCardToTop`, `GainCard`, `GainEnergy`, `Modal`, `Sequence`, `Damage`, `SkipDrawNextTurn`, `SurviveWorld`, `DestroySelf`, `Brace`, `DealProgressAll`, `ExileTopWorldCards`, `DealProgressScaled`, `GainLight`, `GainHeat`, `FreezeCards`, `ThawCards`, `BurnForHeat`, `None`.
+<details>
+<summary>Complete effect kinds (expand)</summary>
 
-Exclusive effects:
+**Progress / Damage:** `DealProgress`, `DealProgressScaled` _(overgrown-mall exclusive)_, `DealProgressAll`, `Damage`, `DamageScaled`
 
-| Effect | Owner | Rule |
+**Draw / Return:** `Draw`, `DiscardThenDraw`, `ReturnWorldCards`, `ReturnPlayerDiscardToTop` _(Tidal: player-selected recall to draw top)_, `RecallPlayerDiscard` _(Tidal: automatic recall from discard)_
+
+**Resource:** `Heal`, `GainEnergy`, `AddCard`, `AddPlayerCardToTop`, `AddWorldCardToDeck` (use `bTop: true` for top-of-deck placement), `AddThreatToWorldDeck`, `GainRandomCard` _(rolled from named pool)_, `GainLight` _(fog-beach-party exclusive)_, `GainHeat`
+
+**Hand / discard manipulation:** `DestroyCardInHand`, `ExileTopWorldCards`, `ForceDestroy`, `Brace`
+
+**State change / terminal:** `FreezeCards`, `ThawCards`, `OfferBoon` _(boon selection)_, `Modal` _(player choice between branches)_, `Sequence` _(ordered steps)_, `DestroySelf` _(world card self-removal in onEndOfTurn)_, `SurviveWorld`, `None`
+
+</details>
+
+Theme-owned exclusive effects — reuse across worlds requires coordination:
+
+| Effect | Owner | Note |
 | --- | --- | --- |
-| `DealProgressScaled` | `overgrown-mall` | No other world may use it without a new design decision |
-| `GainLight` | `fog-beach-party` | No other world may use it without a new design decision |
-| `GainHeat`, `FreezeCards`, `ThawCards`, `BurnForHeat` | `whiteout-parking-garage` | No other world may use them without a new design decision |
+| `DealProgressScaled` | `overgrown-mall` | Exclusive now; others may use it with design review |
+| `GainLight` | `fog-beach-party` | The only way to lift `Concealed:N` depth — tied to Light resource |
+| `GainHeat`, `FreezeCards`, `ThawCards` | `whiteout-parking-garage` | Heat/freeze/thaw economy suite
 
 **C1a:** `DestroySelf` removes the firing world card from hand. It is only meaningful in `onEndOfTurn`, where the engine has a `selfId`.
 
-**C2:** Valid keywords are only `Obstructed`, `Creature`, `Slow`, `Spore`, and `Concealed`. Any other string in a `keywords` array is a bug unless the core keyword type changed.
+**C2:** The current keyword vocabulary is `Obstructed`, `Creature`, `Slow`, `Spore`, and `Concealed`. These cover the engine's supported keyword semantics today. Introducing a new keyword is a valid design decision when a theme needs a semantic category that doesn't map to any existing one — but it requires wiring an engine handler.
 
-**C2a:** Keywords are authored as strings in `keywords`: `"Name"` or `"Name:N"`. A bare keyword has no value; a numeric keyword parses to `{ name, value }`. Only `Concealed` currently uses a value, where the value is the Light depth. `Concealed` is exclusive to `fog-beach-party`.
+**C2a:** Keywords are authored as strings in `keywords`: `"Name"` or `"Name:N"`. A bare keyword has no value; a numeric keyword parses to `{ name, value }`. Currently only `Concealed` uses a value (Light depth); future keywords can adopt other structures with engine support.
 
 **C3:** Every world card defines `onDiscarded`, `onCleared`, and `onEndOfTurn`; use `{ "kind": "None" }` when a hook does nothing. Player cards define `effect`.
 
 **C4:** Player cards may set `exhaust: true` to destroy themselves after play instead of going to discard. Default is false.
 
-**C4a:** Player and world cards may set `canExile: false`. Default is true. `The Walker` and `Door` are canonical false cases because meta-progression exile must not permanently remove narrative-critical cards.
+**C4a:** Player and world cards may set `canExile: false`. The default is true. `The Walker` and `Door` are canonical false cases because meta-progression exile must not permanently remove narrative-critical cards.
 
 ## Visual Identity
 
@@ -131,11 +152,11 @@ Optional but common:
 - `doorTint`
 - `worldCardfrontKey`
 
-**V1:** Each world needs a distinct color identity: intrusion hue, frame family, backdrop, and cardfront should read differently at a glance.
+**V1:** Each world should have a distinct color identity: intrusion hue, frame family, backdrop, and cardfront ought to read differently at a glance. This is an aspirational quality bar — worlds with overlapping palettes feel repetitive but won't break.
 
 **V2:** Semantic color roles stay stable across themes. Danger/destruction reads warm; return/retreat reads cool; progress/ring/target accents should relate.
 
-**V3:** `intrusionHue` is the theme keynote and usually matches `doorGlowTint`. Pick it first.
+**Guidance:** `intrusionHue` is the theme keynote and usually matches `doorGlowTint`. Picking it first tends to produce coherent visual results, though working from palette or frame backward also works.
 
 **Known debt:** `zombie-big-box` is still too close to `starter` visually. Do not treat its reused green palette as the standard.
 
@@ -165,12 +186,14 @@ The derived manifests (`worldManifest`, `themeManifest`, display/help/light mani
 
 ## Author Checklist
 
+Use this as rough orientation, not a prescribed pipeline. Some authors design visuals first and retro-fit cards; others iterate simultaneously on assets and mechanics. The critical invariant is that every item below resolves before the world ships:
+
 1. Pick the kebab-case `worldId`.
 2. Write the three-beat fiction: ordinary place -> Walker + catastrophe -> Door.
 3. Assign the exclusive signature player verb.
-4. Fill the card recipe with themed names, flavor, existing effects, and valid keywords.
+4. Fill the card recipe with themed names, flavor, existing effects, and valid keywords (or new ones with engine support).
 5. Lay out three acts whose size curve expresses the threat; end act 3 with one `The Walker`.
-6. Pick `intrusionHue`; derive palette, frame, backdrop, and cardfront.
+6. Resolve the palette — `intrusionHue`, frame, backdrop, cardfront.
 7. Add assets and asset bindings.
 8. Register the world bundle in `worldDataRegistry`.
 9. Verify `selectTheme(worldId)` returns the theme, `buildWorld(worldId)` assembles, no duplicate template ids exist, asset bindings resolve, and tests pass.
