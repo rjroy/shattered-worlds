@@ -131,7 +131,8 @@ function resolveAutoRecall(
 
     case "panicFirst": {
       const panic = candidates.find((c) => c.templateId === "Panic");
-      const ordered = panic !== undefined ? [panic, ...candidates.filter((c) => c !== panic)] : candidates;
+      const ordered =
+        panic !== undefined ? [panic, ...candidates.filter((c) => c !== panic)] : candidates;
       return { ids: ordered.slice(0, count).map((c) => c.id), rng: state.rng };
     }
 
@@ -171,7 +172,9 @@ export class ReturnPlayerDiscardToTopHandler extends EffectHandler<ReturnPlayerD
   }
 
   override compile(effect: ReturnPlayerDiscardToTopEffect, _ctx: CompileContext): EffectLine[] {
-    return [main([icon("return"), value(rangeText(effect.min, effect.max), "reward"), text("to top")])];
+    return [
+      main([icon("recall"), value(rangeText(effect.min, effect.max), "reward"), text("to top")]),
+    ];
   }
 
   override structuralSpec(effect: ReturnPlayerDiscardToTopEffect): TargetSpec {
@@ -226,7 +229,7 @@ export class RecallPlayerDiscardHandler extends EffectHandler<RecallPlayerDiscar
   override compile(effect: RecallPlayerDiscardEffect, _ctx: CompileContext): EffectLine[] {
     const policy = effect.policy ?? "latest";
     return [
-      main([icon("return"), value(`${effect.count ?? 1}`, "penalty"), text("from discard")]),
+      main([icon("recall"), value(`${effect.count ?? 1}`, "penalty"), text("from discard")]),
       rider([text(policyLabel(policy))]),
     ];
   }

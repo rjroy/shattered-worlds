@@ -34,6 +34,7 @@ export type IconId =
   | "destroy"
   | "exile"
   | "return"
+  | "recall"
   | "addCard"
   | "randomCard"
   | "brace"
