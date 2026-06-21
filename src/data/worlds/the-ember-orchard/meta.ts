@@ -2,9 +2,9 @@ import type { WorldDisplayData, WorldHelpData } from "../types";
 
 export const THE_EMBER_ORCHARD_DISPLAY: WorldDisplayData = {
   name: "The Ember Orchard",
-  tagline: "A warm orchard that stored too much summer. Now the harvest hatches back.",
+  tagline: "A mystical orchard that stores summer heat in star-fruit.",
   story:
-    "The orchard was generous before the Walker came: rows of star-fruit heavy with stored warmth, a cellar full of banked heat against the cold months. Then the Walker crossed the furrows and the orchard began to count itself wrong. The warmth you take now is real, but every dormant star you pocket is an egg waiting in the dark, and the cellar below is already hatching what the summer kept down. The Door glows somewhere past the last row, the color of something cooling that should have stayed hot.",
+    "Rows of star-fruit stored warmth until the Walker came, making the orchard count itself wrong. The heat is real, but every dormant star is an egg hatching in the dark below.",
   difficulty: 4,
   backgroundKey: "the-ember-orchard-bg",
 };

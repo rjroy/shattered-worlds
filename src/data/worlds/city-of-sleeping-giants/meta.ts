@@ -2,10 +2,9 @@ import type { WorldDisplayData, WorldHelpData } from "../types";
 
 export const CITY_OF_SLEEPING_GIANTS_DISPLAY: WorldDisplayData = {
   name: "City of Sleeping Giants",
-  tagline:
-    "A violet metropolis raised across the bodies of sleeping giants. Now the giants are starting to remember.",
+  tagline: "A metropolis raised across the bodies of sleeping giants.",
   story:
-    "The city was built clever: vein-roads and bone anchors threaded between vast sleeping bodies, a violet skyline laced with cyan transit and emerald wards that kept the giants under. It was beautiful while it slept. Then the Walker crossed the districts and the bodies began to remember the route. A tremor you ignore returns as a fingerquake; a district you exploit is recalled into the body at a larger scale. The same movement comes back, heavier each time, until the giant turns fully in its sleep. The Door waits somewhere past the last ward, if the city is still standing when you reach it.",
+    "Clever vein-roads and bone anchors kept the sleeping giants under. Then the Walker crossed, and they began to remember. Ignored tremors return as fingerquakes; exploited districts are recalled at a larger scale. The movement returns heavier each time until the giant turns fully. The Door waits past the last ward, if the city remains standing.",
   difficulty: 5,
   backgroundKey: "city-of-sleeping-giants-bg",
 };
