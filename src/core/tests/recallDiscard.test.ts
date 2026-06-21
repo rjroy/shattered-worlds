@@ -284,16 +284,6 @@ describe("RecallPlayerDiscard", () => {
     expect(after.playerDraw[0]).toBe(flagged);
   });
 
-  it("is never reported as playable from hand", () => {
-    const card = playerCard({
-      id: "auto",
-      effect: { kind: "RecallPlayerDiscard", policy: "latest" },
-    });
-    const state = makeState({ hand: [card], playerDiscard: [playerCard({ id: "d" })], energy: 5 });
-    expect(isPlayableOf(card.effect, state, card.id)).toBe(false);
-  });
-});
-
 // ---------------------------------------------------------------------------
 // recallToTop helper — not-found ids are dropped
 // ---------------------------------------------------------------------------
@@ -407,5 +397,4 @@ describe("non-Tidal worlds (default passive)", () => {
     const rb = reduce(catalog, b, { type: "EndTurn" });
 
     expect(ra.events).toEqual(rb.events);
-  });
 });

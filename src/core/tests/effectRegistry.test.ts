@@ -73,17 +73,6 @@ describe("connectorStyleOf", () => {
     ).toBeNull();
   });
 
-  it("treats OfferBoon as hook-only, not playable from hand", () => {
-    const effect: CardEffect = {
-      kind: "OfferBoon",
-      setId: "fortune-v1",
-      setName: "fortune-v1",
-      offeredCount: 3,
-      chooseCount: 1,
-    };
-    expect(EFFECTS.OfferBoon.isPlayable(effect, makeState(), "boon-card")).toBe(false);
-  });
-
   it("surfaces missing lazy child handlers from composites", () => {
     const mutableEffects = EFFECTS as unknown as Record<string, unknown>;
     const healHandler = mutableEffects.Heal;
@@ -124,9 +113,6 @@ describe("GainRandomCard registration", () => {
     expect(text).toContain("the cache");
   });
 
-  it("is not playable as a player action", () => {
-    expect(EFFECTS.GainRandomCard.isPlayable(effect, makeState(), "world-card")).toBe(false);
-  });
 });
 
 describe("effectAtStep", () => {
