@@ -30,6 +30,8 @@ export const LOOT_POOLS = {
   // they need no paired RawCardSource since the world source is already
   // merged into the catalog by worldManifest.ts.
   "fog-cooler-loot-v1": ["Barricade", "Half-Dead Spotlight", "Cooler Snacks", "Loaded Shotgun"],
+  "bonfire-loot-v1": ["Flashlight", "Flare Gun", "Bonfire", "Searchlight"],
+  "garden-center-loot-v1": ["Pruning Shears", "Machete", "Weed Killer", "Bloom"],
 } as const satisfies Record<string, readonly CardTemplateId[]>;
 
 /**

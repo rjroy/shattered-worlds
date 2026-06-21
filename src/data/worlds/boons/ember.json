@@ -1,0 +1,59 @@
+{
+  "worldId": "ember-boons",
+  "cardTemplates": {
+    "Leave One": {
+      "kind": "player",
+      "name": "Leave One",
+      "insetKey": "ember-inset-leave-one",
+      "exhaust": true,
+      "effect": {
+        "kind": "Sequence",
+        "steps": [
+          { "kind": "ExileTopWorldCards", "amount": 1 },
+          { "kind": "Brace", "amount": 1 }
+        ]
+      }
+    },
+    "Star-Pruner": {
+      "kind": "player",
+      "name": "Star-Pruner",
+      "insetKey": "ember-inset-star-pruner",
+      "effect": {
+        "kind": "DealProgress",
+        "base": 2,
+        "bonus": { "tag": "Obstructed", "amount": 2 }
+      }
+    },
+    "Constellation Shears": {
+      "kind": "player",
+      "name": "Constellation Shears",
+      "insetKey": "ember-inset-constellation-shears",
+      "exhaust": true,
+      "effect": {
+        "kind": "DealProgressAll",
+        "base": 1,
+        "bonus": { "tag": "Creature", "amount": 1 }
+      }
+    },
+    "Keep Vigil": {
+      "kind": "player",
+      "name": "Keep Vigil",
+      "insetKey": "ember-inset-keep-vigil",
+      "exhaust": true,
+      "effect": {
+        "kind": "Sequence",
+        "steps": [
+          { "kind": "Draw", "player": 1 },
+          { "kind": "Brace", "amount": 1 }
+        ]
+      }
+    },
+    "Bank the Heat": {
+      "kind": "player",
+      "name": "Bank the Heat",
+      "insetKey": "ember-inset-bank-the-heat",
+      "exhaust": true,
+      "effect": { "kind": "GainEnergy", "amount": 2 }
+    }
+  }
+}

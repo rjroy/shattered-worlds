@@ -28,6 +28,18 @@ import whiteoutRealityUrl from "../assets/themes/whiteout-parking-garage/whiteou
 import whiteoutOverlayUrl from "../assets/themes/whiteout-parking-garage/intrusion-overlay.webp";
 import whiteoutCardfrontUrl from "../assets/themes/whiteout-parking-garage/whiteout-parking-garage-cardfront.webp";
 
+import tidalRealityUrl from "../assets/themes/the-tidal-archive/the-tidal-archive-reality.webp";
+import tidalOverlayUrl from "../assets/themes/the-tidal-archive/intrusion-overlay.webp";
+import tidalCardfrontUrl from "../assets/themes/the-tidal-archive/the-tidal-archive-cardfront.webp";
+
+import emberRealityUrl from "../assets/themes/the-ember-orchard/the-ember-orchard-reality.webp";
+import emberOverlayUrl from "../assets/themes/the-ember-orchard/intrusion-overlay.webp";
+import emberCardfrontUrl from "../assets/themes/the-ember-orchard/the-ember-orchard-cardfront.webp";
+
+import giantsRealityUrl from "../assets/themes/city-of-sleeping-giants/city-of-sleeping-giants-reality.webp";
+import giantsOverlayUrl from "../assets/themes/city-of-sleeping-giants/intrusion-overlay.webp";
+import giantsCardfrontUrl from "../assets/themes/city-of-sleeping-giants/city-of-sleeping-giants-cardfront.webp";
+
 // ---------------------------------------------------------------------------
 // World inset imports
 // ---------------------------------------------------------------------------
@@ -102,6 +114,51 @@ import zombieInsetShotgunUrl from "../assets/themes/zombie-big-box/insets/inset-
 import zombieInsetStrangeSoundsUrl from "../assets/themes/zombie-big-box/insets/inset-strange-sounds.webp";
 import zombieInsetZombieUrl from "../assets/themes/zombie-big-box/insets/inset-zombie.webp";
 import zombieInsetListenUrl from "../assets/themes/zombie-big-box/insets/inset-listen.webp";
+import zombieInsetPlanUrl from "../assets/themes/zombie-big-box/insets/inset-plan.webp";
+
+import tidalInsetWanderingStacksUrl from "../assets/themes/the-tidal-archive/insets/inset-wandering-stacks.webp";
+import tidalInsetDrownedIndexUrl from "../assets/themes/the-tidal-archive/insets/inset-drowned-index.webp";
+import tidalInsetMisfiledCenturyUrl from "../assets/themes/the-tidal-archive/insets/inset-misfiled-century.webp";
+import tidalInsetBridgeToYesterdayUrl from "../assets/themes/the-tidal-archive/insets/inset-bridge-to-yesterday.webp";
+import tidalInsetBorrowedCatastropheUrl from "../assets/themes/the-tidal-archive/insets/inset-borrowed-catastrophe.webp";
+import tidalInsetChainedBooksRisingUrl from "../assets/themes/the-tidal-archive/insets/inset-chained-books-rising.webp";
+import tidalInsetTheSameFootprintUrl from "../assets/themes/the-tidal-archive/insets/inset-the-same-footprint.webp";
+import tidalInsetMarkTheShelfUrl from "../assets/themes/the-tidal-archive/insets/inset-mark-the-shelf.webp";
+import tidalInsetCrossReferenceUrl from "../assets/themes/the-tidal-archive/insets/inset-cross-reference.webp";
+import tidalInsetWaterproofNotesUrl from "../assets/themes/the-tidal-archive/insets/inset-waterproof-notes.webp";
+import tidalInsetAnchorTheMemoryUrl from "../assets/themes/the-tidal-archive/insets/inset-anchor-the-memory.webp";
+import tidalInsetShelfMapUrl from "../assets/themes/the-tidal-archive/insets/inset-shelf-map.webp";
+
+import emberInsetCrackedHearthStarUrl from "../assets/themes/the-ember-orchard/insets/inset-cracked-hearth-star.webp";
+import emberInsetDormantStarUrl from "../assets/themes/the-ember-orchard/insets/inset-dormant-star.webp";
+import emberInsetEmberMothUrl from "../assets/themes/the-ember-orchard/insets/inset-ember-moth.webp";
+import emberInsetFallingFruitUrl from "../assets/themes/the-ember-orchard/insets/inset-falling-fruit.webp";
+import emberInsetGlasshouseLanternUrl from "../assets/themes/the-ember-orchard/insets/inset-glasshouse-lantern.webp";
+import emberInsetGroundConstellationUrl from "../assets/themes/the-ember-orchard/insets/inset-ground-constellation.webp";
+import emberInsetHatcheryCellarUrl from "../assets/themes/the-ember-orchard/insets/inset-hatchery-cellar.webp";
+import emberInsetLanternBroodUrl from "../assets/themes/the-ember-orchard/insets/inset-lantern-brood.webp";
+import emberInsetRootedMeteorUrl from "../assets/themes/the-ember-orchard/insets/inset-rooted-meteor.webp";
+import emberInsetTakeOneUrl from "../assets/themes/the-ember-orchard/insets/inset-take-one.webp";
+import emberInsetTheOrchardCountsWrongUrl from "../assets/themes/the-ember-orchard/insets/inset-the-orchard-counts-wrong.webp";
+import emberInsetBankTheHeatUrl from "../assets/themes/the-ember-orchard/insets/inset-bank-the-heat.webp";
+import emberInsetConstellationShearsUrl from "../assets/themes/the-ember-orchard/insets/inset-constellation-shears.webp";
+import emberInsetKeepVigilUrl from "../assets/themes/the-ember-orchard/insets/inset-keep-vigil.webp";
+import emberInsetLeaveOneUrl from "../assets/themes/the-ember-orchard/insets/inset-leave-one.webp";
+import emberInsetStarPrunerUrl from "../assets/themes/the-ember-orchard/insets/inset-star-pruner.webp";
+
+import giantsInsetMinorTremorUrl from "../assets/themes/city-of-sleeping-giants/insets/inset-minor-tremor.webp";
+import giantsInsetRelocationOrderUrl from "../assets/themes/city-of-sleeping-giants/insets/inset-relocation-order.webp";
+import giantsInsetFingerquakeWardUrl from "../assets/themes/city-of-sleeping-giants/insets/inset-fingerquake-ward.webp";
+import giantsInsetSurveyorsMarkAPulseUrl from "../assets/themes/city-of-sleeping-giants/insets/inset-surveyors-mark-a-pulse.webp";
+import giantsInsetVeinRoadSurgeUrl from "../assets/themes/city-of-sleeping-giants/insets/inset-vein-road-surge.webp";
+import giantsInsetBoneAnchorFailureUrl from "../assets/themes/city-of-sleeping-giants/insets/inset-bone-anchor-failure.webp";
+import giantsInsetDistrictRecallUrl from "../assets/themes/city-of-sleeping-giants/insets/inset-district-recall.webp";
+import giantsInsetTheGiantTurnsInSleepUrl from "../assets/themes/city-of-sleeping-giants/insets/inset-the-giant-turns-in-sleep.webp";
+import giantsInsetFollowTheVeinUrl from "../assets/themes/city-of-sleeping-giants/insets/inset-follow-the-vein.webp";
+import giantsInsetQuietSurveyUrl from "../assets/themes/city-of-sleeping-giants/insets/inset-quiet-survey.webp";
+import giantsInsetBraceTheWardUrl from "../assets/themes/city-of-sleeping-giants/insets/inset-brace-the-ward.webp";
+import giantsInsetBonePinUrl from "../assets/themes/city-of-sleeping-giants/insets/inset-bone-pin.webp";
+import giantsInsetContourMapUrl from "../assets/themes/city-of-sleeping-giants/insets/inset-contour-map.webp";
 
 // ---------------------------------------------------------------------------
 // World music imports
@@ -133,6 +190,7 @@ export const worldAssetUrls: Record<string, string> = {
   "zombie-inset-shelf-sweep": zombieInsetShelfSweepUrl,
   "zombie-inset-shotgun": zombieInsetShotgunUrl,
   "zombie-inset-listen": zombieInsetListenUrl,
+  "zombie-inset-plan": zombieInsetPlanUrl,
   "zombie-inset-strange-sounds": zombieInsetStrangeSoundsUrl,
   "zombie-inset-zombie": zombieInsetZombieUrl,
   // bird-building
@@ -208,6 +266,58 @@ export const worldAssetUrls: Record<string, string> = {
   "whiteout-inset-ice-locked-door": whiteoutInsetIceLockedDoorUrl,
   "whiteout-inset-plow-buried-in-snow": whiteoutInsetPlowBuriedInSnowUrl,
   "whiteout-inset-the-garage-freezes-shut": whiteoutInsetTheGarageFreezesShutUrl,
+  "the-tidal-archive-bg": tidalRealityUrl,
+  "the-tidal-archive-overlay": tidalOverlayUrl,
+  "the-tidal-archive-cardfront": tidalCardfrontUrl,
+  "tidal-inset-wandering-stacks": tidalInsetWanderingStacksUrl,
+  "tidal-inset-drowned-index": tidalInsetDrownedIndexUrl,
+  "tidal-inset-misfiled-century": tidalInsetMisfiledCenturyUrl,
+  "tidal-inset-bridge-to-yesterday": tidalInsetBridgeToYesterdayUrl,
+  "tidal-inset-borrowed-catastrophe": tidalInsetBorrowedCatastropheUrl,
+  "tidal-inset-chained-books-rising": tidalInsetChainedBooksRisingUrl,
+  "tidal-inset-the-same-footprint": tidalInsetTheSameFootprintUrl,
+  "tidal-inset-mark-the-shelf": tidalInsetMarkTheShelfUrl,
+  "tidal-inset-cross-reference": tidalInsetCrossReferenceUrl,
+  "tidal-inset-waterproof-notes": tidalInsetWaterproofNotesUrl,
+  "tidal-inset-anchor-the-memory": tidalInsetAnchorTheMemoryUrl,
+  "tidal-inset-shelf-map": tidalInsetShelfMapUrl,
+  // the-ember-orchard
+  "the-ember-orchard-bg": emberRealityUrl,
+  "the-ember-orchard-overlay": emberOverlayUrl,
+  "the-ember-orchard-cardfront": emberCardfrontUrl,
+  "ember-inset-cracked-hearth-star": emberInsetCrackedHearthStarUrl,
+  "ember-inset-dormant-star": emberInsetDormantStarUrl,
+  "ember-inset-ember-moth": emberInsetEmberMothUrl,
+  "ember-inset-falling-fruit": emberInsetFallingFruitUrl,
+  "ember-inset-glasshouse-lantern": emberInsetGlasshouseLanternUrl,
+  "ember-inset-ground-constellation": emberInsetGroundConstellationUrl,
+  "ember-inset-hatchery-cellar": emberInsetHatcheryCellarUrl,
+  "ember-inset-lantern-brood": emberInsetLanternBroodUrl,
+  "ember-inset-rooted-meteor": emberInsetRootedMeteorUrl,
+  "ember-inset-take-one": emberInsetTakeOneUrl,
+  "ember-inset-the-orchard-counts-wrong": emberInsetTheOrchardCountsWrongUrl,
+  "ember-inset-bank-the-heat": emberInsetBankTheHeatUrl,
+  "ember-inset-constellation-shears": emberInsetConstellationShearsUrl,
+  "ember-inset-keep-vigil": emberInsetKeepVigilUrl,
+  "ember-inset-leave-one": emberInsetLeaveOneUrl,
+  "ember-inset-star-pruner": emberInsetStarPrunerUrl,
+  // city-of-sleeping-giants
+  "city-of-sleeping-giants-bg": giantsRealityUrl,
+  "city-of-sleeping-giants-overlay": giantsOverlayUrl,
+  "city-of-sleeping-giants-cardfront": giantsCardfrontUrl,
+  "giants-inset-minor-tremor": giantsInsetMinorTremorUrl,
+  "giants-inset-relocation-order": giantsInsetRelocationOrderUrl,
+  "giants-inset-fingerquake-ward": giantsInsetFingerquakeWardUrl,
+  "giants-inset-surveyors-mark-a-pulse": giantsInsetSurveyorsMarkAPulseUrl,
+  "giants-inset-vein-road-surge": giantsInsetVeinRoadSurgeUrl,
+  "giants-inset-bone-anchor-failure": giantsInsetBoneAnchorFailureUrl,
+  "giants-inset-district-recall": giantsInsetDistrictRecallUrl,
+  "giants-inset-the-giant-turns-in-sleep": giantsInsetTheGiantTurnsInSleepUrl,
+  "giants-inset-follow-the-vein": giantsInsetFollowTheVeinUrl,
+  "giants-inset-quiet-survey": giantsInsetQuietSurveyUrl,
+  "giants-inset-brace-the-ward": giantsInsetBraceTheWardUrl,
+  "giants-inset-bone-pin": giantsInsetBonePinUrl,
+  "giants-inset-contour-map": giantsInsetContourMapUrl,
 };
 
 export interface WorldMusicAsset {
@@ -223,4 +333,10 @@ export const worldMusicManifest: Record<string, WorldMusicAsset> = {
   "overgrown-mall": { key: "music-overgrown-mall", url: overgrownMallMusicUrl },
   "fog-beach-party": { key: "music-fog-beach-party", url: fogBeachPartyMusicUrl },
   "whiteout-parking-garage": { key: "music-whiteout-parking-garage", url: fogBeachPartyMusicUrl },
+  "the-tidal-archive": { key: "music-the-tidal-archive", url: fogBeachPartyMusicUrl },
+  "the-ember-orchard": { key: "music-the-ember-orchard", url: fogBeachPartyMusicUrl },
+  "city-of-sleeping-giants": {
+    key: "music-city-of-sleeping-giants",
+    url: fogBeachPartyMusicUrl,
+  },
 };

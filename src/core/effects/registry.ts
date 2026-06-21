@@ -21,6 +21,7 @@ import {
 } from "./gainCard";
 import { FreezeCardsHandler, GainHeatHandler, ThawCardsHandler } from "./heat";
 import { NoneHandler } from "./none";
+import { RecallPlayerDiscardHandler, ReturnPlayerDiscardToTopHandler } from "./recallDiscard";
 import { BraceHandler, GainEnergyHandler, GainLightHandler, HealHandler } from "./resources";
 import {
   DestroyCardInHandHandler,
@@ -55,6 +56,8 @@ export const EFFECTS: {
   AddWorldCardToDeck: new AddWorldCardToDeckHandler(),
   AddThreatToWorldDeck: new AddThreatToWorldDeckHandler(),
   ReturnWorldCards: new ReturnWorldCardsHandler(),
+  ReturnPlayerDiscardToTop: new ReturnPlayerDiscardToTopHandler(),
+  RecallPlayerDiscard: new RecallPlayerDiscardHandler(),
   DestroyCardInHand: new DestroyCardInHandHandler(),
   DestroySelf: new DestroySelfHandler(),
   ForceDestroy: new ForceDestroyHandler(),

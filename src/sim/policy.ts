@@ -96,6 +96,13 @@ function buildPlayAction(
       return { ...base, returnIds: chosen };
     }
 
+    case "recallTarget": {
+      const targets = legalTargets(cardId, 0);
+      const count = Math.min(pickCount(spec.min, spec.max, rng), targets.length);
+      const chosen = pickSubset(targets, count, rng);
+      return { ...base, recallIds: chosen };
+    }
+
     case "modal": {
       // Pick a random branch, weighted equally. If a branch needs targets
       // and none are available, we still build the action — the available
@@ -154,6 +161,11 @@ function buildPlayAction(
           const count = Math.min(pickCount(stepSpec.min, stepSpec.max, rng), targets.length);
           const chosen = pickSubset(targets, count, rng);
           action = { ...action, returnIds: chosen };
+        } else if (stepSpec.kind === "recallTarget") {
+          const targets = legalTargets(cardId, stepIdx);
+          const count = Math.min(pickCount(stepSpec.min, stepSpec.max, rng), targets.length);
+          const chosen = pickSubset(targets, count, rng);
+          action = { ...action, recallIds: chosen };
         } else if (stepSpec.kind === "destroyHand") {
           const targets = legalTargets(cardId, stepIdx);
           const count = Math.min(pickCount(stepSpec.min, stepSpec.max, rng), targets.length);

@@ -4,7 +4,7 @@ export const WHITEOUT_PARKING_GARAGE_DISPLAY: WorldDisplayData = {
   name: "Whiteout Parking Garage",
   tagline: "An empty concrete deck was already cold. Now the new ice age starts there.",
   story:
-    "The upper level of the garage was gray, low, salted, and impersonal before anything impossible happened. Then the Walker crossed the ramp and the blizzard arrived sideways, sealing cars into stalls and turning every tool in your hand rigid with frost. The Door opens somewhere past the exit lane, under ice thick enough to remember you.",
+    "The upper level was gray, salted, and impersonal before the impossible. The Walker crossed the ramp, bringing a sideways blizzard that sealed cars into stalls and froze every tool in your hand. The Door opens past the exit lane, under ice thick enough to remember you.",
   difficulty: 3,
   backgroundKey: "whiteout-parking-garage-bg",
 };

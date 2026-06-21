@@ -334,7 +334,7 @@ describe("fog-cooler-loot-v1 loot pool", () => {
     expect(abandonedCooler.onCleared).toEqual({
       kind: "GainRandomCard",
       setId: "fog-cooler-loot-v1",
-      setName: "the cooler",
+      setName: "Cooler Stash",
     });
 
     const { state } = createWorld(catalog, worldData, 7);
@@ -347,7 +347,7 @@ describe("fog-cooler-loot-v1 loot pool", () => {
     const grantedEvent = result.events.find((event) => event.type === "CardGained");
     expect(grantedEvent).toBeDefined();
     if (grantedEvent?.type === "CardGained") {
-      expect(grantedEvent.setName).toBe("the cooler");
+      expect(grantedEvent.setName).toBe("Cooler Stash");
       expect(grantedEvent.templateId).toBe(granted.templateId);
     }
   });

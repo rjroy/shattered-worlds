@@ -91,7 +91,20 @@ export type CardEffect =
   // Permanently removes up to `amount` exilable cards from the top of worldDraw.
   // Non-exilable cards (canExile: false) are skipped in place; stops gracefully
   // when fewer exilable cards exist than amount.
-  | { kind: "ExileTopWorldCards"; amount: number };
+  | { kind: "ExileTopWorldCards"; amount: number }
+  // Tidal: the player-selected recall. Moves chosen cards from playerDiscard to
+  // the top of playerDraw, preserving each card instance (no re-mint). The
+  // chooser supplies the ids via PlayCard.recallIds; [min,max] bounds the
+  // selection. min: 0 makes it an optional no-op.
+  | { kind: "ReturnPlayerDiscardToTop"; min: number; max: number }
+  // Tidal: the automatic recall fired by hazards and the world end-turn passive.
+  // Picks `count ?? 1` cards from playerDiscard by `policy ?? "latest"` and moves
+  // them to the top of playerDraw. Never played from hand.
+  | {
+      kind: "RecallPlayerDiscard";
+      count?: number;
+      policy?: "latest" | "random" | "lowestCost" | "highestCost" | "panicFirst";
+    };
 
 export interface PlayerCard {
   kind: "player";
@@ -150,6 +163,8 @@ export type Action =
       destroyIds?: readonly CardId[];
       thawIds?: readonly CardId[];
       discardId?: CardId;
+      // Player-selected discard ids for ReturnPlayerDiscardToTop (Tidal).
+      recallIds?: readonly CardId[];
     }
   | { type: "DiscardHazard"; cardId: CardId }
   | { type: "EndTurn" }
@@ -202,6 +217,10 @@ export interface GameState {
   // cards. Granted by the Brace effect; consumed in resolveForceDestroy.
   braceCharges: number;
   pendingBoonChoices: readonly PendingBoonChoice[];
+  // The per-world end-turn passive, threaded onto state once by createWorld
+  // (reduce() does not receive WorldData). Defaults to { kind: "None" } for
+  // every world except those that author onEndOfTurnPassive (Tidal Memory).
+  endOfTurnPassive: CardEffect;
   readonly runModifiers: RunModifiers;
   readonly turnPlayHistory: TurnPlayHistory;
   status: "playing" | "won" | "lost";
@@ -252,6 +271,10 @@ export type TargetSpec =
   | { kind: "destroyHand"; min: number; max: number; maxCost?: number }
   | { kind: "thawHand"; amount: number; heatCost: number }
   | { kind: "discardPlayer" }
+  // Tidal: selecting cards from playerDiscard for ReturnPlayerDiscardToTop.
+  // Named recallTarget (not playerDiscard) to avoid colliding with the
+  // discardPlayer spec, which means "discard a hand card" — the opposite intent.
+  | { kind: "recallTarget"; min: number; max: number }
   | { kind: "compound"; steps: readonly TargetSpec[] };
 
 export interface AvailableActions {
@@ -334,4 +357,11 @@ export type GameEvent = (
   | { type: "WorldCardsExiled"; ids: readonly CardId[]; templateIds: readonly CardTemplateId[] }
   | { type: "HealReceived"; amount: number }
   | { type: "HazardAdded"; templateId: CardTemplateId }
+  | {
+      type: "PlayerDiscardRecalled";
+      cardIds: readonly CardId[];
+      templateIds: readonly CardTemplateId[];
+      source: "latest" | "random" | "lowestCost" | "highestCost" | "panicFirst" | "playerSelected";
+      dest: "playerDrawTop";
+    }
 ) & { readonly sourceCardId?: CardId };

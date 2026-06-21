@@ -131,6 +131,8 @@ function dealProgressOf(
     case "None":
     case "Brace":
     case "ExileTopWorldCards":
+    case "ReturnPlayerDiscardToTop":
+    case "RecallPlayerDiscard":
       return null;
   }
 }

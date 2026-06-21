@@ -21,7 +21,9 @@ import effectIconDiscardUrl from "../assets/effect-icons/effect-icon-discard.png
 import effectIconDestroyUrl from "../assets/effect-icons/effect-icon-destroy.png";
 import effectIconExileUrl from "../assets/effect-icons/effect-icon-exile.png";
 import effectIconReturnUrl from "../assets/effect-icons/effect-icon-return.png";
+import effectIconRecallUrl from "../assets/effect-icons/effect-icon-recall.png";
 import effectIconAddCardUrl from "../assets/effect-icons/effect-icon-add-card.png";
+import effectIconRandomCardUrl from "../assets/effect-icons/effect-icon-random-card.png";
 import effectIconSurviveUrl from "../assets/effect-icons/effect-icon-survive.png";
 import effectIconVanishUrl from "../assets/effect-icons/effect-icon-vanish.png";
 import effectIconEachTurnUrl from "../assets/effect-icons/effect-icon-each-turn.png";
@@ -63,6 +65,7 @@ import worldSelectBgUrl from "../assets/world-select.webp";
 import screenChronicleUrl from "../assets/screens/shattered-chronicle.webp";
 import screenDestinyUrl from "../assets/screens/shattered-destiny.webp";
 import screenLoseUrl from "../assets/screens/shattered-lose.webp";
+import theDoorFxUrl from "../assets/audio/fx/mystical-lightning.mp3";
 import { worldAssetUrls } from "../worlds/assetBindings";
 
 export const assetManifest: Record<string, string> = {
@@ -91,7 +94,9 @@ export const assetManifest: Record<string, string> = {
   "effect-icon-destroy": effectIconDestroyUrl,
   "effect-icon-exile": effectIconExileUrl,
   "effect-icon-return": effectIconReturnUrl,
+  "effect-icon-recall": effectIconRecallUrl,
   "effect-icon-add-card": effectIconAddCardUrl,
+  "effect-icon-random-card": effectIconRandomCardUrl,
   "effect-icon-survive": effectIconSurviveUrl,
   "effect-icon-vanish": effectIconVanishUrl,
   "effect-icon-each-turn": effectIconEachTurnUrl,
@@ -129,6 +134,14 @@ export const assetManifest: Record<string, string> = {
   "unlock/strong-barricades": unlockStrongBarricadesUrl,
   "unlock/world-fog-beach-party": unlockWorldFogBeachPartyUrl,
   "unlock/world-whiteout-parking-garage": unlockWorldWhiteoutParkingGarageUrl,
+  // TODO(ember art): add "unlock/world-the-ember-orchard" -> unlockWorldTheEmberOrchardUrl
+  // (mirroring the whiteout entry above) once
+  // ../assets/unlocks/world-the-ember-orchard.webp is generated. The Ember base,
+  // cardfront, and overlay keys are already reachable via ...worldAssetUrls below.
+  // TODO(giants art): add "unlock/world-city-of-sleeping-giants" -> unlockWorldCityOfSleepingGiantsUrl
+  // (mirroring the whiteout entry above) once
+  // ../assets/unlocks/world-city-of-sleeping-giants.webp is generated. The City base,
+  // cardfront, and overlay keys are already reachable via ...worldAssetUrls below.
   "world-select-bg": worldSelectBgUrl,
   "screen-chronicle": screenChronicleUrl,
   "screen-destiny": screenDestinyUrl,
@@ -136,14 +149,24 @@ export const assetManifest: Record<string, string> = {
   ...worldAssetUrls,
 };
 
+export const fxManifest: Record<string, string> = {
+  "the-door-fx": theDoorFxUrl,
+};
+
 export function loadAssets(scene: Phaser.Scene) {
+  scene.load.on("loaderror", (file: Phaser.Loader.File) => {
+    console.warn(`Asset failed to load: ${file.key}`);
+  });
+
   for (const [key, url] of Object.entries(assetManifest)) {
     if (url !== undefined) {
       scene.load.image(key, url);
     }
   }
 
-  scene.load.on("loaderror", (file: Phaser.Loader.File) => {
-    console.warn(`Asset failed to load: ${file.key}`);
-  });
+  for (const [key, url] of Object.entries(fxManifest)) {
+    if (url !== undefined) {
+      scene.load.audio(key, url);
+    }
+  }
 }

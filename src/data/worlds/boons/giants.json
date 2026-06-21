@@ -1,0 +1,56 @@
+{
+  "worldId": "giants-boons",
+  "cardTemplates": {
+    "Quiet Survey": {
+      "kind": "player",
+      "name": "Quiet Survey",
+      "insetKey": "giants-inset-quiet-survey",
+      "energyCost": 1,
+      "effect": {
+        "kind": "Sequence",
+        "steps": [
+          { "kind": "ExileTopWorldCards", "amount": 1 },
+          { "kind": "Draw", "player": 1 }
+        ]
+      }
+    },
+    "Brace The Ward": {
+      "kind": "player",
+      "name": "Brace The Ward",
+      "insetKey": "giants-inset-brace-the-ward",
+      "energyCost": 1,
+      "effect": {
+        "kind": "Sequence",
+        "steps": [
+          { "kind": "DealProgress", "base": 2, "bonus": { "tag": "Slow", "amount": 2 } },
+          { "kind": "Brace", "amount": 1 }
+        ]
+      }
+    },
+    "Bone Pin": {
+      "kind": "player",
+      "name": "Bone Pin",
+      "insetKey": "giants-inset-bone-pin",
+      "energyCost": 1,
+      "effect": {
+        "kind": "Modal",
+        "branches": [
+          { "kind": "AddPlayerCardToTop", "template": "Quiet Survey" },
+          { "kind": "AddPlayerCardToTop", "template": "Brace The Ward" }
+        ]
+      }
+    },
+    "Contour Map": {
+      "kind": "player",
+      "name": "Contour Map",
+      "insetKey": "giants-inset-contour-map",
+      "energyCost": 2,
+      "exhaust": true,
+      "effect": {
+        "kind": "DealProgressAll",
+        "base": 1,
+        "bonus": { "tag": "Obstructed", "amount": 1 }
+      }
+    }
+  }
+}

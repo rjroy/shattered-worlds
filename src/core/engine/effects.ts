@@ -73,6 +73,7 @@ export function applyEffect(
     ...(play?.destroyIds !== undefined && { destroyIds: play.destroyIds }),
     ...(play?.thawIds !== undefined && { thawIds: play.thawIds }),
     ...(play?.discardId !== undefined && { discardId: play.discardId }),
+    ...(play?.recallIds !== undefined && { recallIds: play.recallIds }),
     ...(play?.choice !== undefined && { choice: play.choice }),
     ...(play?.cardId !== undefined && { sourceId: play.cardId }),
     ...(selfId !== undefined && { selfId }),

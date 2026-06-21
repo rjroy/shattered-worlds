@@ -55,6 +55,8 @@ export interface EffectContext {
   thawIds?: readonly CardId[];
   /** Player card to discard (DiscardThenDraw). */
   discardId?: CardId;
+  /** Player-selected discard cards to recall (ReturnPlayerDiscardToTop). */
+  readonly recallIds?: readonly CardId[];
   /** The player card currently being played. */
   sourceId?: CardId;
   /** Chosen branch index (Modal). */

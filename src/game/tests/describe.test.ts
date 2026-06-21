@@ -25,6 +25,7 @@ function makeState(progress: Record<string, number> = {}): GameState {
     pendingForceDestroy: 0,
     braceCharges: 0,
     pendingBoonChoices: [],
+    endOfTurnPassive: { kind: "None" },
     runModifiers: DEFAULT_RUN_MODIFIERS,
     turnPlayHistory: { cardsPlayedThisTurn: 0, byTemplateId: {} },
     status: "playing",
@@ -128,6 +129,32 @@ describe("describeEffect", () => {
     ]);
     expect(describeEffect({ kind: "ReturnWorldCards", min: 1, max: 1 })).toEqual([
       "Return 1 world card to the deck",
+    ]);
+  });
+
+  it("describes ReturnPlayerDiscardToTop as a recall to the top of the deck", () => {
+    expect(describeEffect({ kind: "ReturnPlayerDiscardToTop", min: 1, max: 1 })).toEqual([
+      "Return 1 discard to the top of your deck",
+    ]);
+    expect(describeEffect({ kind: "ReturnPlayerDiscardToTop", min: 0, max: 2 })).toEqual([
+      "Return 0–2 discards to the top of your deck",
+      "(optional)",
+    ]);
+  });
+
+  it("describes RecallPlayerDiscard with its automatic policy surfaced", () => {
+    expect(describeEffect({ kind: "RecallPlayerDiscard", policy: "latest" })).toEqual([
+      "Recall 1 discard (newest) to the top of your deck",
+    ]);
+    expect(describeEffect({ kind: "RecallPlayerDiscard", policy: "lowestCost" })).toEqual([
+      "Recall 1 discard (cheapest) to the top of your deck",
+    ]);
+    expect(describeEffect({ kind: "RecallPlayerDiscard", policy: "panicFirst" })).toEqual([
+      "Recall 1 discard (Panic first) to the top of your deck",
+    ]);
+    // Default policy is "latest" when omitted.
+    expect(describeEffect({ kind: "RecallPlayerDiscard" })).toEqual([
+      "Recall 1 discard (newest) to the top of your deck",
     ]);
   });
 

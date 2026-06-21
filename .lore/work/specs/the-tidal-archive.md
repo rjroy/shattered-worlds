@@ -1,7 +1,7 @@
 ---
 title: The Tidal Archive world
 date: 2026-06-19
-status: draft
+status: implemented
 tags: [world-design, the-tidal-archive, displacement, discard-memory, deck-control, core-effect]
 modules: [core-engine, world-data, game-view, themes]
 related: [.lore/reference/theme-authoring.md, src/game/assets/themes/the-tidal-archive/CATACLYSM.md]
@@ -15,6 +15,16 @@ The Tidal Archive is a floating turquoise-and-gold archive where memory is index
 Threat verb: **displace**. The world attacks card location: hand, discard, draw pile, world deck, and the top of each deck. The player survives by remembering where useful cards went, choosing which hazards to repeat, and controlling what the tide returns next.
 
 The signature rule is **Tidal Memory**: at the end of each turn, the Archive recalls one player discard to the top of the player deck. Unlike ordinary discard pressure, a discarded card is not gone; it has become a place the tide can revisit.
+
+## Ratified decisions (2026-06-20)
+
+Found during a cross-plan review and folded into the requirements below (trail: `.lore/work/plans/the-tidal-archive.md` § Review corrections):
+
+- **`Hidden` → `Obstructed`** everywhere. The engine has no `Hidden` keyword (`KeywordName = "Obstructed" | "Creature" | "Slow" | "Spore" | "Concealed"`). REQ-TIDAL-22/29/30/31 now read `Obstructed`.
+- **A creature snatches so `Brace` works** (REQ-TIDAL-26/34). `Anchor the Memory` grants `Brace`, which only absorbs `ForceDestroy` snatches; nothing produced one. `Chained Books Rising` now uses `ForceDestroy` instead of `Damage`. (`ForceDestroy` removes cards from hand outright, not to discard, so it does not feed Tidal Memory.)
+- **`ReturnWorldCards` is not used on world auto-hooks** (REQ-TIDAL-32). It is inert there (auto-hooks never supply the player selection it reads). `Bridge to Yesterday`'s `onCleared` is re-expressed as a top-deck recurrence. (`Waterproof Notes`' player-played `ReturnWorldCards` is unaffected.)
+- **Tool-fetch gives a boon choice, not a fixed multi-card grant** (REQ-TIDAL-30). `Drowned Index` `onCleared` runs `OfferBoon` over the reward kit instead of `Sequence[GainCard ×2]`.
+- **Vocabulary** (REQ-TIDAL-19): adds `ForceDestroy` and `OfferBoon`, both existing engine effects.
 
 ## World Contract
 
@@ -32,7 +42,7 @@ The signature rule is **Tidal Memory**: at the end of each turn, the Archive rec
 
 <div id="REQ-TIDAL-3"></div>
 
-**REQ-TIDAL-3:** The implementation must add one inset asset per Tidal card under `src/game/assets/themes/the-tidal-archive/insets/`, use a `tidal-inset-*` key namespace, and register every referenced inset key in `src/game/worlds/assetBindings.ts`.
+**REQ-TIDAL-3:** *(DEFERRED — follow-up art pass; tracked in `.lore/work/issues/the-tidal-archive-card-insets.md`.)* The implementation must add one inset asset per Tidal card under `src/game/assets/themes/the-tidal-archive/insets/`, use a `tidal-inset-*` key namespace, and register every referenced inset key in `src/game/worlds/assetBindings.ts`. Cards ship with no `insetKey` until the art lands; the base assets (reality/intrusion/cardfront/music) are wired and tests pass without insets.
 
 <div id="REQ-TIDAL-4"></div>
 
@@ -118,7 +128,7 @@ The default is `{ count: 1, policy: "latest" }`. `panicFirst` recalls `Panic` if
 
 <div id="REQ-TIDAL-19"></div>
 
-**REQ-TIDAL-19:** Tidal cards must use existing effect names where they already cover the behavior: `DiscardThenDraw`, `Draw`, `ReturnWorldCards`, `AddCard`, `AddWorldCardToDeck`, `AddThreatToWorldDeck`, `GainCard`, `Sequence`, `Modal`, `Damage`, `DestroySelf`, `Brace`, and `None`.
+**REQ-TIDAL-19:** Tidal cards must use existing effect names where they already cover the behavior: `DiscardThenDraw`, `Draw`, `ReturnWorldCards` (player-played cards only — inert on world auto-hooks), `AddCard`, `AddWorldCardToDeck`, `AddThreatToWorldDeck`, `GainCard`, `OfferBoon`, `Sequence`, `Modal`, `Damage`, `ForceDestroy`, `DestroySelf`, `Brace`, and `None`.
 
 <div id="REQ-TIDAL-20"></div>
 
@@ -130,7 +140,7 @@ The default is `{ count: 1, policy: "latest" }`. `panicFirst` recalls `Panic` if
 
 <div id="REQ-TIDAL-22"></div>
 
-**REQ-TIDAL-22:** No new keyword is required for Tidal. The world may use only valid existing keywords: `Hidden`, `Creature`, and `Slow` where appropriate. `Spore` remains Overgrown-only in data, and `Concealed` remains Fog-only in data.
+**REQ-TIDAL-22:** No new keyword is required for Tidal. The world may use only valid existing keywords: `Obstructed`, `Creature`, and `Slow` where appropriate. `Spore` remains Overgrown-only in data, and `Concealed` remains Fog-only in data.
 
 ## Reward Card Recipe
 
@@ -150,7 +160,7 @@ The following numbers are initial tuning. Costs, counts, and exact progress valu
 
 <div id="REQ-TIDAL-26"></div>
 
-**REQ-TIDAL-26:** `Anchor the Memory` must be an exhaust player reward that protects against displacement pressure using existing `Brace` until a broader protection mechanic exists. Initial effect: `Sequence` of `Brace amount 1` then `Draw player 1`; `exhaust: true`. Its copy and help text must describe it as anchoring the next snatch or forced loss, not as a universal immunity.
+**REQ-TIDAL-26:** `Anchor the Memory` must be an exhaust player reward that protects against displacement pressure using existing `Brace` until a broader protection mechanic exists. Initial effect: `Sequence` of `Brace amount 1` then `Draw player 1`; `exhaust: true`. Its copy and help text must describe it as anchoring the next snatch or forced loss, not as a universal immunity. The snatch it anchors is supplied by `Chained Books Rising`'s `ForceDestroy` (REQ-TIDAL-34); without that source `Brace` would be inert.
 
 <div id="REQ-TIDAL-27"></div>
 
@@ -164,19 +174,19 @@ The following numbers are initial tuning. Costs, counts, and exact progress valu
 
 <div id="REQ-TIDAL-29"></div>
 
-**REQ-TIDAL-29:** `Wandering Stacks` must be an act-1 ambient hazard. Initial shape: cost 2, `Hidden`, discardable, `onEndOfTurn: RecallPlayerDiscard latest`, `onCleared: None`, `onDiscarded: None`. It teaches that player discard can return.
+**REQ-TIDAL-29:** `Wandering Stacks` must be an act-1 ambient hazard. Initial shape: cost 2, `Obstructed`, discardable, `onEndOfTurn: RecallPlayerDiscard latest`, `onCleared: None`, `onDiscarded: None`. It teaches that player discard can return.
 
 <div id="REQ-TIDAL-30"></div>
 
-**REQ-TIDAL-30:** `Drowned Index` must be an act-1/2 tool-fetch hazard. Initial shape: cost 4, `Hidden`, discardable, `onCleared` grants `Mark the Shelf` and `Cross-Reference` through a `Sequence` of `GainCard`, `onEndOfTurn: None`, `onDiscarded: None`. It is the visible way the player learns the reward kit.
+**REQ-TIDAL-30:** `Drowned Index` must be an act-1/2 tool-fetch hazard. Initial shape: cost 4, `Obstructed`, discardable, `onCleared: OfferBoon { setId: "tidal-boons", offeredCount: 3, chooseCount: 1 }` (offers three of the reward kit, player keeps one), `onEndOfTurn: None`, `onDiscarded: None`. It is the visible way the player learns the reward kit. *(Ratified 2026-06-20: was `Sequence[GainCard ×2]` granting `Mark the Shelf` and `Cross-Reference`, which floods the deck across the card's copies; the boon set is a single source shared with the hazards' fixed `GainCard` grants.)*
 
 <div id="REQ-TIDAL-31"></div>
 
-**REQ-TIDAL-31:** `Misfiled Century` must be an act-2 recurrence hazard. Initial shape: cost 3, `Hidden`, discardable, `onEndOfTurn: AddThreatToWorldDeck`, `onCleared: None`, `onDiscarded: Damage 1`. It makes the top of the world deck a threat.
+**REQ-TIDAL-31:** `Misfiled Century` must be an act-2 recurrence hazard. Initial shape: cost 3, `Obstructed`, discardable, `onEndOfTurn: AddThreatToWorldDeck`, `onCleared: None`, `onDiscarded: Damage 1`. It makes the top of the world deck a threat.
 
 <div id="REQ-TIDAL-32"></div>
 
-**REQ-TIDAL-32:** `Bridge to Yesterday` must be an act-2 choice hazard. Initial shape: cost 3, discardable, `onCleared: ReturnWorldCards min 0 max 1`, `onDiscarded: Damage 2`, `onEndOfTurn: None`. Clearing it is not pure upside: the player chooses which world card to revisit.
+**REQ-TIDAL-32:** `Bridge to Yesterday` must be an act-2 choice hazard. Initial shape: cost 3, discardable, `onCleared: AddWorldCardToDeck { template: "Misfiled Century", bTop: true }`, `onDiscarded: Damage 2`, `onEndOfTurn: None`. Clearing it is not pure upside: it revisits a known recurrence hazard. *(Ratified 2026-06-20: was `onCleared: ReturnWorldCards`, which is inert on a world auto-hook — auto-hooks never supply the player selection it reads — so the original "player chooses which world card to revisit" intent could not run; re-expressed as a fixed top-deck.)*
 
 <div id="REQ-TIDAL-33"></div>
 
@@ -184,7 +194,7 @@ The following numbers are initial tuning. Costs, counts, and exact progress valu
 
 <div id="REQ-TIDAL-34"></div>
 
-**REQ-TIDAL-34:** `Chained Books Rising` must be an act-2/3 pressure hazard. Initial shape: cost 4, `Creature`, discardable, `onEndOfTurn: Sequence` of `Damage 1` and `RecallPlayerDiscard lowestCost`, `onDiscarded: RecallPlayerDiscard latest`, `onCleared: GainCard "Anchor the Memory"`.
+**REQ-TIDAL-34:** `Chained Books Rising` must be an act-2/3 pressure hazard, and as a `Creature` it snatches a card from hand rather than dealing HP damage. Initial shape: cost 4, `Creature`, discardable, `onEndOfTurn: Sequence` of `ForceDestroy 1` and `RecallPlayerDiscard lowestCost`, `onDiscarded: RecallPlayerDiscard latest`, `onCleared: GainCard "Anchor the Memory"`. *(Ratified 2026-06-20: `onEndOfTurn` `Damage 1` → `ForceDestroy 1` so the `Brace` from `Anchor the Memory` (REQ-TIDAL-26) has a snatch to absorb; matches the `bird-building` creature-snatch language.)*
 
 <div id="REQ-TIDAL-35"></div>
 
@@ -244,7 +254,7 @@ Counts are tuning values; act roles and the fixed Walker closer are not.
 
 <div id="REQ-TIDAL-46"></div>
 
-**REQ-TIDAL-46:** Card insets must make displacement legible. Hazards should show places out of order, maps pointing to wrong districts, books chained to water, and repeated footprints. Reward insets should show deliberate indexing, marked shelves, waterproof notes, and anchored memories.
+**REQ-TIDAL-46:** *(DEFERRED — follow-up art pass; tracked in `.lore/work/issues/the-tidal-archive-card-insets.md`.)* Card insets must make displacement legible. Hazards should show places out of order, maps pointing to wrong districts, books chained to water, and repeated footprints. Reward insets should show deliberate indexing, marked shelves, waterproof notes, and anchored memories. The discard chooser renders an empty inset slot until the art lands.
 
 ## Display And Help
 
@@ -290,7 +300,7 @@ Counts are tuning values; act roles and the fixed Walker closer are not.
 
 <div id="REQ-TIDAL-56"></div>
 
-**REQ-TIDAL-56:** Asset validation must verify every Tidal `insetKey`, `worldCardfrontKey`, backdrop key, display background key, and intrusion key has a matching manifest binding and loads without falling back to starter art.
+**REQ-TIDAL-56:** Asset validation must verify every Tidal `worldCardfrontKey`, backdrop key, display background key, and intrusion key has a matching manifest binding and loads without falling back to starter art. *(The `insetKey` clause is DEFERRED with REQ-TIDAL-3 — no `insetKey` is referenced yet, so `referencedAssetKeys(bundle)` returns only the base keys and validation passes without inset bindings; tracked in `.lore/work/issues/the-tidal-archive-card-insets.md`.)*
 
 <div id="REQ-TIDAL-57"></div>
 
@@ -308,5 +318,5 @@ An AI implementing this spec should verify completion by running or observing:
 2. A targeted core test run for recall, end-turn ordering, effect descriptions, and selection legality passes.
 3. A targeted world-data test confirms `buildWorld("the-tidal-archive")`, registry inclusion, unique template ids, valid hooks, valid keywords, and Walker closer.
 4. Asset validation confirms all `tidal-inset-*` keys and base Tidal image keys are registered and preloadable.
-5. A local game smoke test can select or directly start `the-tidal-archive`, clear `Drowned Index`, play `Mark the Shelf` from a non-empty discard pile, and observe the chosen card appear on top of the player deck.
+5. A local game smoke test can select or directly start `the-tidal-archive`, clear `Drowned Index`, choose `Mark the Shelf` from the boon offer, play it from a non-empty discard pile, and observe the chosen card appear on top of the player deck.
 6. A seeded replay test proves the same Tidal Memory and hazard recall events produce the same final state across two runs.

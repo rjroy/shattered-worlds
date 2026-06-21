@@ -4,7 +4,7 @@
     "React to Noise": {
       "kind": "player",
       "name": "React to Noise",
-      "rarity": "uncommon",
+      "rarity": "common",
       "insetKey": "zombie-inset-listen",
       "energyCost": 0,
       "exhaust": true,
@@ -17,10 +17,25 @@
         }
       }
     },
+    "player-scream": {
+      "kind": "player",
+      "name": "Scream",
+      "rarity": "common",
+      "insetKey": "zombie-inset-screams",
+      "energyCost": 0,
+      "exhaust": true,
+      "effect": {
+        "kind": "Sequence",
+        "steps": [
+          { "kind": "ReturnWorldCards", "min": 0, "max": 8 },
+          { "kind": "Draw", "player": 1, "world": 1 }
+        ]
+      }
+    },
     "Listen": {
       "kind": "player",
       "name": "Listen",
-      "rarity": "common",
+      "rarity": "uncommon",
       "insetKey": "zombie-inset-listen",
       "energyCost": 1,
       "effect": {
@@ -30,6 +45,20 @@
           "tag": "Obstructed",
           "amount": 2
         }
+      }
+    },
+    "Plan": {
+      "kind": "player",
+      "name": "Plan",
+      "insetKey": "zombie-inset-plan",
+      "rarity": "rare",
+      "exhaust": true,
+      "effect": {
+        "kind": "Sequence",
+        "steps": [
+          { "kind": "Draw", "player": 3, "world": 1 },
+          { "kind": "DealProgressAll", "base": 2 }
+        ]
       }
     },
     "Fast Sweep": {

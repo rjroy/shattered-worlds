@@ -580,3 +580,57 @@ describe("togglePick", () => {
     expect(togglePick(idle, "w1")).toEqual(idle);
   });
 });
+
+// ---------------------------------------------------------------------------
+// Tidal recall walk — leaf recallTarget (Mark the Shelf min/max 1) and the
+// optional Shelf Map step (min 0, max 1). Mirrors the returnWorld flow.
+// ---------------------------------------------------------------------------
+
+describe("Tidal recall (recallTarget)", () => {
+  it("hintForSelection shows the recall instruction with pick count", () => {
+    const sel = beginTargeting("p1", { kind: "recallTarget", min: 1, max: 1 });
+    const hint = hintForSelection(sel);
+    expect(hint.visible).toBe(true);
+    expect(hint.text).toContain("Recall");
+    expect(hint.text).toContain("top of your deck");
+    expect(hint.text).toContain("0 chosen");
+  });
+
+  it("marks an optional (min 0) recall step in the hint", () => {
+    const sel = beginTargeting("p1", { kind: "recallTarget", min: 0, max: 1 });
+    expect(hintForSelection(sel).text).toContain("(optional)");
+  });
+
+  it("min 1 / max 1 needsConfirm false and autoAdvances after one pick", () => {
+    let sel = beginTargeting("p1", { kind: "recallTarget", min: 1, max: 1 });
+    expect(needsConfirm(sel)).toBe(false);
+    sel = togglePick(sel, "d1");
+    expect(autoAdvances(sel)).toBe(true);
+  });
+
+  it("builds a PlayCard with recallIds from the chosen discard", () => {
+    let sel = beginTargeting("p1", { kind: "recallTarget", min: 1, max: 1 });
+    sel = togglePick(sel, "d1");
+    sel = advance(sel);
+    expect(isComplete(sel)).toBe(true);
+    if (sel.phase !== "targeting") throw new Error("expected targeting");
+    expect(sel.done[0]).toEqual({ kind: "recallTarget", recallIds: ["d1"] });
+    expect(buildAction(sel)).toEqual({
+      type: "PlayCard",
+      cardId: "p1",
+      recallIds: ["d1"],
+    });
+  });
+
+  it("optional step confirms with zero picks → recallIds: []", () => {
+    let sel = beginTargeting("p1", { kind: "recallTarget", min: 0, max: 1 });
+    expect(stepSatisfied(sel)).toBe(true); // min 0 satisfied at 0 picks
+    sel = advance(sel);
+    expect(isComplete(sel)).toBe(true);
+    expect(buildAction(sel)).toEqual({
+      type: "PlayCard",
+      cardId: "p1",
+      recallIds: [],
+    });
+  });
+});

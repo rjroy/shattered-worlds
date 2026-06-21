@@ -62,6 +62,10 @@ export const EFFECT_ICON_TOOLTIPS: Record<IconId, TooltipCopy> = {
     title: "Return",
     body: "Send world cards back into the world deck.",
   },
+  recall: {
+    title: "Recall",
+    body: "Recall player card from discard pile.",
+  },
   addCard: {
     title: "Gain card",
     body: "Add a named card to the associated deck.",

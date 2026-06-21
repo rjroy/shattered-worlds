@@ -1,0 +1,151 @@
+{
+  "worldId": "the-tidal-archive",
+  "onEndOfTurnPassive": { "kind": "RecallPlayerDiscard", "policy": "latest" },
+  "cardTemplates": {
+    "Wandering Stacks": {
+      "kind": "world",
+      "rarity": "uncommon",
+      "name": "Wandering Stacks",
+      "insetKey": "tidal-inset-wandering-stacks",
+      "cost": 2,
+      "keywords": ["Obstructed"],
+      "discardable": false,
+      "onDiscarded": { "kind": "None" },
+      "onCleared": { "kind": "None" },
+      "onPartialClear": { "kind": "None" },
+      "onEndOfTurn": { "kind": "RecallPlayerDiscard", "policy": "latest" }
+    },
+    "Drowned Index": {
+      "kind": "world",
+      "name": "Drowned Index",
+      "insetKey": "tidal-inset-drowned-index",
+      "rarity": "common",
+      "cost": 4,
+      "keywords": ["Obstructed"],
+      "discardable": true,
+      "onDiscarded": { "kind": "None" },
+      "onCleared": {
+        "kind": "OfferBoon",
+        "setId": "tidal-boons",
+        "setName": "The Reading Room",
+        "offeredCount": 3,
+        "chooseCount": 1
+      },
+      "onPartialClear": { "kind": "None" },
+      "onEndOfTurn": { "kind": "None" }
+    },
+    "Misfiled Century": {
+      "kind": "world",
+      "name": "Misfiled Century",
+      "insetKey": "tidal-inset-misfiled-century",
+      "rarity": "common",
+      "cost": 3,
+      "keywords": ["Obstructed"],
+      "discardable": true,
+      "onDiscarded": { "kind": "Damage", "amount": 1 },
+      "onCleared": { "kind": "None" },
+      "onPartialClear": { "kind": "None" },
+      "onEndOfTurn": { "kind": "AddThreatToWorldDeck" }
+    },
+    "Bridge to Yesterday": {
+      "kind": "world",
+      "name": "Bridge to Yesterday",
+      "insetKey": "tidal-inset-bridge-to-yesterday",
+      "rarity": "uncommon",
+      "cost": 3,
+      "keywords": [],
+      "discardable": true,
+      "onDiscarded": { "kind": "Damage", "amount": 2 },
+      "onCleared": {
+        "kind": "AddWorldCardToDeck",
+        "template": "Misfiled Century",
+        "bTop": true
+      },
+      "onPartialClear": { "kind": "None" },
+      "onEndOfTurn": { "kind": "None" }
+    },
+    "Borrowed Catastrophe": {
+      "kind": "world",
+      "name": "Borrowed Catastrophe",
+      "insetKey": "tidal-inset-borrowed-catastrophe",
+      "rarity": "uncommon",
+      "cost": 4,
+      "keywords": ["Slow"],
+      "discardable": true,
+      "onDiscarded": { "kind": "Damage", "amount": 2 },
+      "onCleared": { "kind": "GainCard", "template": "Waterproof Notes" },
+      "onPartialClear": { "kind": "None" },
+      "onEndOfTurn": {
+        "kind": "AddWorldCardToDeck",
+        "template": "Misfiled Century",
+        "bTop": true
+      }
+    },
+    "Chained Books Rising": {
+      "kind": "world",
+      "name": "Chained Books Rising",
+      "insetKey": "tidal-inset-chained-books-rising",
+      "rarity": "rare",
+      "cost": 4,
+      "keywords": ["Creature"],
+      "discardable": true,
+      "onDiscarded": { "kind": "RecallPlayerDiscard", "policy": "latest" },
+      "onCleared": { "kind": "GainCard", "template": "Anchor the Memory" },
+      "onPartialClear": { "kind": "None" },
+      "onEndOfTurn": {
+        "kind": "Sequence",
+        "steps": [
+          { "kind": "ForceDestroy", "amount": 1 },
+          { "kind": "RecallPlayerDiscard", "policy": "lowestCost" }
+        ]
+      }
+    },
+    "The Same Footprint": {
+      "kind": "world",
+      "name": "The Same Footprint",
+      "insetKey": "tidal-inset-the-same-footprint",
+      "rarity": "rare",
+      "cost": 6,
+      "keywords": ["Slow"],
+      "discardable": true,
+      "onDiscarded": { "kind": "Damage", "amount": 3 },
+      "onCleared": { "kind": "GainCard", "template": "Shelf Map" },
+      "onPartialClear": { "kind": "None" },
+      "onEndOfTurn": {
+        "kind": "Sequence",
+        "steps": [
+          { "kind": "RecallPlayerDiscard", "policy": "panicFirst" },
+          { "kind": "AddThreatToWorldDeck" }
+        ]
+      }
+    }
+  },
+  "deckComposition": {
+    "acts": [
+      {
+        "cards": [
+          { "templateId": "Wandering Stacks", "count": 4 },
+          { "templateId": "Drowned Index", "count": 4 },
+          { "templateId": "Bridge to Yesterday", "count": 2 }
+        ]
+      },
+      {
+        "cards": [
+          { "templateId": "Misfiled Century", "count": 4 },
+          { "templateId": "Bridge to Yesterday", "count": 2 },
+          { "templateId": "Borrowed Catastrophe", "count": 2 },
+          { "templateId": "Drowned Index", "count": 2 }
+        ]
+      },
+      {
+        "cards": [
+          { "templateId": "Chained Books Rising", "count": 2 },
+          { "templateId": "Borrowed Catastrophe", "count": 3 },
+          { "templateId": "The Same Footprint", "count": 2 },
+          { "templateId": "Misfiled Century", "count": 2 },
+          { "templateId": "The Walker", "count": 1 }
+        ]
+      }
+    ]
+  }
+}

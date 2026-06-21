@@ -226,6 +226,20 @@ function checkSpec(
       return null;
     }
 
+    case "recallTarget": {
+      const legal = legalTargetsForCheck(available, cardId, path);
+      const ids = action.recallIds ?? [];
+      if (ids.length < spec.min || ids.length > spec.max) {
+        return `recallIds count ${ids.length} is outside [${spec.min},${spec.max}] for card ${cardId}`;
+      }
+      for (const id of ids) {
+        if (!legal.includes(id)) {
+          return `recallId ${id} is not a legal recall target for card ${cardId}`;
+        }
+      }
+      return null;
+    }
+
     case "modal": {
       const choice = action.choice;
       if (choice === undefined || choice < 0 || choice >= spec.branches.length) {

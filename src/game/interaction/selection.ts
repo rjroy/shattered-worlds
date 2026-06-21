@@ -20,6 +20,7 @@ export type StepResult =
   | { kind: "destroyHand"; destroyIds: readonly CardId[] } // undefined = skipped optional destroy
   | { kind: "thawHand"; thawIds: readonly CardId[] }
   | { kind: "returnWorld"; returnIds: readonly CardId[] }
+  | { kind: "recallTarget"; recallIds: readonly CardId[] } // Tidal discard-recall chooser; [] = optional skip
   | { kind: "discardPlayer"; discardId: CardId };
 
 export type SelectionState =
@@ -40,6 +41,28 @@ export const IDLE: SelectionState = { phase: "idle" };
 // ---------------------------------------------------------------------------
 // Internal helpers
 // ---------------------------------------------------------------------------
+
+/**
+ * Empty-pile / min:0 flow for the Tidal recall chooser (REQ-TIDAL-14):
+ *
+ * The recall chooser targets cards in `playerDiscard`, which this pure state
+ * machine cannot see (it has no GameState). So the EMPTY-PILE auto-skip is the
+ * scene's job, not this module's: the scene checks `legalTargets` for the
+ * recall step and, when the discard pile is empty AND `min === 0` (e.g. Shelf
+ * Map), advances the step immediately with no picks — folding a `recallIds: []`
+ * StepResult and committing without ever opening an empty chooser. When `min > 0`
+ * and the pile is empty the card is already unplayable (core's
+ * ReturnPlayerDiscardToTopHandler.isPlayable), so targeting never begins. With a
+ * non-empty pile the scene opens the chooser, which enforces min/max and offers
+ * a "confirm 0 / done" affordance for the min:0 case. This module only models
+ * the resulting picks; it never special-cases empty legal-target sets, keeping
+ * it identical to the returnWorld flow it mirrors.
+ */
+
+/** "1" when min === max, otherwise "min–max" — for chooser hint text. */
+function rangeLabel(min: number, max: number): string {
+  return min === max ? `${min}` : `${min}–${max}`;
+}
 
 /** Advance stepIdx past any consecutive 'none' steps starting at `idx`. */
 function skipNoneSteps(steps: readonly TargetSpec[], idx: number): number {
@@ -63,6 +86,8 @@ function stepMin(spec: TargetSpec): number {
       return 1;
     case "returnWorld":
       return spec.min;
+    case "recallTarget":
+      return spec.min;
     default:
       return 0;
   }
@@ -81,6 +106,8 @@ export function stepMax(spec: TargetSpec): number {
       return spec.amount;
     case "returnWorld":
       return spec.max;
+    case "recallTarget":
+      return spec.max;
     default:
       return 0;
   }
@@ -96,6 +123,8 @@ export function doesStepResultContain(result: StepResult, target: CardId): boole
       return result.thawIds.includes(target);
     case "returnWorld":
       return result.returnIds.includes(target);
+    case "recallTarget":
+      return result.recallIds.includes(target);
     case "discardPlayer":
       return result.discardId === target;
     default:
@@ -275,6 +304,9 @@ export function advance(sel: SelectionState): SelectionState {
     case "returnWorld":
       result = { kind: "returnWorld", returnIds: [...current] };
       break;
+    case "recallTarget":
+      result = { kind: "recallTarget", recallIds: [...current] };
+      break;
     default:
       // 'none' steps should never reach advance() (they are skipped by
       // skipNoneSteps), but guard defensively.
@@ -401,6 +433,14 @@ export function hintForSelection(sel: SelectionState): {
         text: `Select ${min}–${max} world cards to return (${sel.current.length} chosen)`,
         visible: true,
       };
+    case "recallTarget": {
+      const recallNoun = max === 1 ? "discard" : "discards";
+      const optional = min === 0 ? " (optional)" : "";
+      return {
+        text: `Recall ${rangeLabel(min, max)} ${recallNoun} to the top of your deck${optional} (${sel.current.length} chosen)`,
+        visible: true,
+      };
+    }
     default:
       return { text: "", visible: false };
   }
@@ -433,6 +473,9 @@ export function buildAction(sel: SelectionState): Action | null {
         break;
       case "returnWorld":
         Object.assign(action, { returnIds: result.returnIds });
+        break;
+      case "recallTarget":
+        Object.assign(action, { recallIds: result.recallIds });
         break;
       case "discardPlayer":
         Object.assign(action, { discardId: result.discardId });
