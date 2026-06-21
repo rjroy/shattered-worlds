@@ -184,8 +184,29 @@ function handleEndTurn(catalog: CardCatalog, state: GameState): ReduceResult {
     events.push({ type: "CardsDiscarded", cardIds: discardedIds, templateIds });
   }
 
+  // Per-world end-turn passive (Tidal Memory): recall from playerDiscard to the
+  // top of playerDraw, AFTER this turn's cards have been discarded so the tide
+  // can return a card the just-ended turn dropped, and BEFORE the turn-start
+  // refill draws from the top. Skipped entirely (no event) when None, so
+  // non-Tidal worlds produce a byte-identical end-turn event sequence.
+  let afterPassive = stateAfterDiscard;
+  if (afterPassive.endOfTurnPassive.kind !== "None") {
+    const passiveResult = applyEffect(
+      catalog,
+      afterPassive,
+      afterPassive.endOfTurnPassive,
+      undefined,
+      undefined,
+    );
+    afterPassive = passiveResult.state;
+    events.push(...passiveResult.events);
+    if (afterPassive.status !== "playing") {
+      return { state: afterPassive, events };
+    }
+  }
+
   // Start turn: gain +1 energy, then refill hand
-  const turnStartResult = startTurn(stateAfterDiscard);
+  const turnStartResult = startTurn(afterPassive);
   events.push(...turnStartResult.events);
 
   let afterRefill = turnStartResult.state;

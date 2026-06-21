@@ -1,4 +1,5 @@
 import type { CardTemplate } from "./cards";
+import type { CardEffect } from "./types";
 import { RARITY_ORDER } from "./rarity";
 import { CatalogError } from "./errors";
 
@@ -22,6 +23,9 @@ export interface WorldData {
   // above 0, so every other world boots with light === 0. Defaults to 0.
   startLight?: number;
   startHeat?: number;
+  // Per-world end-turn passive (Tidal Memory). Threaded onto GameState by
+  // createWorld and applied in handleEndTurn. Absent ⇒ { kind: "None" }.
+  onEndOfTurnPassive?: CardEffect;
 }
 
 export interface AssembledWorld {
@@ -37,6 +41,8 @@ export interface RawCardSource {
   // Per-world starting Light (see WorldData.startLight). Defaults to 0.
   startLight?: number;
   startHeat?: number;
+  // Per-world end-turn passive (see WorldData.onEndOfTurnPassive). Absent ⇒ None.
+  onEndOfTurnPassive?: CardEffect;
 }
 
 // ---------------------------------------------------------------------------

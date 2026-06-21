@@ -103,6 +103,9 @@ export function createWorld(
     // exactOptionalPropertyTypes forbids an explicit `undefined` literal here.
     braceCharges: mods.extraStartBrace,
     pendingBoonChoices: [],
+    // The per-world end-turn passive (Tidal Memory). reduce() never sees
+    // WorldData, so it is threaded here once. Default None for every other world.
+    endOfTurnPassive: world.onEndOfTurnPassive ?? { kind: "None" },
     runModifiers: mods,
     turnPlayHistory: { cardsPlayedThisTurn: 0, byTemplateId: {} },
     status: "playing",

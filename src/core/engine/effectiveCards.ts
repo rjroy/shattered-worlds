@@ -225,6 +225,10 @@ function cloneEffect(effect: CardEffect): CardEffect {
       return { ...effect };
     case "ExileTopWorldCards":
       return { ...effect };
+    case "ReturnPlayerDiscardToTop":
+      return { ...effect };
+    case "RecallPlayerDiscard":
+      return { ...effect };
   }
 }
 

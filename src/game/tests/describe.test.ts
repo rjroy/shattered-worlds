@@ -25,6 +25,7 @@ function makeState(progress: Record<string, number> = {}): GameState {
     pendingForceDestroy: 0,
     braceCharges: 0,
     pendingBoonChoices: [],
+    endOfTurnPassive: { kind: "None" },
     runModifiers: DEFAULT_RUN_MODIFIERS,
     turnPlayHistory: { cardsPlayedThisTurn: 0, byTemplateId: {} },
     status: "playing",

@@ -50,6 +50,9 @@ function makeWorldBuilder(worldSource: RawCardSource): (starterId: string) => As
       // (omitted means default 0 in createWorld; non-Fog sources omit it).
       ...(worldSource.startLight !== undefined ? { startLight: worldSource.startLight } : {}),
       ...(worldSource.startHeat !== undefined ? { startHeat: worldSource.startHeat } : {}),
+      ...(worldSource.onEndOfTurnPassive !== undefined
+        ? { onEndOfTurnPassive: worldSource.onEndOfTurnPassive }
+        : {}),
     };
 
     return { catalog, worldData };

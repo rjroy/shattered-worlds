@@ -58,7 +58,7 @@ Map the world's fiction onto these roles.
 1. **Ambient foreshadow** - cheap world cards, often discardable. They set mood and may seed reaction cards. Example: `Strange Sounds` -> `Listen`.
 2. **Obstacle** - cheap world card that punishes neglect. Example: `Rubble` -> `SkipDrawNextTurn` on discard.
 3. **Signature threat creature** - costly world card, usually `Creature` + `Slow`, with end-of-turn pressure and a discard penalty.
-4. **Tool fetch** - `Hidden` world card that grants the weapon/tool countering the threat.
+4. **Tool fetch** - `Obstructed` world card that grants the weapon/tool countering the threat.
 5. **Reaction player cards** - rewards gained mid-run, tuned to the threat.
 6. **Signature player verb** - the world's exclusive mechanical identity. This is not a code field; it is an authorship invariant.
 
@@ -105,7 +105,7 @@ Exclusive effects:
 
 **C1a:** `DestroySelf` removes the firing world card from hand. It is only meaningful in `onEndOfTurn`, where the engine has a `selfId`.
 
-**C2:** Valid keywords are only `Hidden`, `Creature`, `Slow`, `Spore`, and `Concealed`. Any other string in a `keywords` array is a bug unless the core keyword type changed.
+**C2:** Valid keywords are only `Obstructed`, `Creature`, `Slow`, `Spore`, and `Concealed`. Any other string in a `keywords` array is a bug unless the core keyword type changed.
 
 **C2a:** Keywords are authored as strings in `keywords`: `"Name"` or `"Name:N"`. A bare keyword has no value; a numeric keyword parses to `{ name, value }`. Only `Concealed` currently uses a value, where the value is the Light depth. `Concealed` is exclusive to `fog-beach-party`.
 

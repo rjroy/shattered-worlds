@@ -340,6 +340,7 @@ function pendingState(): GameState {
         bToDiscard: false,
       },
     ],
+    endOfTurnPassive: { kind: "None" },
     runModifiers: DEFAULT_RUN_MODIFIERS,
     turnPlayHistory: { cardsPlayedThisTurn: 0, byTemplateId: {} },
     status: "playing",

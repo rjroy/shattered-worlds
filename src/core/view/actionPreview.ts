@@ -451,6 +451,10 @@ function summarizeEvent(event: GameEvent, context: PreviewContext): readonly str
       return ["Shuffle the deck"];
     case "TurnEnded":
       return ["End the turn"];
+    case "PlayerDiscardRecalled":
+      return [
+        `Recall ${event.cardIds.length} ${plural("card", event.cardIds.length)} from discard to the top of your deck`,
+      ];
   }
 }
 
