@@ -7,14 +7,20 @@
       "insetKey": "tidal-inset-mark-the-shelf",
       "rarity": "common",
       "energyCost": 1,
-      "effect": { "kind": "ReturnPlayerDiscardToTop", "min": 1, "max": 1 }
+      "effect": {
+        "kind": "Sequence",
+        "steps": [
+          { "kind": "ReturnPlayerDiscardToTop", "min": 1, "max": 2 },
+          { "kind": "Draw", "player": 1 }
+        ]
+      }
     },
     "Cross-Reference": {
       "kind": "player",
       "name": "Cross-Reference",
       "insetKey": "tidal-inset-cross-reference",
       "rarity": "common",
-      "energyCost": 1,
+      "energyCost": 0,
       "effect": { "kind": "DiscardThenDraw", "player": 2 }
     },
     "Waterproof Notes": {
@@ -36,7 +42,7 @@
       "name": "Anchor the Memory",
       "insetKey": "tidal-inset-anchor-the-memory",
       "rarity": "uncommon",
-      "energyCost": 1,
+      "energyCost": 0,
       "exhaust": true,
       "effect": {
         "kind": "Sequence",
@@ -51,12 +57,14 @@
       "name": "Shelf Map",
       "insetKey": "tidal-inset-shelf-map",
       "rarity": "uncommon",
-      "energyCost": 1,
+      "energyCost": 0,
+      "exhaust": true,
       "effect": {
         "kind": "Sequence",
         "steps": [
           { "kind": "DealProgress", "base": 1 },
-          { "kind": "ReturnPlayerDiscardToTop", "min": 0, "max": 1 }
+          { "kind": "ReturnPlayerDiscardToTop", "min": 0, "max": 1 },
+          { "kind": "Draw", "player": 1 }
         ]
       }
     }

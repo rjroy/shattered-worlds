@@ -235,6 +235,6 @@ export class RecallPlayerDiscardHandler extends EffectHandler<RecallPlayerDiscar
   }
 
   override isPlayable(): boolean {
-    return false;
+    return true;
   }
 }

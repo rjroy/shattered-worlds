@@ -4,6 +4,7 @@
     "Leave One": {
       "kind": "player",
       "name": "Leave One",
+      "rarity": "common",
       "insetKey": "ember-inset-leave-one",
       "exhaust": true,
       "effect": {
@@ -17,6 +18,7 @@
     "Star-Pruner": {
       "kind": "player",
       "name": "Star-Pruner",
+      "rarity": "uncommon",
       "insetKey": "ember-inset-star-pruner",
       "effect": {
         "kind": "DealProgress",
@@ -27,6 +29,7 @@
     "Constellation Shears": {
       "kind": "player",
       "name": "Constellation Shears",
+      "rarity": "uncommon",
       "insetKey": "ember-inset-constellation-shears",
       "exhaust": true,
       "effect": {
@@ -38,6 +41,7 @@
     "Keep Vigil": {
       "kind": "player",
       "name": "Keep Vigil",
+      "rarity": "uncommon",
       "insetKey": "ember-inset-keep-vigil",
       "exhaust": true,
       "effect": {
@@ -51,6 +55,7 @@
     "Bank the Heat": {
       "kind": "player",
       "name": "Bank the Heat",
+      "rarity": "uncommon",
       "insetKey": "ember-inset-bank-the-heat",
       "exhaust": true,
       "effect": { "kind": "GainEnergy", "amount": 2 }

@@ -4,6 +4,7 @@
     "Quiet Survey": {
       "kind": "player",
       "name": "Quiet Survey",
+      "rarity": "common",
       "insetKey": "giants-inset-quiet-survey",
       "energyCost": 1,
       "effect": {
@@ -17,6 +18,7 @@
     "Brace The Ward": {
       "kind": "player",
       "name": "Brace The Ward",
+      "rarity": "uncommon",
       "insetKey": "giants-inset-brace-the-ward",
       "energyCost": 1,
       "effect": {
@@ -30,8 +32,10 @@
     "Bone Pin": {
       "kind": "player",
       "name": "Bone Pin",
+      "rarity": "uncommon",
       "insetKey": "giants-inset-bone-pin",
-      "energyCost": 1,
+      "energyCost": 0,
+      "exhaust": true,
       "effect": {
         "kind": "Modal",
         "branches": [
@@ -43,13 +47,14 @@
     "Contour Map": {
       "kind": "player",
       "name": "Contour Map",
+      "rarity": "rare",
       "insetKey": "giants-inset-contour-map",
-      "energyCost": 2,
+      "energyCost": 0,
       "exhaust": true,
       "effect": {
         "kind": "DealProgressAll",
-        "base": 1,
-        "bonus": { "tag": "Obstructed", "amount": 1 }
+        "base": 2,
+        "bonus": { "tag": "Obstructed", "amount": 2 }
       }
     }
   }

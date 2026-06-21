@@ -45,6 +45,6 @@ export class OfferBoonHandler extends EffectHandler<OfferBoonEffect> {
   }
 
   override isPlayable(_effect: OfferBoonEffect, _state: GameState): boolean {
-    return false;
+    return true;
   }
 }

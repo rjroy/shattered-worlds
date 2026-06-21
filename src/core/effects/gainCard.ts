@@ -116,7 +116,7 @@ export class GainCardHandler extends EffectHandler<GainCardEffect> {
   }
 
   override isPlayable(): boolean {
-    return false;
+    return true;
   }
 }
 
@@ -166,7 +166,7 @@ export class GainRandomCardHandler extends EffectHandler<GainRandomCardEffect> {
   }
 
   override isPlayable(): boolean {
-    return false;
+    return true;
   }
 }
 
@@ -187,7 +187,7 @@ export class AddPlayerCardToTopHandler extends EffectHandler<AddPlayerCardToTopE
   }
 
   override isPlayable(): boolean {
-    return false;
+    return true;
   }
 }
 
