@@ -21,10 +21,11 @@
       "kind": "player",
       "name": "Scream",
       "rarity": "common",
-      "insetKey": "zombie-inset-scream",
+      "insetKey": "zombie-inset-screams",
       "energyCost": 0,
       "exhaust": true,
       "effect": {
+        "kind": "Sequence",
         "steps": [
           { "kind": "ReturnWorldCards", "min": 0, "max": 8 },
           { "kind": "Draw", "player": 1, "world": 1 }

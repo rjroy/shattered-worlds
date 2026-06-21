@@ -24,7 +24,7 @@ export const BOON_SETS = {
   },
   "big-box-boons": {
     source: BIG_BOX_BOON_SOURCE,
-    templateIds: ["React to Noise", "Fast Sweep", "Listen"],
+    templateIds: ["React to Noise", "Fast Sweep", "Listen", "player-scream", "Plan"],
   },
   "tidal-boons": {
     source: TIDAL_BOON_SOURCE,
