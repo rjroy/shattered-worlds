@@ -6,6 +6,7 @@ import { FOG_BEACH_PARTY_BUNDLE } from "./fog-beach-party/index";
 import { WHITEOUT_PARKING_GARAGE_BUNDLE } from "./whiteout-parking-garage/index";
 import { THE_TIDAL_ARCHIVE_BUNDLE } from "./the-tidal-archive/index";
 import { THE_EMBER_ORCHARD_BUNDLE } from "./the-ember-orchard/index";
+import { CITY_OF_SLEEPING_GIANTS_BUNDLE } from "./city-of-sleeping-giants/index";
 import type { WorldDataBundle } from "./types";
 
 export const worldDataRegistry: readonly WorldDataBundle[] = [
@@ -17,4 +18,5 @@ export const worldDataRegistry: readonly WorldDataBundle[] = [
   WHITEOUT_PARKING_GARAGE_BUNDLE,
   THE_TIDAL_ARCHIVE_BUNDLE,
   THE_EMBER_ORCHARD_BUNDLE,
+  CITY_OF_SLEEPING_GIANTS_BUNDLE,
 ];
