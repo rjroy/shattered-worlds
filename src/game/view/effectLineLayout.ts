@@ -82,7 +82,7 @@ export const EFFECT_ICON_PLACEHOLDERS: Record<IconId, IconPlaceholderSpec> = {
   destroy: { letter: "X", color: "#b03a2e" },
   exile: { letter: "L", color: "#8a4fbf" },
   return: { letter: "R", color: "#4fbf8a" },
-  recall: { letter: "r", color: "b7bf4e" },
+  recall: { letter: "r", color: "#b7bf4e" },
   addCard: { letter: "+", color: "#5ad0d0" },
   randomCard: { letter: "?", color: "#d0a45a" },
   brace: { letter: "B", color: "#8fa3b8" },
