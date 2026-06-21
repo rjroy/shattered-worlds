@@ -164,7 +164,7 @@ export class DestroySelfHandler extends EffectHandler<DestroySelfEffect> {
   }
 
   override isPlayable(): boolean {
-    return false;
+    return true;
   }
 }
 
@@ -193,7 +193,7 @@ export class ForceDestroyHandler extends EffectHandler<ForceDestroyEffect> {
   }
 
   override isPlayable(): boolean {
-    return false;
+    return true;
   }
 }
 
@@ -258,7 +258,7 @@ export class SurviveWorldHandler extends EffectHandler<SurviveWorldEffect> {
   }
 
   override isPlayable(): boolean {
-    return false;
+    return true;
   }
 }
 
