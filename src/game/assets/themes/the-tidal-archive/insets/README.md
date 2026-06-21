@@ -2,8 +2,8 @@
 
 Thumbnail-first inset assets (12). Filename = `inset-<kebab-name>.webp`, asset
 key = `tidal-inset-<kebab-name>`. Card names come from `cards.json` and
-`boons/tidal.json`; the `insetKey` fields still need wiring once the art exists
-(see the TODO in `worlds/assetBindings.ts`).
+`boons/tidal.json`. All 12 `insetKey` fields and their imports/manifest entries
+in `worlds/assetBindings.ts` are wired.
 
 Hazards and world cards:
 

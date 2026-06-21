@@ -6,6 +6,7 @@
       "kind": "world",
       "rarity": "uncommon",
       "name": "Wandering Stacks",
+      "insetKey": "tidal-inset-wandering-stacks",
       "cost": 2,
       "keywords": ["Obstructed"],
       "discardable": false,
@@ -17,6 +18,7 @@
     "Drowned Index": {
       "kind": "world",
       "name": "Drowned Index",
+      "insetKey": "tidal-inset-drowned-index",
       "rarity": "common",
       "cost": 4,
       "keywords": ["Obstructed"],
@@ -35,6 +37,7 @@
     "Misfiled Century": {
       "kind": "world",
       "name": "Misfiled Century",
+      "insetKey": "tidal-inset-misfiled-century",
       "rarity": "common",
       "cost": 3,
       "keywords": ["Obstructed"],
@@ -47,6 +50,7 @@
     "Bridge to Yesterday": {
       "kind": "world",
       "name": "Bridge to Yesterday",
+      "insetKey": "tidal-inset-bridge-to-yesterday",
       "rarity": "uncommon",
       "cost": 3,
       "keywords": [],
@@ -63,6 +67,7 @@
     "Borrowed Catastrophe": {
       "kind": "world",
       "name": "Borrowed Catastrophe",
+      "insetKey": "tidal-inset-borrowed-catastrophe",
       "rarity": "uncommon",
       "cost": 4,
       "keywords": ["Slow"],
@@ -79,6 +84,7 @@
     "Chained Books Rising": {
       "kind": "world",
       "name": "Chained Books Rising",
+      "insetKey": "tidal-inset-chained-books-rising",
       "rarity": "rare",
       "cost": 4,
       "keywords": ["Creature"],
@@ -97,6 +103,7 @@
     "The Same Footprint": {
       "kind": "world",
       "name": "The Same Footprint",
+      "insetKey": "tidal-inset-the-same-footprint",
       "rarity": "rare",
       "cost": 6,
       "keywords": ["Slow"],

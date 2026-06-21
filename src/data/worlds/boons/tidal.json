@@ -4,6 +4,7 @@
     "Mark the Shelf": {
       "kind": "player",
       "name": "Mark the Shelf",
+      "insetKey": "tidal-inset-mark-the-shelf",
       "rarity": "common",
       "energyCost": 1,
       "effect": { "kind": "ReturnPlayerDiscardToTop", "min": 1, "max": 1 }
@@ -11,6 +12,7 @@
     "Cross-Reference": {
       "kind": "player",
       "name": "Cross-Reference",
+      "insetKey": "tidal-inset-cross-reference",
       "rarity": "common",
       "energyCost": 1,
       "effect": { "kind": "DiscardThenDraw", "player": 2 }
@@ -18,6 +20,7 @@
     "Waterproof Notes": {
       "kind": "player",
       "name": "Waterproof Notes",
+      "insetKey": "tidal-inset-waterproof-notes",
       "rarity": "uncommon",
       "energyCost": 1,
       "effect": {
@@ -31,6 +34,7 @@
     "Anchor the Memory": {
       "kind": "player",
       "name": "Anchor the Memory",
+      "insetKey": "tidal-inset-anchor-the-memory",
       "rarity": "uncommon",
       "energyCost": 1,
       "exhaust": true,
@@ -45,6 +49,7 @@
     "Shelf Map": {
       "kind": "player",
       "name": "Shelf Map",
+      "insetKey": "tidal-inset-shelf-map",
       "rarity": "uncommon",
       "energyCost": 1,
       "effect": {

@@ -115,6 +115,19 @@ import zombieInsetStrangeSoundsUrl from "../assets/themes/zombie-big-box/insets/
 import zombieInsetZombieUrl from "../assets/themes/zombie-big-box/insets/inset-zombie.webp";
 import zombieInsetListenUrl from "../assets/themes/zombie-big-box/insets/inset-listen.webp";
 
+import tidalInsetWanderingStacksUrl from "../assets/themes/the-tidal-archive/insets/inset-wandering-stacks.webp";
+import tidalInsetDrownedIndexUrl from "../assets/themes/the-tidal-archive/insets/inset-drowned-index.webp";
+import tidalInsetMisfiledCenturyUrl from "../assets/themes/the-tidal-archive/insets/inset-misfiled-century.webp";
+import tidalInsetBridgeToYesterdayUrl from "../assets/themes/the-tidal-archive/insets/inset-bridge-to-yesterday.webp";
+import tidalInsetBorrowedCatastropheUrl from "../assets/themes/the-tidal-archive/insets/inset-borrowed-catastrophe.webp";
+import tidalInsetChainedBooksRisingUrl from "../assets/themes/the-tidal-archive/insets/inset-chained-books-rising.webp";
+import tidalInsetTheSameFootprintUrl from "../assets/themes/the-tidal-archive/insets/inset-the-same-footprint.webp";
+import tidalInsetMarkTheShelfUrl from "../assets/themes/the-tidal-archive/insets/inset-mark-the-shelf.webp";
+import tidalInsetCrossReferenceUrl from "../assets/themes/the-tidal-archive/insets/inset-cross-reference.webp";
+import tidalInsetWaterproofNotesUrl from "../assets/themes/the-tidal-archive/insets/inset-waterproof-notes.webp";
+import tidalInsetAnchorTheMemoryUrl from "../assets/themes/the-tidal-archive/insets/inset-anchor-the-memory.webp";
+import tidalInsetShelfMapUrl from "../assets/themes/the-tidal-archive/insets/inset-shelf-map.webp";
+
 // ---------------------------------------------------------------------------
 // World music imports
 // ---------------------------------------------------------------------------
@@ -223,6 +236,18 @@ export const worldAssetUrls: Record<string, string> = {
   "the-tidal-archive-bg": tidalRealityUrl,
   "the-tidal-archive-overlay": tidalOverlayUrl,
   "the-tidal-archive-cardfront": tidalCardfrontUrl,
+  "tidal-inset-wandering-stacks": tidalInsetWanderingStacksUrl,
+  "tidal-inset-drowned-index": tidalInsetDrownedIndexUrl,
+  "tidal-inset-misfiled-century": tidalInsetMisfiledCenturyUrl,
+  "tidal-inset-bridge-to-yesterday": tidalInsetBridgeToYesterdayUrl,
+  "tidal-inset-borrowed-catastrophe": tidalInsetBorrowedCatastropheUrl,
+  "tidal-inset-chained-books-rising": tidalInsetChainedBooksRisingUrl,
+  "tidal-inset-the-same-footprint": tidalInsetTheSameFootprintUrl,
+  "tidal-inset-mark-the-shelf": tidalInsetMarkTheShelfUrl,
+  "tidal-inset-cross-reference": tidalInsetCrossReferenceUrl,
+  "tidal-inset-waterproof-notes": tidalInsetWaterproofNotesUrl,
+  "tidal-inset-anchor-the-memory": tidalInsetAnchorTheMemoryUrl,
+  "tidal-inset-shelf-map": tidalInsetShelfMapUrl,
   // the-ember-orchard — base assets wired now; insets wired once art is generated.
   "the-ember-orchard-bg": emberRealityUrl,
   "the-ember-orchard-overlay": emberOverlayUrl,
