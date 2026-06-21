@@ -4,6 +4,7 @@
     "Follow The Vein": {
       "kind": "player",
       "name": "Follow The Vein",
+      "rarity": "uncommon",
       "insetKey": "giants-inset-follow-the-vein",
       "energyCost": 0,
       "exhaust": true,
@@ -19,10 +20,11 @@
     "Minor Tremor": {
       "kind": "world",
       "name": "Minor Tremor",
+      "rarity": "common",
       "insetKey": "giants-inset-minor-tremor",
       "cost": 1,
       "keywords": [],
-      "discardable": true,
+      "discardable": false,
       "onCleared": { "kind": "None" },
       "onDiscarded": { "kind": "None" },
       "onPartialClear": { "kind": "None" },
@@ -37,6 +39,7 @@
     "Relocation Order": {
       "kind": "world",
       "name": "Relocation Order",
+      "rarity": "common",
       "insetKey": "giants-inset-relocation-order",
       "cost": 2,
       "keywords": ["Obstructed"],
@@ -49,6 +52,7 @@
     "Fingerquake Ward": {
       "kind": "world",
       "name": "Fingerquake Ward",
+      "rarity": "uncommon",
       "insetKey": "giants-inset-fingerquake-ward",
       "cost": 3,
       "keywords": ["Slow"],
@@ -67,6 +71,7 @@
     "Surveyors Mark A Pulse": {
       "kind": "world",
       "name": "Surveyors Mark A Pulse",
+      "rarity": "common",
       "insetKey": "giants-inset-surveyors-mark-a-pulse",
       "cost": 6,
       "keywords": ["Obstructed"],
@@ -85,6 +90,7 @@
     "Vein-Road Surge": {
       "kind": "world",
       "name": "Vein-Road Surge",
+      "rarity": "uncommon",
       "insetKey": "giants-inset-vein-road-surge",
       "cost": 3,
       "keywords": ["Obstructed"],
@@ -96,12 +102,12 @@
           { "kind": "GainCard", "template": "Follow The Vein" }
         ]
       },
-      "onDiscarded": { "kind": "DiscardThenDraw", "player": 1 },
-      "onPartialClear": { "kind": "DiscardThenDraw", "player": 1 },
+      "onDiscarded": { "kind": "RecallPlayerDiscard", "policy": "random" },
+      "onPartialClear": { "kind": "RecallPlayerDiscard", "policy": "lowestCost" },
       "onEndOfTurn": {
         "kind": "Sequence",
         "steps": [
-          { "kind": "DiscardThenDraw", "player": 1 },
+          { "kind": "RecallPlayerDiscard", "policy": "panicFirst" },
           { "kind": "AddWorldCardToDeck", "template": "Bone Anchor Failure", "bTop": true },
           { "kind": "DestroySelf" }
         ]
@@ -110,25 +116,35 @@
     "Bone Anchor Failure": {
       "kind": "world",
       "name": "Bone Anchor Failure",
+      "rarity": "uncommon",
       "insetKey": "giants-inset-bone-anchor-failure",
       "cost": 4,
       "keywords": ["Slow"],
       "discardable": true,
       "onCleared": { "kind": "GainCard", "template": "Bone Pin" },
       "onDiscarded": { "kind": "Damage", "amount": 2 },
-      "onPartialClear": { "kind": "AddWorldCardToDeck", "template": "Fingerquake Ward", "bTop": true },
+      "onPartialClear": {
+        "kind": "AddWorldCardToDeck",
+        "template": "Fingerquake Ward",
+        "bTop": true
+      },
       "onEndOfTurn": { "kind": "Damage", "amount": 2 }
     },
     "District Recall": {
       "kind": "world",
       "name": "District Recall",
+      "rarity": "rare",
       "insetKey": "giants-inset-district-recall",
       "cost": 4,
       "keywords": ["Obstructed", "Slow"],
       "discardable": true,
       "onCleared": { "kind": "GainCard", "template": "Contour Map" },
       "onDiscarded": { "kind": "AddWorldCardToDeck", "template": "Vein-Road Surge", "bTop": true },
-      "onPartialClear": { "kind": "AddWorldCardToDeck", "template": "Vein-Road Surge", "bTop": true },
+      "onPartialClear": {
+        "kind": "AddWorldCardToDeck",
+        "template": "Vein-Road Surge",
+        "bTop": true
+      },
       "onEndOfTurn": {
         "kind": "Sequence",
         "steps": [
@@ -140,6 +156,7 @@
     "The Giant Turns In Sleep": {
       "kind": "world",
       "name": "The Giant Turns In Sleep",
+      "rarity": "uncommon",
       "insetKey": "giants-inset-the-giant-turns-in-sleep",
       "cost": 6,
       "keywords": ["Slow"],
