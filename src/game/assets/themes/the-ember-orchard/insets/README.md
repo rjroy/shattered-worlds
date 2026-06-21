@@ -1,7 +1,10 @@
 # The Ember Orchard Inset Art Guidance
 
 Thumbnail-first inset assets (16). Filename = `inset-<kebab-name>.webp`, asset
-key = `ember-inset-<kebab-name>` (see `cards.json` and `boons/ember.json`).
+key = `ember-inset-<kebab-name>` (see `cards.json` and `boons/ember.json`). All
+16 art files exist and their imports/manifest entries in
+`worlds/assetBindings.ts` are wired; the `insetKey` fields were already authored
+in `cards.json` and `boons/ember.json`.
 
 Hazards and world cards:
 

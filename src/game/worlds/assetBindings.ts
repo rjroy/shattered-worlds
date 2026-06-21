@@ -128,6 +128,23 @@ import tidalInsetWaterproofNotesUrl from "../assets/themes/the-tidal-archive/ins
 import tidalInsetAnchorTheMemoryUrl from "../assets/themes/the-tidal-archive/insets/inset-anchor-the-memory.webp";
 import tidalInsetShelfMapUrl from "../assets/themes/the-tidal-archive/insets/inset-shelf-map.webp";
 
+import emberInsetCrackedHearthStarUrl from "../assets/themes/the-ember-orchard/insets/inset-cracked-hearth-star.webp";
+import emberInsetDormantStarUrl from "../assets/themes/the-ember-orchard/insets/inset-dormant-star.webp";
+import emberInsetEmberMothUrl from "../assets/themes/the-ember-orchard/insets/inset-ember-moth.webp";
+import emberInsetFallingFruitUrl from "../assets/themes/the-ember-orchard/insets/inset-falling-fruit.webp";
+import emberInsetGlasshouseLanternUrl from "../assets/themes/the-ember-orchard/insets/inset-glasshouse-lantern.webp";
+import emberInsetGroundConstellationUrl from "../assets/themes/the-ember-orchard/insets/inset-ground-constellation.webp";
+import emberInsetHatcheryCellarUrl from "../assets/themes/the-ember-orchard/insets/inset-hatchery-cellar.webp";
+import emberInsetLanternBroodUrl from "../assets/themes/the-ember-orchard/insets/inset-lantern-brood.webp";
+import emberInsetRootedMeteorUrl from "../assets/themes/the-ember-orchard/insets/inset-rooted-meteor.webp";
+import emberInsetTakeOneUrl from "../assets/themes/the-ember-orchard/insets/inset-take-one.webp";
+import emberInsetTheOrchardCountsWrongUrl from "../assets/themes/the-ember-orchard/insets/inset-the-orchard-counts-wrong.webp";
+import emberInsetBankTheHeatUrl from "../assets/themes/the-ember-orchard/insets/inset-bank-the-heat.webp";
+import emberInsetConstellationShearsUrl from "../assets/themes/the-ember-orchard/insets/inset-constellation-shears.webp";
+import emberInsetKeepVigilUrl from "../assets/themes/the-ember-orchard/insets/inset-keep-vigil.webp";
+import emberInsetLeaveOneUrl from "../assets/themes/the-ember-orchard/insets/inset-leave-one.webp";
+import emberInsetStarPrunerUrl from "../assets/themes/the-ember-orchard/insets/inset-star-pruner.webp";
+
 // ---------------------------------------------------------------------------
 // World music imports
 // ---------------------------------------------------------------------------
@@ -248,25 +265,26 @@ export const worldAssetUrls: Record<string, string> = {
   "tidal-inset-waterproof-notes": tidalInsetWaterproofNotesUrl,
   "tidal-inset-anchor-the-memory": tidalInsetAnchorTheMemoryUrl,
   "tidal-inset-shelf-map": tidalInsetShelfMapUrl,
-  // the-ember-orchard — base assets wired now; insets wired once art is generated.
+  // the-ember-orchard
   "the-ember-orchard-bg": emberRealityUrl,
   "the-ember-orchard-overlay": emberOverlayUrl,
   "the-ember-orchard-cardfront": emberCardfrontUrl,
-  // TODO(ember art): wire the 16 Ember card insets once the .webp files exist at
-  // ../assets/themes/the-ember-orchard/insets/inset-<kebab-name>.webp.
-  // Add one import per file and one map entry per key below. Until then the
-  // worldAssetBindings test for the-ember-orchard stays red on these keys.
-  // Keys (from cards.json — 11):
-  //   "ember-inset-cracked-hearth-star", "ember-inset-dormant-star",
-  //   "ember-inset-ember-moth", "ember-inset-falling-fruit",
-  //   "ember-inset-glasshouse-lantern", "ember-inset-ground-constellation",
-  //   "ember-inset-hatchery-cellar", "ember-inset-lantern-brood",
-  //   "ember-inset-rooted-meteor", "ember-inset-take-one",
-  //   "ember-inset-the-orchard-counts-wrong"
-  // Keys (from boons/ember.json — 5):
-  //   "ember-inset-bank-the-heat", "ember-inset-constellation-shears",
-  //   "ember-inset-keep-vigil", "ember-inset-leave-one",
-  //   "ember-inset-star-pruner"
+  "ember-inset-cracked-hearth-star": emberInsetCrackedHearthStarUrl,
+  "ember-inset-dormant-star": emberInsetDormantStarUrl,
+  "ember-inset-ember-moth": emberInsetEmberMothUrl,
+  "ember-inset-falling-fruit": emberInsetFallingFruitUrl,
+  "ember-inset-glasshouse-lantern": emberInsetGlasshouseLanternUrl,
+  "ember-inset-ground-constellation": emberInsetGroundConstellationUrl,
+  "ember-inset-hatchery-cellar": emberInsetHatcheryCellarUrl,
+  "ember-inset-lantern-brood": emberInsetLanternBroodUrl,
+  "ember-inset-rooted-meteor": emberInsetRootedMeteorUrl,
+  "ember-inset-take-one": emberInsetTakeOneUrl,
+  "ember-inset-the-orchard-counts-wrong": emberInsetTheOrchardCountsWrongUrl,
+  "ember-inset-bank-the-heat": emberInsetBankTheHeatUrl,
+  "ember-inset-constellation-shears": emberInsetConstellationShearsUrl,
+  "ember-inset-keep-vigil": emberInsetKeepVigilUrl,
+  "ember-inset-leave-one": emberInsetLeaveOneUrl,
+  "ember-inset-star-pruner": emberInsetStarPrunerUrl,
   // city-of-sleeping-giants — base assets wired now; insets wired once art is generated.
   "city-of-sleeping-giants-bg": giantsRealityUrl,
   "city-of-sleeping-giants-overlay": giantsOverlayUrl,
