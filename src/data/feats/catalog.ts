@@ -98,7 +98,7 @@ export const FEAT_CATALOG: readonly FeatDefinition[] = [
   },
   {
     id: "first-city-of-sleeping-giants",
-    name: "First Thaw",
+    name: "First Metropolis",
     description: "Win your first run of the City of Sleeping Giants.",
     conditions: [
       { statId: "outcome", operator: "is", value: "won" },
