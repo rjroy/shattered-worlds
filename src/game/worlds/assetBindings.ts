@@ -36,6 +36,10 @@ import emberRealityUrl from "../assets/themes/the-ember-orchard/the-ember-orchar
 import emberOverlayUrl from "../assets/themes/the-ember-orchard/intrusion-overlay.webp";
 import emberCardfrontUrl from "../assets/themes/the-ember-orchard/the-ember-orchard-cardfront.webp";
 
+import giantsRealityUrl from "../assets/themes/city-of-sleeping-giants/city-of-sleeping-giants-reality.webp";
+import giantsOverlayUrl from "../assets/themes/city-of-sleeping-giants/intrusion-overlay.webp";
+import giantsCardfrontUrl from "../assets/themes/city-of-sleeping-giants/city-of-sleeping-giants-cardfront.webp";
+
 // ---------------------------------------------------------------------------
 // World inset imports
 // ---------------------------------------------------------------------------
@@ -238,6 +242,10 @@ export const worldAssetUrls: Record<string, string> = {
   //   "ember-inset-bank-the-heat", "ember-inset-constellation-shears",
   //   "ember-inset-keep-vigil", "ember-inset-leave-one",
   //   "ember-inset-star-pruner"
+  // city-of-sleeping-giants — base assets wired now; insets wired once art is generated.
+  "city-of-sleeping-giants-bg": giantsRealityUrl,
+  "city-of-sleeping-giants-overlay": giantsOverlayUrl,
+  "city-of-sleeping-giants-cardfront": giantsCardfrontUrl,
 };
 
 export interface WorldMusicAsset {
@@ -255,4 +263,8 @@ export const worldMusicManifest: Record<string, WorldMusicAsset> = {
   "whiteout-parking-garage": { key: "music-whiteout-parking-garage", url: fogBeachPartyMusicUrl },
   "the-tidal-archive": { key: "music-the-tidal-archive", url: fogBeachPartyMusicUrl },
   "the-ember-orchard": { key: "music-the-ember-orchard", url: fogBeachPartyMusicUrl },
+  "city-of-the-sleeping-giants": {
+    key: "music-city-of-the-sleeping-giants",
+    url: fogBeachPartyMusicUrl,
+  },
 };
