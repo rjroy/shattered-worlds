@@ -4,6 +4,7 @@
     "Dormant Star": {
       "kind": "player",
       "name": "Dormant Star",
+      "rarity": "uncommon",
       "insetKey": "ember-inset-dormant-star",
       "energyCost": 0,
       "exhaust": true,
@@ -19,6 +20,7 @@
     "Take One": {
       "kind": "player",
       "name": "Take One",
+      "rarity": "common",
       "insetKey": "ember-inset-take-one",
       "effect": {
         "kind": "Sequence",
@@ -31,6 +33,7 @@
     "Glasshouse Lantern": {
       "kind": "player",
       "name": "Glasshouse Lantern",
+      "rarity": "rare",
       "insetKey": "ember-inset-glasshouse-lantern",
       "exhaust": true,
       "effect": {
@@ -45,6 +48,7 @@
     "Cracked Hearth-Star": {
       "kind": "world",
       "name": "Cracked Hearth-Star",
+      "rarity": "common",
       "insetKey": "ember-inset-cracked-hearth-star",
       "cost": 2,
       "keywords": ["Obstructed"],
@@ -63,6 +67,7 @@
     "Falling Fruit": {
       "kind": "world",
       "name": "Falling Fruit",
+      "rarity": "common",
       "insetKey": "ember-inset-falling-fruit",
       "cost": 2,
       "keywords": ["Obstructed"],
@@ -81,6 +86,7 @@
     "Rooted Meteor": {
       "kind": "world",
       "name": "Rooted Meteor",
+      "rarity": "common",
       "insetKey": "ember-inset-rooted-meteor",
       "cost": 3,
       "keywords": ["Slow"],
@@ -93,6 +99,7 @@
     "The Orchard Counts Wrong": {
       "kind": "world",
       "name": "The Orchard Counts Wrong",
+      "rarity": "uncommon",
       "insetKey": "ember-inset-the-orchard-counts-wrong",
       "cost": 4,
       "keywords": ["Obstructed"],
@@ -111,6 +118,7 @@
     "Hatchery Cellar": {
       "kind": "world",
       "name": "Hatchery Cellar",
+      "rarity": "rare",
       "insetKey": "ember-inset-hatchery-cellar",
       "cost": 6,
       "keywords": ["Obstructed"],
@@ -135,6 +143,7 @@
     "Ember Moth": {
       "kind": "world",
       "name": "Ember Moth",
+      "rarity": "common",
       "insetKey": "ember-inset-ember-moth",
       "cost": 4,
       "keywords": ["Creature"],
@@ -147,6 +156,7 @@
     "Lantern Brood": {
       "kind": "world",
       "name": "Lantern Brood",
+      "rarity": "uncommon",
       "insetKey": "ember-inset-lantern-brood",
       "cost": 4,
       "keywords": ["Creature", "Slow"],
@@ -159,6 +169,7 @@
     "Ground Constellation": {
       "kind": "world",
       "name": "Ground Constellation",
+      "rarity": "rare",
       "insetKey": "ember-inset-ground-constellation",
       "cost": 6,
       "keywords": ["Creature", "Slow"],
@@ -184,16 +195,16 @@
     "acts": [
       {
         "cards": [
-          { "templateId": "Cracked Hearth-Star", "count": 3 },
-          { "templateId": "Falling Fruit", "count": 3 },
+          { "templateId": "Cracked Hearth-Star", "count": 4 },
+          { "templateId": "Falling Fruit", "count": 4 },
           { "templateId": "Hatchery Cellar", "count": 2 }
         ]
       },
       {
         "cards": [
           { "templateId": "Rooted Meteor", "count": 3 },
-          { "templateId": "The Orchard Counts Wrong", "count": 2 },
-          { "templateId": "Ember Moth", "count": 2 },
+          { "templateId": "The Orchard Counts Wrong", "count": 3 },
+          { "templateId": "Ember Moth", "count": 3 },
           { "templateId": "Hatchery Cellar", "count": 1 }
         ]
       },
