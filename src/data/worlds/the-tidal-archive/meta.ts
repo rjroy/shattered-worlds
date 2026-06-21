@@ -2,9 +2,9 @@ import type { WorldDisplayData, WorldHelpData } from "../types";
 
 export const THE_TIDAL_ARCHIVE_DISPLAY: WorldDisplayData = {
   name: "The Tidal Archive",
-  tagline: "A floating library that remembered everything by where it was kept. Then place stopped staying put.",
+  tagline: "A floating library that remebers everything by where it was kept.",
   story:
-    "The Archive was calm: turquoise water under gold-lit stacks, coral bridges between districts, every memory filed by the place it belonged to. Then the Walker crossed it, and the index broke. Buildings drifted from their histories, roads bent back into yesterday, and the tide began returning what you thought you had set down. Every route you trace now curves toward the one footprint the Walker left, and the Door waits where all the maps finally agree.",
+    "Calm turquoise waters and gold-lit stacks kept every memory filed by place, until the Walker crossed it and broke the index. Buildings now drift from their histories, roads bend back into yesterday, and every route curves toward the Walker's single footprint, where the Door waits.",
   difficulty: 4,
   backgroundKey: "the-tidal-archive-bg",
 };
