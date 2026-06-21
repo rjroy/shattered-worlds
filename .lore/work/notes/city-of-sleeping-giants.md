@@ -1,7 +1,7 @@
 ---
 title: "Implementation notes: City of Sleeping Giants"
 date: 2026-06-21
-status: in_progress
+status: complete
 tags: [implementation, notes, world-design, city-of-sleeping-giants, stirring, recurrence]
 source: .lore/work/plans/city-of-sleeping-giants.md
 modules: [world-data, themes, game-view, unlocks, boons]
@@ -31,33 +31,45 @@ Implementing [the city-of-sleeping-giants plan](../plans/city-of-sleeping-giants
 
 ## Progress
 
-- [ ] **Slice A — World data, registration, unlock gating** (A1-A8)
-  - [ ] A1 cards.json (8 world cards; 5 reward cards live in boon source per A8)
-  - [ ] A2 theme.ts
-  - [ ] A3 meta.ts
-  - [ ] A4 index.ts (bundle)
-  - [ ] A5 registry.ts
-  - [ ] A6 threat mapping (gainCard.ts)
-  - [ ] A7 unlock gating (catalog.ts)
-  - [ ] A8 boon source (giants.json + fortune.ts)
-  - [ ] Gate A
-- [ ] **Slice B — Assets, presentation, help, docs** (B1-B6) — ART DEFERRED
-  - [ ] B1 13 card insets (art-gen) — DEFERRED
+- [x] **Slice A — World data, registration, unlock gating** (A1-A8) ✅ COMPLETE + COMMITTED (user)
+  - [x] A1 cards.json (8 world cards + Follow The Vein player card)
+  - [x] A2 theme.ts (intrusionHue `#9d6cff`, no collision)
+  - [x] A3 meta.ts (user later revised copy at 07:03 — solid)
+  - [x] A4 index.ts (bundle)
+  - [x] A5 registry.ts
+  - [x] A6 threat mapping (gainCard.ts)
+  - [x] A7 unlock gating (catalog.ts, cost 5, destinyWeight 0)
+  - [x] A8 boon source — **DIVERGENCE (Ember-blessed):** Follow The Vein references the Vein-Road Surge WORLD card, so it can't live in a merged boon set. `giants-boons` holds the 4 self-contained tools (Quiet Survey, Brace The Ward, Bone Pin, Contour Map); Follow The Vein stays in `cards.json`, granted via `GainCard` on Vein-Road Surge `onCleared` (changed that hook to `Sequence[GainEnergy 1, GainCard "Follow The Vein"]`). `OfferBoon` now offers 3-of-4, not 3-of-5. No new tools invented (faithful to spec's 5-reward roster).
+  - [x] Gate A: 1214 pass / 4 fail (all expected: 2 giants asset/music deferrals + 2 pre-existing Ember art reds); typecheck + lint clean; review conformant.
+- [x] **Slice B — Assets, presentation, help, docs** (B1-B6) — CODE DONE, ART DEFERRED
+  - [ ] B1 13 card insets (art-gen) — DEFERRED (user generates later)
   - [ ] B2 unlock art (art-gen) — DEFERRED
-  - [ ] B3 base + music bindings (insets left unbound w/ turnkey TODO)
-  - [ ] B4 manifest reachable for base keys; unlock-art entry turnkey TODO
-  - [ ] B5 world-select paging (confirm no layout change)
-  - [ ] B6 theme-authoring doc (add `stir` verb row + finish stale-token cleanup)
-  - [ ] Gate B
+  - [x] B3 base bindings (user, commit 046dc8c) + music wired. **Bug fixed:** music manifest entry had typo `city-of-the-sleeping-giants` (extra "the") → corrected to `city-of-sleeping-giants` / `music-city-of-sleeping-giants`, reusing `fogBeachPartyMusicUrl` (whiteout/ember precedent). Flipped city `musicKey is bound` test to green. Insets left w/ turnkey TODO.
+  - [x] B4 base keys (`-bg/-overlay/-cardfront`) confirmed projecting into preload manifest via `...worldAssetUrls`; unlock-art added as deferred `// TODO(giants art)` comment (mirrors Ember line 133).
+  - [x] B5 world-select pages automatically (`Object.keys(worldManifest)` + `VISIBLE_WORLD_COUNT`/paging in `worldSelectPaging.ts`); no layout change, no hide-fallback needed.
+  - [x] B6 theme-authoring doc: added `stir` verb row; added `ReturnWorldCards` inert-on-auto-hooks caveat. `Hidden`/`AddWorldCardToTop` tokens were already fixed by prior passes.
+  - [x] Gate B: 1212 pass / 6 fail; city base+music resolve, city insets RED by design.
+
+## ⚠️ Unrelated red tests on this branch (USER-OWNED, not part of giants)
+
+Confirmed via stash before/after — present in baseline, NOT introduced by giants work. Tied to the user's in-flight `recall` glyph commits (`01c5940`, `a0080bd`):
+- `EFFECT_ICON_TEXTURES > maps every IconId...`
+- `compileEffect > ReturnPlayerDiscardToTop`
+- `compileEffect > RecallPlayerDiscard`
+
+The final Gate C must NOT claim "all green" — report giants tests green + these 3 as user-owned recall-work reds. Do not fix or absorb them into this implementation.
 - [ ] **Slice C — Tests and validation** (C1-C5)
-  - [ ] C1 world-data tests
-  - [ ] C2 stirring-pattern effect tests
-  - [ ] C3 asset validation (incl. boon-inset coverage)
-  - [ ] C4 presentation/theme test
-  - [ ] C5 seeded three-act gameplay test
-  - [ ] Gate C (final) + holistic spec validation
-- [ ] **Finalize**
+  - [x] C1 world-data tests (5) — `src/core/tests/cityOfSleepingGiants.test.ts`
+  - [x] C2 stirring-pattern effect tests (11) — same file; OfferBoon-on-clear, ForceDestroy, Brace absorption end-to-end, District Recall top-deck ordering, threat-mapping recurrence
+  - [x] C3 asset validation — boon-inset coverage added in `src/game/tests/cityOfSleepingGiantsPresentation.test.ts` (RED by design until art)
+  - [x] C4 presentation/theme test (2) — palette + base keys; inset-render half deferred to manual smoke
+  - [x] C5 seeded three-act gameplay test (4) — deterministic
+  - [x] Gate C (final) + holistic spec validation: **SHIP-READY**. No req gaps, no unacknowledged divergences, three deviations correct, all 5 rewards reachable, 3-act/Walker + soft-lock hold. 1236 pass / 7 fail (all accounted for: 4 deferred-art + 3 user recall reds).
+- [x] **Finalize** — code/tests complete; art (13 insets + unlock art) DEFERRED to user, tracked in `.lore/work/issues/city-of-sleeping-giants-card-insets.md`.
 
 ## Log
 
 - 2026-06-21: Initialized. lore-researcher run complete (anchors above). No task files / no agent registry; using `general-purpose` for all roles. Phases = plan slices A/B/C. User chose to DEFER art (mirrors Ember).
+- 2026-06-21: **Slice A COMPLETE + committed by user.** Follow The Vein world-reference trap resolved the Ember way (giants-boons = 4 self-contained tools; Follow The Vein in cards.json via Vein-Road Surge onCleared GainCard; OfferBoon 3-of-4). intrusionHue `#9d6cff`, no collision. Gate A: 1214 pass, only expected asset reds; review conformant.
+- 2026-06-21: **Slice B COMPLETE (code), art deferred.** User had pre-wired base assets (commit 046dc8c). Agent fixed a music-manifest typo (`city-of-the-sleeping-giants` → `city-of-sleeping-giants`), wired music (reuses fog track), added unlock-art TODO, confirmed world-select paging needs no change, added `stir` verb row + ReturnWorldCards caveat to theme-authoring.md. Flagged 3 unrelated user-owned recall reds.
+- 2026-06-21: **Slice C COMPLETE.** 23 tests (22 pass + 1 expected-RED boon insets). No real bugs; all deviations asserted as shipped. Holistic validation SHIP-READY. Filed art-deferral issue. Notes finalized.

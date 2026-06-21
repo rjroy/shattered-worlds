@@ -74,6 +74,7 @@ Map the world's fiction onto these roles.
 | `whiteout-parking-garage` | freeze | Heat economy; owns `GainHeat`, `FreezeCards`, `ThawCards`, frozen cards stop hand usability |
 | `the-tidal-archive` | displace | Owns discard/deck-order recall; rewards set up the top of the player deck deliberately (`ReturnPlayerDiscardToTop`); hazards/passive recall discards automatically (`RecallPlayerDiscard`) |
 | `the-ember-orchard` | incubate | Owns incubation-as-delayed-known-cost: warmth/benefit now that seeds a known future hazard; rewards trade immediate gain for top-decked threats that hatch into stronger cards at end of turn |
+| `city-of-sleeping-giants` | stir | Owns stirring-as-recurrence/escalation from unresolved or exploited body movement: hazards left unresolved (or whose movement is exploited) return and escalate; recurrence is delivered by re-seeding the top of the world deck |
 
 This is a living registry — each new world adds an entry. The verb captures the exclusive mechanical identity of that world; no two worlds should feel interchangeable.
 
@@ -108,7 +109,7 @@ The threat resurfaces next turn rather than replacing the card in hand. Canonica
 
 **Progress / Damage:** `DealProgress`, `DealProgressScaled` _(overgrown-mall exclusive)_, `DealProgressAll`, `Damage`, `DamageScaled`
 
-**Draw / Return:** `Draw`, `DiscardThenDraw`, `ReturnWorldCards`, `ReturnPlayerDiscardToTop` _(Tidal: player-selected recall to draw top)_, `RecallPlayerDiscard` _(Tidal: automatic recall from discard)_
+**Draw / Return:** `Draw`, `DiscardThenDraw`, `ReturnWorldCards` _(inert on world auto-hooks: it is boon-signed and no-ops when fired from a world card's automatic `onEndOfTurn`/`onClear`/etc. hooks; use `AddWorldCardToDeck { bTop: true }` to re-seed recurrence)_, `ReturnPlayerDiscardToTop` _(Tidal: player-selected recall to draw top)_, `RecallPlayerDiscard` _(Tidal: automatic recall from discard)_
 
 **Resource:** `Heal`, `GainEnergy`, `AddCard`, `AddPlayerCardToTop`, `AddWorldCardToDeck` (use `bTop: true` for top-of-deck placement), `AddThreatToWorldDeck`, `GainRandomCard` _(rolled from named pool)_, `GainLight` _(fog-beach-party exclusive)_, `GainHeat`
 

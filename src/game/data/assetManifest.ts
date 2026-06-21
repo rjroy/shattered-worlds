@@ -134,6 +134,10 @@ export const assetManifest: Record<string, string> = {
   // (mirroring the whiteout entry above) once
   // ../assets/unlocks/world-the-ember-orchard.webp is generated. The Ember base,
   // cardfront, and overlay keys are already reachable via ...worldAssetUrls below.
+  // TODO(giants art): add "unlock/world-city-of-sleeping-giants" -> unlockWorldCityOfSleepingGiantsUrl
+  // (mirroring the whiteout entry above) once
+  // ../assets/unlocks/world-city-of-sleeping-giants.webp is generated. The City base,
+  // cardfront, and overlay keys are already reachable via ...worldAssetUrls below.
   "world-select-bg": worldSelectBgUrl,
   "screen-chronicle": screenChronicleUrl,
   "screen-destiny": screenDestinyUrl,

@@ -263,8 +263,8 @@ export const worldMusicManifest: Record<string, WorldMusicAsset> = {
   "whiteout-parking-garage": { key: "music-whiteout-parking-garage", url: fogBeachPartyMusicUrl },
   "the-tidal-archive": { key: "music-the-tidal-archive", url: fogBeachPartyMusicUrl },
   "the-ember-orchard": { key: "music-the-ember-orchard", url: fogBeachPartyMusicUrl },
-  "city-of-the-sleeping-giants": {
-    key: "music-city-of-the-sleeping-giants",
+  "city-of-sleeping-giants": {
+    key: "music-city-of-sleeping-giants",
     url: fogBeachPartyMusicUrl,
   },
 };
