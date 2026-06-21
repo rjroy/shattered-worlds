@@ -43,6 +43,7 @@ const ALL_ICON_IDS: IconId[] = [
   "discard",
   "destroy",
   "exile",
+  "recall",
   "return",
   "addCard",
   "randomCard",

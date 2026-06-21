@@ -194,17 +194,17 @@ describe("compileEffect", () => {
   it("compiles ReturnPlayerDiscardToTop as a recall-to-top range", () => {
     expect(
       compileEffect({ kind: "ReturnPlayerDiscardToTop", min: 1, max: 1 }, "the-tidal-archive"),
-    ).toStrictEqual([line([i("return"), v("1", "reward"), t("to top")])]);
+    ).toStrictEqual([line([i("recall"), v("1", "reward"), t("to top")])]);
     expect(
       compileEffect({ kind: "ReturnPlayerDiscardToTop", min: 0, max: 2 }, "the-tidal-archive"),
-    ).toStrictEqual([line([i("return"), v("0–2", "reward"), t("to top")])]);
+    ).toStrictEqual([line([i("recall"), v("0–2", "reward"), t("to top")])]);
   });
 
   it("compiles RecallPlayerDiscard with the policy as a rider line", () => {
     expect(
       compileEffect({ kind: "RecallPlayerDiscard", policy: "latest" }, "the-tidal-archive"),
     ).toStrictEqual([
-      line([i("return"), v("1", "penalty"), t("from discard")]),
+      line([i("recall"), v("1", "penalty"), t("from discard")]),
       line([t("newest")], "rider"),
     ]);
     expect(
@@ -213,7 +213,7 @@ describe("compileEffect", () => {
         "the-tidal-archive",
       ),
     ).toStrictEqual([
-      line([i("return"), v("2", "penalty"), t("from discard")]),
+      line([i("recall"), v("2", "penalty"), t("from discard")]),
       line([t("cheapest")], "rider"),
     ]);
   });
