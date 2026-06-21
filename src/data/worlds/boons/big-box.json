@@ -50,6 +50,7 @@
     "Plan": {
       "kind": "player",
       "name": "Plan",
+      "insetKey": "zombie-inset-plan",
       "rarity": "rare",
       "exhaust": true,
       "effect": {

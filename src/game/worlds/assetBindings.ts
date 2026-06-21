@@ -114,6 +114,7 @@ import zombieInsetShotgunUrl from "../assets/themes/zombie-big-box/insets/inset-
 import zombieInsetStrangeSoundsUrl from "../assets/themes/zombie-big-box/insets/inset-strange-sounds.webp";
 import zombieInsetZombieUrl from "../assets/themes/zombie-big-box/insets/inset-zombie.webp";
 import zombieInsetListenUrl from "../assets/themes/zombie-big-box/insets/inset-listen.webp";
+import zombieInsetPlanUrl from "../assets/themes/zombie-big-box/insets/inset-plan.webp";
 
 import tidalInsetWanderingStacksUrl from "../assets/themes/the-tidal-archive/insets/inset-wandering-stacks.webp";
 import tidalInsetDrownedIndexUrl from "../assets/themes/the-tidal-archive/insets/inset-drowned-index.webp";
@@ -189,6 +190,7 @@ export const worldAssetUrls: Record<string, string> = {
   "zombie-inset-shelf-sweep": zombieInsetShelfSweepUrl,
   "zombie-inset-shotgun": zombieInsetShotgunUrl,
   "zombie-inset-listen": zombieInsetListenUrl,
+  "zombie-inset-plan": zombieInsetPlanUrl,
   "zombie-inset-strange-sounds": zombieInsetStrangeSoundsUrl,
   "zombie-inset-zombie": zombieInsetZombieUrl,
   // bird-building

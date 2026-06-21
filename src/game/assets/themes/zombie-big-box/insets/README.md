@@ -7,6 +7,7 @@ Thumbnail-first inset assets:
 - `inset-echoing-aisles.webp`
 - `inset-find-shotgun.webp`
 - `inset-listen.webp`
+- `inset-plan.webp`
 - `inset-regroup.webp`
 - `inset-rubble.webp`
 - `inset-screams.webp`
