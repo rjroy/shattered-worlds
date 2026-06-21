@@ -2,7 +2,6 @@ import { describe, expect, it } from "bun:test";
 import type { CardEffect } from "../index";
 import { effectAtStep } from "../effects/composite";
 import { connectorStyleOf, EFFECTS } from "../effects/registry";
-import { makeState } from "./testFixture";
 
 describe("connectorStyleOf", () => {
   it("maps DealProgress -> progress", () => {
@@ -109,10 +108,11 @@ describe("GainRandomCard registration", () => {
       compactSequences: false,
       compile: (e, ctx) => EFFECTS[e.kind].compile(e as never, ctx),
     });
-    const text = lines.flatMap((line) => line.tokens.map((t) => ("text" in t ? t.text : ""))).join(" ");
+    const text = lines
+      .flatMap((line) => line.tokens.map((t) => ("text" in t ? t.text : "")))
+      .join(" ");
     expect(text).toContain("the cache");
   });
-
 });
 
 describe("effectAtStep", () => {

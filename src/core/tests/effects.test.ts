@@ -12,7 +12,6 @@ import { mintCard } from "../model/cards";
 import { availableActions } from "../engine/available";
 import { createWorld } from "../engine/world";
 import { reduce } from "../engine/reduce";
-import { EFFECTS } from "../effects/registry";
 import type { CardEffect, GameState, PlayerCard, WorldCard } from "../model/types";
 import { DEFAULT_RUN_MODIFIERS } from "../../data/unlocks/types";
 import type { CardCatalog } from "../model/catalog";
