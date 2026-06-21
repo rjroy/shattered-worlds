@@ -21,6 +21,7 @@ import effectIconDiscardUrl from "../assets/effect-icons/effect-icon-discard.png
 import effectIconDestroyUrl from "../assets/effect-icons/effect-icon-destroy.png";
 import effectIconExileUrl from "../assets/effect-icons/effect-icon-exile.png";
 import effectIconReturnUrl from "../assets/effect-icons/effect-icon-return.png";
+import effectIconRecallUrl from "../assets/effect-icons/effect-icon-recall.png";
 import effectIconAddCardUrl from "../assets/effect-icons/effect-icon-add-card.png";
 import effectIconSurviveUrl from "../assets/effect-icons/effect-icon-survive.png";
 import effectIconVanishUrl from "../assets/effect-icons/effect-icon-vanish.png";
@@ -92,6 +93,7 @@ export const assetManifest: Record<string, string> = {
   "effect-icon-destroy": effectIconDestroyUrl,
   "effect-icon-exile": effectIconExileUrl,
   "effect-icon-return": effectIconReturnUrl,
+  "effect-icon-recall": effectIconRecallUrl,
   "effect-icon-add-card": effectIconAddCardUrl,
   "effect-icon-survive": effectIconSurviveUrl,
   "effect-icon-vanish": effectIconVanishUrl,
