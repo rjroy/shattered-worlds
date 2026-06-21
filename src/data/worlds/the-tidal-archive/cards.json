@@ -4,10 +4,11 @@
   "cardTemplates": {
     "Wandering Stacks": {
       "kind": "world",
+      "rarity": "uncommon",
       "name": "Wandering Stacks",
       "cost": 2,
       "keywords": ["Obstructed"],
-      "discardable": true,
+      "discardable": false,
       "onDiscarded": { "kind": "None" },
       "onCleared": { "kind": "None" },
       "onPartialClear": { "kind": "None" },
@@ -16,6 +17,7 @@
     "Drowned Index": {
       "kind": "world",
       "name": "Drowned Index",
+      "rarity": "common",
       "cost": 4,
       "keywords": ["Obstructed"],
       "discardable": true,
@@ -33,6 +35,7 @@
     "Misfiled Century": {
       "kind": "world",
       "name": "Misfiled Century",
+      "rarity": "common",
       "cost": 3,
       "keywords": ["Obstructed"],
       "discardable": true,
@@ -44,6 +47,7 @@
     "Bridge to Yesterday": {
       "kind": "world",
       "name": "Bridge to Yesterday",
+      "rarity": "uncommon",
       "cost": 3,
       "keywords": [],
       "discardable": true,
@@ -59,6 +63,7 @@
     "Borrowed Catastrophe": {
       "kind": "world",
       "name": "Borrowed Catastrophe",
+      "rarity": "uncommon",
       "cost": 4,
       "keywords": ["Slow"],
       "discardable": true,
@@ -74,6 +79,7 @@
     "Chained Books Rising": {
       "kind": "world",
       "name": "Chained Books Rising",
+      "rarity": "rare",
       "cost": 4,
       "keywords": ["Creature"],
       "discardable": true,
@@ -91,6 +97,7 @@
     "The Same Footprint": {
       "kind": "world",
       "name": "The Same Footprint",
+      "rarity": "rare",
       "cost": 6,
       "keywords": ["Slow"],
       "discardable": true,
@@ -110,25 +117,25 @@
     "acts": [
       {
         "cards": [
-          { "templateId": "Wandering Stacks", "count": 3 },
-          { "templateId": "Drowned Index", "count": 2 },
-          { "templateId": "Bridge to Yesterday", "count": 1 }
+          { "templateId": "Wandering Stacks", "count": 4 },
+          { "templateId": "Drowned Index", "count": 4 },
+          { "templateId": "Bridge to Yesterday", "count": 2 }
         ]
       },
       {
         "cards": [
-          { "templateId": "Misfiled Century", "count": 3 },
+          { "templateId": "Misfiled Century", "count": 4 },
           { "templateId": "Bridge to Yesterday", "count": 2 },
           { "templateId": "Borrowed Catastrophe", "count": 2 },
-          { "templateId": "Drowned Index", "count": 1 }
+          { "templateId": "Drowned Index", "count": 2 }
         ]
       },
       {
         "cards": [
           { "templateId": "Chained Books Rising", "count": 2 },
-          { "templateId": "Borrowed Catastrophe", "count": 2 },
-          { "templateId": "The Same Footprint", "count": 1 },
-          { "templateId": "Misfiled Century", "count": 1 },
+          { "templateId": "Borrowed Catastrophe", "count": 3 },
+          { "templateId": "The Same Footprint", "count": 2 },
+          { "templateId": "Misfiled Century", "count": 2 },
           { "templateId": "The Walker", "count": 1 }
         ]
       }
