@@ -172,6 +172,7 @@ import fogBeachPartyMusicUrl from "../assets/audio/fog-beach-party-music.mp3?url
 import whiteoutMusicUrl from "../assets/audio/whiteout-parking-garage-music.mp3?url";
 import orchardMusicUrl from "../assets/audio/the-ember-orchard-music.mp3?url";
 import tidalMusicUrl from "../assets/audio/the-tidal-archive-music.mp3?url";
+import giantsMusicUrl from "../assets/audio/city-of-sleeping-giants-music.mp3?url";
 
 // ---------------------------------------------------------------------------
 // Exports
@@ -338,8 +339,5 @@ export const worldMusicManifest: Record<string, WorldMusicAsset> = {
   "whiteout-parking-garage": { key: "music-whiteout-parking-garage", url: whiteoutMusicUrl },
   "the-tidal-archive": { key: "music-the-tidal-archive", url: tidalMusicUrl },
   "the-ember-orchard": { key: "music-the-ember-orchard", url: orchardMusicUrl },
-  "city-of-sleeping-giants": {
-    key: "music-city-of-sleeping-giants",
-    url: fogBeachPartyMusicUrl,
-  },
+  "city-of-sleeping-giants": { key: "music-city-of-sleeping-giants", url: giantsMusicUrl },
 };
