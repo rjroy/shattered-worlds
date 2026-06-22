@@ -24,8 +24,10 @@ export function canPageRight(
 }
 
 /** Clamp the start index after a left-arrow step (mirrors the scene guard). */
-export function pageLeft(visibleStartIndex: number): number {
-  return canPageLeft(visibleStartIndex) ? visibleStartIndex - 1 : visibleStartIndex;
+export function pageLeft(visibleStartIndex: number, visibleCount: number): number {
+  return canPageLeft(visibleStartIndex)
+    ? Math.max(visibleStartIndex - visibleCount, 0)
+    : visibleStartIndex;
 }
 
 /** Clamp the start index after a right-arrow step (mirrors the scene guard). */
@@ -35,7 +37,7 @@ export function pageRight(
   visibleCount: number,
 ): number {
   return canPageRight(visibleStartIndex, worldCount, visibleCount)
-    ? visibleStartIndex + 1
+    ? Math.min(visibleStartIndex + visibleCount, worldCount - visibleCount)
     : visibleStartIndex;
 }
 

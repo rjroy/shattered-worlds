@@ -295,7 +295,7 @@ export class WorldSelectScene extends Phaser.Scene {
     const rowRight = rowLeft + visibleW;
 
     this.leftArrow = this.createArrow(rowLeft - ARROW_GAP, ARROW_Y, "<", () => {
-      const next = pageLeft(this.visibleStartIndex);
+      const next = pageLeft(this.visibleStartIndex, VISIBLE_WORLD_COUNT);
       if (next === this.visibleStartIndex) return;
       this.visibleStartIndex = next;
       this.renderVisibleWorlds();
