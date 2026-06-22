@@ -11,7 +11,9 @@ import { textStyle, TEXT } from "../view/presentation";
 import { CANVAS_W, CANVAS_H, WORLD_SELECT_LAYOUT } from "../view/layout";
 import { worldBadgeLabel } from "../view/worldBadge";
 import { HelpOverlayView } from "../view/HelpOverlayView";
+import { SettingsOverlayView } from "../view/SettingsOverlayView";
 import { canPageLeft, canPageRight, pageLeft, pageRight } from "./worldSelectPaging";
+import { UserSettingsStore } from "../runtime/userSettings";
 
 const CARD_W = WORLD_SELECT_LAYOUT.cardWidth;
 const CARD_H = WORLD_SELECT_LAYOUT.cardHeight;
@@ -46,13 +48,20 @@ export class WorldSelectScene extends Phaser.Scene {
   private leftArrow?: WorldSelectArrow;
   private rightArrow?: WorldSelectArrow;
   private helpOverlay?: HelpOverlayView;
+  private settingsOverlay?: SettingsOverlayView;
   private readonly runStats: RunStatsReader | undefined;
   private readonly unlocksStore: UnlocksStore | undefined;
+  private readonly userSettings: UserSettingsStore | undefined;
 
-  constructor(runStats?: RunStatsReader, unlocksStore?: UnlocksStore) {
+  constructor(
+    runStats?: RunStatsReader,
+    unlocksStore?: UnlocksStore,
+    userSettings?: UserSettingsStore,
+  ) {
     super({ key: "WorldSelect" });
     this.runStats = runStats;
     this.unlocksStore = unlocksStore;
+    this.userSettings = userSettings;
   }
 
   preload(): void {
@@ -101,6 +110,7 @@ export class WorldSelectScene extends Phaser.Scene {
     this.createChronicleButton();
     this.createDestinyButton();
     this.createHelpButton();
+    this.createSettingsButton();
     this.createArrows();
     this.renderVisibleWorlds();
 
@@ -181,6 +191,30 @@ export class WorldSelectScene extends Phaser.Scene {
     bg.on("pointerdown", () => this.showHelpOverlay());
   }
 
+  private createSettingsButton(): void {
+    const button = this.add.container(CANVAS_W - 335, 34);
+    const bg = this.add.rectangle(0, 0, 34, 34, 0x0f0b15, 0.82);
+    bg.setStrokeStyle(1, 0xd6b15c, 0.9);
+    bg.setRounded(6);
+    bg.setInteractive({ useHandCursor: true });
+    const label = this.add
+      .text(
+        0,
+        -9,
+        "S",
+        textStyle({
+          fontSize: "20px",
+          color: "#d6b15c",
+          fontStyle: "bold",
+        }),
+      )
+      .setOrigin(0.5, 0);
+    button.add([bg, label]);
+    bg.on("pointerover", () => button.setScale(1.08));
+    bg.on("pointerout", () => button.setScale(1));
+    bg.on("pointerdown", () => this.showSettingsOverlay());
+  }
+
   private showHelpOverlay(): void {
     const worldId = this.worldIds[this.visibleStartIndex];
     if (worldId === undefined) return;
@@ -198,6 +232,14 @@ export class WorldSelectScene extends Phaser.Scene {
     const totalActs = buildWorld("starter").worldData.deckComposition.acts.length;
     this.helpOverlay = new HelpOverlayView(this, worldId, totalActs);
     this.helpOverlay.setVisible(true);
+  }
+
+  private showSettingsOverlay(): void {
+    if (this.userSettings) {
+      this.settingsOverlay?.destroy(true);
+      this.settingsOverlay = new SettingsOverlayView(this, this.userSettings);
+      this.settingsOverlay.setVisible(true);
+    }
   }
 
   private renderVisibleWorlds(): void {
