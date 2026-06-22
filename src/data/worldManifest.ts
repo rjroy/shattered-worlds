@@ -4,6 +4,7 @@ import type { RawCardSource, WorldData, AssembledWorld } from "../core/model/cat
 import basicJson from "./worlds/starters/basic.json";
 import starterJson from "./worlds/starters/starter.json";
 import footballerJson from "./worlds/starters/footballer.json";
+import contractorJson from "./worlds/starters/contractor.json";
 import { worldDataRegistry } from "./worlds/registry";
 import { BOON_SETS } from "./worlds/boons/fortune";
 
@@ -12,6 +13,7 @@ const BASIC_SOURCE = basicJson as unknown as RawCardSource;
 const STARTER_SOURCES = [
   starterJson as unknown as RawCardSource,
   footballerJson as unknown as RawCardSource,
+  contractorJson as unknown as RawCardSource,
 ];
 
 const BOON_SET_SOURCES = Object.values(BOON_SETS).map((set) => set.source);
