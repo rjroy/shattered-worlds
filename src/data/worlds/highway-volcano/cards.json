@@ -4,6 +4,7 @@
     "Tremors": {
       "kind": "world",
       "name": "Tremors",
+      "rarity": "uncommon",
       "insetKey": "volcano-inset-tremors",
       "cost": 2,
       "keywords": [],
@@ -16,6 +17,7 @@
     "Gridlock": {
       "kind": "world",
       "name": "Gridlock",
+      "rarity": "common",
       "insetKey": "volcano-inset-gridlock",
       "cost": 1,
       "keywords": ["Slow"],
@@ -28,6 +30,7 @@
     "Ash Fall": {
       "kind": "world",
       "name": "Ash Fall",
+      "rarity": "common",
       "insetKey": "volcano-inset-ash-fall",
       "cost": 1,
       "keywords": ["Slow"],
@@ -40,6 +43,7 @@
     "Lava Flow": {
       "kind": "world",
       "name": "Lava Flow",
+      "rarity": "signature",
       "insetKey": "volcano-inset-lava-flow",
       "cost": 3,
       "keywords": ["Slow"],
@@ -58,6 +62,7 @@
     "Find a Vehicle": {
       "kind": "world",
       "name": "Find a Vehicle",
+      "rarity": "uncommon",
       "insetKey": "volcano-inset-vehicle",
       "cost": 2,
       "keywords": ["Obstructed"],
@@ -70,6 +75,7 @@
     "Push Through": {
       "kind": "player",
       "name": "Push Through",
+      "rarity": "uncommon",
       "insetKey": "volcano-inset-spot-path",
       "energyCost": 1,
       "effect": {
@@ -83,6 +89,7 @@
     "Floor It": {
       "kind": "player",
       "name": "Floor It",
+      "rarity": "rare",
       "insetKey": "volcano-inset-floor-it",
       "energyCost": 0,
       "exhaust": true,
@@ -91,6 +98,7 @@
     "Ditch Gear": {
       "kind": "player",
       "name": "Ditch Gear",
+      "rarity": "common",
       "insetKey": "volcano-inset-ditch-gear",
       "exhaust": true,
       "energyCost": 1,
@@ -105,6 +113,7 @@
     "Nitro": {
       "kind": "player",
       "name": "Nitro",
+      "rarity": "uncommon",
       "insetKey": "volcano-inset-nitro",
       "exhaust": true,
       "energyCost": 0,

@@ -58,7 +58,7 @@
     "Something in the Atrium": {
       "kind": "world",
       "name": "Something in the Atrium",
-      "rarity": "common",
+      "rarity": "signature",
       "insetKey": "mall-inset-something-in-the-atrium",
       "cost": 3,
       "keywords": ["Creature", "Slow"],

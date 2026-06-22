@@ -47,7 +47,7 @@
     "Gripping Talon": {
       "kind": "world",
       "name": "Gripping Talon",
-      "rarity": "common",
+      "rarity": "signature",
       "insetKey": "bird-inset-gripping-talon",
       "cost": 3,
       "keywords": ["Obstructed", "Creature"],

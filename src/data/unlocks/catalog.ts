@@ -219,8 +219,8 @@ export const UNLOCK_CATALOG: readonly UnlockDefinition[] = [
             effect: {
               kind: "Sequence",
               steps: [
-                { kind: "DealProgressAll", base: 1 },
                 { kind: "ReturnWorldCards", min: 0, max: 6 },
+                { kind: "DealProgressAll", base: 2, bonus: { tag: "Obstructed", amount: 1 } },
               ],
             },
           },

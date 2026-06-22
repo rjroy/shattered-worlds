@@ -104,7 +104,7 @@
       "kind": "world",
       "name": "The Same Footprint",
       "insetKey": "tidal-inset-the-same-footprint",
-      "rarity": "rare",
+      "rarity": "signature",
       "cost": 6,
       "keywords": ["Slow"],
       "discardable": true,

@@ -3,8 +3,8 @@ import * as rarityModule from "../model/rarity";
 import { RARITY_ORDER, RARITY_WEIGHTS } from "../model/rarity";
 
 describe("RARITY_ORDER", () => {
-  it("has exactly the four tiers, most to least common", () => {
-    expect(RARITY_ORDER).toEqual(["common", "uncommon", "rare", "legendary"]);
+  it("has exactly the five tiers, most to least common", () => {
+    expect(RARITY_ORDER).toEqual(["common", "uncommon", "rare", "legendary", "signature"]);
   });
 });
 
@@ -14,6 +14,7 @@ describe("RARITY_WEIGHTS", () => {
     expect(RARITY_WEIGHTS).toHaveProperty("uncommon");
     expect(RARITY_WEIGHTS).toHaveProperty("rare");
     expect(RARITY_WEIGHTS).toHaveProperty("legendary");
+    expect(RARITY_WEIGHTS).toHaveProperty("signature");
   });
 });
 

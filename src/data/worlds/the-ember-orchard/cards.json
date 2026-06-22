@@ -169,7 +169,7 @@
     "Ground Constellation": {
       "kind": "world",
       "name": "Ground Constellation",
-      "rarity": "rare",
+      "rarity": "signature",
       "insetKey": "ember-inset-ground-constellation",
       "cost": 6,
       "keywords": ["Creature", "Slow"],
