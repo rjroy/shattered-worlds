@@ -35,6 +35,7 @@ const RARITY_STYLES: Record<RarityTier, RarityStyle> = {
   uncommon: { color: 0x4caf50, glyph: "U", label: "Uncommon", glowStrength: 3 },
   rare: { color: 0x4a90d9, glyph: "R", label: "Rare", glowStrength: 5 },
   legendary: { color: 0xe0a526, glyph: "L", label: "Legendary", glowStrength: 7 },
+  signature: { color: 0xe04826, glyph: "S", label: "Signature", glowStrength: 3 },
 };
 
 /** Common is the fallback treatment for any unknown/missing tier (REQ-RARITY-40). */

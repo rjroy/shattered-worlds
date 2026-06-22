@@ -5,6 +5,7 @@
     "Hand Warmers": {
       "kind": "player",
       "name": "Hand Warmers",
+      "rarity": "common",
       "insetKey": "whiteout-inset-hand-warmers",
       "exhaust": true,
       "effect": {
@@ -16,79 +17,27 @@
         ]
       }
     },
-    "Ice Scraper": {
-      "kind": "player",
-      "name": "Ice Scraper",
-      "insetKey": "whiteout-inset-ice-scraper",
-      "energyCost": 1,
-      "effect": {
-        "kind": "Modal",
-        "branches": [
-          { "kind": "ThawCards", "amount": 1, "heatCost": 1 },
-          { "kind": "GainHeat", "amount": 2 },
-          { "kind": "DealProgress", "base": 2 }
-        ]
-      }
-    },
-    "Burn The Manual": {
-      "kind": "player",
-      "name": "Burn The Manual",
-      "insetKey": "whiteout-inset-burn-the-manual",
-      "effect": {
-        "kind": "Sequence",
-        "steps": [
-          { "kind": "DestroyCardInHand", "min": 1, "max": 1 },
-          { "kind": "GainHeat", "amount": 2 },
-          { "kind": "DealProgressAll", "base": 1, "bonus": { "tag": "Obstructed", "amount": 1 } }
-        ]
-      }
-    },
-    "Space Heater": {
-      "kind": "player",
-      "name": "Space Heater",
-      "insetKey": "whiteout-inset-space-heater",
-      "energyCost": 1,
-      "exhaust": true,
-      "effect": {
-        "kind": "Modal",
-        "branches": [
-          { "kind": "ThawCards", "amount": 2, "heatCost": 1 },
-          { "kind": "GainHeat", "amount": 4 },
-          { "kind": "DealProgressAll", "base": 2, "bonus": { "tag": "Obstructed", "amount": 2 } }
-        ]
-      }
-    },
-    "Jumper Cables": {
-      "kind": "player",
-      "name": "Jumper Cables",
-      "insetKey": "whiteout-inset-jumper-cables",
-      "energyCost": 2,
-      "effect": {
-        "kind": "Modal",
-        "branches": [
-          { "kind": "ThawCards", "amount": 2, "heatCost": 1 },
-          { "kind": "GainHeat", "amount": 4 },
-          { "kind": "DealProgressAll", "base": 2 }
-        ]
-      }
-    },
     "Maintenance Closet": {
       "kind": "world",
       "name": "Maintenance Closet",
+      "rarity": "rare",
       "insetKey": "whiteout-inset-maintenance-closet",
-      "cost": 5,
+      "cost": 3,
       "keywords": ["Obstructed"],
       "discardable": true,
-      "onDiscarded": { "kind": "None" },
+      "onDiscarded": {
+        "kind": "OfferBoon",
+        "setId": "whiteout-boons",
+        "setName": "Maintenance Closet",
+        "offeredCount": 1,
+        "chooseCount": 1
+      },
       "onCleared": {
-        "kind": "Sequence",
-        "steps": [
-          { "kind": "GainCard", "template": "Hand Warmers" },
-          { "kind": "GainCard", "template": "Ice Scraper" },
-          { "kind": "GainCard", "template": "Burn The Manual" },
-          { "kind": "GainCard", "template": "Space Heater" },
-          { "kind": "GainCard", "template": "Jumper Cables" }
-        ]
+        "kind": "OfferBoon",
+        "setId": "whiteout-boons",
+        "setName": "Maintenance Closet",
+        "offeredCount": 3,
+        "chooseCount": 1
       },
       "onPartialClear": { "kind": "None" },
       "onEndOfTurn": { "kind": "None" }
@@ -180,6 +129,7 @@
     "The Garage Freezes Shut": {
       "kind": "world",
       "name": "The Garage Freezes Shut",
+      "rarity": "signature",
       "insetKey": "whiteout-inset-the-garage-freezes-shut",
       "cost": 6,
       "keywords": ["Slow", "Obstructed"],

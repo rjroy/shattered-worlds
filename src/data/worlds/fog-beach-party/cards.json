@@ -5,6 +5,7 @@
     "Flashlight": {
       "kind": "player",
       "name": "Half-Dead Flashlight",
+      "rarity": "common",
       "insetKey": "fog-inset-flashlight",
       "exhaust": true,
       "effect": { "kind": "GainLight", "amount": 2 }
@@ -12,6 +13,7 @@
     "Flare Gun": {
       "kind": "player",
       "name": "Flare Gun",
+      "rarity": "uncommon",
       "insetKey": "fog-inset-flare-gun",
       "energyCost": 1,
       "exhaust": true,
@@ -26,6 +28,7 @@
     "Bonfire": {
       "kind": "player",
       "name": "Bonfire",
+      "rarity": "uncommon",
       "insetKey": "fog-inset-bonfire",
       "energyCost": 2,
       "exhaust": true,
@@ -40,6 +43,7 @@
     "Searchlight": {
       "kind": "player",
       "name": "Searchlight",
+      "rarity": "rare",
       "insetKey": "fog-inset-searchlight",
       "energyCost": 2,
       "exhaust": true,
@@ -80,6 +84,7 @@
     "Rolling Fog": {
       "kind": "world",
       "name": "Rolling Fog",
+      "rarity": "common",
       "insetKey": "fog-inset-rolling-fog",
       "cost": 2,
       "keywords": ["Concealed:1", "Obstructed"],
@@ -92,6 +97,7 @@
     "Abandoned Cooler": {
       "kind": "world",
       "name": "Abandoned Cooler",
+      "rarity": "common",
       "insetKey": "fog-inset-abandoned-cooler",
       "cost": 2,
       "keywords": ["Concealed:1", "Obstructed"],
@@ -108,6 +114,7 @@
     "The Bonfire": {
       "kind": "world",
       "name": "The Bonfire",
+      "rarity": "uncommon",
       "insetKey": "fog-inset-the-bonfire",
       "cost": 4,
       "keywords": ["Obstructed"],
@@ -127,6 +134,7 @@
     "Something in the Mist": {
       "kind": "world",
       "name": "Something in the Mist",
+      "rarity": "signature",
       "insetKey": "fog-inset-something-in-the-mist",
       "cost": 3,
       "keywords": ["Concealed:3", "Creature", "Obstructed"],
@@ -139,6 +147,7 @@
     "The Tide Coming In": {
       "kind": "world",
       "name": "The Tide Coming In",
+      "rarity": "uncommon",
       "insetKey": "fog-inset-the-tide-coming-in",
       "cost": 3,
       "keywords": ["Concealed:3", "Obstructed"],
@@ -151,6 +160,7 @@
     "Whiteout": {
       "kind": "world",
       "name": "Whiteout",
+      "rarity": "rare",
       "insetKey": "fog-inset-whiteout",
       "cost": 4,
       "keywords": ["Concealed:5", "Obstructed"],

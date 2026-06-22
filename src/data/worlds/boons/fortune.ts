@@ -3,11 +3,13 @@ import type { CardTemplateId } from "../../../core/model/types";
 import fortuneJson from "./fortune.json";
 import bigBoxJson from "./big-box.json";
 import tidalJson from "./tidal.json";
+import whiteoutJson from "./whiteout.json";
 import emberJson from "./ember.json";
 import giantsJson from "./giants.json";
 
 export const FORTUNE_BOON_SOURCE = fortuneJson as unknown as RawCardSource;
 export const BIG_BOX_BOON_SOURCE = bigBoxJson as unknown as RawCardSource;
+export const WHITEOUT_BOON_SOURCE = whiteoutJson as unknown as RawCardSource;
 export const TIDAL_BOON_SOURCE = tidalJson as unknown as RawCardSource;
 export const EMBER_BOON_SOURCE = emberJson as unknown as RawCardSource;
 export const GIANTS_BOON_SOURCE = giantsJson as unknown as RawCardSource;
@@ -25,6 +27,10 @@ export const BOON_SETS = {
   "big-box-boons": {
     source: BIG_BOX_BOON_SOURCE,
     templateIds: ["React to Noise", "Fast Sweep", "Listen", "player-scream", "Plan"],
+  },
+  "whiteout-boons": {
+    source: WHITEOUT_BOON_SOURCE,
+    templateIds: Object.keys(WHITEOUT_BOON_SOURCE.cardTemplates),
   },
   "tidal-boons": {
     source: TIDAL_BOON_SOURCE,

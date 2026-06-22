@@ -156,7 +156,7 @@
     "The Giant Turns In Sleep": {
       "kind": "world",
       "name": "The Giant Turns In Sleep",
-      "rarity": "uncommon",
+      "rarity": "signature",
       "insetKey": "giants-inset-the-giant-turns-in-sleep",
       "cost": 6,
       "keywords": ["Slow"],

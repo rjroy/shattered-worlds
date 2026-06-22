@@ -2173,6 +2173,12 @@ const rarityCatalog: CardCatalog = {
     effect: { kind: "DealProgress", base: 1 },
     rarity: "legendary",
   },
+  "Signature Card": {
+    kind: "player",
+    name: "Signature Card",
+    effect: { kind: "DealProgress", base: 1 },
+    rarity: "signature",
+  },
   "Unstamped Card": {
     kind: "player",
     name: "Unstamped Card",
@@ -2201,12 +2207,13 @@ function faceRectangles(view: CardView): { strokeWidth: number; strokeColor: num
 }
 
 describe("CardView rarity stroke", () => {
-  const tiers: RarityTier[] = ["common", "uncommon", "rare", "legendary"];
+  const tiers: RarityTier[] = ["common", "uncommon", "rare", "legendary", "signature"];
   const templateIdByTier: Record<RarityTier, string> = {
     common: "Common Card",
     uncommon: "Uncommon Card",
     rare: "Rare Card",
     legendary: "Legendary Card",
+    signature: "Signature Card",
   };
 
   it("each tier renders a distinct stroke color matching rarityStyle", () => {
