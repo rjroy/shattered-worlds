@@ -30,7 +30,7 @@ export const BOON_SETS = {
   },
   "whiteout-boons": {
     source: WHITEOUT_BOON_SOURCE,
-    templateIds: Object.keys(WHITEOUT_BOON_SOURCE.cardTemplates),
+    templateIds: ["Ice Scraper", "Burn The Manual", "Space Heater", "Jumper Cables"],
   },
   "tidal-boons": {
     source: TIDAL_BOON_SOURCE,
