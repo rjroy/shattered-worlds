@@ -171,8 +171,8 @@ function addCardText(
 export class CardView extends Phaser.GameObjects.Container {
   readonly cardId: string;
   readonly worldId: string;
-  readonly visibleFx?: string;
-  private activeFx?: Phaser.Sound.BaseSound;
+  readonly visibleFxKey?: string;
+  private loopedFx?: Phaser.Sound.BaseSound;
 
   private highlightRect: Phaser.GameObjects.Rectangle;
   private rarityRect: Phaser.GameObjects.Rectangle;
@@ -209,9 +209,13 @@ export class CardView extends Phaser.GameObjects.Container {
     this.worldId = theme.worldId;
     this.setDepth(TABLE_LAYOUT.cardDepth);
 
-    // TODO turn this into a real card property, this is a POC test.
-    if (card.templateId === "Door") {
-      this.visibleFx = "the-door-fx";
+    if (card.fx) {
+      for (const fx of card.fx) {
+        console.log(`FX: ${fx.kind} = ${fx.key}`);
+        if (fx.kind === "WhileVisible") {
+          this.visibleFxKey = fx.key;
+        }
+      }
     }
 
     const isModifled = card.kind === "player" && card.modified;
@@ -493,15 +497,7 @@ export class CardView extends Phaser.GameObjects.Container {
       this.setObjectsVisible(this.fogObjects, false);
     }
 
-    if (this.visibleFx) {
-      this.activeFx = this.scene.sound.add(this.visibleFx, { volume: 0.5, loop: true });
-      this.activeFx.play();
-      this.scene.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
-        if (this.activeFx) {
-          this.activeFx.stop();
-        }
-      });
-    }
+    this.playWhileVisible();
   }
 
   public getCardId(): string {
@@ -619,6 +615,19 @@ export class CardView extends Phaser.GameObjects.Container {
   /** Re-assert this card's base position. */
   setCardPosition(x: number, y: number): void {
     this.setPosition(x, y);
+  }
+
+  private playWhileVisible(): void {
+    if (!this.visibleFxKey) return;
+
+    this.loopedFx = this.scene.sound.add(this.visibleFxKey, { volume: 0.5, loop: true });
+    console.log(`play FX: ${this.visibleFxKey}`);
+    this.loopedFx.play();
+    this.scene.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+      if (this.loopedFx) {
+        this.loopedFx.stop();
+      }
+    });
   }
 
   private obtainGlow(): Phaser.GameObjects.Graphics {
