@@ -11,6 +11,14 @@
  * the in-hand connector flow, since discard cards are not rendered as targetable
  * card objects on the table.
  *
+ * When the discard pile holds more cards than fit in the panel, the row list
+ * pages a fixed window (`MAX_VISIBLE_ROWS`) and the footer stays pinned at the
+ * bottom of the panel, so Confirm/Cancel are always reachable. This mirrors the
+ * row-paging scroll the Destiny scene uses: wheel, Up/Down keys, and touch-drag
+ * all move the window by whole rows, and the visible rows are re-rendered.
+ * Selection survives paging because picks live in `this.picks`, not in the row
+ * objects, so a pick made off-screen is re-applied when its row scrolls back in.
+ *
  * The empty-pile / `min: 0` auto-skip is handled by the SCENE before this view
  * is ever constructed (see selection.ts § empty-pile flow); this view always
  * opens with at least one row. For `min: 0` it still allows confirming with zero
@@ -42,8 +50,15 @@ export interface DiscardChooserViewConfig {
 const PANEL_W = 560;
 const ROW_H = 36;
 const ROW_GAP = 6;
+const ROW_STRIDE = ROW_H + ROW_GAP;
 const LIST_TOP = 168;
 const INSET_SLOT_W = 28;
+/** Most rows shown at once; longer piles page within this window. */
+const MAX_VISIBLE_ROWS = 7;
+/** Touch-drag distance (px) that advances the window by one row. */
+const TOUCH_SCROLL_THRESHOLD = ROW_STRIDE;
+/** x of the page-scroll arrows, just inside the right panel edge. */
+const ARROW_X = CANVAS_W / 2 + PANEL_W / 2 - 24;
 
 /** Compact one-line description of a card's recall-relevant instance state. */
 function cardStateLabel(card: Card): string {
@@ -67,15 +82,44 @@ export class DiscardChooserView extends Phaser.GameObjects.Container {
   private confirmLabel!: Phaser.GameObjects.Text;
   private readonly config: DiscardChooserViewConfig;
 
+  /** Number of rows shown at once, and where the visible window starts. */
+  private readonly visibleRows: number;
+  private readonly maxOffset: number;
+  private scrollOffset = 0;
+  private listContainer?: Phaser.GameObjects.Container;
+
+  /** Touch-drag scroll bookkeeping (mirrors DestinyScene). */
+  private touchScrollLastY: number | undefined;
+  private touchScrollRemainder = 0;
+
+  /** Bound scene-input handlers, retained so destroy() can detach them. */
+  private readonly onWheel: (
+    pointer: Phaser.Input.Pointer,
+    over: unknown,
+    dx: number,
+    dy: number,
+  ) => void;
+  private readonly onKeyUp: () => void;
+  private readonly onKeyDown: () => void;
+  private readonly onPointerDown: (pointer: Phaser.Input.Pointer) => void;
+  private readonly onPointerMove: (pointer: Phaser.Input.Pointer) => void;
+  private readonly onPointerUp: () => void;
+
   constructor(scene: Phaser.Scene, config: DiscardChooserViewConfig) {
     super(scene, 0, 0);
     this.config = config;
     scene.add.existing(this);
     this.setDepth(TABLE_LAYOUT.modalDepth + 20);
 
-    const listH = config.cards.length * ROW_H + Math.max(0, config.cards.length - 1) * ROW_GAP;
-    // Panel spans the header (above LIST_TOP), the row list, and the footer.
-    const panelH = Math.min(CANVAS_H - 40, Math.max(260, LIST_TOP - 60 + listH + 96));
+    this.visibleRows = Math.min(config.cards.length, MAX_VISIBLE_ROWS);
+    this.maxOffset = Math.max(0, config.cards.length - this.visibleRows);
+
+    const visibleListH = this.visibleRows * ROW_H + Math.max(0, this.visibleRows - 1) * ROW_GAP;
+    const footerY = LIST_TOP + visibleListH + 30;
+    // Panel spans the header (title/copy), the fixed row window, and the footer.
+    const panelTop = 76;
+    const panelBottom = footerY + 30;
+    const panelH = panelBottom - panelTop;
 
     const shield = scene.add.rectangle(0, 0, CANVAS_W, CANVAS_H, 0x050505, 0.78);
     shield.setOrigin(0, 0);
@@ -85,7 +129,7 @@ export class DiscardChooserView extends Phaser.GameObjects.Container {
     const panel = scene.add
       .nineslice(
         CANVAS_W / 2,
-        CANVAS_H / 2,
+        (panelTop + panelBottom) / 2,
         "text-back",
         undefined,
         PANEL_W,
@@ -128,27 +172,112 @@ export class DiscardChooserView extends Phaser.GameObjects.Container {
     copy.setOrigin(0.5, 0);
     this.add(copy);
 
-    config.cards.forEach((card, index) => {
-      this.addRow(scene, card, LIST_TOP + index * (ROW_H + ROW_GAP));
-    });
+    this.addFooter(scene, footerY);
+    this.renderRows(scene);
 
-    this.addFooter(scene, LIST_TOP + listH + 18);
+    // Page-scroll input. Guarded for the headless test scene (no `input`); the
+    // bound handlers are detached in destroy() to avoid leaking across opens.
+    this.onWheel = (pointer, _over, _dx, dy: number) => {
+      if (!this.pointerInScrollArea(pointer)) return;
+      this.scrollBy(dy > 0 ? 1 : -1);
+    };
+    this.onKeyUp = () => this.scrollBy(-1);
+    this.onKeyDown = () => this.scrollBy(1);
+    this.onPointerDown = (pointer) => this.beginTouchScroll(pointer);
+    this.onPointerMove = (pointer) => this.updateTouchScroll(pointer);
+    this.onPointerUp = () => this.endTouchScroll();
+
+    const input = scene.input;
+    if (input !== undefined) {
+      input.on("wheel", this.onWheel);
+      input.on("pointerdown", this.onPointerDown);
+      input.on("pointermove", this.onPointerMove);
+      input.on("pointerup", this.onPointerUp);
+      input.on("pointerupoutside", this.onPointerUp);
+      input.keyboard?.on("keydown-UP", this.onKeyUp);
+      input.keyboard?.on("keydown-DOWN", this.onKeyDown);
+    }
 
     this.refreshConfirm();
     scene.children.bringToTop(this);
   }
 
-  private addRow(scene: Phaser.Scene, card: Card, y: number): void {
+  /** (Re)build the visible row window and its page-scroll affordances. */
+  private renderRows(scene: Phaser.Scene): void {
+    this.listContainer?.destroy(true);
+    this.rowBorders.clear();
+    const list = scene.add.container(0, 0);
+    this.listContainer = list;
+    this.add(list);
+
+    const visible = this.config.cards.slice(this.scrollOffset, this.scrollOffset + this.visibleRows);
+    visible.forEach((card, index) => {
+      this.addRow(scene, list, card, LIST_TOP + index * ROW_STRIDE);
+    });
+
+    if (this.maxOffset > 0) {
+      this.addScrollAffordances(scene, list);
+    }
+  }
+
+  private addScrollAffordances(scene: Phaser.Scene, list: Phaser.GameObjects.Container): void {
+    const accent = getRealityPalette(this.config.theme, "title");
+    const windowH = this.visibleRows * ROW_STRIDE;
+
+    const start = this.scrollOffset + 1;
+    const end = this.scrollOffset + this.visibleRows;
+    const count = scene.add
+      .text(
+        CANVAS_W / 2,
+        LIST_TOP + windowH - 4,
+        `${start}–${end} of ${this.config.cards.length}`,
+        textStyle({ fontSize: "11px", color: TEXT.textMuted }),
+      )
+      .setOrigin(0.5, 0.5);
+    list.add(count);
+
+    if (this.scrollOffset > 0) {
+      const up = scene.add
+        .text(ARROW_X, LIST_TOP + 6, "▲", textStyle({ fontSize: "14px", color: accent }))
+        .setOrigin(0.5, 0)
+        .setInteractive({ useHandCursor: true })
+        .on("pointerdown", () => this.scrollBy(-1));
+      list.add(up);
+    }
+    if (this.scrollOffset < this.maxOffset) {
+      const down = scene.add
+        .text(ARROW_X, LIST_TOP + windowH - 22, "▼", textStyle({ fontSize: "14px", color: accent }))
+        .setOrigin(0.5, 0)
+        .setInteractive({ useHandCursor: true })
+        .on("pointerdown", () => this.scrollBy(1));
+      list.add(down);
+    }
+  }
+
+  private addRow(
+    scene: Phaser.Scene,
+    list: Phaser.GameObjects.Container,
+    card: Card,
+    y: number,
+  ): void {
     const rowW = PANEL_W - 60;
     const left = CANVAS_W / 2 - rowW / 2;
+    const picked = this.picks.includes(card.id);
 
     const border = scene.add
-      .rectangle(CANVAS_W / 2, y + ROW_H / 2, rowW, ROW_H, 0x0b0710, 0.55)
+      .rectangle(
+        CANVAS_W / 2,
+        y + ROW_H / 2,
+        rowW,
+        ROW_H,
+        picked ? this.config.theme.frameStyle.pickedBorder : 0x0b0710,
+        picked ? 0.22 : 0.55,
+      )
       .setRounded(6);
-    border.setStrokeStyle(2, this.config.theme.frameStyle.targetBorder, 0.0);
+    border.setStrokeStyle(2, this.config.theme.frameStyle.pickedBorder, picked ? 1 : 0);
     border.setInteractive({ useHandCursor: true });
     border.on("pointerdown", () => this.toggle(card.id));
-    this.add(border);
+    list.add(border);
     this.rowBorders.set(card.id, border);
 
     // Empty inset slot (deferred art): a thin placeholder frame on the left.
@@ -156,7 +285,7 @@ export class DiscardChooserView extends Phaser.GameObjects.Container {
       .rectangle(left + 6 + INSET_SLOT_W / 2, y + ROW_H / 2, INSET_SLOT_W, ROW_H - 10, 0x000000, 0.3)
       .setRounded(3);
     insetSlot.setStrokeStyle(1, this.config.theme.frameStyle.ringAccent, 0.4);
-    this.add(insetSlot);
+    list.add(insetSlot);
 
     const cost = scene.add.text(
       left + 6 + INSET_SLOT_W + 10,
@@ -165,7 +294,7 @@ export class DiscardChooserView extends Phaser.GameObjects.Container {
       textStyle({ fontSize: "15px", color: TEXT.textCost, fontStyle: "bold" }),
     );
     cost.setOrigin(0, 0.5);
-    this.add(cost);
+    list.add(cost);
 
     const name = scene.add.text(
       left + 6 + INSET_SLOT_W + 34,
@@ -174,7 +303,7 @@ export class DiscardChooserView extends Phaser.GameObjects.Container {
       textStyle({ fontSize: "15px", color: getRealityPalette(this.config.theme, "title") }),
     );
     name.setOrigin(0, 0.5);
-    this.add(name);
+    list.add(name);
 
     const state = cardStateLabel(card);
     if (state !== "") {
@@ -185,7 +314,7 @@ export class DiscardChooserView extends Phaser.GameObjects.Container {
         textStyle({ fontSize: "11px", color: TEXT.textHeld, fontStyle: "italic" }),
       );
       stateText.setOrigin(1, 0.5);
-      this.add(stateText);
+      list.add(stateText);
     }
   }
 
@@ -273,9 +402,71 @@ export class DiscardChooserView extends Phaser.GameObjects.Container {
     this.config.onConfirm([...this.picks]);
   }
 
+  /** Page the visible window by whole rows, clamped to the pile. */
+  private scrollBy(delta: number): void {
+    const next = Phaser.Math.Clamp(this.scrollOffset + delta, 0, this.maxOffset);
+    if (next === this.scrollOffset) return;
+    this.scrollOffset = next;
+    this.renderRows(this.scene);
+  }
+
+  private beginTouchScroll(pointer: Phaser.Input.Pointer): void {
+    if (!this.pointerInScrollArea(pointer)) return;
+    this.touchScrollLastY = pointer.y;
+    this.touchScrollRemainder = 0;
+  }
+
+  private updateTouchScroll(pointer: Phaser.Input.Pointer): void {
+    if (this.touchScrollLastY === undefined || !pointer.isDown) return;
+
+    this.touchScrollRemainder += this.touchScrollLastY - pointer.y;
+    this.touchScrollLastY = pointer.y;
+
+    const rows = Math.trunc(this.touchScrollRemainder / TOUCH_SCROLL_THRESHOLD);
+    if (rows === 0) return;
+
+    this.touchScrollRemainder -= rows * TOUCH_SCROLL_THRESHOLD;
+    this.scrollBy(rows);
+  }
+
+  private endTouchScroll(): void {
+    this.touchScrollLastY = undefined;
+    this.touchScrollRemainder = 0;
+  }
+
+  private pointerInScrollArea(pointer: Phaser.Input.Pointer): boolean {
+    if (this.maxOffset === 0) return false;
+    const windowH = this.visibleRows * ROW_STRIDE;
+    return pointer.y >= LIST_TOP && pointer.y <= LIST_TOP + windowH;
+  }
+
+  override destroy(fromScene?: boolean): void {
+    const input = this.scene?.input;
+    if (input !== undefined) {
+      input.off("wheel", this.onWheel);
+      input.off("pointerdown", this.onPointerDown);
+      input.off("pointermove", this.onPointerMove);
+      input.off("pointerup", this.onPointerUp);
+      input.off("pointerupoutside", this.onPointerUp);
+      input.keyboard?.off("keydown-UP", this.onKeyUp);
+      input.keyboard?.off("keydown-DOWN", this.onKeyDown);
+    }
+    super.destroy(fromScene);
+  }
+
   /** Test seam: the current pick order. */
   get selectedIds(): readonly string[] {
     return [...this.picks];
+  }
+
+  /** Test seam: ids of the rows currently rendered, top to bottom. */
+  get visibleCardIds(): readonly string[] {
+    return [...this.rowBorders.keys()];
+  }
+
+  /** Test seam: page the window by `delta` rows. */
+  scrollByRows(delta: number): void {
+    this.scrollBy(delta);
   }
 
   /** Test seam: simulate a pointer click on the row for `id`. */

@@ -262,6 +262,64 @@ describe("DiscardChooserView", () => {
     expect(view.selectedIds).toEqual(["a", "b"]);
   });
 
+  it("pages a fixed window when the pile is taller than the panel", () => {
+    const { scene } = makeScene();
+    const cards = Array.from({ length: 12 }, (_, i) =>
+      discardCard({ id: `c${i}`, name: `Card ${i}` }),
+    );
+    const view = new DiscardChooserView(scene, {
+      theme: THEME,
+      cards,
+      min: 1,
+      max: 1,
+      onConfirm() {},
+      onCancel() {},
+    });
+
+    // The window caps at 7 rows even though 12 cards exist.
+    expect(view.visibleCardIds.length).toBe(7);
+    expect(view.visibleCardIds[0]).toBe("c0");
+    expect(view.visibleCardIds[6]).toBe("c6");
+
+    // Paging down shifts the window; it never runs past the last card.
+    view.scrollByRows(3);
+    expect(view.visibleCardIds[0]).toBe("c3");
+    expect(view.visibleCardIds[6]).toBe("c9");
+
+    view.scrollByRows(99);
+    expect(view.visibleCardIds[0]).toBe("c5");
+    expect(view.visibleCardIds[6]).toBe("c11");
+
+    view.scrollByRows(-99);
+    expect(view.visibleCardIds[0]).toBe("c0");
+  });
+
+  it("keeps a pick made off-screen and re-applies it when scrolled back in", () => {
+    const { scene } = makeScene();
+    const cards = Array.from({ length: 10 }, (_, i) =>
+      discardCard({ id: `c${i}`, name: `Card ${i}` }),
+    );
+    let confirmed: readonly string[] | undefined;
+    const view = new DiscardChooserView(scene, {
+      theme: THEME,
+      cards,
+      min: 1,
+      max: 1,
+      onConfirm(ids) {
+        confirmed = ids;
+      },
+      onCancel() {},
+    });
+
+    view.clickRow("c1"); // visible, selected
+    view.scrollByRows(3); // c1 scrolls out of the window
+    expect(view.visibleCardIds).not.toContain("c1");
+    expect(view.selectedIds).toEqual(["c1"]); // pick survives paging
+
+    view.clickConfirm();
+    expect(confirmed).toEqual(["c1"]);
+  });
+
   it("cancel fires onCancel", () => {
     const { scene } = makeScene();
     let cancelled = false;
