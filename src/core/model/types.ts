@@ -22,6 +22,22 @@ export type CounterSpec =
   | { kind: "KeywordInHand"; keyword: KeywordName }
   | { kind: "FrozenPlayerCards" };
 
+export type CardFxType = "Play" | "EndTurn" | "WhileVisible" | "Discard" | "Clear" | "PartialClear";
+
+export type CardFx =
+  // FX played once when the card is played
+  | { kind: "Play"; key: string }
+  // FX played once when the card is still in hand at the end of turn
+  | { kind: "EndTurn"; key: string }
+  // FX played in loop while the card is visible (legendary only)
+  | { kind: "WhileVisible"; key: string }
+  // FX played once when the card is discarded
+  | { kind: "Discard"; key: string }
+  // FX played once when the card is cleared
+  | { kind: "Clear"; key: string }
+  // FX played once when the card was partially cleared
+  | { kind: "PartialClear"; key: string };
+
 export type CardEffect =
   | {
       kind: "DealProgress";
@@ -128,6 +144,7 @@ export interface PlayerCard {
   keywords: readonly Keyword[];
   // Always concrete on minted cards (template.rarity ?? "common").
   rarity: RarityTier;
+  fx?: CardFx[];
 }
 
 export interface WorldCard {
@@ -149,6 +166,7 @@ export interface WorldCard {
   onPartialClear: CardEffect;
   // Always concrete on minted cards (template.rarity ?? "common").
   rarity: RarityTier;
+  fx?: CardFx[];
 }
 
 export type Card = PlayerCard | WorldCard;

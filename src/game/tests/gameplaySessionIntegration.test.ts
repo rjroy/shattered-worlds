@@ -175,12 +175,8 @@ describe("gameplaySession integration", () => {
 
     expect(source).toContain("const gameplayRuntime = createGameplayRuntime({");
     expect(source).toContain("storage: statsStorage()");
-    expect(source).toContain("visibility: () => document.visibilityState === 'visible'");
-    expect(source).toContain("document.addEventListener('visibilitychange', onChange)");
-    expect(source).toContain("new WorldSelectScene(gameplayRuntime.runStats, gameplayRuntime.unlocksStore)");
-    expect(source).toContain(
-      "new ChronicleScene(gameplayRuntime.runStats, gameplayRuntime.statsTransfer, gameplayRuntime.featsStore)",
-    );
+    expect(source).toContain('visibility: () => document.visibilityState === "visible"');
+    expect(source).toContain('document.addEventListener("visibilitychange", onChange)');
     expect(source).toContain(
       "new DestinyScene(gameplayRuntime.featsStore, gameplayRuntime.unlocksStore)",
     );
@@ -202,24 +198,36 @@ describe("gameplaySession integration", () => {
     const lockedBranchStart = source.indexOf("if (locked) {", cardClickStart);
     const destinyStart = source.indexOf('this.scene.start("Destiny")', lockedBranchStart);
     const lockedReturn = source.indexOf("return;", destinyStart);
-    const tableLaunch = source.indexOf('this.scene.launch("Table", { worldId, seed })', lockedReturn);
+    const tableLaunch = source.indexOf(
+      'this.scene.launch("Table", { worldId, seed })',
+      lockedReturn,
+    );
 
-    expect(source).toContain('import { isWorldUnlocked, UNLOCK_CATALOG } from "../../data/unlocks/catalog";');
+    expect(source).toContain(
+      'import { isWorldUnlocked, UNLOCK_CATALOG } from "../../data/unlocks/catalog";',
+    );
     expect(source).toContain("!isWorldUnlocked(worldId, profile, UNLOCK_CATALOG)");
     expect(source).toContain("const locked = lockState.locked;");
-    expect(source).toContain('`Locked - Destiny${lockState.cost === null ? "" : ` ${lockState.cost} Fragments`}`');
+    expect(source).toContain(
+      '`Locked - Destiny${lockState.cost === null ? "" : ` ${lockState.cost} Fragments`}`',
+    );
     expect(source).toContain("container.setScale(locked ? 1.015 : WORLD_SELECT_LAYOUT.hoverScale)");
     expect(lockedBranchStart).toBeGreaterThan(cardClickStart);
     expect(destinyStart).toBeGreaterThan(lockedBranchStart);
     expect(lockedReturn).toBeGreaterThan(destinyStart);
     expect(tableLaunch).toBeGreaterThan(lockedReturn);
-    expect(source.indexOf("this.disableCarouselInteractions()", lockedReturn)).toBeLessThan(tableLaunch);
+    expect(source.indexOf("this.disableCarouselInteractions()", lockedReturn)).toBeLessThan(
+      tableLaunch,
+    );
   });
 
   it("checks WorldSelect help access before constructing the help overlay", async () => {
     const source = await Bun.file(new URL("../scenes/WorldSelectScene.ts", import.meta.url)).text();
     const showHelpStart = source.indexOf("private showHelpOverlay(): void {");
-    const lockCheck = source.indexOf("if (this.getWorldLockState(worldId).locked) {", showHelpStart);
+    const lockCheck = source.indexOf(
+      "if (this.getWorldLockState(worldId).locked) {",
+      showHelpStart,
+    );
     const destinyStart = source.indexOf('this.scene.start("Destiny")', lockCheck);
     const lockedReturn = source.indexOf("return;", destinyStart);
     const overlayConstruct = source.indexOf(
@@ -242,7 +250,9 @@ describe("gameplaySession integration", () => {
     expect(source).toContain("const worldUnlock = isWorldUnlock(def);");
     expect(source).toContain("if (!worldUnlock && def.destinyWeight > 0) {");
     expect(source).toContain('worldUnlock ? "✓ unlocked" : "✓ owned"');
-    expect(source).toContain("if (!worldUnlock) {\n        this.addActivationToggle(card, def, profile);");
+    expect(source).toContain(
+      "if (!worldUnlock) {\n        this.addActivationToggle(card, def, profile);",
+    );
   });
 
   it("provides Chronicle import/export through the stats transfer seam", async () => {

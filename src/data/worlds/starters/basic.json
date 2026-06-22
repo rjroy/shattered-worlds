@@ -104,7 +104,8 @@
       "onDiscarded": { "kind": "None" },
       "onCleared": { "kind": "SurviveWorld" },
       "onPartialClear": { "kind": "None" },
-      "onEndOfTurn": { "kind": "AddThreatToWorldDeck" }
+      "onEndOfTurn": { "kind": "AddThreatToWorldDeck" },
+      "fx": [{ "kind": "WhileVisible", "key": "the-door-fx" }]
     }
   }
 }

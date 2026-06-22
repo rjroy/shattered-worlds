@@ -169,6 +169,10 @@ import birdBuildingMusicUrl from "../assets/audio/bird-building-music.mp3?url";
 import highwayVolcanoMusicUrl from "../assets/audio/highway-volcano-music.mp3?url";
 import overgrownMallMusicUrl from "../assets/audio/overgrown-mall-music.mp3?url";
 import fogBeachPartyMusicUrl from "../assets/audio/fog-beach-party-music.mp3?url";
+import whiteoutMusicUrl from "../assets/audio/whiteout-parking-garage-music.mp3?url";
+import orchardMusicUrl from "../assets/audio/the-ember-orchard-music.mp3?url";
+import tidalMusicUrl from "../assets/audio/the-tidal-archive-music.mp3?url";
+import giantsMusicUrl from "../assets/audio/city-of-sleeping-giants-music.mp3?url";
 
 // ---------------------------------------------------------------------------
 // Exports
@@ -332,11 +336,8 @@ export const worldMusicManifest: Record<string, WorldMusicAsset> = {
   "highway-volcano": { key: "music-highway-volcano", url: highwayVolcanoMusicUrl },
   "overgrown-mall": { key: "music-overgrown-mall", url: overgrownMallMusicUrl },
   "fog-beach-party": { key: "music-fog-beach-party", url: fogBeachPartyMusicUrl },
-  "whiteout-parking-garage": { key: "music-whiteout-parking-garage", url: fogBeachPartyMusicUrl },
-  "the-tidal-archive": { key: "music-the-tidal-archive", url: fogBeachPartyMusicUrl },
-  "the-ember-orchard": { key: "music-the-ember-orchard", url: fogBeachPartyMusicUrl },
-  "city-of-sleeping-giants": {
-    key: "music-city-of-sleeping-giants",
-    url: fogBeachPartyMusicUrl,
-  },
+  "whiteout-parking-garage": { key: "music-whiteout-parking-garage", url: whiteoutMusicUrl },
+  "the-tidal-archive": { key: "music-the-tidal-archive", url: tidalMusicUrl },
+  "the-ember-orchard": { key: "music-the-ember-orchard", url: orchardMusicUrl },
+  "city-of-sleeping-giants": { key: "music-city-of-sleeping-giants", url: giantsMusicUrl },
 };

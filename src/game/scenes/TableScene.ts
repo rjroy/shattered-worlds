@@ -13,12 +13,15 @@ import type { VisualTheme } from "../view/themes/theme";
 import { availableActions, effectiveHand, effectivePlayerCard } from "../../core/index";
 import type {
   Card,
+  CardId,
+  CardFxType,
   Action,
   PlayerCard,
   TargetSpec,
   WorldCard,
   ActionPreviewSeverity,
   ActionPreview,
+  GameEvent,
 } from "../../core/index";
 import { structuralSpecOf } from "../../core/engine/available";
 import { EFFECTS } from "../../core/effects/registry";
@@ -1082,8 +1085,46 @@ export class TableScene extends Phaser.Scene {
   // Dispatch
   // ---------------------------------------------------------------------------
 
+  private fxAfterDispatch(preHand: Card[], postHand: Card[], events: GameEvent[]): void {
+    const playFx = (id: CardId, kind: CardFxType) => {
+      const card = preHand.find((c) => c.id == id);
+      if (card) {
+        this.playCardFx(card, kind);
+      }
+    };
+
+    for (const event of events) {
+      switch (event.type) {
+        case "CardPlayed":
+          playFx(event.cardId, "Play");
+          break;
+        case "HazardDiscarded":
+          playFx(event.cardId, "Discard");
+          break;
+        case "HazardResolved":
+          playFx(event.hazardId, "Clear");
+          break;
+        case "HazardPartial":
+          playFx(event.hazardId, "PartialClear");
+          break;
+        case "TurnEnded":
+          {
+            const preIds = preHand.map((c) => c.id);
+            const stillHeld = postHand.filter((c) => preIds.includes(c.id));
+            for (const card of stillHeld) {
+              this.playCardFx(card, "EndTurn");
+            }
+          }
+          break;
+      }
+    }
+  }
+
   private dispatch(action: Action): void {
-    this.game_.dispatch(action);
+    const preHand = [...this.game_.state.hand];
+    const result = this.game_.dispatch(action);
+    const postHand = [...this.game_.state.hand];
+    this.fxAfterDispatch(preHand, postHand, result.events);
     this.sel = IDLE;
     this.clearSelectedCardSnapshot();
     this.dismissModal();
@@ -1094,6 +1135,18 @@ export class TableScene extends Phaser.Scene {
     this.clearConnector();
     this.clearPreviewSlot();
     this.drawAll();
+  }
+
+  private playCardFx(card: Card, kind: CardFxType): void {
+    if (!card) return;
+    const fxSet = card.fx;
+    if (!fxSet) return;
+
+    for (const fx of fxSet) {
+      if (fx.kind === kind) {
+        this.sound.play(fx.key, { volume: 0.5, loop: false });
+      }
+    }
   }
 
   // Loads the world's music track on first play and reuses the cached asset on

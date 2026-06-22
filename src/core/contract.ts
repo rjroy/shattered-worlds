@@ -2,6 +2,8 @@ export type {
   CardId,
   CardTemplateId,
   Card,
+  CardFx,
+  CardFxType,
   PlayerCard,
   WorldCard,
   Action,

@@ -132,7 +132,7 @@ export const UNLOCK_CATALOG: readonly UnlockDefinition[] = [
     effect: { type: "worldUnlock", worldId: "whiteout-parking-garage" },
   },
   {
-    id: "world-the-tidal archive",
+    id: "world-the-tidal-archive",
     name: "The Tidal Archive",
     description: "Opens The Tidal Archive in World Select.",
     cost: 10,

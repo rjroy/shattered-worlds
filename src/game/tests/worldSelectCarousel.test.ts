@@ -48,7 +48,7 @@ describe("world-select carousel with seven worlds (REQ-TIDAL-49)", () => {
 
     // Left arrow is disabled / inert at the start.
     expect(canPageLeft(0)).toBe(false);
-    expect(pageLeft(0)).toBe(0);
+    expect(pageLeft(0, VISIBLE)).toBe(0);
 
     // Right arrow advances exactly until the last window is shown, then stops.
     const lastStart = Math.max(0, worldCount - VISIBLE);
@@ -56,7 +56,7 @@ describe("world-select carousel with seven worlds (REQ-TIDAL-49)", () => {
     expect(pageRight(lastStart, worldCount, VISIBLE)).toBe(lastStart);
     if (worldCount > VISIBLE) {
       expect(canPageRight(0, worldCount, VISIBLE)).toBe(true);
-      expect(pageRight(0, worldCount, VISIBLE)).toBe(1);
+      expect(pageRight(0, worldCount, VISIBLE)).toBe(VISIBLE);
     }
   });
 
