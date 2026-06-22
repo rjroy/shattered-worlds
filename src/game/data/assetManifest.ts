@@ -61,6 +61,9 @@ import unlockStarterFootballerUrl from "../assets/unlocks/starter-footballer.web
 import unlockStrongBarricadesUrl from "../assets/unlocks/strong-barricades.webp";
 import unlockWorldFogBeachPartyUrl from "../assets/unlocks/world-fog-beach-party.webp";
 import unlockWorldWhiteoutParkingGarageUrl from "../assets/unlocks/world-whiteout-parking-garage.webp";
+import unlockWorldTheTidalArchiveUrl from "../assets/unlocks/world-the-tidal-archive.webp";
+import unlockWorldTheEmberOrchardUrl from "../assets/unlocks/world-the-ember-orchard.webp";
+import unlockWorldCityOfSleepingGiantsUrl from "../assets/unlocks/world-city-of-sleeping-giants.webp";
 import worldSelectBgUrl from "../assets/world-select.webp";
 import screenChronicleUrl from "../assets/screens/shattered-chronicle.webp";
 import screenDestinyUrl from "../assets/screens/shattered-destiny.webp";
@@ -134,14 +137,9 @@ export const assetManifest: Record<string, string> = {
   "unlock/strong-barricades": unlockStrongBarricadesUrl,
   "unlock/world-fog-beach-party": unlockWorldFogBeachPartyUrl,
   "unlock/world-whiteout-parking-garage": unlockWorldWhiteoutParkingGarageUrl,
-  // TODO(ember art): add "unlock/world-the-ember-orchard" -> unlockWorldTheEmberOrchardUrl
-  // (mirroring the whiteout entry above) once
-  // ../assets/unlocks/world-the-ember-orchard.webp is generated. The Ember base,
-  // cardfront, and overlay keys are already reachable via ...worldAssetUrls below.
-  // TODO(giants art): add "unlock/world-city-of-sleeping-giants" -> unlockWorldCityOfSleepingGiantsUrl
-  // (mirroring the whiteout entry above) once
-  // ../assets/unlocks/world-city-of-sleeping-giants.webp is generated. The City base,
-  // cardfront, and overlay keys are already reachable via ...worldAssetUrls below.
+  "unlock/world-the-tidal-archive": unlockWorldTheTidalArchiveUrl,
+  "unlock/world-the-ember-orchard": unlockWorldTheEmberOrchardUrl,
+  "unlock/world-city-of-sleeping-giants": unlockWorldCityOfSleepingGiantsUrl,
   "world-select-bg": worldSelectBgUrl,
   "screen-chronicle": screenChronicleUrl,
   "screen-destiny": screenDestinyUrl,
