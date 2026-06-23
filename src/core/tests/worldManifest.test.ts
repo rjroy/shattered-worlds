@@ -223,12 +223,15 @@ describe.each(worldIds)('world "%s"', (worldId) => {
 });
 
 describe("fortune-v1 boon source", () => {
-  it("keeps each boon set templateIds in sync with its authored source templates", () => {
-    for (const [, set] of boonSetEntries) {
-      const authoredTemplateIds: string[] = Object.keys(set.source.cardTemplates).sort();
-      const registeredTemplateIds: string[] = [...set.templateIds].sort();
-
-      expect(registeredTemplateIds).toEqual(authoredTemplateIds);
+  it("keeps each boon set templateIds in the unified catalog", () => {
+    // All templates now live in allCards.json. Boon sets just list templateIds;
+    // verify they resolve in the assembled catalog for consistency.
+    const { CARD_CATALOG } = require('../../data/worldManifest');
+    for (const [setId, set] of boonSetEntries) {
+      const missingTemplateRefs = set.templateIds.filter(
+        (id: string) => !(id in CARD_CATALOG),
+      );
+      expect(missingTemplateRefs).toEqual([]);
     }
   });
 
@@ -262,9 +265,20 @@ describe("fortune-v1 boon source", () => {
       expect(actIds.filter((id) => fortuneBoonIdSet.has(id))).toEqual([]);
     }
 
-    for (const bundle of worldDataRegistry) {
-      const refs = allReferencedTemplates(bundle.source.cardTemplates);
-      expect(refs.filter((id) => fortuneBoonIdSet.has(id))).toEqual([]);
+    // All world cards are in the global catalog now — check that none of the
+    // world-authored cards (i.e. those from deck compositions) reference boon ids.
+    for (const worldId of worldIds) {
+      const { catalog, worldData } = buildWorld(worldId);
+      // Pull the templates actually used in this world's deck
+      const actIds = worldData.deckComposition.acts.flatMap((act: any) =>
+        act.cards.map((c: any) => c.templateId),
+      );
+      const starterIds = worldData.starterDeck.map((c: any) => c.templateId);
+      for (const tid of [...actIds, ...starterIds]) {
+        if (fortuneBoonIdSet.has(tid)) {
+          throw new Error(`World ${worldId} deck references boon template ${tid}`);
+        }
+      }
     }
   });
 });

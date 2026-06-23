@@ -1,75 +1,82 @@
-import { CatalogError } from "../core";
+import allCardsJson from "../data/allCards.json";
+import { worldDataRegistry } from "./worlds/registry";
+import type { CardCatalog, RawCardSource, WorldData, AssembledWorld, DeckComposition } from "../core/model/catalog";
 import { assembleCatalog } from "../core/model/catalog";
-import type { RawCardSource, WorldData, AssembledWorld } from "../core/model/catalog";
-import basicJson from "./worlds/starters/basic.json";
 import starterJson from "./worlds/starters/starter.json";
 import footballerJson from "./worlds/starters/footballer.json";
 import contractorJson from "./worlds/starters/contractor.json";
-import { worldDataRegistry } from "./worlds/registry";
-import { BOON_SETS } from "./worlds/boons/fortune";
 
-const BASIC_SOURCE = basicJson as unknown as RawCardSource;
+// ---------------------------------------------------------------------------
+// Global card catalog — loaded once at import time from the unified file.
+// All template definitions for every world and all boon sets live here.
+// ---------------------------------------------------------------------------
 
-const STARTER_SOURCES = [
-  starterJson as unknown as RawCardSource,
-  footballerJson as unknown as RawCardSource,
-  contractorJson as unknown as RawCardSource,
-];
+const rawAllCards = allCardsJson as unknown as RawCardSource;
+export const CARD_CATALOG: CardCatalog = assembleCatalog([rawAllCards]);
 
-const BOON_SET_SOURCES = Object.values(BOON_SETS).map((set) => set.source);
+// ---------------------------------------------------------------------------
+// Starter deck registry
+// ---------------------------------------------------------------------------
 
-/**
- * Build a world by merging the shared starter source with one world-specific
- * source: the merged catalog holds both, the world descriptor pairs the starter
- * deck with the world's own act composition.
- */
-function makeWorldBuilder(worldSource: RawCardSource): (starterId: string) => AssembledWorld {
-  return (starterId: string) => {
-    console.log(`Make world with starter: ${starterId}`);
-    if (BASIC_SOURCE === undefined || worldSource === undefined) {
-      throw new CatalogError("JSON not available in Phaser cache");
-    }
+interface StarterEntry {
+  templateId: string;
+  count: number;
+}
 
-    // The starter source is always available and must be present.
-    const starterSource = STARTER_SOURCES.find((s) => s.worldId === starterId);
+const RESOLVE_STARTER_DECKS: Record<string, readonly StarterEntry[]> = {
+  starter: (starterJson as unknown as { starterDeck: readonly StarterEntry[] }).starterDeck,
+  footballer: (footballerJson as unknown as { starterDeck: readonly StarterEntry[] }).starterDeck,
+  contractor: (contractorJson as unknown as { starterDeck: readonly StarterEntry[] }).starterDeck,
+};
 
-    // Fail fast on an authoring mistake: the starter source must carry the
-    // shared deck, and each world source must carry its own act composition.
-    // A missing field here would otherwise surface as a confusing crash mid-run.
-    if (starterSource === undefined || starterSource.starterDeck === undefined) {
-      throw new CatalogError(`Could not find starter deck for "${starterId}"`);
-    }
-    if (worldSource.deckComposition === undefined) {
-      throw new CatalogError(`world "${worldSource.worldId}" is missing deckComposition`);
-    }
+// ---------------------------------------------------------------------------
+// World builder — returns AssembledWorld pairing the global catalog with
+// a specific world's deck and chosen starter.
+//
+// Each world's stripped cards.json retains worldId, deckComposition and
+// optional per-world settings (startLight, startHeat, onEndOfTurnPassive).
+// Card templates are no longer embedded here — they live in allCards.json.
+// ---------------------------------------------------------------------------
 
-    const catalog = assembleCatalog([BASIC_SOURCE, ...BOON_SET_SOURCES, worldSource]);
-    const worldData: WorldData = {
-      worldId: worldSource.worldId,
-      starterDeck: starterSource.starterDeck,
-      deckComposition: worldSource.deckComposition,
-      // Spread only when present so exactOptionalPropertyTypes stays satisfied
-      // (omitted means default 0 in createWorld; non-Fog sources omit it).
-      ...(worldSource.startLight !== undefined ? { startLight: worldSource.startLight } : {}),
-      ...(worldSource.startHeat !== undefined ? { startHeat: worldSource.startHeat } : {}),
-      ...(worldSource.onEndOfTurnPassive !== undefined
-        ? { onEndOfTurnPassive: worldSource.onEndOfTurnPassive }
-        : {}),
-    };
+export function buildWorld(worldId: string, starterId: string = "starter"): AssembledWorld {
+  // Find the bundle by id
+  const bundle = worldDataRegistry.find((b) => b.id === worldId);
+  if (bundle === undefined) {
+    throw new Error(`Unknown world id: ${worldId}. Registered: ${worldDataRegistry.map(b => b.id).join(", ")}`);
+  }
 
-    return { catalog, worldData };
+  const descriptor = bundle.deck.cardsImport as Record<string, unknown>;
+  if (!descriptor || !descriptor.deckComposition) {
+    throw new Error(`World "${worldId}" deck data not loaded`);
+  }
+
+  const starterDeck = RESOLVE_STARTER_DECKS[starterId];
+  if (starterDeck === undefined) {
+    throw new Error(`Unknown starter deck: ${starterId}. Available: ${Object.keys(RESOLVE_STARTER_DECKS).join(", ")}`);
+  }
+
+  const worldData: WorldData = {
+    worldId: bundle.id,
+    deckComposition: descriptor.deckComposition as DeckComposition,
+    starterDeck: starterDeck as any,  // CardCount[] type match
+    startHeat: (descriptor.startHeat as number) ?? undefined,
+    startLight: (descriptor.startLight as number) ?? undefined,
+    onEndOfTurnPassive: descriptor.onEndOfTurnPassive as any,
+  };
+
+  return {
+    catalog: CARD_CATALOG,
+    worldData,
   };
 }
 
-export const worldManifest: Record<string, (starterId: string) => AssembledWorld> =
-  Object.fromEntries(
-    worldDataRegistry.map((bundle) => [bundle.id, makeWorldBuilder(bundle.source)]),
-  );
+// ---------------------------------------------------------------------------
+// Public manifest — Record<worldId, (starterId) => AssembledWorld>
+// ---------------------------------------------------------------------------
 
-export function buildWorld(worldId: string, starterId: string = "starter"): AssembledWorld {
-  const builder = worldManifest[worldId];
-  if (typeof builder !== "function") {
-    throw new CatalogError(`No world builder found for worldId "${worldId}"`);
-  }
-  return builder(starterId);
-}
+export const worldManifest = Object.fromEntries(
+  worldDataRegistry.map((bundle) => [
+    bundle.id,
+    (starterId: string = "starter") => buildWorld(bundle.id, starterId),
+  ]),
+) as Record<string, (starterId: string) => AssembledWorld>;

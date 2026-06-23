@@ -1,205 +1,73 @@
 {
   "worldId": "city-of-sleeping-giants",
-  "cardTemplates": {
-    "Follow The Vein": {
-      "kind": "player",
-      "name": "Follow The Vein",
-      "rarity": "uncommon",
-      "insetKey": "giants-inset-follow-the-vein",
-      "energyCost": 0,
-      "exhaust": true,
-      "effect": {
-        "kind": "Sequence",
-        "steps": [
-          { "kind": "Draw", "player": 2 },
-          { "kind": "GainEnergy", "amount": 1 },
-          { "kind": "AddWorldCardToDeck", "template": "Vein-Road Surge", "bTop": true }
-        ]
-      }
-    },
-    "Minor Tremor": {
-      "kind": "world",
-      "name": "Minor Tremor",
-      "rarity": "common",
-      "insetKey": "giants-inset-minor-tremor",
-      "cost": 1,
-      "keywords": [],
-      "discardable": false,
-      "onCleared": { "kind": "None" },
-      "onDiscarded": { "kind": "None" },
-      "onPartialClear": { "kind": "None" },
-      "onEndOfTurn": {
-        "kind": "Sequence",
-        "steps": [
-          { "kind": "AddWorldCardToDeck", "template": "Fingerquake Ward", "bTop": true },
-          { "kind": "DestroySelf" }
-        ]
-      }
-    },
-    "Relocation Order": {
-      "kind": "world",
-      "name": "Relocation Order",
-      "rarity": "common",
-      "insetKey": "giants-inset-relocation-order",
-      "cost": 2,
-      "keywords": ["Obstructed"],
-      "discardable": true,
-      "onCleared": { "kind": "GainCard", "template": "Quiet Survey" },
-      "onDiscarded": { "kind": "AddPlayerCardToTop", "template": "Panic" },
-      "onPartialClear": { "kind": "None" },
-      "onEndOfTurn": { "kind": "AddPlayerCardToTop", "template": "Panic" }
-    },
-    "Fingerquake Ward": {
-      "kind": "world",
-      "name": "Fingerquake Ward",
-      "rarity": "uncommon",
-      "insetKey": "giants-inset-fingerquake-ward",
-      "cost": 3,
-      "keywords": ["Slow"],
-      "discardable": true,
-      "onCleared": { "kind": "GainCard", "template": "Brace The Ward" },
-      "onDiscarded": { "kind": "ForceDestroy", "amount": 1 },
-      "onPartialClear": { "kind": "AddWorldCardToDeck", "template": "Minor Tremor", "bTop": true },
-      "onEndOfTurn": {
-        "kind": "Sequence",
-        "steps": [
-          { "kind": "ForceDestroy", "amount": 1 },
-          { "kind": "AddWorldCardToDeck", "template": "Minor Tremor", "bTop": true }
-        ]
-      }
-    },
-    "Surveyors Mark A Pulse": {
-      "kind": "world",
-      "name": "Surveyors Mark A Pulse",
-      "rarity": "common",
-      "insetKey": "giants-inset-surveyors-mark-a-pulse",
-      "cost": 6,
-      "keywords": ["Obstructed"],
-      "discardable": true,
-      "onCleared": {
-        "kind": "OfferBoon",
-        "setId": "giants-boons",
-        "setName": "Surveyor's Kit",
-        "offeredCount": 3,
-        "chooseCount": 1
-      },
-      "onDiscarded": { "kind": "AddWorldCardToDeck", "template": "Minor Tremor", "bTop": true },
-      "onPartialClear": { "kind": "None" },
-      "onEndOfTurn": { "kind": "AddWorldCardToDeck", "template": "Vein-Road Surge", "bTop": true }
-    },
-    "Vein-Road Surge": {
-      "kind": "world",
-      "name": "Vein-Road Surge",
-      "rarity": "uncommon",
-      "insetKey": "giants-inset-vein-road-surge",
-      "cost": 3,
-      "keywords": ["Obstructed"],
-      "discardable": true,
-      "onCleared": {
-        "kind": "Sequence",
-        "steps": [
-          { "kind": "GainEnergy", "amount": 1 },
-          { "kind": "GainCard", "template": "Follow The Vein" }
-        ]
-      },
-      "onDiscarded": { "kind": "RecallPlayerDiscard", "policy": "random" },
-      "onPartialClear": { "kind": "RecallPlayerDiscard", "policy": "lowestCost" },
-      "onEndOfTurn": {
-        "kind": "Sequence",
-        "steps": [
-          { "kind": "RecallPlayerDiscard", "policy": "panicFirst" },
-          { "kind": "AddWorldCardToDeck", "template": "Bone Anchor Failure", "bTop": true },
-          { "kind": "DestroySelf" }
-        ]
-      }
-    },
-    "Bone Anchor Failure": {
-      "kind": "world",
-      "name": "Bone Anchor Failure",
-      "rarity": "uncommon",
-      "insetKey": "giants-inset-bone-anchor-failure",
-      "cost": 4,
-      "keywords": ["Slow"],
-      "discardable": true,
-      "onCleared": { "kind": "GainCard", "template": "Bone Pin" },
-      "onDiscarded": { "kind": "Damage", "amount": 2 },
-      "onPartialClear": {
-        "kind": "AddWorldCardToDeck",
-        "template": "Fingerquake Ward",
-        "bTop": true
-      },
-      "onEndOfTurn": { "kind": "Damage", "amount": 2 }
-    },
-    "District Recall": {
-      "kind": "world",
-      "name": "District Recall",
-      "rarity": "rare",
-      "insetKey": "giants-inset-district-recall",
-      "cost": 4,
-      "keywords": ["Obstructed", "Slow"],
-      "discardable": true,
-      "onCleared": { "kind": "GainCard", "template": "Contour Map" },
-      "onDiscarded": { "kind": "AddWorldCardToDeck", "template": "Vein-Road Surge", "bTop": true },
-      "onPartialClear": {
-        "kind": "AddWorldCardToDeck",
-        "template": "Vein-Road Surge",
-        "bTop": true
-      },
-      "onEndOfTurn": {
-        "kind": "Sequence",
-        "steps": [
-          { "kind": "AddWorldCardToDeck", "template": "Vein-Road Surge", "bTop": true },
-          { "kind": "AddWorldCardToDeck", "template": "Bone Anchor Failure", "bTop": true }
-        ]
-      }
-    },
-    "The Giant Turns In Sleep": {
-      "kind": "world",
-      "name": "The Giant Turns In Sleep",
-      "rarity": "signature",
-      "insetKey": "giants-inset-the-giant-turns-in-sleep",
-      "cost": 6,
-      "keywords": ["Slow"],
-      "discardable": true,
-      "onCleared": { "kind": "None" },
-      "onDiscarded": { "kind": "ForceDestroy", "amount": 2 },
-      "onPartialClear": { "kind": "AddThreatToWorldDeck" },
-      "onEndOfTurn": {
-        "kind": "Sequence",
-        "steps": [
-          { "kind": "Damage", "amount": 2 },
-          { "kind": "AddWorldCardToDeck", "template": "Bone Anchor Failure", "bTop": true },
-          { "kind": "AddThreatToWorldDeck" }
-        ]
-      }
-    }
-  },
   "deckComposition": {
     "acts": [
       {
         "cards": [
-          { "templateId": "Minor Tremor", "count": 3 },
-          { "templateId": "Relocation Order", "count": 3 },
-          { "templateId": "Fingerquake Ward", "count": 1 },
-          { "templateId": "Surveyors Mark A Pulse", "count": 3 }
+          {
+            "templateId": "Minor Tremor",
+            "count": 3
+          },
+          {
+            "templateId": "Relocation Order",
+            "count": 3
+          },
+          {
+            "templateId": "Fingerquake Ward",
+            "count": 1
+          },
+          {
+            "templateId": "Surveyors Mark A Pulse",
+            "count": 3
+          }
         ]
       },
       {
         "cards": [
-          { "templateId": "Fingerquake Ward", "count": 2 },
-          { "templateId": "Vein-Road Surge", "count": 3 },
-          { "templateId": "Bone Anchor Failure", "count": 2 },
-          { "templateId": "District Recall", "count": 1 },
-          { "templateId": "Surveyors Mark A Pulse", "count": 2 }
+          {
+            "templateId": "Fingerquake Ward",
+            "count": 2
+          },
+          {
+            "templateId": "Vein-Road Surge",
+            "count": 3
+          },
+          {
+            "templateId": "Bone Anchor Failure",
+            "count": 2
+          },
+          {
+            "templateId": "District Recall",
+            "count": 1
+          },
+          {
+            "templateId": "Surveyors Mark A Pulse",
+            "count": 2
+          }
         ]
       },
       {
         "cards": [
-          { "templateId": "Bone Anchor Failure", "count": 2 },
-          { "templateId": "District Recall", "count": 2 },
-          { "templateId": "Vein-Road Surge", "count": 2 },
-          { "templateId": "The Giant Turns In Sleep", "count": 3 },
-          { "templateId": "The Walker", "count": 1 }
+          {
+            "templateId": "Bone Anchor Failure",
+            "count": 2
+          },
+          {
+            "templateId": "District Recall",
+            "count": 2
+          },
+          {
+            "templateId": "Vein-Road Surge",
+            "count": 2
+          },
+          {
+            "templateId": "The Giant Turns In Sleep",
+            "count": 3
+          },
+          {
+            "templateId": "The Walker",
+            "count": 1
+          }
         ]
       }
     ]

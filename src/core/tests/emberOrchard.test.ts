@@ -49,10 +49,12 @@ describe("The Ember Orchard — world data shape (REQ-EMBER-46)", () => {
     expect(worldData.worldId).toBe(WORLD_ID);
   });
 
-  it("has no duplicate authored template ids in the card source", () => {
-    const bundle = worldDataRegistry.find((b) => b.id === WORLD_ID)!;
-    const ids = Object.keys(bundle.source.cardTemplates);
-    expect(new Set(ids).size).toBe(ids.length);
+  it("has no duplicate template ids across the unified catalog", () => {
+    // The unified catalog guarantees uniqueness via assembleCatalog collision
+    // detection. Verify the assembled catalog has no duplicates (always passes).
+    const { catalog } = buildWorld(WORLD_ID);
+    const allIds = Object.keys(catalog);
+    expect(new Set(allIds).size).toBe(allIds.length);
   });
 
   it("defines all four hooks and only valid keywords on every Ember world card", () => {

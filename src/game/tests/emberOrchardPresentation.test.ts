@@ -1,7 +1,8 @@
 import { describe, expect, it } from "bun:test";
 import { selectTheme } from "../view/themes/themeManifest";
 import { assetManifest } from "../data/assetManifest";
-import { EMBER_BOON_SOURCE } from "../../data/worlds/boons/fortune";
+import { BOON_SETS } from '../../data/worlds/boons/fortune';
+import { CARD_CATALOG } from '../../data/worldManifest';
 import { THE_EMBER_ORCHARD_THEME } from "../../data/worlds/the-ember-orchard/theme";
 
 const WORLD_ID = "the-ember-orchard";
@@ -58,8 +59,10 @@ describe("The Ember Orchard — theme palette (REQ-EMBER-49)", () => {
 
 describe("The Ember Orchard — boon-source inset bindings (REQ-EMBER-48)", () => {
   it("every ember-boons card inset key is bound in assetManifest (RED until boon art is wired)", () => {
-    const boonInsetKeys = Object.values(EMBER_BOON_SOURCE.cardTemplates)
-      .map((card) => card.insetKey)
+    // Boon cards live in the unified catalog now; look up inset keys via templateIds
+    const emberTemplateIds = BOON_SETS['ember-boons'].templateIds;
+    const boonInsetKeys = emberTemplateIds
+      .map((tid: any) => (CARD_CATALOG[tid] as any)?.insetKey)
       .filter((key): key is string => typeof key === "string");
 
     // Sanity: the boon source actually carries inset keys to validate.

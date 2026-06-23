@@ -10,7 +10,7 @@
  * `import type` erases at compile time and pulls no Phaser or asset code.
  */
 
-import type { RawCardSource } from "../../core/model/catalog";
+import type { CardCatalog } from "../../core/model/catalog";
 import type { VisualTheme } from "../../game/view/themes/theme";
 
 // ---------------------------------------------------------------------------
@@ -42,13 +42,24 @@ export interface WorldHelpData {
 // ---------------------------------------------------------------------------
 
 /**
+ * Per-world deck descriptor — everything that changed per-world after we
+ * unified all card templates into allCards.json. Card template definitions
+ * now live in the global catalog; only act composition and world-specific
+ * settings remain local. Stored as an opaque reference to the JSON import
+ * from each world's index.ts so TypeScript can catch shape mismatches.
+ */
+export interface WorldDeckDescriptor {
+  readonly cardsImport: Record<string, unknown>;
+}
+
+/**
  * Everything the engine needs to know about a world in one place.
- * Core-safe: the only cross-layer import is `VisualTheme`, which is an
+ * Core-safe: the only cross-layer import is VisualTheme, which is an
  * interface-only declaration that erases at compile time.
  */
 export interface WorldDataBundle {
   readonly id: string;
-  readonly source: RawCardSource;
+  readonly deck: WorldDeckDescriptor;
   readonly theme: VisualTheme;
   readonly display: WorldDisplayData;
   readonly help: WorldHelpData;
@@ -72,18 +83,22 @@ export interface WorldDataBundle {
 // ---------------------------------------------------------------------------
 
 /**
- * Computes the set of all asset keys a bundle references, drawn from the card
- * templates, theme backdrop, and display background.
- *
- * Useful for preload validation and asset-loading manifests — callers can
- * confirm every key in this set is registered before a scene starts.
+ * After unifying card templates, this accepts the global catalog to collect
+ * inset keys from all cards rather than per-world subsets. The asset preloader
+ * still works correctly; the bundle's id gives display/background keys.
  */
-export function referencedAssetKeys(bundle: WorldDataBundle): ReadonlySet<string> {
+export function referencedAssetKeys(
+  bundle: WorldDataBundle,
+  cardCatalog?: CardCatalog,
+): ReadonlySet<string> {
   const keys = new Set<string>();
 
-  // Every card template's insetKey (if present)
-  for (const card of Object.values(bundle.source.cardTemplates)) {
-    if (card.insetKey !== undefined) keys.add(card.insetKey);
+  if (cardCatalog) {
+    for (const tpl of Object.values(cardCatalog)) {
+      if ('insetKey' in tpl && tpl.insetKey !== undefined) {
+        keys.add(tpl.insetKey);
+      }
+    }
   }
 
   // Theme backdrop keys

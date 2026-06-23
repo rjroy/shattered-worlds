@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'bun:test'
 import { selectTheme } from '../view/themes/themeManifest'
 import { assetManifest } from '../data/assetManifest'
-import { GIANTS_BOON_SOURCE } from '../../data/worlds/boons/fortune'
+import { BOON_SETS } from '../../data/worlds/boons/fortune'
+import { CARD_CATALOG } from '../../data/worldManifest'
 import { CITY_OF_SLEEPING_GIANTS_THEME } from '../../data/worlds/city-of-sleeping-giants/theme'
 
 const WORLD_ID = 'city-of-sleeping-giants'
@@ -57,8 +58,10 @@ describe('City of Sleeping Giants — theme palette (REQ-GIANTS-48)', () => {
 
 describe('City of Sleeping Giants — boon-source inset bindings (REQ-GIANTS-47)', () => {
   it('every giants-boons card inset key is bound in assetManifest (RED until boon art is wired)', () => {
-    const boonInsetKeys = Object.values(GIANTS_BOON_SOURCE.cardTemplates)
-      .map((card) => card.insetKey)
+    // Boon cards live in the unified catalog now; look up inset keys via templateIds
+    const giantsTemplateIds = BOON_SETS['giants-boons'].templateIds;
+    const boonInsetKeys = giantsTemplateIds
+      .map((tid: any) => (CARD_CATALOG[tid] as any)?.insetKey)
       .filter((key): key is string => typeof key === 'string')
 
     // Sanity: the boon source actually carries inset keys to validate.

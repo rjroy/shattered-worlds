@@ -1,39 +1,31 @@
-import type { RawCardSource } from "../../../core/model/catalog";
 import type { CardTemplateId } from "../../../core/model/types";
-import fortuneJson from "./fortune.json";
-import bigBoxJson from "./big-box.json";
-import tidalJson from "./tidal.json";
-import whiteoutJson from "./whiteout.json";
-import emberJson from "./ember.json";
-import giantsJson from "./giants.json";
 
-export const FORTUNE_BOON_SOURCE = fortuneJson as unknown as RawCardSource;
-export const BIG_BOX_BOON_SOURCE = bigBoxJson as unknown as RawCardSource;
-export const WHITEOUT_BOON_SOURCE = whiteoutJson as unknown as RawCardSource;
-export const TIDAL_BOON_SOURCE = tidalJson as unknown as RawCardSource;
-export const EMBER_BOON_SOURCE = emberJson as unknown as RawCardSource;
-export const GIANTS_BOON_SOURCE = giantsJson as unknown as RawCardSource;
-
+/**
+ * A boon set is a pool of self-contained player cards that can be offered to
+ * the player as rewards (via OfferBoon effects). Each set has a name and a
+ * list of template ids. All card templates live in the unified allCards.json;
+ * this file only tracks which ids belong together per set.
+ */
 export type BoonSetDefinition = {
-  readonly source: RawCardSource;
+  readonly setName: string;
   readonly templateIds: readonly CardTemplateId[];
 };
 
 export const BOON_SETS = {
   "fortune-v1": {
-    source: FORTUNE_BOON_SOURCE,
+    setName: "Fortune Tokens",
     templateIds: ["Lucky Break", "Second Wind", "Found Tool", "Clear Path", "Steady Nerve"],
   },
   "big-box-boons": {
-    source: BIG_BOX_BOON_SOURCE,
+    setName: "Big Box Boons",
     templateIds: ["React to Noise", "Fast Sweep", "Listen", "player-scream", "Plan"],
   },
   "whiteout-boons": {
-    source: WHITEOUT_BOON_SOURCE,
+    setName: "Whiteout Boons",
     templateIds: ["Ice Scraper", "Burn The Manual", "Space Heater", "Jumper Cables"],
   },
   "tidal-boons": {
-    source: TIDAL_BOON_SOURCE,
+    setName: "Tidal Boons",
     templateIds: [
       "Mark the Shelf",
       "Cross-Reference",
@@ -43,14 +35,12 @@ export const BOON_SETS = {
     ],
   },
   // Ember's Hatchery Harvest offer. Only the five *self-contained* tools live
-  // here (the three originals plus Keep Vigil and Bank the Heat): a globally-merged
-  // boon source must resolve in every world catalog, and the worldManifest sync
-  // test requires templateIds to equal the source's cardTemplates exactly. The two
+  // here (the three originals plus Keep Vigil and Bank the Heat). The two
   // hazard-spawning rewards (Take One, Glasshouse Lantern) and Dormant Star
   // reference Ember world cards, so they are authored in the-ember-orchard/cards.json
-  // and granted via GainCard instead — see the deviation note in the plan/retro.
+  // and granted via GainCard instead.
   "ember-boons": {
-    source: EMBER_BOON_SOURCE,
+    setName: "Hatchery Boons",
     templateIds: [
       "Leave One",
       "Star-Pruner",
@@ -60,15 +50,13 @@ export const BOON_SETS = {
     ],
   },
   // City of Sleeping Giants' Surveyor's Kit offer. Only the four *self-contained*
-  // tools live here. Same constraint as ember-boons: a globally-merged boon source
-  // must resolve in every world catalog, and the worldManifest sync test requires
-  // templateIds to equal the source's cardTemplates exactly. The fifth reward
-  // (Follow The Vein) top-decks the Vein-Road Surge *world* card, so it cannot
-  // live in a boon set; it is authored in city-of-sleeping-giants/cards.json and
-  // granted via GainCard on Vein-Road Surge's onCleared instead. Bone Pin's Modal
-  // references Quiet Survey / Brace The Ward, both in this set, so it resolves.
+  // tools live here. The fifth reward (Follow The Vein) top-decks the Vein-Road Surge
+  // *world* card, so it cannot live in a boon set; it is authored in
+  // city-of-sleeping-giants/cards.json and granted via GainCard on Vein-Road Surge's
+  // onCleared instead. Bone Pin's Modal references Quiet Survey / Brace The Ward,
+  // both in this set, so it resolves.
   "giants-boons": {
-    source: GIANTS_BOON_SOURCE,
+    setName: "Surveyor Boons",
     templateIds: ["Quiet Survey", "Brace The Ward", "Bone Pin", "Contour Map"],
   },
 } as const satisfies Record<string, BoonSetDefinition>;
