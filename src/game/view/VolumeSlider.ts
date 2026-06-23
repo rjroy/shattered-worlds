@@ -11,11 +11,7 @@ import { TEXT, textStyle } from "./presentation";
  * Convert a horizontal pixel coordinate to a clamped [0, 1] slider value.
  * `startX` is the left edge of the track, `endX` the right edge.
  */
-export function positionToValue(
-  x: number,
-  startX: number,
-  endX: number,
-): number {
+export function positionToValue(x: number, startX: number, endX: number): number {
   const ratio = (x - startX) / (endX - startX);
   return Math.max(0, Math.min(1, ratio));
 }
@@ -52,9 +48,6 @@ interface SliderParts {
 
 export class VolumeSlider {
   private readonly parts: SliderParts;
-  private readonly _startX: number;
-  private readonly _endX: number;
-  private readonly _trackY: number;
   private readonly _onValueChange: (value: number) => void;
 
   /**
@@ -75,9 +68,7 @@ export class VolumeSlider {
   ) {
     this._onValueChange = onValueChange;
     const halfW = TRACK_W / 2;
-    this._startX = x - halfW;
-    this._endX = x + halfW;
-    this._trackY = y;
+    const startX = x - halfW;
 
     // Track background.
     const track = scene.add.rectangle(x, y, TRACK_W, TRACK_H, TRACK_FILL, 1);
@@ -86,13 +77,13 @@ export class VolumeSlider {
     container.add(track);
 
     // Coloured fill bar — grows left→right inside the track bounds.
-    const fill = scene.add.rectangle(this._startX, y, 0, TRACK_H, FILL_COLOR, 0.85);
+    const fill = scene.add.rectangle(startX, y, TRACK_W, TRACK_H, FILL_COLOR, 0.85);
     fill.setOrigin(0, 0.5); // origin at left edge so width grows right from startX
     fill.setRounded(TRACK_RADIUS);
     container.add(fill);
 
     // Thumb — circle drag handle centred on the fill right edge.
-    const thumb = scene.add.container(this._startX, y);
+    const thumb = scene.add.container(startX, y);
     const thumbDot = scene.add.circle(0, 0, THUMB_SIZE / 2, FILL_COLOR, 1);
     thumb.add(thumbDot);
     container.add(thumb);
@@ -118,9 +109,17 @@ export class VolumeSlider {
   // Public API
   // -----------------------------------------------------------------------
 
+  startX(): number {
+    return this.parts.track.getWorldPoint().x - this.parts.track.width / 2;
+  }
+
+  endX(): number {
+    return this.startX() + this.parts.track.width;
+  }
+
   /** Read the current value [0, 1] by mapping thumb centre position back to track space. */
   getValue(): number {
-    return positionToValue(this.parts.thumb.x, this._startX, this._endX);
+    return positionToValue(this.parts.thumb.getWorldPoint().x, this.startX(), this.endX());
   }
 
   /** Jump the slider to a new visual value (no callback). Used from refreshFromStore. */
@@ -128,13 +127,13 @@ export class VolumeSlider {
     const clamped = Math.max(0, Math.min(1, value));
 
     // Thumb centre position for this value.
-    const thumbCentre = valueToPosition(clamped, this._startX, this._endX);
-    this.parts.thumb.x = thumbCentre;
-
-    // Fill width: from track left to thumb centre (min width so it's always visible).
-    const fillWidth = Math.max(thumbCentre - this._startX, TRACK_H);
-    this.parts.fill.width = fillWidth;
-
+    const thumbCentre = valueToPosition(
+      clamped,
+      this.parts.track.x,
+      this.parts.track.x + this.parts.track.width,
+    );
+    this.parts.thumb.x = thumbCentre - TRACK_W / 2;
+    this.parts.fill.setScale(clamped, 1);
     this.parts.label.setText(`${Math.round(clamped * 100)}%`);
   }
 
@@ -146,7 +145,8 @@ export class VolumeSlider {
     let isDragging = false;
 
     const applyDrag = (pointerX: number) => {
-      const clamped = positionToValue(pointerX, this._startX, this._endX);
+      const clamped = positionToValue(pointerX, this.startX(), this.endX());
+      console.log(`clamped: ${clamped} = ${pointerX} , ${this.startX()} , ${this.endX()}`);
       this.setValue(clamped);
       this._onValueChange(Math.round(clamped * 100) / 100); // round to 2 decimals for stable store writes
     };

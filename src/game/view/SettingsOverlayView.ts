@@ -2,11 +2,7 @@ import Phaser from "phaser";
 import { textStyle, TEXT } from "./presentation";
 import { CANVAS_W, CANVAS_H } from "./layout";
 import { addScreenBackdrop } from "./screenBackdrop";
-import type {
-  ConfirmationMode,
-  UserSettings,
-  UserSettingsStore,
-} from "../runtime/userSettings";
+import type { ConfirmationMode, UserSettings, UserSettingsStore } from "../runtime/userSettings";
 import { VolumeSlider } from "./VolumeSlider";
 
 // ---------------------------------------------------------------------------
@@ -85,11 +81,7 @@ export class SettingsOverlayView extends Phaser.GameObjects.Container {
   /** Live-reapply hook called by volume/mute handlers (wired by step 6). */
   private onAudioChange: (() => void) | undefined;
 
-  constructor(
-    scene: Phaser.Scene,
-    settings: UserSettingsStore,
-    onAudioChange?: () => void,
-  ) {
+  constructor(scene: Phaser.Scene, settings: UserSettingsStore, onAudioChange?: () => void) {
     super(scene, CANVAS_W / 2, CANVAS_H / 2);
     scene.add.existing(this);
     this.setDepth(1000);
@@ -118,7 +110,7 @@ export class SettingsOverlayView extends Phaser.GameObjects.Container {
     this.add(blocker);
 
     // Titled panel — grown to 600px height for volume + mute rows.
-    const panel = scene.add.rectangle(0, 0, 560, 600, 0x101725, 0.92);
+    const panel = scene.add.rectangle(0, 0, 560, 560, 0x101725, 0.92);
     panel.setStrokeStyle(1, 0x31415d, 0.85);
     panel.setRounded(8);
     this.add(panel);
@@ -131,9 +123,9 @@ export class SettingsOverlayView extends Phaser.GameObjects.Container {
 
     this.buildConfirmationControl(-260, -205);
     this.buildHoverControl(-260, -95);
-    this.buildMusicSlider(15);
-    this.buildFxSlider(95);
-    this.buildMuteControl(-260, 165);
+    this.buildMusicSlider(-260, 25);
+    this.buildFxSlider(-260, 65);
+    this.buildMuteControl(-260, 100);
     this.buildCloseButton();
 
     // Reflect persisted state on construction so the overlay is correct even if
@@ -243,8 +235,7 @@ export class SettingsOverlayView extends Phaser.GameObjects.Container {
     });
   }
 
-  private buildMusicSlider(y: number): void {
-    const x = 0;
+  private buildMusicSlider(x: number, y: number): void {
     this.addText(x, y - 20, "Music", {
       fontSize: "14px",
       color: TEXT.textKeyword,
@@ -255,15 +246,14 @@ export class SettingsOverlayView extends Phaser.GameObjects.Container {
     this.musicSlider = new VolumeSlider(
       this.scene,
       this,
-      x,
+      x + 100,
       y + 5,
       current.musicVolume,
       (value: number) => this.setMusicVolume(value),
     );
   }
 
-  private buildFxSlider(y: number): void {
-    const x = 0;
+  private buildFxSlider(x: number, y: number): void {
     this.addText(x, y - 20, "Sound effects", {
       fontSize: "14px",
       color: TEXT.textKeyword,
@@ -274,7 +264,7 @@ export class SettingsOverlayView extends Phaser.GameObjects.Container {
     this.fxSlider = new VolumeSlider(
       this.scene,
       this,
-      x,
+      x + 100,
       y + 5,
       current.fxVolume,
       (value: number) => this.setFxVolume(value),
@@ -376,7 +366,11 @@ export class SettingsOverlayView extends Phaser.GameObjects.Container {
     for (const segment of segments) {
       const isSelected = segment.value === selected;
       segment.bg.setFillStyle(isSelected ? SELECTED_FILL : UNSELECTED_FILL, isSelected ? 1 : 0.95);
-      segment.bg.setStrokeStyle(1, isSelected ? SELECTED_STROKE : UNSELECTED_STROKE, isSelected ? 1 : 0.85);
+      segment.bg.setStrokeStyle(
+        1,
+        isSelected ? SELECTED_STROKE : UNSELECTED_STROKE,
+        isSelected ? 1 : 0.85,
+      );
       segment.label.setColor(isSelected ? TEXT.textLight : TEXT.textMuted);
     }
   }
