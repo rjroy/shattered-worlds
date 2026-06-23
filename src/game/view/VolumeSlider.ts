@@ -111,7 +111,7 @@ export class VolumeSlider {
 
     // Wire pointer events last so initial setValue doesn't trip them.
     this.setValue(initialValue);
-    this.wirePointerEvents(scene);
+    this.wirePointerEvents(scene, thumbDot);
   }
 
   // -----------------------------------------------------------------------
@@ -142,7 +142,7 @@ export class VolumeSlider {
   // Pointer drag wiring
   // -----------------------------------------------------------------------
 
-  private wirePointerEvents(scene: Phaser.Scene): void {
+  private wirePointerEvents(scene: Phaser.Scene, thumbDot: Phaser.GameObjects.Arc): void {
     let isDragging = false;
 
     const applyDrag = (pointerX: number) => {
@@ -167,9 +167,12 @@ export class VolumeSlider {
       applyDrag(pointer.x);
     });
 
-    // Thumb: pointerdown → start drag (position already correct during move).
-    this.parts.thumb.setInteractive({ useHandCursor: true });
-    this.parts.thumb.on("pointerdown", () => {
+    // Thumb circle (inside the container): pointerdown → start drag.
+    // Use the Circle directly instead of the Container — Phaser 3.90
+    // auto-hitArea on Containers can leave hitAreaCallback as null,
+    // causing 'pointWithinHitArea' to crash during input updates.
+    thumbDot.setInteractive({ useHandCursor: true });
+    thumbDot.on("pointerdown", () => {
       isDragging = true;
     });
 
