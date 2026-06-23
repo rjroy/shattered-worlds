@@ -108,7 +108,7 @@ Validation gate:
 
  4. src/game/tests/settingsOverlayView.test.ts — Updated makeFakeStore constructor
 
-### 2. Pure gain helper 
+### 2. Pure gain helper (DONE) 
 
 Files:
 
@@ -126,7 +126,22 @@ Validation gate:
 
 - `bun run test` — helper test covers mute (→0 regardless of slider), 0% slider (→0), 100% (→base), mid value, and that mute overrides a non-zero slider.
 
-### 3. Apply gain at the four playback sites (DEFERRED)
+#### Changed files:
+
+1. src/game/audio/audioVolume.ts — Pure gain helper (new file):
+    - Exported base constants `MENU_MUSIC_BASE = 0.42`, `WORLD_MUSIC_BASE = 0.45`, `CARD_FX_BASE = 0.5`
+    - `musicGain(s: UserSettings)` returns `s.masterMute ? 0 : s.musicVolume`
+    - `fxGain(s: UserSettings)` returns `s.masterMute ? 0 : s.fxVolume`
+    - `effectiveVolume(base, gain)` multiplies base × gain
+
+2. src/game/audio/audioVolume.test.ts — Unit tests (new file):
+    - Base constant values (3 tests)
+    - musicGain: slider passthrough, 0% → zero, mute override regardless of slider (3 tests)
+    - fxGain: slider passthrough, mute override, default 50% gain value (3 tests)
+    - effectiveVolume: multiplication, zero cases, 100% reproduces base, default-settings roundtrip (4 tests)
+    - **Validation:** 13 pass, 0 fail, 26 expect() calls; typecheck clean
+
+### 3. Apply gain at the four playback sites
 
 Files:
 
