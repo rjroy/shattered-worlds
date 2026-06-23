@@ -232,7 +232,7 @@ Validation gate:
 4. src/game/tests/gameplaySessionIntegration.test.ts — Updated source-content assertion:
     - Updated the string assertion for DestinyScene constructor call to include the new userSettings argument
 
-### 5. Volume slider control + overlay UI
+### 5. Volume slider control + overlay UI (DONE)
 
 Files:
 
@@ -253,7 +253,31 @@ Validation gate:
 
 - `bun run test` — slider math pure-function tests (x→value, value→x, clamp, endpoints); overlay handler tests assert persist + clamp + `refreshFromStore` + `onAudioChange` fired; mute toggle flips store and highlight.
 
-### 6. Wire the live re-apply hook (DEFERRED)
+#### Changed files:
+
+1. src/game/view/VolumeSlider.ts — Reusable draggable volume slider (new file):
+    - Pure math exports: `positionToValue(x, startX, endX)` clamps to [0,1]; `valueToPosition(value, startX, endX)` maps back to px
+    - VolumeSlider class: track rectangle, fill bar, thumb container with circle dot, percentage label
+    - Pointer drag wiring on track/fill/thumb elements; global scene input for pointermove/pointer-up tracking
+    - Public API: `getValue()` reads current position, `setValue(value)` updates visual state without firing callback
+
+2. src/game/view/VolumeSlider.test.ts — Pure math function tests (new file):
+    - 13 tests, 0 fail, 37 expect() calls
+
+3. src/game/view/SettingsOverlayView.ts — Full overlay update:
+    - Grew panel: 420 → 600px height; all y-coordinates shifted per plan layout
+    - Added Music/FX sliders and Master mute toggle row
+    - Constructor accepts optional `onAudioChange` callback
+    - Public handlers: setMusicVolume, setFxVolume, setMasterMute — each clamps/persists/refreshes/notifies
+    - refreshFromStore() now drives slider values and mute segment highlights
+
+4. src/game/tests/settingsOverlayView.test.ts — Updated mocks + new volume/mute handler tests:
+    - Expanded fake rectangle/container/text to support VolumeSlider construction
+    - Added fake scene input.on() for pointer event wiring
+    - makeView factory returns onAudioChangeCalls tracker
+    - 9 pass total (5 existing + 4 new), 0 fail, 34 expect() calls
+
+### 6. Wire the live re-apply hook
 
 Files:
 
