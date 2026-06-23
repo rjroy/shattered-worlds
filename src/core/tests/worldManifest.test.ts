@@ -1,7 +1,6 @@
 import { describe, expect, it } from "bun:test";
-import { BOON_SETS, FORTUNE_BOON_POOLS } from "../../data/worlds/boons/fortune";
+import { FORTUNE_BOON_POOLS } from "../../data/worldManifest";
 import { buildWorld, worldManifest, CARD_CATALOG } from "../../data/worldManifest";
-import { LOOT_POOLS } from "../effects/pools";
 import { applyEffect } from "../engine/effects";
 import { createWorld } from "../engine/world";
 import type { CardCatalog, CardCount } from "../model/catalog";
@@ -16,11 +15,11 @@ import type { CardEffect } from "../model/types";
 // ---------------------------------------------------------------------------
 
 const worldIds = Object.keys(worldManifest);
-const fortuneBoonIds = FORTUNE_BOON_POOLS["fortune-v1"];
+const fortuneBoonIds = FORTUNE_BOON_POOLS["fortune-v1"] ?? [];
 const fortuneBoonIdSet = new Set<string>(fortuneBoonIds);
-const boonSetEntries = Object.entries(BOON_SETS);
+const boonSetEntries = Object.entries(FORTUNE_BOON_POOLS);
 const boonSetIds = new Set(boonSetEntries.map(([setId]) => setId));
-const allBoonSetTemplateIds = boonSetEntries.flatMap(([, set]) => [...set.templateIds]);
+const allBoonSetTemplateIds = boonSetEntries.flatMap(([, set]) => [...set]);
 
 /** Template ids an effect can name, walking Modal branches and Sequence steps. */
 function templateRefs(effect: CardEffect): string[] {
@@ -215,7 +214,7 @@ describe.each(worldIds)('world "%s"', (worldId) => {
   it("resolves every authored GainRandomCard setId to a registered loot pool", () => {
     const { catalog } = buildWorld(worldId);
     const missing = allReferencedLootPoolSets(catalog).filter(
-      (setId) => !Object.prototype.hasOwnProperty.call(LOOT_POOLS, setId),
+      (setId) => !Object.prototype.hasOwnProperty.call(FORTUNE_BOON_POOLS, setId),
     );
     expect(missing).toEqual([]);
   });
@@ -226,7 +225,7 @@ describe("fortune-v1 boon source", () => {
     // All templates now live in allCards.json. Boon sets just list templateIds;
     // verify they resolve in the assembled catalog for consistency.
     for (const [_, set] of boonSetEntries) {
-      const missingTemplateRefs = set.templateIds.filter((id: string) => !(id in CARD_CATALOG));
+      const missingTemplateRefs = set.filter((id: string) => !(id in CARD_CATALOG));
       expect(missingTemplateRefs).toEqual([]);
     }
   });
@@ -316,7 +315,7 @@ describe("zombie-big-box Corpse card", () => {
 // ---------------------------------------------------------------------------
 
 describe("fog-cooler-loot-v1 loot pool", () => {
-  const lootPoolTemplateIds = LOOT_POOLS["fog-cooler-loot-v1"];
+  const lootPoolTemplateIds = FORTUNE_BOON_POOLS["fog-cooler-loot-v1"] ?? [];
 
   it("is registered with 4 templates across at least two rarity tiers", () => {
     expect(lootPoolTemplateIds).toHaveLength(4);

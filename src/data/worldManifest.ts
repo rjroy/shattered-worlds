@@ -1,4 +1,8 @@
-import allCardsJson from "../data/allCards.json";
+import allCardsJson from "./allCards.json";
+import boolPoolsJson from "./boonPools.json";
+import starterJson from "./starterDecks/starter.json";
+import footballerJson from "./starterDecks/footballer.json";
+import contractorJson from "./starterDecks/contractor.json";
 import { worldDataRegistry } from "./worlds/registry";
 import type {
   CardCatalog,
@@ -9,10 +13,7 @@ import type {
   CardCount,
 } from "../core/model/catalog";
 import { assembleCatalog } from "../core/model/catalog";
-import starterJson from "./worlds/starters/starter.json";
-import footballerJson from "./worlds/starters/footballer.json";
-import contractorJson from "./worlds/starters/contractor.json";
-import { CardEffect } from "../core";
+import { CardEffect, CardTemplateId } from "../core";
 
 // ---------------------------------------------------------------------------
 // Global card catalog — loaded once at import time from the unified file.
@@ -37,6 +38,13 @@ const RESOLVE_STARTER_DECKS: Record<string, readonly StarterEntry[]> = {
   contractor: (contractorJson as unknown as { starterDeck: readonly StarterEntry[] }).starterDeck,
 };
 
+// ---------------------------------------------------------------------------
+// Boon pools for fortune cards
+// ---------------------------------------------------------------------------
+
+export type BoonPoolSet = Record<string, CardTemplateId[]>;
+
+export const FORTUNE_BOON_POOLS = boolPoolsJson as unknown as BoonPoolSet;
 // ---------------------------------------------------------------------------
 // World builder — returns AssembledWorld pairing the global catalog with
 // a specific world's deck and chosen starter.

@@ -1,7 +1,7 @@
 import type { FeatsProfile } from "../../game/runtime/featsProfile";
 import type { UnlocksProfile } from "../../game/runtime/unlocksProfile";
 import { computeFragmentBalance, FEAT_CATALOG } from "../feats/catalog";
-import { BOON_SETS } from "../worlds/boons/fortune";
+import { FORTUNE_BOON_POOLS } from "../worldManifest";
 import { DEFAULT_RUN_MODIFIERS, type RunModifiers, type UnlockDefinition } from "./types";
 
 export const UNLOCK_CATALOG: readonly UnlockDefinition[] = [
@@ -339,7 +339,8 @@ export function buildRunModifiers(
         break;
       case "actReward":
         {
-          const boonSet = BOON_SETS[def.effect.boonPoolId as keyof typeof BOON_SETS];
+          const boonSet =
+            FORTUNE_BOON_POOLS[def.effect.boonPoolId as keyof typeof FORTUNE_BOON_POOLS];
           if (boonSet === undefined) {
             throw new Error(`Unknown act reward boon pool: ${def.effect.boonPoolId}`);
           }
@@ -348,7 +349,7 @@ export function buildRunModifiers(
             actBoon: {
               poolId: def.effect.boonPoolId,
               poolName: def.effect.boonPoolName,
-              poolTemplateIds: boonSet.templateIds,
+              poolTemplateIds: boonSet,
               offeredCount: def.effect.offeredCount,
               chooseCount: def.effect.chooseCount,
             },

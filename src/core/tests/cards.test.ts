@@ -5,7 +5,7 @@ import { mintCard } from "../model/cards";
 import { UnknownTemplateError } from "../model/errors";
 import { createRng } from "../engine/rng";
 import { DEFAULT_RUN_MODIFIERS } from "../../data/unlocks/types";
-import { FORTUNE_BOON_POOLS } from "../../data/worlds/boons/fortune";
+import { FORTUNE_BOON_POOLS } from "../../data/worldManifest";
 import { catalog } from "./testFixture";
 
 // ---------------------------------------------------------------------------
@@ -40,7 +40,7 @@ function makeEmptyState(nextId = 0): GameState {
 }
 
 const ALL_TEMPLATE_IDS = Object.keys(catalog) as CardTemplateId[];
-const FORTUNE_BOON_IDS = FORTUNE_BOON_POOLS["fortune-v1"];
+const FORTUNE_BOON_IDS = FORTUNE_BOON_POOLS["fortune-v1"] ?? [];
 
 // ---------------------------------------------------------------------------
 // 1. Catalog completeness
@@ -288,8 +288,16 @@ describe("player card keywords", () => {
     // Only core zombie+starter player cards are guaranteed to lack authored
     // keywords. Boon templates like Star-Pruner may carry keywords (e.g. Spore).
     const zombieStarterIds = new Set([
-      "Sprint", "Explore", "Barricade", "Med Kit", "Panic", "Adrenaline",
-      "Summon Door", "Baseball Bat", "Shotgun", "Regroup",
+      "Sprint",
+      "Explore",
+      "Barricade",
+      "Med Kit",
+      "Panic",
+      "Adrenaline",
+      "Summon Door",
+      "Baseball Bat",
+      "Shotgun",
+      "Regroup",
     ]);
     for (const id of ALL_TEMPLATE_IDS) {
       if (!zombieStarterIds.has(id)) continue;

@@ -1,7 +1,6 @@
 import { describe, expect, it } from "bun:test";
-import { buildWorld } from "../../data/worldManifest";
+import { buildWorld, FORTUNE_BOON_POOLS } from "../../data/worldManifest";
 import { DEFAULT_RUN_MODIFIERS } from "../../data/unlocks/types";
-import { FORTUNE_BOON_POOLS } from "../../data/worlds/boons/fortune";
 import { worldDataRegistry } from "../../data/worlds/registry";
 import { applyEffect } from "../engine/effects";
 import { resolveForceDestroy } from "../engine/draw";
