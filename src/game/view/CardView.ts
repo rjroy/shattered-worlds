@@ -10,6 +10,7 @@
 import Phaser from "phaser";
 import type { Card, CardEffect, Keyword, WorldCard } from "../../core/index";
 import { concealOf } from "../../core/index";
+import { CARD_FX_BASE, effectiveVolume } from "../audio/audioVolume";
 import type { FrameStyle, VisualTheme } from "./themes/theme";
 import { compileEffect, type IconId } from "../../core/view/effectGlyphs";
 import { ENERGY_COST_TOOLTIP, PROGRESS_RING_TOOLTIP } from "../../core/view/effectTooltips";
@@ -195,6 +196,9 @@ export class CardView extends Phaser.GameObjects.Container {
   private pickBadge?: Phaser.GameObjects.Container;
   private pickedNow: boolean | undefined = undefined;
 
+  /** Accessor that returns the current FX channel gain (0–1). */
+  private readonly fxGain_: () => number;
+
   constructor(
     scene: Phaser.Scene,
     card: Card,
@@ -202,8 +206,10 @@ export class CardView extends Phaser.GameObjects.Container {
     y: number,
     theme: VisualTheme,
     resolveTheme: (worldId: string) => VisualTheme,
+    fxGain: () => number = () => 1,
   ) {
     super(scene, x, y);
+    this.fxGain_ = fxGain;
     scene.add.existing(this);
     this.cardId = card.id;
     this.worldId = theme.worldId;
@@ -620,7 +626,8 @@ export class CardView extends Phaser.GameObjects.Container {
   private playWhileVisible(): void {
     if (!this.visibleFxKey) return;
 
-    this.loopedFx = this.scene.sound.add(this.visibleFxKey, { volume: 0.5, loop: true });
+    const gain = this.fxGain_();
+    this.loopedFx = this.scene.sound.add(this.visibleFxKey, { volume: effectiveVolume(CARD_FX_BASE, gain), loop: true });
     console.log(`play FX: ${this.visibleFxKey}`);
     this.loopedFx.play();
     this.scene.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
@@ -664,8 +671,9 @@ export function createCardObject(
   y: number,
   theme: VisualTheme,
   resolveTheme: (worldId: string) => VisualTheme,
+  fxGain?: () => number,
 ): Phaser.GameObjects.Container {
-  return new CardView(scene, card, x, y, theme, resolveTheme);
+  return new CardView(scene, card, x, y, theme, resolveTheme, fxGain);
 }
 
 // ---------------------------------------------------------------------------

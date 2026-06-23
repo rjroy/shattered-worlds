@@ -5,6 +5,7 @@
  */
 import Phaser from "phaser";
 import { stopMainTheme } from "../audio/menuMusic";
+import { WORLD_MUSIC_BASE, CARD_FX_BASE, effectiveVolume, musicGain, fxGain } from "../audio/audioVolume";
 import { worldMusicManifest } from "../data/audioManifest";
 import { createGameplayRuntime, type GameplayRuntime } from "../runtime/gameplayRuntime";
 import type { GameplaySession } from "../runtime/gameplaySession";
@@ -642,7 +643,15 @@ export class TableScene extends Phaser.Scene {
       this.playerCardDisplaySignatures.delete(card.id);
     }
 
-    const container = new CardView(this, card, 0, 0, this.theme_, selectTheme);
+    const container = new CardView(
+      this,
+      card,
+      0,
+      0,
+      this.theme_,
+      selectTheme,
+      () => fxGain(this.runtime_.userSettings.get()),
+    );
     this.cardObjects.set(card.id, container);
     if (card.kind === "player") {
       this.playerCardDisplaySignatures.set(card.id, playerCardDisplaySignature(card));
@@ -1142,9 +1151,10 @@ export class TableScene extends Phaser.Scene {
     const fxSet = card.fx;
     if (!fxSet) return;
 
+    const gain = fxGain(this.runtime_.userSettings.get());
     for (const fx of fxSet) {
       if (fx.kind === kind) {
-        this.sound.play(fx.key, { volume: 0.5, loop: false });
+        this.sound.play(fx.key, { volume: effectiveVolume(CARD_FX_BASE, gain), loop: false });
       }
     }
   }
@@ -1162,9 +1172,10 @@ export class TableScene extends Phaser.Scene {
 
     return new Promise((resolve, reject) => {
       const resolveMusic = () => {
+        const gain = musicGain(this.runtime_.userSettings.get());
         this.worldMusic = this.sound.add(music.key, {
           loop: true,
-          volume: 0.45,
+          volume: effectiveVolume(WORLD_MUSIC_BASE, gain),
         });
         this.worldMusic.play();
         resolve();
@@ -1194,6 +1205,13 @@ export class TableScene extends Phaser.Scene {
     this.worldMusic.stop();
     this.worldMusic.destroy();
     this.worldMusic = null;
+  }
+
+  /** Re-apply effective music volume to the currently-playing world track. */
+  private reapplyMusicVolume(): void {
+    if (this.worldMusic === null) return;
+    const gain = musicGain(this.runtime_.userSettings.get());
+    (this.worldMusic as Phaser.Sound.WebAudioSound).setVolume(effectiveVolume(WORLD_MUSIC_BASE, gain));
   }
 
   // ---------------------------------------------------------------------------

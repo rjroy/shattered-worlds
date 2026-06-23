@@ -141,7 +141,7 @@ Validation gate:
     - effectiveVolume: multiplication, zero cases, 100% reproduces base, default-settings roundtrip (4 tests)
     - **Validation:** 13 pass, 0 fail, 26 expect() calls; typecheck clean
 
-### 3. Apply gain at the four playback sites
+### 3. Apply gain at the four playback sites (DONE)
 
 Files:
 
@@ -152,20 +152,46 @@ Files:
 
 Changes:
 
-- `startMainTheme(scene, settings: UserSettingsStore)`: add the `settings` param; set `volume: effectiveVolume(MENU_MUSIC_BASE, musicGain(settings.get()))`. Add `setMainThemeVolume(scene, settings)` that looks up the live sound (`scene.sound.get(mainThemeMusic.key)`) and calls `setVolume(...)` for live re-apply.
-- `TableScene.startWorldMusic`: scale `WORLD_MUSIC_BASE` by `musicGain` from `this.runtime_.userSettings`. Add a private `reapplyMusicVolume()` that, if `this.worldMusic` exists, calls `setVolume(...)`.
+- `startMainTheme(scene, settings: UserSettingsStore)`: add the `settings` param (optional for backward compat with deferred step 4 callers); set `volume: effectiveVolume(MENU_MUSIC_BASE, musicGain(settings.get()))`. Added `setMainThemeVolume(scene, settings)` that looks up the live sound (`scene.sound.get(mainThemeMusic.key)`) and calls `setVolume(...)` via type assertion on concrete subclass for live re-apply.
+- `TableScene.startWorldMusic`: scale `WORLD_MUSIC_BASE` by `musicGain` from `this.runtime_.userSettings`. Added a private `reapplyMusicVolume()` that, if `this.worldMusic` exists, calls `setVolume(...)`.
 - `TableScene.playCardFx`: scale `CARD_FX_BASE` by `fxGain` at play time.
-- `CardView.playWhileVisible`: scale `CARD_FX_BASE` by FX gain. CardView needs the gain — pass an **optional** `fxGain?: () => number` accessor through the `CardView` constructor (default to `() => 1` so untouched call sites stay valid and audible). Looped FX re-reads on next play; no live tracking. Call sites:
-  - `TableScene.ts:645` — pass `() => fxGain(this.runtime_.userSettings.get())`.
-  - `BoonChoiceView.ts:148` — boon-preview cards have no audible looped FX in practice; pass nothing (default) or an explicit `() => 0`. **Decision: pass nothing** (rely on the default), keeping BoonChoiceView ignorant of settings.
-  - `createCardObject` (`CardView.ts:668`) — forwards constructor args; thread the optional param through. (Note: this free function currently has no `src/game` call sites but is type-checked, so its signature must still compile.)
+- `CardView.playWhileVisible`: scale `CARD_FX_BASE` by FX gain. CardView took an **optional** `fxGain?: () => number` accessor through the constructor (default: `() => 1` so untouched call sites stay valid and audible).
+- Call sites updated:
+  - `TableScene.ts` obtainCardContainer — passes `() => fxGain(this.runtime_.userSettings.get())`.
 
 Validation gate:
 
-- `bun run test` — where a scene/sound stub allows, assert the volume passed to `sound.add`/`sound.play` reflects gain (e.g. mute → 0). Otherwise rely on the helper tests + manual check in step 7.
-- `bun run typecheck` confirms every `startMainTheme`/`CardView` caller is updated.
+- `bun run typecheck` clean.
+- `bun run test` — 1266 pass, 0 fail.
+- `bun run lint` — clean.
+- `bun run build` — succeeds.
 
-### 4. Inject settings into the menu scenes (DEFERRED)
+#### Changed files:
+
+1. src/game/audio/menuMusic.ts — Wired gain at playback start + live re-apply:
+    - Imported `MENU_MUSIC_BASE`, `effectiveVolume`, `musicGain` from audioVolume, plus `UserSettingsStore`
+    - Added optional `settings` parameter to `startMainTheme`; computes gain and applies via `effectiveVolume(MENU_MUSIC_BASE, gain)`
+    - New exported `setMainThemeVolume(scene, settings)` for live re-apply (looks up sound by key, re-applies effective volume)
+    - Casts to WebAudioSound for setVolume call (BaseSound type doesn't expose the setter directly)
+
+2. src/game/scenes/TableScene.ts — Three playback sites wired:
+    - Imported `WORLD_MUSIC_BASE`, `CARD_FX_BASE`, `effectiveVolume`, `musicGain`, `fxGain` from audioVolume
+    - `startWorldMusic`: computes gain at play time; uses `effectiveVolume(WORLD_MUSIC_BASE, gain)` instead of hardcoded 0.45
+    - `playCardFx`: moved fxGain computation outside loop; uses `effectiveVolume(CARD_FX_BASE, gain)` instead of hardcoded 0.5
+    - `obtainCardContainer`: passes FX gain accessor to CardView constructor: `() => fxGain(this.runtime_.userSettings.get())`
+    - New private `reapplyMusicVolume()`: looks up worldMusic and sets effective volume (for live slider updates)
+
+3. src/game/view/CardView.ts — Loop-FX volume wired:
+    - Imported `CARD_FX_BASE`, `effectiveVolume` from audioVolume
+    - Added private readonly `fxGain_: () => number` field
+    - Constructor accepts optional 7th parameter `fxGain: () => number = () => 1`
+    - `playWhileVisible()`: reads gain via `this.fxGain_()` and computes `effectiveVolume(CARD_FX_BASE, gain)` instead of hardcoded 0.5
+    - `createCardObject`: threads optional fxGain through to CardView constructor
+
+4. src/game/view/BoonChoiceView.ts — No changes needed;
+    - CardView construction (line ~148) continues to work via default param `fxGain: () => number = () => 1`
+
+### 4. Inject settings into the menu scenes
 
 Files:
 
