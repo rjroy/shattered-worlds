@@ -4,8 +4,8 @@ import { availableActions } from "../engine/available";
 import { applyEffect } from "../engine/effects";
 import { createWorld } from "../engine/world";
 import { concealOf } from "../model/keywords";
-import { mintCard } from "../model/cards";
-import type { GameEvent, GameState, Keyword, PlayerCard, WorldCard } from "../model/types";
+import { mintCard, WorldCardTemplate } from "../model/cards";
+import type { GameEvent, GameState, PlayerCard, WorldCard } from "../model/types";
 import type { CardCatalog } from "../model/catalog";
 
 const FOG_ID = "fog-beach-party";
@@ -90,10 +90,8 @@ describe("fog-beach-party integration", () => {
     const concealedTemplateId = FOG_CONCEALED_TEMPLATES.find((tid) => {
       const tpl = catalog[tid];
       if (tpl?.kind !== "world") return false;
-      return (tpl as unknown as WorldCard).keywords.some(
-        (k: Keyword) =>
-          k.name === "Concealed" ||
-          (typeof k === "string" && (k as string).startsWith("Concealed:")),
+      return (tpl as unknown as WorldCardTemplate).keywords.some((k: string) =>
+        k.startsWith("Concealed"),
       );
     });
     expect(concealedTemplateId, "expected a Concealed fog world template").toBeDefined();
@@ -127,18 +125,10 @@ describe("fog-beach-party integration", () => {
     const hiddenTid = FOG_CONCEALED_TEMPLATES.find((tid) => {
       const tpl = catalog[tid];
       if (tpl?.kind !== "world") return false;
-      const wc = tpl as unknown as WorldCard;
+      const wc = tpl as unknown as WorldCardTemplate;
       return (
-        wc.keywords.some(
-          (k: Keyword) =>
-            k.name === "Obstructed" ||
-            (typeof k === "string" && (k as string).startsWith("Obstructed:")),
-        ) &&
-        wc.keywords.some(
-          (k: Keyword) =>
-            k.name === "Concealed" ||
-            (typeof k === "string" && (k as string).startsWith("Concealed:")),
-        )
+        wc.keywords.some((k: string) => k.startsWith("Obstructed")) &&
+        wc.keywords.some((k: string) => k.startsWith("Concealed"))
       );
     });
     expect(hiddenTid, "expected a Concealed Obstructed fog hazard").toBeDefined();
