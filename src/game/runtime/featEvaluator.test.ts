@@ -610,8 +610,10 @@ describe("createFeatEvaluator — Validation #22: veteran cross-run via stub rea
     });
     evaluator.subscriber(endItem);
 
-    expect(evaluator.lastRunEarned().find((d) => d.id === "veteran")).toBeDefined();
-    expect(featsStore.getProfile().earned.find((r) => r.featId === "veteran")).toBeDefined();
+    expect(evaluator.lastRunEarned().find((d) => d.id === "lost-in-the-void")).toBeDefined();
+    expect(
+      featsStore.getProfile().earned.find((r) => r.featId === "lost-in-the-void"),
+    ).toBeDefined();
   });
 });
 
