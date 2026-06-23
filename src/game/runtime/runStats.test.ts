@@ -131,7 +131,7 @@ describe("runStats collector", () => {
       subscribers: [collector.subscriber],
     });
 
-    for (let turn = 0; turn < 4; turn += 1) {
+    for (let turn = 0; turn < 5; turn += 1) {
       session.dispatch({ type: "EndTurn" });
     }
 
@@ -142,7 +142,7 @@ describe("runStats collector", () => {
     expect(lifetime.runs).toBe(1);
     expect(lifetime.losses).toBe(1);
     expect(lifetime.lastRun?.outcome).toBe("lost");
-    expect(lifetime.lastRun?.turns).toBe(4);
+    expect(lifetime.lastRun?.turns).toBe(5);
     expect(lifetime.lastRun?.damageTaken).toBeGreaterThan(0);
   });
 
@@ -228,7 +228,7 @@ describe("runStats collector", () => {
       subscribers: [firstCollector.subscriber],
     });
 
-    for (let turn = 0; turn < 4; turn += 1) {
+    for (let turn = 0; turn < 5; turn += 1) {
       session.dispatch({ type: "EndTurn" });
     }
 

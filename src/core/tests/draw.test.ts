@@ -34,7 +34,7 @@ describe("refillHand draw table", () => {
     );
   });
 
-  it(`1 world card held → draws 2 world + 3 player (total ${WORLD_CONSTS.baseHandSize})`, () => {
+  it(`1 world card held → draws 1 world + 4 player (total ${WORLD_CONSTS.baseHandSize})`, () => {
     const { state: base } = createWorld(catalog, worldData, 1);
     const playerCards = base.hand.filter((c) => c.kind === "player");
     const worldCards = base.hand.filter((c) => c.kind === "world") as WorldCard[];
@@ -54,8 +54,8 @@ describe("refillHand draw table", () => {
 
     expect(filled.hand).toHaveLength(WORLD_CONSTS.baseHandSize);
     // 1 held + 2 drawn = 3 world (first held card is "free"; draw still targets startWorldCards)
-    expect(filled.hand.filter((c) => c.kind === "world")).toHaveLength(3);
-    expect(filled.hand.filter((c) => c.kind === "player")).toHaveLength(3);
+    expect(filled.hand.filter((c) => c.kind === "world")).toHaveLength(2);
+    expect(filled.hand.filter((c) => c.kind === "player")).toHaveLength(4);
   });
 
   it(`2 world cards held → draws 1 world + ${WORLD_CONSTS.baseHandSize - 3} player (total ${WORLD_CONSTS.baseHandSize})`, () => {

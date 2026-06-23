@@ -69,13 +69,14 @@ describe("gameplaySession integration", () => {
       subscribers: [(item) => firstHistory.push(item), (item) => secondHistory.push(item)],
     });
 
-    for (let turn = 0; turn < 4; turn += 1) {
+    for (let turn = 0; turn < 5; turn += 1) {
       session.dispatch({ type: "EndTurn" });
     }
 
     expect(firstHistory).toEqual(secondHistory);
     expect(firstHistory.map((item) => item.kind)).toEqual([
       "RunStarted",
+      "GameplayBatch",
       "GameplayBatch",
       "GameplayBatch",
       "GameplayBatch",
@@ -391,7 +392,7 @@ describe("RunEnded Phase 3 — finalState", () => {
       ],
     });
 
-    for (let turn = 0; turn < 4; turn += 1) {
+    for (let turn = 0; turn < 5; turn += 1) {
       session.dispatch({ type: "EndTurn" });
     }
 
