@@ -178,7 +178,7 @@ describe("gameplaySession integration", () => {
     expect(source).toContain('visibility: () => document.visibilityState === "visible"');
     expect(source).toContain('document.addEventListener("visibilitychange", onChange)');
     expect(source).toContain(
-      "new DestinyScene(gameplayRuntime.featsStore, gameplayRuntime.unlocksStore)",
+      "new DestinyScene(gameplayRuntime.featsStore, gameplayRuntime.unlocksStore, gameplayRuntime.userSettings)",
     );
     expect(source).toContain("new TableScene(gameplayRuntime)");
   });

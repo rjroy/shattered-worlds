@@ -1,6 +1,7 @@
 import Phaser from "phaser";
 
 import { startMainTheme } from "../audio/menuMusic";
+import type { UserSettingsStore } from "../runtime/userSettings";
 import { worldManifest } from "../../data/worldManifest";
 import { worldDisplayManifest } from "../../data/worldDisplayManifest";
 import { FEAT_CATALOG, computeFragmentBalance } from "../../data/feats/catalog";
@@ -32,6 +33,7 @@ export class ChronicleScene extends Phaser.Scene {
   private readonly runStats: RunStatsReader | undefined;
   private readonly statsTransfer: StatsTransfer | undefined;
   private readonly featsStore: FeatsStore | undefined;
+  private readonly userSettings: UserSettingsStore | undefined;
   private statsContent?: Phaser.GameObjects.Container;
   private featsContent?: Phaser.GameObjects.Container;
   private messageText?: Phaser.GameObjects.Text;
@@ -43,15 +45,16 @@ export class ChronicleScene extends Phaser.Scene {
   private touchScrollLastY: number | undefined;
   private touchScrollRemainder = 0;
 
-  constructor(runStats?: RunStatsReader, statsTransfer?: StatsTransfer, featsStore?: FeatsStore) {
+  constructor(runStats?: RunStatsReader, statsTransfer?: StatsTransfer, featsStore?: FeatsStore, userSettings?: UserSettingsStore) {
     super({ key: "Chronicle" });
     this.runStats = runStats;
     this.statsTransfer = statsTransfer;
     this.featsStore = featsStore;
+    this.userSettings = userSettings;
   }
 
   create(): void {
-    void startMainTheme(this);
+    void startMainTheme(this, this.userSettings);
     this.worldsScrollOffset = 0;
     this.featsScrollOffset = 0;
     addScreenBackdrop(this, {

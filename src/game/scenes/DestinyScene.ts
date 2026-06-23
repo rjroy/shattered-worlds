@@ -1,6 +1,7 @@
 import Phaser from "phaser";
 
 import { startMainTheme } from "../audio/menuMusic";
+import type { UserSettingsStore } from "../runtime/userSettings";
 import {
   activeWeight,
   canActivate,
@@ -33,6 +34,7 @@ type Button = {
 export class DestinyScene extends Phaser.Scene {
   private readonly featsStore: FeatsStore | undefined;
   private readonly unlocksStore: UnlocksStore | undefined;
+  private readonly userSettings: UserSettingsStore | undefined;
   private content?: Phaser.GameObjects.Container;
   private messageText?: Phaser.GameObjects.Text;
   private confirmOverlay?: Phaser.GameObjects.Container;
@@ -40,14 +42,15 @@ export class DestinyScene extends Phaser.Scene {
   private touchScrollLastY: number | undefined;
   private touchScrollRemainder = 0;
 
-  constructor(featsStore?: FeatsStore, unlocksStore?: UnlocksStore) {
+  constructor(featsStore?: FeatsStore, unlocksStore?: UnlocksStore, userSettings?: UserSettingsStore) {
     super({ key: "Destiny" });
     this.featsStore = featsStore;
     this.unlocksStore = unlocksStore;
+    this.userSettings = userSettings;
   }
 
   create(): void {
-    void startMainTheme(this);
+    void startMainTheme(this, this.userSettings);
     this.scrollOffset = 0;
     addScreenBackdrop(this, {
       key: "screen-destiny",

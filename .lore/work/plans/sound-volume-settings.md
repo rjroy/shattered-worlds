@@ -191,7 +191,7 @@ Validation gate:
 4. src/game/view/BoonChoiceView.ts — No changes needed;
     - CardView construction (line ~148) continues to work via default param `fxGain: () => number = () => 1`
 
-### 4. Inject settings into the menu scenes
+### 4. Inject settings into the menu scenes (DONE)
 
 Files:
 
@@ -208,9 +208,31 @@ Changes:
 Validation gate:
 
 - `bun run typecheck` clean.
-- `bun run test` — existing scene tests still pass; add a default-store fallback path if any test constructs these scenes without the arg.
+- `bun run test` — 1266 pass, 0 fail.
+- `bun run lint` — clean.
 
-### 5. Volume slider control + overlay UI (DEFERRED)
+#### Changed files:
+
+1. src/game/scenes/DestinyScene.ts — Injected settings store:
+    - Imported `UserSettingsStore` type from runtime/userSettings
+    - Added `userSettings?: UserSettingsStore` as 3rd constructor param (after featsStore, unlocksStore)
+    - Stored as `private readonly userSettings: UserSettingsStore | undefined`
+    - Changed `startMainTheme(this)` to `startMainTheme(this, this.userSettings)` so theme plays at current gain on entry
+
+2. src/game/scenes/ChronicleScene.ts — Injected settings store:
+    - Imported `UserSettingsStore` type from runtime/userSettings
+    - Added `userSettings?: UserSettingsStore` as 4th constructor param (after runStats, statsTransfer, featsStore)
+    - Stored as `private readonly userSettings: UserSettingsStore | undefined`
+    - Changed `startMainTheme(this)` to `startMainTheme(this, this.userSettings)` so theme plays at current gain on entry
+
+3. src/game/main.ts — Wired settings through at composition root:
+    - ChronicleScene construction now passes `gameplayRuntime.userSettings` as 4th arg
+    - DestinyScene construction now passes `gameplayRuntime.userSettings` as 3rd arg
+
+4. src/game/tests/gameplaySessionIntegration.test.ts — Updated source-content assertion:
+    - Updated the string assertion for DestinyScene constructor call to include the new userSettings argument
+
+### 5. Volume slider control + overlay UI
 
 Files:
 
