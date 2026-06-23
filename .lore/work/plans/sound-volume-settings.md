@@ -59,7 +59,7 @@ Compute gain through one tiny pure helper so mute + 0% + clamping live in a sing
 
 ## Steps
 
-### 1. Extend the settings data model
+### 1. Extend the settings data model (DONE)
 
 Files:
 
@@ -83,7 +83,32 @@ Validation gate:
 - `bun run test` — `userSettings.test.ts` covers: defaults, v1→v2 migration preserving old prefs, v2 round-trip, out-of-range/NaN clamping, mute persistence.
 - `bun run typecheck` reveals every `version: 1` / `UserSettings` construction site that needs updating.
 
-### 2. Pure gain helper (DEFERRED)
+#### Changed files:
+
+1. src/game/runtime/userSettings.ts — Extended the data model:
+    - Added musicVolume, fxVolume, masterMute to UserSettings type
+     - Bumped version literal from 1 to 2
+     - Updated defaultUserSettings() with musicVolume: 1.0, fxVolume: 0.5, masterMute:
+       false
+     - Added comment on storage key noting the intentional v1/v2 skew
+     - Updated isUserSettings type guard for version 2 + new fields
+     - Rewrote loadUserSettings with v1→v2 migration (preserving old prefs) and v2
+       clamping/coercion
+     - Added migrateFromV1() and clampV2() helpers
+
+ 2. src/game/runtime/userSettings.test.ts — Updated and expanded tests:
+     - Updated all existing test fixtures to version 2 shape
+     - Added v1→v2 migration tests (preserves old prefs, double-load no longer needs
+       migration)
+     - Added clamping/coercion tests (below 0, above 1, NaN/null → defaults)
+     - Added mute persistence round-trip test
+
+ 3. src/game/tests/cardObjects.test.ts — Updated 3 UserSettings fixtures:
+     - DEFAULT_HARNESS SETTINGS, inline construction, and settings() helper
+
+ 4. src/game/tests/settingsOverlayView.test.ts — Updated makeFakeStore constructor
+
+### 2. Pure gain helper 
 
 Files:
 

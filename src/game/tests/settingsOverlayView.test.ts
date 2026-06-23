@@ -102,9 +102,12 @@ function makeFakeStore(initial?: Partial<UserSettings>): UserSettingsStore & {
   updates: Partial<Omit<UserSettings, 'version'>>[]
 } {
   let settings: UserSettings = {
-    version: 1,
+    version: 2,
     confirmationMode: 'always',
     detailedHoverPreviews: true,
+    musicVolume: 1.0,
+    fxVolume: 0.5,
+    masterMute: false,
     ...initial,
   }
   const updates: Partial<Omit<UserSettings, 'version'>>[] = []

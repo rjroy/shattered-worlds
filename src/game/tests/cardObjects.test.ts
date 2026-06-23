@@ -372,9 +372,12 @@ interface SelectionHarnessScene {
 // Default to "off" so existing tests exercise the direct-dispatch path on
 // selection completion. Phase 9 confirmation tests set the mode they need.
 const DEFAULT_HARNESS_SETTINGS: UserSettings = {
-  version: 1,
+  version: 2,
   confirmationMode: "off",
   detailedHoverPreviews: true,
+  musicVolume: 1.0,
+  fxVolume: 0.5,
+  masterMute: false,
 };
 
 function makeSelectionHarness(
@@ -676,9 +679,12 @@ describe("TableScene selected effective card snapshots", () => {
       light: 0, // 0 < 3 → the concealed hazard stays hidden
     });
     const { scene } = makeSelectionHarness(state, {
-      version: 1,
+      version: 2,
       confirmationMode: "always",
       detailedHoverPreviews: false,
+      musicVolume: 1.0,
+      fxVolume: 0.5,
+      masterMute: false,
     });
 
     scene.onCardClick(survey.id);
@@ -2472,7 +2478,7 @@ describe("TableScene idle world-card and End Turn previews", () => {
 // ---------------------------------------------------------------------------
 
 function settings(mode: UserSettings["confirmationMode"]): UserSettings {
-  return { version: 1, confirmationMode: mode, detailedHoverPreviews: true };
+  return { version: 2, confirmationMode: mode, detailedHoverPreviews: true, musicVolume: 1.0, fxVolume: 0.5, masterMute: false };
 }
 
 /** A no-target player card that gains energy: a deterministic risk-NONE play. */
