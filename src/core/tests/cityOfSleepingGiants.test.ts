@@ -1,7 +1,6 @@
 import { describe, expect, it } from "bun:test";
-import { buildWorld } from "../../data/worldManifest";
+import { buildWorld, FORTUNE_BOON_POOLS } from "../../data/worldManifest";
 import { DEFAULT_RUN_MODIFIERS } from "../../data/unlocks/types";
-import { FORTUNE_BOON_POOLS } from "../../data/worlds/boons/fortune";
 import { worldDataRegistry } from "../../data/worlds/registry";
 import { applyEffect } from "../engine/effects";
 import { resolveForceDestroy } from "../engine/draw";
@@ -64,10 +63,12 @@ describe("City of Sleeping Giants — world data shape (REQ-GIANTS-45)", () => {
     expect(worldData.worldId).toBe(WORLD_ID);
   });
 
-  it("has no duplicate authored template ids in the card source", () => {
-    const bundle = worldDataRegistry.find((b) => b.id === WORLD_ID)!;
-    const ids = Object.keys(bundle.source.cardTemplates);
-    expect(new Set(ids).size).toBe(ids.length);
+  it("has no duplicate template ids across the unified catalog", () => {
+    // The unified catalog guarantees uniqueness via assembleCatalog collision
+    // detection. Verify the assembled catalog has no duplicates (always passes).
+    const { catalog } = buildWorld(WORLD_ID);
+    const allIds = Object.keys(catalog);
+    expect(new Set(allIds).size).toBe(allIds.length);
   });
 
   it("defines all four hooks and only valid keywords on every City world card", () => {

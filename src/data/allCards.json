@@ -1,0 +1,1831 @@
+{
+  "cardTemplates": {
+    "Shadow Overhead": {
+      "kind": "world",
+      "name": "Shadow Overhead",
+      "rarity": "common",
+      "insetKey": "bird-inset-shadow-overhead",
+      "cost": 2,
+      "keywords": ["Obstructed"],
+      "discardable": true,
+      "onDiscarded": { "kind": "None" },
+      "onCleared": { "kind": "GainCard", "template": "Find Footing" },
+      "onPartialClear": { "kind": "None" },
+      "onEndOfTurn": { "kind": "DestroySelf" }
+    },
+    "Sliding Debris": {
+      "kind": "world",
+      "name": "Sliding Debris",
+      "rarity": "common",
+      "insetKey": "bird-inset-sliding-debris",
+      "cost": 2,
+      "keywords": ["Obstructed"],
+      "discardable": true,
+      "onDiscarded": { "kind": "ForceDestroy", "amount": 1 },
+      "onCleared": { "kind": "GainCard", "template": "Cut It Loose" },
+      "onPartialClear": {
+        "kind": "AddWorldCardToDeck",
+        "template": "Sliding Debris",
+        "bTop": true
+      },
+      "onEndOfTurn": { "kind": "None" }
+    },
+    "Groaning Girders": {
+      "kind": "world",
+      "name": "Groaning Girders",
+      "rarity": "uncommon",
+      "insetKey": "bird-inset-groaning-girders",
+      "cost": 1,
+      "keywords": [],
+      "discardable": true,
+      "onDiscarded": { "kind": "GainCard", "template": "Panic" },
+      "onCleared": { "kind": "GainCard", "template": "Steady" },
+      "onPartialClear": { "kind": "None" },
+      "onEndOfTurn": { "kind": "None" }
+    },
+    "Gripping Talon": {
+      "kind": "world",
+      "name": "Gripping Talon",
+      "rarity": "signature",
+      "insetKey": "bird-inset-gripping-talon",
+      "cost": 3,
+      "keywords": ["Obstructed", "Creature"],
+      "discardable": true,
+      "onDiscarded": { "kind": "ForceDestroy", "amount": 2 },
+      "onCleared": { "kind": "None" },
+      "onPartialClear": { "kind": "Damage", "amount": 2 },
+      "onEndOfTurn": { "kind": "ForceDestroy", "amount": 1 }
+    },
+    "Find Fire Axe": {
+      "kind": "world",
+      "name": "Find Fire Axe",
+      "rarity": "uncommon",
+      "insetKey": "bird-inset-fire-axe-find",
+      "cost": 2,
+      "keywords": ["Obstructed"],
+      "discardable": true,
+      "onDiscarded": { "kind": "None" },
+      "onCleared": { "kind": "GainCard", "template": "Fire Axe" },
+      "onPartialClear": { "kind": "None" },
+      "onEndOfTurn": { "kind": "None" }
+    },
+    "Find Footing": {
+      "kind": "player",
+      "name": "Find Footing",
+      "rarity": "uncommon",
+      "insetKey": "bird-inset-find-footing",
+      "energyCost": 1,
+      "effect": { "kind": "DealProgress", "base": 2, "bonus": { "tag": "Obstructed", "amount": 2 } }
+    },
+    "Fire Axe": {
+      "kind": "player",
+      "name": "Fire Axe",
+      "rarity": "uncommon",
+      "insetKey": "bird-inset-fire-axe",
+      "effect": { "kind": "DealProgress", "base": 1, "bonus": { "tag": "Creature", "amount": 3 } }
+    },
+    "Steady": {
+      "kind": "player",
+      "name": "Steady",
+      "rarity": "uncommon",
+      "insetKey": "bird-inset-steady",
+      "energyCost": 1,
+      "effect": { "kind": "Brace", "amount": 1 }
+    },
+    "Cut It Loose": {
+      "kind": "player",
+      "name": "Cut It Loose",
+      "rarity": "common",
+      "insetKey": "bird-inset-cut-it-loose",
+      "energyCost": 0,
+      "effect": {
+        "kind": "Sequence",
+        "steps": [
+          { "kind": "DestroyCardInHand", "min": 1, "max": 1 },
+          { "kind": "DealProgress", "base": 4 }
+        ]
+      }
+    },
+    "Follow The Vein": {
+      "kind": "player",
+      "name": "Follow The Vein",
+      "rarity": "uncommon",
+      "insetKey": "giants-inset-follow-the-vein",
+      "energyCost": 0,
+      "exhaust": true,
+      "effect": {
+        "kind": "Sequence",
+        "steps": [
+          { "kind": "Draw", "player": 2 },
+          { "kind": "GainEnergy", "amount": 1 },
+          { "kind": "AddWorldCardToDeck", "template": "Vein-Road Surge", "bTop": true }
+        ]
+      }
+    },
+    "Minor Tremor": {
+      "kind": "world",
+      "name": "Minor Tremor",
+      "rarity": "common",
+      "insetKey": "giants-inset-minor-tremor",
+      "cost": 1,
+      "keywords": [],
+      "discardable": false,
+      "onCleared": { "kind": "None" },
+      "onDiscarded": { "kind": "None" },
+      "onPartialClear": { "kind": "None" },
+      "onEndOfTurn": {
+        "kind": "Sequence",
+        "steps": [
+          { "kind": "AddWorldCardToDeck", "template": "Fingerquake Ward", "bTop": true },
+          { "kind": "DestroySelf" }
+        ]
+      }
+    },
+    "Relocation Order": {
+      "kind": "world",
+      "name": "Relocation Order",
+      "rarity": "common",
+      "insetKey": "giants-inset-relocation-order",
+      "cost": 2,
+      "keywords": ["Obstructed"],
+      "discardable": true,
+      "onCleared": { "kind": "GainCard", "template": "Quiet Survey" },
+      "onDiscarded": { "kind": "AddPlayerCardToTop", "template": "Panic" },
+      "onPartialClear": { "kind": "None" },
+      "onEndOfTurn": { "kind": "AddPlayerCardToTop", "template": "Panic" }
+    },
+    "Fingerquake Ward": {
+      "kind": "world",
+      "name": "Fingerquake Ward",
+      "rarity": "uncommon",
+      "insetKey": "giants-inset-fingerquake-ward",
+      "cost": 3,
+      "keywords": ["Slow"],
+      "discardable": true,
+      "onCleared": { "kind": "GainCard", "template": "Brace The Ward" },
+      "onDiscarded": { "kind": "ForceDestroy", "amount": 1 },
+      "onPartialClear": { "kind": "AddWorldCardToDeck", "template": "Minor Tremor", "bTop": true },
+      "onEndOfTurn": {
+        "kind": "Sequence",
+        "steps": [
+          { "kind": "ForceDestroy", "amount": 1 },
+          { "kind": "AddWorldCardToDeck", "template": "Minor Tremor", "bTop": true }
+        ]
+      }
+    },
+    "Surveyors Mark A Pulse": {
+      "kind": "world",
+      "name": "Surveyors Mark A Pulse",
+      "rarity": "common",
+      "insetKey": "giants-inset-surveyors-mark-a-pulse",
+      "cost": 6,
+      "keywords": ["Obstructed"],
+      "discardable": true,
+      "onCleared": {
+        "kind": "OfferBoon",
+        "setId": "giants-boons",
+        "setName": "Surveyor's Kit",
+        "offeredCount": 3,
+        "chooseCount": 1
+      },
+      "onDiscarded": { "kind": "AddWorldCardToDeck", "template": "Minor Tremor", "bTop": true },
+      "onPartialClear": { "kind": "None" },
+      "onEndOfTurn": { "kind": "AddWorldCardToDeck", "template": "Vein-Road Surge", "bTop": true }
+    },
+    "Vein-Road Surge": {
+      "kind": "world",
+      "name": "Vein-Road Surge",
+      "rarity": "uncommon",
+      "insetKey": "giants-inset-vein-road-surge",
+      "cost": 3,
+      "keywords": ["Obstructed"],
+      "discardable": true,
+      "onCleared": {
+        "kind": "Sequence",
+        "steps": [
+          { "kind": "GainEnergy", "amount": 1 },
+          { "kind": "GainCard", "template": "Follow The Vein" }
+        ]
+      },
+      "onDiscarded": { "kind": "RecallPlayerDiscard", "policy": "random" },
+      "onPartialClear": { "kind": "RecallPlayerDiscard", "policy": "lowestCost" },
+      "onEndOfTurn": {
+        "kind": "Sequence",
+        "steps": [
+          { "kind": "RecallPlayerDiscard", "policy": "panicFirst" },
+          { "kind": "AddWorldCardToDeck", "template": "Bone Anchor Failure", "bTop": true },
+          { "kind": "DestroySelf" }
+        ]
+      }
+    },
+    "Bone Anchor Failure": {
+      "kind": "world",
+      "name": "Bone Anchor Failure",
+      "rarity": "uncommon",
+      "insetKey": "giants-inset-bone-anchor-failure",
+      "cost": 4,
+      "keywords": ["Slow"],
+      "discardable": true,
+      "onCleared": { "kind": "GainCard", "template": "Bone Pin" },
+      "onDiscarded": { "kind": "Damage", "amount": 2 },
+      "onPartialClear": {
+        "kind": "AddWorldCardToDeck",
+        "template": "Fingerquake Ward",
+        "bTop": true
+      },
+      "onEndOfTurn": { "kind": "Damage", "amount": 2 }
+    },
+    "District Recall": {
+      "kind": "world",
+      "name": "District Recall",
+      "rarity": "rare",
+      "insetKey": "giants-inset-district-recall",
+      "cost": 4,
+      "keywords": ["Obstructed", "Slow"],
+      "discardable": true,
+      "onCleared": { "kind": "GainCard", "template": "Contour Map" },
+      "onDiscarded": { "kind": "AddWorldCardToDeck", "template": "Vein-Road Surge", "bTop": true },
+      "onPartialClear": {
+        "kind": "AddWorldCardToDeck",
+        "template": "Vein-Road Surge",
+        "bTop": true
+      },
+      "onEndOfTurn": {
+        "kind": "Sequence",
+        "steps": [
+          { "kind": "AddWorldCardToDeck", "template": "Vein-Road Surge", "bTop": true },
+          { "kind": "AddWorldCardToDeck", "template": "Bone Anchor Failure", "bTop": true }
+        ]
+      }
+    },
+    "The Giant Turns In Sleep": {
+      "kind": "world",
+      "name": "The Giant Turns In Sleep",
+      "rarity": "signature",
+      "insetKey": "giants-inset-the-giant-turns-in-sleep",
+      "cost": 6,
+      "keywords": ["Slow"],
+      "discardable": true,
+      "onCleared": { "kind": "None" },
+      "onDiscarded": { "kind": "ForceDestroy", "amount": 2 },
+      "onPartialClear": { "kind": "AddThreatToWorldDeck" },
+      "onEndOfTurn": {
+        "kind": "Sequence",
+        "steps": [
+          { "kind": "Damage", "amount": 2 },
+          { "kind": "AddWorldCardToDeck", "template": "Bone Anchor Failure", "bTop": true },
+          { "kind": "AddThreatToWorldDeck" }
+        ]
+      }
+    },
+    "Flashlight": {
+      "kind": "player",
+      "name": "Half-Dead Flashlight",
+      "rarity": "common",
+      "insetKey": "fog-inset-flashlight",
+      "exhaust": true,
+      "effect": { "kind": "GainLight", "amount": 2 }
+    },
+    "Flare Gun": {
+      "kind": "player",
+      "name": "Flare Gun",
+      "rarity": "uncommon",
+      "insetKey": "fog-inset-flare-gun",
+      "energyCost": 1,
+      "exhaust": true,
+      "effect": {
+        "kind": "Modal",
+        "branches": [
+          { "kind": "DealProgress", "base": 2, "bonus": { "tag": "Obstructed", "amount": 2 } },
+          { "kind": "GainLight", "amount": 6 }
+        ]
+      }
+    },
+    "Bonfire": {
+      "kind": "player",
+      "name": "Bonfire",
+      "rarity": "uncommon",
+      "insetKey": "fog-inset-bonfire",
+      "energyCost": 2,
+      "exhaust": true,
+      "effect": {
+        "kind": "Sequence",
+        "steps": [
+          { "kind": "DealProgressAll", "base": 1 },
+          { "kind": "GainLight", "amount": 4 }
+        ]
+      }
+    },
+    "Searchlight": {
+      "kind": "player",
+      "name": "Searchlight",
+      "rarity": "rare",
+      "insetKey": "fog-inset-searchlight",
+      "energyCost": 2,
+      "exhaust": true,
+      "effect": {
+        "kind": "DealProgressAll",
+        "base": 1,
+        "bonus": { "tag": "Obstructed", "amount": 2 }
+      }
+    },
+    "Half-Dead Spotlight": {
+      "kind": "player",
+      "name": "Half-Dead Spotlight",
+      "insetKey": "fog-inset-flashlight",
+      "rarity": "uncommon",
+      "exhaust": true,
+      "effect": { "kind": "GainLight", "amount": 4 }
+    },
+    "Cooler Snacks": {
+      "kind": "player",
+      "name": "Cooler Snacks",
+      "insetKey": "fortune-inset-lucky-break",
+      "rarity": "rare",
+      "exhaust": true,
+      "effect": { "kind": "Heal", "amount": 4 }
+    },
+    "Loaded Shotgun": {
+      "kind": "player",
+      "name": "Loaded Shotgun",
+      "rarity": "legendary",
+      "insetKey": "zombie-inset-find-shotgun",
+      "exhaust": true,
+      "effect": {
+        "kind": "DealProgressAll",
+        "base": 2,
+        "bonus": { "tag": "Obstructed", "amount": 2 }
+      }
+    },
+    "Rolling Fog": {
+      "kind": "world",
+      "name": "Rolling Fog",
+      "rarity": "common",
+      "insetKey": "fog-inset-rolling-fog",
+      "cost": 2,
+      "keywords": ["Concealed:1", "Obstructed"],
+      "discardable": true,
+      "onDiscarded": { "kind": "None" },
+      "onCleared": { "kind": "None" },
+      "onPartialClear": { "kind": "None" },
+      "onEndOfTurn": { "kind": "Damage", "amount": 1 }
+    },
+    "Abandoned Cooler": {
+      "kind": "world",
+      "name": "Abandoned Cooler",
+      "rarity": "common",
+      "insetKey": "fog-inset-abandoned-cooler",
+      "cost": 2,
+      "keywords": ["Concealed:1", "Obstructed"],
+      "discardable": true,
+      "onDiscarded": { "kind": "None" },
+      "onCleared": {
+        "kind": "GainRandomCard",
+        "setId": "fog-cooler-loot-v1",
+        "setName": "Cooler Stash"
+      },
+      "onPartialClear": { "kind": "None" },
+      "onEndOfTurn": { "kind": "None" }
+    },
+    "The Bonfire": {
+      "kind": "world",
+      "name": "The Bonfire",
+      "rarity": "uncommon",
+      "insetKey": "fog-inset-the-bonfire",
+      "cost": 4,
+      "keywords": ["Obstructed"],
+      "discardable": true,
+      "onDiscarded": { "kind": "None" },
+      "onCleared": {
+        "kind": "Sequence",
+        "steps": [
+          { "kind": "GainRandomCard", "setId": "bonfire-loot-v1", "setName": "Bonfire Stash" },
+          { "kind": "GainRandomCard", "setId": "bonfire-loot-v1", "setName": "Bonfire Stash" },
+          { "kind": "GainLight", "amount": 2 }
+        ]
+      },
+      "onPartialClear": { "kind": "None" },
+      "onEndOfTurn": { "kind": "None" }
+    },
+    "Something in the Mist": {
+      "kind": "world",
+      "name": "Something in the Mist",
+      "rarity": "signature",
+      "insetKey": "fog-inset-something-in-the-mist",
+      "cost": 3,
+      "keywords": ["Concealed:3", "Creature", "Obstructed"],
+      "discardable": true,
+      "onDiscarded": { "kind": "Damage", "amount": 2 },
+      "onCleared": { "kind": "None" },
+      "onPartialClear": { "kind": "Damage", "amount": 1 },
+      "onEndOfTurn": { "kind": "Damage", "amount": 2 }
+    },
+    "The Tide Coming In": {
+      "kind": "world",
+      "name": "The Tide Coming In",
+      "rarity": "uncommon",
+      "insetKey": "fog-inset-the-tide-coming-in",
+      "cost": 3,
+      "keywords": ["Concealed:3", "Obstructed"],
+      "discardable": true,
+      "onDiscarded": { "kind": "Damage", "amount": 2 },
+      "onCleared": { "kind": "None" },
+      "onPartialClear": { "kind": "None" },
+      "onEndOfTurn": { "kind": "Damage", "amount": 2 }
+    },
+    "Whiteout": {
+      "kind": "world",
+      "name": "Whiteout",
+      "rarity": "rare",
+      "insetKey": "fog-inset-whiteout",
+      "cost": 4,
+      "keywords": ["Concealed:5", "Obstructed"],
+      "discardable": true,
+      "onDiscarded": { "kind": "Damage", "amount": 2 },
+      "onCleared": { "kind": "None" },
+      "onPartialClear": { "kind": "None" },
+      "onEndOfTurn": {
+        "kind": "DamageScaled",
+        "base": 1,
+        "per": { "kind": "KeywordInHand", "keyword": "Concealed" },
+        "amount": 1
+      }
+    },
+    "Tremors": {
+      "kind": "world",
+      "name": "Tremors",
+      "rarity": "uncommon",
+      "insetKey": "volcano-inset-tremors",
+      "cost": 2,
+      "keywords": [],
+      "discardable": true,
+      "onDiscarded": { "kind": "None" },
+      "onCleared": { "kind": "GainCard", "template": "Push Through" },
+      "onPartialClear": { "kind": "None" },
+      "onEndOfTurn": { "kind": "DestroySelf" }
+    },
+    "Gridlock": {
+      "kind": "world",
+      "name": "Gridlock",
+      "rarity": "common",
+      "insetKey": "volcano-inset-gridlock",
+      "cost": 1,
+      "keywords": ["Slow"],
+      "discardable": false,
+      "onDiscarded": { "kind": "None" },
+      "onCleared": { "kind": "GainCard", "template": "Nitro" },
+      "onPartialClear": { "kind": "None" },
+      "onEndOfTurn": { "kind": "AddWorldCardToDeck", "template": "Gridlock" }
+    },
+    "Ash Fall": {
+      "kind": "world",
+      "name": "Ash Fall",
+      "rarity": "common",
+      "insetKey": "volcano-inset-ash-fall",
+      "cost": 1,
+      "keywords": ["Slow"],
+      "discardable": true,
+      "onDiscarded": { "kind": "None" },
+      "onCleared": { "kind": "GainCard", "template": "Ditch Gear" },
+      "onPartialClear": { "kind": "None" },
+      "onEndOfTurn": { "kind": "GainCard", "template": "Panic" }
+    },
+    "Lava Flow": {
+      "kind": "world",
+      "name": "Lava Flow",
+      "rarity": "signature",
+      "insetKey": "volcano-inset-lava-flow",
+      "cost": 3,
+      "keywords": ["Slow"],
+      "discardable": true,
+      "onDiscarded": { "kind": "Damage", "amount": 5 },
+      "onCleared": { "kind": "None" },
+      "onPartialClear": { "kind": "None" },
+      "onEndOfTurn": {
+        "kind": "Sequence",
+        "steps": [
+          { "kind": "ForceDestroy", "amount": 1 },
+          { "kind": "AddWorldCardToDeck", "template": "Ash Fall" }
+        ]
+      }
+    },
+    "Find a Vehicle": {
+      "kind": "world",
+      "name": "Find a Vehicle",
+      "rarity": "uncommon",
+      "insetKey": "volcano-inset-vehicle",
+      "cost": 2,
+      "keywords": ["Obstructed"],
+      "discardable": true,
+      "onDiscarded": { "kind": "None" },
+      "onCleared": { "kind": "GainCard", "template": "Floor It" },
+      "onPartialClear": { "kind": "None" },
+      "onEndOfTurn": { "kind": "None" }
+    },
+    "Push Through": {
+      "kind": "player",
+      "name": "Push Through",
+      "rarity": "uncommon",
+      "insetKey": "volcano-inset-spot-path",
+      "energyCost": 1,
+      "effect": {
+        "kind": "Sequence",
+        "steps": [
+          { "kind": "DealProgress", "base": 3, "bonus": { "tag": "Slow", "amount": 2 } },
+          { "kind": "Damage", "amount": 1 }
+        ]
+      }
+    },
+    "Floor It": {
+      "kind": "player",
+      "name": "Floor It",
+      "rarity": "rare",
+      "insetKey": "volcano-inset-floor-it",
+      "energyCost": 0,
+      "exhaust": true,
+      "effect": { "kind": "ExileTopWorldCards", "amount": 2 }
+    },
+    "Ditch Gear": {
+      "kind": "player",
+      "name": "Ditch Gear",
+      "rarity": "common",
+      "insetKey": "volcano-inset-ditch-gear",
+      "exhaust": true,
+      "energyCost": 1,
+      "effect": {
+        "kind": "Sequence",
+        "steps": [
+          { "kind": "DestroyCardInHand", "min": 1, "max": 1 },
+          { "kind": "GainEnergy", "amount": 2 }
+        ]
+      }
+    },
+    "Nitro": {
+      "kind": "player",
+      "name": "Nitro",
+      "rarity": "uncommon",
+      "insetKey": "volcano-inset-nitro",
+      "exhaust": true,
+      "energyCost": 0,
+      "effect": {
+        "kind": "Sequence",
+        "steps": [
+          { "kind": "GainEnergy", "amount": 2 },
+          { "kind": "Draw", "player": 2 }
+        ]
+      }
+    },
+    "Spore": {
+      "kind": "player",
+      "name": "Spore",
+      "rarity": "common",
+      "insetKey": "mall-inset-spore",
+      "energyCost": 1,
+      "exhaust": true,
+      "keywords": ["Spore"],
+      "effect": {
+        "kind": "DamageScaled",
+        "base": 0,
+        "per": { "kind": "KeywordInHand", "keyword": "Spore" },
+        "amount": 1
+      }
+    },
+    "Burst Planter": {
+      "kind": "world",
+      "name": "Burst Planter",
+      "rarity": "common",
+      "insetKey": "mall-inset-burst-planter",
+      "cost": 1,
+      "keywords": ["Spore"],
+      "discardable": true,
+      "onDiscarded": { "kind": "GainCard", "template": "Spore" },
+      "onCleared": { "kind": "None" },
+      "onPartialClear": { "kind": "None" },
+      "onEndOfTurn": { "kind": "None" }
+    },
+    "Pollen Haze": {
+      "kind": "world",
+      "name": "Pollen Haze",
+      "rarity": "common",
+      "insetKey": "mall-inset-pollen-haze",
+      "cost": 2,
+      "keywords": ["Spore"],
+      "discardable": false,
+      "onDiscarded": { "kind": "None" },
+      "onCleared": { "kind": "None" },
+      "onPartialClear": { "kind": "None" },
+      "onEndOfTurn": { "kind": "GainCard", "template": "Spore" }
+    },
+    "Kudzu Curtain": {
+      "kind": "world",
+      "name": "Kudzu Curtain",
+      "rarity": "uncommon",
+      "insetKey": "mall-inset-kudzu-curtain",
+      "cost": 2,
+      "keywords": ["Slow", "Spore"],
+      "discardable": false,
+      "onDiscarded": { "kind": "None" },
+      "onCleared": { "kind": "None" },
+      "onPartialClear": { "kind": "GainCard", "template": "Spore" },
+      "onEndOfTurn": { "kind": "GainCard", "template": "Spore" }
+    },
+    "Something in the Atrium": {
+      "kind": "world",
+      "name": "Something in the Atrium",
+      "rarity": "signature",
+      "insetKey": "mall-inset-something-in-the-atrium",
+      "cost": 3,
+      "keywords": ["Creature", "Slow"],
+      "discardable": true,
+      "onDiscarded": { "kind": "Damage", "amount": 3 },
+      "onCleared": { "kind": "None" },
+      "onPartialClear": { "kind": "Damage", "amount": 1 },
+      "onEndOfTurn": { "kind": "Damage", "amount": 1 }
+    },
+    "Fountain Bloom": {
+      "kind": "world",
+      "name": "Fountain Bloom",
+      "rarity": "common",
+      "insetKey": "mall-inset-fountain-bloom",
+      "cost": 3,
+      "keywords": ["Spore"],
+      "discardable": false,
+      "onDiscarded": { "kind": "None" },
+      "onCleared": { "kind": "None" },
+      "onPartialClear": { "kind": "GainCard", "template": "Spore" },
+      "onEndOfTurn": {
+        "kind": "Sequence",
+        "steps": [
+          { "kind": "AddPlayerCardToTop", "template": "Spore" },
+          { "kind": "AddWorldCardToDeck", "template": "Burst Planter", "bTop": true }
+        ]
+      }
+    },
+    "The Garden Center": {
+      "kind": "world",
+      "name": "The Garden Center",
+      "rarity": "common",
+      "insetKey": "mall-inset-garden-center",
+      "cost": 4,
+      "keywords": ["Obstructed"],
+      "discardable": true,
+      "onDiscarded": { "kind": "None" },
+      "onCleared": {
+        "kind": "Sequence",
+        "steps": [
+          {
+            "kind": "GainRandomCard",
+            "setId": "garden-center-loot-v1",
+            "setName": "Garden Center Rammage"
+          },
+          {
+            "kind": "GainRandomCard",
+            "setId": "garden-center-loot-v1",
+            "setName": "Garden Center Rammage"
+          }
+        ]
+      },
+      "onPartialClear": { "kind": "None" },
+      "onEndOfTurn": { "kind": "None" }
+    },
+    "Pruning Shears": {
+      "kind": "player",
+      "name": "Pruning Shears",
+      "rarity": "common",
+      "insetKey": "mall-inset-pruning-shears",
+      "energyCost": 1,
+      "effect": {
+        "kind": "Sequence",
+        "steps": [
+          { "kind": "DestroyCardInHand", "min": 1, "max": 2 },
+          { "kind": "GainEnergy", "amount": 1 }
+        ]
+      }
+    },
+    "Machete": {
+      "kind": "player",
+      "name": "Machete",
+      "rarity": "uncommon",
+      "insetKey": "mall-inset-machete",
+      "energyCost": 1,
+      "effect": { "kind": "DealProgress", "base": 2, "bonus": { "tag": "Spore", "amount": 2 } }
+    },
+    "Weed Killer": {
+      "kind": "player",
+      "name": "Weed Killer",
+      "rarity": "rare",
+      "insetKey": "mall-inset-weed-killer",
+      "energyCost": 2,
+      "exhaust": true,
+      "effect": { "kind": "DealProgressAll", "base": 2, "bonus": { "tag": "Spore", "amount": 3 } }
+    },
+    "Bloom": {
+      "kind": "player",
+      "name": "Bloom",
+      "rarity": "common",
+      "insetKey": "mall-inset-bloom",
+      "energyCost": 0,
+      "effect": {
+        "kind": "DealProgressScaled",
+        "base": 1,
+        "per": { "kind": "KeywordInHand", "keyword": "Spore" },
+        "amount": 1
+      }
+    },
+    "Dormant Star": {
+      "kind": "player",
+      "name": "Dormant Star",
+      "rarity": "uncommon",
+      "insetKey": "ember-inset-dormant-star",
+      "energyCost": 0,
+      "exhaust": true,
+      "effect": {
+        "kind": "Sequence",
+        "steps": [
+          { "kind": "Draw", "player": 1 },
+          { "kind": "Brace", "amount": 1 },
+          { "kind": "AddWorldCardToDeck", "template": "Ember Moth", "bTop": true }
+        ]
+      }
+    },
+    "Take One": {
+      "kind": "player",
+      "name": "Take One",
+      "rarity": "common",
+      "insetKey": "ember-inset-take-one",
+      "exhaust": true,
+      "effect": {
+        "kind": "Sequence",
+        "steps": [
+          { "kind": "DealProgress", "base": 4 },
+          { "kind": "AddWorldCardToDeck", "template": "Falling Fruit", "bTop": true }
+        ]
+      }
+    },
+    "Glasshouse Lantern": {
+      "kind": "player",
+      "name": "Glasshouse Lantern",
+      "rarity": "rare",
+      "insetKey": "ember-inset-glasshouse-lantern",
+      "exhaust": true,
+      "effect": {
+        "kind": "Sequence",
+        "steps": [
+          { "kind": "Draw", "player": 2 },
+          { "kind": "Brace", "amount": 1 },
+          { "kind": "AddWorldCardToDeck", "template": "Cracked Hearth-Star", "bTop": true }
+        ]
+      }
+    },
+    "Cracked Hearth-Star": {
+      "kind": "world",
+      "name": "Cracked Hearth-Star",
+      "rarity": "common",
+      "insetKey": "ember-inset-cracked-hearth-star",
+      "cost": 2,
+      "keywords": ["Obstructed"],
+      "discardable": true,
+      "onCleared": { "kind": "GainCard", "template": "Dormant Star" },
+      "onDiscarded": { "kind": "Damage", "amount": 1 },
+      "onPartialClear": { "kind": "None" },
+      "onEndOfTurn": {
+        "kind": "Sequence",
+        "steps": [
+          { "kind": "AddWorldCardToDeck", "template": "Ember Moth", "bTop": true },
+          { "kind": "DestroySelf" }
+        ]
+      }
+    },
+    "Falling Fruit": {
+      "kind": "world",
+      "name": "Falling Fruit",
+      "rarity": "common",
+      "insetKey": "ember-inset-falling-fruit",
+      "cost": 2,
+      "keywords": ["Obstructed"],
+      "discardable": true,
+      "onCleared": {
+        "kind": "Sequence",
+        "steps": [
+          { "kind": "GainEnergy", "amount": 1 },
+          { "kind": "GainCard", "template": "Take One" }
+        ]
+      },
+      "onDiscarded": { "kind": "AddPlayerCardToTop", "template": "Dormant Star" },
+      "onPartialClear": { "kind": "AddPlayerCardToTop", "template": "Dormant Star" },
+      "onEndOfTurn": { "kind": "AddWorldCardToDeck", "template": "Rooted Meteor", "bTop": true }
+    },
+    "Rooted Meteor": {
+      "kind": "world",
+      "name": "Rooted Meteor",
+      "rarity": "common",
+      "insetKey": "ember-inset-rooted-meteor",
+      "cost": 3,
+      "keywords": ["Slow"],
+      "discardable": true,
+      "onCleared": { "kind": "GainCard", "template": "Glasshouse Lantern" },
+      "onDiscarded": { "kind": "Damage", "amount": 1 },
+      "onPartialClear": { "kind": "AddWorldCardToDeck", "template": "Falling Fruit", "bTop": true },
+      "onEndOfTurn": { "kind": "Damage", "amount": 1 }
+    },
+    "The Orchard Counts Wrong": {
+      "kind": "world",
+      "name": "The Orchard Counts Wrong",
+      "rarity": "uncommon",
+      "insetKey": "ember-inset-the-orchard-counts-wrong",
+      "cost": 4,
+      "keywords": ["Obstructed"],
+      "discardable": true,
+      "onCleared": { "kind": "GainCard", "template": "Star-Pruner" },
+      "onDiscarded": { "kind": "Damage", "amount": 2 },
+      "onPartialClear": { "kind": "AddPlayerCardToTop", "template": "Dormant Star" },
+      "onEndOfTurn": {
+        "kind": "Sequence",
+        "steps": [
+          {
+            "kind": "Draw",
+            "player": 1
+          },
+          { "kind": "AddPlayerCardToTop", "template": "Dormant Star" }
+        ]
+      }
+    },
+    "Hatchery Cellar": {
+      "kind": "world",
+      "name": "Hatchery Cellar",
+      "rarity": "rare",
+      "insetKey": "ember-inset-hatchery-cellar",
+      "cost": 6,
+      "keywords": ["Obstructed"],
+      "discardable": true,
+      "onCleared": {
+        "kind": "OfferBoon",
+        "setId": "ember-boons",
+        "setName": "Hatchery Harvest",
+        "offeredCount": 3,
+        "chooseCount": 1
+      },
+      "onDiscarded": { "kind": "None" },
+      "onPartialClear": { "kind": "None" },
+      "onEndOfTurn": {
+        "kind": "Sequence",
+        "steps": [
+          { "kind": "AddWorldCardToDeck", "template": "Ember Moth", "bTop": true },
+          { "kind": "AddWorldCardToDeck", "template": "Falling Fruit", "bTop": true }
+        ]
+      }
+    },
+    "Ember Moth": {
+      "kind": "world",
+      "name": "Ember Moth",
+      "rarity": "common",
+      "insetKey": "ember-inset-ember-moth",
+      "cost": 4,
+      "keywords": ["Creature"],
+      "discardable": true,
+      "onCleared": { "kind": "None" },
+      "onDiscarded": { "kind": "ForceDestroy", "amount": 2 },
+      "onPartialClear": { "kind": "ForceDestroy", "amount": 1 },
+      "onEndOfTurn": { "kind": "ForceDestroy", "amount": 1 }
+    },
+    "Lantern Brood": {
+      "kind": "world",
+      "name": "Lantern Brood",
+      "rarity": "uncommon",
+      "insetKey": "ember-inset-lantern-brood",
+      "cost": 4,
+      "keywords": ["Creature", "Slow"],
+      "discardable": true,
+      "onCleared": { "kind": "GainCard", "template": "Leave One" },
+      "onDiscarded": { "kind": "AddWorldCardToDeck", "template": "Ember Moth", "bTop": true },
+      "onPartialClear": { "kind": "AddWorldCardToDeck", "template": "Ember Moth", "bTop": true },
+      "onEndOfTurn": { "kind": "AddThreatToWorldDeck" }
+    },
+    "Ground Constellation": {
+      "kind": "world",
+      "name": "Ground Constellation",
+      "rarity": "signature",
+      "insetKey": "ember-inset-ground-constellation",
+      "cost": 6,
+      "keywords": ["Creature", "Slow"],
+      "discardable": true,
+      "onCleared": { "kind": "GainCard", "template": "Constellation Shears" },
+      "onDiscarded": {
+        "kind": "Sequence",
+        "steps": [
+          { "kind": "ForceDestroy", "amount": 2 },
+          { "kind": "AddWorldCardToDeck", "template": "Ember Moth" }
+        ]
+      },
+      "onPartialClear": { "kind": "AddWorldCardToDeck", "template": "Ember Moth", "bTop": true },
+      "onEndOfTurn": {
+        "kind": "Sequence",
+        "steps": [
+          {
+            "kind": "DamageScaled",
+            "base": 0,
+            "per": { "kind": "KeywordInHand", "keyword": "Creature" },
+            "amount": 1
+          },
+          { "kind": "AddThreatToWorldDeck" }
+        ]
+      }
+    },
+    "Wandering Stacks": {
+      "kind": "world",
+      "rarity": "uncommon",
+      "name": "Wandering Stacks",
+      "insetKey": "tidal-inset-wandering-stacks",
+      "cost": 2,
+      "keywords": ["Obstructed"],
+      "discardable": false,
+      "onDiscarded": { "kind": "None" },
+      "onCleared": { "kind": "None" },
+      "onPartialClear": { "kind": "None" },
+      "onEndOfTurn": { "kind": "RecallPlayerDiscard", "policy": "latest" }
+    },
+    "Drowned Index": {
+      "kind": "world",
+      "name": "Drowned Index",
+      "insetKey": "tidal-inset-drowned-index",
+      "rarity": "common",
+      "cost": 4,
+      "keywords": ["Obstructed"],
+      "discardable": true,
+      "onDiscarded": { "kind": "None" },
+      "onCleared": {
+        "kind": "OfferBoon",
+        "setId": "tidal-boons",
+        "setName": "The Reading Room",
+        "offeredCount": 3,
+        "chooseCount": 1
+      },
+      "onPartialClear": { "kind": "None" },
+      "onEndOfTurn": { "kind": "None" }
+    },
+    "Misfiled Century": {
+      "kind": "world",
+      "name": "Misfiled Century",
+      "insetKey": "tidal-inset-misfiled-century",
+      "rarity": "common",
+      "cost": 3,
+      "keywords": ["Obstructed"],
+      "discardable": true,
+      "onDiscarded": { "kind": "Damage", "amount": 1 },
+      "onCleared": { "kind": "None" },
+      "onPartialClear": { "kind": "None" },
+      "onEndOfTurn": { "kind": "AddThreatToWorldDeck" }
+    },
+    "Bridge to Yesterday": {
+      "kind": "world",
+      "name": "Bridge to Yesterday",
+      "insetKey": "tidal-inset-bridge-to-yesterday",
+      "rarity": "uncommon",
+      "cost": 3,
+      "keywords": [],
+      "discardable": true,
+      "onDiscarded": { "kind": "Damage", "amount": 2 },
+      "onCleared": { "kind": "AddWorldCardToDeck", "template": "Misfiled Century", "bTop": true },
+      "onPartialClear": { "kind": "None" },
+      "onEndOfTurn": { "kind": "None" }
+    },
+    "Borrowed Catastrophe": {
+      "kind": "world",
+      "name": "Borrowed Catastrophe",
+      "insetKey": "tidal-inset-borrowed-catastrophe",
+      "rarity": "uncommon",
+      "cost": 4,
+      "keywords": ["Slow"],
+      "discardable": true,
+      "onDiscarded": { "kind": "Damage", "amount": 2 },
+      "onCleared": { "kind": "GainCard", "template": "Waterproof Notes" },
+      "onPartialClear": { "kind": "None" },
+      "onEndOfTurn": { "kind": "AddWorldCardToDeck", "template": "Misfiled Century", "bTop": true }
+    },
+    "Chained Books Rising": {
+      "kind": "world",
+      "name": "Chained Books Rising",
+      "insetKey": "tidal-inset-chained-books-rising",
+      "rarity": "rare",
+      "cost": 4,
+      "keywords": ["Creature"],
+      "discardable": true,
+      "onDiscarded": { "kind": "RecallPlayerDiscard", "policy": "latest" },
+      "onCleared": { "kind": "GainCard", "template": "Anchor the Memory" },
+      "onPartialClear": { "kind": "None" },
+      "onEndOfTurn": {
+        "kind": "Sequence",
+        "steps": [
+          { "kind": "ForceDestroy", "amount": 1 },
+          { "kind": "RecallPlayerDiscard", "policy": "lowestCost" }
+        ]
+      }
+    },
+    "The Same Footprint": {
+      "kind": "world",
+      "name": "The Same Footprint",
+      "insetKey": "tidal-inset-the-same-footprint",
+      "rarity": "signature",
+      "cost": 6,
+      "keywords": ["Slow"],
+      "discardable": true,
+      "onDiscarded": { "kind": "Damage", "amount": 3 },
+      "onCleared": { "kind": "GainCard", "template": "Shelf Map" },
+      "onPartialClear": { "kind": "None" },
+      "onEndOfTurn": {
+        "kind": "Sequence",
+        "steps": [
+          { "kind": "RecallPlayerDiscard", "policy": "panicFirst" },
+          { "kind": "AddThreatToWorldDeck" }
+        ]
+      }
+    },
+    "Hand Warmers": {
+      "kind": "player",
+      "name": "Hand Warmers",
+      "rarity": "common",
+      "insetKey": "whiteout-inset-hand-warmers",
+      "exhaust": true,
+      "effect": {
+        "kind": "Modal",
+        "branches": [
+          { "kind": "ThawCards", "amount": 1, "heatCost": 1 },
+          { "kind": "GainHeat", "amount": 2 },
+          { "kind": "DealProgress", "base": 2 }
+        ]
+      }
+    },
+    "Maintenance Closet": {
+      "kind": "world",
+      "name": "Maintenance Closet",
+      "rarity": "rare",
+      "insetKey": "whiteout-inset-maintenance-closet",
+      "cost": 3,
+      "keywords": ["Obstructed"],
+      "discardable": true,
+      "onDiscarded": {
+        "kind": "GainRandomCard",
+        "setId": "whiteout-boons",
+        "setName": "Maintenance Closet"
+      },
+      "onCleared": {
+        "kind": "OfferBoon",
+        "setId": "whiteout-boons",
+        "setName": "Maintenance Closet",
+        "offeredCount": 3,
+        "chooseCount": 1
+      },
+      "onPartialClear": { "kind": "None" },
+      "onEndOfTurn": { "kind": "None" }
+    },
+    "Powder Drift": {
+      "kind": "world",
+      "name": "Powder Drift",
+      "insetKey": "whiteout-inset-powder-drift",
+      "cost": 2,
+      "keywords": ["Obstructed"],
+      "discardable": false,
+      "onDiscarded": { "kind": "None" },
+      "onCleared": { "kind": "None" },
+      "onPartialClear": { "kind": "None" },
+      "onEndOfTurn": { "kind": "Damage", "amount": 1 }
+    },
+    "Frozen Puddle": {
+      "kind": "world",
+      "name": "Frozen Puddle",
+      "insetKey": "whiteout-inset-frozen-puddle",
+      "cost": 3,
+      "keywords": ["Obstructed"],
+      "discardable": true,
+      "onDiscarded": { "kind": "Damage", "amount": 1 },
+      "onCleared": { "kind": "None" },
+      "onPartialClear": { "kind": "FreezeCards", "amount": 1, "duration": 1 },
+      "onEndOfTurn": { "kind": "FreezeCards", "amount": 1, "duration": 1 }
+    },
+    "Dead Battery": {
+      "kind": "world",
+      "name": "Dead Battery",
+      "insetKey": "whiteout-inset-dead-battery",
+      "cost": 3,
+      "keywords": ["Obstructed"],
+      "discardable": true,
+      "onDiscarded": { "kind": "Damage", "amount": 1 },
+      "onCleared": { "kind": "GainCard", "template": "Hand Warmers" },
+      "onPartialClear": { "kind": "None" },
+      "onEndOfTurn": { "kind": "Damage", "amount": 1 }
+    },
+    "Black Ice Ramp": {
+      "kind": "world",
+      "name": "Black Ice Ramp",
+      "insetKey": "whiteout-inset-black-ice-ramp",
+      "cost": 3,
+      "keywords": ["Slow", "Obstructed"],
+      "discardable": true,
+      "onDiscarded": { "kind": "Damage", "amount": 2 },
+      "onCleared": { "kind": "None" },
+      "onPartialClear": { "kind": "FreezeCards", "amount": 1, "duration": 2 },
+      "onEndOfTurn": { "kind": "FreezeCards", "amount": 2, "duration": 1 }
+    },
+    "Snowblind Headlights": {
+      "kind": "world",
+      "name": "Snowblind Headlights",
+      "insetKey": "whiteout-inset-snowblind-headlights",
+      "cost": 3,
+      "keywords": ["Obstructed"],
+      "discardable": true,
+      "onDiscarded": { "kind": "Damage", "amount": 1 },
+      "onCleared": { "kind": "GainHeat", "amount": 1 },
+      "onPartialClear": { "kind": "Damage", "amount": 1 },
+      "onEndOfTurn": { "kind": "Damage", "amount": 2 }
+    },
+    "Ice-Locked Door": {
+      "kind": "world",
+      "name": "Ice-Locked Door",
+      "insetKey": "whiteout-inset-ice-locked-door",
+      "cost": 4,
+      "keywords": ["Obstructed"],
+      "discardable": true,
+      "onDiscarded": { "kind": "Damage", "amount": 2 },
+      "onCleared": { "kind": "GainHeat", "amount": 2 },
+      "onPartialClear": { "kind": "FreezeCards", "amount": 1, "duration": 2 },
+      "onEndOfTurn": { "kind": "FreezeCards", "amount": 1, "duration": 2 }
+    },
+    "Plow Buried In Snow": {
+      "kind": "world",
+      "name": "Plow Buried In Snow",
+      "insetKey": "whiteout-inset-plow-buried-in-snow",
+      "cost": 5,
+      "keywords": ["Slow", "Obstructed"],
+      "discardable": true,
+      "onDiscarded": { "kind": "Damage", "amount": 2 },
+      "onCleared": { "kind": "GainHeat", "amount": 5 },
+      "onPartialClear": { "kind": "None" },
+      "onEndOfTurn": { "kind": "FreezeCards", "amount": 1, "duration": 2 }
+    },
+    "The Garage Freezes Shut": {
+      "kind": "world",
+      "name": "The Garage Freezes Shut",
+      "rarity": "signature",
+      "insetKey": "whiteout-inset-the-garage-freezes-shut",
+      "cost": 6,
+      "keywords": ["Slow", "Obstructed"],
+      "discardable": true,
+      "onDiscarded": { "kind": "Damage", "amount": 3 },
+      "onCleared": { "kind": "None" },
+      "onPartialClear": { "kind": "FreezeCards", "amount": 1, "duration": 2 },
+      "onEndOfTurn": {
+        "kind": "Sequence",
+        "steps": [
+          { "kind": "FreezeCards", "amount": 1, "duration": 2 },
+          { "kind": "DamageScaled", "base": 0, "per": { "kind": "FrozenPlayerCards" }, "amount": 1 }
+        ]
+      }
+    },
+    "Strange Sounds": {
+      "kind": "world",
+      "name": "Strange Sounds",
+      "rarity": "uncommon",
+      "insetKey": "zombie-inset-strange-sounds",
+      "cost": 2,
+      "keywords": [],
+      "discardable": true,
+      "onDiscarded": { "kind": "None" },
+      "onCleared": {
+        "kind": "OfferBoon",
+        "setId": "big-box-boons",
+        "setName": "Sound Reactions",
+        "offeredCount": 3,
+        "chooseCount": 1
+      },
+      "onPartialClear": { "kind": "None" },
+      "onEndOfTurn": { "kind": "DestroySelf" }
+    },
+    "Rubble": {
+      "kind": "world",
+      "name": "Rubble",
+      "rarity": "common",
+      "insetKey": "zombie-inset-rubble",
+      "cost": 1,
+      "keywords": [],
+      "discardable": false,
+      "onDiscarded": { "kind": "None" },
+      "onCleared": { "kind": "None" },
+      "onPartialClear": { "kind": "None" },
+      "onEndOfTurn": { "kind": "Damage", "amount": 1 }
+    },
+    "Screams": {
+      "kind": "world",
+      "name": "Screams",
+      "rarity": "common",
+      "insetKey": "zombie-inset-screams",
+      "cost": 1,
+      "keywords": [],
+      "discardable": true,
+      "onDiscarded": {
+        "kind": "Sequence",
+        "steps": [
+          { "kind": "GainCard", "template": "Panic" },
+          { "kind": "GainCard", "template": "Panic" }
+        ]
+      },
+      "onCleared": { "kind": "GainCard", "template": "Regroup" },
+      "onPartialClear": { "kind": "None" },
+      "onEndOfTurn": { "kind": "DestroySelf" }
+    },
+    "Zombie": {
+      "kind": "world",
+      "name": "Zombie",
+      "rarity": "common",
+      "insetKey": "zombie-inset-zombie",
+      "cost": 3,
+      "keywords": ["Creature"],
+      "discardable": true,
+      "onDiscarded": { "kind": "Damage", "amount": 5 },
+      "onCleared": { "kind": "GainEnergy", "amount": 1 },
+      "onPartialClear": { "kind": "Damage", "amount": 1 },
+      "onEndOfTurn": {
+        "kind": "Sequence",
+        "steps": [
+          { "kind": "Damage", "amount": 1 },
+          { "kind": "AddWorldCardToDeck", "template": "Zombie" }
+        ]
+      }
+    },
+    "Find Baseball Bat": {
+      "kind": "world",
+      "name": "Find Baseball Bat",
+      "rarity": "uncommon",
+      "insetKey": "zombie-inset-baseball",
+      "cost": 2,
+      "keywords": ["Obstructed"],
+      "discardable": true,
+      "onDiscarded": { "kind": "None" },
+      "onCleared": { "kind": "GainCard", "template": "Baseball Bat" },
+      "onPartialClear": { "kind": "None" },
+      "onEndOfTurn": { "kind": "None" }
+    },
+    "Corpse": {
+      "kind": "world",
+      "name": "Corpse",
+      "rarity": "common",
+      "insetKey": "zombie-inset-corpse",
+      "cost": 2,
+      "keywords": [],
+      "discardable": false,
+      "onDiscarded": { "kind": "None" },
+      "onCleared": { "kind": "None" },
+      "onPartialClear": { "kind": "None" },
+      "onEndOfTurn": {
+        "kind": "Sequence",
+        "steps": [
+          { "kind": "AddWorldCardToDeck", "template": "Zombie", "bTop": true },
+          { "kind": "DestroySelf" }
+        ]
+      }
+    },
+    "Find Shotgun": {
+      "kind": "world",
+      "name": "Find Shotgun",
+      "rarity": "rare",
+      "insetKey": "zombie-inset-find-shotgun",
+      "cost": 2,
+      "keywords": ["Obstructed"],
+      "discardable": true,
+      "onDiscarded": { "kind": "None" },
+      "onCleared": { "kind": "GainCard", "template": "Shotgun" },
+      "onPartialClear": { "kind": "None" },
+      "onEndOfTurn": { "kind": "None" }
+    },
+    "Baseball Bat": {
+      "kind": "player",
+      "name": "Baseball Bat",
+      "rarity": "uncommon",
+      "insetKey": "zombie-inset-baseball",
+      "effect": { "kind": "DealProgress", "base": 1, "bonus": { "tag": "Creature", "amount": 3 } }
+    },
+    "Shotgun": {
+      "kind": "player",
+      "name": "Shotgun",
+      "rarity": "rare",
+      "insetKey": "zombie-inset-shotgun",
+      "energyCost": 2,
+      "effect": {
+        "kind": "Sequence",
+        "steps": [
+          { "kind": "DealProgressAll", "base": 2, "bonus": { "tag": "Creature", "amount": 2 } },
+          { "kind": "AddWorldCardToDeck", "template": "Zombie" }
+        ]
+      }
+    },
+    "Regroup": {
+      "kind": "player",
+      "name": "Regroup",
+      "rarity": "common",
+      "insetKey": "zombie-inset-regroup",
+      "energyCost": 0,
+      "exhaust": true,
+      "effect": { "kind": "DestroyCardInHand", "min": 0, "max": 3 }
+    },
+    "Shelf Sweep": {
+      "kind": "player",
+      "name": "Shelf Sweep",
+      "rarity": "rare",
+      "insetKey": "zombie-inset-shelf-sweep",
+      "energyCost": 2,
+      "effect": {
+        "kind": "DealProgressAll",
+        "base": 1,
+        "bonus": { "tag": "Creature", "amount": 1 }
+      }
+    },
+    "Echoing Aisles": {
+      "kind": "world",
+      "name": "Echoing Aisles",
+      "rarity": "rare",
+      "insetKey": "zombie-inset-echoing-aisles",
+      "cost": 2,
+      "keywords": ["Obstructed"],
+      "discardable": true,
+      "onDiscarded": { "kind": "None" },
+      "onCleared": { "kind": "GainCard", "template": "Shelf Sweep" },
+      "onPartialClear": { "kind": "AddWorldCardToDeck", "template": "Echoing Aisles" },
+      "onEndOfTurn": {
+        "kind": "Sequence",
+        "steps": [
+          { "kind": "AddWorldCardToDeck", "template": "Zombie", "bTop": true },
+          { "kind": "AddWorldCardToDeck", "template": "Echoing Aisles" }
+        ]
+      }
+    },
+    "React to Noise": {
+      "kind": "player",
+      "name": "React to Noise",
+      "rarity": "common",
+      "insetKey": "zombie-inset-listen",
+      "energyCost": 0,
+      "exhaust": true,
+      "effect": { "kind": "DealProgress", "base": 2, "bonus": { "tag": "Obstructed", "amount": 2 } }
+    },
+    "player-scream": {
+      "kind": "player",
+      "name": "Scream",
+      "rarity": "common",
+      "insetKey": "zombie-inset-screams",
+      "energyCost": 0,
+      "exhaust": true,
+      "effect": {
+        "kind": "Sequence",
+        "steps": [
+          { "kind": "ReturnWorldCards", "min": 0, "max": 8 },
+          { "kind": "Draw", "player": 1, "world": 1 }
+        ]
+      }
+    },
+    "Listen": {
+      "kind": "player",
+      "name": "Listen",
+      "rarity": "uncommon",
+      "insetKey": "zombie-inset-listen",
+      "energyCost": 1,
+      "effect": { "kind": "DealProgress", "base": 2, "bonus": { "tag": "Obstructed", "amount": 2 } }
+    },
+    "Plan": {
+      "kind": "player",
+      "name": "Plan",
+      "insetKey": "zombie-inset-plan",
+      "rarity": "rare",
+      "exhaust": true,
+      "effect": {
+        "kind": "Sequence",
+        "steps": [
+          { "kind": "Draw", "player": 3, "world": 1 },
+          { "kind": "DealProgressAll", "base": 2 }
+        ]
+      }
+    },
+    "Fast Sweep": {
+      "kind": "player",
+      "name": "Fast Sweep",
+      "rarity": "uncommon",
+      "insetKey": "zombie-inset-shelf-sweep",
+      "energyCost": 0,
+      "exhaust": true,
+      "effect": {
+        "kind": "DealProgressAll",
+        "base": 1,
+        "bonus": { "tag": "Creature", "amount": 1 }
+      }
+    },
+    "Leave One": {
+      "kind": "player",
+      "name": "Leave One",
+      "rarity": "common",
+      "insetKey": "ember-inset-leave-one",
+      "exhaust": true,
+      "effect": {
+        "kind": "Sequence",
+        "steps": [
+          { "kind": "ExileTopWorldCards", "amount": 1 },
+          { "kind": "Brace", "amount": 1 }
+        ]
+      }
+    },
+    "Star-Pruner": {
+      "kind": "player",
+      "name": "Star-Pruner",
+      "rarity": "uncommon",
+      "insetKey": "ember-inset-star-pruner",
+      "effect": { "kind": "DealProgress", "base": 2, "bonus": { "tag": "Obstructed", "amount": 2 } }
+    },
+    "Constellation Shears": {
+      "kind": "player",
+      "name": "Constellation Shears",
+      "rarity": "uncommon",
+      "insetKey": "ember-inset-constellation-shears",
+      "exhaust": true,
+      "effect": {
+        "kind": "DealProgressAll",
+        "base": 1,
+        "bonus": { "tag": "Creature", "amount": 1 }
+      }
+    },
+    "Keep Vigil": {
+      "kind": "player",
+      "name": "Keep Vigil",
+      "rarity": "uncommon",
+      "insetKey": "ember-inset-keep-vigil",
+      "exhaust": true,
+      "effect": {
+        "kind": "Sequence",
+        "steps": [
+          { "kind": "Draw", "player": 1 },
+          { "kind": "Brace", "amount": 1 }
+        ]
+      }
+    },
+    "Bank the Heat": {
+      "kind": "player",
+      "name": "Bank the Heat",
+      "rarity": "uncommon",
+      "insetKey": "ember-inset-bank-the-heat",
+      "exhaust": true,
+      "effect": { "kind": "GainEnergy", "amount": 2 }
+    },
+    "Lucky Break": {
+      "kind": "player",
+      "name": "Lucky Break",
+      "insetKey": "fortune-inset-lucky-break",
+      "exhaust": true,
+      "rarity": "common",
+      "effect": { "kind": "Heal", "amount": 3 }
+    },
+    "Second Wind": {
+      "kind": "player",
+      "name": "Second Wind",
+      "insetKey": "fortune-inset-second-wind",
+      "exhaust": true,
+      "rarity": "rare",
+      "effect": { "kind": "GainEnergy", "amount": 3 }
+    },
+    "Found Tool": {
+      "kind": "player",
+      "name": "Found Tool",
+      "insetKey": "fortune-inset-found-tool",
+      "exhaust": true,
+      "rarity": "uncommon",
+      "effect": { "kind": "DealProgress", "base": 3 }
+    },
+    "Clear Path": {
+      "kind": "player",
+      "name": "Clear Path",
+      "insetKey": "fortune-inset-clear-path",
+      "exhaust": true,
+      "rarity": "common",
+      "effect": { "kind": "ReturnWorldCards", "min": 0, "max": 8 }
+    },
+    "Steady Nerve": {
+      "kind": "player",
+      "name": "Steady Nerve",
+      "insetKey": "fortune-inset-steady-nerve",
+      "exhaust": true,
+      "rarity": "uncommon",
+      "effect": {
+        "kind": "Sequence",
+        "steps": [
+          { "kind": "Brace", "amount": 2 },
+          { "kind": "GainLight", "amount": 2 },
+          { "kind": "GainHeat", "amount": 2 }
+        ]
+      }
+    },
+    "Quiet Survey": {
+      "kind": "player",
+      "name": "Quiet Survey",
+      "rarity": "common",
+      "insetKey": "giants-inset-quiet-survey",
+      "energyCost": 1,
+      "effect": {
+        "kind": "Sequence",
+        "steps": [
+          { "kind": "ExileTopWorldCards", "amount": 1 },
+          { "kind": "Draw", "player": 1 }
+        ]
+      }
+    },
+    "Brace The Ward": {
+      "kind": "player",
+      "name": "Brace The Ward",
+      "rarity": "uncommon",
+      "insetKey": "giants-inset-brace-the-ward",
+      "energyCost": 1,
+      "effect": {
+        "kind": "Sequence",
+        "steps": [
+          { "kind": "DealProgress", "base": 2, "bonus": { "tag": "Slow", "amount": 2 } },
+          { "kind": "Brace", "amount": 1 }
+        ]
+      }
+    },
+    "Bone Pin": {
+      "kind": "player",
+      "name": "Bone Pin",
+      "rarity": "uncommon",
+      "insetKey": "giants-inset-bone-pin",
+      "energyCost": 0,
+      "exhaust": true,
+      "effect": {
+        "kind": "Modal",
+        "branches": [
+          { "kind": "AddPlayerCardToTop", "template": "Quiet Survey" },
+          { "kind": "AddPlayerCardToTop", "template": "Brace The Ward" }
+        ]
+      }
+    },
+    "Pick Ember Fruit": {
+      "kind": "player",
+      "name": "Pick Ember Fruit",
+      "rarity": "uncommon",
+      "insetKey": "ember-inset-the-orchard-counts-wrong",
+      "energyCost": 0,
+      "effect": {
+        "kind": "Sequence",
+        "steps": [
+          {
+            "kind": "Modal",
+            "branches": [
+              { "kind": "AddPlayerCardToTop", "template": "Take One" },
+              { "kind": "AddPlayerCardToTop", "template": "Leave One" }
+            ]
+          },
+          { "kind": "Draw", "player": 1 }
+        ]
+      }
+    },
+    "Contour Map": {
+      "kind": "player",
+      "name": "Contour Map",
+      "rarity": "rare",
+      "insetKey": "giants-inset-contour-map",
+      "energyCost": 0,
+      "exhaust": true,
+      "effect": {
+        "kind": "DealProgressAll",
+        "base": 2,
+        "bonus": { "tag": "Obstructed", "amount": 2 }
+      }
+    },
+    "Mark the Shelf": {
+      "kind": "player",
+      "name": "Mark the Shelf",
+      "insetKey": "tidal-inset-mark-the-shelf",
+      "rarity": "common",
+      "energyCost": 1,
+      "effect": {
+        "kind": "Sequence",
+        "steps": [
+          { "kind": "ReturnPlayerDiscardToTop", "min": 1, "max": 2 },
+          { "kind": "Draw", "player": 1 }
+        ]
+      }
+    },
+    "Cross-Reference": {
+      "kind": "player",
+      "name": "Cross-Reference",
+      "insetKey": "tidal-inset-cross-reference",
+      "rarity": "common",
+      "energyCost": 0,
+      "effect": { "kind": "DiscardThenDraw", "player": 2 }
+    },
+    "Waterproof Notes": {
+      "kind": "player",
+      "name": "Waterproof Notes",
+      "insetKey": "tidal-inset-waterproof-notes",
+      "rarity": "uncommon",
+      "energyCost": 1,
+      "effect": {
+        "kind": "Sequence",
+        "steps": [
+          { "kind": "DealProgress", "base": 3 },
+          { "kind": "ReturnWorldCards", "min": 0, "max": 1 }
+        ]
+      }
+    },
+    "Anchor the Memory": {
+      "kind": "player",
+      "name": "Anchor the Memory",
+      "insetKey": "tidal-inset-anchor-the-memory",
+      "rarity": "uncommon",
+      "energyCost": 0,
+      "exhaust": true,
+      "effect": {
+        "kind": "Sequence",
+        "steps": [
+          { "kind": "Brace", "amount": 1 },
+          { "kind": "Draw", "player": 1 }
+        ]
+      }
+    },
+    "Shelf Map": {
+      "kind": "player",
+      "name": "Shelf Map",
+      "insetKey": "tidal-inset-shelf-map",
+      "rarity": "uncommon",
+      "energyCost": 0,
+      "exhaust": true,
+      "effect": {
+        "kind": "Sequence",
+        "steps": [
+          { "kind": "DealProgress", "base": 1 },
+          { "kind": "ReturnPlayerDiscardToTop", "min": 0, "max": 1 },
+          { "kind": "Draw", "player": 1 }
+        ]
+      }
+    },
+    "Ice Scraper": {
+      "kind": "player",
+      "name": "Ice Scraper",
+      "rarity": "uncommon",
+      "insetKey": "whiteout-inset-ice-scraper",
+      "energyCost": 1,
+      "effect": {
+        "kind": "Modal",
+        "branches": [
+          { "kind": "ThawCards", "amount": 1, "heatCost": 1 },
+          { "kind": "GainHeat", "amount": 2 },
+          { "kind": "DealProgress", "base": 2 }
+        ]
+      }
+    },
+    "Burn The Manual": {
+      "kind": "player",
+      "name": "Burn The Manual",
+      "rarity": "uncommon",
+      "insetKey": "whiteout-inset-burn-the-manual",
+      "effect": {
+        "kind": "Sequence",
+        "steps": [
+          { "kind": "DestroyCardInHand", "min": 1, "max": 1 },
+          { "kind": "GainHeat", "amount": 2 },
+          { "kind": "DealProgressAll", "base": 1, "bonus": { "tag": "Obstructed", "amount": 1 } }
+        ]
+      }
+    },
+    "Space Heater": {
+      "kind": "player",
+      "name": "Space Heater",
+      "rarity": "rare",
+      "insetKey": "whiteout-inset-space-heater",
+      "energyCost": 1,
+      "exhaust": true,
+      "effect": {
+        "kind": "Modal",
+        "branches": [
+          { "kind": "ThawCards", "amount": 2, "heatCost": 1 },
+          { "kind": "GainHeat", "amount": 4 },
+          { "kind": "DealProgressAll", "base": 2, "bonus": { "tag": "Obstructed", "amount": 2 } }
+        ]
+      }
+    },
+    "Jumper Cables": {
+      "kind": "player",
+      "name": "Jumper Cables",
+      "rarity": "rare",
+      "insetKey": "whiteout-inset-jumper-cables",
+      "energyCost": 2,
+      "effect": {
+        "kind": "Modal",
+        "branches": [
+          { "kind": "ThawCards", "amount": 2, "heatCost": 1 },
+          { "kind": "GainHeat", "amount": 4 },
+          { "kind": "DealProgressAll", "base": 2 }
+        ]
+      }
+    },
+    "Sprint": {
+      "kind": "player",
+      "name": "Sprint",
+      "rarity": "common",
+      "insetKey": "inset-sprint",
+      "energyCost": 1,
+      "effect": {
+        "kind": "Modal",
+        "branches": [
+          { "kind": "Draw", "player": 3, "world": 1 },
+          { "kind": "DealProgress", "base": 0, "bonus": { "tag": "Slow", "amount": 3 } }
+        ]
+      }
+    },
+    "Explore": {
+      "kind": "player",
+      "name": "Explore",
+      "rarity": "common",
+      "insetKey": "inset-explore",
+      "effect": { "kind": "DealProgress", "base": 1, "bonus": { "tag": "Obstructed", "amount": 1 } }
+    },
+    "Barricade": {
+      "kind": "player",
+      "name": "Barricade",
+      "rarity": "common",
+      "insetKey": "inset-barricade",
+      "energyCost": 1,
+      "effect": {
+        "kind": "Sequence",
+        "steps": [
+          { "kind": "DealProgress", "base": 1 },
+          { "kind": "ReturnWorldCards", "min": 0, "max": 3 }
+        ]
+      }
+    },
+    "Med Kit": {
+      "kind": "player",
+      "name": "Med Kit",
+      "rarity": "uncommon",
+      "insetKey": "inset-medkit",
+      "effect": { "kind": "Heal", "amount": 2 }
+    },
+    "Panic": {
+      "kind": "player",
+      "name": "Panic",
+      "rarity": "common",
+      "insetKey": "inset-panic",
+      "effect": {
+        "kind": "Sequence",
+        "steps": [
+          { "kind": "ReturnWorldCards", "min": 1, "max": 4 },
+          { "kind": "Draw", "world": 1 }
+        ]
+      }
+    },
+    "Adrenaline": {
+      "kind": "player",
+      "name": "Adrenaline",
+      "rarity": "uncommon",
+      "insetKey": "inset-adrenaline",
+      "effect": {
+        "kind": "Sequence",
+        "steps": [
+          { "kind": "DiscardThenDraw", "player": 2 },
+          { "kind": "GainEnergy", "amount": 1 }
+        ]
+      }
+    },
+    "The Walker": {
+      "kind": "world",
+      "name": "The Walker",
+      "insetKey": "inset-walker",
+      "cost": 10,
+      "rarity": "legendary",
+      "keywords": [],
+      "discardable": true,
+      "canExile": false,
+      "onDiscarded": { "kind": "AddWorldCardToDeck", "template": "Door" },
+      "onCleared": { "kind": "AddPlayerCardToTop", "template": "Summon Door" },
+      "onPartialClear": { "kind": "None" },
+      "onEndOfTurn": { "kind": "None" }
+    },
+    "Summon Door": {
+      "kind": "player",
+      "name": "Summon Door",
+      "insetKey": "inset-door",
+      "energyCost": 6,
+      "rarity": "legendary",
+      "exhaust": true,
+      "effect": { "kind": "AddWorldCardToDeck", "template": "Door" }
+    },
+    "Door": {
+      "kind": "world",
+      "name": "Door",
+      "insetKey": "inset-door",
+      "cost": 4,
+      "rarity": "legendary",
+      "keywords": ["Obstructed"],
+      "discardable": false,
+      "canExile": false,
+      "onDiscarded": { "kind": "None" },
+      "onCleared": { "kind": "SurviveWorld" },
+      "onPartialClear": { "kind": "None" },
+      "onEndOfTurn": { "kind": "AddThreatToWorldDeck" },
+      "fx": [{ "kind": "WhileVisible", "key": "the-door-fx" }]
+    }
+  }
+}

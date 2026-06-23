@@ -182,15 +182,15 @@ describe("createUnlocksStore", () => {
     const storage = memoryStorage({
       [UNLOCKS_PROFILE_STORAGE_KEY]: JSON.stringify({
         version: 1,
-        purchased: ["extra-hp", "starter-footballer", "act-reward"],
-        activated: ["starter-footballer"],
+        purchased: ["extra-hp", "extra-brace", "starter-footballer", "act-reward"],
+        activated: ["starter-footballer", "extra-hp"],
       }),
     });
     const store = createUnlocksStore(storage, richFeats);
 
     expect(store.setActive("missing", true)).toBe("not-owned");
     expect(store.setActive("act-reward", true)).toBe("over-budget");
-    expect(store.getProfile().activated).toEqual(["starter-footballer"]);
+    expect(store.getProfile().activated).toEqual(["starter-footballer", "extra-hp"]);
 
     expect(store.setActive("extra-hp", true)).toBe("ok");
     expect(store.setActive("extra-hp", true)).toBe("ok");

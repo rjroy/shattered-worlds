@@ -1,10 +1,10 @@
-import { describe, expect, it } from 'bun:test'
-import { selectTheme } from '../view/themes/themeManifest'
-import { assetManifest } from '../data/assetManifest'
-import { GIANTS_BOON_SOURCE } from '../../data/worlds/boons/fortune'
-import { CITY_OF_SLEEPING_GIANTS_THEME } from '../../data/worlds/city-of-sleeping-giants/theme'
+import { describe, expect, it } from "bun:test";
+import { selectTheme } from "../view/themes/themeManifest";
+import { assetManifest } from "../data/assetManifest";
+import { CARD_CATALOG, FORTUNE_BOON_POOLS } from "../../data/worldManifest";
+import { CITY_OF_SLEEPING_GIANTS_THEME } from "../../data/worlds/city-of-sleeping-giants/theme";
 
-const WORLD_ID = 'city-of-sleeping-giants'
+const WORLD_ID = "city-of-sleeping-giants";
 
 // ---------------------------------------------------------------------------
 // C4 — theme/palette assertion (REQ-GIANTS-48, palette portion only).
@@ -15,30 +15,30 @@ const WORLD_ID = 'city-of-sleeping-giants'
 // which are pure data and assertable headless.
 // ---------------------------------------------------------------------------
 
-describe('City of Sleeping Giants — theme palette (REQ-GIANTS-48)', () => {
-  it('selectTheme returns the City palette and backdrop/overlay/cardfront keys', () => {
-    const theme = selectTheme(WORLD_ID)
-    expect(theme.worldId).toBe(WORLD_ID)
+describe("City of Sleeping Giants — theme palette (REQ-GIANTS-48)", () => {
+  it("selectTheme returns the City palette and backdrop/overlay/cardfront keys", () => {
+    const theme = selectTheme(WORLD_ID);
+    expect(theme.worldId).toBe(WORLD_ID);
     // City keynote: deep civic violet intrusion (REQ-GIANTS-35..39).
-    expect(theme.intrusionHue).toBe('#9d6cff')
-    expect(theme.intrusionHue).toBe(CITY_OF_SLEEPING_GIANTS_THEME.intrusionHue)
-    expect(theme.doorGlowTint).toBe(0x9d6cff)
-    expect(theme.backdrop.realityKey).toBe('city-of-sleeping-giants-bg')
-    expect(theme.backdrop.intrusionKey).toBe('city-of-sleeping-giants-overlay')
-    expect(theme.worldCardfrontKey).toBe('city-of-sleeping-giants-cardfront')
-  })
+    expect(theme.intrusionHue).toBe("#9d6cff");
+    expect(theme.intrusionHue).toBe(CITY_OF_SLEEPING_GIANTS_THEME.intrusionHue);
+    expect(theme.doorGlowTint).toBe(0x9d6cff);
+    expect(theme.backdrop.realityKey).toBe("city-of-sleeping-giants-bg");
+    expect(theme.backdrop.intrusionKey).toBe("city-of-sleeping-giants-overlay");
+    expect(theme.worldCardfrontKey).toBe("city-of-sleeping-giants-cardfront");
+  });
 
-  it('the three base City asset keys resolve in the manifest (wired now, not regenerated)', () => {
+  it("the three base City asset keys resolve in the manifest (wired now, not regenerated)", () => {
     // REQ-GIANTS-2: base assets are already on disk and must be wired.
     for (const key of [
-      'city-of-sleeping-giants-bg',
-      'city-of-sleeping-giants-overlay',
-      'city-of-sleeping-giants-cardfront',
+      "city-of-sleeping-giants-bg",
+      "city-of-sleeping-giants-overlay",
+      "city-of-sleeping-giants-cardfront",
     ]) {
-      expect(key in assetManifest).toBe(true)
+      expect(key in assetManifest).toBe(true);
     }
-  })
-})
+  });
+});
 
 // ---------------------------------------------------------------------------
 // C3 — boon-source inset coverage (REQ-GIANTS-47).
@@ -55,16 +55,18 @@ describe('City of Sleeping Giants — theme palette (REQ-GIANTS-48)', () => {
 // which is the honest state.
 // ---------------------------------------------------------------------------
 
-describe('City of Sleeping Giants — boon-source inset bindings (REQ-GIANTS-47)', () => {
-  it('every giants-boons card inset key is bound in assetManifest (RED until boon art is wired)', () => {
-    const boonInsetKeys = Object.values(GIANTS_BOON_SOURCE.cardTemplates)
-      .map((card) => card.insetKey)
-      .filter((key): key is string => typeof key === 'string')
+describe("City of Sleeping Giants — boon-source inset bindings (REQ-GIANTS-47)", () => {
+  it("every giants-boons card inset key is bound in assetManifest (RED until boon art is wired)", () => {
+    // Boon cards live in the unified catalog now; look up inset keys via templateIds
+    const giantsTemplateIds = FORTUNE_BOON_POOLS["giants-boons"] ?? [];
+    const boonInsetKeys = giantsTemplateIds
+      .map((tid) => CARD_CATALOG[tid]?.insetKey)
+      .filter((key): key is string => typeof key === "string");
 
     // Sanity: the boon source actually carries inset keys to validate.
-    expect(boonInsetKeys.length).toBeGreaterThan(0)
+    expect(boonInsetKeys.length).toBeGreaterThan(0);
 
-    const missing = boonInsetKeys.filter((key) => !(key in assetManifest))
-    expect(missing).toEqual([])
-  })
-})
+    const missing = boonInsetKeys.filter((key) => !(key in assetManifest));
+    expect(missing).toEqual([]);
+  });
+});

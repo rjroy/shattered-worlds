@@ -2,24 +2,18 @@ import { describe, expect, it } from "bun:test";
 import { assembleCatalog } from "../model/catalog";
 import { CatalogError } from "../model/errors";
 import type { RawCardSource } from "../model/catalog";
-import basicJson from "../../data/worlds/starters/basic.json";
-import zombieJson from "../../data/worlds/zombie-big-box/cards.json";
-
-const BASIC_SOURCE = basicJson as unknown as RawCardSource;
-const ZOMBIE_SOURCE = zombieJson as unknown as RawCardSource;
+import { CARD_CATALOG } from "../../data/worldManifest";
 
 // ---------------------------------------------------------------------------
-// 1. Merge completeness
+// 1. Merge completeness — unified catalog has all templates
 // ---------------------------------------------------------------------------
 
-describe("assembleCatalog merge completeness", () => {
-  it("merging starter and zombie-big-box sources produces 22 templates", () => {
-    const catalog = assembleCatalog([BASIC_SOURCE, ZOMBIE_SOURCE]);
-    expect(Object.keys(catalog)).toHaveLength(21);
+describe("unified catalog completeness", () => {
+  it("global catalog has the expected template count", () => {
+    expect(Object.keys(CARD_CATALOG)).toHaveLength(129);
   });
 
-  it("merged catalog contains all expected template ids", () => {
-    const catalog = assembleCatalog([BASIC_SOURCE, ZOMBIE_SOURCE]);
+  it("catalog contains all core starter and zombie-big-box template ids", () => {
     const expectedIds = [
       "Sprint",
       "Explore",
@@ -44,7 +38,7 @@ describe("assembleCatalog merge completeness", () => {
       "Door",
     ];
     for (const id of expectedIds) {
-      expect(catalog).toHaveProperty(id);
+      expect(CARD_CATALOG).toHaveProperty(id);
     }
   });
 });

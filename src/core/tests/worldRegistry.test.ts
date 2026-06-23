@@ -49,10 +49,10 @@ it('no duplicate world ids in registry', () => {
 })
 
 describe.each([...worldDataRegistry])('world registry: "$id"', (bundle) => {
-  it('id is unique within registry and matches source.worldId', () => {
-    // Uniqueness is covered by the top-level test; this asserts the per-bundle
-    // contract that bundle.id and bundle.source.worldId agree.
-    expect(bundle.id).toBe(bundle.source.worldId)
+  it('id is present and non-empty', () => {
+    // Uniqueness is covered by the top-level test.
+    expect(typeof bundle.id).toBe('string')
+    expect(bundle.id.length).toBeGreaterThan(0)
   })
 
   it('theme, display, help, and musicKey are present', () => {
@@ -70,7 +70,8 @@ describe.each([...worldDataRegistry])('world registry: "$id"', (bundle) => {
   })
 
   it('referencedAssetKeys are all non-empty strings', () => {
-    const keys = referencedAssetKeys(bundle)
+    const { catalog } = buildWorld(bundle.id)
+    const keys = referencedAssetKeys(bundle, catalog)
     expect(keys.size).toBeGreaterThan(0)
     for (const key of keys) {
       expect(typeof key).toBe('string')

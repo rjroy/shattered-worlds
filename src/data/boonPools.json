@@ -1,0 +1,23 @@
+{
+  "fortune-v1": ["Lucky Break", "Second Wind", "Found Tool", "Clear Path", "Steady Nerve"],
+  "big-box-boons": ["React to Noise", "Fast Sweep", "Listen", "player-scream", "Plan"],
+  "whiteout-boons": ["Ice Scraper", "Burn The Manual", "Space Heater", "Jumper Cables"],
+  "tidal-boons": [
+    "Mark the Shelf",
+    "Cross-Reference",
+    "Waterproof Notes",
+    "Anchor the Memory",
+    "Shelf Map"
+  ],
+  "ember-boons": [
+    "Leave One",
+    "Star-Pruner",
+    "Constellation Shears",
+    "Keep Vigil",
+    "Bank the Heat"
+  ],
+  "giants-boons": ["Quiet Survey", "Brace The Ward", "Bone Pin", "Contour Map"],
+  "fog-cooler-loot-v1": ["Barricade", "Half-Dead Spotlight", "Cooler Snacks", "Loaded Shotgun"],
+  "bonfire-loot-v1": ["Flashlight", "Flare Gun", "Bonfire", "Searchlight"],
+  "garden-center-loot-v1": ["Pruning Shears", "Machete", "Weed Killer", "Bloom"]
+}
