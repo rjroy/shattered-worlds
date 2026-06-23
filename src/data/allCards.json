@@ -1561,6 +1561,26 @@
         ]
       }
     },
+    "Pick Ember Fruit": {
+      "kind": "player",
+      "name": "Pick Ember Fruit",
+      "rarity": "uncommon",
+      "insetKey": "ember-inset-the-orchard-counts-wrong",
+      "energyCost": 0,
+      "effect": {
+        "kind": "Sequence",
+        "steps": [
+          {
+            "kind": "Modal",
+            "branches": [
+              { "kind": "AddPlayerCardToTop", "template": "Take One" },
+              { "kind": "AddPlayerCardToTop", "template": "Leave One" }
+            ]
+          },
+          { "kind": "Draw", "player": 1 }
+        ]
+      }
+    },
     "Contour Map": {
       "kind": "player",
       "name": "Contour Map",

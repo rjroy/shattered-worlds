@@ -76,7 +76,7 @@
     "name": "Builder's Instinct",
     "description": "A muscle memory from a different life. More Barricades, No Panic, Less Sprint.",
     "cost": 50,
-    "destinyWeight": 3,
+    "destinyWeight": 2,
     "effect": { "type": "starterDeckOverride", "starterDeckId": "contractor" }
   },
   {
@@ -84,8 +84,16 @@
     "name": "Athlete's Instinct",
     "description": "A muscle memory from a different life. More Sprint, No Barricades.",
     "cost": 50,
-    "destinyWeight": 3,
+    "destinyWeight": 2,
     "effect": { "type": "starterDeckOverride", "starterDeckId": "footballer" }
+  },
+  {
+    "id": "starter-harvester",
+    "name": "Harvester of the Ember Orchard",
+    "description": "A muscle memory from a different life. Harvester of the Ember Orchard.",
+    "cost": 100,
+    "destinyWeight": 2,
+    "effect": { "type": "starterDeckOverride", "starterDeckId": "harvester" }
   },
   {
     "id": "act-reward",
@@ -168,6 +176,29 @@
             "kind": "replaceEffect",
             "effect": { "kind": "Draw", "player": 2, "world": 1 }
           }
+        ]
+      }
+    }
+  },
+  {
+    "id": "other-sprint-free",
+    "name": "Run in Terror",
+    "description": "All Sprint cards after the first costs 0 energy, but also add a Panic to your deck.",
+    "cost": 30,
+    "destinyWeight": 1,
+    "effect": {
+      "type": "playerCardModifier",
+      "modifier": {
+        "id": "other-sprint-free",
+        "displayName": "Run in Terror",
+        "target": { "kind": "template", "templateId": "Sprint" },
+        "condition": {
+          "kind": "not",
+          "condition": { "kind": "templatePlayOrdinalThisTurn", "ordinal": 1 }
+        },
+        "patches": [
+          { "kind": "setEnergyCost", "energyCost": 0 },
+          { "kind": "appendEffect", "effect": { "kind": "GainCard", "template": "Panic" } }
         ]
       }
     }

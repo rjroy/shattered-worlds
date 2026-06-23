@@ -2,6 +2,7 @@ import allCardsJson from "./allCards.json";
 import boolPoolsJson from "./boonPools.json";
 import starterJson from "./starterDecks/starter.json";
 import footballerJson from "./starterDecks/footballer.json";
+import harvesterJson from "./starterDecks/harvester.json";
 import contractorJson from "./starterDecks/contractor.json";
 import { worldDataRegistry } from "./worlds/registry";
 import type {
@@ -35,6 +36,7 @@ interface StarterEntry {
 const RESOLVE_STARTER_DECKS: Record<string, readonly StarterEntry[]> = {
   starter: (starterJson as unknown as { starterDeck: readonly StarterEntry[] }).starterDeck,
   footballer: (footballerJson as unknown as { starterDeck: readonly StarterEntry[] }).starterDeck,
+  harvester: (harvesterJson as unknown as { starterDeck: readonly StarterEntry[] }).starterDeck,
   contractor: (contractorJson as unknown as { starterDeck: readonly StarterEntry[] }).starterDeck,
 };
 
