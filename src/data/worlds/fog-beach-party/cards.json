@@ -5,58 +5,25 @@
     "acts": [
       {
         "cards": [
-          {
-            "templateId": "Rolling Fog",
-            "count": 5
-          },
-          {
-            "templateId": "Abandoned Cooler",
-            "count": 2
-          },
-          {
-            "templateId": "The Bonfire",
-            "count": 3
-          }
+          { "templateId": "Rolling Fog", "count": 5 },
+          { "templateId": "Abandoned Cooler", "count": 2 },
+          { "templateId": "The Bonfire", "count": 3 }
         ]
       },
       {
         "cards": [
-          {
-            "templateId": "Rolling Fog",
-            "count": 3
-          },
-          {
-            "templateId": "Something in the Mist",
-            "count": 3
-          },
-          {
-            "templateId": "The Tide Coming In",
-            "count": 3
-          },
-          {
-            "templateId": "Abandoned Cooler",
-            "count": 1
-          }
+          { "templateId": "Rolling Fog", "count": 3 },
+          { "templateId": "Something in the Mist", "count": 3 },
+          { "templateId": "The Tide Coming In", "count": 3 },
+          { "templateId": "Abandoned Cooler", "count": 1 }
         ]
       },
       {
         "cards": [
-          {
-            "templateId": "The Tide Coming In",
-            "count": 3
-          },
-          {
-            "templateId": "Something in the Mist",
-            "count": 3
-          },
-          {
-            "templateId": "Whiteout",
-            "count": 3
-          },
-          {
-            "templateId": "The Walker",
-            "count": 1
-          }
+          { "templateId": "The Tide Coming In", "count": 3 },
+          { "templateId": "Something in the Mist", "count": 3 },
+          { "templateId": "Whiteout", "count": 3 },
+          { "templateId": "The Walker", "count": 1 }
         ]
       }
     ]

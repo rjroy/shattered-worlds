@@ -4,70 +4,28 @@
     "acts": [
       {
         "cards": [
-          {
-            "templateId": "Minor Tremor",
-            "count": 3
-          },
-          {
-            "templateId": "Relocation Order",
-            "count": 3
-          },
-          {
-            "templateId": "Fingerquake Ward",
-            "count": 1
-          },
-          {
-            "templateId": "Surveyors Mark A Pulse",
-            "count": 3
-          }
+          { "templateId": "Minor Tremor", "count": 3 },
+          { "templateId": "Relocation Order", "count": 3 },
+          { "templateId": "Fingerquake Ward", "count": 1 },
+          { "templateId": "Surveyors Mark A Pulse", "count": 3 }
         ]
       },
       {
         "cards": [
-          {
-            "templateId": "Fingerquake Ward",
-            "count": 2
-          },
-          {
-            "templateId": "Vein-Road Surge",
-            "count": 3
-          },
-          {
-            "templateId": "Bone Anchor Failure",
-            "count": 2
-          },
-          {
-            "templateId": "District Recall",
-            "count": 1
-          },
-          {
-            "templateId": "Surveyors Mark A Pulse",
-            "count": 2
-          }
+          { "templateId": "Fingerquake Ward", "count": 2 },
+          { "templateId": "Vein-Road Surge", "count": 3 },
+          { "templateId": "Bone Anchor Failure", "count": 2 },
+          { "templateId": "District Recall", "count": 1 },
+          { "templateId": "Surveyors Mark A Pulse", "count": 2 }
         ]
       },
       {
         "cards": [
-          {
-            "templateId": "Bone Anchor Failure",
-            "count": 2
-          },
-          {
-            "templateId": "District Recall",
-            "count": 2
-          },
-          {
-            "templateId": "Vein-Road Surge",
-            "count": 2
-          },
-          {
-            "templateId": "The Giant Turns In Sleep",
-            "count": 3
-          },
-          {
-            "templateId": "The Walker",
-            "count": 1
-          }
+          { "templateId": "Bone Anchor Failure", "count": 2 },
+          { "templateId": "District Recall", "count": 2 },
+          { "templateId": "Vein-Road Surge", "count": 2 },
+          { "templateId": "The Giant Turns In Sleep", "count": 3 },
+          { "templateId": "The Walker", "count": 1 }
         ]
       }
     ]

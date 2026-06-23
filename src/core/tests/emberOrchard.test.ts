@@ -260,13 +260,21 @@ describe("The Ember Orchard — incubation effects drive the reducer (REQ-EMBER-
     expect(events.some((e) => e.type === "DamageDealt")).toBe(false);
   });
 
-  it("Ground Constellation onDiscarded queues ForceDestroy 2", () => {
+  it("Ground Constellation onDiscarded queues ForceDestroy 2 and adds moth", () => {
     const { catalog, worldData } = buildWorld(WORLD_ID);
     const groundConstellation = catalog["Ground Constellation"];
     expect(groundConstellation?.kind).toBe("world");
     if (groundConstellation === undefined || groundConstellation.kind !== "world") return;
 
-    expect(groundConstellation.onDiscarded).toEqual({ kind: "ForceDestroy", amount: 2 });
+    expect(groundConstellation.onDiscarded.kind).toEqual("Sequence");
+    if (groundConstellation.onDiscarded.kind == "Sequence") {
+      expect(groundConstellation.onDiscarded.steps.length).toEqual(2);
+      expect(groundConstellation.onDiscarded.steps[0]).toEqual({ kind: "ForceDestroy", amount: 2 });
+      expect(groundConstellation.onDiscarded.steps[1]).toEqual({
+        kind: "AddWorldCardToDeck",
+        template: "Ember Moth",
+      });
+    }
 
     const { state } = createWorld(catalog, worldData, 8, DEFAULT_RUN_MODIFIERS);
     const { state: after } = applyEffect(catalog, state, groundConstellation.onDiscarded);

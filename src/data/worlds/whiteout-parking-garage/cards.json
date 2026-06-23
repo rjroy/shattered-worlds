@@ -5,66 +5,27 @@
     "acts": [
       {
         "cards": [
-          {
-            "templateId": "Powder Drift",
-            "count": 3
-          },
-          {
-            "templateId": "Frozen Puddle",
-            "count": 2
-          },
-          {
-            "templateId": "Dead Battery",
-            "count": 2
-          },
-          {
-            "templateId": "Maintenance Closet",
-            "count": 3
-          }
+          { "templateId": "Powder Drift", "count": 3 },
+          { "templateId": "Frozen Puddle", "count": 2 },
+          { "templateId": "Dead Battery", "count": 2 },
+          { "templateId": "Maintenance Closet", "count": 3 }
         ]
       },
       {
         "cards": [
-          {
-            "templateId": "Black Ice Ramp",
-            "count": 3
-          },
-          {
-            "templateId": "Snowblind Headlights",
-            "count": 3
-          },
-          {
-            "templateId": "Ice-Locked Door",
-            "count": 3
-          },
-          {
-            "templateId": "Maintenance Closet",
-            "count": 1
-          }
+          { "templateId": "Black Ice Ramp", "count": 3 },
+          { "templateId": "Snowblind Headlights", "count": 3 },
+          { "templateId": "Ice-Locked Door", "count": 3 },
+          { "templateId": "Maintenance Closet", "count": 1 }
         ]
       },
       {
         "cards": [
-          {
-            "templateId": "Black Ice Ramp",
-            "count": 2
-          },
-          {
-            "templateId": "Ice-Locked Door",
-            "count": 2
-          },
-          {
-            "templateId": "Plow Buried In Snow",
-            "count": 2
-          },
-          {
-            "templateId": "The Garage Freezes Shut",
-            "count": 3
-          },
-          {
-            "templateId": "The Walker",
-            "count": 1
-          }
+          { "templateId": "Black Ice Ramp", "count": 2 },
+          { "templateId": "Ice-Locked Door", "count": 2 },
+          { "templateId": "Plow Buried In Snow", "count": 2 },
+          { "templateId": "The Garage Freezes Shut", "count": 3 },
+          { "templateId": "The Walker", "count": 1 }
         ]
       }
     ]

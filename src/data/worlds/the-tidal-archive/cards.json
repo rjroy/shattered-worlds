@@ -1,69 +1,30 @@
 {
   "worldId": "the-tidal-archive",
-  "onEndOfTurnPassive": {
-    "kind": "RecallPlayerDiscard",
-    "policy": "latest"
-  },
+  "onEndOfTurnPassive": { "kind": "RecallPlayerDiscard", "policy": "latest" },
   "deckComposition": {
     "acts": [
       {
         "cards": [
-          {
-            "templateId": "Wandering Stacks",
-            "count": 4
-          },
-          {
-            "templateId": "Drowned Index",
-            "count": 4
-          },
-          {
-            "templateId": "Bridge to Yesterday",
-            "count": 2
-          }
+          { "templateId": "Wandering Stacks", "count": 4 },
+          { "templateId": "Drowned Index", "count": 4 },
+          { "templateId": "Bridge to Yesterday", "count": 2 }
         ]
       },
       {
         "cards": [
-          {
-            "templateId": "Misfiled Century",
-            "count": 4
-          },
-          {
-            "templateId": "Bridge to Yesterday",
-            "count": 2
-          },
-          {
-            "templateId": "Borrowed Catastrophe",
-            "count": 2
-          },
-          {
-            "templateId": "Drowned Index",
-            "count": 2
-          }
+          { "templateId": "Misfiled Century", "count": 4 },
+          { "templateId": "Bridge to Yesterday", "count": 2 },
+          { "templateId": "Borrowed Catastrophe", "count": 2 },
+          { "templateId": "Drowned Index", "count": 2 }
         ]
       },
       {
         "cards": [
-          {
-            "templateId": "Chained Books Rising",
-            "count": 2
-          },
-          {
-            "templateId": "Borrowed Catastrophe",
-            "count": 3
-          },
-          {
-            "templateId": "The Same Footprint",
-            "count": 2
-          },
-          {
-            "templateId": "Misfiled Century",
-            "count": 2
-          },
-          {
-            "templateId": "The Walker",
-            "count": 1
-          }
+          { "templateId": "Chained Books Rising", "count": 2 },
+          { "templateId": "Borrowed Catastrophe", "count": 3 },
+          { "templateId": "The Same Footprint", "count": 2 },
+          { "templateId": "Misfiled Century", "count": 2 },
+          { "templateId": "The Walker", "count": 1 }
         ]
       }
     ]

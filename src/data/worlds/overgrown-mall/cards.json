@@ -4,54 +4,24 @@
     "acts": [
       {
         "cards": [
-          {
-            "templateId": "Burst Planter",
-            "count": 7
-          },
-          {
-            "templateId": "The Garden Center",
-            "count": 3
-          }
+          { "templateId": "Burst Planter", "count": 7 },
+          { "templateId": "The Garden Center", "count": 3 }
         ]
       },
       {
         "cards": [
-          {
-            "templateId": "Pollen Haze",
-            "count": 4
-          },
-          {
-            "templateId": "Kudzu Curtain",
-            "count": 3
-          },
-          {
-            "templateId": "Something in the Atrium",
-            "count": 2
-          },
-          {
-            "templateId": "The Garden Center",
-            "count": 1
-          }
+          { "templateId": "Pollen Haze", "count": 4 },
+          { "templateId": "Kudzu Curtain", "count": 3 },
+          { "templateId": "Something in the Atrium", "count": 2 },
+          { "templateId": "The Garden Center", "count": 1 }
         ]
       },
       {
         "cards": [
-          {
-            "templateId": "Fountain Bloom",
-            "count": 4
-          },
-          {
-            "templateId": "Something in the Atrium",
-            "count": 4
-          },
-          {
-            "templateId": "The Garden Center",
-            "count": 1
-          },
-          {
-            "templateId": "The Walker",
-            "count": 1
-          }
+          { "templateId": "Fountain Bloom", "count": 4 },
+          { "templateId": "Something in the Atrium", "count": 4 },
+          { "templateId": "The Garden Center", "count": 1 },
+          { "templateId": "The Walker", "count": 1 }
         ]
       }
     ]
