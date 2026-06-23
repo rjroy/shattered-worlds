@@ -2287,6 +2287,7 @@ describe("ExileTopWorldCards: livelock guard", () => {
       name: "Floor It",
       insetKey: undefined,
       sourceWorldId: "highway-volcano",
+      canDestroy: true,
       energyCost: 0,
       exhaust: true,
       keywords: [],

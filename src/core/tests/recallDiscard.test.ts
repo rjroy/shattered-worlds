@@ -24,6 +24,7 @@ function playerCard(overrides: Partial<PlayerCard> & Pick<PlayerCard, "id">): Pl
     insetKey: undefined,
     sourceWorldId: "test",
     effect: { kind: "None" },
+    canDestroy: true,
     energyCost: 0,
     keywords: [],
     rarity: "common",

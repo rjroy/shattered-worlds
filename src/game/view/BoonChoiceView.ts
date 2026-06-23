@@ -39,6 +39,7 @@ function previewCardFromTemplate(
       insetKey: template.insetKey,
       sourceWorldId: worldId,
       effect: template.effect,
+      canDestroy: template.canDestroy ?? true,
       energyCost: template.energyCost ?? 0,
       exhaust: template.exhaust ?? false,
       keywords: (template.keywords ?? []).map(parseKeyword),

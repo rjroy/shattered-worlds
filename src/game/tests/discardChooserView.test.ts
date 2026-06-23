@@ -141,6 +141,7 @@ function discardCard(over: Partial<Extract<Card, { kind: "player" }>>): Card {
     insetKey: undefined,
     sourceWorldId: "the-tidal-archive",
     effect: { kind: "None" },
+    canDestroy: true,
     energyCost: 1,
     keywords: [],
     rarity: "common",

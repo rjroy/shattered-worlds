@@ -312,6 +312,7 @@ function pendingState(): GameState {
         insetKey: undefined,
         sourceWorldId: "zombie-big-box",
         effect: { kind: "Draw", player: 1 },
+        canDestroy: true,
         energyCost: 0,
         keywords: [],
         rarity: "common",

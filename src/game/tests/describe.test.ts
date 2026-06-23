@@ -44,6 +44,7 @@ function player(effect: CardEffect): PlayerCard {
     insetKey: undefined,
     sourceWorldId: "test",
     effect,
+    canDestroy: true,
     energyCost: 0,
     keywords: [],
     rarity: "common",
