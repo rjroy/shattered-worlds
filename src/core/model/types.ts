@@ -130,6 +130,7 @@ export interface PlayerCard {
   insetKey: string | undefined;
   sourceWorldId: string;
   effect: CardEffect;
+  canDestroy: boolean;
   energyCost: number;
   // When true, the card is marked as modified due to an unlock.
   modified?: boolean;

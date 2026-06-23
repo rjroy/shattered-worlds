@@ -141,7 +141,7 @@ export class DestroyCardInHandHandler extends EffectHandler<DestroyCardInHandEff
     state: GameState,
   ): readonly CardId[] {
     return playerCardsInHand(state)
-      .filter((c) => c.id !== selfId)
+      .filter((c) => c.id !== selfId && c.canDestroy)
       .map((c) => c.id);
   }
 

@@ -7,9 +7,12 @@ import type { RunStatsStorage } from './runStats'
 export type ConfirmationMode = 'always' | 'risk-only' | 'off'
 
 export type UserSettings = {
-  readonly version: 1
+  readonly version: 2
   readonly confirmationMode: ConfirmationMode
   readonly detailedHoverPreviews: boolean
+  readonly musicVolume: number
+  readonly fxVolume: number
+  readonly masterMute: boolean
 }
 
 // ---------------------------------------------------------------------------
@@ -17,13 +20,22 @@ export type UserSettings = {
 // ---------------------------------------------------------------------------
 
 export const USER_SETTINGS_STORAGE_KEY = 'shattered-worlds/settings/v1'
+// Note: the key name still says v1 even though payload version is now 2.
+// The storage key must stay stable so existing saved preferences are found on read;
 
 // ---------------------------------------------------------------------------
 // Defaults
 // ---------------------------------------------------------------------------
 
 function defaultUserSettings(): UserSettings {
-  return { version: 1, confirmationMode: 'always', detailedHoverPreviews: true }
+  return {
+    version: 2,
+    confirmationMode: 'always',
+    detailedHoverPreviews: true,
+    musicVolume: 1.0,
+    fxVolume: 0.5,
+    masterMute: false,
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -47,9 +59,12 @@ export function isUserSettings(value: unknown): value is UserSettings {
   if (typeof value !== 'object' || value === null) return false
   const s = value as Record<string, unknown>
   return (
-    s.version === 1 &&
+    s.version === 2 &&
     isConfirmationMode(s.confirmationMode) &&
-    typeof s.detailedHoverPreviews === 'boolean'
+    typeof s.detailedHoverPreviews === 'boolean' &&
+    typeof s.musicVolume === 'number' &&
+    typeof s.fxVolume === 'number' &&
+    typeof s.masterMute === 'boolean'
   )
 }
 
@@ -68,26 +83,66 @@ export function loadUserSettings(
     if (raw === null) return defaultUserSettings()
 
     const parsed: unknown = JSON.parse(raw)
-    if (!isUserSettings(parsed)) {
-      console.warn('[userSettings] discarding stored settings with unknown shape', { key })
-      return defaultUserSettings()
+
+    // Try v2 validation first, then fall back to v1 migration.
+    if (isUserSettings(parsed)) {
+      // v2 — re-project known fields, clamping volume ranges.
+      return clampV2(parsed)
     }
 
-    // Whole-object fallback (not per-field): once the known keys all validate,
-    // re-project only the known fields into the typed result. Unknown future
-    // keys are tolerated on read (they don't fail validation) but never carried
-    // into the typed object — they stay opaque until a future build adds them.
-    // If any known field were malformed, isUserSettings already rejected above
-    // and we returned defaults. This keeps the result a complete, valid
-    // UserSettings without leaking unvalidated data into the type.
-    return {
-      version: 1,
-      confirmationMode: parsed.confirmationMode,
-      detailedHoverPreviews: parsed.detailedHoverPreviews,
-    }
+    // Check if this is a v1 payload we can migrate.
+    const migrated = migrateFromV1(parsed)
+    if (migrated) return clampV2(migrated)
+
+    // Unrecognised shape — fall back to defaults.
+    console.warn('[userSettings] discarding stored settings with unknown shape', { key })
+    return defaultUserSettings()
   } catch (error) {
     console.warn('[userSettings] failed to load settings; using defaults', { key, error })
     return defaultUserSettings()
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Migration helpers
+// ---------------------------------------------------------------------------
+
+/** Re-project a v1 object into a v2 shape, filling in new-field defaults. */
+function migrateFromV1(value: unknown): UserSettings | undefined {
+  if (typeof value !== 'object' || value === null) return undefined
+  const s = value as Record<string, unknown>
+  if (
+    s.version !== 1 ||
+    !isConfirmationMode(s.confirmationMode) ||
+    typeof s.detailedHoverPreviews !== 'boolean'
+  ) {
+    return undefined
+  }
+  return {
+    version: 2,
+    confirmationMode: s.confirmationMode,
+    detailedHoverPreviews: s.detailedHoverPreviews,
+    musicVolume: 1.0,
+    fxVolume: 0.5,
+    masterMute: false,
+  }
+}
+
+/**
+ * Clamp volume fields to [0, 1] and coerce non-finite numbers to defaults.
+ * Keeps the "tolerant of unknown future keys" behavior — only known keys are
+ * projected into the typed result.
+ */
+function clampV2(s: Record<string, unknown>): UserSettings {
+  const mv = Number.isFinite(s.musicVolume) ? Math.max(0, Math.min(1, Number(s.musicVolume))) : 1.0
+  const fv = Number.isFinite(s.fxVolume) ? Math.max(0, Math.min(1, Number(s.fxVolume))) : 0.5
+  return {
+    version: 2,
+    confirmationMode: s.confirmationMode as ConfirmationMode,
+    detailedHoverPreviews: s.detailedHoverPreviews as boolean,
+    musicVolume: mv,
+    fxVolume: fv,
+    masterMute: Boolean(s.masterMute),
   }
 }
 

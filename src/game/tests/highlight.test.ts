@@ -12,6 +12,7 @@ function player(id: string): PlayerCard {
     insetKey: undefined,
     sourceWorldId: "test",
     effect: { kind: "Draw", player: 1 },
+    canDestroy: true,
     energyCost: 0,
     keywords: [],
     rarity: "common",

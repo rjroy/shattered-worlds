@@ -155,9 +155,8 @@ export function refillHand(state: GameState): {
   // collapses to 0 via the min(…, worldCardsRemaining) clip.
   const totalWorldRemaining = worldCardsRemaining(state);
   const worldToDraw = Math.min(
-    // Try and draw `startWorldCards`
-    // Reduce by 1 for each world card held beyond the first, so the first is "free" and encourages holding onto it.
-    Math.max(1, WORLD_CONSTS.startWorldCards - Math.max(0, heldWorld - 1)),
+    // Draw startWorldCards if none held, otherwise draw 1 if possible.
+    Math.max(1, WORLD_CONSTS.startWorldCards - heldWorld),
     room,
     totalWorldRemaining,
   );
@@ -232,7 +231,7 @@ export function resolveForceDestroy(state: GameState): {
     return { state: { ...current, pendingForceDestroySource: undefined }, events };
   }
 
-  const playerCards = current.hand.filter((c) => c.kind === "player");
+  const playerCards = current.hand.filter((c) => c.kind === "player" && c.canDestroy);
   const takeCount = Math.min(current.pendingForceDestroy, playerCards.length);
 
   if (takeCount === 0) {

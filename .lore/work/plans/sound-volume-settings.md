@@ -59,7 +59,7 @@ Compute gain through one tiny pure helper so mute + 0% + clamping live in a sing
 
 ## Steps
 
-### 1. Extend the settings data model
+### 1. Extend the settings data model (DONE)
 
 Files:
 
@@ -83,7 +83,32 @@ Validation gate:
 - `bun run test` — `userSettings.test.ts` covers: defaults, v1→v2 migration preserving old prefs, v2 round-trip, out-of-range/NaN clamping, mute persistence.
 - `bun run typecheck` reveals every `version: 1` / `UserSettings` construction site that needs updating.
 
-### 2. Pure gain helper
+#### Changed files:
+
+1. src/game/runtime/userSettings.ts — Extended the data model:
+    - Added musicVolume, fxVolume, masterMute to UserSettings type
+     - Bumped version literal from 1 to 2
+     - Updated defaultUserSettings() with musicVolume: 1.0, fxVolume: 0.5, masterMute:
+       false
+     - Added comment on storage key noting the intentional v1/v2 skew
+     - Updated isUserSettings type guard for version 2 + new fields
+     - Rewrote loadUserSettings with v1→v2 migration (preserving old prefs) and v2
+       clamping/coercion
+     - Added migrateFromV1() and clampV2() helpers
+
+ 2. src/game/runtime/userSettings.test.ts — Updated and expanded tests:
+     - Updated all existing test fixtures to version 2 shape
+     - Added v1→v2 migration tests (preserves old prefs, double-load no longer needs
+       migration)
+     - Added clamping/coercion tests (below 0, above 1, NaN/null → defaults)
+     - Added mute persistence round-trip test
+
+ 3. src/game/tests/cardObjects.test.ts — Updated 3 UserSettings fixtures:
+     - DEFAULT_HARNESS SETTINGS, inline construction, and settings() helper
+
+ 4. src/game/tests/settingsOverlayView.test.ts — Updated makeFakeStore constructor
+
+### 2. Pure gain helper (DONE) 
 
 Files:
 
@@ -101,7 +126,22 @@ Validation gate:
 
 - `bun run test` — helper test covers mute (→0 regardless of slider), 0% slider (→0), 100% (→base), mid value, and that mute overrides a non-zero slider.
 
-### 3. Apply gain at the four playback sites
+#### Changed files:
+
+1. src/game/audio/audioVolume.ts — Pure gain helper (new file):
+    - Exported base constants `MENU_MUSIC_BASE = 0.42`, `WORLD_MUSIC_BASE = 0.45`, `CARD_FX_BASE = 0.5`
+    - `musicGain(s: UserSettings)` returns `s.masterMute ? 0 : s.musicVolume`
+    - `fxGain(s: UserSettings)` returns `s.masterMute ? 0 : s.fxVolume`
+    - `effectiveVolume(base, gain)` multiplies base × gain
+
+2. src/game/audio/audioVolume.test.ts — Unit tests (new file):
+    - Base constant values (3 tests)
+    - musicGain: slider passthrough, 0% → zero, mute override regardless of slider (3 tests)
+    - fxGain: slider passthrough, mute override, default 50% gain value (3 tests)
+    - effectiveVolume: multiplication, zero cases, 100% reproduces base, default-settings roundtrip (4 tests)
+    - **Validation:** 13 pass, 0 fail, 26 expect() calls; typecheck clean
+
+### 3. Apply gain at the four playback sites (DONE)
 
 Files:
 
@@ -112,20 +152,46 @@ Files:
 
 Changes:
 
-- `startMainTheme(scene, settings: UserSettingsStore)`: add the `settings` param; set `volume: effectiveVolume(MENU_MUSIC_BASE, musicGain(settings.get()))`. Add `setMainThemeVolume(scene, settings)` that looks up the live sound (`scene.sound.get(mainThemeMusic.key)`) and calls `setVolume(...)` for live re-apply.
-- `TableScene.startWorldMusic`: scale `WORLD_MUSIC_BASE` by `musicGain` from `this.runtime_.userSettings`. Add a private `reapplyMusicVolume()` that, if `this.worldMusic` exists, calls `setVolume(...)`.
+- `startMainTheme(scene, settings: UserSettingsStore)`: add the `settings` param (optional for backward compat with deferred step 4 callers); set `volume: effectiveVolume(MENU_MUSIC_BASE, musicGain(settings.get()))`. Added `setMainThemeVolume(scene, settings)` that looks up the live sound (`scene.sound.get(mainThemeMusic.key)`) and calls `setVolume(...)` via type assertion on concrete subclass for live re-apply.
+- `TableScene.startWorldMusic`: scale `WORLD_MUSIC_BASE` by `musicGain` from `this.runtime_.userSettings`. Added a private `reapplyMusicVolume()` that, if `this.worldMusic` exists, calls `setVolume(...)`.
 - `TableScene.playCardFx`: scale `CARD_FX_BASE` by `fxGain` at play time.
-- `CardView.playWhileVisible`: scale `CARD_FX_BASE` by FX gain. CardView needs the gain — pass an **optional** `fxGain?: () => number` accessor through the `CardView` constructor (default to `() => 1` so untouched call sites stay valid and audible). Looped FX re-reads on next play; no live tracking. Call sites:
-  - `TableScene.ts:645` — pass `() => fxGain(this.runtime_.userSettings.get())`.
-  - `BoonChoiceView.ts:148` — boon-preview cards have no audible looped FX in practice; pass nothing (default) or an explicit `() => 0`. **Decision: pass nothing** (rely on the default), keeping BoonChoiceView ignorant of settings.
-  - `createCardObject` (`CardView.ts:668`) — forwards constructor args; thread the optional param through. (Note: this free function currently has no `src/game` call sites but is type-checked, so its signature must still compile.)
+- `CardView.playWhileVisible`: scale `CARD_FX_BASE` by FX gain. CardView took an **optional** `fxGain?: () => number` accessor through the constructor (default: `() => 1` so untouched call sites stay valid and audible).
+- Call sites updated:
+  - `TableScene.ts` obtainCardContainer — passes `() => fxGain(this.runtime_.userSettings.get())`.
 
 Validation gate:
 
-- `bun run test` — where a scene/sound stub allows, assert the volume passed to `sound.add`/`sound.play` reflects gain (e.g. mute → 0). Otherwise rely on the helper tests + manual check in step 7.
-- `bun run typecheck` confirms every `startMainTheme`/`CardView` caller is updated.
+- `bun run typecheck` clean.
+- `bun run test` — 1266 pass, 0 fail.
+- `bun run lint` — clean.
+- `bun run build` — succeeds.
 
-### 4. Inject settings into the menu scenes
+#### Changed files:
+
+1. src/game/audio/menuMusic.ts — Wired gain at playback start + live re-apply:
+    - Imported `MENU_MUSIC_BASE`, `effectiveVolume`, `musicGain` from audioVolume, plus `UserSettingsStore`
+    - Added optional `settings` parameter to `startMainTheme`; computes gain and applies via `effectiveVolume(MENU_MUSIC_BASE, gain)`
+    - New exported `setMainThemeVolume(scene, settings)` for live re-apply (looks up sound by key, re-applies effective volume)
+    - Casts to WebAudioSound for setVolume call (BaseSound type doesn't expose the setter directly)
+
+2. src/game/scenes/TableScene.ts — Three playback sites wired:
+    - Imported `WORLD_MUSIC_BASE`, `CARD_FX_BASE`, `effectiveVolume`, `musicGain`, `fxGain` from audioVolume
+    - `startWorldMusic`: computes gain at play time; uses `effectiveVolume(WORLD_MUSIC_BASE, gain)` instead of hardcoded 0.45
+    - `playCardFx`: moved fxGain computation outside loop; uses `effectiveVolume(CARD_FX_BASE, gain)` instead of hardcoded 0.5
+    - `obtainCardContainer`: passes FX gain accessor to CardView constructor: `() => fxGain(this.runtime_.userSettings.get())`
+    - New private `reapplyMusicVolume()`: looks up worldMusic and sets effective volume (for live slider updates)
+
+3. src/game/view/CardView.ts — Loop-FX volume wired:
+    - Imported `CARD_FX_BASE`, `effectiveVolume` from audioVolume
+    - Added private readonly `fxGain_: () => number` field
+    - Constructor accepts optional 7th parameter `fxGain: () => number = () => 1`
+    - `playWhileVisible()`: reads gain via `this.fxGain_()` and computes `effectiveVolume(CARD_FX_BASE, gain)` instead of hardcoded 0.5
+    - `createCardObject`: threads optional fxGain through to CardView constructor
+
+4. src/game/view/BoonChoiceView.ts — No changes needed;
+    - CardView construction (line ~148) continues to work via default param `fxGain: () => number = () => 1`
+
+### 4. Inject settings into the menu scenes (DONE)
 
 Files:
 
@@ -142,9 +208,31 @@ Changes:
 Validation gate:
 
 - `bun run typecheck` clean.
-- `bun run test` — existing scene tests still pass; add a default-store fallback path if any test constructs these scenes without the arg.
+- `bun run test` — 1266 pass, 0 fail.
+- `bun run lint` — clean.
 
-### 5. Volume slider control + overlay UI
+#### Changed files:
+
+1. src/game/scenes/DestinyScene.ts — Injected settings store:
+    - Imported `UserSettingsStore` type from runtime/userSettings
+    - Added `userSettings?: UserSettingsStore` as 3rd constructor param (after featsStore, unlocksStore)
+    - Stored as `private readonly userSettings: UserSettingsStore | undefined`
+    - Changed `startMainTheme(this)` to `startMainTheme(this, this.userSettings)` so theme plays at current gain on entry
+
+2. src/game/scenes/ChronicleScene.ts — Injected settings store:
+    - Imported `UserSettingsStore` type from runtime/userSettings
+    - Added `userSettings?: UserSettingsStore` as 4th constructor param (after runStats, statsTransfer, featsStore)
+    - Stored as `private readonly userSettings: UserSettingsStore | undefined`
+    - Changed `startMainTheme(this)` to `startMainTheme(this, this.userSettings)` so theme plays at current gain on entry
+
+3. src/game/main.ts — Wired settings through at composition root:
+    - ChronicleScene construction now passes `gameplayRuntime.userSettings` as 4th arg
+    - DestinyScene construction now passes `gameplayRuntime.userSettings` as 3rd arg
+
+4. src/game/tests/gameplaySessionIntegration.test.ts — Updated source-content assertion:
+    - Updated the string assertion for DestinyScene constructor call to include the new userSettings argument
+
+### 5. Volume slider control + overlay UI (DONE)
 
 Files:
 
@@ -165,23 +253,59 @@ Validation gate:
 
 - `bun run test` — slider math pure-function tests (x→value, value→x, clamp, endpoints); overlay handler tests assert persist + clamp + `refreshFromStore` + `onAudioChange` fired; mute toggle flips store and highlight.
 
-### 6. Wire the live re-apply hook
+#### Changed files:
+
+1. src/game/view/VolumeSlider.ts — Reusable draggable volume slider (new file):
+    - Pure math exports: `positionToValue(x, startX, endX)` clamps to [0,1]; `valueToPosition(value, startX, endX)` maps back to px
+    - VolumeSlider class: track rectangle, fill bar, thumb container with circle dot, percentage label
+    - Pointer drag wiring on track/fill/thumb elements; global scene input for pointermove/pointer-up tracking
+    - Public API: `getValue()` reads current position, `setValue(value)` updates visual state without firing callback
+
+2. src/game/view/VolumeSlider.test.ts — Pure math function tests (new file):
+    - 13 tests, 0 fail, 37 expect() calls
+
+3. src/game/view/SettingsOverlayView.ts — Full overlay update:
+    - Grew panel: 420 → 600px height; all y-coordinates shifted per plan layout
+    - Added Music/FX sliders and Master mute toggle row
+    - Constructor accepts optional `onAudioChange` callback
+    - Public handlers: setMusicVolume, setFxVolume, setMasterMute — each clamps/persists/refreshes/notifies
+    - refreshFromStore() now drives slider values and mute segment highlights
+
+4. src/game/tests/settingsOverlayView.test.ts — Updated mocks + new volume/mute handler tests:
+    - Expanded fake rectangle/container/text to support VolumeSlider construction
+    - Added fake scene input.on() for pointer event wiring
+    - makeView factory returns onAudioChangeCalls tracker
+    - 9 pass total (5 existing + 4 new), 0 fail, 34 expect() calls
+
+### 6. Wire the live re-apply hook 
 
 Files:
 
-- `src/game/view/SettingsOverlayView.ts`
-- `src/game/scenes/WorldSelectScene.ts`, `DestinyScene.ts`, `ChronicleScene.ts`, `TableScene.ts`
+- `src/game/scenes/WorldSelectScene.ts`
+- `src/game/scenes/TableScene.ts`
 
 Changes:
 
-- Add an optional `onAudioChange?: () => void` constructor arg to `SettingsOverlayView`.
-- `WorldSelectScene` (`:240`) passes `() => setMainThemeVolume(this, this.userSettings)`.
-- `TableScene` (`:300`) passes `() => this.reapplyMusicVolume()`.
-- Only these two scenes own an overlay (confirmed in the Strategy section). `DestinyScene`/`ChronicleScene` get no `onAudioChange` because they have no overlay; their theme gain is set fresh at `create()` (Step 3) and needs no live path.
+- `WorldSelectScene` (`showSettingsOverlay`) passes `() => setMainThemeVolume(this, this.userSettings)` as the `onAudioChange` callback (importing `setMainThemeVolume` from menuMusic).
+- `TableScene` (`create`) passes `() => this.reapplyMusicVolume()` as the `onAudioChange` callback.
+- Only these two scenes own an overlay (confirmed in Strategy). Destiny/Chronicle get no callback — their theme gain is set fresh at `create()` (Step 3) and needs no live path.
 
 Validation gate:
 
 - `bun run test` — overlay test asserts `onAudioChange` invoked on each volume/mute setter. For Destiny/Chronicle, the only meaningful automated coverage is that `startMainTheme` is invoked with current gain at `create()` (Step 3/4 coverage) — there is no live-update behavior to assert for them, so do not list them under a manual live-update check.
+- `bun run lint` — clean.
+- `bun run typecheck` — clean.
+- `bun run test` — 1296 pass, 0 fail.
+- `bun run build` — succeeds.
+
+#### Changed files:
+
+1. src/game/scenes/WorldSelectScene.ts — Wired live re-apply for main menu theme:
+    - Imported `setMainThemeVolume` from menuMusic (alongside existing `startMainTheme` import)
+    - `showSettingsOverlay()` passes `() => setMainThemeVolume(this, this.userSettings)` as third arg to `SettingsOverlayView`
+
+2. src/game/scenes/TableScene.ts — Wired live re-apply for world music:
+    - `create()` passes `() => this.reapplyMusicVolume()` as third arg to `SettingsOverlayView`
 
 ### 7. Verify
 

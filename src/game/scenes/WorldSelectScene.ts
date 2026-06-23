@@ -1,5 +1,5 @@
 import Phaser from "phaser";
-import { startMainTheme } from "../audio/menuMusic";
+import { startMainTheme, setMainThemeVolume } from "../audio/menuMusic";
 import { loadAssets } from "../data/assetManifest";
 import { isWorldUnlocked, UNLOCK_CATALOG } from "../../data/unlocks/catalog";
 import { worldManifest } from "../../data/worldManifest";
@@ -69,7 +69,7 @@ export class WorldSelectScene extends Phaser.Scene {
   }
 
   create(): void {
-    void startMainTheme(this);
+    startMainTheme(this, this.userSettings);
 
     // title image fills canvas
     this.add
@@ -140,7 +140,9 @@ export class WorldSelectScene extends Phaser.Scene {
     button.add([bg, label]);
     bg.on("pointerover", () => button.setScale(1.08));
     bg.on("pointerout", () => button.setScale(1));
-    bg.on("pointerdown", () => this.scene.start("Chronicle"));
+    bg.on("pointerdown", () => {
+      if (this.scene.isActive()) this.scene.start("Chronicle");
+    });
   }
 
   private createDestinyButton(): void {
@@ -164,7 +166,9 @@ export class WorldSelectScene extends Phaser.Scene {
     button.add([bg, label]);
     bg.on("pointerover", () => button.setScale(1.08));
     bg.on("pointerout", () => button.setScale(1));
-    bg.on("pointerdown", () => this.scene.start("Destiny"));
+    bg.on("pointerdown", () => {
+      if (this.scene.isActive()) this.scene.start("Destiny");
+    });
   }
 
   private createHelpButton(): void {
@@ -188,7 +192,9 @@ export class WorldSelectScene extends Phaser.Scene {
     button.add([bg, label]);
     bg.on("pointerover", () => button.setScale(1.08));
     bg.on("pointerout", () => button.setScale(1));
-    bg.on("pointerdown", () => this.showHelpOverlay());
+    bg.on("pointerdown", () => {
+      if (this.scene.isActive()) this.showHelpOverlay();
+    });
   }
 
   private createSettingsButton(): void {
@@ -212,7 +218,9 @@ export class WorldSelectScene extends Phaser.Scene {
     button.add([bg, label]);
     bg.on("pointerover", () => button.setScale(1.08));
     bg.on("pointerout", () => button.setScale(1));
-    bg.on("pointerdown", () => this.showSettingsOverlay());
+    bg.on("pointerdown", () => {
+      if (this.scene.isActive()) this.showSettingsOverlay();
+    });
   }
 
   private showHelpOverlay(): void {
@@ -237,7 +245,9 @@ export class WorldSelectScene extends Phaser.Scene {
   private showSettingsOverlay(): void {
     if (this.userSettings) {
       this.settingsOverlay?.destroy(true);
-      this.settingsOverlay = new SettingsOverlayView(this, this.userSettings);
+      this.settingsOverlay = new SettingsOverlayView(this, this.userSettings, () =>
+        setMainThemeVolume(this, this.userSettings),
+      );
       this.settingsOverlay.setVisible(true);
     }
   }

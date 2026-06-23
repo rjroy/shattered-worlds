@@ -125,6 +125,7 @@ export function makePlayerCard(
     insetKey: undefined,
     sourceWorldId: "test",
     effect: { kind: "None" },
+    canDestroy: true,
     energyCost: 0,
     keywords: [],
     rarity: "common",

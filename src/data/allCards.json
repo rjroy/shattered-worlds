@@ -917,7 +917,7 @@
           { "kind": "AddWorldCardToDeck", "template": "Ember Moth" }
         ]
       },
-      "onPartialClear": { "kind": "AddWorldCardToDeck", "template": "Ember Moth", "bTop": true },
+      "onPartialClear": { "kind": "Damage", "amount": 1 },
       "onEndOfTurn": {
         "kind": "Sequence",
         "steps": [
@@ -1435,7 +1435,7 @@
       "name": "Star-Pruner",
       "rarity": "uncommon",
       "insetKey": "ember-inset-star-pruner",
-      "effect": { "kind": "DealProgress", "base": 2, "bonus": { "tag": "Obstructed", "amount": 2 } }
+      "effect": { "kind": "DealProgress", "base": 2, "bonus": { "tag": "Creature", "amount": 2 } }
     },
     "Constellation Shears": {
       "kind": "player",
@@ -1445,8 +1445,8 @@
       "exhaust": true,
       "effect": {
         "kind": "DealProgressAll",
-        "base": 1,
-        "bonus": { "tag": "Creature", "amount": 1 }
+        "base": 2,
+        "bonus": { "tag": "Creature", "amount": 4 }
       }
     },
     "Keep Vigil": {
@@ -1807,6 +1807,7 @@
       "kind": "player",
       "name": "Summon Door",
       "insetKey": "inset-door",
+      "canDestroy": false,
       "energyCost": 6,
       "rarity": "legendary",
       "exhaust": true,

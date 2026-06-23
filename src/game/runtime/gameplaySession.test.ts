@@ -319,7 +319,7 @@ describe("gameplaySession", () => {
       subscribers: [(item) => items.push(item)],
     });
 
-    for (let turn = 0; turn < 4; turn += 1) {
+    for (let turn = 0; turn < 5; turn += 1) {
       session.dispatch({ type: "EndTurn" });
     }
 
@@ -334,7 +334,7 @@ describe("gameplaySession", () => {
     });
     expect(runEnded.finalState).toBeDefined();
     expect(items.filter((item) => item.kind === "RunEnded")).toHaveLength(1);
-    expect(items.filter((item) => item.kind === "GameplayBatch")).toHaveLength(4);
+    expect(items.filter((item) => item.kind === "GameplayBatch")).toHaveLength(5);
   });
 
   it("reports subscriber failures without changing accepted dispatch or terminal emission", () => {
@@ -358,7 +358,7 @@ describe("gameplaySession", () => {
     let sessionResult = undefined as ReturnType<typeof session.dispatch> | undefined;
     let coreResult = undefined as ReturnType<typeof core.dispatch> | undefined;
 
-    for (let turn = 0; turn < 4; turn += 1) {
+    for (let turn = 0; turn < 5; turn += 1) {
       sessionResult = session.dispatch({ type: "EndTurn" });
       coreResult = core.dispatch({ type: "EndTurn" });
     }
@@ -371,7 +371,7 @@ describe("gameplaySession", () => {
     expect(started.seed).toBe(17);
     expect(started.appliedModifiers).toEqual([]);
     expect(started.timestamp).toBe(7_000);
-    expect(items.filter((item) => item.kind === "GameplayBatch")).toHaveLength(4);
+    expect(items.filter((item) => item.kind === "GameplayBatch")).toHaveLength(5);
     expect(items.at(-1)).toMatchObject({
       kind: "RunEnded",
       sessionId: "session-dispatch-error",
@@ -380,8 +380,9 @@ describe("gameplaySession", () => {
       timestamp: 7_000,
     });
     expect(items.filter((item) => item.kind === "RunEnded")).toHaveLength(1);
-    expect(reports).toHaveLength(5);
+    expect(reports).toHaveLength(6);
     expect(reports.map((report) => report.error)).toEqual([
+      failure,
       failure,
       failure,
       failure,
@@ -389,6 +390,7 @@ describe("gameplaySession", () => {
       failure,
     ]);
     expect(reports.map((report) => report.item.kind)).toEqual([
+      "GameplayBatch",
       "GameplayBatch",
       "GameplayBatch",
       "GameplayBatch",
@@ -404,7 +406,7 @@ describe("gameplaySession", () => {
       subscribers: [(item) => items.push(item)],
     });
 
-    for (let turn = 0; turn < 4; turn += 1) {
+    for (let turn = 0; turn < 5; turn += 1) {
       session.dispatch({ type: "EndTurn" });
     }
 
@@ -499,7 +501,7 @@ describe("gameplaySession", () => {
       subscribers: [(item) => items.push(item)],
     });
 
-    for (let turn = 0; turn < 4; turn += 1) {
+    for (let turn = 0; turn < 5; turn += 1) {
       session.dispatch({ type: "EndTurn" });
     }
 
@@ -695,7 +697,7 @@ describe("gameplaySession", () => {
     });
     const core = createGame(catalog, worldData, 17);
 
-    for (let turn = 0; turn < 4; turn += 1) {
+    for (let turn = 0; turn < 5; turn += 1) {
       expect(() => session.dispatch({ type: "EndTurn" })).not.toThrow();
       core.dispatch({ type: "EndTurn" });
     }

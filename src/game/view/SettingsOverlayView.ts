@@ -2,11 +2,8 @@ import Phaser from "phaser";
 import { textStyle, TEXT } from "./presentation";
 import { CANVAS_W, CANVAS_H } from "./layout";
 import { addScreenBackdrop } from "./screenBackdrop";
-import type {
-  ConfirmationMode,
-  UserSettings,
-  UserSettingsStore,
-} from "../runtime/userSettings";
+import type { ConfirmationMode, UserSettings, UserSettingsStore } from "../runtime/userSettings";
+import { VolumeSlider } from "./VolumeSlider";
 
 // ---------------------------------------------------------------------------
 // Control option tables. These drive both rendering and the click handlers, so
@@ -32,6 +29,12 @@ interface ToggleOption {
 const HOVER_OPTIONS: readonly ToggleOption[] = [
   { value: true, label: "On" },
   { value: false, label: "Off" },
+];
+
+// Master mute toggle — same segmented pattern as hover but for muting all audio.
+const MUTE_OPTIONS: readonly ToggleOption[] = [
+  { value: true, label: "Mute All" },
+  { value: false, label: "No Mute" },
 ];
 
 // Selected vs. unselected segment styling, shared by both segmented controls.
@@ -61,8 +64,8 @@ interface Segment<T> {
  * The store is taken by dependency injection so the view has no knowledge of the
  * runtime or any global state. Opening re-syncs the control highlights from the
  * store via open(); the click handlers (selectConfirmationMode /
- * setDetailedHoverPreviews) are public so tests can drive them without
- * simulating Phaser pointer events.
+ * setDetailedHoverPreviews / setMusicVolume / setFxVolume / setMasterMute) are
+ * public so tests can drive them without simulating Phaser pointer events.
  */
 export class SettingsOverlayView extends Phaser.GameObjects.Container {
   // Assigned in build(), which the constructor calls. build() is a separate
@@ -72,12 +75,18 @@ export class SettingsOverlayView extends Phaser.GameObjects.Container {
   private settings!: UserSettingsStore;
   private readonly confirmationSegments: Segment<ConfirmationMode>[] = [];
   private readonly hoverSegments: Segment<boolean>[] = [];
+  private readonly muteSegments: Segment<boolean>[] = [];
+  private musicSlider!: VolumeSlider;
+  private fxSlider!: VolumeSlider;
+  /** Live-reapply hook called by volume/mute handlers (wired by step 6). */
+  private onAudioChange: (() => void) | undefined;
 
-  constructor(scene: Phaser.Scene, settings: UserSettingsStore) {
+  constructor(scene: Phaser.Scene, settings: UserSettingsStore, onAudioChange?: () => void) {
     super(scene, CANVAS_W / 2, CANVAS_H / 2);
     scene.add.existing(this);
     this.setDepth(1000);
     this.setVisible(false);
+    this.onAudioChange = onAudioChange;
     this.build(scene, settings);
   }
 
@@ -100,20 +109,23 @@ export class SettingsOverlayView extends Phaser.GameObjects.Container {
     blocker.setInteractive();
     this.add(blocker);
 
-    // Titled panel, well inside the 900x600 canvas.
-    const panel = scene.add.rectangle(0, 0, 560, 420, 0x101725, 0.92);
+    // Titled panel — grown to 600px height for volume + mute rows.
+    const panel = scene.add.rectangle(0, 0, 560, 560, 0x101725, 0.92);
     panel.setStrokeStyle(1, 0x31415d, 0.85);
     panel.setRounded(8);
     this.add(panel);
 
-    this.addText(-260, -185, "SETTINGS", {
+    this.addText(-260, -265, "SETTINGS", {
       fontSize: "20px",
       color: TEXT.textLight,
       fontStyle: "bold",
     });
 
-    this.buildConfirmationControl(-260, -120);
-    this.buildHoverControl(-260, 0);
+    this.buildConfirmationControl(-260, -205);
+    this.buildHoverControl(-260, -95);
+    this.buildMusicSlider(-260, 25);
+    this.buildFxSlider(-260, 65);
+    this.buildMuteControl(-260, 100);
     this.buildCloseButton();
 
     // Reflect persisted state on construction so the overlay is correct even if
@@ -152,6 +164,29 @@ export class SettingsOverlayView extends Phaser.GameObjects.Container {
   setDetailedHoverPreviews(enabled: boolean): void {
     this.settings.update({ detailedHoverPreviews: enabled });
     this.refreshFromStore();
+  }
+
+  /** Persist music volume and re-apply to live music. */
+  setMusicVolume(value: number): void {
+    const clamped = Math.max(0, Math.min(1, value));
+    this.settings.update({ musicVolume: clamped });
+    this.refreshFromStore();
+    this.onAudioChange?.();
+  }
+
+  /** Persist FX volume and re-apply. */
+  setFxVolume(value: number): void {
+    const clamped = Math.max(0, Math.min(1, value));
+    this.settings.update({ fxVolume: clamped });
+    this.refreshFromStore();
+    this.onAudioChange?.();
+  }
+
+  /** Persist master mute toggle and re-apply. */
+  setMasterMute(muted: boolean): void {
+    this.settings.update({ masterMute: muted });
+    this.refreshFromStore();
+    this.onAudioChange?.();
   }
 
   // -------------------------------------------------------------------------
@@ -200,8 +235,65 @@ export class SettingsOverlayView extends Phaser.GameObjects.Container {
     });
   }
 
+  private buildMusicSlider(x: number, y: number): void {
+    this.addText(x, y - 20, "Music", {
+      fontSize: "14px",
+      color: TEXT.textKeyword,
+      fontStyle: "bold",
+    });
+
+    const current = this.settings.get();
+    this.musicSlider = new VolumeSlider(
+      this.scene,
+      this,
+      x + 100,
+      y + 5,
+      current.musicVolume,
+      (value: number) => this.setMusicVolume(value),
+    );
+  }
+
+  private buildFxSlider(x: number, y: number): void {
+    this.addText(x, y - 20, "Sound effects", {
+      fontSize: "14px",
+      color: TEXT.textKeyword,
+      fontStyle: "bold",
+    });
+
+    const current = this.settings.get();
+    this.fxSlider = new VolumeSlider(
+      this.scene,
+      this,
+      x + 100,
+      y + 5,
+      current.fxVolume,
+      (value: number) => this.setFxVolume(value),
+    );
+  }
+
+  private buildMuteControl(x: number, y: number): void {
+    this.addText(x, y, "Master mute", {
+      fontSize: "14px",
+      color: TEXT.textKeyword,
+      fontStyle: "bold",
+    });
+
+    MUTE_OPTIONS.forEach((opt, i) => {
+      const segX = x + 6 + i * (SEGMENT_W + SEGMENT_GAP) + SEGMENT_W / 2;
+      const segment = this.addSegment(segX, y + 44, opt.value, opt.label, () =>
+        this.setMasterMute(opt.value),
+      );
+      this.muteSegments.push(segment);
+    });
+
+    this.addText(x, y + 70, "Silence all audio regardless of slider levels.", {
+      fontSize: "12px",
+      color: TEXT.textMuted,
+    });
+  }
+
   private buildCloseButton(): void {
-    const bg = this.scene.add.rectangle(0, 175, 140, 32, UNSELECTED_FILL, 0.95);
+    const bg = this.scene.add.rectangle(0, 250, 140, 32, UNSELECTED_FILL, 0.95);
     bg.setStrokeStyle(1, UNSELECTED_STROKE, 0.85);
     bg.setRounded(7);
     bg.setInteractive({ useHandCursor: true });
@@ -210,7 +302,7 @@ export class SettingsOverlayView extends Phaser.GameObjects.Container {
 
     const label = this.scene.add.text(
       0,
-      175,
+      250,
       "Close",
       textStyle({ fontSize: "13px", color: TEXT.textLight, fontStyle: "bold" }),
     );
@@ -265,13 +357,20 @@ export class SettingsOverlayView extends Phaser.GameObjects.Container {
     const current: UserSettings = this.settings.get();
     this.applyHighlight(this.confirmationSegments, current.confirmationMode);
     this.applyHighlight(this.hoverSegments, current.detailedHoverPreviews);
+    this.musicSlider.setValue(current.musicVolume);
+    this.fxSlider.setValue(current.fxVolume);
+    this.applyHighlight(this.muteSegments, current.masterMute);
   }
 
   private applyHighlight<T>(segments: Segment<T>[], selected: T): void {
     for (const segment of segments) {
       const isSelected = segment.value === selected;
       segment.bg.setFillStyle(isSelected ? SELECTED_FILL : UNSELECTED_FILL, isSelected ? 1 : 0.95);
-      segment.bg.setStrokeStyle(1, isSelected ? SELECTED_STROKE : UNSELECTED_STROKE, isSelected ? 1 : 0.85);
+      segment.bg.setStrokeStyle(
+        1,
+        isSelected ? SELECTED_STROKE : UNSELECTED_STROKE,
+        isSelected ? 1 : 0.85,
+      );
       segment.label.setColor(isSelected ? TEXT.textLight : TEXT.textMuted);
     }
   }
