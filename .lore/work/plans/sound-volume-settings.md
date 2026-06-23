@@ -277,25 +277,37 @@ Validation gate:
     - makeView factory returns onAudioChangeCalls tracker
     - 9 pass total (5 existing + 4 new), 0 fail, 34 expect() calls
 
-### 6. Wire the live re-apply hook
+### 6. Wire the live re-apply hook 
 
 Files:
 
-- `src/game/view/SettingsOverlayView.ts`
-- `src/game/scenes/WorldSelectScene.ts`, `DestinyScene.ts`, `ChronicleScene.ts`, `TableScene.ts`
+- `src/game/scenes/WorldSelectScene.ts`
+- `src/game/scenes/TableScene.ts`
 
 Changes:
 
-- Add an optional `onAudioChange?: () => void` constructor arg to `SettingsOverlayView`.
-- `WorldSelectScene` (`:240`) passes `() => setMainThemeVolume(this, this.userSettings)`.
-- `TableScene` (`:300`) passes `() => this.reapplyMusicVolume()`.
-- Only these two scenes own an overlay (confirmed in the Strategy section). `DestinyScene`/`ChronicleScene` get no `onAudioChange` because they have no overlay; their theme gain is set fresh at `create()` (Step 3) and needs no live path.
+- `WorldSelectScene` (`showSettingsOverlay`) passes `() => setMainThemeVolume(this, this.userSettings)` as the `onAudioChange` callback (importing `setMainThemeVolume` from menuMusic).
+- `TableScene` (`create`) passes `() => this.reapplyMusicVolume()` as the `onAudioChange` callback.
+- Only these two scenes own an overlay (confirmed in Strategy). Destiny/Chronicle get no callback — their theme gain is set fresh at `create()` (Step 3) and needs no live path.
 
 Validation gate:
 
 - `bun run test` — overlay test asserts `onAudioChange` invoked on each volume/mute setter. For Destiny/Chronicle, the only meaningful automated coverage is that `startMainTheme` is invoked with current gain at `create()` (Step 3/4 coverage) — there is no live-update behavior to assert for them, so do not list them under a manual live-update check.
+- `bun run lint` — clean.
+- `bun run typecheck` — clean.
+- `bun run test` — 1296 pass, 0 fail.
+- `bun run build` — succeeds.
 
-### 7. Verify (DEFERRED)
+#### Changed files:
+
+1. src/game/scenes/WorldSelectScene.ts — Wired live re-apply for main menu theme:
+    - Imported `setMainThemeVolume` from menuMusic (alongside existing `startMainTheme` import)
+    - `showSettingsOverlay()` passes `() => setMainThemeVolume(this, this.userSettings)` as third arg to `SettingsOverlayView`
+
+2. src/game/scenes/TableScene.ts — Wired live re-apply for world music:
+    - `create()` passes `() => this.reapplyMusicVolume()` as third arg to `SettingsOverlayView`
+
+### 7. Verify
 
 - `bun run lint`, `bun run typecheck`, `bun run build`, `bun run test` all green.
 - Fresh-context sub-agent review of the diff (per the project's >2-file review rule).

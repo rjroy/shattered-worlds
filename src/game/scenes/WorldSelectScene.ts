@@ -1,5 +1,5 @@
 import Phaser from "phaser";
-import { startMainTheme } from "../audio/menuMusic";
+import { startMainTheme, setMainThemeVolume } from "../audio/menuMusic";
 import { loadAssets } from "../data/assetManifest";
 import { isWorldUnlocked, UNLOCK_CATALOG } from "../../data/unlocks/catalog";
 import { worldManifest } from "../../data/worldManifest";
@@ -237,7 +237,11 @@ export class WorldSelectScene extends Phaser.Scene {
   private showSettingsOverlay(): void {
     if (this.userSettings) {
       this.settingsOverlay?.destroy(true);
-      this.settingsOverlay = new SettingsOverlayView(this, this.userSettings);
+      this.settingsOverlay = new SettingsOverlayView(
+        this,
+        this.userSettings,
+        () => setMainThemeVolume(this, this.userSettings),
+      );
       this.settingsOverlay.setVisible(true);
     }
   }

@@ -298,7 +298,11 @@ export class TableScene extends Phaser.Scene {
     this.runSummary = new RunSummaryView(this);
 
     this.helpOverlay = new HelpOverlayView(this, this.worldId_, this.game_.state.totalActs);
-    this.settingsOverlay = new SettingsOverlayView(this, this.runtime_.userSettings);
+    this.settingsOverlay = new SettingsOverlayView(
+      this,
+      this.runtime_.userSettings,
+      () => this.reapplyMusicVolume(),
+    );
     this.actionConfirmation = new ActionConfirmationView(this);
 
     const questionStyle = textStyle({
