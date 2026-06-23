@@ -1,10 +1,18 @@
 import allCardsJson from "../data/allCards.json";
 import { worldDataRegistry } from "./worlds/registry";
-import type { CardCatalog, RawCardSource, WorldData, AssembledWorld, DeckComposition } from "../core/model/catalog";
+import type {
+  CardCatalog,
+  RawCardSource,
+  WorldData,
+  AssembledWorld,
+  DeckComposition,
+  CardCount,
+} from "../core/model/catalog";
 import { assembleCatalog } from "../core/model/catalog";
 import starterJson from "./worlds/starters/starter.json";
 import footballerJson from "./worlds/starters/footballer.json";
 import contractorJson from "./worlds/starters/contractor.json";
+import { CardEffect } from "../core";
 
 // ---------------------------------------------------------------------------
 // Global card catalog — loaded once at import time from the unified file.
@@ -42,7 +50,9 @@ export function buildWorld(worldId: string, starterId: string = "starter"): Asse
   // Find the bundle by id
   const bundle = worldDataRegistry.find((b) => b.id === worldId);
   if (bundle === undefined) {
-    throw new Error(`Unknown world id: ${worldId}. Registered: ${worldDataRegistry.map(b => b.id).join(", ")}`);
+    throw new Error(
+      `Unknown world id: ${worldId}. Registered: ${worldDataRegistry.map((b) => b.id).join(", ")}`,
+    );
   }
 
   const descriptor = bundle.deck.cardsImport as Record<string, unknown>;
@@ -52,16 +62,18 @@ export function buildWorld(worldId: string, starterId: string = "starter"): Asse
 
   const starterDeck = RESOLVE_STARTER_DECKS[starterId];
   if (starterDeck === undefined) {
-    throw new Error(`Unknown starter deck: ${starterId}. Available: ${Object.keys(RESOLVE_STARTER_DECKS).join(", ")}`);
+    throw new Error(
+      `Unknown starter deck: ${starterId}. Available: ${Object.keys(RESOLVE_STARTER_DECKS).join(", ")}`,
+    );
   }
 
   const worldData: WorldData = {
     worldId: bundle.id,
     deckComposition: descriptor.deckComposition as DeckComposition,
-    starterDeck: starterDeck as any,  // CardCount[] type match
+    starterDeck: starterDeck as CardCount[],
     startHeat: (descriptor.startHeat as number) ?? undefined,
     startLight: (descriptor.startLight as number) ?? undefined,
-    onEndOfTurnPassive: descriptor.onEndOfTurnPassive as any,
+    onEndOfTurnPassive: descriptor.onEndOfTurnPassive as CardEffect,
   };
 
   return {

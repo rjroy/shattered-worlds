@@ -5,22 +5,25 @@ import { applyEffect } from "../engine/effects";
 import { createWorld } from "../engine/world";
 import { concealOf } from "../model/keywords";
 import { mintCard } from "../model/cards";
-import type { CardEffect, GameState, PlayerCard, WorldCard } from "../model/types";
+import type { GameEvent, GameState, Keyword, PlayerCard, WorldCard } from "../model/types";
 import type { CardCatalog } from "../model/catalog";
 
 const FOG_ID = "fog-beach-party";
 
 /** Fog-specific player template IDs. */
 const FOG_PLAYER_TEMPLATES = [
-  "Flashlight", "Flare Gun", "Bonfire", "Searchlight",
-  "Find Fire Axe", "Fire Axe", "Steady", "Cut It Loose",
+  "Flashlight",
+  "Flare Gun",
+  "Bonfire",
+  "Searchlight",
+  "Find Fire Axe",
+  "Fire Axe",
+  "Steady",
+  "Cut It Loose",
 ] as const;
 
 /** Fog-specific world template IDs with Concealed keywords. */
 const FOG_CONCEALED_TEMPLATES = ["Rolling Fog", "Whiteout"] as const;
-
-/** A fog-authored sweep (DealProgressAll). */
-const FOG_SWEEP_TEMPLATE = "Shelf Sweep" as const;
 
 function mintPlayer(
   catalog: CardCatalog,
@@ -57,7 +60,7 @@ describe("fog-beach-party integration", () => {
     const { catalog, worldData } = buildWorld(FOG_ID);
     const gainLightIds = FOG_PLAYER_TEMPLATES.filter((tid) => {
       const tpl = catalog[tid];
-      return tpl?.kind === "player" && (tpl as PlayerCard).effect.kind === "GainLight";
+      return tpl?.kind === "player" && (tpl as unknown as PlayerCard).effect.kind === "GainLight";
     });
 
     expect(gainLightIds.length).toBeGreaterThan(0);
@@ -87,7 +90,11 @@ describe("fog-beach-party integration", () => {
     const concealedTemplateId = FOG_CONCEALED_TEMPLATES.find((tid) => {
       const tpl = catalog[tid];
       if (tpl?.kind !== "world") return false;
-      return (tpl as WorldCard).keywords.some((k: any) => k.name === "Concealed" || (typeof k === "string" && k.startsWith("Concealed:")));
+      return (tpl as unknown as WorldCard).keywords.some(
+        (k: Keyword) =>
+          k.name === "Concealed" ||
+          (typeof k === "string" && (k as string).startsWith("Concealed:")),
+      );
     });
     expect(concealedTemplateId, "expected a Concealed fog world template").toBeDefined();
 
@@ -110,7 +117,9 @@ describe("fog-beach-party integration", () => {
     // Find a fog sweep card with DealProgressAll
     const sweepTid: string | undefined = [...FOG_PLAYER_TEMPLATES, "Panic"].find((tid) => {
       const tpl = catalog[tid];
-      return tpl?.kind === "player" && (tpl as PlayerCard).effect.kind === "DealProgressAll";
+      return (
+        tpl?.kind === "player" && (tpl as unknown as PlayerCard).effect.kind === "DealProgressAll"
+      );
     });
     expect(sweepTid, "expected a fog sweep card").toBeDefined();
 
@@ -118,9 +127,19 @@ describe("fog-beach-party integration", () => {
     const hiddenTid = FOG_CONCEALED_TEMPLATES.find((tid) => {
       const tpl = catalog[tid];
       if (tpl?.kind !== "world") return false;
-      const wc = tpl as WorldCard;
-      return wc.keywords.some((k: any) => k.name === "Obstructed" || (typeof k === "string" && k.startsWith("Obstructed:"))) &&
-             wc.keywords.some((k: any) => k.name === "Concealed" || (typeof k === "string" && k.startsWith("Concealed:")));
+      const wc = tpl as unknown as WorldCard;
+      return (
+        wc.keywords.some(
+          (k: Keyword) =>
+            k.name === "Obstructed" ||
+            (typeof k === "string" && (k as string).startsWith("Obstructed:")),
+        ) &&
+        wc.keywords.some(
+          (k: Keyword) =>
+            k.name === "Concealed" ||
+            (typeof k === "string" && (k as string).startsWith("Concealed:")),
+        )
+      );
     });
     expect(hiddenTid, "expected a Concealed Obstructed fog hazard").toBeDefined();
 
@@ -141,9 +160,9 @@ describe("fog-beach-party integration", () => {
     expect(availableActions(state).playable.map((p) => p.cardId)).toContain(sweep.id);
 
     const { events } = applyEffect(catalog, state, sweep.effect);
-    const progress = events.find(
-      (e): any => e.type === "ProgressDealt",
-    ) as { hazardId: string; templateId: string; amount: number } | undefined;
+    const progress = events.find((e: GameEvent) => e.type === "ProgressDealt") as
+      | { hazardId: string; templateId: string; amount: number }
+      | undefined;
 
     expect(progress?.hazardId).toBe(hazard.id);
   });

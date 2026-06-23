@@ -1,11 +1,10 @@
 import { describe, expect, it } from "bun:test";
 import { BOON_SETS, FORTUNE_BOON_POOLS } from "../../data/worlds/boons/fortune";
-import { buildWorld, worldManifest } from "../../data/worldManifest";
-import { worldDataRegistry } from "../../data/worlds/registry";
+import { buildWorld, worldManifest, CARD_CATALOG } from "../../data/worldManifest";
 import { LOOT_POOLS } from "../effects/pools";
 import { applyEffect } from "../engine/effects";
 import { createWorld } from "../engine/world";
-import type { CardCatalog } from "../model/catalog";
+import type { CardCatalog, CardCount } from "../model/catalog";
 import type { CardEffect } from "../model/types";
 
 // ---------------------------------------------------------------------------
@@ -226,11 +225,8 @@ describe("fortune-v1 boon source", () => {
   it("keeps each boon set templateIds in the unified catalog", () => {
     // All templates now live in allCards.json. Boon sets just list templateIds;
     // verify they resolve in the assembled catalog for consistency.
-    const { CARD_CATALOG } = require('../../data/worldManifest');
-    for (const [setId, set] of boonSetEntries) {
-      const missingTemplateRefs = set.templateIds.filter(
-        (id: string) => !(id in CARD_CATALOG),
-      );
+    for (const [_, set] of boonSetEntries) {
+      const missingTemplateRefs = set.templateIds.filter((id: string) => !(id in CARD_CATALOG));
       expect(missingTemplateRefs).toEqual([]);
     }
   });
@@ -268,12 +264,12 @@ describe("fortune-v1 boon source", () => {
     // All world cards are in the global catalog now — check that none of the
     // world-authored cards (i.e. those from deck compositions) reference boon ids.
     for (const worldId of worldIds) {
-      const { catalog, worldData } = buildWorld(worldId);
+      const worldData = buildWorld(worldId).worldData;
       // Pull the templates actually used in this world's deck
-      const actIds = worldData.deckComposition.acts.flatMap((act: any) =>
-        act.cards.map((c: any) => c.templateId),
+      const actIds = worldData.deckComposition.acts.flatMap((act: { cards: CardCount[] }) =>
+        act.cards.map((c: CardCount) => c.templateId),
       );
-      const starterIds = worldData.starterDeck.map((c: any) => c.templateId);
+      const starterIds = worldData.starterDeck.map((c: CardCount) => c.templateId);
       for (const tid of [...actIds, ...starterIds]) {
         if (fortuneBoonIdSet.has(tid)) {
           throw new Error(`World ${worldId} deck references boon template ${tid}`);
