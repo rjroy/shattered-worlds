@@ -232,7 +232,7 @@ export function resolveForceDestroy(state: GameState): {
     return { state: { ...current, pendingForceDestroySource: undefined }, events };
   }
 
-  const playerCards = current.hand.filter((c) => c.kind === "player");
+  const playerCards = current.hand.filter((c) => c.kind === "player" && c.canDestroy);
   const takeCount = Math.min(current.pendingForceDestroy, playerCards.length);
 
   if (takeCount === 0) {

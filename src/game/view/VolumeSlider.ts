@@ -146,7 +146,6 @@ export class VolumeSlider {
 
     const applyDrag = (pointerX: number) => {
       const clamped = positionToValue(pointerX, this.startX(), this.endX());
-      console.log(`clamped: ${clamped} = ${pointerX} , ${this.startX()} , ${this.endX()}`);
       this.setValue(clamped);
       this._onValueChange(Math.round(clamped * 100) / 100); // round to 2 decimals for stable store writes
     };

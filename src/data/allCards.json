@@ -1807,6 +1807,7 @@
       "kind": "player",
       "name": "Summon Door",
       "insetKey": "inset-door",
+      "canDestroy": false,
       "energyCost": 6,
       "rarity": "legendary",
       "exhaust": true,

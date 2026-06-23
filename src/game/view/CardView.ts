@@ -339,13 +339,24 @@ export class CardView extends Phaser.GameObjects.Container {
       // Exhaust badge: the flag lives on the card (not the effect), so it cannot
       // come through compileEffect.
       if (card.exhaust === true) {
-        addCardText(scene, this, 0, CARD_H / 2 - 8, "Exhaust", {
-          fontSize: "9px",
-          color: TEXT.textKeyword,
-          bold: true,
-          originY: 1,
-          background: 0x000000,
-        });
+        if (card.canDestroy) {
+          addCardText(scene, this, 0, CARD_H / 2 - 8, "Exhaust", {
+            fontSize: "9px",
+            color: TEXT.textKeyword,
+            bold: true,
+            originY: 1,
+            background: 0x000000,
+          });
+        } else {
+          // If you cannot destroy normally, then exhaust is the only option
+          addCardText(scene, this, 0, CARD_H / 2 - 8, "Exhaust Only", {
+            fontSize: "9px",
+            color: TEXT.textReward,
+            bold: true,
+            originY: 1,
+            background: 0x000000,
+          });
+        }
       }
 
       if ((card.frozen ?? 0) > 0) {
@@ -627,7 +638,10 @@ export class CardView extends Phaser.GameObjects.Container {
     if (!this.visibleFxKey) return;
 
     const gain = this.fxGain_();
-    this.loopedFx = this.scene.sound.add(this.visibleFxKey, { volume: effectiveVolume(CARD_FX_BASE, gain), loop: true });
+    this.loopedFx = this.scene.sound.add(this.visibleFxKey, {
+      volume: effectiveVolume(CARD_FX_BASE, gain),
+      loop: true,
+    });
     console.log(`play FX: ${this.visibleFxKey}`);
     this.loopedFx.play();
     this.scene.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {

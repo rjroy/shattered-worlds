@@ -20,6 +20,7 @@ export interface BasicCardTemplate {
 export interface PlayerCardTemplate extends BasicCardTemplate {
   kind: "player";
   effect: CardEffect;
+  canDestroy?: boolean;
   energyCost?: number;
   exhaust?: boolean;
   // Authored as strings ("Name" or "Name:N"); parsed to structured Keywords at
@@ -75,6 +76,7 @@ export function mintCard(
       insetKey: template.insetKey,
       sourceWorldId: state.worldId,
       effect: template.effect,
+      canDestroy: template.canDestroy ?? true,
       energyCost: template.energyCost ?? 0,
       exhaust: template.exhaust ?? false,
       keywords: (template.keywords ?? []).map(parseKeyword),
