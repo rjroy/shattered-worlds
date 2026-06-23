@@ -83,7 +83,7 @@ Validation gate:
 - `bun run test` — `userSettings.test.ts` covers: defaults, v1→v2 migration preserving old prefs, v2 round-trip, out-of-range/NaN clamping, mute persistence.
 - `bun run typecheck` reveals every `version: 1` / `UserSettings` construction site that needs updating.
 
-### 2. Pure gain helper
+### 2. Pure gain helper (DEFERRED)
 
 Files:
 
@@ -101,7 +101,7 @@ Validation gate:
 
 - `bun run test` — helper test covers mute (→0 regardless of slider), 0% slider (→0), 100% (→base), mid value, and that mute overrides a non-zero slider.
 
-### 3. Apply gain at the four playback sites
+### 3. Apply gain at the four playback sites (DEFERRED)
 
 Files:
 
@@ -125,7 +125,7 @@ Validation gate:
 - `bun run test` — where a scene/sound stub allows, assert the volume passed to `sound.add`/`sound.play` reflects gain (e.g. mute → 0). Otherwise rely on the helper tests + manual check in step 7.
 - `bun run typecheck` confirms every `startMainTheme`/`CardView` caller is updated.
 
-### 4. Inject settings into the menu scenes
+### 4. Inject settings into the menu scenes (DEFERRED)
 
 Files:
 
@@ -144,7 +144,7 @@ Validation gate:
 - `bun run typecheck` clean.
 - `bun run test` — existing scene tests still pass; add a default-store fallback path if any test constructs these scenes without the arg.
 
-### 5. Volume slider control + overlay UI
+### 5. Volume slider control + overlay UI (DEFERRED)
 
 Files:
 
@@ -165,7 +165,7 @@ Validation gate:
 
 - `bun run test` — slider math pure-function tests (x→value, value→x, clamp, endpoints); overlay handler tests assert persist + clamp + `refreshFromStore` + `onAudioChange` fired; mute toggle flips store and highlight.
 
-### 6. Wire the live re-apply hook
+### 6. Wire the live re-apply hook (DEFERRED)
 
 Files:
 
@@ -183,7 +183,7 @@ Validation gate:
 
 - `bun run test` — overlay test asserts `onAudioChange` invoked on each volume/mute setter. For Destiny/Chronicle, the only meaningful automated coverage is that `startMainTheme` is invoked with current gain at `create()` (Step 3/4 coverage) — there is no live-update behavior to assert for them, so do not list them under a manual live-update check.
 
-### 7. Verify
+### 7. Verify (DEFERRED)
 
 - `bun run lint`, `bun run typecheck`, `bun run build`, `bun run test` all green.
 - Fresh-context sub-agent review of the diff (per the project's >2-file review rule).
