@@ -30,7 +30,7 @@ In scope:
 - A new `GainRandomCard` card effect (roll mode) for world-card clear rewards.
 - Tier carried on the offer/grant/gain events so the renderer can color cards.
 - A renderer-side tier → visual mapping (color / glyph / label).
-- An alpha-stage stratification of the `fortune-v1` pool that exercises every path.
+- An alpha-stage stratification of the `pool-fortune` pool that exercises every path.
 - An authoring rule binding rarity to modest power.
 
 Out of scope:
@@ -158,7 +158,7 @@ Out of scope:
 
 ### Fortune Pool Alpha Pass
 
-**REQ-RARITY-41:** The existing five `fortune-v1` boon templates must be stamped with rarity. At least one must be Uncommon and at least one must be Rare, with the remainder Common, so the weighted draw and the colored rendering both fire in a real run. No new boon cards and no balance work are required.
+**REQ-RARITY-41:** The existing five `pool-fortune` boon templates must be stamped with rarity. At least one must be Uncommon and at least one must be Rare, with the remainder Common, so the weighted draw and the colored rendering both fire in a real run. No new boon cards and no balance work are required.
 
 **REQ-RARITY-42:** This alpha stratification must not violate the Fortune-pool constraints from the Fortune spec (boon-only, `exhaust: true`, no world-specific loot cards, etc.).
 
@@ -189,7 +189,7 @@ Out of scope:
 8. `GainRandomCard` fails closed (no crash, RNG advanced) for a missing pool and an empty legal pool.
 9. Event tests: `BoonOffered` carries a `rarities` array index-aligned with `templateIds` on both the `act` and `worldClear` union arms with the discriminated split intact, `CardGained` and `BoonCardGranted` carry tier, event-tier equals minted-card tier, and the Fortune/OfferBoon batching/ordering guarantees still hold.
 10. Lint-boundary test: core has no import of the renderer tier→visual map; the renderer maps every tier to a distinct treatment and falls back to Common for an unknown tier.
-11. Confirm the `fortune-v1` pool has at least one Uncommon and one Rare stamped, still satisfies the Fortune-pool constraints, and that an act-reward offer can surface a non-Common boon.
+11. Confirm the `pool-fortune` pool has at least one Uncommon and one Rare stamped, still satisfies the Fortune-pool constraints, and that an act-reward offer can surface a non-Common boon.
 12. Confirm at least one real world data file exercises `GainRandomCard` from `onCleared` without breaking world assembly.
 
 ## Open Questions

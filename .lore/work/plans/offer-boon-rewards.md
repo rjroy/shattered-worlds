@@ -75,7 +75,7 @@ Changes:
   - uses deterministic RNG and advances RNG even for degenerate shuffles
   - returns unchanged/no-pending state when no legal templates exist
 - Migrate Fortune act rewards to call the generic helper from `handleEndTurn`.
-- Preserve Fortune behavior: source `act`, set `fortune-v1`, offer 3, choose 1, grant to hand, no Act 1 opening trigger.
+- Preserve Fortune behavior: source `act`, set `pool-fortune`, offer 3, choose 1, grant to hand, no Act 1 opening trigger.
 - Replace `handleChooseActBoon` with `handleChooseBoon`.
 - In `handleChooseBoon`, mint the selected template, enforce player exhaust, grant to either hand or `playerDiscard`, clear the pending choice, and emit `BoonCardGranted` with destination.
 - Update reducer blocking so only `ChooseBoon` is accepted while `pendingBoonChoice` exists.
@@ -134,7 +134,7 @@ Files:
 
 Changes:
 
-- Add a generic exported boon set registry, for example `BOON_SETS`, initially containing `fortune-v1`.
+- Add a generic exported boon set registry, for example `BOON_SETS`, initially containing `pool-fortune`.
 - Keep `FORTUNE_BOON_POOLS` as a compatibility alias if that minimizes churn.
 - Make both unlock modifier building and `OfferBoon` set lookup use the same registry.
 - Ensure every boon set template is present in assembled world catalogs.
@@ -208,7 +208,7 @@ Files:
 Recommended first target:
 
 - Pick a cache-style or high-cost existing world reward that currently grants multiple fixed cards via `Sequence` of `GainCard`.
-- Use `onCleared: { "kind": "OfferBoon", "setId": "fortune-v1", "offeredCount": 3, "chooseCount": 1 }` for the first exercise.
+- Use `onCleared: { "kind": "OfferBoon", "setId": "pool-fortune", "offeredCount": 3, "chooseCount": 1 }` for the first exercise.
 
 Avoid first:
 
@@ -275,7 +275,7 @@ Spec trace:
 
 ## Not In This Plan
 
-- Designing new boon pools beyond `fortune-v1`.
+- Designing new boon pools beyond `pool-fortune`.
 - Making permanent boon draft rewards.
 - Adding a pending-choice queue.
 - Rebalancing all world reward cards.

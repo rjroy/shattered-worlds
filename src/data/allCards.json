@@ -947,6 +947,20 @@
       "onPartialClear": { "kind": "None" },
       "onEndOfTurn": { "kind": "RecallPlayerDiscard", "policy": "latest" }
     },
+    "Archivist Choice": {
+      "kind": "player",
+      "name": "Archivist Choice",
+      "insetKey": "tidal-inset-drowned-index",
+      "rarity": "rare",
+      "exhaust": true,
+      "effect": {
+        "kind": "OfferBoon",
+        "setId": "pool-archive-lesson",
+        "setName": "The Reading Room",
+        "offeredCount": 3,
+        "chooseCount": 1
+      }
+    },
     "Drowned Index": {
       "kind": "world",
       "name": "Drowned Index",
@@ -1504,6 +1518,23 @@
       "rarity": "rare",
       "effect": { "kind": "GainEnergy", "amount": 3 }
     },
+    "Rejuvenation": {
+      "kind": "player",
+      "name": "Rejuvenation",
+      "insetKey": "fortune-inset-second-wind",
+      "exhaust": true,
+      "rarity": "legendary",
+      "effect": {
+        "kind": "Sequence",
+        "steps": [
+          { "kind": "Heal", "amount": 4 },
+          { "kind": "GainEnergy", "amount": 4 },
+          { "kind": "Brace", "amount": 6 },
+          { "kind": "GainLight", "amount": 6 },
+          { "kind": "GainHeat", "amount": 6 }
+        ]
+      }
+    },
     "Found Tool": {
       "kind": "player",
       "name": "Found Tool",
@@ -1511,6 +1542,14 @@
       "exhaust": true,
       "rarity": "uncommon",
       "effect": { "kind": "DealProgress", "base": 3 }
+    },
+    "Power Tool": {
+      "kind": "player",
+      "name": "Power Tool",
+      "insetKey": "fortune-inset-found-tool",
+      "exhaust": true,
+      "rarity": "legendary",
+      "effect": { "kind": "DealProgressAll", "base": 4 }
     },
     "Clear Path": {
       "kind": "player",
@@ -1529,9 +1568,9 @@
       "effect": {
         "kind": "Sequence",
         "steps": [
-          { "kind": "Brace", "amount": 2 },
-          { "kind": "GainLight", "amount": 2 },
-          { "kind": "GainHeat", "amount": 2 }
+          { "kind": "Brace", "amount": 4 },
+          { "kind": "GainLight", "amount": 4 },
+          { "kind": "GainHeat", "amount": 4 }
         ]
       }
     },
@@ -1581,9 +1620,8 @@
     "Pick Ember Fruit": {
       "kind": "player",
       "name": "Pick Ember Fruit",
-      "rarity": "uncommon",
+      "rarity": "rare",
       "insetKey": "ember-inset-the-orchard-counts-wrong",
-      "energyCost": 0,
       "effect": {
         "kind": "Sequence",
         "steps": [

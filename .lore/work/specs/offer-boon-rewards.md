@@ -82,7 +82,7 @@ Out of scope:
 
 **REQ-OFFER-BOON-10:** Boon sets must be available through data/configuration rather than hard-coded in the reducer.
 
-**REQ-OFFER-BOON-11:** The existing `fortune-v1` pool must remain available as a boon set.
+**REQ-OFFER-BOON-11:** The existing `pool-fortune` pool must remain available as a boon set.
 
 **REQ-OFFER-BOON-12:** A boon set may be referenced by both act rewards and `OfferBoon` effects.
 
@@ -136,7 +136,7 @@ type PendingBoonChoice = {
 
 **REQ-OFFER-BOON-30:** Active Fortune act rewards must produce generic pending boon choices instead of act-specific pending choices.
 
-**REQ-OFFER-BOON-31:** Fortune must preserve its current implemented behavior: when an eligible act transition occurs, offer 3 legal cards from `fortune-v1`, choose 1, and grant the chosen temporary card to hand.
+**REQ-OFFER-BOON-31:** Fortune must preserve its current implemented behavior: when an eligible act transition occurs, offer 3 legal cards from `pool-fortune`, choose 1, and grant the chosen temporary card to hand.
 
 **REQ-OFFER-BOON-32:** Fortune must continue not to trigger during the opening Act 1 deal.
 
@@ -234,12 +234,12 @@ type PendingBoonChoice = {
 ## AI Validation
 
 1. Run core card/effect registry tests and verify `OfferBoon` is recognized, described, compiled for display, and not treated as a normal playable effect by itself.
-2. Run catalog/world manifest tests and verify every referenced boon set exists, every initial offered template is legal, and the `fortune-v1` set remains available.
+2. Run catalog/world manifest tests and verify every referenced boon set exists, every initial offered template is legal, and the `pool-fortune` set remains available.
 3. Add reducer tests for `OfferBoon` on a world card's `onCleared`. Clearing the card must create a pending generic boon choice and emit a boon-offered event.
 4. Add reducer tests for `bToDiscard` absent/false and true. The chosen card must land in hand for false and `playerDiscard` for true.
 5. Verify `ChooseBoon` rejects missing, non-offered, non-player, and non-exhaust templates without mutating state.
 6. Verify normal gameplay actions are rejected while a generic boon choice is pending.
-7. Verify Fortune still offers 3 from `fortune-v1`, chooses 1, grants to hand, skips the opening Act 1 deal, and triggers only on real act advancement.
+7. Verify Fortune still offers 3 from `pool-fortune`, chooses 1, grants to hand, skips the opening Act 1 deal, and triggers only on real act advancement.
 8. Run deterministic replay tests showing identical seeds/action sequences produce identical offered template IDs and different seeds may produce different legal offers.
 9. Verify event batches contain the boon-offered event in the producing dispatch and the boon-granted event in the choice dispatch, with destination included.
 10. Verify a multi-clear scenario cannot replace an already pending boon choice.

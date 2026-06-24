@@ -40,7 +40,7 @@ function makeEmptyState(nextId = 0): GameState {
 }
 
 const ALL_TEMPLATE_IDS = Object.keys(catalog) as CardTemplateId[];
-const FORTUNE_BOON_IDS = FORTUNE_BOON_POOLS["fortune-v1"] ?? [];
+const FORTUNE_BOON_IDS = FORTUNE_BOON_POOLS["pool-fortune"] ?? [];
 
 // ---------------------------------------------------------------------------
 // 1. Catalog completeness

@@ -55,8 +55,8 @@ function actBoonModifier(
   overrides: Partial<NonNullable<RunModifiers["actBoon"]>> = {},
 ): NonNullable<RunModifiers["actBoon"]> {
   return {
-    poolId: "fortune-v1",
-    poolName: "fortune-v1",
+    poolId: "pool-fortune",
+    poolName: "pool-fortune",
     poolTemplateIds: fortunePool,
     offeredCount: 3,
     chooseCount: 1,
@@ -1863,8 +1863,8 @@ describe("Boon offer generation", () => {
       {
         source: "act",
         act: 1,
-        setId: "fortune-v1",
-        setName: "fortune-v1",
+        setId: "pool-fortune",
+        setName: "pool-fortune",
         offeredTemplateIds: offered,
         chooseCount: 1,
         bToDiscard: false,
@@ -1893,8 +1893,8 @@ describe("Boon offer generation", () => {
       {
         source: "act",
         act: 1,
-        setId: "fortune-v1",
-        setName: "fortune-v1",
+        setId: "pool-fortune",
+        setName: "pool-fortune",
         offeredTemplateIds: offered,
         chooseCount: 2,
         bToDiscard: false,
@@ -1920,8 +1920,8 @@ describe("Boon offer generation", () => {
     expect(result.state.pendingBoonChoices.map((choice) => choice.act)).toEqual([1, 2]);
     if (boonEvents[0]?.type === "BoonOffered") {
       expect(boonEvents[0].source).toBe("act");
-      expect(boonEvents[0].setId).toBe("fortune-v1");
-      expect(boonEvents[0].setName).toBe("fortune-v1");
+      expect(boonEvents[0].setId).toBe("pool-fortune");
+      expect(boonEvents[0].setName).toBe("pool-fortune");
       expect(boonEvents[0].act).toBe(1);
       expect(result.state.pendingBoonChoices[0]?.offeredTemplateIds).toEqual(
         boonEvents[0].templateIds,
@@ -1929,7 +1929,7 @@ describe("Boon offer generation", () => {
     }
     if (boonEvents[1]?.type === "BoonOffered") {
       expect(boonEvents[1].source).toBe("act");
-      expect(boonEvents[1].setId).toBe("fortune-v1");
+      expect(boonEvents[1].setId).toBe("pool-fortune");
       expect(boonEvents[1].act).toBe(2);
       expect(result.state.pendingBoonChoices[1]?.offeredTemplateIds).toEqual(
         boonEvents[1].templateIds,
@@ -1993,7 +1993,7 @@ describe("Boon offer generation", () => {
 
   it("is deterministic for the same seed and stays within the pool for another seed", () => {
     // Regenerated for Step 8 (REQ-RARITY-41/42): stamping rarity onto the
-    // fortune-v1 templates changes weightedDraw's per-slot tier weighting,
+    // pool-fortune templates changes weightedDraw's per-slot tier weighting,
     // so the previously pinned offers for these seeds no longer match.
     // Captured by running each seed and reading the emitted BoonOffered
     // event, per this plan's fixture-regeneration discipline (never
@@ -2035,7 +2035,7 @@ describe("Boon offer generation", () => {
   });
 
   it("an act-reward Fortune offer can surface a non-Common boon (REQ-RARITY-41/42)", () => {
-    // Seed 3 is pinned because it reliably draws the fortune-v1 pool's
+    // Seed 3 is pinned because it reliably draws the pool-fortune pool's
     // "Steady Nerve" (uncommon) and "Clear Path" (rare) into the same
     // 3-card act offer alongside a common ("Second Wind"), confirmed by
     // running this exact seed/state shape and inspecting the emitted
@@ -2124,7 +2124,7 @@ describe("Boon offer generation", () => {
 // ---------------------------------------------------------------------------
 
 describe("Fortune pool stratification", () => {
-  it("fortune-v1's resolved templates include at least one Uncommon and one Rare", () => {
+  it("pool-fortune's resolved templates include at least one Uncommon and one Rare", () => {
     const tiers = fortunePool.map((templateId) => catalog[templateId]?.rarity ?? "common");
 
     expect(tiers).toContain("uncommon");
@@ -2132,7 +2132,7 @@ describe("Fortune pool stratification", () => {
     expect(tiers.filter((tier) => tier === "common").length).toBeGreaterThanOrEqual(1);
   });
 
-  it("all five fortune-v1 templates remain exhaust player cards (regression)", () => {
+  it("all five pool-fortune templates remain exhaust player cards (regression)", () => {
     for (const templateId of fortunePool) {
       const template = catalog[templateId];
       expect(template?.kind).toBe("player");
@@ -2521,8 +2521,8 @@ describe("Act boon choice reducer gates", () => {
         {
           source: "act",
           act: 1,
-          setId: "fortune-v1",
-          setName: "fortune-v1",
+          setId: "pool-fortune",
+          setName: "pool-fortune",
           offeredTemplateIds: ["Lucky Break", "Second Wind", "Found Tool"],
           chooseCount: 1,
           bToDiscard: false,
@@ -2599,8 +2599,8 @@ describe("Act boon choice reducer gates", () => {
   it("valid ChooseBoon resolves only the first queued choice", () => {
     const laterChoice = {
       source: "worldClear" as const,
-      setId: "fortune-v1",
-      setName: "fortune-v1",
+      setId: "pool-fortune",
+      setName: "pool-fortune",
       offeredTemplateIds: ["Clear Path"],
       chooseCount: 1,
       bToDiscard: false,
@@ -2678,8 +2678,8 @@ describe("Act boon choice reducer gates", () => {
     };
     const laterChoice = {
       source: "worldClear" as const,
-      setId: "fortune-v1",
-      setName: "fortune-v1",
+      setId: "pool-fortune",
+      setName: "pool-fortune",
       offeredTemplateIds: ["Clear Path"],
       chooseCount: 1,
       bToDiscard: false,
@@ -2719,8 +2719,8 @@ describe("Act boon choice reducer gates", () => {
         pendingBoonState().pendingBoonChoices[0]!,
         {
           source: "worldClear" as const,
-          setId: "fortune-v1",
-          setName: "fortune-v1",
+          setId: "pool-fortune",
+          setName: "pool-fortune",
           offeredTemplateIds: ["Clear Path"],
           chooseCount: 1,
           bToDiscard: false,
@@ -2742,8 +2742,8 @@ describe("Act boon choice reducer gates", () => {
       pendingBoonChoices: [
         {
           source: "worldClear",
-          setId: "fortune-v1",
-          setName: "fortune-v1",
+          setId: "pool-fortune",
+          setName: "pool-fortune",
           offeredTemplateIds: ["Second Wind"],
           chooseCount: 1,
           bToDiscard: true,

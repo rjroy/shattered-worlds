@@ -1,12 +1,29 @@
 {
-  "fortune-v1": ["Lucky Break", "Second Wind", "Found Tool", "Clear Path", "Steady Nerve"],
-  "pool-heard-noise": ["Sprint", "React to Noise", "Fast Sweep", "Listen", "You Scream", "Plan"],
+  "pool-fortune": [
+    "Lucky Break",
+    "Second Wind",
+    "Rejuvenation",
+    "Found Tool",
+    "Power Tool",
+    "Clear Path",
+    "Steady Nerve"
+  ],
+  "pool-heard-noise": [
+    "Sprint",
+    "Regroup",
+    "React to Noise",
+    "Fast Sweep",
+    "Listen",
+    "You Scream",
+    "Plan"
+  ],
   "pool-heaters": [
     "Hand Warmers",
     "Ice Scraper",
     "Burn The Manual",
     "Space Heater",
-    "Jumper Cables"
+    "Jumper Cables",
+    "Burn The Manual"
   ],
   "pool-archive-lesson": [
     "Mark the Shelf",

@@ -211,8 +211,8 @@ describe("describeEffect (hazard effect kinds)", () => {
     expect(
       describeEffect({
         kind: "OfferBoon",
-        setId: "fortune-v1",
-        setName: "fortune-v1",
+        setId: "pool-fortune",
+        setName: "pool-fortune",
         offeredCount: 3,
         chooseCount: 1,
       }),
@@ -220,8 +220,8 @@ describe("describeEffect (hazard effect kinds)", () => {
     expect(
       describeEffect({
         kind: "OfferBoon",
-        setId: "fortune-v1",
-        setName: "fortune-v1",
+        setId: "pool-fortune",
+        setName: "pool-fortune",
         offeredCount: 2,
         chooseCount: 1,
         bToDiscard: true,

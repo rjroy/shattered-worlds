@@ -40,9 +40,9 @@ describe("UNLOCK_CATALOG", () => {
     expect(fortune).toMatchObject({
       id: "act-reward",
       name: "Fortune",
-      cost: 70,
+      cost: 60,
       destinyWeight: 3,
-      effect: { type: "actReward", boonPoolId: "fortune-v1", offeredCount: 3, chooseCount: 1 },
+      effect: { type: "actReward", boonPoolId: "pool-fortune", offeredCount: 3, chooseCount: 1 },
     });
     expect(fortune?.destinyWeight).toBeLessThanOrEqual(DESTINY_BUDGET);
     expect(fortune?.description).not.toContain(["Not", "Implemented"].join(""));
@@ -129,13 +129,13 @@ describe("buildRunModifiers", () => {
     const mods = buildRunModifiers(["act-reward"], UNLOCK_CATALOG);
 
     expect(mods.actBoon).toEqual({
-      poolId: "fortune-v1",
+      poolId: "pool-fortune",
       poolName: "Instant Fortune",
-      poolTemplateIds: FORTUNE_BOON_POOLS["fortune-v1"] ?? [],
+      poolTemplateIds: FORTUNE_BOON_POOLS["pool-fortune"] ?? [],
       offeredCount: 3,
       chooseCount: 1,
     });
-    expect(mods.actBoon?.poolTemplateIds).toHaveLength(5);
+    expect(mods.actBoon?.poolTemplateIds).toHaveLength(7);
   });
 
   it("appends active card-modifier unlock effects to run modifiers", () => {

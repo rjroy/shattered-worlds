@@ -84,7 +84,7 @@
     "name": "Builder's Instinct",
     "description": "A muscle memory from a different life. More Barricades, No Panic, Less Sprint.",
     "cost": 50,
-    "destinyWeight": 2,
+    "destinyWeight": 3,
     "effect": { "type": "starterDeckOverride", "starterDeckId": "contractor" }
   },
   {
@@ -92,26 +92,42 @@
     "name": "Athlete's Instinct",
     "description": "A muscle memory from a different life. More Sprint, No Barricades.",
     "cost": 50,
-    "destinyWeight": 2,
+    "destinyWeight": 3,
     "effect": { "type": "starterDeckOverride", "starterDeckId": "footballer" }
   },
   {
     "id": "starter-harvester",
     "name": "Harvester of the Ember Orchard",
     "description": "A muscle memory from a different life. Harvester of the Ember Orchard.",
-    "cost": 100,
-    "destinyWeight": 2,
+    "cost": 80,
+    "destinyWeight": 3,
     "effect": { "type": "starterDeckOverride", "starterDeckId": "harvester" }
+  },
+  {
+    "id": "starter-archivist",
+    "name": "Tidal Archivist",
+    "description": "A muscle memory from a different life. Archivist of the Tidal Archive.",
+    "cost": 80,
+    "destinyWeight": 3,
+    "effect": { "type": "starterDeckOverride", "starterDeckId": "archivist" }
+  },
+  {
+    "id": "starter-surveyor",
+    "name": "Giant Surveyor",
+    "description": "A muscle memory from a different life. Surveyor of a Sleeping Giant.",
+    "cost": 80,
+    "destinyWeight": 3,
+    "effect": { "type": "starterDeckOverride", "starterDeckId": "surveyor" }
   },
   {
     "id": "act-reward",
     "name": "Fortune",
     "description": "At the start of each new act, choose 1 of 3 temporary boon cards for your hand.",
-    "cost": 70,
+    "cost": 60,
     "destinyWeight": 3,
     "effect": {
       "type": "actReward",
-      "boonPoolId": "fortune-v1",
+      "boonPoolId": "pool-fortune",
       "boonPoolName": "Instant Fortune",
       "offeredCount": 3,
       "chooseCount": 1

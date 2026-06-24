@@ -233,7 +233,7 @@ describe("gameplayRuntime composition root", () => {
     expect(session.state.runModifiers.extraStartHp).toBe(3);
     expect(session.state.runModifiers.extraStartEnergy).toBe(0);
     expect(session.state.runModifiers.actBoon).toMatchObject({
-      poolId: "fortune-v1",
+      poolId: "pool-fortune",
       offeredCount: 3,
       chooseCount: 1,
     });

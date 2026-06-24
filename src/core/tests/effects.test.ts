@@ -1177,8 +1177,8 @@ describe("OfferBoon", () => {
   it("creates a pending worldClear choice and emits BoonOffered when a world card clears", () => {
     const { state, events } = resolveOfferBoonHazard({
       kind: "OfferBoon",
-      setId: "fortune-v1",
-      setName: "fortune-v1",
+      setId: "pool-fortune",
+      setName: "pool-fortune",
       offeredCount: 3,
       chooseCount: 1,
     });
@@ -1186,8 +1186,8 @@ describe("OfferBoon", () => {
     expect(state.pendingBoonChoices).toHaveLength(1);
     expect(state.pendingBoonChoices[0]).toMatchObject({
       source: "worldClear",
-      setId: "fortune-v1",
-      setName: "fortune-v1",
+      setId: "pool-fortune",
+      setName: "pool-fortune",
       chooseCount: 1,
       bToDiscard: false,
     });
@@ -1197,8 +1197,8 @@ describe("OfferBoon", () => {
       expect.objectContaining({
         type: "BoonOffered",
         source: "worldClear",
-        setId: "fortune-v1",
-        setName: "fortune-v1",
+        setId: "pool-fortune",
+        setName: "pool-fortune",
         templateIds: offeredTemplateIds,
         rarities: offeredTemplateIds.map((id) => catalog[id]?.rarity ?? "common"),
         // onCleared hook events now carry provenance to the clearing hazard.
@@ -1210,8 +1210,8 @@ describe("OfferBoon", () => {
   it("defaults chosen boons to hand", () => {
     const offer = resolveOfferBoonHazard({
       kind: "OfferBoon",
-      setId: "fortune-v1",
-      setName: "fortune-v1",
+      setId: "pool-fortune",
+      setName: "pool-fortune",
       offeredCount: 3,
       chooseCount: 1,
     });
@@ -1237,8 +1237,8 @@ describe("OfferBoon", () => {
   it("can route chosen boons to player discard", () => {
     const offer = resolveOfferBoonHazard({
       kind: "OfferBoon",
-      setId: "fortune-v1",
-      setName: "fortune-v1",
+      setId: "pool-fortune",
+      setName: "pool-fortune",
       offeredCount: 3,
       chooseCount: 1,
       bToDiscard: true,
@@ -1265,8 +1265,8 @@ describe("OfferBoon", () => {
   it("appends a new offer without replacing an existing pending choice", () => {
     const pending = {
       source: "worldClear" as const,
-      setId: "fortune-v1",
-      setName: "fortune-v1",
+      setId: "pool-fortune",
+      setName: "pool-fortune",
       offeredTemplateIds: ["Lucky Break"],
       chooseCount: 1 as const,
       bToDiscard: false,
@@ -1275,8 +1275,8 @@ describe("OfferBoon", () => {
 
     const result = applyEffect(catalog, state, {
       kind: "OfferBoon",
-      setId: "fortune-v1",
-      setName: "fortune-v1",
+      setId: "pool-fortune",
+      setName: "pool-fortune",
       offeredCount: 3,
       chooseCount: 1,
     });
@@ -1285,8 +1285,8 @@ describe("OfferBoon", () => {
     expect(result.state.pendingBoonChoices[0]).toEqual(pending);
     expect(result.state.pendingBoonChoices[1]).toMatchObject({
       source: "worldClear",
-      setId: "fortune-v1",
-      setName: "fortune-v1",
+      setId: "pool-fortune",
+      setName: "pool-fortune",
       chooseCount: 1,
       bToDiscard: false,
     });
@@ -1297,7 +1297,7 @@ describe("OfferBoon", () => {
     const effect: CardEffect = {
       kind: "OfferBoon",
       setId: "missing-set",
-      setName: "fortune-v1",
+      setName: "pool-fortune",
       offeredCount: 3,
       chooseCount: 1,
     };
@@ -1313,7 +1313,7 @@ describe("OfferBoon", () => {
     expect(first.events).toEqual(second.events);
   });
 
-  it("fails closed when the referenced set has no legal exhaust player options", () => {
+  it("fails closed when the referenced set has no legal player options", () => {
     const illegalCatalog: CardCatalog = { ...catalog };
     for (const templateId of [
       "Lucky Break",
@@ -1321,6 +1321,8 @@ describe("OfferBoon", () => {
       "Found Tool",
       "Clear Path",
       "Steady Nerve",
+      "Power Tool",
+      "Rejuvenation",
     ]) {
       const template = illegalCatalog[templateId];
       if (template === undefined || template.kind !== "player") {
@@ -1342,8 +1344,8 @@ describe("OfferBoon", () => {
     const { state, events } = resolveOfferBoonHazard(
       {
         kind: "OfferBoon",
-        setId: "fortune-v1",
-        setName: "fortune-v1",
+        setId: "pool-fortune",
+        setName: "pool-fortune",
         offeredCount: 3,
         chooseCount: 1,
       },
@@ -1362,6 +1364,8 @@ describe("OfferBoon", () => {
       "Found Tool",
       "Clear Path",
       "Steady Nerve",
+      "Power Tool",
+      "Rejuvenation",
     ]) {
       const template = illegalCatalog[templateId];
       if (template === undefined || template.kind !== "player") {
@@ -1381,8 +1385,8 @@ describe("OfferBoon", () => {
     }
     const pending = {
       source: "worldClear" as const,
-      setId: "fortune-v1",
-      setName: "fortune-v1",
+      setId: "pool-fortune",
+      setName: "pool-fortune",
       offeredTemplateIds: ["Lucky Break"],
       chooseCount: 1,
       bToDiscard: false,
@@ -1391,8 +1395,8 @@ describe("OfferBoon", () => {
 
     const result = applyEffect(illegalCatalog, state, {
       kind: "OfferBoon",
-      setId: "fortune-v1",
-      setName: "fortune-v1",
+      setId: "pool-fortune",
+      setName: "pool-fortune",
       offeredCount: 3,
       chooseCount: 1,
     });
@@ -1411,7 +1415,7 @@ describe("GainRandomCard", () => {
   it("mints exactly one card from the pool to playerDiscard, tagged with setName", () => {
     const { state, events } = resolveGainRandomCardHazard({
       kind: "GainRandomCard",
-      setId: "fortune-v1",
+      setId: "pool-fortune",
       setName: "the cache",
     });
 
@@ -1457,6 +1461,8 @@ describe("GainRandomCard", () => {
       "Found Tool",
       "Clear Path",
       "Steady Nerve",
+      "Power Tool",
+      "Rejuvenation",
     ]) {
       const template = illegalCatalog[templateId];
       if (template === undefined || template.kind !== "player") {
@@ -1477,7 +1483,7 @@ describe("GainRandomCard", () => {
     const before = makeState();
     const result = applyEffect(illegalCatalog, before, {
       kind: "GainRandomCard",
-      setId: "fortune-v1",
+      setId: "pool-fortune",
       setName: "the cache",
     } as CardEffect);
 

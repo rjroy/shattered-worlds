@@ -123,7 +123,7 @@ Avoid at first:
 
 - Should `OfferBoon` require `exhaust: true`, or should the boon set decide whether cards are temporary?
 - Should `bToDiscard: true` allow non-exhaust permanent cards as a separate reward tier?
-- Should boon sets live beside `fortune-v1`, or should each world define local boon sets in its own data bundle?
+- Should boon sets live beside `pool-fortune`, or should each world define local boon sets in its own data bundle?
 - Should the source include the cleared world card id/template id for event telemetry and animation?
 - Should `BoonOffered` happen before or after `HazardResolved` in the event list?
 

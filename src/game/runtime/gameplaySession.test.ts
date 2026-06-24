@@ -90,8 +90,8 @@ function createTwoActWorldData(): WorldData {
 const fortuneRunModifiers = {
   ...DEFAULT_RUN_MODIFIERS,
   actBoon: {
-    poolId: "fortune-v1",
-    poolName: "fortune-v1",
+    poolId: "pool-fortune",
+    poolName: "pool-fortune",
     poolTemplateIds: ["Lucky Break", "Second Wind", "Found Tool", "Clear Path", "Steady Nerve"],
     offeredCount: 3,
     chooseCount: 1,
@@ -833,7 +833,7 @@ describe("gameplaySession", () => {
     if (offerEvent?.type !== "BoonOffered") {
       throw new Error("expected BoonOffered in act-advancing batch");
     }
-    expect(offerEvent).toMatchObject({ source: "act", setId: "fortune-v1", act: 1 });
+    expect(offerEvent).toMatchObject({ source: "act", setId: "pool-fortune", act: 1 });
     const chosenTemplateId = (() => {
       const templateId = offerEvent.templateIds[0];
       if (templateId === undefined) {
