@@ -1065,7 +1065,7 @@
       "discardable": true,
       "onDiscarded": {
         "kind": "GainRandomCard",
-        "setId": "whiteout-boons",
+        "setId": "pool-heaters",
         "setName": "Maintenance Closet"
       },
       "onCleared": {

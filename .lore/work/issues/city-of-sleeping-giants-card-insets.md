@@ -34,7 +34,7 @@ carry `insetKey`s (Ember approach), so these stay RED until art lands:
 - `worldAssetBindings.test.ts` → `"city-of-sleeping-giants" > all referenced asset keys
   are bound` (the 13 `giants-inset-*` cards.json keys).
 - `cityOfSleepingGiantsPresentation.test.ts` → `boon-source inset bindings (REQ-GIANTS-47)`
-  (the 4 `giants-boons` inset keys: quiet-survey, brace-the-ward, bone-pin, contour-map).
+  (the 4 `pool-survey-results` inset keys: quiet-survey, brace-the-ward, bone-pin, contour-map).
 
 Do NOT add placeholder webp files to force these green.
 

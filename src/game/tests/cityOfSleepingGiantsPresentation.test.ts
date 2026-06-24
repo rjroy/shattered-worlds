@@ -48,7 +48,7 @@ describe("City of Sleeping Giants — theme palette (REQ-GIANTS-48)", () => {
 // in a SEPARATE source (boons/giants.json) that is NOT part of the bundle, so
 // their giants-inset-* keys are NOT covered by the existing test.
 //
-// This test closes that gap: it asserts the four giants-boons inset keys WILL be
+// This test closes that gap: it asserts the four pool-survey-results inset keys WILL be
 // validated/bound, so they cannot ship silently broken. It is expected to be RED
 // until the boon-card inset art is generated and wired (Slice B). Do NOT add
 // placeholder webp files to force it green — a red here means "art not yet wired",
@@ -56,9 +56,9 @@ describe("City of Sleeping Giants — theme palette (REQ-GIANTS-48)", () => {
 // ---------------------------------------------------------------------------
 
 describe("City of Sleeping Giants — boon-source inset bindings (REQ-GIANTS-47)", () => {
-  it("every giants-boons card inset key is bound in assetManifest (RED until boon art is wired)", () => {
+  it("every pool-survey-results card inset key is bound in assetManifest (RED until boon art is wired)", () => {
     // Boon cards live in the unified catalog now; look up inset keys via templateIds
-    const giantsTemplateIds = FORTUNE_BOON_POOLS["giants-boons"] ?? [];
+    const giantsTemplateIds = FORTUNE_BOON_POOLS["pool-survey-results"] ?? [];
     const boonInsetKeys = giantsTemplateIds
       .map((tid) => CARD_CATALOG[tid]?.insetKey)
       .filter((key): key is string => typeof key === "string");

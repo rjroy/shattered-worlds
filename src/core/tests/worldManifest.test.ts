@@ -308,14 +308,14 @@ describe("zombie-big-box Corpse card", () => {
 });
 
 // ---------------------------------------------------------------------------
-// fog-cooler-loot-v1: the Step 7 GainRandomCard example (REQ-RARITY-30, D2).
+// pool-lights-lv1: the Step 7 GainRandomCard example (REQ-RARITY-30, D2).
 // "Abandoned Cooler" is a generic cache-style world card — its grant is not
 // load-bearing world identity (unlike Fire Axe/Nitro elsewhere), so it is the
 // one onCleared converted from fixed GainCard to a rolled GainRandomCard.
 // ---------------------------------------------------------------------------
 
-describe("fog-cooler-loot-v1 loot pool", () => {
-  const lootPoolTemplateIds = FORTUNE_BOON_POOLS["fog-cooler-loot-v1"] ?? [];
+describe("pool-lights-lv1 loot pool", () => {
+  const lootPoolTemplateIds = FORTUNE_BOON_POOLS["pool-lights-lv1"] ?? [];
 
   it("is registered with 4 templates across at least two rarity tiers", () => {
     expect(lootPoolTemplateIds).toHaveLength(4);
@@ -330,11 +330,11 @@ describe("fog-cooler-loot-v1 loot pool", () => {
       return template?.rarity;
     });
 
-    expect(rarities).toContain("common");
+    expect(rarities).toContain("rare");
     expect(rarities).toContain("uncommon");
   });
 
-  it('"Abandoned Cooler" onCleared rolls a card from fog-cooler-loot-v1 instead of a fixed grant', () => {
+  it('"Abandoned Cooler" onCleared rolls a card from pool-lights-lv1 instead of a fixed grant', () => {
     const { catalog, worldData } = buildWorld("fog-beach-party");
 
     const abandonedCooler = catalog["Abandoned Cooler"];
@@ -342,7 +342,7 @@ describe("fog-cooler-loot-v1 loot pool", () => {
     if (abandonedCooler === undefined || abandonedCooler.kind !== "world") return;
     expect(abandonedCooler.onCleared).toEqual({
       kind: "GainRandomCard",
-      setId: "fog-cooler-loot-v1",
+      setId: "pool-lights-lv1",
       setName: "Cooler Stash",
     });
 

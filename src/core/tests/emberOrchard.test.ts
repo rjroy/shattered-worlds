@@ -202,7 +202,7 @@ describe("The Ember Orchard — incubation effects drive the reducer (REQ-EMBER-
     expect(result.state.worldDraw[1]!.templateId).toBe("Ember Moth");
   });
 
-  it("Hatchery Cellar onCleared offers a boon from ember-boons (3 offered, choose 1), not a five-card grant", () => {
+  it("Hatchery Cellar onCleared offers a boon from pool-ember-cellar (3 offered, choose 1), not a five-card grant", () => {
     // Decision §4 deviation: REQ-EMBER-26's initial shape granted all five tools
     // via Sequence[GainCard x5]; we assert an OfferBoon offer instead. Mirrors the
     // big-box / tidal OfferBoon-on-clear assertion shape.
@@ -223,12 +223,12 @@ describe("The Ember Orchard — incubation effects drive the reducer (REQ-EMBER-
     expect(result.state.pendingBoonChoices.length).toBe(before + 1);
 
     const pending = result.state.pendingBoonChoices.at(-1)!;
-    expect(pending.setId).toBe("ember-boons");
+    expect(pending.setId).toBe("pool-ember-cellar");
     expect(pending.chooseCount).toBe(1);
     expect(pending.offeredTemplateIds).toHaveLength(3);
 
-    // Every offered template is drawn from the ember-boons pool.
-    const pool = new Set<string>(FORTUNE_BOON_POOLS["ember-boons"]);
+    // Every offered template is drawn from the pool-ember-cellar pool.
+    const pool = new Set<string>(FORTUNE_BOON_POOLS["pool-ember-cellar"]);
     for (const offered of pending.offeredTemplateIds) {
       expect(pool.has(offered)).toBe(true);
     }
@@ -236,7 +236,7 @@ describe("The Ember Orchard — incubation effects drive the reducer (REQ-EMBER-
     const offered = result.events.find((e) => e.type === "BoonOffered");
     expect(offered).toBeDefined();
     if (offered?.type === "BoonOffered") {
-      expect(offered.setId).toBe("ember-boons");
+      expect(offered.setId).toBe("pool-ember-cellar");
     }
   });
 

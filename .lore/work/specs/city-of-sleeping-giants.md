@@ -136,7 +136,7 @@ The following numbers are initial tuning. Costs, counts, progress values, and ex
 
 <div id="REQ-GIANTS-24"></div>
 
-**REQ-GIANTS-24:** `Surveyors Mark A Pulse` must be the tool-fetch hazard. Initial shape: cost 6, `Obstructed`, discardable, `onCleared: OfferBoon { setId: "giants-boons", offeredCount: 3, chooseCount: 1 }` (offers three of the five tools — `Quiet Survey`, `Brace The Ward`, `Follow The Vein`, `Bone Pin`, `Contour Map` — and the player keeps one), `onDiscarded: AddWorldCardToDeck { template: "Minor Tremor", bTop: true }`, `onPartialClear: None`, `onEndOfTurn: AddWorldCardToDeck { template: "Vein-Road Surge", bTop: true }`. *(Ratified 2026-06-20: was `Sequence[GainCard ×5]`, which floods a starter-sized deck across this card's copies; the boon set is authored as a single source shared with the hazards' fixed `GainCard` grants.)*
+**REQ-GIANTS-24:** `Surveyors Mark A Pulse` must be the tool-fetch hazard. Initial shape: cost 6, `Obstructed`, discardable, `onCleared: OfferBoon { setId: "pool-survey-results", offeredCount: 3, chooseCount: 1 }` (offers three of the five tools — `Quiet Survey`, `Brace The Ward`, `Follow The Vein`, `Bone Pin`, `Contour Map` — and the player keeps one), `onDiscarded: AddWorldCardToDeck { template: "Minor Tremor", bTop: true }`, `onPartialClear: None`, `onEndOfTurn: AddWorldCardToDeck { template: "Vein-Road Surge", bTop: true }`. *(Ratified 2026-06-20: was `Sequence[GainCard ×5]`, which floods a starter-sized deck across this card's copies; the boon set is authored as a single source shared with the hazards' fixed `GainCard` grants.)*
 
 <div id="REQ-GIANTS-25"></div>
 
@@ -242,7 +242,7 @@ Counts are tuning values; act roles and the fixed Walker closer are not.
 
 <div id="REQ-GIANTS-46"></div>
 
-**REQ-GIANTS-46:** Effect/data tests must cover the shipped Stirring patterns: `Minor Tremor` top-decks `Fingerquake Ward`, `Surveyors Mark A Pulse` creates a boon offer from the `giants-boons` pool when cleared (not a five-card grant) and top-decks `Vein-Road Surge` if ignored, `Vein-Road Surge` creates `Bone Anchor Failure`, `District Recall` top-decks recurrence hazards (`Vein-Road Surge`; and `Vein-Road Surge` + `Bone Anchor Failure` at end of turn), `Fingerquake Ward` `onEndOfTurn` queues `ForceDestroy` (not HP `Damage`) with a `Brace` charge absorbing the snatch end-to-end, and `The Giant Turns In Sleep` uses `AddThreatToWorldDeck` through the Giants threat mapping.
+**REQ-GIANTS-46:** Effect/data tests must cover the shipped Stirring patterns: `Minor Tremor` top-decks `Fingerquake Ward`, `Surveyors Mark A Pulse` creates a boon offer from the `pool-survey-results` pool when cleared (not a five-card grant) and top-decks `Vein-Road Surge` if ignored, `Vein-Road Surge` creates `Bone Anchor Failure`, `District Recall` top-decks recurrence hazards (`Vein-Road Surge`; and `Vein-Road Surge` + `Bone Anchor Failure` at end of turn), `Fingerquake Ward` `onEndOfTurn` queues `ForceDestroy` (not HP `Damage`) with a `Brace` charge absorbing the snatch end-to-end, and `The Giant Turns In Sleep` uses `AddThreatToWorldDeck` through the Giants threat mapping.
 
 <div id="REQ-GIANTS-47"></div>
 
