@@ -111,7 +111,7 @@
     "destinyWeight": 3,
     "effect": {
       "type": "actReward",
-      "boonPoolId": "fortune-v1",
+      "boonPoolId": "pool-fortune",
       "boonPoolName": "Instant Fortune",
       "offeredCount": 3,
       "chooseCount": 1

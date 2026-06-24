@@ -334,8 +334,8 @@ function pendingState(): GameState {
       {
         source: "act",
         act: 2,
-        setId: "fortune-v1",
-        setName: "fortune-v1",
+        setId: "pool-fortune",
+        setName: "pool-fortune",
         offeredTemplateIds: ["Lucky Break", "Second Wind", "Found Tool"],
         chooseCount: 1,
         bToDiscard: false,

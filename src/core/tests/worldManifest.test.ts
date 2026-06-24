@@ -15,7 +15,7 @@ import type { CardEffect } from "../model/types";
 // ---------------------------------------------------------------------------
 
 const worldIds = Object.keys(worldManifest);
-const fortuneBoonIds = FORTUNE_BOON_POOLS["fortune-v1"] ?? [];
+const fortuneBoonIds = FORTUNE_BOON_POOLS["pool-fortune"] ?? [];
 const fortuneBoonIdSet = new Set<string>(fortuneBoonIds);
 const boonSetEntries = Object.entries(FORTUNE_BOON_POOLS);
 const boonSetIds = new Set(boonSetEntries.map(([setId]) => setId));
@@ -220,7 +220,7 @@ describe.each(worldIds)('world "%s"', (worldId) => {
   });
 });
 
-describe("fortune-v1 boon source", () => {
+describe("pool-fortune boon source", () => {
   it("keeps each boon set templateIds in the unified catalog", () => {
     // All templates now live in allCards.json. Boon sets just list templateIds;
     // verify they resolve in the assembled catalog for consistency.

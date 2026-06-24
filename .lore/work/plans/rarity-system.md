@@ -162,10 +162,10 @@ Steps 4, 5, 6 can proceed in parallel once 3 lands (5 also needs 2). Steps 8 and
 
 **Requirements:** REQ-RARITY-41, 42.
 
-- In `src/data/worlds/boons/fortune.json` (the source behind `fortune-v1`), stamp the five templates: at least one `uncommon`, at least one `rare`, remainder `common`. No new cards, no balance changes.
+- In `src/data/worlds/boons/fortune.json` (the source behind `pool-fortune`), stamp the five templates: at least one `uncommon`, at least one `rare`, remainder `common`. No new cards, no balance changes.
 - Verify the constraints from the Fortune spec still hold (boon-only, `exhaust: true`, no world-specific loot) — these are unchanged by adding a `rarity` field.
 
-**Gate:** a test confirms `fortune-v1` has ≥1 Uncommon and ≥1 Rare, all templates still `exhaust: true` player cards, and an act-reward offer can surface a non-Common boon (drive the kernel with a seed that selects the higher tier). `bun run test` green.
+**Gate:** a test confirms `pool-fortune` has ≥1 Uncommon and ≥1 Rare, all templates still `exhaust: true` player cards, and an act-reward offer can surface a non-Common boon (drive the kernel with a seed that selects the higher tier). `bun run test` green.
 
 ## Step 9 — Renderer tier→visual map + surfacing (Phaser)
 

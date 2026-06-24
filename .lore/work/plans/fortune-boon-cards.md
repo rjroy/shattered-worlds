@@ -50,14 +50,14 @@ Implements [.lore/work/specs/fortune-boon-cards.md](../specs/fortune-boon-cards.
    - Expand `UnlockEffect` `actReward` from only `offeredCount` to include `boonPoolId`, `offeredCount`, and `chooseCount`.
 
 2. Create the initial pool manifest `src/data/worlds/boons/fortune.ts`.
-   - Export `FORTUNE_BOON_POOLS` with `fortune-v1` mapped to the planned five template IDs.
+   - Export `FORTUNE_BOON_POOLS` with `pool-fortune` mapped to the planned five template IDs.
    - At this phase, the file may export only pool IDs. Phase 2 adds the matching JSON source and `FORTUNE_BOON_SOURCE`.
    - This keeps `buildRunModifiers` able to resolve `poolTemplateIds` without importing core reducer code or waiting for world assembly changes.
 
 3. Update `src/data/unlocks/catalog.ts`.
    - Change `act-reward` description to implemented Fortune copy: choose 1 of 3 temporary boon cards at the start of each new act.
    - Set `cost: 70`, `destinyWeight: 3`.
-   - Set `effect: { type: "actReward", boonPoolId: "fortune-v1", offeredCount: 3, chooseCount: 1 }`.
+   - Set `effect: { type: "actReward", boonPoolId: "pool-fortune", offeredCount: 3, chooseCount: 1 }`.
    - Import `FORTUNE_BOON_POOLS` from the manifest created above.
    - In `buildRunModifiers`, translate active `actReward` into `mods.actBoon` with `poolId`, `poolTemplateIds`, `offeredCount`, and `chooseCount` instead of skipping it. Throw or fail tests if the configured `boonPoolId` has no manifest entry.
 
@@ -67,7 +67,7 @@ Implements [.lore/work/specs/fortune-boon-cards.md](../specs/fortune-boon-cards.
 
 5. Update tests.
    - Extend `src/data/unlocks/catalog.test.ts` to assert Fortune is legal under `DESTINY_BUDGET`, has stable id/name, builds the `actBoon` modifier only when active, and no longer contains `NotImplemented`.
-   - Assert `mods.actBoon.poolTemplateIds` equals the `fortune-v1` pool manifest and contains at least five IDs.
+   - Assert `mods.actBoon.poolTemplateIds` equals the `pool-fortune` pool manifest and contains at least five IDs.
    - Extend runtime unlock tests if needed so activated `act-reward` survives into `GameState.runModifiers.actBoon`.
 
 > **Validation gate:** `bun run typecheck` and `bun run test src/data/unlocks/catalog.test.ts src/game/runtime/gameplayRuntime.test.ts` pass. Manually grep `rg "NotImplemented|act-reward" src/data/unlocks src/game/scenes/DestinyScene.ts` and confirm the obsolete description is gone.
@@ -89,7 +89,7 @@ Implements [.lore/work/specs/fortune-boon-cards.md](../specs/fortune-boon-cards.
 
 2. Extend the typed pool manifest created in Phase 1.
    - Export `FORTUNE_BOON_SOURCE` by importing/casting the new JSON source.
-   - Keep `FORTUNE_BOON_POOLS.fortune-v1` synchronized with the five JSON template IDs.
+   - Keep `FORTUNE_BOON_POOLS.pool-fortune` synchronized with the five JSON template IDs.
    - Keep pool metadata in data and feed it into `RunModifiers.actBoon.poolTemplateIds` from `buildRunModifiers`; do not import this manifest from `src/core/engine/reduce.ts`.
 
 3. Update `src/data/worldManifest.ts`.
@@ -98,7 +98,7 @@ Implements [.lore/work/specs/fortune-boon-cards.md](../specs/fortune-boon-cards.
    - Do not add boon templates to any starter deck, act composition, or world hazard reward effect.
 
 4. Add or extend tests.
-   - `src/core/tests/worldManifest.test.ts`: every `buildWorld(worldId, starter)` catalog contains every `fortune-v1` boon template.
+   - `src/core/tests/worldManifest.test.ts`: every `buildWorld(worldId, starter)` catalog contains every `pool-fortune` boon template.
    - Add a leak test that scans starter decks, act compositions, and world-authored `AddCard`/`GainCard`/`AddPlayerCardToTop` effects and verifies Fortune boon template IDs are not referenced outside the boon pool.
    - Verify every boon template is a player card with `exhaust: true`.
    - Add a recursive effect validator for each boon template, walking `Sequence` and `Modal` branches. Reject forbidden first-version shapes: `SurviveWorld`, `AddWorldCardToDeck`, `AddThreatToWorldDeck`, `AddCard`/`GainCard`/`AddPlayerCardToTop` for `Door` or `The Walker`, `ExileTopWorldCards`, and any effect that adds additional world cards.
@@ -185,7 +185,7 @@ Implements [.lore/work/specs/fortune-boon-cards.md](../specs/fortune-boon-cards.
    - Multiple act transitions over a run create one pending choice per real `ActAdvanced`, no duplicates.
    - Post-terminal states never trigger offers.
    - Same seed/world/starter/active unlocks/action sequence produces the same offered template IDs in the same order.
-   - Different seed smoke test can produce different offers while staying within `fortune-v1`.
+   - Different seed smoke test can produce different offers while staying within `pool-fortune`.
    - RNG advances on every trigger, including a test-only pool with fewer than 3 legal templates.
    - A focused REQ-FORTUNE-12 rescue test: construct an act transition where `playerCardsDrawn === 0`; with Fortune inactive the run loses under the existing guard, and with Fortune active the reducer returns `playing` with `pendingActBoon` instead of `lost`.
 

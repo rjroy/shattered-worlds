@@ -674,7 +674,7 @@ describe("previewAction", () => {
       templateId: "Cache Hazard",
       name: "Cache Hazard",
       cost: 1,
-      onCleared: { kind: "GainRandomCard", setId: "fortune-v1", setName: "the cache" },
+      onCleared: { kind: "GainRandomCard", setId: "pool-fortune", setName: "the cache" },
     });
     const state = { ...s1, hand: [explore, cache], progress: {} };
 

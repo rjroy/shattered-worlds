@@ -55,8 +55,8 @@ describe("connectorStyleOf", () => {
     expect(
       connectorStyleOf({
         kind: "OfferBoon",
-        setId: "fortune-v1",
-        setName: "fortune-v1",
+        setId: "pool-fortune",
+        setName: "pool-fortune",
         offeredCount: 3,
         chooseCount: 1,
       }),
@@ -90,7 +90,11 @@ describe("connectorStyleOf", () => {
 });
 
 describe("GainRandomCard registration", () => {
-  const effect: CardEffect = { kind: "GainRandomCard", setId: "fortune-v1", setName: "the cache" };
+  const effect: CardEffect = {
+    kind: "GainRandomCard",
+    setId: "pool-fortune",
+    setName: "the cache",
+  };
 
   it("is recognized in the effect registry", () => {
     expect(EFFECTS.GainRandomCard).toBeDefined();

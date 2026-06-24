@@ -80,7 +80,7 @@ This is a **content-authoring discipline**, not something the system enforces. T
 
 ## Fortune pool: just "do something"
 
-Game is still basically alpha, so the goal is to exercise the system, not balance it. Stamp the existing five `fortune-v1` boons as Common, then bump one to Uncommon and one to Rare so the weighted draw *and* the colored rendering both actually fire in a real run. No new cards, no balance work. Rebalance later.
+Game is still basically alpha, so the goal is to exercise the system, not balance it. Stamp the existing five `pool-fortune` boons as Common, then bump one to Uncommon and one to Rare so the weighted draw *and* the colored rendering both actually fire in a real run. No new cards, no balance work. Rebalance later.
 
 ## Out of scope (named for later)
 
