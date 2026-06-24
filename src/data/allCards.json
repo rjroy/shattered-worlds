@@ -355,7 +355,8 @@
         "kind": "DealProgressAll",
         "base": 2,
         "bonus": { "tag": "Obstructed", "amount": 2 }
-      }
+      },
+      "fx": [{ "kind": "Play", "key": "shotgun-fx" }]
     },
     "Rolling Fog": {
       "kind": "world",
@@ -534,7 +535,8 @@
           { "kind": "DealProgress", "base": 3, "bonus": { "tag": "Slow", "amount": 2 } },
           { "kind": "Damage", "amount": 1 }
         ]
-      }
+      },
+      "fx": [{ "kind": "Play", "key": "push-through-fx" }]
     },
     "Floor It": {
       "kind": "player",
@@ -543,7 +545,8 @@
       "insetKey": "volcano-inset-floor-it",
       "energyCost": 0,
       "exhaust": true,
-      "effect": { "kind": "ExileTopWorldCards", "amount": 2 }
+      "effect": { "kind": "ExileTopWorldCards", "amount": 2 },
+      "fx": [{ "kind": "Play", "key": "floor-it-fx" }]
     },
     "Ditch Gear": {
       "kind": "player",
@@ -1256,7 +1259,12 @@
           { "kind": "Damage", "amount": 1 },
           { "kind": "AddWorldCardToDeck", "template": "Zombie" }
         ]
-      }
+      },
+      "fx": [
+        { "kind": "EndTurn", "key": "zombie-fx" },
+        { "kind": "Discard", "key": "zombie-fx" },
+        { "kind": "PartialClear", "key": "zombie-fx" }
+      ]
     },
     "Find Baseball Bat": {
       "kind": "world",
@@ -1308,7 +1316,8 @@
       "name": "Baseball Bat",
       "rarity": "rare",
       "insetKey": "zombie-inset-baseball",
-      "effect": { "kind": "DealProgress", "base": 1, "bonus": { "tag": "Creature", "amount": 3 } }
+      "effect": { "kind": "DealProgress", "base": 1, "bonus": { "tag": "Creature", "amount": 3 } },
+      "fx": [{ "kind": "Play", "key": "baseball-bat-fx" }]
     },
     "Shotgun": {
       "kind": "player",
@@ -1322,7 +1331,8 @@
           { "kind": "DealProgressAll", "base": 2, "bonus": { "tag": "Creature", "amount": 2 } },
           { "kind": "AddWorldCardToDeck", "template": "Zombie" }
         ]
-      }
+      },
+      "fx": [{ "kind": "Play", "key": "shotgun-fx" }]
     },
     "Regroup": {
       "kind": "player",
