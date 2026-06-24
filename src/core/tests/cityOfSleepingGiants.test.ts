@@ -235,10 +235,10 @@ describe("City of Sleeping Giants — stirring effects drive the reducer (REQ-GI
     expect(resolved.state.braceCharges).toBe(0);
   });
 
-  it("Surveyors Mark A Pulse onCleared offers a boon from giants-boons (3 offered, choose 1), not a card grant", () => {
+  it("Surveyors Mark A Pulse onCleared offers a boon from pool-survey-results (3 offered, choose 1), not a card grant", () => {
     // Decision §4 deviation: REQ-GIANTS-24's initial shape granted all five tools
     // via GainCard; we assert an OfferBoon offer instead. Mirrors the big-box /
-    // tidal / ember OfferBoon-on-clear assertion shape. The giants-boons pool has
+    // tidal / ember OfferBoon-on-clear assertion shape. The pool-survey-results pool has
     // FOUR cards (Quiet Survey, Brace The Ward, Bone Pin, Contour Map); Follow The
     // Vein is granted elsewhere and is NOT in this pool.
     const { catalog, worldData } = buildWorld(WORLD_ID);
@@ -260,12 +260,12 @@ describe("City of Sleeping Giants — stirring effects drive the reducer (REQ-GI
     expect(result.state.pendingBoonChoices.length).toBe(before + 1);
 
     const pending = result.state.pendingBoonChoices.at(-1)!;
-    expect(pending.setId).toBe("giants-boons");
+    expect(pending.setId).toBe("pool-survey-results");
     expect(pending.chooseCount).toBe(1);
     expect(pending.offeredTemplateIds).toHaveLength(3);
 
-    // Every offered template is drawn from the four-card giants-boons pool.
-    const pool = new Set<string>(FORTUNE_BOON_POOLS["giants-boons"]);
+    // Every offered template is drawn from the four-card pool-survey-results pool.
+    const pool = new Set<string>(FORTUNE_BOON_POOLS["pool-survey-results"]);
     expect(pool.size).toBe(4);
     expect(pool.has("Follow The Vein")).toBe(false);
     for (const offered of pending.offeredTemplateIds) {
@@ -275,7 +275,7 @@ describe("City of Sleeping Giants — stirring effects drive the reducer (REQ-GI
     const offered = result.events.find((e) => e.type === "BoonOffered");
     expect(offered).toBeDefined();
     if (offered?.type === "BoonOffered") {
-      expect(offered.setId).toBe("giants-boons");
+      expect(offered.setId).toBe("pool-survey-results");
     }
   });
 

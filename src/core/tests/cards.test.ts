@@ -314,8 +314,14 @@ describe("player card keywords", () => {
 
 describe("rarity stamping", () => {
   it("a template without rarity mints as common", () => {
-    // No template in the zombie-big-box catalog authors a rarity
-    const [card] = mintCard(catalog, makeEmptyState(), "Sprint");
+    const blankCatalog: CardCatalog = {
+      "Simple Find": {
+        kind: "player",
+        name: "Simple Find",
+        effect: { kind: "DealProgress", base: 1 },
+      },
+    };
+    const [card] = mintCard(blankCatalog, makeEmptyState(), "Simple Find");
     expect(card.rarity).toBe("common");
   });
 

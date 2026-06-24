@@ -144,7 +144,7 @@ The following numbers are initial tuning. Costs, counts, and exact progress valu
 
 <div id="REQ-EMBER-26"></div>
 
-**REQ-EMBER-26:** `Hatchery Cellar` must be the tool-fetch hazard. Initial shape: cost 6, `Obstructed`, discardable, `onCleared: OfferBoon { setId: "ember-boons", offeredCount: 3, chooseCount: 1 }` (offers three of the five tools — `Take One`, `Leave One`, `Star-Pruner`, `Glasshouse Lantern`, `Constellation Shears` — and the player keeps one), `onDiscarded: None`, `onPartialClear: None`, `onEndOfTurn: Sequence` adding `Ember Moth` and `Falling Fruit` to the top of the world deck, with the last-added card order verified by tests or adjusted to match engine semantics. *(Ratified 2026-06-20: was `Sequence[GainCard ×5]`, which floods a starter-sized deck across this card's copies; the boon set is authored as a single source shared with the hazards' fixed `GainCard` grants.)*
+**REQ-EMBER-26:** `Hatchery Cellar` must be the tool-fetch hazard. Initial shape: cost 6, `Obstructed`, discardable, `onCleared: OfferBoon { setId: "pool-ember-cellar", offeredCount: 3, chooseCount: 1 }` (offers three of the five tools — `Take One`, `Leave One`, `Star-Pruner`, `Glasshouse Lantern`, `Constellation Shears` — and the player keeps one), `onDiscarded: None`, `onPartialClear: None`, `onEndOfTurn: Sequence` adding `Ember Moth` and `Falling Fruit` to the top of the world deck, with the last-added card order verified by tests or adjusted to match engine semantics. *(Ratified 2026-06-20: was `Sequence[GainCard ×5]`, which floods a starter-sized deck across this card's copies; the boon set is authored as a single source shared with the hazards' fixed `GainCard` grants.)*
 
 <div id="REQ-EMBER-27"></div>
 
@@ -246,7 +246,7 @@ Counts are tuning values; act roles and the fixed Walker closer are not.
 
 <div id="REQ-EMBER-47"></div>
 
-**REQ-EMBER-47:** Effect/data tests must cover the shipped incubation patterns: `Dormant Star` adds `Ember Moth` to the top of the world deck, `Cracked Hearth-Star` self-transforms into `Ember Moth`, `Falling Fruit` can plant a `Dormant Star`, `Ground Constellation` uses `AddThreatToWorldDeck` through the Ember threat mapping, `Hatchery Cellar` `onCleared` creates a boon offer from the `ember-boons` pool (not a five-card grant), `Ember Moth` `onEndOfTurn` queues `ForceDestroy` (not HP `Damage`), and a `Brace` charge absorbs a creature snatch end-to-end.
+**REQ-EMBER-47:** Effect/data tests must cover the shipped incubation patterns: `Dormant Star` adds `Ember Moth` to the top of the world deck, `Cracked Hearth-Star` self-transforms into `Ember Moth`, `Falling Fruit` can plant a `Dormant Star`, `Ground Constellation` uses `AddThreatToWorldDeck` through the Ember threat mapping, `Hatchery Cellar` `onCleared` creates a boon offer from the `pool-ember-cellar` pool (not a five-card grant), `Ember Moth` `onEndOfTurn` queues `ForceDestroy` (not HP `Damage`), and a `Brace` charge absorbs a creature snatch end-to-end.
 
 <div id="REQ-EMBER-48"></div>
 

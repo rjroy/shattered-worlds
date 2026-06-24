@@ -83,6 +83,9 @@ export function buildRunModifiers(
           mods = { ...mods, minLightPerTurn: Math.max(mods.minLightPerTurn, def.effect.floor) };
         }
         break;
+      case "rarityBonus":
+        mods = { ...mods, rarityBonus: mods.rarityBonus + def.effect.amount };
+        break;
       case "keywordDamageBonus":
         mods = { ...mods, keywordDamageBonus: mods.keywordDamageBonus + def.effect.amount };
         break;

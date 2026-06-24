@@ -42,7 +42,11 @@ export class DestinyScene extends Phaser.Scene {
   private touchScrollLastY: number | undefined;
   private touchScrollRemainder = 0;
 
-  constructor(featsStore?: FeatsStore, unlocksStore?: UnlocksStore, userSettings?: UserSettingsStore) {
+  constructor(
+    featsStore?: FeatsStore,
+    unlocksStore?: UnlocksStore,
+    userSettings?: UserSettingsStore,
+  ) {
     super({ key: "Destiny" });
     this.featsStore = featsStore;
     this.unlocksStore = unlocksStore;
@@ -582,6 +586,8 @@ function effectSummary(def: UnlockDefinition): string {
       return `Hand size +${def.effect.amountPerAct} per act`;
     case "minResourcePerTurn":
       return `${def.effect.resource} floor ${def.effect.floor}`;
+    case "rarityBonus":
+      return `Rarity bonuses +${def.effect.amount}`;
     case "keywordDamageBonus":
       return `Keyword bonuses +${def.effect.amount}`;
     case "playerCardModifier":

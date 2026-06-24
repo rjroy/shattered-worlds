@@ -118,6 +118,7 @@ describe("buildRunModifiers", () => {
       extraStartHp: 3,
       handSizeBonusPerAct: 1,
       minEnergyPerTurn: 2,
+      rarityBonus: 0,
       keywordDamageBonus: 1,
     });
   });

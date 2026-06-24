@@ -69,6 +69,11 @@ import screenChronicleUrl from "../assets/screens/shattered-chronicle.webp";
 import screenDestinyUrl from "../assets/screens/shattered-destiny.webp";
 import screenLoseUrl from "../assets/screens/shattered-lose.webp";
 import theDoorFxUrl from "../assets/audio/fx/mystical-lightning.mp3";
+import zombieFxUrl from "../assets/audio/fx/zombie-moan.mp3";
+import floorItFxUrl from "../assets/audio/fx/floor-it.mp3";
+import pushThroughFxUrl from "../assets/audio/fx/push-through.mp3";
+import shotgunFxUrl from "../assets/audio/fx/shotgun.mp3";
+import baseballBatFxUrl from "../assets/audio/fx/baseball-bat.mp3";
 import { worldAssetUrls } from "../worlds/assetBindings";
 
 export const assetManifest: Record<string, string> = {
@@ -149,6 +154,11 @@ export const assetManifest: Record<string, string> = {
 
 export const fxManifest: Record<string, string> = {
   "the-door-fx": theDoorFxUrl,
+  "zombie-fx": zombieFxUrl,
+  "floor-it-fx": floorItFxUrl,
+  "push-through-fx": pushThroughFxUrl,
+  "shotgun-fx": shotgunFxUrl,
+  "baseball-bat-fx": baseballBatFxUrl,
 };
 
 export function loadAssets(scene: Phaser.Scene) {

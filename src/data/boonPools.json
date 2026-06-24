@@ -1,23 +1,29 @@
 {
   "fortune-v1": ["Lucky Break", "Second Wind", "Found Tool", "Clear Path", "Steady Nerve"],
-  "big-box-boons": ["React to Noise", "Fast Sweep", "Listen", "player-scream", "Plan"],
-  "whiteout-boons": ["Ice Scraper", "Burn The Manual", "Space Heater", "Jumper Cables"],
-  "tidal-boons": [
+  "pool-heard-noise": ["Sprint", "React to Noise", "Fast Sweep", "Listen", "You Scream", "Plan"],
+  "pool-heaters": [
+    "Hand Warmers",
+    "Ice Scraper",
+    "Burn The Manual",
+    "Space Heater",
+    "Jumper Cables"
+  ],
+  "pool-archive-lesson": [
     "Mark the Shelf",
     "Cross-Reference",
     "Waterproof Notes",
     "Anchor the Memory",
     "Shelf Map"
   ],
-  "ember-boons": [
+  "pool-ember-cellar": [
     "Leave One",
     "Star-Pruner",
     "Constellation Shears",
     "Keep Vigil",
     "Bank the Heat"
   ],
-  "giants-boons": ["Quiet Survey", "Brace The Ward", "Bone Pin", "Contour Map"],
-  "fog-cooler-loot-v1": ["Barricade", "Half-Dead Spotlight", "Cooler Snacks", "Loaded Shotgun"],
-  "bonfire-loot-v1": ["Flashlight", "Flare Gun", "Bonfire", "Searchlight"],
-  "garden-center-loot-v1": ["Pruning Shears", "Machete", "Weed Killer", "Bloom"]
+  "pool-survey-results": ["Quiet Survey", "Brace The Ward", "Bone Pin", "Contour Map"],
+  "pool-lights-lv1": ["Barricade", "Half-Dead Spotlight", "Cooler Snacks", "Loaded Shotgun"],
+  "pool-lights-lv2": ["Flashlight", "Flare Gun", "Bonfire", "Searchlight"],
+  "pool-garden-tools": ["Pruning Shears", "Machete", "Weed Killer", "Bloom"]
 }

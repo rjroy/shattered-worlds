@@ -111,12 +111,12 @@ describe("The Tidal Archive — review-correction hooks drive the reducer (REQ-T
     expect(result.state.playerDiscard).toHaveLength(0);
     expect(result.state.pendingBoonChoices.length).toBe(before + 1);
     const pending = result.state.pendingBoonChoices[result.state.pendingBoonChoices.length - 1]!;
-    expect(pending.setId).toBe("tidal-boons");
+    expect(pending.setId).toBe("pool-archive-lesson");
 
     const offered = result.events.find((e) => e.type === "BoonOffered");
     expect(offered).toBeDefined();
     if (offered?.type === "BoonOffered") {
-      expect(offered.setId).toBe("tidal-boons");
+      expect(offered.setId).toBe("pool-archive-lesson");
     }
   });
 

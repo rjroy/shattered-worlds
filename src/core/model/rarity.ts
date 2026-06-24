@@ -23,11 +23,10 @@ export const RARITY_ORDER: readonly RarityTier[] = [
  * world, surface, or effect may override them.
  */
 export const RARITY_WEIGHTS: Record<RarityTier, number> = {
-  common: 50,
-  uncommon: 30,
-  rare: 13,
-  legendary: 7,
-  // NOTE: Signature is a special weight that is intended for 1 world card per set.
-  //       EX: Zombie
-  signature: 100,
+  common: 80,
+  uncommon: 40,
+  rare: 20,
+  legendary: 10,
+  // NOTE: Signature is a special weight that is intended to always be present.
+  signature: 160,
 };

@@ -58,6 +58,7 @@ export type RunModifiers = {
   readonly handSizeBonusPerAct: number;
   readonly minLightPerTurn: number;
   readonly minEnergyPerTurn: number;
+  readonly rarityBonus: number;
   readonly keywordDamageBonus: number;
   readonly actBoon: {
     readonly poolId: string;
@@ -79,6 +80,7 @@ export const DEFAULT_RUN_MODIFIERS: RunModifiers = {
   handSizeBonusPerAct: 0,
   minLightPerTurn: 0,
   minEnergyPerTurn: 0,
+  rarityBonus: 0,
   keywordDamageBonus: 0,
   actBoon: null,
   playerCardModifiers: [],
@@ -96,6 +98,7 @@ export type UnlockEffect =
       readonly resource: "energy" | "light";
       readonly floor: number;
     }
+  | { readonly type: "rarityBonus"; readonly amount: number }
   | { readonly type: "keywordDamageBonus"; readonly amount: number }
   | { readonly type: "playerCardModifier"; readonly modifier: PlayerCardModifier }
   | { readonly type: "starterDeckOverride"; readonly starterDeckId: string }
