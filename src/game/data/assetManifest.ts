@@ -74,6 +74,8 @@ import floorItFxUrl from "../assets/audio/fx/floor-it.mp3";
 import pushThroughFxUrl from "../assets/audio/fx/push-through.mp3";
 import shotgunFxUrl from "../assets/audio/fx/shotgun.mp3";
 import baseballBatFxUrl from "../assets/audio/fx/baseball-bat.mp3";
+import grindingGirderFxUrl from "../assets/audio/fx/grinding-girders.mp3";
+import bonfireFxUrl from "../assets/audio/fx/bonfire.mp3";
 import { worldAssetUrls } from "../worlds/assetBindings";
 
 export const assetManifest: Record<string, string> = {
@@ -159,6 +161,8 @@ export const fxManifest: Record<string, string> = {
   "push-through-fx": pushThroughFxUrl,
   "shotgun-fx": shotgunFxUrl,
   "baseball-bat-fx": baseballBatFxUrl,
+  "grinding-girder-fx": grindingGirderFxUrl,
+  "bonfire-fx": bonfireFxUrl,
 };
 
 export function loadAssets(scene: Phaser.Scene) {

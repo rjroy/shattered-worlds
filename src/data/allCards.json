@@ -41,7 +41,11 @@
       "onDiscarded": { "kind": "GainCard", "template": "Panic" },
       "onCleared": { "kind": "GainCard", "template": "Steady" },
       "onPartialClear": { "kind": "None" },
-      "onEndOfTurn": { "kind": "None" }
+      "onEndOfTurn": { "kind": "None" },
+      "fx": [
+        { "kind": "EndTurn", "key": "groaning-girder-fx" },
+        { "kind": "Clear", "key": "groaning-girder-fx" }
+      ]
     },
     "Gripping Talon": {
       "kind": "world",
@@ -406,7 +410,11 @@
         ]
       },
       "onPartialClear": { "kind": "None" },
-      "onEndOfTurn": { "kind": "None" }
+      "onEndOfTurn": { "kind": "None" },
+      "fx": [
+        { "kind": "Clear", "key": "bonfire-fx" },
+        { "kind": "Discard", "key": "bonfire-fx" }
+      ]
     },
     "Something in the Mist": {
       "kind": "world",
