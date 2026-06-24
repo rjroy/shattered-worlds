@@ -33,7 +33,7 @@
     "Groaning Girders": {
       "kind": "world",
       "name": "Groaning Girders",
-      "rarity": "uncommon",
+      "rarity": "rare",
       "insetKey": "bird-inset-groaning-girders",
       "cost": 1,
       "keywords": [],
@@ -87,7 +87,7 @@
     "Steady": {
       "kind": "player",
       "name": "Steady",
-      "rarity": "uncommon",
+      "rarity": "rare",
       "insetKey": "bird-inset-steady",
       "energyCost": 1,
       "effect": { "kind": "Brace", "amount": 1 }
@@ -157,7 +157,7 @@
     "Fingerquake Ward": {
       "kind": "world",
       "name": "Fingerquake Ward",
-      "rarity": "uncommon",
+      "rarity": "rare",
       "insetKey": "giants-inset-fingerquake-ward",
       "cost": 3,
       "keywords": ["Slow"],
@@ -183,7 +183,7 @@
       "discardable": true,
       "onCleared": {
         "kind": "OfferBoon",
-        "setId": "giants-boons",
+        "setId": "pool-survey-results",
         "setName": "Surveyor's Kit",
         "offeredCount": 3,
         "chooseCount": 1
@@ -373,7 +373,7 @@
     "Abandoned Cooler": {
       "kind": "world",
       "name": "Abandoned Cooler",
-      "rarity": "common",
+      "rarity": "uncommon",
       "insetKey": "fog-inset-abandoned-cooler",
       "cost": 2,
       "keywords": ["Concealed:1", "Obstructed"],
@@ -381,7 +381,7 @@
       "onDiscarded": { "kind": "None" },
       "onCleared": {
         "kind": "GainRandomCard",
-        "setId": "fog-cooler-loot-v1",
+        "setId": "pool-lights-lv1",
         "setName": "Cooler Stash"
       },
       "onPartialClear": { "kind": "None" },
@@ -390,7 +390,7 @@
     "The Bonfire": {
       "kind": "world",
       "name": "The Bonfire",
-      "rarity": "uncommon",
+      "rarity": "rare",
       "insetKey": "fog-inset-the-bonfire",
       "cost": 4,
       "keywords": ["Obstructed"],
@@ -399,8 +399,8 @@
       "onCleared": {
         "kind": "Sequence",
         "steps": [
-          { "kind": "GainRandomCard", "setId": "bonfire-loot-v1", "setName": "Bonfire Stash" },
-          { "kind": "GainRandomCard", "setId": "bonfire-loot-v1", "setName": "Bonfire Stash" },
+          { "kind": "GainRandomCard", "setId": "pool-lights-lv2", "setName": "Bonfire Stash" },
+          { "kind": "GainRandomCard", "setId": "pool-lights-lv2", "setName": "Bonfire Stash" },
           { "kind": "GainLight", "amount": 2 }
         ]
       },
@@ -512,7 +512,7 @@
     "Find a Vehicle": {
       "kind": "world",
       "name": "Find a Vehicle",
-      "rarity": "uncommon",
+      "rarity": "rare",
       "insetKey": "volcano-inset-vehicle",
       "cost": 2,
       "keywords": ["Obstructed"],
@@ -563,7 +563,7 @@
     "Nitro": {
       "kind": "player",
       "name": "Nitro",
-      "rarity": "uncommon",
+      "rarity": "common",
       "insetKey": "volcano-inset-nitro",
       "exhaust": true,
       "energyCost": 0,
@@ -606,7 +606,7 @@
     "Pollen Haze": {
       "kind": "world",
       "name": "Pollen Haze",
-      "rarity": "common",
+      "rarity": "uncommon",
       "insetKey": "mall-inset-pollen-haze",
       "cost": 2,
       "keywords": ["Spore"],
@@ -619,7 +619,7 @@
     "Kudzu Curtain": {
       "kind": "world",
       "name": "Kudzu Curtain",
-      "rarity": "uncommon",
+      "rarity": "rare",
       "insetKey": "mall-inset-kudzu-curtain",
       "cost": 2,
       "keywords": ["Slow", "Spore"],
@@ -645,7 +645,7 @@
     "Fountain Bloom": {
       "kind": "world",
       "name": "Fountain Bloom",
-      "rarity": "common",
+      "rarity": "uncommon",
       "insetKey": "mall-inset-fountain-bloom",
       "cost": 3,
       "keywords": ["Spore"],
@@ -664,7 +664,7 @@
     "The Garden Center": {
       "kind": "world",
       "name": "The Garden Center",
-      "rarity": "common",
+      "rarity": "uncommon",
       "insetKey": "mall-inset-garden-center",
       "cost": 4,
       "keywords": ["Obstructed"],
@@ -675,12 +675,12 @@
         "steps": [
           {
             "kind": "GainRandomCard",
-            "setId": "garden-center-loot-v1",
+            "setId": "pool-garden-tools",
             "setName": "Garden Center Rammage"
           },
           {
             "kind": "GainRandomCard",
-            "setId": "garden-center-loot-v1",
+            "setId": "pool-garden-tools",
             "setName": "Garden Center Rammage"
           }
         ]
@@ -735,7 +735,7 @@
     "Dormant Star": {
       "kind": "player",
       "name": "Dormant Star",
-      "rarity": "uncommon",
+      "rarity": "common",
       "insetKey": "ember-inset-dormant-star",
       "energyCost": 0,
       "exhaust": true,
@@ -765,7 +765,7 @@
     "Glasshouse Lantern": {
       "kind": "player",
       "name": "Glasshouse Lantern",
-      "rarity": "rare",
+      "rarity": "common",
       "insetKey": "ember-inset-glasshouse-lantern",
       "exhaust": true,
       "effect": {
@@ -799,7 +799,7 @@
     "Falling Fruit": {
       "kind": "world",
       "name": "Falling Fruit",
-      "rarity": "common",
+      "rarity": "uncommon",
       "insetKey": "ember-inset-falling-fruit",
       "cost": 2,
       "keywords": ["Obstructed"],
@@ -860,7 +860,7 @@
       "discardable": true,
       "onCleared": {
         "kind": "OfferBoon",
-        "setId": "ember-boons",
+        "setId": "pool-ember-cellar",
         "setName": "Hatchery Harvest",
         "offeredCount": 3,
         "chooseCount": 1
@@ -891,7 +891,7 @@
     "Lantern Brood": {
       "kind": "world",
       "name": "Lantern Brood",
-      "rarity": "uncommon",
+      "rarity": "rare",
       "insetKey": "ember-inset-lantern-brood",
       "cost": 4,
       "keywords": ["Creature", "Slow"],
@@ -933,8 +933,8 @@
     },
     "Wandering Stacks": {
       "kind": "world",
-      "rarity": "uncommon",
       "name": "Wandering Stacks",
+      "rarity": "uncommon",
       "insetKey": "tidal-inset-wandering-stacks",
       "cost": 2,
       "keywords": ["Obstructed"],
@@ -955,7 +955,7 @@
       "onDiscarded": { "kind": "None" },
       "onCleared": {
         "kind": "OfferBoon",
-        "setId": "tidal-boons",
+        "setId": "pool-archive-lesson",
         "setName": "The Reading Room",
         "offeredCount": 3,
         "chooseCount": 1
@@ -1070,7 +1070,7 @@
       },
       "onCleared": {
         "kind": "OfferBoon",
-        "setId": "whiteout-boons",
+        "setId": "pool-heaters",
         "setName": "Maintenance Closet",
         "offeredCount": 3,
         "chooseCount": 1
@@ -1081,6 +1081,7 @@
     "Powder Drift": {
       "kind": "world",
       "name": "Powder Drift",
+      "rarity": "common",
       "insetKey": "whiteout-inset-powder-drift",
       "cost": 2,
       "keywords": ["Obstructed"],
@@ -1093,6 +1094,7 @@
     "Frozen Puddle": {
       "kind": "world",
       "name": "Frozen Puddle",
+      "rarity": "rare",
       "insetKey": "whiteout-inset-frozen-puddle",
       "cost": 3,
       "keywords": ["Obstructed"],
@@ -1105,6 +1107,7 @@
     "Dead Battery": {
       "kind": "world",
       "name": "Dead Battery",
+      "rarity": "rare",
       "insetKey": "whiteout-inset-dead-battery",
       "cost": 3,
       "keywords": ["Obstructed"],
@@ -1117,6 +1120,7 @@
     "Black Ice Ramp": {
       "kind": "world",
       "name": "Black Ice Ramp",
+      "rarity": "common",
       "insetKey": "whiteout-inset-black-ice-ramp",
       "cost": 3,
       "keywords": ["Slow", "Obstructed"],
@@ -1129,6 +1133,7 @@
     "Snowblind Headlights": {
       "kind": "world",
       "name": "Snowblind Headlights",
+      "rarity": "uncommon",
       "insetKey": "whiteout-inset-snowblind-headlights",
       "cost": 3,
       "keywords": ["Obstructed"],
@@ -1141,6 +1146,7 @@
     "Ice-Locked Door": {
       "kind": "world",
       "name": "Ice-Locked Door",
+      "rarity": "common",
       "insetKey": "whiteout-inset-ice-locked-door",
       "cost": 4,
       "keywords": ["Obstructed"],
@@ -1153,6 +1159,7 @@
     "Plow Buried In Snow": {
       "kind": "world",
       "name": "Plow Buried In Snow",
+      "rarity": "rare",
       "insetKey": "whiteout-inset-plow-buried-in-snow",
       "cost": 5,
       "keywords": ["Slow", "Obstructed"],
@@ -1184,7 +1191,7 @@
     "Strange Sounds": {
       "kind": "world",
       "name": "Strange Sounds",
-      "rarity": "uncommon",
+      "rarity": "rare",
       "insetKey": "zombie-inset-strange-sounds",
       "cost": 2,
       "keywords": [],
@@ -1192,7 +1199,7 @@
       "onDiscarded": { "kind": "None" },
       "onCleared": {
         "kind": "OfferBoon",
-        "setId": "big-box-boons",
+        "setId": "pool-heard-noise",
         "setName": "Sound Reactions",
         "offeredCount": 3,
         "chooseCount": 1
@@ -1216,7 +1223,7 @@
     "Screams": {
       "kind": "world",
       "name": "Screams",
-      "rarity": "common",
+      "rarity": "uncommon",
       "insetKey": "zombie-inset-screams",
       "cost": 1,
       "keywords": [],
@@ -1254,7 +1261,7 @@
     "Find Baseball Bat": {
       "kind": "world",
       "name": "Find Baseball Bat",
-      "rarity": "uncommon",
+      "rarity": "rare",
       "insetKey": "zombie-inset-baseball",
       "cost": 2,
       "keywords": ["Obstructed"],
@@ -1286,7 +1293,7 @@
     "Find Shotgun": {
       "kind": "world",
       "name": "Find Shotgun",
-      "rarity": "rare",
+      "rarity": "legendary",
       "insetKey": "zombie-inset-find-shotgun",
       "cost": 2,
       "keywords": ["Obstructed"],
@@ -1299,14 +1306,14 @@
     "Baseball Bat": {
       "kind": "player",
       "name": "Baseball Bat",
-      "rarity": "uncommon",
+      "rarity": "rare",
       "insetKey": "zombie-inset-baseball",
       "effect": { "kind": "DealProgress", "base": 1, "bonus": { "tag": "Creature", "amount": 3 } }
     },
     "Shotgun": {
       "kind": "player",
       "name": "Shotgun",
-      "rarity": "rare",
+      "rarity": "legendary",
       "insetKey": "zombie-inset-shotgun",
       "energyCost": 2,
       "effect": {
@@ -1320,7 +1327,7 @@
     "Regroup": {
       "kind": "player",
       "name": "Regroup",
-      "rarity": "common",
+      "rarity": "uncommon",
       "insetKey": "zombie-inset-regroup",
       "energyCost": 0,
       "exhaust": true,
@@ -1366,9 +1373,9 @@
       "exhaust": true,
       "effect": { "kind": "DealProgress", "base": 2, "bonus": { "tag": "Obstructed", "amount": 2 } }
     },
-    "player-scream": {
+    "You Scream": {
       "kind": "player",
-      "name": "Scream",
+      "name": "You Scream",
       "rarity": "common",
       "insetKey": "zombie-inset-screams",
       "energyCost": 0,
@@ -1419,7 +1426,7 @@
     "Leave One": {
       "kind": "player",
       "name": "Leave One",
-      "rarity": "common",
+      "rarity": "uncommon",
       "insetKey": "ember-inset-leave-one",
       "exhaust": true,
       "effect": {
@@ -1440,7 +1447,7 @@
     "Constellation Shears": {
       "kind": "player",
       "name": "Constellation Shears",
-      "rarity": "uncommon",
+      "rarity": "signature",
       "insetKey": "ember-inset-constellation-shears",
       "exhaust": true,
       "effect": {
@@ -1535,7 +1542,7 @@
     "Brace The Ward": {
       "kind": "player",
       "name": "Brace The Ward",
-      "rarity": "uncommon",
+      "rarity": "rare",
       "insetKey": "giants-inset-brace-the-ward",
       "energyCost": 1,
       "effect": {
@@ -1634,7 +1641,7 @@
       "kind": "player",
       "name": "Anchor the Memory",
       "insetKey": "tidal-inset-anchor-the-memory",
-      "rarity": "uncommon",
+      "rarity": "rare",
       "energyCost": 0,
       "exhaust": true,
       "effect": {
@@ -1649,7 +1656,7 @@
       "kind": "player",
       "name": "Shelf Map",
       "insetKey": "tidal-inset-shelf-map",
-      "rarity": "uncommon",
+      "rarity": "signature",
       "energyCost": 0,
       "exhaust": true,
       "effect": {
@@ -1724,7 +1731,7 @@
     "Sprint": {
       "kind": "player",
       "name": "Sprint",
-      "rarity": "common",
+      "rarity": "uncommon",
       "insetKey": "inset-sprint",
       "energyCost": 1,
       "effect": {
@@ -1745,7 +1752,7 @@
     "Barricade": {
       "kind": "player",
       "name": "Barricade",
-      "rarity": "common",
+      "rarity": "uncommon",
       "insetKey": "inset-barricade",
       "energyCost": 1,
       "effect": {
@@ -1759,7 +1766,7 @@
     "Med Kit": {
       "kind": "player",
       "name": "Med Kit",
-      "rarity": "uncommon",
+      "rarity": "rare",
       "insetKey": "inset-medkit",
       "effect": { "kind": "Heal", "amount": 2 }
     },
@@ -1779,7 +1786,7 @@
     "Adrenaline": {
       "kind": "player",
       "name": "Adrenaline",
-      "rarity": "uncommon",
+      "rarity": "rare",
       "insetKey": "inset-adrenaline",
       "effect": {
         "kind": "Sequence",

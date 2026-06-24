@@ -56,6 +56,14 @@
     "effect": { "type": "keywordDamageBonus", "amount": 1 }
   },
   {
+    "id": "rarity-bonus",
+    "name": "Born Lucky",
+    "description": "Improves the odds of getting better random rewards.",
+    "cost": 50,
+    "destinyWeight": 2,
+    "effect": { "type": "rarityBonus", "amount": 5 }
+  },
+  {
     "id": "min-light",
     "name": "Fog Signal",
     "description": "There is always a little light left. You make sure of it.",

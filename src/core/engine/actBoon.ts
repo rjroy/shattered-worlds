@@ -44,15 +44,14 @@ export function createBoonOffer(
     state.rng,
     legalIds,
     config.offeredCount,
+    state.runModifiers.rarityBonus,
   );
 
   if (legalIds.length === 0) {
     return { state: { ...state, rng: nextRng }, event: null };
   }
 
-  const offeredRarities = offeredTemplateIds.map(
-    (id) => catalog[id]?.rarity ?? "common",
-  );
+  const offeredRarities = offeredTemplateIds.map((id) => catalog[id]?.rarity ?? "common");
 
   const pending: PendingBoonChoice =
     config.source === "act"

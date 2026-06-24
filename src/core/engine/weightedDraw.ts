@@ -75,6 +75,7 @@ export function weightedDraw(
   rng: RngState,
   candidateIds: readonly CardTemplateId[],
   count: number,
+  rarityBonus?: number,
 ): { templateIds: CardTemplateId[]; rng: RngState } {
   if (candidateIds.length === 0) {
     const [, next] = nextFloat(rng);
@@ -99,7 +100,12 @@ export function weightedDraw(
     }
 
     const presentTiers = RARITY_ORDER.filter((tier) => tierToCandidates.has(tier));
-    const totalWeight = presentTiers.reduce((sum, tier) => sum + RARITY_WEIGHTS[tier], 0);
+    const totalWeight = presentTiers.reduce((sum, tier) => {
+      const weight = RARITY_WEIGHTS[tier];
+      if (!rarityBonus) return sum + weight;
+      const tierIndex = RARITY_ORDER.indexOf(tier);
+      return sum + weight + rarityBonus * tierIndex;
+    }, 0);
 
     const [tierRoll, afterTierRoll] = nextFloat(state);
     state = afterTierRoll;

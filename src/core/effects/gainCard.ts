@@ -136,6 +136,7 @@ export class GainRandomCardHandler extends EffectHandler<GainRandomCardEffect> {
       ctx.state.rng,
       legalIds,
       1,
+      ctx.state.runModifiers.rarityBonus,
     );
 
     const drawnId = drawn[0];
