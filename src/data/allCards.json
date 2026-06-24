@@ -947,6 +947,20 @@
       "onPartialClear": { "kind": "None" },
       "onEndOfTurn": { "kind": "RecallPlayerDiscard", "policy": "latest" }
     },
+    "Archivist Choice": {
+      "kind": "player",
+      "name": "Archivist Choice",
+      "insetKey": "tidal-inset-drowned-index",
+      "rarity": "rare",
+      "exhaust": true,
+      "effect": {
+        "kind": "OfferBoon",
+        "setId": "pool-archive-lesson",
+        "setName": "The Reading Room",
+        "offeredCount": 3,
+        "chooseCount": 1
+      }
+    },
     "Drowned Index": {
       "kind": "world",
       "name": "Drowned Index",
@@ -1606,9 +1620,8 @@
     "Pick Ember Fruit": {
       "kind": "player",
       "name": "Pick Ember Fruit",
-      "rarity": "uncommon",
+      "rarity": "rare",
       "insetKey": "ember-inset-the-orchard-counts-wrong",
-      "energyCost": 0,
       "effect": {
         "kind": "Sequence",
         "steps": [

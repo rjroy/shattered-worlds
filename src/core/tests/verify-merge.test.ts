@@ -5,11 +5,11 @@ import allCardsJson from "../../data/allCards.json";
 import { CARD_CATALOG } from "../../data/worldManifest";
 
 describe("unified catalog verification", () => {
-  it("assembles without errors and has 131 templates", () => {
+  it("assembles without errors and has 132 templates", () => {
     const unified = allCardsJson as unknown as RawCardSource;
     expect(unified.cardTemplates).toBeDefined();
     const catalog = assembleCatalog([unified]);
-    expect(Object.keys(catalog)).toHaveLength(131);
+    expect(Object.keys(catalog)).toHaveLength(132);
   });
 
   it("CARD_CATALOG matches the assembled unified file", () => {
@@ -37,7 +37,7 @@ describe("unified catalog verification", () => {
       if (v.kind === "player") playerCt++;
       else worldCt++;
     }
-    expect(playerCt).toBe(67);
+    expect(playerCt).toBe(68);
     expect(worldCt).toBe(64);
   });
 });

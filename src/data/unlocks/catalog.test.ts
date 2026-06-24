@@ -40,7 +40,7 @@ describe("UNLOCK_CATALOG", () => {
     expect(fortune).toMatchObject({
       id: "act-reward",
       name: "Fortune",
-      cost: 70,
+      cost: 60,
       destinyWeight: 3,
       effect: { type: "actReward", boonPoolId: "pool-fortune", offeredCount: 3, chooseCount: 1 },
     });
