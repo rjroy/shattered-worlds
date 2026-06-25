@@ -54,10 +54,15 @@ import unlockHandSizePerActUrl from "../assets/unlocks/hand-size-per-act.webp";
 import unlockKeywordBonusUrl from "../assets/unlocks/keyword-bonus.webp";
 import unlockMinEnergyUrl from "../assets/unlocks/min-energy.webp";
 import unlockMinLightUrl from "../assets/unlocks/min-light.webp";
+import unlockOtherSprintFreeUrl from "../assets/unlocks/other-sprint-free.webp";
 import unlockPanicResponseUrl from "../assets/unlocks/panic-response.webp";
+import unlockRarityBonusUrl from "../assets/unlocks/rarity-bonus.webp";
 import unlockSecondExplorePushUrl from "../assets/unlocks/second-explore-push.webp";
+import unlockStarterArchivistUrl from "../assets/unlocks/starter-archivist.webp";
 import unlockStarterContractorUrl from "../assets/unlocks/starter-contractor.webp";
 import unlockStarterFootballerUrl from "../assets/unlocks/starter-footballer.webp";
+import unlockStarterHarvesterUrl from "../assets/unlocks/starter-harvester.webp";
+import unlockStarterSurveyorUrl from "../assets/unlocks/starter-surveyor.webp";
 import unlockStrongBarricadesUrl from "../assets/unlocks/strong-barricades.webp";
 import unlockWorldFogBeachPartyUrl from "../assets/unlocks/world-fog-beach-party.webp";
 import unlockWorldWhiteoutParkingGarageUrl from "../assets/unlocks/world-whiteout-parking-garage.webp";
@@ -137,10 +142,15 @@ export const assetManifest: Record<string, string> = {
   "unlock/keyword-bonus": unlockKeywordBonusUrl,
   "unlock/min-energy": unlockMinEnergyUrl,
   "unlock/min-light": unlockMinLightUrl,
+  "unlock/other-sprint-free": unlockOtherSprintFreeUrl,
   "unlock/panic-response": unlockPanicResponseUrl,
+  "unlock/rarity-bonus": unlockRarityBonusUrl,
   "unlock/second-explore-push": unlockSecondExplorePushUrl,
+  "unlock/starter-archivist": unlockStarterArchivistUrl,
   "unlock/starter-contractor": unlockStarterContractorUrl,
   "unlock/starter-footballer": unlockStarterFootballerUrl,
+  "unlock/starter-harvester": unlockStarterHarvesterUrl,
+  "unlock/starter-surveyor": unlockStarterSurveyorUrl,
   "unlock/strong-barricades": unlockStrongBarricadesUrl,
   "unlock/world-fog-beach-party": unlockWorldFogBeachPartyUrl,
   "unlock/world-whiteout-parking-garage": unlockWorldWhiteoutParkingGarageUrl,
