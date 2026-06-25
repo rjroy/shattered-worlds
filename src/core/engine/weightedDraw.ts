@@ -100,12 +100,18 @@ export function weightedDraw(
     }
 
     const presentTiers = RARITY_ORDER.filter((tier) => tierToCandidates.has(tier));
-    const totalWeight = presentTiers.reduce((sum, tier) => {
-      const weight = RARITY_WEIGHTS[tier];
-      if (!rarityBonus) return sum + weight;
-      const tierIndex = RARITY_ORDER.indexOf(tier);
-      return sum + weight + rarityBonus * tierIndex;
-    }, 0);
+    const currRarityWeights = rarityBonus
+      ? presentTiers.reduce(
+          (curr: Record<RarityTier, number>, tier: RarityTier) => {
+            if (!rarityBonus) return curr;
+            curr[tier] += RARITY_ORDER.indexOf(tier) * rarityBonus;
+            return curr;
+          },
+          { ...RARITY_WEIGHTS },
+        )
+      : RARITY_WEIGHTS;
+
+    const totalWeight = presentTiers.reduce((sum, tier) => sum + currRarityWeights[tier], 0);
 
     const [tierRoll, afterTierRoll] = nextFloat(state);
     state = afterTierRoll;
@@ -113,7 +119,7 @@ export function weightedDraw(
     let cumulative = 0;
     let chosenTier: RarityTier = presentTiers[0]!;
     for (const tier of presentTiers) {
-      cumulative += RARITY_WEIGHTS[tier] / totalWeight;
+      cumulative += currRarityWeights[tier] / totalWeight;
       if (tierRoll < cumulative) {
         chosenTier = tier;
         break;

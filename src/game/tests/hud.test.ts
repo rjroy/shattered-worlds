@@ -1,8 +1,7 @@
-import { describe, it, expect, afterEach } from "bun:test";
+import { describe, it, expect } from "bun:test";
 import { DEFAULT_RUN_MODIFIERS } from "../../data/unlocks/types";
 import { HUDView } from "../view/HUDView";
 import type { GameState } from "../../core/index";
-import { worldUsesLightManifest } from "../../data/worldUsesLightManifest";
 
 // ---------------------------------------------------------------------------
 // Fakes
@@ -155,9 +154,9 @@ describe("HUDView.update", () => {
   });
 
   // -------------------------------------------------------------------------
-  // Light indicator (Decision 3): visible for the whole run in a light-world,
-  // absent in a non-light world, value tracks state.light. Driven entirely off
-  // worldUsesLightManifest[worldId], never `light > 0`.
+  // Light indicator: direct resource readout. The HUD no longer asks world
+  // config whether a world "uses light"; it shows Light while state.light > 0
+  // and hides it at zero.
   // -------------------------------------------------------------------------
 
   // A power-up indicator records the icon texture key it was built with and the
@@ -269,43 +268,47 @@ describe("HUDView.update", () => {
     };
   }
 
-  const LIGHT_WORLD = "fog-test-light-world";
-  afterEach(() => {
-    delete worldUsesLightManifest[LIGHT_WORLD];
-  });
-
-  it("shows the Light indicator at Light 0 in a light-world (not gated on light > 0)", () => {
-    worldUsesLightManifest[LIGHT_WORLD] = true;
+  it("shows the Light indicator when Light is above 0", () => {
     const { view, powerUps } = makeLightCapableView();
 
-    view.update(lightState(LIGHT_WORLD, 0));
+    view.update(lightState("test-world", 2));
 
     const light = powerUps.find((p) => p.texture === "effect-icon-light");
     expect(light).toBeDefined();
     expect(light!.container.visible).toBe(true);
-    expect(light!.countText.text).toBe("0");
+    expect(light!.countText.text).toBe("2");
   });
 
   it("tracks state.light as it changes", () => {
-    worldUsesLightManifest[LIGHT_WORLD] = true;
     const { view, powerUps } = makeLightCapableView();
 
-    view.update(lightState(LIGHT_WORLD, 2));
+    view.update(lightState("test-world", 2));
     let light = powerUps.find((p) => p.texture === "effect-icon-light");
     expect(light!.countText.text).toBe("2");
 
-    view.update(lightState(LIGHT_WORLD, 5));
+    view.update(lightState("test-world", 5));
     light = powerUps.find((p) => p.texture === "effect-icon-light");
     expect(light!.countText.text).toBe("5");
   });
 
-  it("omits the Light indicator entirely in a non-light world", () => {
+  it("does not create the Light indicator while Light is 0", () => {
     const { view, powerUps } = makeLightCapableView();
 
-    // worldId not in the manifest → false → indicator never created.
-    view.update(lightState("zombie-big-box", 0));
+    view.update(lightState("test-world", 0));
 
     expect(powerUps.some((p) => p.texture === "effect-icon-light")).toBe(false);
+  });
+
+  it("hides the Light indicator when Light drops to 0", () => {
+    const { view, powerUps } = makeLightCapableView();
+
+    view.update(lightState("test-world", 2));
+    const light = powerUps.find((p) => p.texture === "effect-icon-light");
+    expect(light).toBeDefined();
+
+    view.update(lightState("test-world", 0));
+
+    expect(light!.container.visible).toBe(false);
   });
 
   it("updates HP and act text alongside energy", () => {

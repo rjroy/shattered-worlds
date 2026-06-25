@@ -85,8 +85,8 @@ export function buildWorld(worldId: string, starterId: string = "starter"): Asse
     worldId: bundle.id,
     deckComposition: descriptor.deckComposition as DeckComposition,
     starterDeck: starterDeck as CardCount[],
-    startHeat: (descriptor.startHeat as number) ?? undefined,
-    startLight: (descriptor.startLight as number) ?? undefined,
+    startHeat: (descriptor.startHeat as number) ?? 0,
+    startLight: (descriptor.startLight as number) ?? 0,
     onEndOfTurnPassive: descriptor.onEndOfTurnPassive as CardEffect,
   };
 

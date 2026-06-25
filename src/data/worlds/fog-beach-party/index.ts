@@ -10,5 +10,4 @@ export const FOG_BEACH_PARTY_BUNDLE: WorldDataBundle = {
   display: FOG_BEACH_PARTY_DISPLAY,
   help: FOG_BEACH_PARTY_HELP,
   musicKey: "music-fog-beach-party",
-  usesLight: true,
 };

@@ -14,6 +14,34 @@ import { effectivePlayerCard } from "./effectiveCards";
 
 type ReduceResult = { state: GameState; events: GameEvent[] };
 
+function hasPendingActBoonChoice(state: GameState, act: number): boolean {
+  return state.pendingBoonChoices.some((choice) => choice.source === "act" && choice.act === act);
+}
+
+function applyActBoonCascades(catalog: CardCatalog, result: ReduceResult): ReduceResult {
+  const events = result.events;
+
+  const eventReducer = (curr: ReduceResult, event: GameEvent): ReduceResult => {
+    switch (event.type) {
+      case "ActAdvanced": {
+        const actBoon = curr.state.runModifiers.actBoon;
+        if (actBoon !== null && !hasPendingActBoonChoice(curr.state, event.act)) {
+          const offer = createActBoonOffer(catalog, curr.state, actBoon, event.act);
+          if (offer.event !== null) {
+            events.push(offer.event);
+            return eventReducer({ state: offer.state, events }, offer.event);
+          }
+          return { state: offer.state, events };
+        }
+      }
+    }
+
+    return curr;
+  };
+
+  return result.events.reduce(eventReducer, result);
+}
+
 // ---------------------------------------------------------------------------
 // PlayCard handler
 // ---------------------------------------------------------------------------
@@ -209,20 +237,14 @@ function handleEndTurn(catalog: CardCatalog, state: GameState): ReduceResult {
   const turnStartResult = startTurn(afterPassive);
   events.push(...turnStartResult.events);
 
-  let afterRefill = turnStartResult.state;
-  const actBoon = afterRefill.runModifiers.actBoon;
-  if (afterRefill.status === "playing" && actBoon !== null) {
-    for (const event of turnStartResult.events) {
-      if (event.type !== "ActAdvanced") continue;
-      const offer = createActBoonOffer(catalog, afterRefill, actBoon, event.act);
-      afterRefill = offer.state;
-      if (offer.event !== null) {
-        events.push(offer.event);
-      }
-    }
-    if (afterRefill.pendingBoonChoices.length > 0) {
-      return { state: afterRefill, events };
-    }
+  const cascadeResult = applyActBoonCascades(catalog, {
+    state: turnStartResult.state,
+    events,
+  });
+  const afterRefill = cascadeResult.state;
+
+  if (afterRefill.pendingBoonChoices.length > 0) {
+    return { state: afterRefill, events };
   }
 
   // Livelock guard A: all draw piles and acts exhausted (player cards also
@@ -354,7 +376,13 @@ function handleChooseBoon(
       pendingBoonChoices: afterPendingBoonChoices,
     },
     events: [
-      { type: "BoonCardGranted", cardId: card.id, templateId: card.templateId, dest, rarity: card.rarity },
+      {
+        type: "BoonCardGranted",
+        cardId: card.id,
+        templateId: card.templateId,
+        dest,
+        rarity: card.rarity,
+      },
     ],
   };
 }
@@ -386,14 +414,21 @@ export function reduce(catalog: CardCatalog, state: GameState, action: Action): 
     );
   }
 
+  let result: ReduceResult = { state, events: [] };
   switch (action.type) {
     case "PlayCard":
-      return handlePlayCard(catalog, state, action);
+      result = handlePlayCard(catalog, state, action);
+      break;
     case "DiscardHazard":
-      return handleDiscardHazard(catalog, state, action);
+      result = handleDiscardHazard(catalog, state, action);
+      break;
     case "EndTurn":
-      return handleEndTurn(catalog, state);
+      result = handleEndTurn(catalog, state);
+      break;
     case "ChooseBoon":
-      return handleChooseBoon(catalog, state, action);
+      result = handleChooseBoon(catalog, state, action);
+      break;
   }
+
+  return applyActBoonCascades(catalog, result);
 }

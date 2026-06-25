@@ -217,7 +217,6 @@ export class CardView extends Phaser.GameObjects.Container {
 
     if (card.fx) {
       for (const fx of card.fx) {
-        console.log(`FX: ${fx.kind} = ${fx.key}`);
         if (fx.kind === "WhileVisible") {
           this.visibleFxKey = fx.key;
         }
@@ -642,7 +641,6 @@ export class CardView extends Phaser.GameObjects.Container {
       volume: effectiveVolume(CARD_FX_BASE, gain),
       loop: true,
     });
-    console.log(`play FX: ${this.visibleFxKey}`);
     this.loopedFx.play();
     this.scene.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
       if (this.loopedFx) {
