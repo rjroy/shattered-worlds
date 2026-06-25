@@ -4,7 +4,7 @@ date: 2026-06-13
 status: open
 tags: [world-design, fog-beach-party, conceal, reveal, hidden, light, information-clock]
 modules: [core-engine, world-data, renderer]
-related: [.lore/work/brainstorm/new-world-concepts.md, .lore/work/brainstorm/overgrown-mall-world.html, .lore/work/brainstorm/shard-response-archetypes.html]
+related: [.lore/work/brainstorm/new-world-concepts.md, .lore/work/brainstorm/overgrown-mall-world.md, .lore/work/brainstorm/shard-response-archetypes.md]
 ---
 
 # Fog Beach Party: the conceal world

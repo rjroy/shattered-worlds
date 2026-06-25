@@ -6,7 +6,7 @@ tags: [meta-progression, unlocks, memory-fragments, balance, ux, architecture]
 modules: [feats, meta-progression, core-engine]
 related:
   - .lore/work/brainstorm/feat-definitions.md
-  - .lore/work/brainstorm/shattered-worlds-meta-progression.html
+  - .lore/work/brainstorm/shattered-worlds-meta-progression.md
 ---
 
 # Unlock system — Memory Fragments, meta-shop, and Destiny Blessings

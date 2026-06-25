@@ -4,7 +4,7 @@ date: 2026-06-17
 status: open
 tags: [unlocks, meta-progression, relics, gameplay-identity]
 modules: [unlocks, destiny, card-system]
-related: [.lore/work/brainstorm/unlock-system.md, .lore/work/brainstorm/shattered-worlds-meta-progression.html]
+related: [.lore/work/brainstorm/unlock-system.md, .lore/work/brainstorm/shattered-worlds-meta-progression.md]
 ---
 
 # Unlocks that change gameplay
