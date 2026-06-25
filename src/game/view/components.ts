@@ -9,6 +9,13 @@ import Phaser from "phaser";
 import { TooltipCopy } from "../../core/view/effectTooltips";
 import { addTooltip } from "./TooltipView";
 
+const LABEL_TEXTURE = "text-back";
+const LABEL_SIDE_INSET = 4;
+const LABEL_EDGE_INSET = 2;
+const BUTTON_TEXTURE = "button-back";
+const BUTTON_SIDE_INSET = 16;
+const BUTTON_EDGE_INSET = 12;
+
 export class CommonLabel extends Phaser.GameObjects.Container {
   protected txtBg: Phaser.GameObjects.NineSlice;
   protected label: Phaser.GameObjects.Text;
@@ -21,11 +28,14 @@ export class CommonLabel extends Phaser.GameObjects.Container {
     y: number,
     text: string,
     textStyle: Phaser.Types.GameObjects.Text.TextStyle,
+    backingTexture = LABEL_TEXTURE,
+    sideInset = LABEL_SIDE_INSET,
+    edgeInset = LABEL_EDGE_INSET,
   ) {
     super(scene, x, y);
 
     this.txtBg = scene.add
-      .nineslice(0, 0, "text-back", undefined, 30, 20, 4, 4, 2, 2)
+      .nineslice(0, 0, backingTexture, undefined, 30, 20, sideInset, sideInset, edgeInset, edgeInset)
       .setOrigin(0.5, 0.5)
       .setTint(0x777777);
     this.add(this.txtBg);
@@ -94,17 +104,39 @@ export class CommonButton extends CommonLabel {
     text: string,
     textStyle: Phaser.Types.GameObjects.Text.TextStyle,
   ) {
-    super(scene, x, y, text, textStyle);
+    super(scene, x, y, text, textStyle, BUTTON_TEXTURE, BUTTON_SIDE_INSET, BUTTON_EDGE_INSET);
 
     this.buttonShadow = scene.add
-      .nineslice(0, 4, "text-back", undefined, 30, 20, 4, 4, 2, 2)
+      .nineslice(
+        0,
+        4,
+        BUTTON_TEXTURE,
+        undefined,
+        30,
+        20,
+        BUTTON_SIDE_INSET,
+        BUTTON_SIDE_INSET,
+        BUTTON_EDGE_INSET,
+        BUTTON_EDGE_INSET,
+      )
       .setOrigin(0.5, 0.5)
       .setTint(0x17110d);
     this.buttonShadow.alpha = 0.78;
     this.addAt(this.buttonShadow, 0);
 
     this.buttonRim = scene.add
-      .nineslice(0, 1, "text-back", undefined, 30, 20, 4, 4, 2, 2)
+      .nineslice(
+        0,
+        1,
+        BUTTON_TEXTURE,
+        undefined,
+        30,
+        20,
+        BUTTON_SIDE_INSET,
+        BUTTON_SIDE_INSET,
+        BUTTON_EDGE_INSET,
+        BUTTON_EDGE_INSET,
+      )
       .setOrigin(0.5, 0.5)
       .setTint(0xd7b071);
     this.buttonRim.alpha = 0.9;
