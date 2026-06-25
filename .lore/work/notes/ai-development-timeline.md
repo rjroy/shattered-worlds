@@ -192,9 +192,34 @@ Evidence: `82d1b30 Resolved reference drift against source. (#110)`; `996caf5 Up
 - Where did AI output require the most repair: TypeScript correctness, Phaser rendering, game balance, asset linkage, mobile layout, deployment, or docs?
 - Which days had substantial non-git work, such as prompting, image selection, music generation, or desktop app comparison?
 
+## Answered Provenance Notes
+
+Tool use was not cleanly separated by day. The user moved between tools frequently, and model choice was often based on task feel rather than a fixed schedule. Git-visible `[codex]` labels remain useful evidence for specific commits, but the timeline should avoid assigning exact tool ownership where the repo does not preserve it.
+
+Copilot was used mostly early on for writing pull requests, not as the main implementation partner. Its harness felt too limited for the user's workflow because it ultimately routed to Anthropic or OpenAI models anyway, making it preferable to use a harness built around the desired model directly. qwen3.6 was used through pi.dev and worked best for small, well-defined tasks; it tended to drift, get confused, or lose the thread on longer-running work.
+
+Claude model choice depended on task shape. Sonnet was useful for brainstorming, where slightly wrong questions could still be productive, and for research-style lookup/report work. Opus was generally used for specs and planning. Sonnet was also used for implementation when the work was already scoped. ChatGPT could handle the whole workflow, especially implementation from a clear plan, but its more holistic planning tendency could make plans too expansive.
+
+ChatGPT web app was used for broader concept art and reality/world images. It was useful because it behaved creatively and somewhat randomly, which was acceptable when generating multiple candidates and selecting a direction. The early AI style drafts from 2026-06-03 were also generated in ChatGPT as part of the first design exploration; they produced detailed-looking mockups, but those mockups were not directly usable because many practical game UX details were missing.
+
+Codex's imagegen skill behaved differently from ChatGPT image generation: it was more prescriptive, repeatable, and consistent, which made it better for constrained generation where consistency mattered more than broad ideation. Flux 2.0 Pro was used for the card insets for Ember Orchard, Tidal Archive, and City of Sleeping Giants. Those images skewed more cartoony, which fit the otherworldly tone of those worlds, though this may have come partly from Claude-generated prompts rather than Flux alone. The intended general inset direction was graphic novel style, but ChatGPT did not reliably adhere to that; Whiteout Parking Garage insets came out especially realistic and may be regenerated.
+
+All committed music files came from Suno. The workflow used custom skill files with Claude to build lyrics and production prompts, then those prompts were given to Suno. No manual audio editing was done before commit. Some later songs used Opus for prompt generation and came out less creative and more corporate-sounding, so the prompt-generation model materially shaped the final music.
+
+All committed FX files were generated with ElevenLabs. Some outputs did not sound right as generated, so Audacity was used for manual cleanup and composition. The edits typically involved combining multiple ElevenLabs generations, adding fades, applying effects, and producing a slightly longer sound that felt better in game. There were discarded or partially used generations, and that affected workflow time because the useful result sometimes came from assembling fragments rather than accepting a single generation. The current FX quality is considered a weak point, possibly due to the difficulty of sound-design prompting; a future sound-design prompt-generation skill may help.
+
+The lore, spec, and plan files were not written directly by a human. They were assistant-generated project memory, with the human role focused on direction, review, and correction. At most, the user would comment on a lore file and have an assistant integrate those comments into the document.
+
+The largest area of direct human repair was game balance. Some Phaser rendering issues also needed manual correction, especially when the desired interaction or visual behavior was hard to explain precisely. Manual implementation happened when explaining the change to an AI would take more effort than making the change directly, when the user simply wanted to add a feature quickly, or when the existing lore/spec/plan artifacts would make the assistant resist the needed change.
+
+The sound FX implementation is one example of a manually added feature. The ActBoon timing change is another: the original behavior only drew the ActBoon at the start of a turn, but that design was wrong because mid-turn reductions could matter. Rather than revise the spec, make a new plan, and convince the assistant to update the implementation against the corrected design, the user changed it directly.
+
+A key workflow finding is that AI assistants sometimes treated specs as authoritative law rather than provisional project memory. That became a problem when yesterday's design needed to change. Assistants could also over-prioritize the quickest route to implementation or adherence to existing patterns, which made them less helpful when the real goal was correctness or a meaningful refactor.
+
+Substantial non-git work cannot be reconstructed reliably. If logs or committed artifacts do not show prompting, image selection, music generation, or desktop app comparison time, then that evidence does not exist for the report. The timeline should mark this as an explicit provenance gap rather than inferring daily effort where logs do not exist.
+
 ## Report-Readiness Notes
 
 - The timeline is strong enough to support sections on speed, content scale, refactor pressure, documentation-as-memory, and provenance gaps.
 - The repo shows many cases where rapid feature/content generation was followed by consolidation: renderer splitting, effect registry, world consolidation, unified card JSON, and reference drift cleanup.
 - The main missing evidence is not what changed, but how the work felt and which tool produced which kind of output. Those questions should be answered by short user annotations before drafting final findings.
-
