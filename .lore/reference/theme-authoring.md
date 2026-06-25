@@ -6,7 +6,7 @@ status: current
 tags: theme, world, authoring, rules, the-walker, deck, visual-theme, reference
 fg-type: architecture
 fg-sources: .lore/work/specs/overgrown-mall.html, .lore/work/specs/fog-beach-party.html, .lore/work/brainstorm/shard-response-archetypes.html
-related: .lore/reference/visual-direction.html, .lore/reference/vision.html
+related: .lore/reference/visual-direction.md, .lore/reference/vision.md
 -->
 
 Use this when adding or reviewing a world theme. A theme is one `worldId` plus coordinated data, presentation, assets, and registration. The canonical model is `zombie-big-box`, but do not copy its palette verbatim.
