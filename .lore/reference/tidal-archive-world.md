@@ -4,7 +4,7 @@ date: 2026-06-25
 status: current
 tags: [world-design, the-tidal-archive, discard-recall, passive-effects, boons]
 fg-type: concept
-fg-sources: [.lore/work/plans/the-tidal-archive.md]
+fg-sources: [.lore/work/plans/the-tidal-archive.md, .lore/work/notes/the-tidal-archive.md]
 fg-status: current
 ---
 

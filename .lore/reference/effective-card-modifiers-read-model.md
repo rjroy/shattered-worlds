@@ -4,7 +4,7 @@ date: 2026-06-25
 status: current
 tags: [effective-cards, unlocks, run-modifiers, card-system, read-model]
 fg-type: architecture
-fg-sources: [.lore/work/plans/effective-card-modifiers.md]
+fg-sources: [.lore/work/plans/effective-card-modifiers.md, .lore/work/notes/effective-card-modifiers.md]
 fg-status: current
 ---
 
@@ -23,3 +23,5 @@ Turn play history lives in core state and resets on end turn. It supports modifi
 ## Design Constraint
 
 Effective snapshots are not authority on their own. Reducer validation remains authoritative, and UI-selected snapshots are presentation/read-model artifacts. This prevents unlocked card changes from becoming a second rules engine in the renderer.
+
+The table scene captures a selected effective snapshot when targeting or modal selection begins. That snapshot remains stable even if live modifiers change before the action completes, so previews, connector styling, target specs, and reducer submission all describe the same chosen card.

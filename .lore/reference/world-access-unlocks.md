@@ -4,7 +4,7 @@ date: 2026-06-25
 status: current
 tags: [world-unlocks, destiny, world-select, access-control, unlocks]
 fg-type: decision
-fg-sources: [.lore/work/plans/world-access-unlocks.md]
+fg-sources: [.lore/work/plans/world-access-unlocks.md, .lore/work/notes/world-access-unlocks.md]
 fg-status: current
 ---
 

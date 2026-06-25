@@ -4,7 +4,7 @@ date: 2026-06-25
 status: current
 tags: [unlocks, destiny, run-modifiers, runtime, meta-progression]
 fg-type: architecture
-fg-sources: [.lore/work/plans/unlock-system.md]
+fg-sources: [.lore/work/plans/unlock-system.md, .lore/work/notes/unlock-system.md]
 fg-status: current
 ---
 

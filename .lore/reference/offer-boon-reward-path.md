@@ -4,7 +4,7 @@ date: 2026-06-25
 status: current
 tags: [offer-boon, boons, reward-choice, world-clear, core-effects]
 fg-type: architecture
-fg-sources: [.lore/work/plans/offer-boon-rewards.md]
+fg-sources: [.lore/work/plans/offer-boon-rewards.md, .lore/work/notes/offer-boon-rewards.md]
 fg-status: current
 ---
 
@@ -20,6 +20,10 @@ A generic boon-offer helper accepts a source, set id, template pool, offered cou
 
 `ChooseBoon` mints the selected template, enforces player/exhaust constraints, grants it to hand or discard, clears the pending choice, and emits `BoonCardGranted`.
 
+`OfferBoon` is hook-only and fail-closed. Unknown sets, no legal options, and already-pending choices do not create partial state. The handler resolves through the shared boon-set registry rather than a local Fortune-only shim.
+
 ## Authoring Rule
 
 Boon sets are registered once and referenced by set id. World-card `onCleared` hooks may use `OfferBoon` for cache-style rewards where player agency is better than dumping several fixed cards into the deck.
+
+Recursive effect description and availability dispatch resolve the effect registry lazily at method-call time. This avoids the `registry -> composite -> describe/available -> registry` initialization cycle in the current effect system.

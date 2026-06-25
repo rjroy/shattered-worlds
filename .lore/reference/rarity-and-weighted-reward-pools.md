@@ -4,7 +4,7 @@ date: 2026-06-25
 status: current
 tags: [rarity, weighted-draw, rewards, boons, gain-random-card]
 fg-type: architecture
-fg-sources: [.lore/work/plans/rarity-system.md]
+fg-sources: [.lore/work/plans/rarity-system.md, .lore/work/notes/rarity-system.md]
 fg-status: current
 ---
 
@@ -23,3 +23,9 @@ The kernel is legality-agnostic. Callers filter for player cards, exhaust-only c
 ## Preview Rule
 
 Random rewards must not leak their rolled result through action preview or confirmation. `GainRandomCard` grants may emit the concrete result for committed game events, but preview summaries use the pool display name instead of naming the future card or tier.
+
+## Maintenance Constraints
+
+The weighted-draw kernel assumes callers pass deduped, legal, catalog-resolvable candidate ids. That precondition is documented rather than defensively revalidated, because existing callers already own legality filtering.
+
+`src/core/effects/registry.ts` and `src/core/effects/composite.ts` currently form a circular import. The canonical full test suite is not affected, but narrow test-file subsets can hit a load-order `ReferenceError`; effect-system work should avoid deepening that cycle and should break it when touching those modules.

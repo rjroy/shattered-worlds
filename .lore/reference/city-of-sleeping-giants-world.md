@@ -4,7 +4,7 @@ date: 2026-06-25
 status: current
 tags: [world-design, city-of-sleeping-giants, stir, recurrence, force-destroy]
 fg-type: concept
-fg-sources: [.lore/work/plans/city-of-sleeping-giants.md]
+fg-sources: [.lore/work/plans/city-of-sleeping-giants.md, .lore/work/notes/city-of-sleeping-giants.md]
 fg-status: current
 ---
 
@@ -24,4 +24,4 @@ Body-movement hazards use `ForceDestroy` where the fiction is snatching or buryi
 
 ## Delivery Shape
 
-The world is gated through the unlock system, registers a signature threat, adds a boon source for survey rewards, ships with full inset art, and validates recurrence through top-decked body-reflex hazards rather than a new core engine slice.
+The world is gated through the unlock system, registers a signature threat, adds a boon source for survey rewards, and validates recurrence through top-decked body-reflex hazards rather than a new core engine slice. Base and music bindings are wired; card inset art and unlock art are deferred, so the corresponding asset checks remain intentionally red until those assets exist.

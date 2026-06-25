@@ -4,7 +4,7 @@ date: 2026-06-25
 status: current
 tags: [fortune, act-rewards, boons, unlocks, temporary-cards]
 fg-type: architecture
-fg-sources: [.lore/work/plans/fortune-boon-cards.md]
+fg-sources: [.lore/work/plans/fortune-boon-cards.md, .lore/work/notes/fortune-boon-cards.md]
 fg-status: current
 ---
 
@@ -23,3 +23,5 @@ Offers store template ids, not minted cards. This prevents rejected options from
 ## Trigger Rule
 
 Fortune triggers on real act advancement from the end-turn path, not on the opening deal. If an act transition would otherwise lead into a post-refill loss check, the pending boon choice takes priority so the player can resolve the offered rescue card first.
+
+Fortune intentionally creates at most one pending act-boon choice per reducer dispatch. If a single end-turn refill emits multiple `ActAdvanced` events, the offer uses the first advanced act from that event batch rather than queueing multiple choices.

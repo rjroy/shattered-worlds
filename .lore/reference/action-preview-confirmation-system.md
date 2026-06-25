@@ -4,7 +4,7 @@ date: 2026-06-25
 status: current
 tags: [action-preview, confirmation, ux, settings, core-runtime]
 fg-type: architecture
-fg-sources: [.lore/work/plans/action-impact-preview-and-confirmation.md]
+fg-sources: [.lore/work/plans/action-impact-preview-and-confirmation.md, .lore/work/notes/action-impact-preview-and-confirmation.md]
 fg-status: current
 ---
 
@@ -20,8 +20,14 @@ Preview summaries are derived from emitted `GameEvent` values and before/after d
 
 Concealed world cards must stay concealed in preview text. Names, costs, keywords, and exact hook text are masked. Broad effects may describe concealed impact only generically, and hidden consequences count as harmful for confirmation.
 
+Concealment masking is provenance-based. `GameEvent` values can carry `sourceCardId`, and `applyEffect` stamps events from the firing card while preserving inner provenance. Preview masking can then genericize or drop events whose source resolves to a concealed world card, instead of mirroring reducer event counts. Deferred `ForceDestroy` also carries source provenance through `pendingForceDestroySource`.
+
+The remaining intentional exception is concealed hooks that add cards to the world deck. Later refill events are emitted by draw logic rather than the hook itself, so preview uses a small downstream taint to mask those newly drawn hazards.
+
 ## UI Integration
 
 The unified preview system replaces the older targeted `previewPlay` path. It powers selected-card target hover, idle world-card hover, end-turn hover, and confirmation modals. Detailed hover text is controlled by user settings.
 
 Confirmation is controlled by a versioned settings store with modes for always confirming, confirming risky actions only, or disabling confirmation. The same store is intentionally broad enough to host future settings.
+
+Confirmation owns top-most modal behavior in the table scene. It blocks help/settings toggles while open, cancels on ESC before other overlays, clears selected previews/connectors on cancel, and hides during terminal or shutdown cleanup.

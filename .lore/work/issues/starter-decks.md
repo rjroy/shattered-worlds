@@ -1,1 +1,0 @@
-The WorldSelectScene.md is currently hard coded the 'starter' for the starterDeck. We need to be able to select the starter deck from the available options. This also means the starter dekcs need some themeing and additional design around that.
