@@ -26,11 +26,19 @@ Every decision in this project answers to seven principles. The short version:
 
 ## Status
 
-Early development. The POC core loop — seeded RNG, reducer-based state machine, headless sim runner, Phaser renderer — is implemented and deployed.
+Playable vertical slice in active development. The project now has:
 
-Live build: [GitHub Pages](https://rjroy.github.io/shattered-worlds) _(once deployed)_
+- A deterministic, seeded TypeScript rules engine with reducer-driven state and semantic game events.
+- A Phaser/Vite browser client with world select, table play, action previews, confirmations, help overlays, settings, music, and run summaries.
+- Persistent local stats, Chronicle import/export, feat rewards, Fragments, and Destiny unlocks.
+- World access unlocks, starter deck unlocks, stat/resource unlocks, rarity modifiers, card modifiers, and temporary Fortune boon rewards.
+- Nine registered worlds: The Big Box, Last Day at the Office, Highway Eruption, Mall Reclaimnation, Fog Beach Party, Whiteout Parking Garage, The Tidal Archive, The Ember Orchard, and City of Sleeping Giants.
+- A headless sim runner for balance checks.
+- CI for lint, typecheck, tests, and production build.
 
-## This is a portfolio game
+Live build: [GitHub Pages](https://rjroy.github.io/shattered-worlds/)
+
+## Portfolio standard
 
 That phrase is load-bearing: the codebase must be typed, tested, CI-backed, **and** genuinely fun with real retention. Not one or the other.
 

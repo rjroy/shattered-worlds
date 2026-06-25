@@ -17,12 +17,13 @@ bun install
 |---|---|
 | `bun run dev` | Start Vite dev server with hot reload |
 | `bun run build` | Production build to `dist/` |
+| `bun run preview` | Serve the production build locally |
 | `bun run test` | Run unit tests |
 | `bun run typecheck` | Type-check without emitting |
 | `bun run lint` | ESLint across all sources |
 | `bun run sim` | Headless sim runner (balance data) |
 
-All of these run in CI. A PR must pass lint, typecheck, tests, and build before it can merge.
+CI runs install, lint, typecheck, tests, and build. A PR must pass those checks before it can merge.
 
 ## Architecture
 
@@ -40,12 +41,20 @@ src/
     scenes/              — BootScene, TableScene
     view/                — render, components, presentation, theme, visualMappers, backdrop, walker, piles
     interaction/         — selection, describe, feedback
-    data/                — assetManifest, worldData
+    runtime/             — session orchestration, local profiles, feats, unlocks, stats, import/export
+    data/                — assetManifest, audioManifest
+    worlds/              — Vite asset bindings for world art and music
     assets/              — webp art + per-theme assets
     tests/               — *.test.ts + testSetup
   sim/                   — headless runner, imports core
     tests/               — *.test.ts
-  data/worlds/           — world definition JSON
+  data/                  — card, boon, starter deck, feat, unlock, and world data
+    allCards.json        — unified card template catalog
+    boonPools.json       — fortune boon template pools
+    starterDecks/        — starter deck JSON
+    feats/               — feat catalog and types
+    unlocks/             — Destiny unlock catalog and types
+    worlds/              — per-world deck composition, theme, display/help metadata
 ```
 
 ### `src/core/` — the rules engine
@@ -85,18 +94,18 @@ bun run sim
 
 ## Key design decisions
 
-**Why Phaser?** The architecture supports the kind of maximalist juice (Balatro-style card effects, screen shake, escalating particle work) that DOM-based approaches make painful. Phaser gives full control over the render loop without fighting the browser. The research doc lives in `.lore/work/research/game-engine-for-ai-development.html`.
+**Why Phaser?** The architecture supports the kind of maximalist juice (Balatro-style card effects, screen shake, escalating particle work) that DOM-based approaches make painful. Phaser gives full control over the render loop without fighting the browser. The research doc lives in `.lore/reference/game-engine-choice.md`.
 
-**Why a pure-core/renderer split?** The core is exhaustively unit-testable and runnable headless for balance sims. Simulation speed and animation speed are decoupled by design. The architecture document is at `.lore/work/design/core-render-architecture.html`.
+**Why a pure-core/renderer split?** The core is exhaustively unit-testable and runnable headless for balance sims. Simulation speed and animation speed are decoupled by design. The architecture document is at `.lore/reference/core-render-split.md`.
 
 **Why seeded RNG?** Same seed + same actions yields the same run, byte for byte. This is what makes "randomness is owned, never imposed" enforceable — every outcome is reproducible and traceable.
 
 ## Lore
 
-Design documents, specs, research, and retros live in `.lore/`. They are HTML files readable in a browser. Key documents:
+Design documents, specs, research, retros, and reference pages live in `.lore/`. Most are Markdown, with some older HTML artifacts. Vite serves the folder at `/lore/` during development and copies it to `dist/lore/` during production builds. Key documents:
 
-- `.lore/reference/vision.html` — project north star, principles, anti-goals
-- `.lore/work/design/core-render-architecture.html` — the core/renderer split in detail
+- `.lore/reference/vision.md` — project north star, principles, anti-goals
+- `.lore/reference/core-render-split.md` — the core/renderer split in detail
 - `.lore/work/specs/poc-core-loop.html` — POC scope and requirements
 
 ## Branch and PR workflow
@@ -108,7 +117,7 @@ Design documents, specs, research, and retros live in `.lore/`. They are HTML fi
 
 ## Testing
 
-Tests live in a `tests/` folder within each module (`*.test.ts`). Run them with `bun run test`.
+Tests live beside the code they cover or in a module `tests/` folder (`*.test.ts`). Run them with `bun run test`.
 
 The core module has near-complete unit test coverage. New core logic requires tests. The sim runner provides integration-level validation of the full game loop.
 
@@ -116,19 +125,19 @@ Do not mock the core in renderer tests. The core is pure and fast — use it dir
 
 ## Adding a world
 
-A world is one folder under `src/data/worlds/<id>/` plus two small entries in the renderer layer. The type system prevents most authoring mistakes; the two conformance tests catch the rest.
+A world is one folder under `src/data/worlds/<id>/` plus renderer asset and music bindings. Card templates are global; per-world `cards.json` files define world id, act composition, and optional world settings. The type system prevents most authoring mistakes; conformance tests catch the rest.
 
 ### 1. Create the world folder
 
 ```
 src/data/worlds/<id>/
-  cards.json    — card templates and act composition (same schema as existing worlds)
+  cards.json    — worldId, deckComposition, and optional start/passive settings
   theme.ts      — exports a named VisualTheme constant (import the type from ../../../game/view/themes/theme)
   meta.ts       — exports WorldDisplayData (name, tagline, story, backgroundKey) and WorldHelpData (mechanics[])
-  index.ts      — assembles and exports the WorldDataBundle (id, source, theme, display, help, musicKey)
+  index.ts      — assembles and exports the WorldDataBundle (id, deck, theme, display, help, musicKey)
 ```
 
-A `WorldDataBundle` requires all of `theme`, `display`, `help`, and `musicKey` — the type will not compile with any of them missing.
+A `WorldDataBundle` requires `id`, `deck`, `theme`, `display`, `help`, and `musicKey` — the type will not compile with any of them missing. If the world needs new card templates, add them to `src/data/allCards.json`. If it needs new fortune boon pools, add pool membership to `src/data/boonPools.json`.
 
 ### 2. Register the bundle
 
@@ -136,7 +145,7 @@ Add the bundle to the `worldDataRegistry` array in `src/data/worlds/registry.ts`
 
 ### 3. Add asset bindings
 
-Add the world's asset entries (backdrops, card front, inset art) and music binding to `src/game/worlds/assetBindings.ts`. Each entry maps the string key used in `cards.json` / `theme.ts` to the Vite-resolved asset URL.
+Add the world's asset entries (backdrops, card front, inset art) and music binding to `src/game/worlds/assetBindings.ts`. Each entry maps the string key used in card templates, `theme.ts`, and `meta.ts` to the Vite-resolved asset URL. `src/game/data/assetManifest.ts` spreads these world bindings into the preload manifest.
 
 ### 4. Run the conformance tests
 
@@ -144,9 +153,11 @@ Add the world's asset entries (backdrops, card front, inset art) and music bindi
 bun run test
 ```
 
-Two tests catch every wiring mistake:
+These tests catch the common wiring mistakes:
 
-- `src/core/tests/worldRegistry.test.ts` — verifies id uniqueness, id matches `source.worldId`, all required fields present, all asset key strings are non-empty, and every card-template cross-reference resolves in the assembled catalog.
+- `src/core/tests/worldRegistry.test.ts` — verifies id uniqueness, required bundle fields, non-empty referenced asset keys, and every card-template cross-reference in the assembled catalog.
+- `src/core/tests/worldManifest.test.ts` — verifies assembled world data, deck composition, starter decks, boon pools, and catalog consistency.
 - `src/game/tests/worldAssetBindings.test.ts` — verifies every key that `referencedAssetKeys(bundle)` derives (card insets, backdrop keys, display background) is bound in `assetManifest`, and the music key is bound in `worldMusicManifest`.
+- `src/game/tests/unlockAssetBindings.test.ts` — verifies every unlock icon key from the unlock catalog is bound in `assetManifest`.
 
 If a key is missing from `assetManifest`, the second test names it explicitly. Fix the `assetBindings.ts` entry rather than the key string.
