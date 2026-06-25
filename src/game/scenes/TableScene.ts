@@ -67,7 +67,12 @@ import { PileLayer } from "../view/PileLayer";
 import { BackdropLayer } from "../view/backdrop";
 import { worldDisplayManifest } from "../../data/worldDisplayManifest";
 import { CARD_FACE, TABLE_LAYOUT } from "../view/layout";
-import { rowCardPositions } from "../view/tableLayout";
+import {
+  rowWindowLayout,
+  rowWindowPageOffset,
+  type RowCardPosition,
+  type RowWindowLayout,
+} from "../view/tableLayout";
 import { addTooltip } from "../view/TooltipView";
 import { CONCEALED_HOOK_WARNING } from "../../core/view/actionPreview";
 
@@ -169,6 +174,12 @@ export class TableScene extends Phaser.Scene {
   private questionBtn!: CommonButton;
   private settingsBtn!: CommonButton;
   private exitBtn!: CommonButton;
+  private worldRowPrevBtn!: CommonButton;
+  private worldRowNextBtn!: CommonButton;
+  private worldRowRangeLabel!: CommonLabel;
+  private playerRowPrevBtn!: CommonButton;
+  private playerRowNextBtn!: CommonButton;
+  private playerRowRangeLabel!: CommonLabel;
 
   // Modal chooser UI (created/destroyed per card play)
   private modalChooser: ModalChooserView | null = null;
@@ -199,6 +210,8 @@ export class TableScene extends Phaser.Scene {
   private seed_: number = 0;
   private terminalSummaryShown_: boolean = false;
   private runtime_: GameplayRuntime;
+  private worldRowOffset: number = 0;
+  private playerRowOffset: number = 0;
 
   constructor(runtime?: GameplayRuntime) {
     super({ key: "Table" });
@@ -218,6 +231,8 @@ export class TableScene extends Phaser.Scene {
     this.cardObjects = new Map();
     this.playerCardDisplaySignatures = new Map();
     this.selectedCardSnapshot = null;
+    this.worldRowOffset = 0;
+    this.playerRowOffset = 0;
   }
 
   create(): void {
@@ -351,6 +366,34 @@ export class TableScene extends Phaser.Scene {
     });
     addTooltip(this, this.exitBtn, TABLE_TOOLTIPS.exit);
 
+    const rowNavStyle = textStyle({
+      fontSize: "13px",
+      fontStyle: "bold",
+      color: getRealityPalette(this.theme_, "text"),
+    });
+    const rowRangeStyle = textStyle({
+      fontSize: "12px",
+      color: getRealityPalette(this.theme_, "title"),
+    });
+    this.worldRowPrevBtn = this.createRowNavButton("world", -1, "<", rowNavStyle);
+    this.worldRowNextBtn = this.createRowNavButton("world", 1, ">", rowNavStyle);
+    this.worldRowRangeLabel = new CommonLabel(
+      this,
+      TABLE_LAYOUT.rowNav.world.labelX,
+      TABLE_LAYOUT.rowNav.world.labelY,
+      "",
+      rowRangeStyle,
+    ).setDepth(TABLE_LAYOUT.cardHoverDepth + 25).setVisible(false);
+    this.playerRowPrevBtn = this.createRowNavButton("player", -1, "<", rowNavStyle);
+    this.playerRowNextBtn = this.createRowNavButton("player", 1, ">", rowNavStyle);
+    this.playerRowRangeLabel = new CommonLabel(
+      this,
+      TABLE_LAYOUT.rowNav.player.labelX,
+      TABLE_LAYOUT.rowNav.player.labelY,
+      "",
+      rowRangeStyle,
+    ).setDepth(TABLE_LAYOUT.cardHoverDepth + 25).setVisible(false);
+
     this.input.keyboard?.on("keydown-ESC", () => {
       // The confirmation modal is top-most, so ESC only cancels it when open;
       // help/settings can never be open behind it.
@@ -440,22 +483,38 @@ export class TableScene extends Phaser.Scene {
     // while the face shown reflects current buffs/debuffs.
     const visibleHand = effectiveHand(state);
     const worldCards = visibleHand.filter(
-      (c): c is import("../../core/index").WorldCard => c.kind === "world",
+      (c): c is WorldCard => c.kind === "world",
     );
     const playerCards = visibleHand.filter((c) => c.kind === "player");
+    const worldWindow = rowWindowLayout(
+      worldCards.map((c) => c.id),
+      this.worldRowOffset,
+      WORLD_ROW_Y,
+    );
+    const playerWindow = rowWindowLayout(
+      playerCards.map((c) => c.id),
+      this.playerRowOffset,
+      HAND_ROW_Y,
+    );
+    this.worldRowOffset = worldWindow.offset;
+    this.playerRowOffset = playerWindow.offset;
+    const visibleWorldCards = worldCards.slice(worldWindow.startIndex, worldWindow.endIndex);
+    const visiblePlayerCards = playerCards.slice(playerWindow.startIndex, playerWindow.endIndex);
+    this.updateRowNavigation("world", worldWindow);
+    this.updateRowNavigation("player", playerWindow);
 
     const desiredIds = new Set<string>();
     this.layoutRow(
-      worldCards,
-      WORLD_ROW_Y,
+      visibleWorldCards,
+      worldWindow.positions,
       playableIds,
       discardableIds,
       legalTargetIds,
       desiredIds,
     );
     this.layoutRow(
-      playerCards,
-      HAND_ROW_Y,
+      visiblePlayerCards,
+      playerWindow.positions,
       playableIds,
       discardableIds,
       legalTargetIds,
@@ -584,14 +643,12 @@ export class TableScene extends Phaser.Scene {
    */
   private layoutRow(
     cards: readonly Card[],
-    rowY: number,
+    positions: readonly RowCardPosition[],
     playableIds: Set<string>,
     discardableIds: Set<string>,
     legalTargetIds: Set<string>,
     desiredIds: Set<string>,
   ): void {
-    const positions = rowCardPositions(cards.length, rowY);
-
     cards.forEach((card, i) => {
       const { x, y } = positions[i]!;
       const container = this.obtainCardContainer(card);
@@ -623,6 +680,69 @@ export class TableScene extends Phaser.Scene {
         container.applyConcealment(this.game_.state.light);
       }
     });
+  }
+
+  private createRowNavButton(
+    row: "world" | "player",
+    direction: -1 | 1,
+    text: string,
+    style: Phaser.Types.GameObjects.Text.TextStyle,
+  ): CommonButton {
+    const y =
+      row === "world" ? TABLE_LAYOUT.rowNav.world.buttonY : TABLE_LAYOUT.rowNav.player.buttonY;
+    const x = direction < 0 ? TABLE_LAYOUT.rowNav.previousX : TABLE_LAYOUT.rowNav.nextX;
+    return new CommonButton(this, x, y, text, style)
+      .setDepth(TABLE_LAYOUT.cardHoverDepth + 25)
+      .on("pointerdown", () => this.navigateRow(row, direction))
+      .setVisible(false);
+  }
+
+  private updateRowNavigation(row: "world" | "player", layout: RowWindowLayout): void {
+    const previous = row === "world" ? this.worldRowPrevBtn : this.playerRowPrevBtn;
+    const next = row === "world" ? this.worldRowNextBtn : this.playerRowNextBtn;
+    const label = row === "world" ? this.worldRowRangeLabel : this.playerRowRangeLabel;
+
+    previous.setVisible(layout.hasOverflow);
+    next.setVisible(layout.hasOverflow);
+    label.setVisible(layout.hasOverflow);
+    if (!layout.hasOverflow) {
+      previous.disableInteractive();
+      next.disableInteractive();
+      return;
+    }
+
+    label.setText(layout.rangeLabel);
+    this.setRowNavButtonEnabled(previous, layout.canPageBackward);
+    this.setRowNavButtonEnabled(next, layout.canPageForward);
+  }
+
+  private setRowNavButtonEnabled(button: CommonButton, enabled: boolean): void {
+    button.setAlpha(enabled ? 1 : 0.35);
+    button.disableInteractive();
+    if (enabled) button.setInteractive({ useHandCursor: true });
+  }
+
+  private navigateRow(row: "world" | "player", direction: -1 | 1): void {
+    if (this.actionConfirmation.isOpen) return;
+    if (this.game_.state.status !== "playing") return;
+    const visibleHand = effectiveHand(this.game_.state);
+    const cardCount = visibleHand.filter((card) => card.kind === row).length;
+    const currentOffset = row === "world" ? this.worldRowOffset : this.playerRowOffset;
+    const nextOffset = rowWindowPageOffset(cardCount, currentOffset, direction);
+    if (nextOffset === currentOffset) return;
+
+    if (this.hoveredCardId !== null) {
+      this.cardObjects.get(this.hoveredCardId)?.clearEmphasis();
+      this.hoveredCardId = null;
+    }
+    this.clearConnector();
+    this.clearPreviewSlot();
+    if (row === "world") {
+      this.worldRowOffset = nextOffset;
+    } else {
+      this.playerRowOffset = nextOffset;
+    }
+    this.drawAll();
   }
 
   /**

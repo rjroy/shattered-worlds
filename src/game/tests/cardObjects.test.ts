@@ -166,18 +166,45 @@ function nthTween(captured: CapturedTween[], i: number): CapturedTween {
 }
 
 function makeDrawAllHarness(state: GameState): {
-  scene: { drawAll(): void };
+  scene: { drawAll(): void; navigateRow(row: "world" | "player", direction: -1 | 1): void };
+  worldRows: Card[][];
   playerRows: Card[][];
+  rowNav: {
+    worldPrev: FakeRowNavButton;
+    worldNext: FakeRowNavButton;
+    worldLabel: FakeRowNavLabel;
+    playerPrev: FakeRowNavButton;
+    playerNext: FakeRowNavButton;
+    playerLabel: FakeRowNavLabel;
+  };
 } {
   const scene = Object.create(TableScene.prototype) as Record<string, unknown> & {
     drawAll(): void;
+    navigateRow(row: "world" | "player", direction: -1 | 1): void;
   };
+  const worldRows: Card[][] = [];
   const playerRows: Card[][] = [];
+  const rowNav = {
+    worldPrev: makeFakeRowNavButton(),
+    worldNext: makeFakeRowNavButton(),
+    worldLabel: makeFakeRowNavLabel(),
+    playerPrev: makeFakeRowNavButton(),
+    playerNext: makeFakeRowNavButton(),
+    playerLabel: makeFakeRowNavLabel(),
+  };
   scene.game_ = { state, intensity: () => 0 };
   scene.theme_ = selectTheme("zombie-big-box");
   scene.sel = { phase: "idle" };
   scene.hoveredCardId = null;
+  scene.worldRowOffset = 0;
+  scene.playerRowOffset = 0;
   scene.cardObjects = new Map();
+  scene.worldRowPrevBtn = rowNav.worldPrev;
+  scene.worldRowNextBtn = rowNav.worldNext;
+  scene.worldRowRangeLabel = rowNav.worldLabel;
+  scene.playerRowPrevBtn = rowNav.playerPrev;
+  scene.playerRowNextBtn = rowNav.playerNext;
+  scene.playerRowRangeLabel = rowNav.playerLabel;
   scene.backdropLayer = { update(): void {} };
   scene.hudView = { update(): void {} };
   scene.pileLayer = { update(): void {} };
@@ -221,14 +248,98 @@ function makeDrawAllHarness(state: GameState): {
       return scene.helpOverlay;
     },
   };
+  scene.settingsBtn = {
+    disableInteractive(): unknown {
+      return scene.settingsBtn;
+    },
+    setVisible(): unknown {
+      return scene.settingsBtn;
+    },
+  };
+  scene.actionConfirmation = { isOpen: false };
   scene.tweens = { killTweensOf(): void {} };
   scene.currentLegalTargetIds = () => new Set<string>();
-  scene.layoutRow = (cards: readonly Card[], rowY: number) => {
-    if (rowY > 400) playerRows.push([...cards]);
+  scene.layoutRow = (cards: readonly Card[], positions: readonly { y: number }[]) => {
+    const rowY = positions[0]?.y;
+    if (rowY === undefined) return;
+    if (rowY > 400) {
+      playerRows.push([...cards]);
+    } else {
+      worldRows.push([...cards]);
+    }
   };
   scene.updateHint = () => {};
   scene.updateBoonChoiceView = () => {};
-  return { scene, playerRows };
+  scene.clearConnector = () => {};
+  scene.clearPreviewSlot = () => {};
+  rowNav.worldPrev.onPress = () => scene.navigateRow("world", -1);
+  rowNav.worldNext.onPress = () => scene.navigateRow("world", 1);
+  rowNav.playerPrev.onPress = () => scene.navigateRow("player", -1);
+  rowNav.playerNext.onPress = () => scene.navigateRow("player", 1);
+
+  return { scene, worldRows, playerRows, rowNav };
+}
+
+interface FakeRowNavButton {
+  visible: boolean;
+  alpha: number;
+  interactive: boolean;
+  onPress: (() => void) | null;
+  setVisible(visible: boolean): FakeRowNavButton;
+  setAlpha(alpha: number): FakeRowNavButton;
+  disableInteractive(): FakeRowNavButton;
+  setInteractive(): FakeRowNavButton;
+  press(): void;
+}
+
+interface FakeRowNavLabel {
+  visible: boolean;
+  text: string;
+  setVisible(visible: boolean): FakeRowNavLabel;
+  setText(text: string): void;
+}
+
+function makeFakeRowNavButton(): FakeRowNavButton {
+  return {
+    visible: false,
+    alpha: 1,
+    interactive: false,
+    onPress: null,
+    setVisible(visible: boolean): FakeRowNavButton {
+      this.visible = visible;
+      return this;
+    },
+    setAlpha(alpha: number): FakeRowNavButton {
+      this.alpha = alpha;
+      return this;
+    },
+    disableInteractive(): FakeRowNavButton {
+      this.interactive = false;
+      return this;
+    },
+    setInteractive(): FakeRowNavButton {
+      this.interactive = true;
+      return this;
+    },
+    press(): void {
+      if (!this.visible || !this.interactive) return;
+      this.onPress?.();
+    },
+  };
+}
+
+function makeFakeRowNavLabel(): FakeRowNavLabel {
+  return {
+    visible: false,
+    text: "",
+    setVisible(visible: boolean): FakeRowNavLabel {
+      this.visible = visible;
+      return this;
+    },
+    setText(text: string): void {
+      this.text = text;
+    },
+  };
 }
 
 describe("TableScene effective player-card layout", () => {
@@ -279,6 +390,77 @@ describe("TableScene effective player-card layout", () => {
     expect(afterPlayerRow?.map((card) => (card.kind === "player" ? card.energyCost : NaN))).toEqual(
       [1, 1],
     );
+  });
+
+  it("shows row navigation only for overflowing rows and pages the player window", () => {
+    const base = makeCoreState({ energy: 9 });
+    const [sprints, state] = mintCorePlayers(base, "Sprint", 7);
+    const harness = makeDrawAllHarness({ ...state, hand: sprints });
+
+    harness.scene.drawAll();
+
+    expect(harness.playerRows[0]?.map((card) => card.id)).toEqual(
+      sprints.slice(0, 5).map((card) => card.id),
+    );
+    expect(harness.rowNav.worldLabel.visible).toBe(false);
+    expect(harness.rowNav.worldPrev.visible).toBe(false);
+    expect(harness.rowNav.playerLabel.visible).toBe(true);
+    expect(harness.rowNav.playerLabel.text).toBe("1-5 of 7");
+    expect(harness.rowNav.playerPrev.interactive).toBe(false);
+    expect(harness.rowNav.playerPrev.alpha).toBe(0.35);
+    expect(harness.rowNav.playerNext.interactive).toBe(true);
+
+    harness.rowNav.playerNext.press();
+
+    expect(harness.playerRows.at(-1)?.map((card) => card.id)).toEqual(
+      sprints.slice(2, 7).map((card) => card.id),
+    );
+    expect(harness.rowNav.playerLabel.text).toBe("3-7 of 7");
+    expect(harness.rowNav.playerPrev.interactive).toBe(true);
+    expect(harness.rowNav.playerNext.interactive).toBe(false);
+    expect(harness.rowNav.playerNext.alpha).toBe(0.35);
+  });
+
+  it("pages overflowing world and player rows independently through nav controls", () => {
+    const base = makeCoreState({ energy: 9 });
+    const worldCards = Array.from({ length: 7 }, (_, i) =>
+      makeWorldCard({ id: `world-${i + 1}` }),
+    );
+    const [playerCards, state] = mintCorePlayers(base, "Sprint", 7);
+    const harness = makeDrawAllHarness({ ...state, hand: [...worldCards, ...playerCards] });
+
+    harness.scene.drawAll();
+
+    expect(harness.worldRows.at(-1)?.map((card) => card.id)).toEqual(
+      worldCards.slice(0, 5).map((card) => card.id),
+    );
+    expect(harness.playerRows.at(-1)?.map((card) => card.id)).toEqual(
+      playerCards.slice(0, 5).map((card) => card.id),
+    );
+    expect(harness.rowNav.worldLabel.text).toBe("1-5 of 7");
+    expect(harness.rowNav.playerLabel.text).toBe("1-5 of 7");
+
+    harness.rowNav.worldNext.press();
+
+    expect(harness.worldRows.at(-1)?.map((card) => card.id)).toEqual(
+      worldCards.slice(2, 7).map((card) => card.id),
+    );
+    expect(harness.playerRows.at(-1)?.map((card) => card.id)).toEqual(
+      playerCards.slice(0, 5).map((card) => card.id),
+    );
+    expect(harness.rowNav.worldLabel.text).toBe("3-7 of 7");
+    expect(harness.rowNav.playerLabel.text).toBe("1-5 of 7");
+
+    harness.rowNav.playerNext.press();
+
+    expect(harness.worldRows.at(-1)?.map((card) => card.id)).toEqual(
+      worldCards.slice(2, 7).map((card) => card.id),
+    );
+    expect(harness.playerRows.at(-1)?.map((card) => card.id)).toEqual(
+      playerCards.slice(2, 7).map((card) => card.id),
+    );
+    expect(harness.rowNav.worldLabel.text).toBe("3-7 of 7");
+    expect(harness.rowNav.playerLabel.text).toBe("3-7 of 7");
   });
 });
 

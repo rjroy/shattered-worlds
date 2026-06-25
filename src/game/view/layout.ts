@@ -42,6 +42,12 @@ export const TABLE_LAYOUT = {
   confirmDepth: 2500,
   selectionHint: { x: CANVAS_W / 2, y: 580 },
   previewSlot: { x: CANVAS_W / 2, y: 565 },
+  rowNav: {
+    world: { buttonY: 260, labelX: 92, labelY: 260 },
+    player: { buttonY: 300, labelX: 780, labelY: 300 },
+    previousX: 28,
+    nextX: CANVAS_W - 28,
+  },
   buttons: {
     exit: { x: 20, y: 22 },
     endTurn: { x: 820, y: 560 },

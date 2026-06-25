@@ -8,7 +8,14 @@
  * happy-dom supplies a maintained DOM, replacing the hand-rolled window /
  * document / navigator / HTMLCanvasElement stubs this file used to carry.
  */
+import { mock } from 'bun:test'
 import { GlobalRegistrator } from '@happy-dom/global-registrator'
+
+const mainThemeAsset = new URL('../assets/audio/main-theme.mp3', import.meta.url)
+mock.module(mainThemeAsset.pathname, () => ({ default: '/assets/audio/main-theme.mp3' }))
+mock.module(`${mainThemeAsset.pathname}?url`, () => ({ default: '/assets/audio/main-theme.mp3' }))
+mock.module(mainThemeAsset.href, () => ({ default: '/assets/audio/main-theme.mp3' }))
+mock.module(`${mainThemeAsset.href}?url`, () => ({ default: '/assets/audio/main-theme.mp3' }))
 
 GlobalRegistrator.register()
 
