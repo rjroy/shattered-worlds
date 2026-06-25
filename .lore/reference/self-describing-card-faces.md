@@ -7,6 +7,17 @@ tags: card-text, renderer, description, ux, modal, preview
 fg-type: decision
 fg-sources: .lore/work/retros/self-describing-card-faces.html, .lore/work/plans/world-deck-slice.html
 fg-status: current
+fg-evidence:
+  code:
+    - src/core/view/describe.ts
+    - src/core/view/branchLabels.ts
+    - src/game/view/CardView.ts
+  tests:
+    - src/game/tests/describe.test.ts
+    - src/core/tests/golden.test.ts
+  symbols:
+    - describeEffect
+    - resolveBranchLabels
 -->
 
 The renderer chose bigger, self-describing card faces over hiding rules in a hover panel. Cards should explain their behavior directly on the face, including modal branches, sequence steps, penalties, rewards, and target previews.

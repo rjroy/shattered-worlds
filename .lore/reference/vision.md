@@ -8,6 +8,16 @@ fg-type: concept
 fg-sources: .lore/work/research/deckbuilding-game-design.html, .lore/work/brainstorm/shattered-worlds-meta-progression.html
 fg-status: current
 related: .lore/work/research/deckbuilding-game-design.html
+fg-evidence:
+  code:
+    - src/core/engine/energy.ts
+    - src/game/runtime/runStats.ts
+  tests:
+    - src/core/tests/available.test.ts
+    - src/core/tests/reduce.test.ts
+    - src/core/tests/worldManifest.test.ts
+    - src/game/runtime/gameplaySession.test.ts
+    - src/game/tests/worldSelectCarousel.test.ts
 -->
 
 **Project North Star.** Approved 2026-06-02.

@@ -7,6 +7,20 @@ tags: card-effect, effect-system, deferred-effect, testing, exhaustive-switch
 fg-type: lesson
 fg-sources: .lore/work/retros/adding-forcedestroy-effect.html
 fg-status: current
+fg-evidence:
+  code:
+    - src/core/model/types.ts
+    - src/core/effects/registry.ts
+    - src/core/view/describe.ts
+    - src/core/engine/effects.ts
+  tests:
+    - src/core/tests/effects.test.ts
+    - src/core/tests/effectRegistry.test.ts
+    - src/game/tests/describe.test.ts
+  symbols:
+    - CardEffect
+    - EffectHandler
+    - ForceDestroy
 -->
 
 Adding a new card effect is rarely a one-file change. The effect union, apply logic, description text, playability or target spec, data authoring, tests, and renderer feedback all need consideration. Exhaustive switches are useful tripwires, but some areas have defaults that silently mask missing cases.

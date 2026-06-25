@@ -6,6 +6,21 @@ tags: [action-preview, confirmation, ux, settings, core-runtime]
 fg-type: architecture
 fg-sources: [.lore/work/plans/action-impact-preview-and-confirmation.md, .lore/work/notes/action-impact-preview-and-confirmation.md]
 fg-status: current
+fg-evidence:
+  code:
+    - src/core/view/actionPreview.ts
+    - src/core/engine/game.ts
+    - src/game/view/ActionConfirmationView.ts
+    - src/game/scenes/TableScene.ts
+    - src/game/runtime/userSettings.ts
+  tests:
+    - src/core/tests/actionPreview.test.ts
+    - src/game/tests/actionConfirmationView.test.ts
+  symbols:
+    - GameCore
+    - previewAction
+    - ActionConfirmationView
+    - UserSettings
 ---
 
 # Action Preview and Confirmation System

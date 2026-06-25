@@ -6,6 +6,20 @@ tags: [world-design, city-of-sleeping-giants, stir, recurrence, force-destroy]
 fg-type: concept
 fg-sources: [.lore/work/plans/city-of-sleeping-giants.md, .lore/work/notes/city-of-sleeping-giants.md]
 fg-status: current
+fg-evidence:
+  code:
+    - src/data/worlds/city-of-sleeping-giants/cards.json
+    - src/data/worlds/city-of-sleeping-giants/index.ts
+    - src/data/worlds/city-of-sleeping-giants/theme.ts
+    - src/core/effects/worldCards.ts
+  tests:
+    - src/core/tests/cityOfSleepingGiants.test.ts
+    - src/game/tests/cityOfSleepingGiantsPresentation.test.ts
+  symbols:
+    - AddThreatToWorldDeck
+    - AddWorldCardToDeck
+    - OfferBoon
+    - ForceDestroy
 ---
 
 # City of Sleeping Giants World

@@ -8,6 +8,19 @@ fg-type: concept
 fg-sources: .lore/work/specs/visual-identity.html, .lore/work/retros/visual-identity-rollout.html
 fg-status: current
 related: .lore/reference/vision.md
+fg-evidence:
+  code:
+    - src/game/view/backdrop.ts
+    - src/game/view/visualMappers.ts
+    - src/game/view/themes/theme.ts
+    - src/game/assets/cardback.webp
+  tests:
+    - src/game/tests/theme.test.ts
+    - src/game/tests/visualMappers.test.ts
+    - src/game/tests/walker.test.ts
+  symbols:
+    - intensity
+    - VisualTheme
 -->
 
 **Visual North Star.** Current as of 2026-06-04.

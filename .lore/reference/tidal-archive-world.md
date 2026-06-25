@@ -6,6 +6,20 @@ tags: [world-design, the-tidal-archive, discard-recall, passive-effects, boons]
 fg-type: concept
 fg-sources: [.lore/work/plans/the-tidal-archive.md, .lore/work/notes/the-tidal-archive.md]
 fg-status: current
+fg-evidence:
+  code:
+    - src/data/worlds/the-tidal-archive/cards.json
+    - src/data/worlds/the-tidal-archive/index.ts
+    - src/core/effects/recallDiscard.ts
+    - src/game/interaction/selection.ts
+  tests:
+    - src/core/tests/tidalArchive.test.ts
+    - src/core/tests/recallDiscard.test.ts
+    - src/core/tests/tidalReplay.test.ts
+  symbols:
+    - RecallPlayerDiscard
+    - ReturnPlayerDiscardToTop
+    - WorldData
 ---
 
 # Tidal Archive World

@@ -7,6 +7,18 @@ tags: energy, player-resource, turn-economy, cost, core-state
 fg-type: architecture
 fg-sources: .lore/work/specs/player-energy-resource.html, .lore/work/plans/player-energy-resource.html, .lore/work/notes/player-energy-resource.html
 fg-status: current
+fg-evidence:
+  code:
+    - src/core/engine/energy.ts
+    - src/core/engine/available.ts
+    - src/core/engine/reduce.ts
+    - src/core/model/types.ts
+  tests:
+    - src/core/tests/available.test.ts
+    - src/core/tests/reduce.test.ts
+  symbols:
+    - energy
+    - energyCost
 -->
 
 Energy is a per-turn player resource stored on `GameState`. It gates player-card playability without changing world-card hazard cost. The two costs are separate concepts: hazard cost is cleared by Progress; energy cost is paid by the player to play certain cards.

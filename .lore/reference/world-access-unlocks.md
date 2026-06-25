@@ -6,6 +6,19 @@ tags: [world-unlocks, destiny, world-select, access-control, unlocks]
 fg-type: decision
 fg-sources: [.lore/work/plans/world-access-unlocks.md, .lore/work/notes/world-access-unlocks.md]
 fg-status: current
+fg-evidence:
+  code:
+    - src/data/unlocks/catalog.ts
+    - src/data/unlocks/types.ts
+    - src/game/runtime/unlocksProfile.ts
+    - src/game/scenes/WorldSelectScene.ts
+  tests:
+    - src/data/unlocks/catalog.test.ts
+    - src/game/runtime/unlocksProfile.test.ts
+    - src/game/tests/worldSelectCarousel.test.ts
+  symbols:
+    - worldUnlock
+    - isWorldUnlocked
 ---
 
 # World Access Unlocks

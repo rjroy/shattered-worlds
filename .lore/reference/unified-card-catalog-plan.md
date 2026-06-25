@@ -6,6 +6,20 @@ tags: [card-catalog, templates, data-architecture, world-manifest, refactor]
 fg-type: architecture
 fg-sources: [.lore/work/plans/plan-unified-card-catalog.md]
 fg-status: current
+fg-evidence:
+  code:
+    - src/core/model/catalog.ts
+    - src/core/engine/world.ts
+    - src/data/allCards.json
+    - src/data/worlds/registry.ts
+  tests:
+    - src/core/tests/catalog.test.ts
+    - src/core/tests/worldManifest.test.ts
+    - src/core/tests/verify-merge.test.ts
+  symbols:
+    - CardCatalog
+    - GainCard
+    - AddWorldCardToDeck
 ---
 
 # Unified Card Catalog Plan

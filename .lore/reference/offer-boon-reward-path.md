@@ -6,6 +6,19 @@ tags: [offer-boon, boons, reward-choice, world-clear, core-effects]
 fg-type: architecture
 fg-sources: [.lore/work/plans/offer-boon-rewards.md, .lore/work/notes/offer-boon-rewards.md]
 fg-status: current
+fg-evidence:
+  code:
+    - src/core/effects/boonChoice.ts
+    - src/core/engine/actBoon.ts
+    - src/core/model/types.ts
+    - src/data/boonPools.json
+  tests:
+    - src/core/tests/effects.test.ts
+    - src/game/tests/boonChoiceView.test.ts
+  symbols:
+    - OfferBoon
+    - ChooseBoon
+    - BoonCardGranted
 ---
 
 # OfferBoon Reward Path

@@ -6,6 +6,19 @@ tags: [effective-cards, unlocks, run-modifiers, card-system, read-model]
 fg-type: architecture
 fg-sources: [.lore/work/plans/effective-card-modifiers.md, .lore/work/notes/effective-card-modifiers.md]
 fg-status: current
+fg-evidence:
+  code:
+    - src/core/engine/effectiveCards.ts
+    - src/core/engine/available.ts
+    - src/core/engine/reduce.ts
+    - src/data/unlocks/types.ts
+  tests:
+    - src/core/tests/effectiveCards.test.ts
+    - src/core/tests/available.test.ts
+  symbols:
+    - RunModifiers
+    - effectiveCard
+    - effectivePlayerCard
 ---
 
 # Effective Card Modifiers Read Model

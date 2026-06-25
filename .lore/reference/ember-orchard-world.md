@@ -6,6 +6,19 @@ tags: [world-design, the-ember-orchard, incubation, delayed-pressure, boons]
 fg-type: concept
 fg-sources: [.lore/work/plans/the-ember-orchard.md, .lore/work/notes/the-ember-orchard.md]
 fg-status: current
+fg-evidence:
+  code:
+    - src/data/worlds/the-ember-orchard/cards.json
+    - src/data/worlds/the-ember-orchard/index.ts
+    - src/data/worlds/the-ember-orchard/theme.ts
+    - src/core/effects/worldCards.ts
+  tests:
+    - src/core/tests/emberOrchard.test.ts
+    - src/game/tests/emberOrchardPresentation.test.ts
+  symbols:
+    - OfferBoon
+    - ForceDestroy
+    - AddWorldCardToDeck
 ---
 
 # Ember Orchard World

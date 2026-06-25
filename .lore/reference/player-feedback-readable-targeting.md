@@ -7,6 +7,19 @@ tags: feedback, targeting, connector, hover, progress-ring, ux
 fg-type: lesson
 fg-sources: .lore/work/specs/player-feedback-selection-and-progress.html, .lore/work/brainstorm/player-feedback-selection-and-progress.html, .lore/work/plans/player-feedback-selection-and-progress.html
 fg-status: current
+fg-evidence:
+  code:
+    - src/game/interaction/feedback.ts
+    - src/game/interaction/highlight.ts
+    - src/game/view/connector.ts
+    - src/game/scenes/TableScene.ts
+  tests:
+    - src/game/tests/feedback.test.ts
+    - src/game/tests/highlight.test.ts
+    - src/game/tests/selection.test.ts
+  symbols:
+    - connector
+    - target
 -->
 
 Click-to-commit targeting is only fair if the hover state makes the outcome unmistakable before the click. The target read must be loud enough to stand on its own: not only a border tint, but a clear highlighted target, a connector from acting card to target, and a live preview of what will happen.

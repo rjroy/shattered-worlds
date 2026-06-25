@@ -7,6 +7,18 @@ tags: architecture, core, renderer, phaser, deterministic, event-log, seam
 fg-type: architecture
 fg-sources: .lore/work/design/core-render-architecture.html, .lore/work/specs/poc-core-loop.html, .lore/work/plans/poc-core-loop.html
 fg-status: current
+fg-evidence:
+  code:
+    - src/core/index.ts
+    - src/core/engine/reduce.ts
+    - src/game/scenes/TableScene.ts
+  tests:
+    - src/core/tests/reduce.test.ts
+    - src/game/tests/gameplaySessionIntegration.test.ts
+  symbols:
+    - reduce
+    - GameState
+    - GameEvent
 -->
 
 Game truth lives in a pure, synchronous, deterministic TypeScript core. The Phaser layer is a renderer and input adapter. The core never imports Phaser, DOM, canvas, timers, audio, or game presentation code; the build enforces that boundary.

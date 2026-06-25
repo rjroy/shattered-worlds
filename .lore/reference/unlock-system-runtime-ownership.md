@@ -6,6 +6,20 @@ tags: [unlocks, destiny, run-modifiers, runtime, meta-progression]
 fg-type: architecture
 fg-sources: [.lore/work/plans/unlock-system.md, .lore/work/notes/unlock-system.md]
 fg-status: current
+fg-evidence:
+  code:
+    - src/game/runtime/gameplayRuntime.ts
+    - src/game/runtime/unlocksProfile.ts
+    - src/data/unlocks/catalog.ts
+    - src/data/unlocks/types.ts
+  tests:
+    - src/game/runtime/gameplayRuntime.test.ts
+    - src/game/runtime/unlocksProfile.test.ts
+    - src/data/unlocks/catalog.test.ts
+  symbols:
+    - RunModifiers
+    - startSession
+    - UnlocksProfile
 ---
 
 # Unlock System Runtime Ownership

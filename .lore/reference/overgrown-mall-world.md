@@ -7,6 +7,18 @@ tags: world-design, overgrown-mall, spore, prune, bloom, deal-progress-scaled
 fg-type: concept
 fg-sources: .lore/work/specs/overgrown-mall.html, .lore/work/brainstorm/overgrown-mall-world.html, .lore/work/plans/overgrown-mall.html
 fg-status: current
+fg-evidence:
+  code:
+    - src/data/worlds/overgrown-mall/cards.json
+    - src/data/worlds/overgrown-mall/index.ts
+    - src/core/effects/dealProgress.ts
+    - src/core/model/types.ts
+  tests:
+    - src/core/tests/effects.test.ts
+    - src/core/tests/available.test.ts
+  symbols:
+    - Spore
+    - DealProgressScaled
 -->
 
 Overgrown Mall's threat verb is **infest**: world cards inject Spore cards into the player deck. The player response archetype is **prune and profit**, with a symbiosis line for players who choose to keep Spores and scale with them.

@@ -6,6 +6,18 @@ tags: [fortune, act-rewards, boons, unlocks, temporary-cards]
 fg-type: architecture
 fg-sources: [.lore/work/plans/fortune-boon-cards.md, .lore/work/notes/fortune-boon-cards.md]
 fg-status: current
+fg-evidence:
+  code:
+    - src/core/engine/actBoon.ts
+    - src/core/engine/reduce.ts
+    - src/data/unlocks/catalog.json
+  tests:
+    - src/core/tests/reduce.test.ts
+    - src/game/runtime/gameplaySession.test.ts
+  symbols:
+    - ActAdvanced
+    - BoonOffered
+    - act-reward
 ---
 
 # Fortune Act Boon Rewards

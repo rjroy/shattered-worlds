@@ -6,6 +6,19 @@ tags: [feats, memory-fragments, meta-progression, run-summary, runtime]
 fg-type: architecture
 fg-sources: [.lore/work/plans/feat-definitions.md, .lore/work/notes/feat-definitions.md]
 fg-status: current
+fg-evidence:
+  code:
+    - src/game/runtime/featEvaluator.ts
+    - src/game/runtime/featsProfile.ts
+    - src/game/runtime/unlocksProfile.ts
+  tests:
+    - src/game/runtime/featEvaluator.test.ts
+    - src/game/runtime/featsProfile.test.ts
+    - src/game/runtime/unlocksProfile.test.ts
+  symbols:
+    - createFeatEvaluator
+    - evaluateFeat
+    - RunEnded
 ---
 
 # Feat Evaluation and Memory Fragment Economy

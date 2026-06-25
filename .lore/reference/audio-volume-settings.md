@@ -6,6 +6,21 @@ tags: [audio, settings, music, fx, volume, phaser]
 fg-type: architecture
 fg-sources: [.lore/work/plans/sound-volume-settings.md]
 fg-status: current
+fg-evidence:
+  code:
+    - src/game/audio/audioVolume.ts
+    - src/game/audio/menuMusic.ts
+    - src/game/runtime/userSettings.ts
+    - src/game/view/SettingsOverlayView.ts
+  tests:
+    - src/game/audio/audioVolume.test.ts
+    - src/game/runtime/userSettings.test.ts
+    - src/game/tests/settingsOverlayView.test.ts
+  symbols:
+    - UserSettings
+    - musicGain
+    - fxGain
+    - SettingsOverlayView
 ---
 
 # Audio Volume Settings

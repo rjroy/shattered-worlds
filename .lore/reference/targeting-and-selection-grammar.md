@@ -7,6 +7,18 @@ tags: targeting, selection, available-actions, renderer, ux, legality
 fg-type: architecture
 fg-sources: .lore/work/design/targeting-interaction.html, .lore/work/plans/generalize-selection-targeting.html, .lore/work/specs/player-feedback-selection-and-progress.html
 fg-status: current
+fg-evidence:
+  code:
+    - src/core/engine/available.ts
+    - src/game/interaction/selection.ts
+    - src/game/interaction/highlight.ts
+  tests:
+    - src/core/tests/available.test.ts
+    - src/game/tests/selection.test.ts
+    - src/game/tests/highlight.test.ts
+  symbols:
+    - AvailableAction
+    - SelectionState
 -->
 
 Selection is renderer-only transient state. The core never sees half-built interactions such as "card selected, target pending." It receives only complete actions. Legality, however, comes from the core through a pure available-actions read model, so renderer highlights and reducer validation share the same source of truth.

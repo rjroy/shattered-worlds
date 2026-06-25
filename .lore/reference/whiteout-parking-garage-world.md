@@ -6,6 +6,19 @@ tags: [world-design, whiteout-parking-garage, heat, frozen-cards, themes]
 fg-type: concept
 fg-sources: [.lore/work/notes/whiteout-parking-garage.md]
 fg-status: current
+fg-evidence:
+  code:
+    - src/data/worlds/whiteout-parking-garage/cards.json
+    - src/data/worlds/whiteout-parking-garage/index.ts
+    - src/core/effects/heat.ts
+    - src/data/unlocks/catalog.json
+  tests:
+    - src/core/tests/whiteout.test.ts
+    - src/game/runtime/featEvaluator.whiteout.test.ts
+  symbols:
+    - GainHeat
+    - FreezeCards
+    - ThawCards
 ---
 
 # Whiteout Parking Garage World

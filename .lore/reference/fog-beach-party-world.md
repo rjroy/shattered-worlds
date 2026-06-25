@@ -7,6 +7,18 @@ tags: world-design, fog-beach-party, conceal, light, numeric-keywords, gain-ligh
 fg-type: concept
 fg-sources: .lore/work/specs/fog-beach-party.html
 fg-status: current
+fg-evidence:
+  code:
+    - src/data/worlds/fog-beach-party/cards.json
+    - src/data/worlds/fog-beach-party/index.ts
+    - src/core/model/keywords.ts
+    - src/core/effects/resources.ts
+  tests:
+    - src/core/tests/fogBeachParty.test.ts
+    - src/core/tests/keywords.test.ts
+  symbols:
+    - Concealed
+    - GainLight
 -->
 
 Fog Beach Party's threat verb is **conceal**: hazards can be present and harmful while their identity is hidden. The response archetype is **reveal and endure**. Light is the weapon, but blind discard and sweep effects prevent hard lock.

@@ -7,6 +7,19 @@ tags: engine-choice, typescript, phaser, godot, ai-assisted-development, testing
 fg-type: decision
 fg-sources: .lore/work/research/game-engine-for-ai-development.html, .lore/work/design/core-render-architecture.html
 fg-status: current
+fg-evidence:
+  code:
+    - package.json
+    - vite.config.ts
+    - tsconfig.json
+    - src/core/index.ts
+    - src/game/index.ts
+  tests:
+    - src/core/tests/reduce.test.ts
+    - src/game/tests/gameplaySessionIntegration.test.ts
+  symbols:
+    - phaser
+    - typescript
 -->
 
 The project settled on a TypeScript implementation with Phaser as a thin renderer over a pure TypeScript rules core. The research initially found Godot plus C# to be the default native-engine choice for a typed, testable 2D deckbuilder, but the web distribution and AI-assisted development loop made the TypeScript web stack the practical route for this project.

@@ -6,6 +6,18 @@ tags: [feats, type-contracts, validation]
 fg-type: lesson
 fg-sources: [.lore/work/notes/simplify-feat-definitions.md]
 fg-status: current
+fg-evidence:
+  code:
+    - src/data/feats/types.ts
+    - src/data/feats/catalog.ts
+    - src/data/feats/catalog.json
+  tests:
+    - src/data/feats/catalog.test.ts
+    - src/game/runtime/featEvaluator.test.ts
+  symbols:
+    - FeatDefinition
+    - FeatReward
+    - RewardItem
 ---
 
 # Feat Definition Type Contract

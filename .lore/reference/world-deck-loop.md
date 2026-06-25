@@ -7,6 +7,20 @@ tags: world-deck, hazards, progress, acts, acquisition, loop
 fg-type: architecture
 fg-sources: .lore/work/specs/world-deck-slice.html, .lore/work/plans/world-deck-slice.html, .lore/work/notes/world-deck-acquisition.html
 fg-status: current
+fg-evidence:
+  code:
+    - src/core/engine/draw.ts
+    - src/core/engine/world.ts
+    - src/core/engine/reduce.ts
+    - src/data/allCards.json
+  tests:
+    - src/core/tests/draw.test.ts
+    - src/core/tests/world.test.ts
+    - src/core/tests/reduce.test.ts
+  symbols:
+    - The Walker
+    - Door
+    - SurviveWorld
 -->
 
 The world deck is both threat engine and acquisition engine. World cards enter the player's hand as hazards. Player cards deal Progress to hazards; cleared hazards can grant cards or survival progress; discarded hazards apply penalties; ignored hazards persist and clog the hand.

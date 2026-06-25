@@ -6,6 +6,18 @@ tags: [rarity, weighted-draw, rewards, boons, gain-random-card]
 fg-type: architecture
 fg-sources: [.lore/work/plans/rarity-system.md, .lore/work/notes/rarity-system.md]
 fg-status: current
+fg-evidence:
+  code:
+    - src/core/engine/weightedDraw.ts
+    - src/core/effects/pools.ts
+    - src/core/effects/gainCard.ts
+    - src/core/model/rarity.ts
+  tests:
+    - src/core/tests/weightedDraw.test.ts
+    - src/core/tests/rarity.test.ts
+  symbols:
+    - GainRandomCard
+    - Rarity
 ---
 
 # Rarity and Weighted Reward Pools
