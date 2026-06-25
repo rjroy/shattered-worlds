@@ -164,11 +164,87 @@ describe('row window navigation helpers', () => {
 })
 
 describe('row navigation geometry', () => {
-  it('keeps overflow controls outside five-card centers and away from bottom chrome', () => {
+  interface Rect {
+    left: number
+    right: number
+    top: number
+    bottom: number
+  }
+
+  function centeredRect(
+    x: number,
+    y: number,
+    width: number,
+    height: number,
+  ): Rect {
+    return {
+      left: x - width / 2,
+      right: x + width / 2,
+      top: y - height / 2,
+      bottom: y + height / 2,
+    }
+  }
+
+  function fiveCardRowExclusion(rowY: number): Rect {
+    const positions = rowCardPositions(5, rowY)
+    const cardHalfWidth = CARD_FACE.width / 2 + TABLE_LAYOUT.rowNav.hoverSafePadding
+    const cardHalfHeight = CARD_FACE.height / 2 + TABLE_LAYOUT.rowNav.hoverSafePadding
+
+    return {
+      left: positions[0]!.x - cardHalfWidth,
+      right: positions.at(-1)!.x + cardHalfWidth,
+      top: rowY - cardHalfHeight,
+      bottom: rowY + cardHalfHeight,
+    }
+  }
+
+  function intersects(a: Rect, b: Rect): boolean {
+    return a.left < b.right && a.right > b.left && a.top < b.bottom && a.bottom > b.top
+  }
+
+  it('keeps overflow controls outside five-card hover exclusion zones and away from bottom chrome', () => {
     const fiveCardPositions = rowCardPositions(5, TABLE_LAYOUT.handRowY)
     const cardCenterMinX = fiveCardPositions[0]!.x
     const cardCenterMaxX = fiveCardPositions.at(-1)!.x
     const cardHalfWidth = CARD_FACE.width / 2
+    const worldExclusion = fiveCardRowExclusion(TABLE_LAYOUT.worldRowY)
+    const playerExclusion = fiveCardRowExclusion(TABLE_LAYOUT.handRowY)
+    const worldLabelRect = centeredRect(
+      TABLE_LAYOUT.rowNav.world.labelX,
+      TABLE_LAYOUT.rowNav.world.labelY,
+      TABLE_LAYOUT.rowNav.labelSafeSize.width,
+      TABLE_LAYOUT.rowNav.labelSafeSize.height,
+    )
+    const playerLabelRect = centeredRect(
+      TABLE_LAYOUT.rowNav.player.labelX,
+      TABLE_LAYOUT.rowNav.player.labelY,
+      TABLE_LAYOUT.rowNav.labelSafeSize.width,
+      TABLE_LAYOUT.rowNav.labelSafeSize.height,
+    )
+    const worldPrevRect = centeredRect(
+      TABLE_LAYOUT.rowNav.world.previousX,
+      TABLE_LAYOUT.rowNav.world.buttonY,
+      TABLE_LAYOUT.rowNav.buttonSafeSize.width,
+      TABLE_LAYOUT.rowNav.buttonSafeSize.height,
+    )
+    const worldNextRect = centeredRect(
+      TABLE_LAYOUT.rowNav.world.nextX,
+      TABLE_LAYOUT.rowNav.world.buttonY,
+      TABLE_LAYOUT.rowNav.buttonSafeSize.width,
+      TABLE_LAYOUT.rowNav.buttonSafeSize.height,
+    )
+    const playerPrevRect = centeredRect(
+      TABLE_LAYOUT.rowNav.player.previousX,
+      TABLE_LAYOUT.rowNav.player.buttonY,
+      TABLE_LAYOUT.rowNav.buttonSafeSize.width,
+      TABLE_LAYOUT.rowNav.buttonSafeSize.height,
+    )
+    const playerNextRect = centeredRect(
+      TABLE_LAYOUT.rowNav.player.nextX,
+      TABLE_LAYOUT.rowNav.player.buttonY,
+      TABLE_LAYOUT.rowNav.buttonSafeSize.width,
+      TABLE_LAYOUT.rowNav.buttonSafeSize.height,
+    )
     const previewBandTop = Math.min(
       TABLE_LAYOUT.buttons.confirm.y,
       TABLE_LAYOUT.buttons.endTurn.y,
@@ -176,18 +252,38 @@ describe('row navigation geometry', () => {
       TABLE_LAYOUT.selectionHint.y,
     )
 
-    expect(TABLE_LAYOUT.rowNav.previousX).toBeLessThan(cardCenterMinX - cardHalfWidth)
-    expect(TABLE_LAYOUT.rowNav.nextX).toBeGreaterThan(cardCenterMaxX + cardHalfWidth)
-    expect(TABLE_LAYOUT.rowNav.world.buttonY).toBeGreaterThan(
-      TABLE_LAYOUT.worldRowY + CARD_FACE.height / 2,
-    )
-    expect(TABLE_LAYOUT.rowNav.player.buttonY).toBeLessThan(
-      TABLE_LAYOUT.handRowY - CARD_FACE.height / 2,
-    )
+    expect(TABLE_LAYOUT.rowNav.world.previousX).toBeLessThan(cardCenterMinX - cardHalfWidth)
+    expect(TABLE_LAYOUT.rowNav.world.nextX).toBeGreaterThan(cardCenterMaxX + cardHalfWidth)
+    expect(TABLE_LAYOUT.rowNav.player.previousX).toBeGreaterThan(cardCenterMinX)
+    expect(TABLE_LAYOUT.rowNav.player.nextX).toBeGreaterThan(cardCenterMaxX)
+    expect(intersects(worldLabelRect, worldExclusion)).toBe(false)
+    expect(intersects(playerLabelRect, playerExclusion)).toBe(false)
+    expect(intersects(worldPrevRect, worldExclusion)).toBe(false)
+    expect(intersects(worldNextRect, worldExclusion)).toBe(false)
+    expect(intersects(playerPrevRect, playerExclusion)).toBe(false)
+    expect(intersects(playerNextRect, playerExclusion)).toBe(false)
+    expect(intersects(worldPrevRect, playerPrevRect)).toBe(false)
+    expect(intersects(worldNextRect, playerNextRect)).toBe(false)
+    expect(intersects(worldLabelRect, playerLabelRect)).toBe(false)
+    expect(intersects(worldPrevRect, worldLabelRect)).toBe(false)
+    expect(intersects(worldNextRect, worldLabelRect)).toBe(false)
+    expect(intersects(playerPrevRect, playerLabelRect)).toBe(false)
+    expect(intersects(playerNextRect, playerLabelRect)).toBe(false)
+    expect(intersects(worldPrevRect, playerLabelRect)).toBe(false)
+    expect(intersects(worldNextRect, playerLabelRect)).toBe(false)
+    expect(intersects(playerPrevRect, worldLabelRect)).toBe(false)
+    expect(intersects(playerNextRect, worldLabelRect)).toBe(false)
+    expect(worldPrevRect.top).toBeLessThan(worldLabelRect.bottom)
+    expect(worldNextRect.top).toBeLessThan(worldLabelRect.bottom)
+    expect(playerPrevRect.bottom).toBeGreaterThan(playerLabelRect.top)
+    expect(playerNextRect.bottom).toBeGreaterThan(playerLabelRect.top)
     expect(TABLE_LAYOUT.rowNav.player.buttonY).toBeLessThan(previewBandTop)
-    expect(TABLE_LAYOUT.rowNav.world.labelX).toBeLessThan(cardCenterMinX)
-    expect(TABLE_LAYOUT.rowNav.player.labelX).toBeGreaterThan(cardCenterMaxX)
-    expect(TABLE_LAYOUT.rowNav.nextX).toBeLessThan(CANVAS_W)
+    expect(worldLabelRect.left).toBeGreaterThanOrEqual(0)
+    expect(playerLabelRect.right).toBeLessThanOrEqual(CANVAS_W)
+    expect(worldPrevRect.left).toBeGreaterThanOrEqual(0)
+    expect(worldNextRect.right).toBeLessThanOrEqual(CANVAS_W)
+    expect(playerPrevRect.left).toBeGreaterThanOrEqual(0)
+    expect(playerNextRect.right).toBeLessThanOrEqual(CANVAS_W)
     expect(TABLE_LAYOUT.rowNav.player.buttonY).toBeLessThan(CANVAS_H)
   })
 })

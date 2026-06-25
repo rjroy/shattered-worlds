@@ -68,6 +68,8 @@ import { BackdropLayer } from "../view/backdrop";
 import { worldDisplayManifest } from "../../data/worldDisplayManifest";
 import { CARD_FACE, TABLE_LAYOUT } from "../view/layout";
 import {
+  bringRowCardIdIntoView,
+  ROW_WINDOW_VISIBLE_LIMIT,
   rowWindowLayout,
   rowWindowPageOffset,
   type RowCardPosition,
@@ -409,6 +411,9 @@ export class TableScene extends Phaser.Scene {
       if (event.key !== "1" && event.key !== "2" && event.key !== "3") return;
       this.chooseVisibleBoonOption(Number(event.key) - 1);
     });
+    this.input.keyboard?.on("keydown", (event: KeyboardEvent) => {
+      this.handleRowNavigationKey(event);
+    });
 
     this.selectionHint = new CommonLabel(
       this,
@@ -500,8 +505,8 @@ export class TableScene extends Phaser.Scene {
     this.playerRowOffset = playerWindow.offset;
     const visibleWorldCards = worldCards.slice(worldWindow.startIndex, worldWindow.endIndex);
     const visiblePlayerCards = playerCards.slice(playerWindow.startIndex, playerWindow.endIndex);
-    this.updateRowNavigation("world", worldWindow);
-    this.updateRowNavigation("player", playerWindow);
+    this.updateRowNavigation("world", worldWindow, legalTargetIds);
+    this.updateRowNavigation("player", playerWindow, legalTargetIds);
 
     const desiredIds = new Set<string>();
     this.layoutRow(
@@ -688,16 +693,19 @@ export class TableScene extends Phaser.Scene {
     text: string,
     style: Phaser.Types.GameObjects.Text.TextStyle,
   ): CommonButton {
-    const y =
-      row === "world" ? TABLE_LAYOUT.rowNav.world.buttonY : TABLE_LAYOUT.rowNav.player.buttonY;
-    const x = direction < 0 ? TABLE_LAYOUT.rowNav.previousX : TABLE_LAYOUT.rowNav.nextX;
-    return new CommonButton(this, x, y, text, style)
+    const nav = row === "world" ? TABLE_LAYOUT.rowNav.world : TABLE_LAYOUT.rowNav.player;
+    const x = direction < 0 ? nav.previousX : nav.nextX;
+    return new CommonButton(this, x, nav.buttonY, text, style)
       .setDepth(TABLE_LAYOUT.cardHoverDepth + 25)
       .on("pointerdown", () => this.navigateRow(row, direction))
       .setVisible(false);
   }
 
-  private updateRowNavigation(row: "world" | "player", layout: RowWindowLayout): void {
+  private updateRowNavigation(
+    row: "world" | "player",
+    layout: RowWindowLayout,
+    legalTargetIds: Set<string>,
+  ): void {
     const previous = row === "world" ? this.worldRowPrevBtn : this.playerRowPrevBtn;
     const next = row === "world" ? this.worldRowNextBtn : this.playerRowNextBtn;
     const label = row === "world" ? this.worldRowRangeLabel : this.playerRowRangeLabel;
@@ -711,9 +719,62 @@ export class TableScene extends Phaser.Scene {
       return;
     }
 
-    label.setText(layout.rangeLabel);
+    label.setText(this.rowRangeLabel(row, layout, legalTargetIds));
     this.setRowNavButtonEnabled(previous, layout.canPageBackward);
     this.setRowNavButtonEnabled(next, layout.canPageForward);
+  }
+
+  private rowRangeLabel(
+    row: "world" | "player",
+    layout: RowWindowLayout,
+    legalTargetIds: Set<string>,
+  ): string {
+    if (legalTargetIds.size === 0) return layout.rangeLabel;
+
+    let hasLegalBefore = false;
+    let hasLegalAfter = false;
+    const allIds = this.rowIdsFor(row);
+    for (let i = 0; i < allIds.length; i += 1) {
+      const id = allIds[i];
+      if (id === undefined || !legalTargetIds.has(id)) continue;
+      if (i < layout.startIndex) hasLegalBefore = true;
+      if (i >= layout.endIndex) hasLegalAfter = true;
+    }
+
+    if (!hasLegalBefore && !hasLegalAfter) return layout.rangeLabel;
+    const direction =
+      hasLegalBefore && hasLegalAfter ? "< target >" : hasLegalBefore ? "< target" : "target >";
+    return `${layout.rangeLabel} ${direction}`;
+  }
+
+  private rowIdsFor(row: "world" | "player"): readonly string[] {
+    const visibleHand = effectiveHand(this.game_.state);
+    return visibleHand.filter((card) => card.kind === row).map((card) => card.id);
+  }
+
+  private handleRowNavigationKey(event: KeyboardEvent): void {
+    if (event.ctrlKey || event.metaKey || event.altKey) return;
+    if (!this.canHandleTableRowNavigationKeys()) return;
+
+    let direction: -1 | 1 | null = null;
+    if (event.code === "BracketLeft") direction = -1;
+    if (event.code === "BracketRight") direction = 1;
+    if (direction === null) return;
+
+    event.preventDefault();
+    this.navigateRow(event.shiftKey ? "player" : "world", direction);
+  }
+
+  private canHandleTableRowNavigationKeys(): boolean {
+    if (this.game_.state.status !== "playing") return false;
+    if (this.actionConfirmation.isOpen) return false;
+    if (this.runSummary.visible) return false;
+    if (this.helpOverlay.visible) return false;
+    if (this.settingsOverlay.visible) return false;
+    if (this.modalChooser !== null) return false;
+    if (this.discardChooser !== null) return false;
+    if (this.boonChoiceView !== null) return false;
+    return true;
   }
 
   private setRowNavButtonEnabled(button: CommonButton, enabled: boolean): void {
@@ -742,7 +803,43 @@ export class TableScene extends Phaser.Scene {
     } else {
       this.playerRowOffset = nextOffset;
     }
+    if (this.shouldPinActingCardAfterRowNavigation(row, nextOffset)) {
+      this.ensureActingCardVisibleForTargeting();
+    }
     this.drawAll();
+  }
+
+  private shouldPinActingCardAfterRowNavigation(
+    row: "world" | "player",
+    nextOffset: number,
+  ): boolean {
+    if (row !== "player") return true;
+    if (this.sel.phase !== "targeting") return true;
+
+    const playerCardIds = effectiveHand(this.game_.state)
+      .filter((card): card is PlayerCard => card.kind === "player")
+      .map((card) => card.id);
+    const actorPinnedOffset = bringRowCardIdIntoView(
+      playerCardIds,
+      this.sel.cardId,
+      nextOffset,
+    );
+    if (actorPinnedOffset === nextOffset) return true;
+
+    const legalTargetIds = this.currentLegalTargetIds();
+    if (legalTargetIds.size === 0) return true;
+
+    return !playerCardIds.some((id, index) => {
+      if (!legalTargetIds.has(id)) return false;
+      return (
+        this.rowIndexVisibleAtOffset(index, nextOffset) &&
+        !this.rowIndexVisibleAtOffset(index, actorPinnedOffset)
+      );
+    });
+  }
+
+  private rowIndexVisibleAtOffset(index: number, offset: number): boolean {
+    return index >= offset && index < offset + ROW_WINDOW_VISIBLE_LIMIT;
   }
 
   /**
@@ -974,7 +1071,20 @@ export class TableScene extends Phaser.Scene {
       return;
     }
 
+    this.ensureActingCardVisibleForTargeting();
     this.drawAll();
+  }
+
+  private ensureActingCardVisibleForTargeting(): void {
+    if (this.sel.phase !== "targeting") return;
+    const playerCardIds = effectiveHand(this.game_.state)
+      .filter((card): card is PlayerCard => card.kind === "player")
+      .map((card) => card.id);
+    this.playerRowOffset = bringRowCardIdIntoView(
+      playerCardIds,
+      this.sel.cardId,
+      this.playerRowOffset,
+    );
   }
 
   // The current targeting step when it is a Tidal discard-recall step, else null.
@@ -1531,7 +1641,10 @@ export class TableScene extends Phaser.Scene {
 
     const source = this.cardObjects.get(sel.cardId);
     const target = this.cardObjects.get(targetId);
-    if (source === undefined || target === undefined) return;
+    if (source === undefined || target === undefined) {
+      this.clearConnector();
+      return;
+    }
 
     const { from, to } = connectorLine(source, target);
     const style = this.stepConnectorStyle(sel.cardId, step);

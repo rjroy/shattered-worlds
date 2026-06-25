@@ -3,6 +3,7 @@ import { CardView, applyCardHighlight } from "../view/CardView";
 import { TableScene } from "../scenes/TableScene";
 import { selectTheme } from "../view/themes/themeManifest";
 import type { VisualTheme } from "../view/themes/theme";
+import type { CommonButton } from "../view/components";
 import { CARD_FACE } from "../view/layout";
 import { mintCard } from "../../core/model/cards";
 import { createRng } from "../../core/engine/rng";
@@ -27,6 +28,7 @@ import {
 } from "../../core/tests/testFixture";
 import { previewAction } from "../../core/index";
 import type { ActionPreview } from "../../core/index";
+import { reduce } from "../../core/engine/reduce";
 import type { UserSettings } from "../runtime/userSettings";
 
 // ---------------------------------------------------------------------------
@@ -165,40 +167,81 @@ function nthTween(captured: CapturedTween[], i: number): CapturedTween {
   return t;
 }
 
+type RowNavButton = CommonButton & {
+  interactive: boolean;
+  press(): void;
+};
+
 function makeDrawAllHarness(state: GameState): {
-  scene: { drawAll(): void; navigateRow(row: "world" | "player", direction: -1 | 1): void };
+  scene: {
+    drawAll(): void;
+    navigateRow(row: "world" | "player", direction: -1 | 1): void;
+    cardObjects: Map<string, CardView>;
+  };
   worldRows: Card[][];
   playerRows: Card[][];
   rowNav: {
-    worldPrev: FakeRowNavButton;
-    worldNext: FakeRowNavButton;
+    worldPrev: RowNavButton;
+    worldNext: RowNavButton;
     worldLabel: FakeRowNavLabel;
-    playerPrev: FakeRowNavButton;
-    playerNext: FakeRowNavButton;
+    playerPrev: RowNavButton;
+    playerNext: RowNavButton;
     playerLabel: FakeRowNavLabel;
   };
 } {
+  const render = makeRenderScene();
   const scene = Object.create(TableScene.prototype) as Record<string, unknown> & {
     drawAll(): void;
     navigateRow(row: "world" | "player", direction: -1 | 1): void;
+    cardObjects: Map<string, CardView>;
   };
+  scene.sys = render.scene.sys;
+  scene.textures = render.scene.textures;
+  const commonButtonAdd = makeFakeCommonButtonAdd();
+  scene.add = { ...render.scene.add, nineslice: commonButtonAdd.nineslice };
   const worldRows: Card[][] = [];
   const playerRows: Card[][] = [];
+  const createRowNavButton = (scene as unknown as {
+    createRowNavButton(
+      row: "world" | "player",
+      direction: -1 | 1,
+      text: string,
+      style: Record<string, never>,
+    ): CommonButton;
+  }).createRowNavButton.bind(scene);
   const rowNav = {
-    worldPrev: makeFakeRowNavButton(),
-    worldNext: makeFakeRowNavButton(),
+    worldPrev: makeTestRowNavButton(createRowNavButton("world", -1, "<", {})),
+    worldNext: makeTestRowNavButton(createRowNavButton("world", 1, ">", {})),
     worldLabel: makeFakeRowNavLabel(),
-    playerPrev: makeFakeRowNavButton(),
-    playerNext: makeFakeRowNavButton(),
+    playerPrev: makeTestRowNavButton(createRowNavButton("player", -1, "<", {})),
+    playerNext: makeTestRowNavButton(createRowNavButton("player", 1, ">", {})),
     playerLabel: makeFakeRowNavLabel(),
   };
-  scene.game_ = { state, intensity: () => 0 };
+  const game = {
+    state,
+    intensity: () => 0,
+    dispatch(action: Action): { state: GameState; events: unknown[] } {
+      const result = reduce(coreCatalog, game.state, action);
+      game.state = result.state;
+      return result;
+    },
+    preview(action: Action): ActionPreview {
+      return previewAction(coreCatalog, game.state, action);
+    },
+  };
+  scene.game_ = game;
   scene.theme_ = selectTheme("zombie-big-box");
   scene.sel = { phase: "idle" };
+  scene.selectedCardSnapshot = null;
   scene.hoveredCardId = null;
   scene.worldRowOffset = 0;
   scene.playerRowOffset = 0;
   scene.cardObjects = new Map();
+  scene.playerCardDisplaySignatures = new Map();
+  scene.modalChooser = null;
+  scene.discardChooser = null;
+  scene.boonChoiceView = null;
+  scene.runtime_ = { userSettings: { get: () => DEFAULT_HARNESS_SETTINGS } };
   scene.worldRowPrevBtn = rowNav.worldPrev;
   scene.worldRowNextBtn = rowNav.worldNext;
   scene.worldRowRangeLabel = rowNav.worldLabel;
@@ -244,8 +287,15 @@ function makeDrawAllHarness(state: GameState): {
     },
   };
   scene.helpOverlay = {
+    visible: false,
     setVisible(): unknown {
       return scene.helpOverlay;
+    },
+  };
+  scene.settingsOverlay = {
+    visible: false,
+    close(): unknown {
+      return scene.settingsOverlay;
     },
   };
   scene.settingsBtn = {
@@ -259,7 +309,27 @@ function makeDrawAllHarness(state: GameState): {
   scene.actionConfirmation = { isOpen: false };
   scene.tweens = { killTweensOf(): void {} };
   scene.currentLegalTargetIds = () => new Set<string>();
-  scene.layoutRow = (cards: readonly Card[], positions: readonly { y: number }[]) => {
+  const realLayoutRow = (
+    scene as unknown as {
+      layoutRow(
+        cards: readonly Card[],
+        positions: readonly { y: number }[],
+        playableIds: Set<string>,
+        discardableIds: Set<string>,
+        legalTargetIds: Set<string>,
+        desiredIds: Set<string>,
+      ): void;
+    }
+  ).layoutRow.bind(scene);
+  scene.layoutRow = (
+    cards: readonly Card[],
+    positions: readonly { y: number }[],
+    playableIds: Set<string>,
+    discardableIds: Set<string>,
+    legalTargetIds: Set<string>,
+    desiredIds: Set<string>,
+  ) => {
+    realLayoutRow(cards, positions, playableIds, discardableIds, legalTargetIds, desiredIds);
     const rowY = positions[0]?.y;
     if (rowY === undefined) return;
     if (rowY > 400) {
@@ -272,24 +342,29 @@ function makeDrawAllHarness(state: GameState): {
   scene.updateBoonChoiceView = () => {};
   scene.clearConnector = () => {};
   scene.clearPreviewSlot = () => {};
-  rowNav.worldPrev.onPress = () => scene.navigateRow("world", -1);
-  rowNav.worldNext.onPress = () => scene.navigateRow("world", 1);
-  rowNav.playerPrev.onPress = () => scene.navigateRow("player", -1);
-  rowNav.playerNext.onPress = () => scene.navigateRow("player", 1);
 
   return { scene, worldRows, playerRows, rowNav };
 }
 
-interface FakeRowNavButton {
-  visible: boolean;
-  alpha: number;
+interface FakeCommonButtonBacking {
   interactive: boolean;
-  onPress: (() => void) | null;
-  setVisible(visible: boolean): FakeRowNavButton;
-  setAlpha(alpha: number): FakeRowNavButton;
-  disableInteractive(): FakeRowNavButton;
-  setInteractive(): FakeRowNavButton;
-  press(): void;
+  pointerdown: (() => void) | null;
+  width: number;
+  height: number;
+  setOrigin(): FakeCommonButtonBacking;
+  setTint(): FakeCommonButtonBacking;
+  setSize(width: number, height: number): FakeCommonButtonBacking;
+  setInteractive(): FakeCommonButtonBacking;
+  disableInteractive(): FakeCommonButtonBacking;
+  on(event: string, callback: () => void): FakeCommonButtonBacking;
+  once(): FakeCommonButtonBacking;
+  off(): FakeCommonButtonBacking;
+  removeFromDisplayList(): FakeCommonButtonBacking;
+  addToDisplayList(): FakeCommonButtonBacking;
+  addToUpdateList(): FakeCommonButtonBacking;
+  removeFromUpdateList(): FakeCommonButtonBacking;
+  addedToScene(): void;
+  removedFromScene(): void;
 }
 
 interface FakeRowNavLabel {
@@ -299,33 +374,126 @@ interface FakeRowNavLabel {
   setText(text: string): void;
 }
 
-function makeFakeRowNavButton(): FakeRowNavButton {
-  return {
-    visible: false,
-    alpha: 1,
+function makeFakeCommonButtonBacking(): FakeCommonButtonBacking {
+  const backing: FakeCommonButtonBacking = {
     interactive: false,
-    onPress: null,
-    setVisible(visible: boolean): FakeRowNavButton {
-      this.visible = visible;
+    pointerdown: null,
+    width: 30,
+    height: 20,
+    setOrigin(): FakeCommonButtonBacking {
       return this;
     },
-    setAlpha(alpha: number): FakeRowNavButton {
-      this.alpha = alpha;
+    setTint(): FakeCommonButtonBacking {
       return this;
     },
-    disableInteractive(): FakeRowNavButton {
-      this.interactive = false;
+    setSize(width: number, height: number): FakeCommonButtonBacking {
+      this.width = width;
+      this.height = height;
       return this;
     },
-    setInteractive(): FakeRowNavButton {
+    setInteractive(): FakeCommonButtonBacking {
       this.interactive = true;
       return this;
     },
-    press(): void {
-      if (!this.visible || !this.interactive) return;
-      this.onPress?.();
+    disableInteractive(): FakeCommonButtonBacking {
+      this.interactive = false;
+      return this;
     },
+    on(event: string, callback: () => void): FakeCommonButtonBacking {
+      if (event === "pointerdown") this.pointerdown = callback;
+      return this;
+    },
+    once(): FakeCommonButtonBacking {
+      return this;
+    },
+    off(): FakeCommonButtonBacking {
+      return this;
+    },
+    removeFromDisplayList(): FakeCommonButtonBacking {
+      return this;
+    },
+    addToDisplayList(): FakeCommonButtonBacking {
+      return this;
+    },
+    addToUpdateList(): FakeCommonButtonBacking {
+      return this;
+    },
+    removeFromUpdateList(): FakeCommonButtonBacking {
+      return this;
+    },
+    addedToScene(): void {},
+    removedFromScene(): void {},
   };
+  return backing;
+}
+
+function makeFakeCommonButtonAdd(): {
+  nineslice(): FakeCommonButtonBacking;
+  text(): FakeCommonButtonBacking & { text: string; setText(text: string): void };
+  existing(): void;
+} {
+  return {
+    nineslice(): FakeCommonButtonBacking {
+      return makeFakeCommonButtonBacking();
+    },
+    text(): FakeCommonButtonBacking & { text: string; setText(text: string): void } {
+      return {
+        ...makeFakeCommonButtonBacking(),
+        text: "",
+        width: 8,
+        height: 12,
+        setText(text: string): void {
+          this.text = text;
+          this.width = Math.max(8, text.length * 8);
+        },
+      };
+    },
+    existing(): void {},
+  };
+}
+
+function rowNavButtonBacking(button: CommonButton): FakeCommonButtonBacking {
+  return (button as unknown as { txtBg: FakeCommonButtonBacking }).txtBg;
+}
+
+function makeTestRowNavButton(button: CommonButton): RowNavButton {
+  Object.defineProperty(button, "interactive", {
+    get(): boolean {
+      return rowNavButtonBacking(button).interactive;
+    },
+  });
+  Object.defineProperty(button, "press", {
+    value(): void {
+      const backing = rowNavButtonBacking(button);
+      if (!button.visible || !backing.interactive) return;
+      backing.pointerdown?.();
+    },
+  });
+  return button as RowNavButton;
+}
+
+function pressRowNavKey(
+  scene: unknown,
+  code: "BracketLeft" | "BracketRight",
+  shiftKey = false,
+): boolean {
+  let prevented = false;
+  const event = {
+    code,
+    shiftKey,
+    ctrlKey: false,
+    metaKey: false,
+    altKey: false,
+    preventDefault(): void {
+      prevented = true;
+    },
+  } as unknown as KeyboardEvent;
+  (
+    scene as {
+      handleRowNavigationKey(event: KeyboardEvent): void;
+    }
+  ).handleRowNavigationKey(event);
+  return prevented;
 }
 
 function makeFakeRowNavLabel(): FakeRowNavLabel {
@@ -462,6 +630,237 @@ describe("TableScene effective player-card layout", () => {
     expect(harness.rowNav.worldLabel.text).toBe("3-7 of 7");
     expect(harness.rowNav.playerLabel.text).toBe("3-7 of 7");
   });
+
+  it("pages overflowing world and player rows independently through keyboard shortcuts", () => {
+    const base = makeCoreState({ energy: 9 });
+    const worldCards = Array.from({ length: 7 }, (_, i) =>
+      makeWorldCard({ id: `key-world-${i + 1}` }),
+    );
+    const [playerCards, state] = mintCorePlayers(base, "Sprint", 7);
+    const harness = makeDrawAllHarness({ ...state, hand: [...worldCards, ...playerCards] });
+
+    harness.scene.drawAll();
+
+    expect(pressRowNavKey(harness.scene, "BracketRight")).toBe(true);
+    expect(harness.worldRows.at(-1)?.map((card) => card.id)).toEqual(
+      worldCards.slice(2, 7).map((card) => card.id),
+    );
+    expect(harness.playerRows.at(-1)?.map((card) => card.id)).toEqual(
+      playerCards.slice(0, 5).map((card) => card.id),
+    );
+    expect(harness.rowNav.worldLabel.text).toBe("3-7 of 7");
+    expect(harness.rowNav.playerLabel.text).toBe("1-5 of 7");
+
+    expect(pressRowNavKey(harness.scene, "BracketRight", true)).toBe(true);
+    expect(harness.worldRows.at(-1)?.map((card) => card.id)).toEqual(
+      worldCards.slice(2, 7).map((card) => card.id),
+    );
+    expect(harness.playerRows.at(-1)?.map((card) => card.id)).toEqual(
+      playerCards.slice(2, 7).map((card) => card.id),
+    );
+    expect(harness.rowNav.worldLabel.text).toBe("3-7 of 7");
+    expect(harness.rowNav.playerLabel.text).toBe("3-7 of 7");
+
+    expect(pressRowNavKey(harness.scene, "BracketLeft")).toBe(true);
+    expect(pressRowNavKey(harness.scene, "BracketLeft", true)).toBe(true);
+    expect(harness.worldRows.at(-1)?.map((card) => card.id)).toEqual(
+      worldCards.slice(0, 5).map((card) => card.id),
+    );
+    expect(harness.playerRows.at(-1)?.map((card) => card.id)).toEqual(
+      playerCards.slice(0, 5).map((card) => card.id),
+    );
+  });
+
+  it("draws only the five-card visible windows for twenty-plus-card rows", () => {
+    const base = makeCoreState({ energy: 30 });
+    const worldCards = Array.from({ length: 23 }, (_, i) =>
+      makeWorldCard({ id: `oversized-world-${i + 1}` }),
+    );
+    const [playerCards, state] = mintCorePlayers(base, "Sprint", 23);
+    const harness = makeDrawAllHarness({ ...state, hand: [...worldCards, ...playerCards] });
+
+    harness.scene.drawAll();
+
+    expect(harness.worldRows.at(-1)?.map((card) => card.id)).toEqual(
+      worldCards.slice(0, 5).map((card) => card.id),
+    );
+    expect(harness.playerRows.at(-1)?.map((card) => card.id)).toEqual(
+      playerCards.slice(0, 5).map((card) => card.id),
+    );
+    expect(harness.worldRows.at(-1)).toHaveLength(5);
+    expect(harness.playerRows.at(-1)).toHaveLength(5);
+    expect([...harness.scene.cardObjects.keys()].sort()).toEqual(
+      [...worldCards.slice(0, 5), ...playerCards.slice(0, 5)].map((card) => card.id).sort(),
+    );
+    const firstPlayerView = harness.scene.cardObjects.get(playerCards[0]!.id);
+    const sixthPlayerId = playerCards[5]!.id;
+    let firstPlayerDestroyed = 0;
+    if (firstPlayerView === undefined) throw new Error("expected first player CardView");
+    const destroyFirstPlayer = firstPlayerView.destroy.bind(firstPlayerView);
+    firstPlayerView.destroy = ((...args: Parameters<CardView["destroy"]>) => {
+      firstPlayerDestroyed += 1;
+      return destroyFirstPlayer(...args);
+    }) as CardView["destroy"];
+    expect(harness.scene.cardObjects.has(sixthPlayerId)).toBe(false);
+    expect(harness.rowNav.worldLabel.text).toBe("1-5 of 23");
+    expect(harness.rowNav.playerLabel.text).toBe("1-5 of 23");
+
+    harness.rowNav.playerNext.press();
+
+    expect(harness.worldRows.at(-1)?.map((card) => card.id)).toEqual(
+      worldCards.slice(0, 5).map((card) => card.id),
+    );
+    expect(harness.playerRows.at(-1)?.map((card) => card.id)).toEqual(
+      playerCards.slice(5, 10).map((card) => card.id),
+    );
+    expect(firstPlayerDestroyed).toBe(1);
+    expect(harness.scene.cardObjects.has(playerCards[0]!.id)).toBe(false);
+    expect(harness.scene.cardObjects.has(sixthPlayerId)).toBe(true);
+    expect([...harness.scene.cardObjects.keys()].sort()).toEqual(
+      [...worldCards.slice(0, 5), ...playerCards.slice(5, 10)].map((card) => card.id).sort(),
+    );
+    expect(harness.rowNav.worldLabel.text).toBe("1-5 of 23");
+    expect(harness.rowNav.playerLabel.text).toBe("6-10 of 23");
+
+    harness.rowNav.worldNext.press();
+    harness.rowNav.worldNext.press();
+    harness.rowNav.worldNext.press();
+    harness.rowNav.worldNext.press();
+
+    expect(harness.worldRows.at(-1)?.map((card) => card.id)).toEqual(
+      worldCards.slice(18, 23).map((card) => card.id),
+    );
+    expect(harness.playerRows.at(-1)?.map((card) => card.id)).toEqual(
+      playerCards.slice(5, 10).map((card) => card.id),
+    );
+    expect(harness.rowNav.worldLabel.text).toBe("19-23 of 23");
+    expect(harness.rowNav.playerLabel.text).toBe("6-10 of 23");
+    expect([...harness.scene.cardObjects.keys()].sort()).toEqual(
+      [...worldCards.slice(18, 23), ...playerCards.slice(5, 10)].map((card) => card.id).sort(),
+    );
+    expect(harness.rowNav.worldNext.interactive).toBe(false);
+    expect(harness.rowNav.playerNext.interactive).toBe(true);
+  });
+
+  it("surfaces off-window legal targets through the overflowing row range label", () => {
+    const base = makeCoreState({ energy: 9 });
+    const worldCards = Array.from({ length: 7 }, (_, i) =>
+      makeWorldCard({ id: `world-target-${i + 1}` }),
+    );
+    const [playerCards, state] = mintCorePlayers(base, "Sprint", 1);
+    const harness = makeDrawAllHarness({ ...state, hand: [...worldCards, ...playerCards] });
+    (harness.scene as unknown as { currentLegalTargetIds(): Set<string> }).currentLegalTargetIds =
+      () => new Set([worldCards[6]!.id]);
+
+    harness.scene.drawAll();
+
+    expect(harness.rowNav.worldLabel.text).toBe("1-5 of 7 target >");
+
+    harness.rowNav.worldNext.press();
+
+    expect(harness.worldRows.at(-1)?.map((card) => card.id)).toContain(worldCards[6]!.id);
+    expect(harness.rowNav.worldLabel.text).toBe("3-7 of 7");
+  });
+
+  it("lets pointer paging reach and select an off-window player target during targeting", () => {
+    const base = makeCoreState({ energy: 9 });
+    const worldCards = Array.from({ length: 7 }, (_, i) =>
+      makeWorldCard({ id: `world-pick-${i + 1}` }),
+    );
+    const [playerCards, state] = mintCorePlayers(base, "Sprint", 7);
+    const harness = makeDrawAllHarness({ ...state, hand: [...worldCards, ...playerCards] });
+    const snapshot = playerCards[0]!;
+    const offWindowPlayerTarget = playerCards[6]!;
+    const sel = {
+      phase: "targeting" as const,
+      cardId: snapshot.id,
+      steps: [{ kind: "destroyHand" as const, min: 0, max: 2 }],
+      stepIdx: 0,
+      done: [{ kind: "returnWorld" as const, returnIds: [worldCards[0]!.id] }],
+      current: [playerCards[1]!.id],
+    };
+    const scene = harness.scene as unknown as {
+      sel: typeof sel;
+      selectedCardSnapshot: PlayerCard | null;
+    };
+    scene.sel = sel;
+    scene.selectedCardSnapshot = snapshot;
+    (harness.scene as unknown as { currentLegalTargetIds(): Set<string> }).currentLegalTargetIds =
+      () => new Set([offWindowPlayerTarget.id]);
+
+    harness.scene.drawAll();
+    harness.rowNav.worldNext.press();
+    harness.rowNav.playerNext.press();
+
+    expect(scene.sel).toBe(sel);
+    expect(scene.selectedCardSnapshot).toBe(snapshot);
+    expect(scene.sel.done).toEqual([{ kind: "returnWorld", returnIds: [worldCards[0]!.id] }]);
+    expect(scene.sel.current).toEqual([playerCards[1]!.id]);
+    expect(harness.worldRows.at(-1)?.map((card) => card.id)).toEqual(
+      worldCards.slice(2, 7).map((card) => card.id),
+    );
+    expect(harness.playerRows.at(-1)?.map((card) => card.id)).toEqual(
+      playerCards.slice(2, 7).map((card) => card.id),
+    );
+    expect(harness.playerRows.at(-1)?.map((card) => card.id)).toContain(offWindowPlayerTarget.id);
+    expect(harness.rowNav.playerLabel.text).toBe("3-7 of 7");
+
+    const targetView = harness.scene.cardObjects.get(offWindowPlayerTarget.id);
+    expect(targetView).toBeInstanceOf(CardView);
+
+    targetView!.emit("pointerdown");
+
+    expect(scene.selectedCardSnapshot).toBe(snapshot);
+    expect(scene.sel).toMatchObject({
+      phase: "targeting",
+      cardId: snapshot.id,
+      stepIdx: 0,
+      done: [{ kind: "returnWorld", returnIds: [worldCards[0]!.id] }],
+      current: [playerCards[1]!.id, offWindowPlayerTarget.id],
+    });
+  });
+
+  it("keeps the acting card visible when keyboard paging would not reveal a new player target", () => {
+    const base = makeCoreState({ energy: 9 });
+    const worldCards = Array.from({ length: 7 }, (_, i) =>
+      makeWorldCard({ id: `key-world-pick-${i + 1}` }),
+    );
+    const [playerCards, state] = mintCorePlayers(base, "Sprint", 7);
+    const harness = makeDrawAllHarness({ ...state, hand: [...worldCards, ...playerCards] });
+    const snapshot = playerCards[0]!;
+    const sel = {
+      phase: "targeting" as const,
+      cardId: snapshot.id,
+      steps: [{ kind: "hazard" as const }],
+      stepIdx: 0,
+      done: [{ kind: "returnWorld" as const, returnIds: [worldCards[0]!.id] }],
+      current: [worldCards[1]!.id],
+    };
+    const scene = harness.scene as unknown as {
+      sel: typeof sel;
+      selectedCardSnapshot: PlayerCard | null;
+    };
+    scene.sel = sel;
+    scene.selectedCardSnapshot = snapshot;
+    (harness.scene as unknown as { currentLegalTargetIds(): Set<string> }).currentLegalTargetIds =
+      () => new Set([playerCards[4]!.id]);
+
+    harness.scene.drawAll();
+    expect(pressRowNavKey(harness.scene, "BracketRight")).toBe(true);
+    expect(pressRowNavKey(harness.scene, "BracketRight", true)).toBe(true);
+
+    expect(scene.sel).toBe(sel);
+    expect(scene.selectedCardSnapshot).toBe(snapshot);
+    expect(scene.sel.done).toEqual([{ kind: "returnWorld", returnIds: [worldCards[0]!.id] }]);
+    expect(scene.sel.current).toEqual([worldCards[1]!.id]);
+    expect(harness.worldRows.at(-1)?.map((card) => card.id)).toEqual(
+      worldCards.slice(2, 7).map((card) => card.id),
+    );
+    expect(harness.playerRows.at(-1)?.map((card) => card.id)).toEqual(
+      playerCards.slice(0, 5).map((card) => card.id),
+    );
+    expect(harness.playerRows.at(-1)?.map((card) => card.id)).toContain(snapshot.id);
+  });
 });
 
 /**
@@ -519,6 +918,7 @@ interface SelectionHarnessScene {
   onCardClick(cardId: string): void;
   onEndTurnClick(): void;
   onDiscardClick(cardId: string): void;
+  navigateRow(row: "world" | "player", direction: -1 | 1): void;
   currentLegalTargetIds(): Set<string>;
   showTargetPreview(targetId: string): void;
   showIdleWorldPreview(card: WorldCard): void;
@@ -589,6 +989,8 @@ function makeSelectionHarness(
   scene.actionConfirmation = makeFakeActionConfirmation();
   scene.sel = { phase: "idle" };
   scene.selectedCardSnapshot = null;
+  (scene as typeof scene & { hoveredCardId: string | null }).hoveredCardId = null;
+  (scene as typeof scene & { cardObjects: Map<string, unknown> }).cardObjects = new Map();
   // Mirror production: the scene picks its theme from the run's world so
   // severity tinting (which reads theme_.intrusionHue / realityPalette.cancel)
   // has a real palette to resolve against.
@@ -669,6 +1071,91 @@ describe("TableScene selected effective card snapshots", () => {
       stepIdx: 1,
       steps: [{ kind: "none" }, { kind: "hazard" }],
     });
+  });
+
+  it("brings the acting player card into the player row window before targeting repaints", () => {
+    const survey = makePlayerCard({
+      id: "survey-window",
+      templateId: "Survey",
+      name: "Survey",
+      effect: { kind: "DealProgress", base: 1 },
+      energyCost: 0,
+    });
+    const extraPlayers = Array.from({ length: 6 }, (_, i) =>
+      makePlayerCard({
+        id: `extra-player-${i + 1}`,
+        templateId: "Extra",
+        name: "Extra",
+        effect: { kind: "None" },
+        energyCost: 0,
+      }),
+    );
+    const hazard = makeWorldCard({ id: "hazard-window", discardable: false });
+    const state = makeCoreState({
+      hand: [survey, ...extraPlayers, hazard],
+      energy: 0,
+    });
+    const { scene, drawCount } = makeSelectionHarness(state);
+    const windowedScene = scene as typeof scene & { playerRowOffset: number };
+    windowedScene.playerRowOffset = 2;
+
+    scene.onCardClick(survey.id);
+
+    expect(drawCount()).toBe(1);
+    expect(windowedScene.playerRowOffset).toBe(0);
+    expect(scene.sel).toMatchObject({
+      phase: "targeting",
+      cardId: survey.id,
+    });
+  });
+
+  it("keeps off-window player cards in hand and playable after row navigation", () => {
+    const players = Array.from({ length: 23 }, (_, i) =>
+      makePlayerCard({
+        id: `off-window-player-${i + 1}`,
+        templateId: "OffWindow",
+        name: "Off Window",
+        effect: { kind: "None" },
+        energyCost: 0,
+      }),
+    );
+    const state = makeCoreState({
+      hand: players,
+      energy: 0,
+    });
+    const harness = makeDrawAllHarness(state);
+    const scene = harness.scene as typeof harness.scene & {
+      game_: { state: GameState };
+      playerRowOffset: number;
+    };
+    const target = players[5]!;
+
+    harness.scene.drawAll();
+
+    expect(scene.playerRowOffset).toBe(0);
+    expect(scene.game_.state.hand.map((card) => card.id)).toContain(target.id);
+    expect(harness.playerRows.at(-1)?.map((card) => card.id)).toEqual(
+      players.slice(0, 5).map((card) => card.id),
+    );
+    expect(scene.cardObjects.has(target.id)).toBe(false);
+
+    const beforeNavHandIds = scene.game_.state.hand.map((card) => card.id);
+    scene.navigateRow("player", 1);
+
+    expect(scene.playerRowOffset).toBe(5);
+    expect(scene.game_.state.hand.map((card) => card.id)).toEqual(beforeNavHandIds);
+    expect(scene.game_.state.hand.map((card) => card.id)).toContain(target.id);
+    expect(harness.playerRows.at(-1)?.map((card) => card.id)).toEqual(
+      players.slice(5, 10).map((card) => card.id),
+    );
+    const targetView = scene.cardObjects.get(target.id);
+    expect(targetView).toBeInstanceOf(CardView);
+
+    targetView!.emit("pointerdown");
+
+    expect(scene.game_.state.hand.map((card) => card.id)).not.toContain(target.id);
+    expect(scene.game_.state.playerDiscard.map((card) => card.id)).toContain(target.id);
+    expect(scene.cardObjects.has(target.id)).toBe(false);
   });
 
   it("keeps an effective appended target step highlightable and clickable after live state loses the modifier", () => {
@@ -1155,6 +1642,63 @@ describe("TableScene selected effective card snapshots", () => {
       },
     ]);
   });
+
+  it("clears connectors when an endpoint is off-window and draws again once both endpoints are visible", () => {
+    const acting = makePlayerCard({
+      id: "connector-acting",
+      templateId: "Connector",
+      name: "Connector",
+      effect: { kind: "DealProgress", base: 1 },
+      energyCost: 0,
+    });
+    const target = makeWorldCard({ id: "connector-target", discardable: false });
+    const gfx = {
+      clears: 0,
+      lines: 0,
+      clear(): void {
+        this.clears += 1;
+      },
+      lineStyle(): void {},
+      lineBetween(): void {
+        this.lines += 1;
+      },
+    };
+    const scene = Object.create(TableScene.prototype) as {
+      sel: unknown;
+      cardObjects: Map<string, { x: number; y: number }>;
+      connectorGfx: typeof gfx;
+      theme_: VisualTheme;
+      pileLayer: { worldPileCenter(): { x: number; y: number } };
+      currentLegalTargetIds(): Set<string>;
+      stepConnectorStyle(): "progress";
+      showConnector(targetId: string): void;
+    };
+    scene.sel = {
+      phase: "targeting",
+      cardId: acting.id,
+      steps: [{ kind: "hazard" }],
+      stepIdx: 0,
+      done: [],
+      current: [],
+    };
+    scene.cardObjects = new Map([[target.id, { x: 300, y: 180 }]]);
+    scene.connectorGfx = gfx;
+    scene.theme_ = selectTheme("zombie-big-box");
+    scene.pileLayer = { worldPileCenter: () => ({ x: 0, y: 0 }) };
+    scene.currentLegalTargetIds = () => new Set([target.id]);
+    scene.stepConnectorStyle = () => "progress";
+
+    scene.showConnector(target.id);
+
+    expect(gfx.clears).toBe(1);
+    expect(gfx.lines).toBe(0);
+
+    scene.cardObjects.set(acting.id, { x: 100, y: 460 });
+    scene.showConnector(target.id);
+
+    expect(gfx.clears).toBe(2);
+    expect(gfx.lines).toBe(1);
+  });
 });
 
 describe("updateCostRing", () => {
@@ -1585,10 +2129,18 @@ interface TrackedText {
 const childProtocol = {
   parentContainer: null as unknown,
   visible: true,
+  interactive: false,
   once(): void {},
   off(): void {},
+  on(): unknown {
+    return this;
+  },
   removeFromDisplayList(): void {},
   addedToScene(): void {},
+  setInteractive(this: { interactive: boolean }): unknown {
+    this.interactive = true;
+    return this;
+  },
   // CardView's fog-back toggles identity vs. fog via setVisible; every fake
   // child records the last value so the concealment tests can read it.
   setVisible(this: { visible: boolean }, v: boolean): unknown {
@@ -1635,6 +2187,8 @@ function makeFakeText(
       return tracked.color;
     },
     setOrigin: (): unknown => text,
+    setScale: (): unknown => text,
+    setWordWrapWidth: (): unknown => text,
     setPosition(px: number, py: number): unknown {
       text.x = px;
       text.y = py;
@@ -1722,6 +2276,12 @@ function makeFakeGraphics(): unknown {
   const g = {
     ...childProtocol,
     setPosition: (): unknown => g,
+    clear: (): unknown => g,
+    lineStyle: (): unknown => g,
+    strokeCircle: (): unknown => g,
+    beginPath: (): unknown => g,
+    arc: (): unknown => g,
+    strokePath: (): unknown => g,
     // obtainPickBadge's circle draw calls (fillStyle/fillCircle/setAlpha) —
     // no-ops here since these tests assert on stroke colors, not pixels.
     fillStyle: (): unknown => g,
@@ -1782,14 +2342,49 @@ function makeFakeContainer(sink: FakeContainer[]): FakeContainer {
   return container;
 }
 
+type RenderScene = {
+  sys: {
+    queueDepthSort(): void;
+    events: { once(): void; on(): void; off(): void };
+    displayList: { add(): void; remove(): void; exists(): boolean };
+    updateList: { add(): void; remove(): void };
+    input: { enable(obj: unknown): void; disable(obj: unknown): void };
+  };
+  textures: { exists(): boolean };
+  add: {
+    existing(obj?: unknown): unknown;
+    image(x: number, y: number, key: string): unknown;
+    rectangle(x: number, y: number): unknown;
+    circle(x: number, y: number): unknown;
+    graphics(): unknown;
+    container(): unknown;
+    text(
+      x: number,
+      y: number,
+      content: string,
+      style: { fontSize?: string; color?: string },
+    ): unknown;
+  };
+};
+
 /** Scene stub satisfying the full CardView constructor (player and world cards). */
-function makeRenderScene(): { scene: unknown; texts: TrackedText[]; containers: FakeContainer[] } {
+function makeRenderScene(): { scene: RenderScene; texts: TrackedText[]; containers: FakeContainer[] } {
   const texts: TrackedText[] = [];
   const containers: FakeContainer[] = [];
-  const scene = {
+  const scene: RenderScene = {
     sys: {
       queueDepthSort(): void {},
-      events: { once(): void {}, off(): void {} },
+      events: { once(): void {}, on(): void {}, off(): void {} },
+      displayList: { add(): void {}, remove(): void {}, exists(): boolean { return false; } },
+      updateList: { add(): void {}, remove(): void {} },
+      input: {
+        enable(obj: unknown): void {
+          (obj as { interactive?: boolean }).interactive = true;
+        },
+        disable(obj: unknown): void {
+          (obj as { interactive?: boolean }).interactive = false;
+        },
+      },
     },
     // addEffectLines lazily ensures the icon placeholder textures; claiming
     // every key exists skips canvas texture generation (a browser concern).
