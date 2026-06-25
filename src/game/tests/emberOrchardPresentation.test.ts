@@ -49,15 +49,12 @@ describe("The Ember Orchard — theme palette (REQ-EMBER-49)", () => {
 // cards live in a SEPARATE source (boons/ember.json) that is NOT part of the
 // bundle, so their inset keys are NOT covered by the existing test.
 //
-// This test closes that gap: it asserts the five pool-ember-cellar inset keys WILL be
-// validated/bound, so they cannot ship silently broken. It is expected to be RED
-// until the boon-card inset art is generated and wired (Slice B). Do NOT add
-// placeholder webp files to force it green — a red here means "art not yet wired",
-// which is the honest state.
+// This test closes that gap: it asserts the five pool-ember-cellar inset keys are
+// validated/bound, so they cannot ship silently broken.
 // ---------------------------------------------------------------------------
 
 describe("The Ember Orchard — boon-source inset bindings (REQ-EMBER-48)", () => {
-  it("every pool-ember-cellar card inset key is bound in assetManifest (RED until boon art is wired)", () => {
+  it("every pool-ember-cellar card inset key is bound in assetManifest", () => {
     // Boon cards live in the unified catalog now; look up inset keys via templateIds
     const emberTemplateIds = FORTUNE_BOON_POOLS["pool-ember-cellar"] ?? [];
     const boonInsetKeys = emberTemplateIds

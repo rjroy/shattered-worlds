@@ -38,4 +38,4 @@ Body-movement hazards use `ForceDestroy` where the fiction is snatching or buryi
 
 ## Delivery Shape
 
-The world is gated through the unlock system, registers a signature threat, adds a boon source for survey rewards, and validates recurrence through top-decked body-reflex hazards rather than a new core engine slice. Base and music bindings are wired; card inset art and unlock art are deferred, so the corresponding asset checks remain intentionally red until those assets exist.
+The world is gated through the unlock system, registers a signature threat, adds a boon source for survey rewards, and validates recurrence through top-decked body-reflex hazards rather than a new core engine slice. Base, music, unlock, and card inset assets are wired and covered by presentation asset checks.

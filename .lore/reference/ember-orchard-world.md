@@ -37,4 +37,4 @@ Ember creature pressure uses `ForceDestroy` so Brace rewards have something real
 
 ## Delivery Shape
 
-Ember is a gated world unlock with a registered theme, help/display metadata, boon source registration, base/music asset bindings, and tests for the incubation loops, boon offer, threat mapping, and seeded three-act gameplay. Card inset art and unlock art are deferred; asset-binding tests intentionally stay red until the real assets are generated and wired.
+Ember is a gated world unlock with a registered theme, help/display metadata, boon source registration, base/music/unlock asset bindings, card inset bindings, and tests for the incubation loops, boon offer, threat mapping, presentation assets, and seeded three-act gameplay.

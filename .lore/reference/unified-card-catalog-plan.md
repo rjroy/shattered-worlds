@@ -24,15 +24,15 @@ fg-evidence:
 
 # Unified Card Catalog Plan
 
-The planned catalog refactor moves every card template from world JSON, starter files, and boon sources into one global template file. World deck composition and starter deck lists remain where they are and become references into the unified catalog.
+The catalog refactor moved every card template from world JSON, starter files, and boon sources into one global template file. World deck composition and starter deck lists remain where they are and reference the unified catalog.
 
-Today each world assembles its own catalog from basics, boon sets, and that world's templates. The refactor replaces per-world template merging with one imported catalog paired with each world's deck descriptor.
+`CARD_CATALOG` is assembled once from `src/data/allCards.json`. `buildWorld(worldId, starterId)` pairs that shared catalog with a world deck descriptor and a chosen starter deck; the public `worldManifest` still exposes per-world builders that accept `starterId`.
 
 ## Safety Net
 
-The transition depends on automated extraction, duplicate-template validation, and reference integrity checks. Every `GainCard`, `AddWorldCardToDeck`, `AddPlayerCardToTop`, deck composition entry, boon set, and loot pool reference must resolve against the unified catalog.
+The architecture depends on duplicate-template validation and reference integrity checks. Every `GainCard`, `AddWorldCardToDeck`, `AddPlayerCardToTop`, deck composition entry, boon set, and loot pool reference must resolve against the unified catalog.
 
-Tests that currently assert intermediate merge counts or inspect `source.cardTemplates` must be rewritten to assert catalog contents and reference validity instead. The public `buildWorld(starterId)` shape is preserved.
+Tests assert catalog contents, starter/world references, boon set references, loot pool references, and `CARD_CATALOG` equivalence to the assembled unified file rather than inspecting per-world merge intermediates.
 
 ## Risk
 

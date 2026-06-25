@@ -36,4 +36,4 @@ Offers store template ids, not minted cards. This prevents rejected options from
 
 Fortune triggers on real act advancement from the end-turn path, not on the opening deal. If an act transition would otherwise lead into a post-refill loss check, the pending boon choice takes priority so the player can resolve the offered rescue card first.
 
-Fortune intentionally creates at most one pending act-boon choice per reducer dispatch. If a single end-turn refill emits multiple `ActAdvanced` events, the offer uses the first advanced act from that event batch rather than queueing multiple choices.
+Fortune creates one pending act-boon choice per advanced act. If a single end-turn refill emits multiple `ActAdvanced` events, the reducer queues one `BoonOffered` choice for each advanced act and resolves them in order through `ChooseBoon`.
