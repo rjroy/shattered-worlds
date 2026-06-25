@@ -5,6 +5,7 @@ import walkerUrl from "../assets/walker.webp";
 import doorUrl from "../assets/door.webp";
 import doorGlowUrl from "../assets/door-glow.webp";
 import textBackUrl from "../assets/text-background.webp";
+import buttonBackUrl from "../assets/button-background.png";
 import insetFrameUrl from "../assets/inset-frame.webp";
 import effectIconEnergyUrl from "../assets/effect-icons/effect-icon-energy.png";
 import effectIconBraceUrl from "../assets/effect-icons/effect-icon-brace.png";
@@ -90,6 +91,7 @@ export const assetManifest: Record<string, string> = {
   door: doorUrl,
   "door-glow": doorGlowUrl,
   "text-back": textBackUrl,
+  "button-back": buttonBackUrl,
   "inset-frame": insetFrameUrl,
   "effect-icon-energy": effectIconEnergyUrl,
   "effect-icon-brace": effectIconBraceUrl,
