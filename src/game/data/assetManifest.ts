@@ -171,7 +171,7 @@ export const fxManifest: Record<string, string> = {
   "push-through-fx": pushThroughFxUrl,
   "shotgun-fx": shotgunFxUrl,
   "baseball-bat-fx": baseballBatFxUrl,
-  "grinding-girder-fx": grindingGirderFxUrl,
+  "groaning-girder-fx": grindingGirderFxUrl,
   "bonfire-fx": bonfireFxUrl,
 };
 
