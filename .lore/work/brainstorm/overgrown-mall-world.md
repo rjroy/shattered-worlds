@@ -16,7 +16,7 @@ Status: open · 2026-06-11 · fourth world candidate
 
 ## Where it sits in the shard map
 
-The [response-archetype proposal](shard-response-archetypes.html) gave the shipped trio their identities. The Mall claims the first unclaimed clock: your own deck's purity.
+The [response-archetype proposal](shard-response-archetypes.md) gave the shipped trio their identities. The Mall claims the first unclaimed clock: your own deck's purity.
 
 | World | Threat-verb | Response archetype | Clock |
 | --- | --- | --- | --- |

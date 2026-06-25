@@ -6,7 +6,7 @@ tags: [feats, meta-progression, memory-fragments, run-summary, rewards]
 modules: [feats-profile, run-stats, run-summary-view]
 related:
   - .lore/work/specs/extended-run-telemetry.md
-  - .lore/work/brainstorm/shattered-worlds-meta-progression.html
+  - .lore/work/brainstorm/shattered-worlds-meta-progression.md
 ---
 
 # Feat definitions and Memory Fragments

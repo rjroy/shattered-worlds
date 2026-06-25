@@ -44,7 +44,7 @@ Cost: trivial once a save shape exists. Could ship with any view screen as a but
 
 ### D. Save-architecture consolidation
 
-Destiny meta-progression is coming ([existing brainstorm](shattered-worlds-meta-progression.html)). Stats, Destiny, settings, suspended-run: four bespoke localStorage keys each hand-rolling load/validate/version/persist is how save corruption stories start. The load/validate pattern in `runStats.ts` is already the template — extract it into a small `versionedStorage` helper when the *second* customer arrives, not before.
+Destiny meta-progression is coming ([existing brainstorm](shattered-worlds-meta-progression.md)). Stats, Destiny, settings, suspended-run: four bespoke localStorage keys each hand-rolling load/validate/version/persist is how save corruption stories start. The load/validate pattern in `runStats.ts` is already the template — extract it into a small `versionedStorage` helper when the *second* customer arrives, not before.
 
 Cost: near-zero if done as extraction-on-second-use. High if done as an up-front save framework with one customer. Don't do the second thing.
 

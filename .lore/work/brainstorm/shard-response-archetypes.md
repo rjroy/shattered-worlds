@@ -18,7 +18,7 @@ Effort tags: no code data-only, reuses existing effects · data + tuning recompo
 
 ## ◈ Where the June 7 brainstorm got us
 
-The [prior brainstorm](theme-mechanical-differentiation.html) diagnosed the worlds as reskins and prescribed threat-verbs. Most of that shipped: energy exists now (`energy.ts`, cost gating in `handlePlayCard`), the Zombie's `onEndOfTurn` spawns another Zombie, Lava Flow compounds (`ForceDestroy` + Ash Fall spawn), and the Bird's "displace" verb became the `ForceDestroy` / `pendingForceDestroy` pipeline. Corpses reanimate. The *threat side* diverged.
+The [prior brainstorm](theme-mechanical-differentiation.md) diagnosed the worlds as reskins and prescribed threat-verbs. Most of that shipped: energy exists now (`energy.ts`, cost gating in `handlePlayCard`), the Zombie's `onEndOfTurn` spawns another Zombie, Lava Flow compounds (`ForceDestroy` + Ash Fall spawn), and the Bird's "displace" verb became the `ForceDestroy` / `pendingForceDestroy` pipeline. Corpses reanimate. The *threat side* diverged.
 
 The remaining sameness is on the response side. Read the three world files next to each other and the player-facing cards are literally identical:
 
@@ -161,4 +161,4 @@ Q3**Amend the theme-authoring recipe?** Resolved: yes. The five-archetype recipe
 
 (1) **Data-only batch first** — Shotgun, kill-energy, Push Through, exhaust consumables, keyword saturation, act shapes. One JSON-heavy PR, immediate feel delta, zero engine risk. (2) **Amend the theme-authoring recipe** (Q3) in the same breath, so no new world is authored against the old template while this lands. (3) **Wave-1 effects** — `Brace` then `DealProgressAll` then `ExileTopWorldCards` with the `canExile` flag (rising order of design risk). (4) **Trio rewrite** lands with each effect as it ships. (5) **Wave 2** (`DealProgressScaled`) only after playtest confirms "travel light" reads as an archetype.
 
-Shattered Worlds · Proposal · builds on [theme-mechanical-differentiation](theme-mechanical-differentiation.html) · related: [theme-authoring](../../reference/theme-authoring.md), [vision](../../reference/vision.html)
+Shattered Worlds · Proposal · builds on [theme-mechanical-differentiation](theme-mechanical-differentiation.md) · related: [theme-authoring](../../reference/theme-authoring.md), [vision](../../reference/vision.md)
