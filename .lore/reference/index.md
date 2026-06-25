@@ -19,7 +19,7 @@ Reference wiki for durable project knowledge extracted from lore artifacts.
 
 - [Deckbuilder Design Principles](deckbuilder-design-principles.md) - deck-building decisions must expose agency, synergy, deck thickness, and risk.
 - [Effect System Extension Pattern](effect-system-extension-pattern.md) - new effects require union, handler, description, playability, data, tests, and renderer checks.
-- [Feat Definition Type Contract](feat-definition-type-contract.md) - feat exported types do not yet express every required condition and reward shape.
+- [Feat Definition Type Contract](feat-definition-type-contract.md) - feat exported types are the live contract for authored conditions and rewards.
 - [Readable Targeting Feedback](player-feedback-readable-targeting.md) - targeting feedback should preview consequences before the player commits.
 
 ## architecture

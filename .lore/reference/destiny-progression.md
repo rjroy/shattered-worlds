@@ -9,7 +9,19 @@ fg-sources: .lore/work/brainstorm/shattered-worlds-meta-progression.html
 fg-status: current
 fg-evidence:
   code:
+    - src/data/feats/catalog.ts
+    - src/data/unlocks/catalog.ts
+    - src/game/runtime/featsProfile.ts
+    - src/game/runtime/unlocksProfile.ts
     - src/game/runtime/runStats.ts
+  tests:
+    - src/data/unlocks/catalog.test.ts
+    - src/game/runtime/featEvaluator.test.ts
+    - src/game/runtime/unlocksProfile.test.ts
+  symbols:
+    - computeFragmentBalance
+    - computeSpendableBalance
+    - buildRunModifiers
 -->
 
 Destiny is the between-run progression layer. Its job is to widen the game without flattening the run. It may unlock new choices, memories, starter variants, world access, and modest early-run help, but it must not let a patient player buy past the hardest content.

@@ -7,6 +7,20 @@ tags: deckbuilder, design-principles, agency, randomness, synergy, balance, ui
 fg-type: lesson
 fg-sources: .lore/work/research/deckbuilding-game-design.html
 fg-status: current
+fg-evidence:
+  code:
+    - src/core/engine/weightedDraw.ts
+    - src/core/effects/boonChoice.ts
+    - src/core/view/actionPreview.ts
+    - src/data/boonPools.json
+  tests:
+    - src/core/tests/weightedDraw.test.ts
+    - src/core/tests/effects.test.ts
+    - src/core/tests/actionPreview.test.ts
+  symbols:
+    - OfferBoon
+    - GainRandomCard
+    - previewAction
 -->
 
 Shattered Worlds treats deck-building as the primary game, not as a reward wrapper around combat. A good card offer changes a decision: it asks the player to weigh power, deck thickness, timing, synergy, and future risk. Auto-picks, obvious skips, and bloat are design failures even when the card looks exciting.

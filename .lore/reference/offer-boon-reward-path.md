@@ -23,9 +23,9 @@ fg-evidence:
 
 # OfferBoon Reward Path
 
-`OfferBoon` generalizes the Fortune act-boon path into a reusable reward-choice system. The act-specific `pendingActBoon`, `ChooseActBoon`, and `ActBoonOffered` concepts become generic boon-choice state, action, and events.
+`OfferBoon` generalizes the Fortune act-boon path into a reusable reward-choice system. Act rewards and world-clear rewards now share generic `pendingBoonChoices`, `ChooseBoon`, `BoonOffered`, and `BoonCardGranted` concepts, with source metadata distinguishing act offers from world-clear offers.
 
-The first implementation stays intentionally narrow: one pending boon choice, `chooseCount: 1`, exhaust player-card templates only, and no queue. That keeps world-card clear rewards and Fortune act rewards on the same engine path without broadening every reward shape at once.
+The implementation supports queued pending boon choices, `chooseCount` greater than one, hand or discard destinations, and exhaust player-card templates. That keeps world-card clear rewards and Fortune act rewards on the same engine path without broadening every reward shape at once.
 
 ## Core Behavior
 
@@ -33,7 +33,7 @@ A generic boon-offer helper accepts a source, set id, template pool, offered cou
 
 `ChooseBoon` mints the selected template, enforces player/exhaust constraints, grants it to hand or discard, clears the pending choice, and emits `BoonCardGranted`.
 
-`OfferBoon` is hook-only and fail-closed. Unknown sets, no legal options, and already-pending choices do not create partial state. The handler resolves through the shared boon-set registry rather than a local Fortune-only shim.
+`OfferBoon` is hook-only and fail-closed. Unknown sets and no legal options do not create partial state. Already-pending choices are allowed; new offers append to the queue and resolve FIFO through `ChooseBoon`. The handler resolves through the shared boon-set registry rather than a local Fortune-only shim.
 
 ## Authoring Rule
 
