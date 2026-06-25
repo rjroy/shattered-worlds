@@ -414,6 +414,12 @@ export class TableScene extends Phaser.Scene {
     this.input.keyboard?.on("keydown", (event: KeyboardEvent) => {
       this.handleRowNavigationKey(event);
     });
+    this.input.on(
+      "wheel",
+      (pointer: Phaser.Input.Pointer, _over: unknown, _dx: number, deltaY: number) => {
+        this.handleRowNavigationWheel(pointer, deltaY);
+      },
+    );
 
     this.selectionHint = new CommonLabel(
       this,
@@ -763,6 +769,30 @@ export class TableScene extends Phaser.Scene {
 
     event.preventDefault();
     this.navigateRow(event.shiftKey ? "player" : "world", direction);
+  }
+
+  private handleRowNavigationWheel(pointer: Phaser.Input.Pointer, deltaY: number): void {
+    if (!this.canHandleTableRowNavigationKeys()) return;
+    if (deltaY === 0) return;
+
+    const row = this.rowForWheelPointer(pointer);
+    if (row === null) return;
+
+    this.navigateRow(row, deltaY > 0 ? 1 : -1);
+  }
+
+  private rowForWheelPointer(pointer: Phaser.Input.Pointer): "world" | "player" | null {
+    const y = pointer.worldY ?? pointer.y;
+    const x = pointer.worldX ?? pointer.x;
+    const rowMinX = TABLE_LAYOUT.rowCenterX - TABLE_LAYOUT.cardSpacing * 2.5;
+    const rowMaxX = TABLE_LAYOUT.rowCenterX + TABLE_LAYOUT.cardSpacing * 2.5;
+    if (x < rowMinX || x > rowMaxX) return null;
+
+    const rowPadding = 16;
+    const rowHalfHeight = CARD_FACE.height / 2 + rowPadding;
+    if (Math.abs(y - TABLE_LAYOUT.worldRowY) <= rowHalfHeight) return "world";
+    if (Math.abs(y - TABLE_LAYOUT.handRowY) <= rowHalfHeight) return "player";
+    return null;
   }
 
   private canHandleTableRowNavigationKeys(): boolean {

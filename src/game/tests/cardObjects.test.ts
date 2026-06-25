@@ -4,7 +4,7 @@ import { TableScene } from "../scenes/TableScene";
 import { selectTheme } from "../view/themes/themeManifest";
 import type { VisualTheme } from "../view/themes/theme";
 import type { CommonButton } from "../view/components";
-import { CARD_FACE } from "../view/layout";
+import { CARD_FACE, TABLE_LAYOUT } from "../view/layout";
 import { mintCard } from "../../core/model/cards";
 import { createRng } from "../../core/engine/rng";
 import { DEFAULT_RUN_MODIFIERS, type PlayerCardModifier } from "../../data/unlocks/types";
@@ -496,6 +496,14 @@ function pressRowNavKey(
   return prevented;
 }
 
+function scrollRowWheel(scene: unknown, x: number, y: number, deltaY: number): void {
+  (
+    scene as {
+      handleRowNavigationWheel(pointer: Phaser.Input.Pointer, deltaY: number): void;
+    }
+  ).handleRowNavigationWheel({ x, y, worldX: x, worldY: y } as Phaser.Input.Pointer, deltaY);
+}
+
 function makeFakeRowNavLabel(): FakeRowNavLabel {
   return {
     visible: false,
@@ -669,6 +677,68 @@ describe("TableScene effective player-card layout", () => {
     expect(harness.playerRows.at(-1)?.map((card) => card.id)).toEqual(
       playerCards.slice(0, 5).map((card) => card.id),
     );
+  });
+
+  it("pages overflowing world and player rows independently with the mouse wheel over each row", () => {
+    const base = makeCoreState({ energy: 9 });
+    const worldCards = Array.from({ length: 7 }, (_, i) =>
+      makeWorldCard({ id: `wheel-world-${i + 1}` }),
+    );
+    const [playerCards, state] = mintCorePlayers(base, "Sprint", 7);
+    const harness = makeDrawAllHarness({ ...state, hand: [...worldCards, ...playerCards] });
+
+    harness.scene.drawAll();
+
+    scrollRowWheel(harness.scene, TABLE_LAYOUT.rowCenterX, TABLE_LAYOUT.worldRowY, 120);
+
+    expect(harness.worldRows.at(-1)?.map((card) => card.id)).toEqual(
+      worldCards.slice(2, 7).map((card) => card.id),
+    );
+    expect(harness.playerRows.at(-1)?.map((card) => card.id)).toEqual(
+      playerCards.slice(0, 5).map((card) => card.id),
+    );
+    expect(harness.rowNav.worldLabel.text).toBe("3-7 of 7");
+    expect(harness.rowNav.playerLabel.text).toBe("1-5 of 7");
+
+    scrollRowWheel(harness.scene, TABLE_LAYOUT.rowCenterX, TABLE_LAYOUT.handRowY, 120);
+
+    expect(harness.worldRows.at(-1)?.map((card) => card.id)).toEqual(
+      worldCards.slice(2, 7).map((card) => card.id),
+    );
+    expect(harness.playerRows.at(-1)?.map((card) => card.id)).toEqual(
+      playerCards.slice(2, 7).map((card) => card.id),
+    );
+    expect(harness.rowNav.worldLabel.text).toBe("3-7 of 7");
+    expect(harness.rowNav.playerLabel.text).toBe("3-7 of 7");
+
+    scrollRowWheel(harness.scene, TABLE_LAYOUT.rowCenterX, TABLE_LAYOUT.handRowY, -120);
+
+    expect(harness.playerRows.at(-1)?.map((card) => card.id)).toEqual(
+      playerCards.slice(0, 5).map((card) => card.id),
+    );
+    expect(harness.rowNav.playerLabel.text).toBe("1-5 of 7");
+  });
+
+  it("ignores mouse wheel outside the hand row footprints", () => {
+    const base = makeCoreState({ energy: 9 });
+    const worldCards = Array.from({ length: 7 }, (_, i) =>
+      makeWorldCard({ id: `wheel-outside-world-${i + 1}` }),
+    );
+    const [playerCards, state] = mintCorePlayers(base, "Sprint", 7);
+    const harness = makeDrawAllHarness({ ...state, hand: [...worldCards, ...playerCards] });
+
+    harness.scene.drawAll();
+    scrollRowWheel(harness.scene, TABLE_LAYOUT.rowCenterX, 285, 120);
+    scrollRowWheel(harness.scene, TABLE_LAYOUT.rowCenterX, TABLE_LAYOUT.handRowY, 0);
+
+    expect(harness.worldRows.at(-1)?.map((card) => card.id)).toEqual(
+      worldCards.slice(0, 5).map((card) => card.id),
+    );
+    expect(harness.playerRows.at(-1)?.map((card) => card.id)).toEqual(
+      playerCards.slice(0, 5).map((card) => card.id),
+    );
+    expect(harness.rowNav.worldLabel.text).toBe("1-5 of 7");
+    expect(harness.rowNav.playerLabel.text).toBe("1-5 of 7");
   });
 
   it("draws only the five-card visible windows for twenty-plus-card rows", () => {
