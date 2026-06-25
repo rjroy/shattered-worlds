@@ -5,7 +5,13 @@
  */
 import Phaser from "phaser";
 import { stopMainTheme } from "../audio/menuMusic";
-import { WORLD_MUSIC_BASE, CARD_FX_BASE, effectiveVolume, musicGain, fxGain } from "../audio/audioVolume";
+import {
+  WORLD_MUSIC_BASE,
+  CARD_FX_BASE,
+  effectiveVolume,
+  musicGain,
+  fxGain,
+} from "../audio/audioVolume";
 import { worldMusicManifest } from "../data/audioManifest";
 import { createGameplayRuntime, type GameplayRuntime } from "../runtime/gameplayRuntime";
 import type { GameplaySession } from "../runtime/gameplaySession";
@@ -315,10 +321,8 @@ export class TableScene extends Phaser.Scene {
     this.runSummary = new RunSummaryView(this);
 
     this.helpOverlay = new HelpOverlayView(this, this.worldId_, this.game_.state.totalActs);
-    this.settingsOverlay = new SettingsOverlayView(
-      this,
-      this.runtime_.userSettings,
-      () => this.reapplyMusicVolume(),
+    this.settingsOverlay = new SettingsOverlayView(this, this.runtime_.userSettings, () =>
+      this.reapplyMusicVolume(),
     );
     this.actionConfirmation = new ActionConfirmationView(this);
 
@@ -369,9 +373,9 @@ export class TableScene extends Phaser.Scene {
     addTooltip(this, this.exitBtn, TABLE_TOOLTIPS.exit);
 
     const rowNavStyle = textStyle({
-      fontSize: "13px",
+      fontSize: "16px",
       fontStyle: "bold",
-      color: getRealityPalette(this.theme_, "text"),
+      color: getRealityPalette(this.theme_, "confirm"),
     });
     const rowRangeStyle = textStyle({
       fontSize: "12px",
@@ -385,7 +389,9 @@ export class TableScene extends Phaser.Scene {
       TABLE_LAYOUT.rowNav.world.labelY,
       "",
       rowRangeStyle,
-    ).setDepth(TABLE_LAYOUT.cardHoverDepth + 25).setVisible(false);
+    )
+      .setDepth(TABLE_LAYOUT.cardHoverDepth + 25)
+      .setVisible(false);
     this.playerRowPrevBtn = this.createRowNavButton("player", -1, "<", rowNavStyle);
     this.playerRowNextBtn = this.createRowNavButton("player", 1, ">", rowNavStyle);
     this.playerRowRangeLabel = new CommonLabel(
@@ -394,7 +400,9 @@ export class TableScene extends Phaser.Scene {
       TABLE_LAYOUT.rowNav.player.labelY,
       "",
       rowRangeStyle,
-    ).setDepth(TABLE_LAYOUT.cardHoverDepth + 25).setVisible(false);
+    )
+      .setDepth(TABLE_LAYOUT.cardHoverDepth + 25)
+      .setVisible(false);
 
     this.input.keyboard?.on("keydown-ESC", () => {
       // The confirmation modal is top-most, so ESC only cancels it when open;
@@ -493,9 +501,7 @@ export class TableScene extends Phaser.Scene {
     // ids, so reconciliation/dispatch still address the durable GameState card
     // while the face shown reflects current buffs/debuffs.
     const visibleHand = effectiveHand(state);
-    const worldCards = visibleHand.filter(
-      (c): c is WorldCard => c.kind === "world",
-    );
+    const worldCards = visibleHand.filter((c): c is WorldCard => c.kind === "world");
     const playerCards = visibleHand.filter((c) => c.kind === "player");
     const worldWindow = rowWindowLayout(
       worldCards.map((c) => c.id),
@@ -849,11 +855,7 @@ export class TableScene extends Phaser.Scene {
     const playerCardIds = effectiveHand(this.game_.state)
       .filter((card): card is PlayerCard => card.kind === "player")
       .map((card) => card.id);
-    const actorPinnedOffset = bringRowCardIdIntoView(
-      playerCardIds,
-      this.sel.cardId,
-      nextOffset,
-    );
+    const actorPinnedOffset = bringRowCardIdIntoView(playerCardIds, this.sel.cardId, nextOffset);
     if (actorPinnedOffset === nextOffset) return true;
 
     const legalTargetIds = this.currentLegalTargetIds();
@@ -894,14 +896,8 @@ export class TableScene extends Phaser.Scene {
       this.playerCardDisplaySignatures.delete(card.id);
     }
 
-    const container = new CardView(
-      this,
-      card,
-      0,
-      0,
-      this.theme_,
-      selectTheme,
-      () => fxGain(this.runtime_.userSettings.get()),
+    const container = new CardView(this, card, 0, 0, this.theme_, selectTheme, () =>
+      fxGain(this.runtime_.userSettings.get()),
     );
     this.cardObjects.set(card.id, container);
     if (card.kind === "player") {
@@ -1475,7 +1471,9 @@ export class TableScene extends Phaser.Scene {
   private reapplyMusicVolume(): void {
     if (this.worldMusic === null) return;
     const gain = musicGain(this.runtime_.userSettings.get());
-    (this.worldMusic as Phaser.Sound.WebAudioSound).setVolume(effectiveVolume(WORLD_MUSIC_BASE, gain));
+    (this.worldMusic as Phaser.Sound.WebAudioSound).setVolume(
+      effectiveVolume(WORLD_MUSIC_BASE, gain),
+    );
   }
 
   // ---------------------------------------------------------------------------
