@@ -64,18 +64,6 @@ export interface WorldDataBundle {
   readonly display: WorldDisplayData;
   readonly help: WorldHelpData;
   readonly musicKey: string;
-  /**
-   * Whether this world runs on the Light economy (a Light HUD readout, fog
-   * concealment). Default-absent = false; only a light-world (Fog) sets it
-   * true. Surfaced as the `worldUsesLight` manifest so the HUD can decide
-   * whether to show the Light indicator from `worldId` alone.
-   */
-  readonly usesLight?: boolean;
-  /**
-   * Whether this world runs on the Heat economy. Heat may be present on
-   * GameState from unlocks in any world, but only heat-worlds surface the HUD.
-   */
-  readonly usesHeat?: boolean;
 }
 
 // ---------------------------------------------------------------------------
@@ -95,7 +83,7 @@ export function referencedAssetKeys(
 
   if (cardCatalog) {
     for (const tpl of Object.values(cardCatalog)) {
-      if ('insetKey' in tpl && tpl.insetKey !== undefined) {
+      if ("insetKey" in tpl && tpl.insetKey !== undefined) {
         keys.add(tpl.insetKey);
       }
     }

@@ -10,5 +10,4 @@ export const WHITEOUT_PARKING_GARAGE_BUNDLE: WorldDataBundle = {
   display: WHITEOUT_PARKING_GARAGE_DISPLAY,
   help: WHITEOUT_PARKING_GARAGE_HELP,
   musicKey: "music-whiteout-parking-garage",
-  usesHeat: true,
 };

@@ -7,8 +7,6 @@ import Phaser from "phaser";
 import type { GameState } from "../../core/index";
 import { TEXT, textStyle } from "./presentation";
 import { HUD_LAYOUT } from "./layout";
-import { worldUsesLightManifest } from "../../data/worldUsesLightManifest";
-import { worldUsesHeatManifest } from "../../data/worldUsesHeatManifest";
 import { addTooltip } from "./TooltipView";
 
 // HUD backing panel geometry. The text-back texture is a 600×600 grunge frame:
@@ -160,12 +158,7 @@ export class HUDView extends Phaser.GameObjects.Container {
     this.hpText.setText(`HP: ${state.hp}`);
     this.actText.setText(`Act ${state.actIndex + 1} / ${state.totalActs}`);
     this.energyText.setText(`${state.energy}`);
-    // Light readout. Decision 3: the indicator is shown for the whole run in a
-    // light-world (visible even at Light 0 — that is exactly when the player
-    // needs the number) and is absent entirely in a non-light world. So the
-    // gate is `worldUsesLight[worldId]`, never `light > 0`. Purely a readout of
-    // `state.light`; it never feeds back into core.
-    if (worldUsesLightManifest[state.worldId] === true) {
+    if (state.light > 0) {
       if (this.lightIndicator === undefined) {
         this.lightIndicator = this.addPowerUp("effect-icon-light");
         addTooltip(this.scene, this.lightIndicator.icon, HUD_TOOLTIPS.light);
@@ -174,7 +167,7 @@ export class HUDView extends Phaser.GameObjects.Container {
     } else if (this.lightIndicator !== undefined) {
       this.lightIndicator.container.setVisible(false);
     }
-    if (worldUsesHeatManifest[state.worldId] === true) {
+    if (state.heat > 0) {
       if (this.heatIndicator === undefined) {
         this.heatIndicator = this.addPowerUp("effect-icon-heat");
         addTooltip(this.scene, this.heatIndicator.icon, HUD_TOOLTIPS.heat);
