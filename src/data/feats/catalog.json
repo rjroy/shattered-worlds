@@ -306,14 +306,14 @@
     "id": "understanding-the-void",
     "name": "Understanding the Void",
     "description": "Complete 50 runs across any world.",
-    "conditions": [{ "statId": "lifetime.runs", "operator": "gte", "value": 20 }],
+    "conditions": [{ "statId": "lifetime.runs", "operator": "gte", "value": 50 }],
     "reward": { "items": [{ "type": "memoryFragments", "amount": 20 }] }
   },
   {
     "id": "one-with-the-void",
     "name": "One with the Void",
     "description": "Complete 100 runs across any world.",
-    "conditions": [{ "statId": "lifetime.runs", "operator": "gte", "value": 20 }],
+    "conditions": [{ "statId": "lifetime.runs", "operator": "gte", "value": 100 }],
     "reward": { "items": [{ "type": "memoryFragments", "amount": 50 }] }
   },
   {
