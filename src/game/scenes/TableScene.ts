@@ -265,6 +265,7 @@ export class TableScene extends Phaser.Scene {
     this.hudView = new HUDView(this);
 
     const endTurnStyle = textStyle({
+      fontFamily: "Helvetica",
       fontSize: "16px",
       color: getRealityPalette(this.theme_, "text"),
       fontStyle: "bold",
@@ -273,7 +274,7 @@ export class TableScene extends Phaser.Scene {
       this,
       TABLE_LAYOUT.buttons.endTurn.x,
       TABLE_LAYOUT.buttons.endTurn.y,
-      "[ End Turn ]",
+      "End Turn",
       endTurnStyle,
     )
       .on("pointerdown", () => this.onEndTurnClick())
@@ -282,14 +283,16 @@ export class TableScene extends Phaser.Scene {
     addTooltip(this, this.endTurnBtn, TABLE_TOOLTIPS.endTurn);
 
     const cancelStyle = textStyle({
-      fontSize: "13px",
+      fontFamily: "Helvetica",
+      fontSize: "16px",
       color: getRealityPalette(this.theme_, "cancel"),
+      fontStyle: "bold",
     });
     this.cancelBtn = new CommonButton(
       this,
       TABLE_LAYOUT.buttons.cancel.x,
       TABLE_LAYOUT.buttons.cancel.y,
-      "[ Cancel ]",
+      "Cancel",
       cancelStyle,
     )
       .on("pointerdown", () => {
@@ -304,7 +307,8 @@ export class TableScene extends Phaser.Scene {
       .setVisible(false);
 
     const confirmStyle = textStyle({
-      fontSize: "13px",
+      fontFamily: "Helvetica",
+      fontSize: "16px",
       fontStyle: "bold",
       color: getRealityPalette(this.theme_, "confirm"),
     });
@@ -312,7 +316,7 @@ export class TableScene extends Phaser.Scene {
       this,
       TABLE_LAYOUT.buttons.confirm.x,
       TABLE_LAYOUT.buttons.confirm.y,
-      "[ Confirm ]",
+      "Confirm",
       confirmStyle,
     )
       .on("pointerdown", () => this.onConfirmClick())

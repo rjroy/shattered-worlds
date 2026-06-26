@@ -51,9 +51,9 @@ export const TABLE_LAYOUT = {
   },
   buttons: {
     exit: { x: 20, y: 22 },
-    endTurn: { x: 820, y: 560 },
-    cancel: { x: 820, y: 500 },
-    confirm: { x: 820, y: 340 },
+    endTurn: { x: 830, y: 560 },
+    cancel: { x: 830, y: 500 },
+    confirm: { x: 830, y: 340 },
     settings: { x: 818, y: 22 },
     help: { x: 860, y: 22 },
   },
