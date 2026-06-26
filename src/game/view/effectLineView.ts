@@ -23,6 +23,7 @@ import { EFFECT_ICON_TOOLTIPS } from "../../core/view/effectTooltips";
 import { textStyle } from "./presentation";
 import { EFFECT_ROW } from "./layout";
 import { addTooltip } from "./TooltipView";
+import { FONTS } from "./fonts";
 import {
   EFFECT_ICON_PLACEHOLDERS,
   EFFECT_ICON_TEXTURES,
@@ -156,7 +157,7 @@ export function addEffectLines(
   const builtRows = effectiveLines.map((line, index) => {
     // The ?? arm is unreachable: styles is index-aligned with lines.
     const style = styles[index] ?? {
-      fontFamily: "Helvetica",
+      fontFamily: FONTS.body,
       fontSize: baseFontSize,
       indent: 0,
     };

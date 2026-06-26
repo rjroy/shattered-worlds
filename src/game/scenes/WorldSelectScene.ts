@@ -8,6 +8,7 @@ import type { RunStatsReader } from "../runtime/runStats";
 import type { UnlocksStore } from "../runtime/unlocksProfile";
 import { selectTheme } from "../view/themes/themeManifest";
 import { textStyle, TEXT } from "../view/presentation";
+import { FONTS } from "../view/fonts";
 import { CANVAS_W, CANVAS_H, WORLD_SELECT_LAYOUT } from "../view/layout";
 import { worldBadgeLabel } from "../view/worldBadge";
 import { HelpOverlayView } from "../view/HelpOverlayView";
@@ -83,7 +84,7 @@ export class WorldSelectScene extends Phaser.Scene {
         SUBTITLE_Y,
         "Choose your shard",
         textStyle({
-          fontFamily: "Times New Roman",
+          fontFamily: FONTS.title,
           fontSize: "20px",
           fontStyle: "italic",
           color: TEXT.textWorldTag,
@@ -132,7 +133,7 @@ export class WorldSelectScene extends Phaser.Scene {
         -8,
         "Chronicle",
         textStyle({
-          fontFamily: "Times New Roman",
+          fontFamily: FONTS.title,
           fontSize: "15px",
           color: "#d6b15c",
           fontStyle: "bold",
@@ -159,7 +160,7 @@ export class WorldSelectScene extends Phaser.Scene {
         -8,
         "Destiny",
         textStyle({
-          fontFamily: "Times New Roman",
+          fontFamily: FONTS.title,
           fontSize: "15px",
           color: "#d6b15c",
           fontStyle: "bold",
@@ -186,7 +187,7 @@ export class WorldSelectScene extends Phaser.Scene {
         -9,
         "?",
         textStyle({
-          fontFamily: "Courier",
+          fontFamily: FONTS.monospace,
           fontSize: "20px",
           color: "#d6b15c",
           fontStyle: "bold",
@@ -213,7 +214,7 @@ export class WorldSelectScene extends Phaser.Scene {
         -9,
         "S",
         textStyle({
-          fontFamily: "Courier",
+          fontFamily: FONTS.monospace,
           fontSize: "20px",
           color: "#d6b15c",
           fontStyle: "bold",
@@ -333,7 +334,7 @@ export class WorldSelectScene extends Phaser.Scene {
         -3,
         label,
         textStyle({
-          fontFamily: "Courier",
+          fontFamily: FONTS.monospace,
           fontSize: "46px",
           color: TEXT.textWorldTitle,
           fontStyle: "bold",
@@ -437,7 +438,7 @@ export class WorldSelectScene extends Phaser.Scene {
         -CARD_H / 2 + WORLD_SELECT_LAYOUT.nameY,
         display.name,
         textStyle({
-          fontFamily: "Arial",
+          fontFamily: FONTS.ui,
           fontSize: "17px",
           color: TEXT.textWorldTitle,
           fontStyle: "bold",
@@ -462,7 +463,7 @@ export class WorldSelectScene extends Phaser.Scene {
         tagLineY,
         display.tagline,
         textStyle({
-          fontFamily: "Arial",
+          fontFamily: FONTS.ui,
           fontSize: "14px",
           color: TEXT.textWorldTag,
           fontStyle: "italic",
@@ -487,7 +488,7 @@ export class WorldSelectScene extends Phaser.Scene {
         storyLineY,
         display.story,
         textStyle({
-          fontFamily: "Arial",
+          fontFamily: FONTS.ui,
           fontSize: "13px",
           color: TEXT.textWorldStory,
           align: "center",
@@ -528,7 +529,7 @@ export class WorldSelectScene extends Phaser.Scene {
           CARD_H / 2 - 36,
           badge,
           textStyle({
-            fontFamily: "Courier",
+            fontFamily: FONTS.monospace,
             fontSize: "13px",
             color: TEXT.textLight,
             fontStyle: "bold",

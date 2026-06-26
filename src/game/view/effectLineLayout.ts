@@ -14,6 +14,7 @@
 import type { EffectLine, IconId, ValueEmphasis } from "../../core/view/effectGlyphs";
 import { EFFECT_ROW } from "./layout";
 import { TEXT } from "./presentation";
+import { FONTS } from "./fonts";
 
 // ---------------------------------------------------------------------------
 // IconId → texture key
@@ -147,14 +148,14 @@ export function effectLineStyles(
     const hang = index > 0 ? geometry.hangIndent : 0;
     if (line.role === "rider") {
       styles.push({
-        fontFamily: "Helvetica",
+        fontFamily: FONTS.body,
         fontSize: geometry.riderFontSize,
         indent: Math.max(owningIndent, hang),
       });
       return;
     }
     const indent = hang + (line.role === "branch" ? geometry.branchIndent : 0);
-    styles.push({ fontFamily: "Helvetica", fontSize: geometry.baseFontSize, indent });
+    styles.push({ fontFamily: FONTS.body, fontSize: geometry.baseFontSize, indent });
     owningIndent = indent;
   });
   return styles;

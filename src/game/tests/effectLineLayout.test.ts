@@ -9,6 +9,7 @@
  */
 import { describe, it, expect } from "bun:test";
 import type { EffectLine, IconId } from "../../core/view/effectGlyphs";
+import { FONTS } from "../view/fonts";
 import { TEXT } from "../view/presentation";
 import {
   EFFECT_ICON_PLACEHOLDERS,
@@ -109,6 +110,12 @@ const GEOMETRY: EffectLineGeometry = {
   hangIndent: 0,
 };
 
+const bodyStyle = (fontSize: number, indent: number) => ({
+  fontFamily: FONTS.body,
+  fontSize,
+  indent,
+});
+
 function line(role?: EffectLine["role"]): EffectLine {
   const tokens: EffectLine["tokens"] = [{ kind: "text", text: "x" }];
   return role === undefined ? { tokens } : { tokens, role };
@@ -118,24 +125,24 @@ describe("effectLineStyles", () => {
   it("renders main (and undefined-role) lines at base size with no indent", () => {
     const styles = effectLineStyles([line(), line("main")], GEOMETRY);
     expect(styles).toEqual([
-      { fontSize: 11, indent: 0 },
-      { fontSize: 11, indent: 0 },
+      bodyStyle(11, 0),
+      bodyStyle(11, 0),
     ]);
   });
 
   it("indents branch lines at base size", () => {
     const styles = effectLineStyles([line(), line("branch")], GEOMETRY);
-    expect(styles[1]).toEqual({ fontSize: 11, indent: 10 });
+    expect(styles[1]).toEqual(bodyStyle(11, 10));
   });
 
   it("renders a rider smaller, at the indent of the preceding main line", () => {
     const styles = effectLineStyles([line(), line("rider")], GEOMETRY);
-    expect(styles[1]).toEqual({ fontSize: 9, indent: 0 });
+    expect(styles[1]).toEqual(bodyStyle(9, 0));
   });
 
   it("indents a rider after a branch with that branch", () => {
     const styles = effectLineStyles([line(), line("branch"), line("rider")], GEOMETRY);
-    expect(styles[2]).toEqual({ fontSize: 9, indent: 10 });
+    expect(styles[2]).toEqual(bodyStyle(9, 10));
   });
 
   it("binds consecutive riders to the same owning line", () => {
@@ -148,10 +155,10 @@ describe("effectLineStyles", () => {
     const hanging = { ...GEOMETRY, hangIndent: 12 };
     const styles = effectLineStyles([line(), line(), line("branch"), line("rider")], hanging);
     expect(styles).toEqual([
-      { fontSize: 11, indent: 0 }, // first line carries the icon itself
-      { fontSize: 11, indent: 12 }, // continuation hangs under it
-      { fontSize: 11, indent: 22 }, // branch indent stacks on the hang
-      { fontSize: 9, indent: 22 }, // rider copies the branch's full indent
+      bodyStyle(11, 0), // first line carries the icon itself
+      bodyStyle(11, 12), // continuation hangs under it
+      bodyStyle(11, 22), // branch indent stacks on the hang
+      bodyStyle(9, 22), // rider copies the branch's full indent
     ]);
   });
 
@@ -163,20 +170,20 @@ describe("effectLineStyles", () => {
     const hanging = { ...GEOMETRY, hangIndent: 12 };
     const styles = effectLineStyles([line(), line("rider")], hanging);
     expect(styles).toEqual([
-      { fontSize: 11, indent: 0 }, // first line carries the icon itself
-      { fontSize: 9, indent: 12 }, // rider hangs at the floor
+      bodyStyle(11, 0), // first line carries the icon itself
+      bodyStyle(9, 12), // rider hangs at the floor
     ]);
   });
 
   it("keeps hang + branch for a rider bound to a hung branch", () => {
     const hanging = { ...GEOMETRY, hangIndent: 12 };
     const styles = effectLineStyles([line(), line("branch"), line("rider")], hanging);
-    expect(styles[2]).toEqual({ fontSize: 9, indent: 22 }); // owner's 12 + 10 beats the 12 floor
+    expect(styles[2]).toEqual(bodyStyle(9, 22)); // owner's 12 + 10 beats the 12 floor
   });
 
   it("defaults a leading rider to indent 0", () => {
     const styles = effectLineStyles([line("rider")], GEOMETRY);
-    expect(styles[0]).toEqual({ fontSize: 9, indent: 0 });
+    expect(styles[0]).toEqual(bodyStyle(9, 0));
   });
 
   it("returns one style per line", () => {
@@ -267,11 +274,11 @@ describe("fitRowScale", () => {
 
 describe("availableWidthFor", () => {
   it("gives an unindented row the full block width", () => {
-    expect(availableWidthFor({ fontSize: 11, indent: 0 }, 120)).toBe(120);
+    expect(availableWidthFor(bodyStyle(11, 0), 120)).toBe(120);
   });
 
   it("charges an indented row its indent on BOTH sides of the centred block", () => {
-    expect(availableWidthFor({ fontSize: 9, indent: 10 }, 120)).toBe(100);
+    expect(availableWidthFor(bodyStyle(9, 10), 120)).toBe(100);
   });
 });
 

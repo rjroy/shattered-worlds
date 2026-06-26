@@ -58,6 +58,7 @@ import { HelpOverlayView } from "../view/HelpOverlayView";
 import { ActionConfirmationView } from "../view/ActionConfirmationView";
 import { SettingsOverlayView } from "../view/SettingsOverlayView";
 import { textStyle, TEXT, getRealityPalette } from "../view/presentation";
+import { FONTS } from "../view/fonts";
 import { ringFraction, connectorLine } from "../interaction/feedback";
 import type { ConnectorStyle } from "../interaction/feedback";
 import { effectAtStep } from "../../core/effects/composite";
@@ -265,7 +266,7 @@ export class TableScene extends Phaser.Scene {
     this.hudView = new HUDView(this);
 
     const endTurnStyle = textStyle({
-      fontFamily: "Helvetica",
+      fontFamily: FONTS.body,
       fontSize: "16px",
       color: getRealityPalette(this.theme_, "text"),
       fontStyle: "bold",
@@ -283,7 +284,7 @@ export class TableScene extends Phaser.Scene {
     addTooltip(this, this.endTurnBtn, TABLE_TOOLTIPS.endTurn);
 
     const cancelStyle = textStyle({
-      fontFamily: "Helvetica",
+      fontFamily: FONTS.body,
       fontSize: "16px",
       color: getRealityPalette(this.theme_, "cancel"),
       fontStyle: "bold",
@@ -307,7 +308,7 @@ export class TableScene extends Phaser.Scene {
       .setVisible(false);
 
     const confirmStyle = textStyle({
-      fontFamily: "Helvetica",
+      fontFamily: FONTS.body,
       fontSize: "16px",
       fontStyle: "bold",
       color: getRealityPalette(this.theme_, "confirm"),
@@ -331,7 +332,7 @@ export class TableScene extends Phaser.Scene {
     this.actionConfirmation = new ActionConfirmationView(this);
 
     const questionStyle = textStyle({
-      fontFamily: "Courier",
+      fontFamily: FONTS.monospace,
       fontSize: "16px",
       fontStyle: "bold",
       color: TEXT.textLight,
@@ -378,13 +379,13 @@ export class TableScene extends Phaser.Scene {
     addTooltip(this, this.exitBtn, TABLE_TOOLTIPS.exit);
 
     const worldRowNavStyle = textStyle({
-      fontFamily: "Courier",
+      fontFamily: FONTS.monospace,
       fontSize: "16px",
       fontStyle: "bold",
       color: getRealityPalette(this.theme_, "cancel"),
     });
     const worldRowRangeStyle = textStyle({
-      fontFamily: "Helvetica",
+      fontFamily: FONTS.body,
       fontSize: "13px",
       color: getRealityPalette(this.theme_, "cancel"),
     });
@@ -401,13 +402,13 @@ export class TableScene extends Phaser.Scene {
       .setVisible(false);
 
     const playerRowNavStyle = textStyle({
-      fontFamily: "Courier",
+      fontFamily: FONTS.monospace,
       fontSize: "16px",
       fontStyle: "bold",
       color: getRealityPalette(this.theme_, "confirm"),
     });
     const playerRowRangeStyle = textStyle({
-      fontFamily: "Helvetica",
+      fontFamily: FONTS.body,
       fontSize: "13px",
       color: getRealityPalette(this.theme_, "confirm"),
     });
@@ -454,7 +455,7 @@ export class TableScene extends Phaser.Scene {
       TABLE_LAYOUT.selectionHint.y,
       "",
       textStyle({
-        fontFamily: "Arial",
+        fontFamily: FONTS.ui,
         fontSize: "13px",
         color: getRealityPalette(this.theme_, "text"),
       }),
@@ -468,7 +469,7 @@ export class TableScene extends Phaser.Scene {
       TABLE_LAYOUT.previewSlot.y,
       "",
       textStyle({
-        fontFamily: "Arial",
+        fontFamily: FONTS.ui,
         fontSize: "13px",
         color: getRealityPalette(this.theme_, "title"),
         wordWrap: { width: 400 },
