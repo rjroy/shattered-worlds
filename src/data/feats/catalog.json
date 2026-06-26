@@ -223,7 +223,7 @@
     "name": "Talon Stomper",
     "description": "Fight back 25 Gripping Talons across all runs.",
     "conditions": [
-      { "statId": "witness.Gripping Talons.resolvedCount", "operator": "gte", "value": 25 }
+      { "statId": "witness.Gripping Talon.resolvedCount", "operator": "gte", "value": 25 }
     ],
     "reward": { "items": [{ "type": "memoryFragments", "amount": 30 }] }
   },
@@ -266,7 +266,7 @@
     "name": "Giant Slayer",
     "description": "Resolve 25 encounters with The Giant Turns in Sleep hazards across all runs.",
     "conditions": [
-      { "statId": "witness.The Giant Turns in Sleep.resolvedCount", "operator": "gte", "value": 25 }
+      { "statId": "witness.The Giant Turns In Sleep.resolvedCount", "operator": "gte", "value": 25 }
     ],
     "reward": { "items": [{ "type": "memoryFragments", "amount": 40 }] }
   },

@@ -66,6 +66,7 @@ const game = new Phaser.Game({
       gameplayRuntime.runStats,
       gameplayRuntime.statsTransfer,
       gameplayRuntime.featsStore,
+      gameplayRuntime.witnessStore,
       gameplayRuntime.userSettings,
     ),
     new DestinyScene(gameplayRuntime.featsStore, gameplayRuntime.unlocksStore, gameplayRuntime.userSettings),

@@ -8,49 +8,76 @@ import { FEAT_CATALOG, computeFragmentBalance } from "../../data/feats/catalog";
 import type { RunStatsReader } from "../runtime/runStats";
 import type { StatsTransfer, InspectedStatsImport } from "../runtime/statsTransfer";
 import type { FeatsStore } from "../runtime/featsProfile";
+import type { WitnessStore } from "../runtime/witnessProfile";
 import { CANVAS_W, CANVAS_H } from "../view/layout";
 import { FONTS } from "../view/fonts";
 import { TEXT, textStyle } from "../view/presentation";
 import { formatDuration } from "../view/format";
 import { addScreenBackdrop } from "../view/screenBackdrop";
-import { FeatReward } from "../../data/feats/types";
+import type { FeatCondition, FeatReward } from "../../data/feats/types";
 
 const VISIBLE_WORLDS = 4;
 const VISIBLE_FEATS = 11;
+const VISIBLE_RECORDS = 6;
 const WORLDS_SCROLL_TOP = 222;
 const WORLDS_SCROLL_BOTTOM = 432;
 const FEATS_SCROLL_TOP = 165;
 const FEATS_ROW_H = 32;
+const RECORDS_SCROLL_TOP = 282;
+const RECORDS_ROW_H = 32;
 const TOUCH_SCROLL_THRESHOLD = 32;
 
-type TouchScrollTarget = "worlds" | "feats";
+type TouchScrollTarget = "worlds" | "feats" | "records";
 
 type Button = {
   container: Phaser.GameObjects.Container;
   bg: Phaser.GameObjects.Rectangle;
 };
 
+type ThreatRecord = {
+  threatId: string;
+  target: number;
+  featNames: string[];
+};
+
+type RunCheckRecord = {
+  statId: string;
+  label: string;
+  value: string;
+  targets: string;
+};
+
 export class ChronicleScene extends Phaser.Scene {
   private readonly runStats: RunStatsReader | undefined;
   private readonly statsTransfer: StatsTransfer | undefined;
   private readonly featsStore: FeatsStore | undefined;
+  private readonly witnessStore: WitnessStore | undefined;
   private readonly userSettings: UserSettingsStore | undefined;
   private statsContent?: Phaser.GameObjects.Container;
   private featsContent?: Phaser.GameObjects.Container;
+  private recordsContent?: Phaser.GameObjects.Container;
   private messageText?: Phaser.GameObjects.Text;
   private confirmOverlay?: Phaser.GameObjects.Container;
   private fileInput?: HTMLInputElement;
   private worldsScrollOffset = 0;
   private featsScrollOffset = 0;
+  private recordsScrollOffset = 0;
   private touchScrollTarget: TouchScrollTarget | undefined;
   private touchScrollLastY: number | undefined;
   private touchScrollRemainder = 0;
 
-  constructor(runStats?: RunStatsReader, statsTransfer?: StatsTransfer, featsStore?: FeatsStore, userSettings?: UserSettingsStore) {
+  constructor(
+    runStats?: RunStatsReader,
+    statsTransfer?: StatsTransfer,
+    featsStore?: FeatsStore,
+    witnessStore?: WitnessStore,
+    userSettings?: UserSettingsStore,
+  ) {
     super({ key: "Chronicle" });
     this.runStats = runStats;
     this.statsTransfer = statsTransfer;
     this.featsStore = featsStore;
+    this.witnessStore = witnessStore;
     this.userSettings = userSettings;
   }
 
@@ -58,6 +85,7 @@ export class ChronicleScene extends Phaser.Scene {
     void startMainTheme(this, this.userSettings);
     this.worldsScrollOffset = 0;
     this.featsScrollOffset = 0;
+    this.recordsScrollOffset = 0;
     addScreenBackdrop(this, {
       key: "screen-chronicle",
       veilAlpha: 0.64,
@@ -103,6 +131,8 @@ export class ChronicleScene extends Phaser.Scene {
           this.scrollWorldsAt(pointer, deltaY);
         if (this.featsContent !== undefined && this.featsContent.visible)
           this.scrollFeatsAt(pointer, deltaY);
+        if (this.recordsContent !== undefined && this.recordsContent.visible)
+          this.scrollRecordsAt(pointer, deltaY);
       },
     );
     this.input.on("pointerdown", (pointer: Phaser.Input.Pointer) => this.beginTouchScroll(pointer));
@@ -112,11 +142,13 @@ export class ChronicleScene extends Phaser.Scene {
 
     this.renderStats();
     this.renderFeats();
+    this.renderRecords();
 
     this.switchTab(this.statsContent);
 
     this.createButton(280, 42, "Stats", () => this.switchTab(this.statsContent));
     this.createButton(380, 42, "Feats", () => this.switchTab(this.featsContent));
+    this.createButton(480, 42, "Records", () => this.switchTab(this.recordsContent));
   }
 
   private switchTab(tabContent?: Phaser.GameObjects.Container): void {
@@ -125,6 +157,9 @@ export class ChronicleScene extends Phaser.Scene {
     }
     if (this.featsContent !== undefined) {
       this.featsContent.setVisible(this.featsContent == tabContent);
+    }
+    if (this.recordsContent !== undefined) {
+      this.recordsContent.setVisible(this.recordsContent == tabContent);
     }
   }
 
@@ -442,6 +477,226 @@ export class ChronicleScene extends Phaser.Scene {
     }
   }
 
+  private renderRecords(): void {
+    this.recordsContent?.destroy(true);
+    this.recordsContent = this.add.container(0, 0);
+
+    const lifetime = this.runStats?.lifetime();
+    const witness = this.witnessStore?.getProfile();
+    const lastRun = lifetime?.lastRun;
+    const runChecks = this.runCheckRecords();
+
+    this.addPanel(this.recordsContent, 44, 82, 812, 150);
+    this.addText(this.recordsContent, 64, 100, "Last Run Checks", 18, "#d6b15c", true);
+
+    if (lastRun === undefined) {
+      this.addText(this.recordsContent, 64, 138, "Finish a run to see feat-related run stats.", 14, TEXT.textMuted);
+    } else {
+      this.addText(this.recordsContent, 64, 134, "Stat", 12, TEXT.textMuted, true);
+      this.addText(this.recordsContent, 214, 134, "Last", 12, TEXT.textMuted, true);
+      this.addText(this.recordsContent, 280, 134, "Target", 12, TEXT.textMuted, true);
+      this.addText(this.recordsContent, 430, 134, "Stat", 12, TEXT.textMuted, true);
+      this.addText(this.recordsContent, 580, 134, "Last", 12, TEXT.textMuted, true);
+      this.addText(this.recordsContent, 646, 134, "Target", 12, TEXT.textMuted, true);
+
+      runChecks.forEach((record, index) => {
+        if (this.recordsContent === undefined) return;
+        const column = index % 2;
+        const row = Math.floor(index / 2);
+        const x = column === 0 ? 64 : 430;
+        const y = 160 + row * 24;
+        this.addText(this.recordsContent, x, y, record.label, 13, TEXT.textLight, false, 136);
+        this.addText(this.recordsContent, x + 150, y, record.value, 13, TEXT.textReward);
+        this.addText(this.recordsContent, x + 216, y, record.targets, 13, TEXT.textLight);
+      });
+    }
+
+    this.addPanel(this.recordsContent, 44, 252, 812, 272);
+    this.addText(this.recordsContent, 64, 270, "Threat Records", 18, "#d6b15c", true);
+    this.addText(this.recordsContent, 64, 306, "Threat", 12, TEXT.textMuted, true);
+    this.addText(this.recordsContent, 310, 306, "Resolved", 12, TEXT.textMuted, true);
+    this.addText(this.recordsContent, 418, 306, "Seen", 12, TEXT.textMuted, true);
+    this.addText(this.recordsContent, 500, 306, "Discarded", 12, TEXT.textMuted, true);
+    this.addText(this.recordsContent, 608, 306, "Target", 12, TEXT.textMuted, true);
+    this.addText(this.recordsContent, 704, 306, "Death", 12, TEXT.textMuted, true);
+
+    const threatRecords = this.threatRecords();
+    const visibleRecords = threatRecords.slice(
+      this.recordsScrollOffset,
+      this.recordsScrollOffset + VISIBLE_RECORDS,
+    );
+
+    visibleRecords.forEach((record, index) => {
+      if (this.recordsContent === undefined) return;
+      const y = 334 + index * RECORDS_ROW_H;
+      const entry = witness?.threats[record.threatId];
+      const resolved = entry?.resolvedCount ?? 0;
+      const progress = `${resolved}/${record.target}`;
+      const color = resolved >= record.target ? TEXT.textReward : TEXT.textLight;
+
+      this.addPanel(this.recordsContent, 56, y - 1, 770, 32, 0x5e2f29);
+      this.addText(this.recordsContent, 64, y, record.threatId, 13, color, false, 230);
+      this.addText(this.recordsContent, 310, y, resolved.toString(), 13, color);
+      this.addText(this.recordsContent, 418, y, (entry?.encounterCount ?? 0).toString(), 13, TEXT.textLight);
+      this.addText(this.recordsContent, 500, y, (entry?.discardedCount ?? 0).toString(), 13, TEXT.textLight);
+      this.addText(this.recordsContent, 608, y, progress, 13, color);
+      this.addText(this.recordsContent, 704, y, entry?.diedTo ? "Yes" : "No", 13, entry?.diedTo ? TEXT.textPenalty : TEXT.textMuted);
+    });
+
+    if (threatRecords.length > VISIBLE_RECORDS) {
+      const maxOffset = threatRecords.length - VISIBLE_RECORDS;
+      const showingEnd = Math.min(this.recordsScrollOffset + VISIBLE_RECORDS, threatRecords.length);
+      this.addText(
+        this.recordsContent,
+        720,
+        273,
+        `${this.recordsScrollOffset + 1}–${showingEnd} of ${threatRecords.length}`,
+        11,
+        TEXT.textMuted,
+      );
+
+      if (this.recordsScrollOffset > 0) {
+        const upArrow = this.add
+          .text(
+            840,
+            306,
+            "▲",
+            textStyle({ fontFamily: FONTS.monospace, fontSize: "16px", color: "#d6b15c" }),
+          )
+          .setInteractive({ useHandCursor: true })
+          .on("pointerdown", () => this.scrollRecordsBy(-1));
+        upArrow.on("pointerover", () => upArrow.setAlpha(0.7));
+        upArrow.on("pointerout", () => upArrow.setAlpha(1));
+        this.recordsContent.add(upArrow);
+      }
+
+      if (this.recordsScrollOffset < maxOffset) {
+        const downArrow = this.add
+          .text(
+            840,
+            306 + RECORDS_ROW_H * VISIBLE_RECORDS,
+            "▼",
+            textStyle({ fontFamily: FONTS.monospace, fontSize: "16px", color: "#d6b15c" }),
+          )
+          .setInteractive({ useHandCursor: true })
+          .on("pointerdown", () => this.scrollRecordsBy(1));
+        downArrow.on("pointerover", () => downArrow.setAlpha(0.7));
+        downArrow.on("pointerout", () => downArrow.setAlpha(1));
+        this.recordsContent.add(downArrow);
+      }
+    }
+  }
+
+  private runCheckRecords(): RunCheckRecord[] {
+    const lastRun = this.runStats?.lifetime().lastRun;
+    if (lastRun === undefined) return [];
+
+    const statIds = ["finalHp", "healingReceived", "cardsThawed", "energy", "light", "brace", "heat"];
+    return statIds.map((statId) => ({
+      statId,
+      label: this.statLabel(statId),
+      value: this.formatRunStatValue(statId, lastRun),
+      targets: this.targetText(statId),
+    }));
+  }
+
+  private threatRecords(): ThreatRecord[] {
+    const byThreat = new Map<string, { target: number; featNames: Set<string> }>();
+
+    for (const feat of FEAT_CATALOG) {
+      for (const condition of feat.conditions) {
+        const parsed = this.parseWitnessResolvedStat(condition);
+        if (parsed === undefined) continue;
+
+        const existing = byThreat.get(parsed.threatId);
+        byThreat.set(parsed.threatId, {
+          target: Math.max(existing?.target ?? 0, parsed.target),
+          featNames: new Set([...(existing?.featNames ?? []), feat.name]),
+        });
+      }
+    }
+
+    return [...byThreat.entries()]
+      .map(([threatId, record]) => ({
+        threatId,
+        target: record.target,
+        featNames: [...record.featNames],
+      }))
+      .sort((a, b) => a.threatId.localeCompare(b.threatId));
+  }
+
+  private parseWitnessResolvedStat(
+    condition: FeatCondition,
+  ): { threatId: string; target: number } | undefined {
+    if (!condition.statId.startsWith("witness.") || !condition.statId.endsWith(".resolvedCount")) {
+      return undefined;
+    }
+    if (typeof condition.value !== "number") return undefined;
+
+    return {
+      threatId: condition.statId.slice("witness.".length, -".resolvedCount".length),
+      target: condition.value,
+    };
+  }
+
+  private statLabel(statId: string): string {
+    switch (statId) {
+      case "finalHp":
+        return "Final HP";
+      case "healingReceived":
+        return "Healing Received";
+      case "cardsThawed":
+        return "Cards Thawed";
+      case "energy":
+        return "Energy";
+      case "light":
+        return "Light";
+      case "brace":
+        return "Brace";
+      case "heat":
+        return "Heat";
+      default:
+        return statId;
+    }
+  }
+
+  private formatRunStatValue(statId: string, lastRun: NonNullable<ReturnType<RunStatsReader["lifetime"]>["lastRun"]>): string {
+    switch (statId) {
+      case "energy":
+      case "light":
+      case "brace":
+      case "heat":
+        return (lastRun.finalResources?.[statId] ?? 0).toString();
+      default:
+        return ((lastRun as unknown as Record<string, unknown>)[statId] ?? 0).toString();
+    }
+  }
+
+  private targetText(statId: string): string {
+    const targets = FEAT_CATALOG.flatMap((feat) =>
+      feat.conditions
+        .filter((condition) => condition.statId === statId)
+        .map((condition) => this.conditionText(condition)),
+    );
+    return [...new Set(targets)].join(", ");
+  }
+
+  private conditionText(condition: FeatCondition): string {
+    switch (condition.operator) {
+      case "gte":
+        return `>= ${condition.value}`;
+      case "lte":
+        return `<= ${condition.value}`;
+      case "gt":
+        return `> ${condition.value}`;
+      case "lt":
+        return `< ${condition.value}`;
+      case "eq":
+      case "is":
+        return `${condition.value}`;
+    }
+  }
+
   private toDateStr(epochMs: number): string {
     const date = new Date(epochMs);
     return `${date.getMonth() + 1}/${date.getDate()}/${date.getFullYear()}`;
@@ -455,6 +710,11 @@ export class ChronicleScene extends Phaser.Scene {
   private scrollFeatsAt(pointer: Phaser.Input.Pointer, deltaY: number): void {
     if (!this.pointerInFeatsScrollArea(pointer)) return;
     this.scrollFeatsBy(deltaY > 0 ? 1 : -1);
+  }
+
+  private scrollRecordsAt(pointer: Phaser.Input.Pointer, deltaY: number): void {
+    if (!this.pointerInRecordsScrollArea(pointer)) return;
+    this.scrollRecordsBy(deltaY > 0 ? 1 : -1);
   }
 
   private scrollWorldsBy(delta: number): void {
@@ -471,6 +731,14 @@ export class ChronicleScene extends Phaser.Scene {
     if (next === this.featsScrollOffset) return;
     this.featsScrollOffset = next;
     this.renderFeats();
+  }
+
+  private scrollRecordsBy(delta: number): void {
+    const maxOffset = Math.max(0, this.threatRecords().length - VISIBLE_RECORDS);
+    const next = Phaser.Math.Clamp(this.recordsScrollOffset + delta, 0, maxOffset);
+    if (next === this.recordsScrollOffset) return;
+    this.recordsScrollOffset = next;
+    this.renderRecords();
   }
 
   private beginTouchScroll(pointer: Phaser.Input.Pointer): void {
@@ -501,8 +769,10 @@ export class ChronicleScene extends Phaser.Scene {
     this.touchScrollRemainder -= rows * TOUCH_SCROLL_THRESHOLD;
     if (this.touchScrollTarget === "worlds") {
       this.scrollWorldsBy(rows);
-    } else {
+    } else if (this.touchScrollTarget === "feats") {
       this.scrollFeatsBy(rows);
+    } else {
+      this.scrollRecordsBy(rows);
     }
   }
 
@@ -525,6 +795,12 @@ export class ChronicleScene extends Phaser.Scene {
       this.pointerInFeatsScrollArea(pointer)
     )
       return "feats";
+    if (
+      this.recordsContent !== undefined &&
+      this.recordsContent.visible &&
+      this.pointerInRecordsScrollArea(pointer)
+    )
+      return "records";
     return undefined;
   }
 
@@ -534,6 +810,13 @@ export class ChronicleScene extends Phaser.Scene {
 
   private pointerInFeatsScrollArea(pointer: Phaser.Input.Pointer): boolean {
     return pointer.y >= FEATS_SCROLL_TOP && pointer.y <= FEATS_SCROLL_TOP + FEATS_ROW_H * VISIBLE_FEATS;
+  }
+
+  private pointerInRecordsScrollArea(pointer: Phaser.Input.Pointer): boolean {
+    return (
+      pointer.y >= RECORDS_SCROLL_TOP &&
+      pointer.y <= RECORDS_SCROLL_TOP + RECORDS_ROW_H * VISIBLE_RECORDS
+    );
   }
 
   private addPanel(

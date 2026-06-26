@@ -1,5 +1,6 @@
 import { describe, expect, it } from "bun:test";
 
+import allCardsJson from "../allCards.json";
 import { FEAT_CATALOG, computeFragmentBalance } from "./catalog";
 import type { FeatDefinition } from "./types";
 import type { FeatsProfile } from "../../game/runtime/featsProfile";
@@ -26,6 +27,19 @@ function makeProfile(featIds: string[]): FeatsProfile {
 describe("FEAT_CATALOG", () => {
   it("validation #16: all feat IDs are unique", () => {
     expect(new Set(FEAT_CATALOG.map((d) => d.id)).size).toBe(FEAT_CATALOG.length);
+  });
+
+  it("witness resolved-count feat conditions reference real card templates", () => {
+    for (const feat of FEAT_CATALOG) {
+      for (const condition of feat.conditions) {
+        if (!condition.statId.startsWith("witness.") || !condition.statId.endsWith(".resolvedCount")) {
+          continue;
+        }
+
+        const templateId = condition.statId.slice("witness.".length, -".resolvedCount".length);
+        expect(Object.hasOwn(allCardsJson.cardTemplates, templateId)).toBe(true);
+      }
+    }
   });
 });
 
