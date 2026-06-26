@@ -275,7 +275,7 @@ export class TableScene extends Phaser.Scene {
       this,
       TABLE_LAYOUT.buttons.endTurn.x,
       TABLE_LAYOUT.buttons.endTurn.y,
-      "End Turn",
+      "END TURN",
       endTurnStyle,
     )
       .on("pointerdown", () => this.onEndTurnClick())
@@ -293,7 +293,7 @@ export class TableScene extends Phaser.Scene {
       this,
       TABLE_LAYOUT.buttons.cancel.x,
       TABLE_LAYOUT.buttons.cancel.y,
-      "Cancel",
+      "CANCEL",
       cancelStyle,
     )
       .on("pointerdown", () => {
@@ -317,7 +317,7 @@ export class TableScene extends Phaser.Scene {
       this,
       TABLE_LAYOUT.buttons.confirm.x,
       TABLE_LAYOUT.buttons.confirm.y,
-      "Confirm",
+      "CONFIRM",
       confirmStyle,
     )
       .on("pointerdown", () => this.onConfirmClick())

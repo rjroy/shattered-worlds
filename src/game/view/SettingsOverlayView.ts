@@ -1,6 +1,7 @@
 import Phaser from "phaser";
 import { textStyle, TEXT } from "./presentation";
 import { CANVAS_W, CANVAS_H } from "./layout";
+import { FONTS } from "./fonts";
 import { addScreenBackdrop } from "./screenBackdrop";
 import type { ConfirmationMode, UserSettings, UserSettingsStore } from "../runtime/userSettings";
 import { VolumeSlider } from "./VolumeSlider";
@@ -116,6 +117,7 @@ export class SettingsOverlayView extends Phaser.GameObjects.Container {
     this.add(panel);
 
     this.addText(-260, -265, "SETTINGS", {
+      fontFamily: FONTS.title,
       fontSize: "20px",
       color: TEXT.textLight,
       fontStyle: "bold",
@@ -304,7 +306,12 @@ export class SettingsOverlayView extends Phaser.GameObjects.Container {
       0,
       250,
       "Close",
-      textStyle({ fontSize: "13px", color: TEXT.textLight, fontStyle: "bold" }),
+      textStyle({
+        fontFamily: FONTS.ui,
+        fontSize: "13px",
+        color: TEXT.textLight,
+        fontStyle: "bold",
+      }),
     );
     label.setOrigin(0.5, 0.5);
     this.add(label);
@@ -329,7 +336,12 @@ export class SettingsOverlayView extends Phaser.GameObjects.Container {
       x,
       y,
       labelText,
-      textStyle({ fontSize: "12px", color: TEXT.textMuted, fontStyle: "bold" }),
+      textStyle({
+        fontFamily: FONTS.ui,
+        fontSize: "12px",
+        color: TEXT.textMuted,
+        fontStyle: "bold",
+      }),
     );
     label.setOrigin(0.5, 0.5);
     this.add(label);
@@ -343,7 +355,7 @@ export class SettingsOverlayView extends Phaser.GameObjects.Container {
     text: string,
     style: Phaser.Types.GameObjects.Text.TextStyle,
   ): Phaser.GameObjects.Text {
-    const obj = this.scene.add.text(x, y, text, textStyle(style));
+    const obj = this.scene.add.text(x, y, text, textStyle({ fontFamily: FONTS.body, ...style }));
     this.add(obj);
     return obj;
   }
