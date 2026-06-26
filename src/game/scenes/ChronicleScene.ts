@@ -18,16 +18,20 @@ import type { FeatCondition, FeatReward } from "../../data/feats/types";
 
 const VISIBLE_WORLDS = 4;
 const VISIBLE_FEATS = 11;
-const VISIBLE_RECORDS = 6;
+const VISIBLE_RUN_CHECKS = 3;
+const VISIBLE_RECORDS = 8;
 const WORLDS_SCROLL_TOP = 222;
 const WORLDS_SCROLL_BOTTOM = 432;
 const FEATS_SCROLL_TOP = 165;
 const FEATS_ROW_H = 32;
+const RUN_CHECKS_SCROLL_TOP = 150;
+const RUN_CHECKS_ROW_H = 24;
 const RECORDS_SCROLL_TOP = 282;
-const RECORDS_ROW_H = 32;
+const RECORDS_ROW_H = 24;
 const TOUCH_SCROLL_THRESHOLD = 32;
+const LIFETIME_ROW_H = 20;
 
-type TouchScrollTarget = "worlds" | "feats" | "records";
+type TouchScrollTarget = "worlds" | "feats" | "runChecks" | "records";
 
 type Button = {
   container: Phaser.GameObjects.Container;
@@ -61,6 +65,7 @@ export class ChronicleScene extends Phaser.Scene {
   private fileInput?: HTMLInputElement;
   private worldsScrollOffset = 0;
   private featsScrollOffset = 0;
+  private runChecksScrollOffset = 0;
   private recordsScrollOffset = 0;
   private touchScrollTarget: TouchScrollTarget | undefined;
   private touchScrollLastY: number | undefined;
@@ -85,6 +90,7 @@ export class ChronicleScene extends Phaser.Scene {
     void startMainTheme(this, this.userSettings);
     this.worldsScrollOffset = 0;
     this.featsScrollOffset = 0;
+    this.runChecksScrollOffset = 0;
     this.recordsScrollOffset = 0;
     addScreenBackdrop(this, {
       key: "screen-chronicle",
@@ -136,7 +142,9 @@ export class ChronicleScene extends Phaser.Scene {
       },
     );
     this.input.on("pointerdown", (pointer: Phaser.Input.Pointer) => this.beginTouchScroll(pointer));
-    this.input.on("pointermove", (pointer: Phaser.Input.Pointer) => this.updateTouchScroll(pointer));
+    this.input.on("pointermove", (pointer: Phaser.Input.Pointer) =>
+      this.updateTouchScroll(pointer),
+    );
     this.input.on("pointerup", () => this.endTouchScroll());
     this.input.on("pointerupoutside", () => this.endTouchScroll());
 
@@ -215,19 +223,31 @@ export class ChronicleScene extends Phaser.Scene {
 
     this.addPanel(this.statsContent, 44, 82, 812, 116);
     this.addText(this.statsContent, 64, 100, "Lifetime", 18, "#d6b15c", true);
-    const totals = [
-      `Runs ${lifetime.runs}`,
-      `Wins ${lifetime.wins}`,
-      `Losses ${lifetime.losses}`,
-      `Abandons ${lifetime.abandoned}`,
-      `Turns ${lifetime.turns}`,
-      `Cards ${lifetime.cardsPlayed}`,
-      `Progress ${lifetime.progressDealt}`,
-      `Damage ${lifetime.damageTaken}`,
-      `Hazards ${lifetime.hazardsResolved}/${lifetime.hazardsDiscarded}`,
-      `Time ${formatDuration(lifetime.durationMs)}`,
+    const total_rows = [
+      [
+        `Runs ${lifetime.runs}`,
+        `Wins ${lifetime.wins}`,
+        `Losses ${lifetime.losses}`,
+        `Abandons ${lifetime.abandoned}`,
+        `Time ${formatDuration(lifetime.durationMs)}`,
+      ],
+      [
+        `Turns ${lifetime.turns}`,
+        `Cards ${lifetime.cardsPlayed}`,
+        `Progress ${lifetime.progressDealt}`,
+        `Damage ${lifetime.damageTaken}`,
+      ],
+      [
+        `Hazards:`,
+        `resolved: ${lifetime.hazardsResolved}`,
+        `discarded: ${lifetime.hazardsDiscarded}`,
+      ],
     ];
-    this.addText(this.statsContent, 64, 132, totals.join("   "), 13, TEXT.textLight);
+    total_rows.forEach((totals, index) => {
+      if (!this.statsContent) return;
+      const y = 132 + index * LIFETIME_ROW_H;
+      this.addText(this.statsContent, 64, y, totals.join("   "), 13, TEXT.textLight);
+    });
 
     this.addPanel(this.statsContent, 44, 222, 812, 210);
     this.addText(this.statsContent, 64, 240, "Worlds", 18, "#d6b15c", true);
@@ -486,32 +506,85 @@ export class ChronicleScene extends Phaser.Scene {
     const lastRun = lifetime?.lastRun;
     const runChecks = this.runCheckRecords();
 
-    this.addPanel(this.recordsContent, 44, 82, 812, 150);
+    this.addPanel(this.recordsContent, 44, 82, 812, 151);
     this.addText(this.recordsContent, 64, 100, "Last Run Checks", 18, "#d6b15c", true);
 
     if (lastRun === undefined) {
-      this.addText(this.recordsContent, 64, 138, "Finish a run to see feat-related run stats.", 14, TEXT.textMuted);
+      this.addText(
+        this.recordsContent,
+        64,
+        138,
+        "Finish a run to see feat-related run stats.",
+        14,
+        TEXT.textMuted,
+      );
     } else {
       this.addText(this.recordsContent, 64, 134, "Stat", 12, TEXT.textMuted, true);
-      this.addText(this.recordsContent, 214, 134, "Last", 12, TEXT.textMuted, true);
-      this.addText(this.recordsContent, 280, 134, "Target", 12, TEXT.textMuted, true);
-      this.addText(this.recordsContent, 430, 134, "Stat", 12, TEXT.textMuted, true);
-      this.addText(this.recordsContent, 580, 134, "Last", 12, TEXT.textMuted, true);
-      this.addText(this.recordsContent, 646, 134, "Target", 12, TEXT.textMuted, true);
+      this.addText(this.recordsContent, 300, 134, "Last Run", 12, TEXT.textMuted, true);
+      this.addText(this.recordsContent, 430, 134, "Feat Target", 12, TEXT.textMuted, true);
 
-      runChecks.forEach((record, index) => {
+      const visibleRunChecks = runChecks.slice(
+        this.runChecksScrollOffset,
+        this.runChecksScrollOffset + VISIBLE_RUN_CHECKS,
+      );
+
+      visibleRunChecks.forEach((record, index) => {
         if (this.recordsContent === undefined) return;
-        const column = index % 2;
-        const row = Math.floor(index / 2);
-        const x = column === 0 ? 64 : 430;
-        const y = 160 + row * 24;
-        this.addText(this.recordsContent, x, y, record.label, 13, TEXT.textLight, false, 136);
-        this.addText(this.recordsContent, x + 150, y, record.value, 13, TEXT.textReward);
-        this.addText(this.recordsContent, x + 216, y, record.targets, 13, TEXT.textLight);
+        const y = 160 + index * RUN_CHECKS_ROW_H;
+        this.addPanel(this.recordsContent, 56, y - 1, 770, RUN_CHECKS_ROW_H, 0x5e2f29);
+        this.addText(this.recordsContent, 64, y, record.label, 13, TEXT.textLight, false, 210);
+        this.addText(this.recordsContent, 300, y, record.value, 13, TEXT.textReward);
+        this.addText(this.recordsContent, 430, y, record.targets, 13, TEXT.textLight);
       });
+
+      if (runChecks.length > VISIBLE_RUN_CHECKS) {
+        const maxOffset = runChecks.length - VISIBLE_RUN_CHECKS;
+        const showingEnd = Math.min(
+          this.runChecksScrollOffset + VISIBLE_RUN_CHECKS,
+          runChecks.length,
+        );
+        this.addText(
+          this.recordsContent,
+          720,
+          103,
+          `${this.runChecksScrollOffset + 1}–${showingEnd} of ${runChecks.length}`,
+          11,
+          TEXT.textMuted,
+        );
+
+        if (this.runChecksScrollOffset > 0) {
+          const upArrow = this.add
+            .text(
+              840,
+              134,
+              "▲",
+              textStyle({ fontFamily: FONTS.monospace, fontSize: "16px", color: "#d6b15c" }),
+            )
+            .setInteractive({ useHandCursor: true })
+            .on("pointerdown", () => this.scrollRunChecksBy(-1));
+          upArrow.on("pointerover", () => upArrow.setAlpha(0.7));
+          upArrow.on("pointerout", () => upArrow.setAlpha(1));
+          this.recordsContent.add(upArrow);
+        }
+
+        if (this.runChecksScrollOffset < maxOffset) {
+          const downArrow = this.add
+            .text(
+              840,
+              208,
+              "▼",
+              textStyle({ fontFamily: FONTS.monospace, fontSize: "16px", color: "#d6b15c" }),
+            )
+            .setInteractive({ useHandCursor: true })
+            .on("pointerdown", () => this.scrollRunChecksBy(1));
+          downArrow.on("pointerover", () => downArrow.setAlpha(0.7));
+          downArrow.on("pointerout", () => downArrow.setAlpha(1));
+          this.recordsContent.add(downArrow);
+        }
+      }
     }
 
-    this.addPanel(this.recordsContent, 44, 252, 812, 272);
+    this.addPanel(this.recordsContent, 44, 252, 812, 274);
     this.addText(this.recordsContent, 64, 270, "Threat Records", 18, "#d6b15c", true);
     this.addText(this.recordsContent, 64, 306, "Threat", 12, TEXT.textMuted, true);
     this.addText(this.recordsContent, 310, 306, "Resolved", 12, TEXT.textMuted, true);
@@ -534,13 +607,34 @@ export class ChronicleScene extends Phaser.Scene {
       const progress = `${resolved}/${record.target}`;
       const color = resolved >= record.target ? TEXT.textReward : TEXT.textLight;
 
-      this.addPanel(this.recordsContent, 56, y - 1, 770, 32, 0x5e2f29);
+      this.addPanel(this.recordsContent, 56, y - 1, 770, RECORDS_ROW_H, 0x5e2f29);
       this.addText(this.recordsContent, 64, y, record.threatId, 13, color, false, 230);
       this.addText(this.recordsContent, 310, y, resolved.toString(), 13, color);
-      this.addText(this.recordsContent, 418, y, (entry?.encounterCount ?? 0).toString(), 13, TEXT.textLight);
-      this.addText(this.recordsContent, 500, y, (entry?.discardedCount ?? 0).toString(), 13, TEXT.textLight);
+      this.addText(
+        this.recordsContent,
+        418,
+        y,
+        (entry?.encounterCount ?? 0).toString(),
+        13,
+        TEXT.textLight,
+      );
+      this.addText(
+        this.recordsContent,
+        500,
+        y,
+        (entry?.discardedCount ?? 0).toString(),
+        13,
+        TEXT.textLight,
+      );
       this.addText(this.recordsContent, 608, y, progress, 13, color);
-      this.addText(this.recordsContent, 704, y, entry?.diedTo ? "Yes" : "No", 13, entry?.diedTo ? TEXT.textPenalty : TEXT.textMuted);
+      this.addText(
+        this.recordsContent,
+        704,
+        y,
+        entry?.diedTo ? "Yes" : "No",
+        13,
+        entry?.diedTo ? TEXT.textPenalty : TEXT.textMuted,
+      );
     });
 
     if (threatRecords.length > VISIBLE_RECORDS) {
@@ -591,7 +685,15 @@ export class ChronicleScene extends Phaser.Scene {
     const lastRun = this.runStats?.lifetime().lastRun;
     if (lastRun === undefined) return [];
 
-    const statIds = ["finalHp", "healingReceived", "cardsThawed", "energy", "light", "brace", "heat"];
+    const statIds = [
+      "finalHp",
+      "healingReceived",
+      "cardsThawed",
+      "energy",
+      "light",
+      "brace",
+      "heat",
+    ];
     return statIds.map((statId) => ({
       statId,
       label: this.statLabel(statId),
@@ -660,7 +762,10 @@ export class ChronicleScene extends Phaser.Scene {
     }
   }
 
-  private formatRunStatValue(statId: string, lastRun: NonNullable<ReturnType<RunStatsReader["lifetime"]>["lastRun"]>): string {
+  private formatRunStatValue(
+    statId: string,
+    lastRun: NonNullable<ReturnType<RunStatsReader["lifetime"]>["lastRun"]>,
+  ): string {
     switch (statId) {
       case "energy":
       case "light":
@@ -713,6 +818,10 @@ export class ChronicleScene extends Phaser.Scene {
   }
 
   private scrollRecordsAt(pointer: Phaser.Input.Pointer, deltaY: number): void {
+    if (this.pointerInRunChecksScrollArea(pointer)) {
+      this.scrollRunChecksBy(deltaY > 0 ? 1 : -1);
+      return;
+    }
     if (!this.pointerInRecordsScrollArea(pointer)) return;
     this.scrollRecordsBy(deltaY > 0 ? 1 : -1);
   }
@@ -731,6 +840,14 @@ export class ChronicleScene extends Phaser.Scene {
     if (next === this.featsScrollOffset) return;
     this.featsScrollOffset = next;
     this.renderFeats();
+  }
+
+  private scrollRunChecksBy(delta: number): void {
+    const maxOffset = Math.max(0, this.runCheckRecords().length - VISIBLE_RUN_CHECKS);
+    const next = Phaser.Math.Clamp(this.runChecksScrollOffset + delta, 0, maxOffset);
+    if (next === this.runChecksScrollOffset) return;
+    this.runChecksScrollOffset = next;
+    this.renderRecords();
   }
 
   private scrollRecordsBy(delta: number): void {
@@ -771,6 +888,8 @@ export class ChronicleScene extends Phaser.Scene {
       this.scrollWorldsBy(rows);
     } else if (this.touchScrollTarget === "feats") {
       this.scrollFeatsBy(rows);
+    } else if (this.touchScrollTarget === "runChecks") {
+      this.scrollRunChecksBy(rows);
     } else {
       this.scrollRecordsBy(rows);
     }
@@ -798,6 +917,12 @@ export class ChronicleScene extends Phaser.Scene {
     if (
       this.recordsContent !== undefined &&
       this.recordsContent.visible &&
+      this.pointerInRunChecksScrollArea(pointer)
+    )
+      return "runChecks";
+    if (
+      this.recordsContent !== undefined &&
+      this.recordsContent.visible &&
       this.pointerInRecordsScrollArea(pointer)
     )
       return "records";
@@ -809,7 +934,16 @@ export class ChronicleScene extends Phaser.Scene {
   }
 
   private pointerInFeatsScrollArea(pointer: Phaser.Input.Pointer): boolean {
-    return pointer.y >= FEATS_SCROLL_TOP && pointer.y <= FEATS_SCROLL_TOP + FEATS_ROW_H * VISIBLE_FEATS;
+    return (
+      pointer.y >= FEATS_SCROLL_TOP && pointer.y <= FEATS_SCROLL_TOP + FEATS_ROW_H * VISIBLE_FEATS
+    );
+  }
+
+  private pointerInRunChecksScrollArea(pointer: Phaser.Input.Pointer): boolean {
+    return (
+      pointer.y >= RUN_CHECKS_SCROLL_TOP &&
+      pointer.y <= RUN_CHECKS_SCROLL_TOP + RUN_CHECKS_ROW_H * VISIBLE_RUN_CHECKS
+    );
   }
 
   private pointerInRecordsScrollArea(pointer: Phaser.Input.Pointer): boolean {
@@ -881,7 +1015,7 @@ export class ChronicleScene extends Phaser.Scene {
       y,
       value,
       textStyle({
-        fontFamily: bold ? FONTS.ui : FONTS.body,
+        fontFamily: bold ? FONTS.body : FONTS.ui,
         fontSize: `${size}px`,
         color,
         fontStyle: bold ? "bold" : "",
@@ -975,7 +1109,12 @@ export class ChronicleScene extends Phaser.Scene {
         overlay.destroy(true);
         this.messageText?.setText("");
         this.worldsScrollOffset = 0;
+        this.featsScrollOffset = 0;
+        this.runChecksScrollOffset = 0;
+        this.recordsScrollOffset = 0;
         this.renderStats();
+        this.renderFeats();
+        this.renderRecords();
       }),
     ]);
   }
