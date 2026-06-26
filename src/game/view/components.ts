@@ -10,17 +10,19 @@ import { TooltipCopy } from "../../core/view/effectTooltips";
 import { addTooltip } from "./TooltipView";
 
 const LABEL_TEXTURE = "text-back";
-const LABEL_SIDE_INSET = 4;
-const LABEL_EDGE_INSET = 2;
+const LABEL_SIDE_INSET = 50;
+const LABEL_EDGE_INSET = 100;
 const BUTTON_TEXTURE = "button-back";
-const BUTTON_SIDE_INSET = 16;
-const BUTTON_EDGE_INSET = 12;
+const BUTTON_SIDE_INSET = 30;
+const BUTTON_EDGE_INSET = 30;
 
 export class CommonLabel extends Phaser.GameObjects.Container {
   protected txtBg: Phaser.GameObjects.NineSlice;
   protected label: Phaser.GameObjects.Text;
   protected readonly horizontalPadding = 24;
   protected readonly verticalPadding = 14;
+  protected readonly sideInset: number;
+  protected readonly edgeInset: number;
 
   constructor(
     scene: Phaser.Scene,
@@ -34,8 +36,22 @@ export class CommonLabel extends Phaser.GameObjects.Container {
   ) {
     super(scene, x, y);
 
+    this.sideInset = sideInset;
+    this.edgeInset = edgeInset;
+
     this.txtBg = scene.add
-      .nineslice(0, 0, backingTexture, undefined, 30, 20, sideInset, sideInset, edgeInset, edgeInset)
+      .nineslice(
+        0,
+        0,
+        backingTexture,
+        undefined,
+        30,
+        20,
+        this.sideInset,
+        this.sideInset,
+        this.edgeInset,
+        this.edgeInset,
+      )
       .setOrigin(0.5, 0.5)
       .setTint(0x777777);
     this.add(this.txtBg);
@@ -55,10 +71,18 @@ export class CommonLabel extends Phaser.GameObjects.Container {
   }
 
   protected resizeBacking(): void {
-    this.txtBg.setSize(
-      this.label.width + this.horizontalPadding,
-      this.label.height + this.verticalPadding,
-    );
+    const insettedWidth = this.label.width + 2 * this.sideInset;
+    const insettedHeight = this.label.height + 2 * this.edgeInset;
+    const finalWidth = this.label.width + this.horizontalPadding;
+    const finalHeight = this.label.height + this.verticalPadding;
+
+    const scaleX = finalWidth / insettedWidth;
+    const scaleY = finalHeight / insettedHeight;
+
+    const width = finalWidth / scaleX;
+    const height = finalHeight / scaleY;
+
+    this.txtBg.setSize(width, height).setScale(scaleX, scaleY);
   }
 
   setTint(tint: string): void {
@@ -94,9 +118,6 @@ export class CommonLabel extends Phaser.GameObjects.Container {
 }
 
 export class CommonButton extends CommonLabel {
-  private readonly buttonShadow: Phaser.GameObjects.NineSlice;
-  private readonly buttonRim: Phaser.GameObjects.NineSlice;
-
   constructor(
     scene: Phaser.Scene,
     x: number,
@@ -105,42 +126,6 @@ export class CommonButton extends CommonLabel {
     textStyle: Phaser.Types.GameObjects.Text.TextStyle,
   ) {
     super(scene, x, y, text, textStyle, BUTTON_TEXTURE, BUTTON_SIDE_INSET, BUTTON_EDGE_INSET);
-
-    this.buttonShadow = scene.add
-      .nineslice(
-        0,
-        4,
-        BUTTON_TEXTURE,
-        undefined,
-        30,
-        20,
-        BUTTON_SIDE_INSET,
-        BUTTON_SIDE_INSET,
-        BUTTON_EDGE_INSET,
-        BUTTON_EDGE_INSET,
-      )
-      .setOrigin(0.5, 0.5)
-      .setTint(0x17110d);
-    this.buttonShadow.alpha = 0.78;
-    this.addAt(this.buttonShadow, 0);
-
-    this.buttonRim = scene.add
-      .nineslice(
-        0,
-        1,
-        BUTTON_TEXTURE,
-        undefined,
-        30,
-        20,
-        BUTTON_SIDE_INSET,
-        BUTTON_SIDE_INSET,
-        BUTTON_EDGE_INSET,
-        BUTTON_EDGE_INSET,
-      )
-      .setOrigin(0.5, 0.5)
-      .setTint(0xd7b071);
-    this.buttonRim.alpha = 0.9;
-    this.addAt(this.buttonRim, 1);
 
     this.txtBg.setTint(0x8f5c30);
     this.resizeBacking();
@@ -156,37 +141,22 @@ export class CommonButton extends CommonLabel {
     this.resizeBacking();
   }
 
-  protected resizeBacking(): void {
-    super.resizeBacking();
-    if (this.buttonShadow === undefined || this.buttonRim === undefined) return;
-
-    this.buttonRim.setSize(this.txtBg.width + 7, this.txtBg.height + 7);
-    this.buttonShadow.setSize(this.txtBg.width + 7, this.txtBg.height + 7);
-  }
-
   private setButtonState(state: "idle" | "hover" | "down"): void {
     const pressedOffset = state === "down" ? 2 : 0;
     this.txtBg.y = pressedOffset;
     this.label.y = pressedOffset;
-    this.buttonRim.y = pressedOffset + 1;
 
     if (state === "hover") {
       this.txtBg.setTint(0xb4793f);
-      this.buttonRim.setTint(0xf2cf88);
-      this.buttonShadow.alpha = 0.9;
       return;
     }
 
     if (state === "down") {
       this.txtBg.setTint(0x704321);
-      this.buttonRim.setTint(0xb8894c);
-      this.buttonShadow.alpha = 0.55;
       return;
     }
 
     this.txtBg.setTint(0x8f5c30);
-    this.buttonRim.setTint(0xd7b071);
-    this.buttonShadow.alpha = 0.78;
   }
 
   on(event: string, callback: () => void): this {

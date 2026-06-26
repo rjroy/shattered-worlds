@@ -10,6 +10,8 @@ const WALKER_START = { size: VISUAL_CONSTS.walker.proximity.far.size, x: 450, y:
 const WALKER_END = { size: VISUAL_CONSTS.walker.proximity.present.size, x: 180, y: 480 };
 const DOOR = { size: VISUAL_CONSTS.door.size, x: 450, y: 360 };
 
+const VIGNETTE = { alpha: 0.5, flashAlpha: 0.75, flashDuration: 250 };
+
 /** Scale an image so it renders `size` px tall (base art is 75px tall at 1.0). */
 function scaleToSize(sprite: Phaser.GameObjects.Image, size: number): void {
   sprite.setScale(size / sprite.height);
@@ -19,7 +21,16 @@ export class BackdropLayer {
   private scene: Phaser.Scene;
   private realityImg: Phaser.GameObjects.Image;
   private intrusionImg: Phaser.GameObjects.Image;
+  private vignetteImg: Phaser.GameObjects.Image;
   private intrusionTween?: Phaser.Tweens.Tween;
+  private vignetteTween?: Phaser.Tweens.Tween;
+  private vignetteColorTween?: Phaser.Tweens.Tween;
+  private vignetteTint: Phaser.Display.Color;
+  private dangerTint: Phaser.Display.Color;
+  private vignetteData = { t: 0 };
+
+  // Intrusion state
+  private lastIntrusionAct: number = -1;
 
   // Door + its glow halo
   private doorSprite: Phaser.GameObjects.Image;
@@ -27,14 +38,14 @@ export class BackdropLayer {
   private doorTween?: Phaser.Tweens.Tween;
   private doorGlowTween?: Phaser.Tweens.Tween;
   private lastDoorPresKind: WalkerPresentation["kind"] = "hidden";
-  private lastDoorActIndex = -1;
+  private lastDoorActIndex: number = -1;
 
   // Walker (the antagonist sprite advancing through the acts)
   private walkerSprite: Phaser.GameObjects.Image;
   private walkerTween?: Phaser.Tweens.Tween;
   private lastWalkerPresKind: WalkerPresentation["kind"] = "hidden";
-  private lastWalkerActIndex = -1;
-  private hasWalkerLeft = false;
+  private lastWalkerActIndex: number = -1;
+  private hasWalkerLeft: boolean = false;
 
   constructor(scene: Phaser.Scene, theme: VisualTheme) {
     this.scene = scene;
@@ -64,9 +75,19 @@ export class BackdropLayer {
     this.intrusionImg.setDisplaySize(CANVAS_W, CANVAS_H);
     this.intrusionImg.setAlpha(0);
     this.intrusionImg.setDepth(-8);
+
+    this.vignetteTint = Phaser.Display.Color.HexStringToColor(theme.intrusionHue).darken(90);
+    this.dangerTint = Phaser.Display.Color.ValueToColor(theme.realityPalette.cancel).darken(50);
+
+    this.vignetteImg = scene.add
+      .image(CANVAS_W / 2, CANVAS_H / 2, "vignette")
+      .setDisplaySize(CANVAS_W, CANVAS_H)
+      .setAlpha(VIGNETTE.alpha)
+      .setTint(this.vignetteTint.color)
+      .setDepth(-6);
   }
 
-  updateIntrusion(intensity: number): void {
+  updateIntrusion(state: GameState, intensity: number): void {
     // Intrusion: kill any running tween and start a fresh one toward the target.
     // This is safe on every drawAll() because intensity only changes when game
     // state changes (dispatch), keeping tween churn proportional to state changes.
@@ -80,6 +101,40 @@ export class BackdropLayer {
       duration: 1500,
       ease: "Sine.easeInOut",
     });
+
+    if (this.lastDoorActIndex != state.actIndex) {
+      this.lastDoorActIndex = state.actIndex;
+      if (this.vignetteTween !== undefined) {
+        this.vignetteTween.stop();
+      }
+      if (this.vignetteColorTween !== undefined) {
+        this.vignetteColorTween.stop();
+      }
+      this.vignetteColorTween = this.scene.add.tween({
+        targets: this.vignetteData,
+        t: { from: 0, to: 100 },
+        onUpdate: () => {
+          const color = Phaser.Display.Color.Interpolate.ColorWithColor(
+            this.vignetteTint,
+            this.dangerTint,
+            100,
+            this.vignetteData.t,
+          ).color;
+          this.vignetteImg.setTint(color);
+        },
+        yoyo: true,
+        duration: VIGNETTE.flashDuration,
+        ease: "Sine.easeIn",
+      });
+
+      this.vignetteTween = this.scene.add.tween({
+        targets: this.vignetteImg,
+        alpha: { from: VIGNETTE.alpha, to: VIGNETTE.flashAlpha },
+        yoyo: true,
+        duration: VIGNETTE.flashDuration,
+        ease: "Sine.easeIn",
+      });
+    }
   }
 
   updateDoor(state: GameState): void {
@@ -133,7 +188,7 @@ export class BackdropLayer {
    * Transitions tween rather than snapping.
    */
   update(state: GameState, intensity: number): void {
-    this.updateIntrusion(intensity);
+    this.updateIntrusion(state, intensity);
     this.updateDoor(state);
     this.updateWalker(state);
   }

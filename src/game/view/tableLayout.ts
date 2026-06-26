@@ -1,37 +1,37 @@
-import { CANVAS_W, TABLE_LAYOUT } from './layout'
+import { CANVAS_W, TABLE_LAYOUT } from "./layout";
 
-export const ROW_WINDOW_VISIBLE_LIMIT = 5
+export const ROW_WINDOW_VISIBLE_LIMIT = 5;
 
 export interface RowCardPosition {
-  x: number
-  y: number
+  x: number;
+  y: number;
 }
 
 export interface RowWindowState {
-  offset: number
+  offset: number;
 }
 
 export interface RowWindowLayout<CardId extends string = string> {
-  totalCount: number
-  visibleLimit: number
-  requestedOffset: number
-  offset: number
-  startIndex: number
-  endIndex: number
-  visibleIds: CardId[]
-  positions: RowCardPosition[]
-  rangeLabel: string
-  hasOverflow: boolean
-  canPageBackward: boolean
-  canPageForward: boolean
+  totalCount: number;
+  visibleLimit: number;
+  requestedOffset: number;
+  offset: number;
+  startIndex: number;
+  endIndex: number;
+  visibleIds: CardId[];
+  positions: RowCardPosition[];
+  rangeLabel: string;
+  hasOverflow: boolean;
+  canPageBackward: boolean;
+  canPageForward: boolean;
 }
 
 function nonnegativeInteger(value: number): number {
-  return Number.isFinite(value) ? Math.max(0, Math.trunc(value)) : 0
+  return Number.isFinite(value) ? Math.max(0, Math.trunc(value)) : 0;
 }
 
 function positiveInteger(value: number): number {
-  return Number.isFinite(value) ? Math.max(1, Math.trunc(value)) : 1
+  return Number.isFinite(value) ? Math.max(1, Math.trunc(value)) : 1;
 }
 
 /**
@@ -40,20 +40,25 @@ function positiveInteger(value: number): number {
  * The row compresses when it would overflow the logical canvas, matching the
  * original TableScene behavior.
  */
-export function rowCardPositions(count: number, rowY: number): RowCardPosition[] {
-  if (count <= 0) return []
+export function rowCardPositions(
+  isPlayer: boolean,
+  count: number,
+  rowY: number,
+): RowCardPosition[] {
+  if (count <= 0) return [];
 
+  const cardSpacing = TABLE_LAYOUT.cardSpacing * (isPlayer ? 0.9 : 1);
   const totalWidth = Math.min(
-    CANVAS_W - TABLE_LAYOUT.cardSpacing - TABLE_LAYOUT.rowWidthPadding,
-    (count - 1) * TABLE_LAYOUT.cardSpacing,
-  )
-  const startX = TABLE_LAYOUT.rowCenterX - totalWidth / 2
-  const spacing = count > 1 ? totalWidth / (count - 1) : TABLE_LAYOUT.cardSpacing
+    CANVAS_W - cardSpacing - TABLE_LAYOUT.rowWidthPadding,
+    (count - 1) * cardSpacing,
+  );
+  const startX = TABLE_LAYOUT.rowCenterX - totalWidth / 2;
+  const spacing = count > 1 ? totalWidth / (count - 1) : cardSpacing;
 
   return Array.from({ length: count }, (_, i) => ({
     x: startX + i * spacing,
     y: rowY,
-  }))
+  }));
 }
 
 export function clampRowWindowOffset(
@@ -61,12 +66,12 @@ export function clampRowWindowOffset(
   desiredOffset: number,
   visibleLimit = ROW_WINDOW_VISIBLE_LIMIT,
 ): number {
-  const safeCardCount = nonnegativeInteger(cardCount)
-  const safeVisibleLimit = positiveInteger(visibleLimit)
-  const safeDesiredOffset = Number.isFinite(desiredOffset) ? Math.trunc(desiredOffset) : 0
-  const maxOffset = Math.max(0, safeCardCount - safeVisibleLimit)
+  const safeCardCount = nonnegativeInteger(cardCount);
+  const safeVisibleLimit = positiveInteger(visibleLimit);
+  const safeDesiredOffset = Number.isFinite(desiredOffset) ? Math.trunc(desiredOffset) : 0;
+  const maxOffset = Math.max(0, safeCardCount - safeVisibleLimit);
 
-  return Math.min(Math.max(0, safeDesiredOffset), maxOffset)
+  return Math.min(Math.max(0, safeDesiredOffset), maxOffset);
 }
 
 export function clampRowWindowOffsetAfterRemoval(
@@ -74,7 +79,7 @@ export function clampRowWindowOffsetAfterRemoval(
   remainingCardCount: number,
   visibleLimit = ROW_WINDOW_VISIBLE_LIMIT,
 ): number {
-  return clampRowWindowOffset(remainingCardCount, currentOffset, visibleLimit)
+  return clampRowWindowOffset(remainingCardCount, currentOffset, visibleLimit);
 }
 
 export function rowWindowPageOffset(
@@ -83,8 +88,8 @@ export function rowWindowPageOffset(
   direction: -1 | 1,
   visibleLimit = ROW_WINDOW_VISIBLE_LIMIT,
 ): number {
-  const offset = clampRowWindowOffset(cardCount, currentOffset, visibleLimit)
-  return clampRowWindowOffset(cardCount, offset + direction * visibleLimit, visibleLimit)
+  const offset = clampRowWindowOffset(cardCount, currentOffset, visibleLimit);
+  return clampRowWindowOffset(cardCount, offset + direction * visibleLimit, visibleLimit);
 }
 
 export function rowWindowSlotOffset(
@@ -93,8 +98,8 @@ export function rowWindowSlotOffset(
   direction: -1 | 1,
   visibleLimit = ROW_WINDOW_VISIBLE_LIMIT,
 ): number {
-  const offset = clampRowWindowOffset(cardCount, currentOffset, visibleLimit)
-  return clampRowWindowOffset(cardCount, offset + direction, visibleLimit)
+  const offset = clampRowWindowOffset(cardCount, currentOffset, visibleLimit);
+  return clampRowWindowOffset(cardCount, offset + direction, visibleLimit);
 }
 
 export function bringRowIndexIntoView(
@@ -103,16 +108,16 @@ export function bringRowIndexIntoView(
   cardCount: number,
   visibleLimit = ROW_WINDOW_VISIBLE_LIMIT,
 ): number {
-  const offset = clampRowWindowOffset(cardCount, currentOffset, visibleLimit)
-  const safeCardIndex = Math.trunc(cardIndex)
+  const offset = clampRowWindowOffset(cardCount, currentOffset, visibleLimit);
+  const safeCardIndex = Math.trunc(cardIndex);
 
-  if (safeCardIndex < 0 || safeCardIndex >= cardCount) return offset
-  if (safeCardIndex < offset) return clampRowWindowOffset(cardCount, safeCardIndex, visibleLimit)
+  if (safeCardIndex < 0 || safeCardIndex >= cardCount) return offset;
+  if (safeCardIndex < offset) return clampRowWindowOffset(cardCount, safeCardIndex, visibleLimit);
   if (safeCardIndex >= offset + visibleLimit) {
-    return clampRowWindowOffset(cardCount, safeCardIndex - visibleLimit + 1, visibleLimit)
+    return clampRowWindowOffset(cardCount, safeCardIndex - visibleLimit + 1, visibleLimit);
   }
 
-  return offset
+  return offset;
 }
 
 export function bringRowCardIdIntoView<CardId extends string>(
@@ -121,27 +126,32 @@ export function bringRowCardIdIntoView<CardId extends string>(
   currentOffset: number,
   visibleLimit = ROW_WINDOW_VISIBLE_LIMIT,
 ): number {
-  const cardIndex = cardIds.findIndex((id) => id === cardId)
-  return bringRowIndexIntoView(cardIndex, currentOffset, cardIds.length, visibleLimit)
+  const cardIndex = cardIds.findIndex((id) => id === cardId);
+  return bringRowIndexIntoView(cardIndex, currentOffset, cardIds.length, visibleLimit);
 }
 
-export function rowWindowRangeLabel(startIndex: number, endIndex: number, totalCount: number): string {
-  if (totalCount <= 0) return '0 of 0'
-  return `${startIndex + 1}-${endIndex} of ${totalCount}`
+export function rowWindowRangeLabel(
+  startIndex: number,
+  endIndex: number,
+  totalCount: number,
+): string {
+  if (totalCount <= 0) return "0 of 0";
+  return `${startIndex + 1}-${endIndex} of ${totalCount}`;
 }
 
 export function rowWindowLayout<CardId extends string>(
+  isPlayer: boolean,
   cardIds: readonly CardId[],
   desiredOffset: number,
   rowY: number,
   visibleLimit = ROW_WINDOW_VISIBLE_LIMIT,
 ): RowWindowLayout<CardId> {
-  const totalCount = cardIds.length
-  const safeVisibleLimit = positiveInteger(visibleLimit)
-  const offset = clampRowWindowOffset(totalCount, desiredOffset, safeVisibleLimit)
-  const endIndex = Math.min(totalCount, offset + safeVisibleLimit)
-  const visibleIds = cardIds.slice(offset, endIndex)
-  const hasOverflow = totalCount > safeVisibleLimit
+  const totalCount = cardIds.length;
+  const safeVisibleLimit = positiveInteger(visibleLimit);
+  const offset = clampRowWindowOffset(totalCount, desiredOffset, safeVisibleLimit);
+  const endIndex = Math.min(totalCount, offset + safeVisibleLimit);
+  const visibleIds = cardIds.slice(offset, endIndex);
+  const hasOverflow = totalCount > safeVisibleLimit;
 
   return {
     totalCount,
@@ -151,10 +161,10 @@ export function rowWindowLayout<CardId extends string>(
     startIndex: offset,
     endIndex,
     visibleIds,
-    positions: rowCardPositions(visibleIds.length, rowY),
+    positions: rowCardPositions(isPlayer, visibleIds.length, rowY),
     rangeLabel: rowWindowRangeLabel(offset, endIndex, totalCount),
     hasOverflow,
     canPageBackward: hasOverflow && offset > 0,
     canPageForward: hasOverflow && endIndex < totalCount,
-  }
+  };
 }

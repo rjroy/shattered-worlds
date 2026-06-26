@@ -43,8 +43,8 @@ export const TABLE_LAYOUT = {
   selectionHint: { x: CANVAS_W / 2, y: 580 },
   previewSlot: { x: CANVAS_W / 2, y: 565 },
   rowNav: {
-    world: { previousX: 28, nextX: CANVAS_W - 28, buttonY: 274, labelX: 96, labelY: 274 },
-    player: { previousX: 164, nextX: 820, buttonY: 286, labelX: 720, labelY: 286 },
+    world: { previousX: 780, nextX: 820, buttonY: 265, labelX: 800, labelY: 295 },
+    player: { previousX: 100, nextX: 140, buttonY: 295, labelX: 120, labelY: 265 },
     labelSafeSize: { width: 96, height: 28 },
     buttonSafeSize: { width: 40, height: 30 },
     hoverSafePadding: 16,
@@ -52,8 +52,8 @@ export const TABLE_LAYOUT = {
   buttons: {
     exit: { x: 20, y: 22 },
     endTurn: { x: 820, y: 560 },
-    cancel: { x: 740, y: 570 },
-    confirm: { x: 740, y: 540 },
+    cancel: { x: 820, y: 500 },
+    confirm: { x: 820, y: 340 },
     settings: { x: 818, y: 22 },
     help: { x: 860, y: 22 },
   },
@@ -89,9 +89,9 @@ export const PILE_LAYOUT = {
   cardHeight: 64,
   cardOffset: 2,
   maxVisibleCards: 5,
-  player: { x: 80, y: 440 },
-  world: { x: 820, y: 440 },
-  discard: { x: 80, y: 560 },
+  player: { x: 60, y: 440 },
+  world: { x: 850, y: 180 },
+  discard: { x: 60, y: 560 },
   labelY: 20,
 } as const;
 

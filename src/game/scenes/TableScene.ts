@@ -372,34 +372,44 @@ export class TableScene extends Phaser.Scene {
     });
     addTooltip(this, this.exitBtn, TABLE_TOOLTIPS.exit);
 
-    const rowNavStyle = textStyle({
+    const worldRowNavStyle = textStyle({
       fontSize: "16px",
       fontStyle: "bold",
-      color: getRealityPalette(this.theme_, "confirm"),
+      color: getRealityPalette(this.theme_, "cancel"),
     });
-    const rowRangeStyle = textStyle({
+    const worldRowRangeStyle = textStyle({
       fontSize: "12px",
-      color: getRealityPalette(this.theme_, "title"),
+      color: getRealityPalette(this.theme_, "cancel"),
     });
-    this.worldRowPrevBtn = this.createRowNavButton("world", -1, "<", rowNavStyle);
-    this.worldRowNextBtn = this.createRowNavButton("world", 1, ">", rowNavStyle);
+    this.worldRowPrevBtn = this.createRowNavButton("world", -1, "<", worldRowNavStyle);
+    this.worldRowNextBtn = this.createRowNavButton("world", 1, ">", worldRowNavStyle);
     this.worldRowRangeLabel = new CommonLabel(
       this,
       TABLE_LAYOUT.rowNav.world.labelX,
       TABLE_LAYOUT.rowNav.world.labelY,
       "",
-      rowRangeStyle,
+      worldRowRangeStyle,
     )
       .setDepth(TABLE_LAYOUT.cardHoverDepth + 25)
       .setVisible(false);
-    this.playerRowPrevBtn = this.createRowNavButton("player", -1, "<", rowNavStyle);
-    this.playerRowNextBtn = this.createRowNavButton("player", 1, ">", rowNavStyle);
+
+    const playerRowNavStyle = textStyle({
+      fontSize: "16px",
+      fontStyle: "bold",
+      color: getRealityPalette(this.theme_, "confirm"),
+    });
+    const playerRowRangeStyle = textStyle({
+      fontSize: "12px",
+      color: getRealityPalette(this.theme_, "confirm"),
+    });
+    this.playerRowPrevBtn = this.createRowNavButton("player", -1, "<", playerRowNavStyle);
+    this.playerRowNextBtn = this.createRowNavButton("player", 1, ">", playerRowNavStyle);
     this.playerRowRangeLabel = new CommonLabel(
       this,
       TABLE_LAYOUT.rowNav.player.labelX,
       TABLE_LAYOUT.rowNav.player.labelY,
       "",
-      rowRangeStyle,
+      playerRowRangeStyle,
     )
       .setDepth(TABLE_LAYOUT.cardHoverDepth + 25)
       .setVisible(false);
@@ -504,11 +514,13 @@ export class TableScene extends Phaser.Scene {
     const worldCards = visibleHand.filter((c): c is WorldCard => c.kind === "world");
     const playerCards = visibleHand.filter((c) => c.kind === "player");
     const worldWindow = rowWindowLayout(
+      false,
       worldCards.map((c) => c.id),
       this.worldRowOffset,
       WORLD_ROW_Y,
     );
     const playerWindow = rowWindowLayout(
+      true,
       playerCards.map((c) => c.id),
       this.playerRowOffset,
       HAND_ROW_Y,
@@ -522,6 +534,8 @@ export class TableScene extends Phaser.Scene {
 
     const desiredIds = new Set<string>();
     this.layoutRow(
+      false,
+      worldWindow.offset,
       visibleWorldCards,
       worldWindow.positions,
       playableIds,
@@ -530,6 +544,8 @@ export class TableScene extends Phaser.Scene {
       desiredIds,
     );
     this.layoutRow(
+      true,
+      playerWindow.offset,
       visiblePlayerCards,
       playerWindow.positions,
       playableIds,
@@ -659,6 +675,8 @@ export class TableScene extends Phaser.Scene {
    * `desiredIds` so drawAll can destroy whatever is left over.
    */
   private layoutRow(
+    isPlayer: boolean,
+    offset: number,
     cards: readonly Card[],
     positions: readonly RowCardPosition[],
     playableIds: Set<string>,
@@ -666,6 +684,8 @@ export class TableScene extends Phaser.Scene {
     legalTargetIds: Set<string>,
     desiredIds: Set<string>,
   ): void {
+    const radians = (2 * 3.14159) / 180;
+    const rotationOffset = Math.floor((positions.length - offset) / 2);
     cards.forEach((card, i) => {
       const { x, y } = positions[i]!;
       const container = this.obtainCardContainer(card);
@@ -674,6 +694,7 @@ export class TableScene extends Phaser.Scene {
       // Position is mutable per cycle (a card may shift slots as the hand
       // changes). The static face was set once, at creation.
       container.setCardPosition(x, y);
+      if (isPlayer) container.setRotation((i - rotationOffset) * radians);
 
       // Re-apply mutable visual state every cycle, reused or freshly created.
       this.applyHighlight(container, card, playableIds, discardableIds, legalTargetIds);
