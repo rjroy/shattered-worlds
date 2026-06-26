@@ -312,6 +312,8 @@ function makeDrawAllHarness(state: GameState): {
   const realLayoutRow = (
     scene as unknown as {
       layoutRow(
+        isPlayer: boolean,
+        offset: number,
         cards: readonly Card[],
         positions: readonly { y: number }[],
         playableIds: Set<string>,
@@ -322,6 +324,8 @@ function makeDrawAllHarness(state: GameState): {
     }
   ).layoutRow.bind(scene);
   scene.layoutRow = (
+    isPlayer: boolean,
+    offset: number,
     cards: readonly Card[],
     positions: readonly { y: number }[],
     playableIds: Set<string>,
@@ -329,7 +333,16 @@ function makeDrawAllHarness(state: GameState): {
     legalTargetIds: Set<string>,
     desiredIds: Set<string>,
   ) => {
-    realLayoutRow(cards, positions, playableIds, discardableIds, legalTargetIds, desiredIds);
+    realLayoutRow(
+      isPlayer,
+      offset,
+      cards,
+      positions,
+      playableIds,
+      discardableIds,
+      legalTargetIds,
+      desiredIds,
+    );
     const rowY = positions[0]?.y;
     if (rowY === undefined) return;
     if (rowY > 400) {
@@ -354,6 +367,7 @@ interface FakeCommonButtonBacking {
   setOrigin(): FakeCommonButtonBacking;
   setTint(): FakeCommonButtonBacking;
   setSize(width: number, height: number): FakeCommonButtonBacking;
+  setScale(scaleX: number, scaleY: number): FakeCommonButtonBacking;
   setInteractive(): FakeCommonButtonBacking;
   disableInteractive(): FakeCommonButtonBacking;
   on(event: string, callback: () => void): FakeCommonButtonBacking;
@@ -389,6 +403,9 @@ function makeFakeCommonButtonBacking(): FakeCommonButtonBacking {
     setSize(width: number, height: number): FakeCommonButtonBacking {
       this.width = width;
       this.height = height;
+      return this;
+    },
+    setScale(): FakeCommonButtonBacking {
       return this;
     },
     setInteractive(): FakeCommonButtonBacking {
