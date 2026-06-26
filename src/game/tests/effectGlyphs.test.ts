@@ -243,7 +243,7 @@ describe("compileEffect (composites)", () => {
     ]);
   });
 
-  it('joins a 1–2 step Sequence onto one line with "→" connectives', () => {
+  it('splits a top-level 2-step Sequence into one line per step, continuation lines led by "→"', () => {
     const sequence: CardEffect = {
       kind: "Sequence",
       steps: [
@@ -252,11 +252,12 @@ describe("compileEffect (composites)", () => {
       ],
     };
     expect(compileEffect(sequence, "zombie-big-box")).toStrictEqual([
-      line([t("+"), v("1", "progress"), i("progress"), t("→"), i("draw"), v("1", "reward")]),
+      line([t("+"), v("1", "progress"), i("progress")]),
+      line([t("→"), i("draw"), v("1", "reward")]),
     ]);
   });
 
-  it("keeps a step rider as a trailing rider line of the Sequence", () => {
+  it("keeps a step rider immediately after its own line in a split Sequence", () => {
     const sequence: CardEffect = {
       kind: "Sequence",
       steps: [
@@ -265,18 +266,9 @@ describe("compileEffect (composites)", () => {
       ],
     };
     expect(compileEffect(sequence, "zombie-big-box")).toStrictEqual([
-      line([
-        t("+"),
-        v("2", "progress"),
-        i("progress"),
-        t("→"),
-        i("draw"),
-        v("1", "reward"),
-        t("·"),
-        i("worldDraw"),
-        v("1", "penalty"),
-      ]),
+      line([t("+"), v("2", "progress"), i("progress")]),
       line([v("+2", "progress"), t("vs"), t("Spore")], "rider"),
+      line([t("→"), i("draw"), v("1", "reward"), t("·"), i("worldDraw"), v("1", "penalty")]),
     ]);
   });
 
@@ -420,7 +412,8 @@ describe("compileEffect (composites)", () => {
       ],
     };
     expect(compileEffect(sequence, "zombie-big-box")).toStrictEqual([
-      line([t("+"), v("1", "progress"), i("progress"), t("→"), t("Choose:")]),
+      line([t("+"), v("1", "progress"), i("progress")]),
+      line([t("→"), t("Choose:")]),
       line([v("+1", "reward"), i("hp")], "branch"),
       line([i("draw"), v("1", "reward")], "branch"),
     ]);
@@ -501,7 +494,7 @@ describe("compileEffect (catalog composites)", () => {
     ]);
   });
 
-  it("compiles Barricade — Sequence of DealProgress then ReturnWorldCards", () => {
+  it("compiles Barricade — Sequence of DealProgress then ReturnWorldCards, one line per step", () => {
     const barricade: CardEffect = {
       kind: "Sequence",
       steps: [
@@ -510,7 +503,8 @@ describe("compileEffect (catalog composites)", () => {
       ],
     };
     expect(compileEffect(barricade, "zombie-big-box")).toStrictEqual([
-      line([t("+"), v("1", "progress"), i("progress"), t("→"), i("return"), v("0–1", "reward")]),
+      line([t("+"), v("1", "progress"), i("progress")]),
+      line([t("→"), i("return"), v("0–1", "reward")]),
     ]);
   });
 });

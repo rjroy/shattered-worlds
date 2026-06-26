@@ -106,7 +106,7 @@ export class SequenceHandler extends EffectHandler<SequenceEffect> {
       .map((step) => ctx.compile(step, ctx))
       .filter((compiled) => compiled.length > 0);
 
-    if (ctx.compactSequences || compiledSteps.length <= 2) {
+    if (ctx.compactSequences) {
       // Step main lines join onto one line with '→' connectives; any
       // rider/branch lines the steps produced follow after, roles preserved.
       const joined: EffectLine["tokens"] = [];
