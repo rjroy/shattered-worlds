@@ -1,6 +1,6 @@
 export const FONTS = {
-  title: "Times New Roman",
-  body: "Helvetica",
-  ui: "Arial",
-  monospace: "Courier",
+  title: '"Bebas Neue", Helvetica, Arial, sans-serif',
+  body: '"Atkinson Hyperlegible", Helvetica, Arial, sans-serif',
+  ui: '"Special Elite", "Courier New", monospace',
+  monospace: '"Special Elite", "Courier New", monospace',
 } as const;
