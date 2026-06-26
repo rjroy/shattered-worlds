@@ -223,7 +223,7 @@
     "name": "Talon Stomper",
     "description": "Fight back 25 Gripping Talons across all runs.",
     "conditions": [
-      { "statId": "witness.Gripping Talons.resolvedCount", "operator": "gte", "value": 25 }
+      { "statId": "witness.Gripping Talon.resolvedCount", "operator": "gte", "value": 25 }
     ],
     "reward": { "items": [{ "type": "memoryFragments", "amount": 30 }] }
   },
@@ -266,7 +266,7 @@
     "name": "Giant Slayer",
     "description": "Resolve 25 encounters with The Giant Turns in Sleep hazards across all runs.",
     "conditions": [
-      { "statId": "witness.The Giant Turns in Sleep.resolvedCount", "operator": "gte", "value": 25 }
+      { "statId": "witness.The Giant Turns In Sleep.resolvedCount", "operator": "gte", "value": 25 }
     ],
     "reward": { "items": [{ "type": "memoryFragments", "amount": 40 }] }
   },
@@ -306,14 +306,14 @@
     "id": "understanding-the-void",
     "name": "Understanding the Void",
     "description": "Complete 50 runs across any world.",
-    "conditions": [{ "statId": "lifetime.runs", "operator": "gte", "value": 20 }],
+    "conditions": [{ "statId": "lifetime.runs", "operator": "gte", "value": 50 }],
     "reward": { "items": [{ "type": "memoryFragments", "amount": 20 }] }
   },
   {
     "id": "one-with-the-void",
     "name": "One with the Void",
     "description": "Complete 100 runs across any world.",
-    "conditions": [{ "statId": "lifetime.runs", "operator": "gte", "value": 20 }],
+    "conditions": [{ "statId": "lifetime.runs", "operator": "gte", "value": 100 }],
     "reward": { "items": [{ "type": "memoryFragments", "amount": 50 }] }
   },
   {
