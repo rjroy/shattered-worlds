@@ -100,6 +100,7 @@ export const RARITY_STROKE_WIDTH = 2;
 // ---------------------------------------------------------------------------
 
 interface CardTextOpts {
+  fontFamily?: string;
   fontSize: string;
   color: string;
   originY: number; // 0 = top-anchored, 1 = bottom-anchored
@@ -121,6 +122,7 @@ function addCardText(
     fontSize: opts.fontSize,
     color: opts.color,
   };
+  if (opts.fontFamily) style.fontFamily = opts.fontFamily;
   if (opts.bold === true) style.fontStyle = "bold";
   const text = scene.add.text(x, y, "", textStyle(style));
   text.setOrigin(0.5, opts.originY);
@@ -286,6 +288,7 @@ export class CardView extends Phaser.GameObjects.Container {
 
     // Name at top — identical for player and world cards.
     const nameText = addCardText(scene, this, 0, -CARD_H / 2 + 8, card.name, {
+      fontFamily: "Arial",
       fontSize: "16px",
       color: titleColor,
       bold: true,

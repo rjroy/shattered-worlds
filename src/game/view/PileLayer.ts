@@ -94,7 +94,8 @@ export class PileLayer {
       PILE_LAYOUT.labelY,
       `${str}: ${count}`,
       textStyle({
-        fontSize: "10px",
+        fontFamily: "Helvetica",
+        fontSize: "12px",
         color: TEXT.textMuted,
       }),
     );

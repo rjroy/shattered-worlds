@@ -331,6 +331,7 @@ export class TableScene extends Phaser.Scene {
     this.actionConfirmation = new ActionConfirmationView(this);
 
     const questionStyle = textStyle({
+      fontFamily: "Courier",
       fontSize: "16px",
       fontStyle: "bold",
       color: TEXT.textLight,
@@ -377,12 +378,14 @@ export class TableScene extends Phaser.Scene {
     addTooltip(this, this.exitBtn, TABLE_TOOLTIPS.exit);
 
     const worldRowNavStyle = textStyle({
+      fontFamily: "Courier",
       fontSize: "16px",
       fontStyle: "bold",
       color: getRealityPalette(this.theme_, "cancel"),
     });
     const worldRowRangeStyle = textStyle({
-      fontSize: "12px",
+      fontFamily: "Helvetica",
+      fontSize: "13px",
       color: getRealityPalette(this.theme_, "cancel"),
     });
     this.worldRowPrevBtn = this.createRowNavButton("world", -1, "<", worldRowNavStyle);
@@ -398,12 +401,14 @@ export class TableScene extends Phaser.Scene {
       .setVisible(false);
 
     const playerRowNavStyle = textStyle({
+      fontFamily: "Courier",
       fontSize: "16px",
       fontStyle: "bold",
       color: getRealityPalette(this.theme_, "confirm"),
     });
     const playerRowRangeStyle = textStyle({
-      fontSize: "12px",
+      fontFamily: "Helvetica",
+      fontSize: "13px",
       color: getRealityPalette(this.theme_, "confirm"),
     });
     this.playerRowPrevBtn = this.createRowNavButton("player", -1, "<", playerRowNavStyle);
@@ -449,7 +454,8 @@ export class TableScene extends Phaser.Scene {
       TABLE_LAYOUT.selectionHint.y,
       "",
       textStyle({
-        fontSize: "12px",
+        fontFamily: "Arial",
+        fontSize: "13px",
         color: getRealityPalette(this.theme_, "text"),
       }),
     ).setVisible(false);
@@ -462,7 +468,8 @@ export class TableScene extends Phaser.Scene {
       TABLE_LAYOUT.previewSlot.y,
       "",
       textStyle({
-        fontSize: "12px",
+        fontFamily: "Arial",
+        fontSize: "13px",
         color: getRealityPalette(this.theme_, "title"),
         wordWrap: { width: 400 },
       }),
