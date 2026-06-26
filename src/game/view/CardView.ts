@@ -27,6 +27,7 @@ import {
 } from "./presentation";
 import { CARD_FACE, TABLE_LAYOUT } from "./layout";
 import { addTooltip } from "./TooltipView";
+import { FONTS } from "./fonts";
 
 // ---------------------------------------------------------------------------
 // Keyword display
@@ -100,6 +101,7 @@ export const RARITY_STROKE_WIDTH = 2;
 // ---------------------------------------------------------------------------
 
 interface CardTextOpts {
+  fontFamily?: string;
   fontSize: string;
   color: string;
   originY: number; // 0 = top-anchored, 1 = bottom-anchored
@@ -118,6 +120,7 @@ function addCardText(
   opts: CardTextOpts,
 ): Phaser.GameObjects.Text[] {
   const style: Phaser.Types.GameObjects.Text.TextStyle = {
+    fontFamily: opts.fontFamily ?? FONTS.body,
     fontSize: opts.fontSize,
     color: opts.color,
   };
@@ -286,6 +289,7 @@ export class CardView extends Phaser.GameObjects.Container {
 
     // Name at top — identical for player and world cards.
     const nameText = addCardText(scene, this, 0, -CARD_H / 2 + 8, card.name, {
+      fontFamily: FONTS.ui,
       fontSize: "16px",
       color: titleColor,
       bold: true,
@@ -299,7 +303,8 @@ export class CardView extends Phaser.GameObjects.Container {
       const hasKeywords = card.keywords.length > 0;
       if (hasKeywords) {
         addCardText(scene, this, 0, -CARD_H / 2 + 23, formatKeywords(card.keywords), {
-          fontSize: "9px",
+          fontFamily: FONTS.body,
+          fontSize: "10px",
           color: TEXT.textKeyword,
           originY: 0,
         });
@@ -328,6 +333,7 @@ export class CardView extends Phaser.GameObjects.Container {
         this.add(badgeBg);
 
         addCardText(scene, this, CARD_W / 2 - 16, -CARD_H / 2 + 16, String(card.energyCost), {
+          fontFamily: FONTS.monospace,
           fontSize: "16px",
           color: TEXT.textEnergy,
           bold: true,
@@ -340,7 +346,8 @@ export class CardView extends Phaser.GameObjects.Container {
       if (card.exhaust === true) {
         if (card.canDestroy) {
           addCardText(scene, this, 0, CARD_H / 2 - 8, "Exhaust", {
-            fontSize: "9px",
+            fontFamily: FONTS.body,
+            fontSize: "10px",
             color: TEXT.textKeyword,
             bold: true,
             originY: 1,
@@ -349,6 +356,7 @@ export class CardView extends Phaser.GameObjects.Container {
         } else {
           // If you cannot destroy normally, then exhaust is the only option
           addCardText(scene, this, 0, CARD_H / 2 - 8, "Exhaust Only", {
+            fontFamily: FONTS.body,
             fontSize: "9px",
             color: TEXT.textReward,
             bold: true,
@@ -366,7 +374,8 @@ export class CardView extends Phaser.GameObjects.Container {
         ice.setStrokeStyle(2, 0xe8f8ff, 0.85);
         this.add(ice);
         addCardText(scene, this, 0, CARD_H / 2 - 25, `Frozen ${card.frozen}`, {
-          fontSize: "11px",
+          fontFamily: FONTS.body,
+          fontSize: "12px",
           color: "#e8f8ff",
           bold: true,
           originY: 1,
@@ -396,11 +405,12 @@ export class CardView extends Phaser.GameObjects.Container {
         CARD_W / 2 - 21,
         CARD_H / 2 - 21,
         String(worldCard.cost),
-        { fontSize: "30px", color: TEXT.textCost, bold: true, originY: 0.5 },
+        { fontFamily: FONTS.monospace, fontSize: "30px", color: TEXT.textCost, bold: true, originY: 0.5 },
       )) {
         reveal.push(line);
       }
       for (const line of addCardText(scene, this, CARD_W / 2 - 21, CARD_H / 2 - 3, "to clear", {
+        fontFamily: FONTS.body,
         fontSize: "8px",
         color: TEXT.textMuted,
         originY: 1,
@@ -422,7 +432,7 @@ export class CardView extends Phaser.GameObjects.Container {
           0,
           -CARD_H / 2 + 23,
           formatKeywords(worldCard.keywords),
-          { fontSize: "9px", color: TEXT.textKeyword, originY: 0 },
+          { fontFamily: FONTS.body, fontSize: "9px", color: TEXT.textKeyword, originY: 0 },
         )) {
           reveal.push(line);
         }
@@ -489,6 +499,7 @@ export class CardView extends Phaser.GameObjects.Container {
       // Discard indicator.
       if (worldCard.discardable) {
         for (const line of addCardText(scene, this, 0, CARD_H / 2 - 22, "click to discard", {
+          fontFamily: FONTS.body,
           fontSize: "9px",
           color: TEXT.textDiscard,
           bold: true,
@@ -544,7 +555,13 @@ export class CardView extends Phaser.GameObjects.Container {
       0,
       0,
       formatKeyword({ name: "Concealed", value: this.concealDepth }),
-      { fontSize: "14px", color: TEXT.textKeyword, bold: true, originY: 0.5 },
+      {
+        fontFamily: FONTS.body,
+        fontSize: "15px",
+        color: TEXT.textKeyword,
+        bold: true,
+        originY: 0.5,
+      },
     )) {
       this.fogObjects.push(line);
     }
@@ -665,7 +682,12 @@ export class CardView extends Phaser.GameObjects.Container {
     circle.fillCircle(0, 0, 8);
     circle.setAlpha(0.8);
     badge.add(circle);
-    const check = this.scene.add.text(0, 0, "✓", textStyle({ fontSize: "12px", color: "#ffffff" }));
+    const check = this.scene.add.text(
+      0,
+      0,
+      "✓",
+      textStyle({ fontFamily: FONTS.monospace, fontSize: "12px", color: "#ffffff" }),
+    );
     check.setOrigin(0.5, 0.5);
     badge.add(check);
     badge.setVisible(false);

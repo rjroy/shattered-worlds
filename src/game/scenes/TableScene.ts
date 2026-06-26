@@ -58,6 +58,7 @@ import { HelpOverlayView } from "../view/HelpOverlayView";
 import { ActionConfirmationView } from "../view/ActionConfirmationView";
 import { SettingsOverlayView } from "../view/SettingsOverlayView";
 import { textStyle, TEXT, getRealityPalette } from "../view/presentation";
+import { FONTS } from "../view/fonts";
 import { ringFraction, connectorLine } from "../interaction/feedback";
 import type { ConnectorStyle } from "../interaction/feedback";
 import { effectAtStep } from "../../core/effects/composite";
@@ -265,6 +266,7 @@ export class TableScene extends Phaser.Scene {
     this.hudView = new HUDView(this);
 
     const endTurnStyle = textStyle({
+      fontFamily: FONTS.body,
       fontSize: "16px",
       color: getRealityPalette(this.theme_, "text"),
       fontStyle: "bold",
@@ -273,7 +275,7 @@ export class TableScene extends Phaser.Scene {
       this,
       TABLE_LAYOUT.buttons.endTurn.x,
       TABLE_LAYOUT.buttons.endTurn.y,
-      "[ End Turn ]",
+      "END TURN",
       endTurnStyle,
     )
       .on("pointerdown", () => this.onEndTurnClick())
@@ -282,14 +284,16 @@ export class TableScene extends Phaser.Scene {
     addTooltip(this, this.endTurnBtn, TABLE_TOOLTIPS.endTurn);
 
     const cancelStyle = textStyle({
-      fontSize: "13px",
+      fontFamily: FONTS.body,
+      fontSize: "16px",
       color: getRealityPalette(this.theme_, "cancel"),
+      fontStyle: "bold",
     });
     this.cancelBtn = new CommonButton(
       this,
       TABLE_LAYOUT.buttons.cancel.x,
       TABLE_LAYOUT.buttons.cancel.y,
-      "[ Cancel ]",
+      "CANCEL",
       cancelStyle,
     )
       .on("pointerdown", () => {
@@ -304,7 +308,8 @@ export class TableScene extends Phaser.Scene {
       .setVisible(false);
 
     const confirmStyle = textStyle({
-      fontSize: "13px",
+      fontFamily: FONTS.body,
+      fontSize: "16px",
       fontStyle: "bold",
       color: getRealityPalette(this.theme_, "confirm"),
     });
@@ -312,7 +317,7 @@ export class TableScene extends Phaser.Scene {
       this,
       TABLE_LAYOUT.buttons.confirm.x,
       TABLE_LAYOUT.buttons.confirm.y,
-      "[ Confirm ]",
+      "CONFIRM",
       confirmStyle,
     )
       .on("pointerdown", () => this.onConfirmClick())
@@ -327,6 +332,7 @@ export class TableScene extends Phaser.Scene {
     this.actionConfirmation = new ActionConfirmationView(this);
 
     const questionStyle = textStyle({
+      fontFamily: FONTS.monospace,
       fontSize: "16px",
       fontStyle: "bold",
       color: TEXT.textLight,
@@ -373,12 +379,14 @@ export class TableScene extends Phaser.Scene {
     addTooltip(this, this.exitBtn, TABLE_TOOLTIPS.exit);
 
     const worldRowNavStyle = textStyle({
+      fontFamily: FONTS.monospace,
       fontSize: "16px",
       fontStyle: "bold",
       color: getRealityPalette(this.theme_, "cancel"),
     });
     const worldRowRangeStyle = textStyle({
-      fontSize: "12px",
+      fontFamily: FONTS.body,
+      fontSize: "13px",
       color: getRealityPalette(this.theme_, "cancel"),
     });
     this.worldRowPrevBtn = this.createRowNavButton("world", -1, "<", worldRowNavStyle);
@@ -394,12 +402,14 @@ export class TableScene extends Phaser.Scene {
       .setVisible(false);
 
     const playerRowNavStyle = textStyle({
+      fontFamily: FONTS.monospace,
       fontSize: "16px",
       fontStyle: "bold",
       color: getRealityPalette(this.theme_, "confirm"),
     });
     const playerRowRangeStyle = textStyle({
-      fontSize: "12px",
+      fontFamily: FONTS.body,
+      fontSize: "13px",
       color: getRealityPalette(this.theme_, "confirm"),
     });
     this.playerRowPrevBtn = this.createRowNavButton("player", -1, "<", playerRowNavStyle);
@@ -445,7 +455,8 @@ export class TableScene extends Phaser.Scene {
       TABLE_LAYOUT.selectionHint.y,
       "",
       textStyle({
-        fontSize: "12px",
+        fontFamily: FONTS.ui,
+        fontSize: "13px",
         color: getRealityPalette(this.theme_, "text"),
       }),
     ).setVisible(false);
@@ -458,7 +469,8 @@ export class TableScene extends Phaser.Scene {
       TABLE_LAYOUT.previewSlot.y,
       "",
       textStyle({
-        fontSize: "12px",
+        fontFamily: FONTS.ui,
+        fontSize: "13px",
         color: getRealityPalette(this.theme_, "title"),
         wordWrap: { width: 400 },
       }),

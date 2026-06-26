@@ -23,6 +23,7 @@ import { EFFECT_ICON_TOOLTIPS } from "../../core/view/effectTooltips";
 import { textStyle } from "./presentation";
 import { EFFECT_ROW } from "./layout";
 import { addTooltip } from "./TooltipView";
+import { FONTS } from "./fonts";
 import {
   EFFECT_ICON_PLACEHOLDERS,
   EFFECT_ICON_TEXTURES,
@@ -155,8 +156,12 @@ export function addEffectLines(
   // vertical stack (per-row centres + total block height) in one computation.
   const builtRows = effectiveLines.map((line, index) => {
     // The ?? arm is unreachable: styles is index-aligned with lines.
-    const style = styles[index] ?? { fontSize: baseFontSize, indent: 0 };
-    return { line, style, ...buildRow(scene, line, style.fontSize, opts) };
+    const style = styles[index] ?? {
+      fontFamily: FONTS.body,
+      fontSize: baseFontSize,
+      indent: 0,
+    };
+    return { line, style, ...buildRow(scene, line, style.fontFamily, style.fontSize, opts) };
   });
   const stack = stackLines(
     builtRows.map((built) => built.lineHeight),
@@ -202,6 +207,7 @@ type TokenSlot = { kind: "text"; text: Phaser.GameObjects.Text } | { kind: "icon
 function buildRow(
   scene: Phaser.Scene,
   line: EffectLine,
+  fontFamily: string,
   fontSize: number,
   opts: EffectLinesOptions,
 ): RowBuild {
@@ -220,7 +226,7 @@ function buildRow(
       0,
       0,
       normalizeTokenText(token.text),
-      textStyle({ fontSize: `${fontSize}px`, color: style.color }),
+      textStyle({ fontFamily: fontFamily, fontSize: `${fontSize}px`, color: style.color }),
     );
     text.setOrigin(0.5, 0.5);
     if (style.glowColor !== undefined) {

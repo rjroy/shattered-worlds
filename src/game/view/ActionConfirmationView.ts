@@ -13,6 +13,7 @@
  */
 import Phaser from "phaser";
 import { textStyle, TEXT } from "./presentation";
+import { FONTS } from "./fonts";
 import { CANVAS_W, CANVAS_H, TABLE_LAYOUT } from "./layout";
 
 export interface ActionConfirmationOptions {
@@ -74,6 +75,7 @@ export class ActionConfirmationView extends Phaser.GameObjects.Container {
         -150,
         "",
         textStyle({
+          fontFamily: FONTS.title,
           fontSize: "22px",
           color: TEXT.textLight,
           fontStyle: "bold",
@@ -90,6 +92,7 @@ export class ActionConfirmationView extends Phaser.GameObjects.Container {
         148,
         "[ Cancel ]",
         textStyle({
+          fontFamily: FONTS.ui,
           fontSize: "16px",
           color: TEXT.textMuted,
           fontStyle: "bold",
@@ -106,6 +109,7 @@ export class ActionConfirmationView extends Phaser.GameObjects.Container {
         148,
         "[ Commit ]",
         textStyle({
+          fontFamily: FONTS.ui,
           fontSize: "16px",
           color: TEXT.textReward,
           fontStyle: "bold",
@@ -136,6 +140,7 @@ export class ActionConfirmationView extends Phaser.GameObjects.Container {
           LINE_START_Y + index * LINE_HEIGHT,
           line,
           textStyle({
+            fontFamily: FONTS.body,
             fontSize: "14px",
             color: TEXT.textMuted,
             align: "center",

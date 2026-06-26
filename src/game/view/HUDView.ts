@@ -6,6 +6,7 @@
 import Phaser from "phaser";
 import type { GameState } from "../../core/index";
 import { TEXT, textStyle } from "./presentation";
+import { FONTS } from "./fonts";
 import { HUD_LAYOUT } from "./layout";
 import { addTooltip } from "./TooltipView";
 
@@ -99,7 +100,12 @@ export class HUDView extends Phaser.GameObjects.Container {
 
     // The textured panel supplies the dark backing, so the labels no longer carry
     // their own translucent-black backgroundColor.
-    const style = textStyle({ fontSize: "16px", fontStyle: "bold", color: TEXT.textLight });
+    const style = textStyle({
+      fontFamily: FONTS.monospace,
+      fontSize: "16px",
+      fontStyle: "bold",
+      color: TEXT.textLight,
+    });
 
     // Origin (0, 0.5): x is the panel-relative left edge of the label, y is the
     // panel's vertical center, so every label is vertically centered in the bar.
@@ -225,7 +231,12 @@ export class HUDView extends Phaser.GameObjects.Container {
   }
 
   private addPowerUp(texture: string): PowerUpIndicator {
-    const style = textStyle({ fontSize: "16px", fontStyle: "bold", color: TEXT.textLight });
+    const style = textStyle({
+      fontFamily: FONTS.monospace,
+      fontSize: "16px",
+      fontStyle: "bold",
+      color: TEXT.textLight,
+    });
     const container = this.scene.add.container(0, 0);
     const icon = this.scene.add
       .image(0, 0, texture)

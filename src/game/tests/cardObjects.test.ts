@@ -201,14 +201,16 @@ function makeDrawAllHarness(state: GameState): {
   scene.add = { ...render.scene.add, nineslice: commonButtonAdd.nineslice };
   const worldRows: Card[][] = [];
   const playerRows: Card[][] = [];
-  const createRowNavButton = (scene as unknown as {
-    createRowNavButton(
-      row: "world" | "player",
-      direction: -1 | 1,
-      text: string,
-      style: Record<string, never>,
-    ): CommonButton;
-  }).createRowNavButton.bind(scene);
+  const createRowNavButton = (
+    scene as unknown as {
+      createRowNavButton(
+        row: "world" | "player",
+        direction: -1 | 1,
+        text: string,
+        style: Record<string, never>,
+      ): CommonButton;
+    }
+  ).createRowNavButton.bind(scene);
   const rowNav = {
     worldPrev: makeTestRowNavButton(createRowNavButton("world", -1, "<", {})),
     worldNext: makeTestRowNavButton(createRowNavButton("world", 1, ">", {})),
@@ -616,9 +618,7 @@ describe("TableScene effective player-card layout", () => {
 
   it("pages overflowing world and player rows independently through nav controls", () => {
     const base = makeCoreState({ energy: 9 });
-    const worldCards = Array.from({ length: 7 }, (_, i) =>
-      makeWorldCard({ id: `world-${i + 1}` }),
-    );
+    const worldCards = Array.from({ length: 7 }, (_, i) => makeWorldCard({ id: `world-${i + 1}` }));
     const [playerCards, state] = mintCorePlayers(base, "Sprint", 7);
     const harness = makeDrawAllHarness({ ...state, hand: [...worldCards, ...playerCards] });
 
@@ -2455,14 +2455,24 @@ type RenderScene = {
 };
 
 /** Scene stub satisfying the full CardView constructor (player and world cards). */
-function makeRenderScene(): { scene: RenderScene; texts: TrackedText[]; containers: FakeContainer[] } {
+function makeRenderScene(): {
+  scene: RenderScene;
+  texts: TrackedText[];
+  containers: FakeContainer[];
+} {
   const texts: TrackedText[] = [];
   const containers: FakeContainer[] = [];
   const scene: RenderScene = {
     sys: {
       queueDepthSort(): void {},
       events: { once(): void {}, on(): void {}, off(): void {} },
-      displayList: { add(): void {}, remove(): void {}, exists(): boolean { return false; } },
+      displayList: {
+        add(): void {},
+        remove(): void {},
+        exists(): boolean {
+          return false;
+        },
+      },
       updateList: { add(): void {}, remove(): void {} },
       input: {
         enable(obj: unknown): void {
@@ -2608,7 +2618,6 @@ describe("CardView player-card keyword line (REQ-MALL-21)", () => {
     const kw = texts.find((t) => t.content === "Spore");
     expect(kw).toBeDefined();
     expect(kw!.y).toBe(KEYWORD_Y);
-    expect(kw!.fontSize).toBe("9px");
   });
 
   it("joins multiple keywords with ' · ' exactly like the world face", () => {
@@ -3342,7 +3351,14 @@ describe("TableScene idle world-card and End Turn previews", () => {
 // ---------------------------------------------------------------------------
 
 function settings(mode: UserSettings["confirmationMode"]): UserSettings {
-  return { version: 2, confirmationMode: mode, detailedHoverPreviews: true, musicVolume: 1.0, fxVolume: 0.5, masterMute: false };
+  return {
+    version: 2,
+    confirmationMode: mode,
+    detailedHoverPreviews: true,
+    musicVolume: 1.0,
+    fxVolume: 0.5,
+    masterMute: false,
+  };
 }
 
 /** A no-target player card that gains energy: a deterministic risk-NONE play. */

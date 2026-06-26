@@ -2,6 +2,7 @@ import Phaser from "phaser";
 import type { TooltipCopy } from "../../core/view/effectTooltips";
 import { CANVAS_H, CANVAS_W } from "./layout";
 import { TEXT, textStyle } from "./presentation";
+import { FONTS } from "./fonts";
 
 const TOOLTIP_DEPTH = 2000;
 const TOOLTIP_DELAY_MS = 450;
@@ -45,6 +46,7 @@ export class TooltipView extends Phaser.GameObjects.Container {
       TOOLTIP_PAD_Y,
       "",
       textStyle({
+        fontFamily: FONTS.ui,
         fontSize: "12px",
         color: TEXT.textKeyword,
         fontStyle: "bold",
@@ -58,6 +60,7 @@ export class TooltipView extends Phaser.GameObjects.Container {
       TOOLTIP_PAD_Y,
       "",
       textStyle({
+        fontFamily: FONTS.body,
         fontSize: "11px",
         color: TEXT.textLight,
         wordWrap: { width: TOOLTIP_MAX_W },

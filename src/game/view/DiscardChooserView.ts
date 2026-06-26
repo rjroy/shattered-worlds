@@ -30,6 +30,7 @@ import Phaser from "phaser";
 import type { Card } from "../../core/index";
 import { CANVAS_H, CANVAS_W, TABLE_LAYOUT } from "./layout";
 import { textStyle, getRealityPalette, TEXT } from "./presentation";
+import { FONTS } from "./fonts";
 import type { VisualTheme } from "./themes/theme";
 
 export interface DiscardChooserOption {
@@ -147,6 +148,7 @@ export class DiscardChooserView extends Phaser.GameObjects.Container {
       96,
       "Mark the Shelf",
       textStyle({
+        fontFamily: FONTS.title,
         fontSize: "22px",
         color: getRealityPalette(config.theme, "title"),
         fontStyle: "bold",
@@ -163,6 +165,7 @@ export class DiscardChooserView extends Phaser.GameObjects.Container {
       `Choose ${range} ${noun} from your discard to return to the top of your deck.` +
         (config.min === 0 ? " (optional)" : ""),
       textStyle({
+        fontFamily: FONTS.body,
         fontSize: "13px",
         color: getRealityPalette(config.theme, "text"),
         align: "center",
@@ -231,14 +234,19 @@ export class DiscardChooserView extends Phaser.GameObjects.Container {
         CANVAS_W / 2,
         LIST_TOP + windowH - 4,
         `${start}–${end} of ${this.config.cards.length}`,
-        textStyle({ fontSize: "11px", color: TEXT.textMuted }),
+        textStyle({ fontFamily: FONTS.body, fontSize: "11px", color: TEXT.textMuted }),
       )
       .setOrigin(0.5, 0.5);
     list.add(count);
 
     if (this.scrollOffset > 0) {
       const up = scene.add
-        .text(ARROW_X, LIST_TOP + 6, "▲", textStyle({ fontSize: "14px", color: accent }))
+        .text(
+          ARROW_X,
+          LIST_TOP + 6,
+          "▲",
+          textStyle({ fontFamily: FONTS.monospace, fontSize: "14px", color: accent }),
+        )
         .setOrigin(0.5, 0)
         .setInteractive({ useHandCursor: true })
         .on("pointerdown", () => this.scrollBy(-1));
@@ -246,7 +254,12 @@ export class DiscardChooserView extends Phaser.GameObjects.Container {
     }
     if (this.scrollOffset < this.maxOffset) {
       const down = scene.add
-        .text(ARROW_X, LIST_TOP + windowH - 22, "▼", textStyle({ fontSize: "14px", color: accent }))
+        .text(
+          ARROW_X,
+          LIST_TOP + windowH - 22,
+          "▼",
+          textStyle({ fontFamily: FONTS.monospace, fontSize: "14px", color: accent }),
+        )
         .setOrigin(0.5, 0)
         .setInteractive({ useHandCursor: true })
         .on("pointerdown", () => this.scrollBy(1));
@@ -291,7 +304,12 @@ export class DiscardChooserView extends Phaser.GameObjects.Container {
       left + 6 + INSET_SLOT_W + 10,
       y + ROW_H / 2,
       `${cardCost(card)}`,
-      textStyle({ fontSize: "15px", color: TEXT.textCost, fontStyle: "bold" }),
+      textStyle({
+        fontFamily: FONTS.monospace,
+        fontSize: "15px",
+        color: TEXT.textCost,
+        fontStyle: "bold",
+      }),
     );
     cost.setOrigin(0, 0.5);
     list.add(cost);
@@ -300,7 +318,11 @@ export class DiscardChooserView extends Phaser.GameObjects.Container {
       left + 6 + INSET_SLOT_W + 34,
       y + ROW_H / 2,
       card.name,
-      textStyle({ fontSize: "15px", color: getRealityPalette(this.config.theme, "title") }),
+      textStyle({
+        fontFamily: FONTS.body,
+        fontSize: "15px",
+        color: getRealityPalette(this.config.theme, "title"),
+      }),
     );
     name.setOrigin(0, 0.5);
     list.add(name);
@@ -311,7 +333,12 @@ export class DiscardChooserView extends Phaser.GameObjects.Container {
         left + rowW - 10,
         y + ROW_H / 2,
         state,
-        textStyle({ fontSize: "11px", color: TEXT.textHeld, fontStyle: "italic" }),
+        textStyle({
+          fontFamily: FONTS.body,
+          fontSize: "11px",
+          color: TEXT.textHeld,
+          fontStyle: "italic",
+        }),
       );
       stateText.setOrigin(1, 0.5);
       list.add(stateText);
@@ -333,6 +360,7 @@ export class DiscardChooserView extends Phaser.GameObjects.Container {
         y,
         "Confirm",
         textStyle({
+          fontFamily: FONTS.ui,
           fontSize: "15px",
           color: getRealityPalette(this.config.theme, "confirm"),
           fontStyle: "bold",
@@ -355,6 +383,7 @@ export class DiscardChooserView extends Phaser.GameObjects.Container {
         y,
         "Cancel",
         textStyle({
+          fontFamily: FONTS.ui,
           fontSize: "15px",
           color: getRealityPalette(this.config.theme, "cancel"),
           fontStyle: "bold",

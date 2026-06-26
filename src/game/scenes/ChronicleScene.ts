@@ -9,6 +9,7 @@ import type { RunStatsReader } from "../runtime/runStats";
 import type { StatsTransfer, InspectedStatsImport } from "../runtime/statsTransfer";
 import type { FeatsStore } from "../runtime/featsProfile";
 import { CANVAS_W, CANVAS_H } from "../view/layout";
+import { FONTS } from "../view/fonts";
 import { TEXT, textStyle } from "../view/presentation";
 import { formatDuration } from "../view/format";
 import { addScreenBackdrop } from "../view/screenBackdrop";
@@ -67,6 +68,7 @@ export class ChronicleScene extends Phaser.Scene {
       24,
       "Chronicle",
       textStyle({
+        fontFamily: FONTS.title,
         fontSize: "32px",
         color: "#d6b15c",
         fontStyle: "bold",
@@ -83,6 +85,7 @@ export class ChronicleScene extends Phaser.Scene {
         560,
         "",
         textStyle({
+          fontFamily: FONTS.body,
           fontSize: "13px",
           color: TEXT.textPenalty,
           align: "center",
@@ -137,6 +140,7 @@ export class ChronicleScene extends Phaser.Scene {
         -8,
         label,
         textStyle({
+          fontFamily: FONTS.ui,
           fontSize: "14px",
           color: "#d6b15c",
           fontStyle: "bold",
@@ -163,6 +167,7 @@ export class ChronicleScene extends Phaser.Scene {
             285,
             "Nothing is written yet. Step through a Door.",
             textStyle({
+              fontFamily: FONTS.title,
               fontSize: "24px",
               color: TEXT.textMuted,
               fontStyle: "italic",
@@ -249,7 +254,12 @@ export class ChronicleScene extends Phaser.Scene {
 
       if (this.worldsScrollOffset > 0) {
         const upArrow = this.add
-          .text(840, 287, "▲", textStyle({ fontSize: "16px", color: "#d6b15c" }))
+          .text(
+            840,
+            287,
+            "▲",
+            textStyle({ fontFamily: FONTS.monospace, fontSize: "16px", color: "#d6b15c" }),
+          )
           .setInteractive({ useHandCursor: true })
           .on("pointerdown", () => this.scrollWorldsBy(-1));
         upArrow.on("pointerover", () => upArrow.setAlpha(0.7));
@@ -259,7 +269,12 @@ export class ChronicleScene extends Phaser.Scene {
 
       if (this.worldsScrollOffset < maxOffset) {
         const downArrow = this.add
-          .text(840, 412, "▼", textStyle({ fontSize: "16px", color: "#d6b15c" }))
+          .text(
+            840,
+            412,
+            "▼",
+            textStyle({ fontFamily: FONTS.monospace, fontSize: "16px", color: "#d6b15c" }),
+          )
           .setInteractive({ useHandCursor: true })
           .on("pointerdown", () => this.scrollWorldsBy(1));
         downArrow.on("pointerover", () => downArrow.setAlpha(0.7));
@@ -397,7 +412,12 @@ export class ChronicleScene extends Phaser.Scene {
 
       if (this.featsScrollOffset > 0) {
         const upArrow = this.add
-          .text(840, 133, "▲", textStyle({ fontSize: "16px", color: "#d6b15c" }))
+          .text(
+            840,
+            133,
+            "▲",
+            textStyle({ fontFamily: FONTS.monospace, fontSize: "16px", color: "#d6b15c" }),
+          )
           .setInteractive({ useHandCursor: true })
           .on("pointerdown", () => this.scrollFeatsBy(-1));
         upArrow.on("pointerover", () => upArrow.setAlpha(0.7));
@@ -411,7 +431,7 @@ export class ChronicleScene extends Phaser.Scene {
             840,
             133 + 32 * VISIBLE_FEATS,
             "▼",
-            textStyle({ fontSize: "16px", color: "#d6b15c" }),
+            textStyle({ fontFamily: FONTS.monospace, fontSize: "16px", color: "#d6b15c" }),
           )
           .setInteractive({ useHandCursor: true })
           .on("pointerdown", () => this.scrollFeatsBy(1));
@@ -546,6 +566,7 @@ export class ChronicleScene extends Phaser.Scene {
       y,
       value,
       textStyle({
+        fontFamily: FONTS.monospace,
         fontSize: `${size}px`,
         color,
         fontStyle: bold ? "bold" : "",
@@ -577,6 +598,7 @@ export class ChronicleScene extends Phaser.Scene {
       y,
       value,
       textStyle({
+        fontFamily: bold ? FONTS.ui : FONTS.body,
         fontSize: `${size}px`,
         color,
         fontStyle: bold ? "bold" : "",
@@ -652,6 +674,7 @@ export class ChronicleScene extends Phaser.Scene {
           .filter(Boolean)
           .join("\n"),
         textStyle({
+          fontFamily: FONTS.body,
           fontSize: "18px",
           color: TEXT.textLight,
           align: "center",
@@ -691,6 +714,7 @@ export class ChronicleScene extends Phaser.Scene {
         -8,
         label,
         textStyle({
+          fontFamily: FONTS.ui,
           fontSize: "14px",
           color: "#d6b15c",
           fontStyle: "bold",

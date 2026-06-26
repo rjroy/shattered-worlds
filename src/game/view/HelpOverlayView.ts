@@ -1,6 +1,7 @@
 import Phaser from "phaser";
 import { textStyle, TEXT } from "./presentation";
 import { CANVAS_W, CANVAS_H } from "./layout";
+import { FONTS } from "./fonts";
 import { WORLD_CONSTS } from "../../core/engine/world";
 import { worldDisplayManifest } from "../../data/worldDisplayManifest";
 import { worldHelpManifest } from "../../data/worldHelpManifest";
@@ -57,6 +58,7 @@ export class HelpOverlayView extends Phaser.GameObjects.Container {
       -265,
       "HELP",
       textStyle({
+        fontFamily: FONTS.ui,
         fontSize: "11px",
         color: TEXT.textKeyword,
         fontStyle: "bold",
@@ -73,7 +75,7 @@ export class HelpOverlayView extends Phaser.GameObjects.Container {
       originX = 0,
       originY = 0,
     ): Phaser.GameObjects.Text {
-      const obj = scene.add.text(x, y, text, textStyle(style));
+      const obj = scene.add.text(x, y, text, textStyle({ fontFamily: FONTS.body, ...style }));
       obj.setOrigin(originX, originY);
       parent.add(obj);
       return obj;
@@ -333,6 +335,7 @@ export class HelpOverlayView extends Phaser.GameObjects.Container {
         y - 9,
         n,
         {
+          fontFamily: FONTS.ui,
           fontSize: "14px",
           color: TEXT.textKeyword,
           fontStyle: "bold",
@@ -414,6 +417,7 @@ export class HelpOverlayView extends Phaser.GameObjects.Container {
         -7,
         label,
         textStyle({
+          fontFamily: FONTS.ui,
           fontSize: "11px",
           color: TEXT.textMuted,
           fontStyle: "bold",
@@ -910,6 +914,7 @@ export class HelpOverlayView extends Phaser.GameObjects.Container {
 
       const page = scene.add.container(0, 0);
       addText(page, -380, -240, spec.title, {
+        fontFamily: FONTS.title,
         fontSize: "20px",
         color: TEXT.textLight,
         fontStyle: "bold",
@@ -935,6 +940,7 @@ export class HelpOverlayView extends Phaser.GameObjects.Container {
       -265,
       "×",
       textStyle({
+        fontFamily: FONTS.monospace,
         fontSize: "20px",
         color: TEXT.textLight,
       }),
@@ -948,6 +954,7 @@ export class HelpOverlayView extends Phaser.GameObjects.Container {
       255,
       "‹ Previous",
       textStyle({
+        fontFamily: FONTS.ui,
         fontSize: "14px",
         color: TEXT.textMuted,
       }),
@@ -961,6 +968,7 @@ export class HelpOverlayView extends Phaser.GameObjects.Container {
       255,
       "Next ›",
       textStyle({
+        fontFamily: FONTS.ui,
         fontSize: "14px",
         color: TEXT.textMuted,
       }),

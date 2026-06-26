@@ -14,6 +14,7 @@ import type { FeatsStore } from "../runtime/featsProfile";
 import type { UnlocksStore } from "../runtime/unlocksProfile";
 import { unlockCardState } from "../view/unlockShop";
 import { CANVAS_W, CANVAS_H } from "../view/layout";
+import { FONTS } from "../view/fonts";
 import { TEXT, textStyle } from "../view/presentation";
 import { addScreenBackdrop } from "../view/screenBackdrop";
 
@@ -66,6 +67,7 @@ export class DestinyScene extends Phaser.Scene {
       24,
       "Destiny",
       textStyle({
+        fontFamily: FONTS.title,
         fontSize: "32px",
         color: "#d6b15c",
         fontStyle: "bold",
@@ -79,6 +81,7 @@ export class DestinyScene extends Phaser.Scene {
         560,
         "",
         textStyle({
+          fontFamily: FONTS.body,
           fontSize: "13px",
           color: TEXT.textPenalty,
           align: "center",
@@ -119,6 +122,7 @@ export class DestinyScene extends Phaser.Scene {
             300,
             "Destiny is quiet.",
             textStyle({
+              fontFamily: FONTS.title,
               fontSize: "22px",
               color: TEXT.textMuted,
               fontStyle: "italic",
@@ -173,7 +177,12 @@ export class DestinyScene extends Phaser.Scene {
       this.addText(775, 82, pageLabel, 11, TEXT.textMuted);
       if (this.scrollOffset > 0) {
         const up = this.add
-          .text(842, GRID_TOP, "▲", textStyle({ fontSize: "13px", color: "#d6b15c" }))
+          .text(
+            842,
+            GRID_TOP,
+            "▲",
+            textStyle({ fontFamily: FONTS.monospace, fontSize: "13px", color: "#d6b15c" }),
+          )
           .setInteractive({ useHandCursor: true })
           .on("pointerdown", () => this.scrollBy(-1));
         this.addToContent(up);
@@ -184,7 +193,7 @@ export class DestinyScene extends Phaser.Scene {
             842,
             GRID_TOP + VISIBLE_ROWS * (CARD_H + GRID_GAP_Y) - 28,
             "▼",
-            textStyle({ fontSize: "13px", color: "#d6b15c" }),
+            textStyle({ fontFamily: FONTS.monospace, fontSize: "13px", color: "#d6b15c" }),
           )
           .setInteractive({ useHandCursor: true })
           .on("pointerdown", () => this.scrollBy(1));
@@ -216,7 +225,12 @@ export class DestinyScene extends Phaser.Scene {
       card.add(placeholder);
       card.add(
         this.add
-          .text(50, 42, "✦", textStyle({ fontSize: "22px", color: "#d6b15c" }))
+          .text(
+            50,
+            42,
+            "✦",
+            textStyle({ fontFamily: FONTS.monospace, fontSize: "22px", color: "#d6b15c" }),
+          )
           .setOrigin(0.5, 0.5),
       );
     }
@@ -226,6 +240,7 @@ export class DestinyScene extends Phaser.Scene {
       14,
       def.name,
       textStyle({
+        fontFamily: FONTS.title,
         fontSize: "15px",
         color: TEXT.textWorldTitle,
         fontStyle: "bold",
@@ -245,6 +260,7 @@ export class DestinyScene extends Phaser.Scene {
           15,
           "●".repeat(def.destinyWeight),
           textStyle({
+            fontFamily: FONTS.monospace,
             fontSize: "13px",
             color: "#d6b15c",
           }),
@@ -256,6 +272,7 @@ export class DestinyScene extends Phaser.Scene {
       38,
       effectSummary(def),
       textStyle({
+        fontFamily: FONTS.body,
         fontSize: "12px",
         color: TEXT.textReward,
         wordWrap: { width: 246 },
@@ -272,6 +289,7 @@ export class DestinyScene extends Phaser.Scene {
       56,
       def.description,
       textStyle({
+        fontFamily: FONTS.body,
         fontSize: "11px",
         color: TEXT.textMuted,
         fontStyle: "italic",
@@ -290,6 +308,7 @@ export class DestinyScene extends Phaser.Scene {
         98,
         `✦ ${def.cost}`,
         textStyle({
+          fontFamily: FONTS.monospace,
           fontSize: "12px",
           color: TEXT.textLight,
           fontStyle: "bold",
@@ -305,6 +324,7 @@ export class DestinyScene extends Phaser.Scene {
           96,
           worldUnlock ? "✓ unlocked" : "✓ owned",
           textStyle({
+            fontFamily: FONTS.ui,
             fontSize: "12px",
             color: TEXT.textReward,
             fontStyle: "bold",
@@ -323,6 +343,7 @@ export class DestinyScene extends Phaser.Scene {
           96,
           "locked",
           textStyle({
+            fontFamily: FONTS.ui,
             fontSize: "12px",
             color: TEXT.textMuted,
           }),
@@ -347,6 +368,7 @@ export class DestinyScene extends Phaser.Scene {
       96,
       label,
       textStyle({
+        fontFamily: FONTS.ui,
         fontSize: "12px",
         color,
         fontStyle: active ? "bold" : "",
@@ -390,6 +412,7 @@ export class DestinyScene extends Phaser.Scene {
         -52,
         `Buy ${def.name} for ✦ ${def.cost}?`,
         textStyle({
+          fontFamily: FONTS.body,
           fontSize: "18px",
           color: TEXT.textLight,
           align: "center",
@@ -474,6 +497,7 @@ export class DestinyScene extends Phaser.Scene {
         -8,
         label,
         textStyle({
+          fontFamily: FONTS.ui,
           fontSize: "14px",
           color: "#d6b15c",
           fontStyle: "bold",
@@ -504,6 +528,7 @@ export class DestinyScene extends Phaser.Scene {
         -7,
         label,
         textStyle({
+          fontFamily: FONTS.ui,
           fontSize: "12px",
           color: "#d6b15c",
           fontStyle: "bold",
@@ -532,6 +557,7 @@ export class DestinyScene extends Phaser.Scene {
         -8,
         label,
         textStyle({
+          fontFamily: FONTS.ui,
           fontSize: "14px",
           color: "#d6b15c",
           fontStyle: "bold",
@@ -564,6 +590,7 @@ export class DestinyScene extends Phaser.Scene {
         y,
         value,
         textStyle({
+          fontFamily: bold ? FONTS.ui : FONTS.body,
           fontSize: `${size}px`,
           color,
           fontStyle: bold ? "bold" : "",

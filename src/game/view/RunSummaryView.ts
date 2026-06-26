@@ -4,6 +4,7 @@ import type { RunOutcome } from '../runtime/gameplayEventStream'
 import type { RunRecordRecords } from '../runtime/runStats'
 import type { FeatDefinition } from '../../data/feats/types'
 import { CANVAS_W, CANVAS_H } from './layout'
+import { FONTS } from './fonts'
 import { textStyle, TEXT } from './presentation'
 import { formatDuration } from './format'
 
@@ -89,6 +90,7 @@ export class RunSummaryView extends Phaser.GameObjects.Container {
     this.add(frame)
 
     const title = this.scene.add.text(0, -178, titleForOutcome(data.outcome), textStyle({
+      fontFamily: FONTS.title,
       fontSize: '34px',
       color: colorForOutcome(data.outcome),
       fontStyle: 'bold',
@@ -98,6 +100,7 @@ export class RunSummaryView extends Phaser.GameObjects.Container {
     const contextParts = [`${data.worldName}`, `Run ${data.runNumber}`]
     if (data.worldWins > 0) contextParts.push(`${data.worldWins} wins on this world`)
     const context = this.scene.add.text(0, -139, contextParts.join('  |  '), textStyle({
+      fontFamily: FONTS.body,
       fontSize: '15px',
       color: TEXT.textMuted,
     })).setOrigin(0.5, 0.5)
@@ -117,10 +120,12 @@ export class RunSummaryView extends Phaser.GameObjects.Container {
     rows.forEach(([label, value], index) => {
       const y = -92 + index * 28
       const labelText = this.scene.add.text(-220, y, label, textStyle({
+        fontFamily: FONTS.body,
         fontSize: '15px',
         color: TEXT.textMuted,
       })).setOrigin(0, 0.5)
       const valueText = this.scene.add.text(220, y, value, textStyle({
+        fontFamily: FONTS.ui,
         fontSize: '15px',
         color: TEXT.textLight,
         fontStyle: 'bold',
@@ -134,6 +139,7 @@ export class RunSummaryView extends Phaser.GameObjects.Container {
     ]
     if (recordLabels.length > 0) {
       const recordText = this.scene.add.text(0, 142, recordLabels.join('  |  '), textStyle({
+        fontFamily: FONTS.ui,
         fontSize: '16px',
         color: TEXT.textReward,
         fontStyle: 'bold',
@@ -155,10 +161,10 @@ export class RunSummaryView extends Phaser.GameObjects.Container {
         const fragments = def.reward.items.reduce((sum, item) =>
           item.type === 'memoryFragments' ? sum + item.amount : sum, 0)
         const nameText = this.scene.add.text(-220, y, def.name, textStyle({
-          fontSize: '14px', color: TEXT.textReward, fontStyle: 'bold',
+          fontFamily: FONTS.ui, fontSize: '14px', color: TEXT.textReward, fontStyle: 'bold',
         })).setOrigin(0, 0.5)
         const rewardText = this.scene.add.text(220, y, `+${fragments} Fragments`, textStyle({
-          fontSize: '14px', color: TEXT.textReward, fontStyle: 'bold',
+          fontFamily: FONTS.ui, fontSize: '14px', color: TEXT.textReward, fontStyle: 'bold',
         })).setOrigin(1, 0.5)
         this.add([nameText, rewardText])
       })
@@ -166,6 +172,7 @@ export class RunSummaryView extends Phaser.GameObjects.Container {
       if (overflow > 0) {
         const y = anchor + 28 + capped.length * 22
         const moreText = this.scene.add.text(0, y, `+ ${overflow} more`, textStyle({
+          fontFamily: FONTS.body,
           fontSize: '14px', color: TEXT.textMuted,
         })).setOrigin(0.5, 0.5)
         this.add(moreText)
@@ -188,6 +195,7 @@ export class RunSummaryView extends Phaser.GameObjects.Container {
     }
 
     const continueText = this.scene.add.text(0, continueY, 'Tap to continue', textStyle({
+      fontFamily: FONTS.ui,
       fontSize: '16px',
       color: '#d6b15c',
       fontStyle: 'bold',

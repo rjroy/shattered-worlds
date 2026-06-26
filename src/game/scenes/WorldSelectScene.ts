@@ -8,6 +8,7 @@ import type { RunStatsReader } from "../runtime/runStats";
 import type { UnlocksStore } from "../runtime/unlocksProfile";
 import { selectTheme } from "../view/themes/themeManifest";
 import { textStyle, TEXT } from "../view/presentation";
+import { FONTS } from "../view/fonts";
 import { CANVAS_W, CANVAS_H, WORLD_SELECT_LAYOUT } from "../view/layout";
 import { worldBadgeLabel } from "../view/worldBadge";
 import { HelpOverlayView } from "../view/HelpOverlayView";
@@ -83,6 +84,7 @@ export class WorldSelectScene extends Phaser.Scene {
         SUBTITLE_Y,
         "Choose your shard",
         textStyle({
+          fontFamily: FONTS.title,
           fontSize: "20px",
           fontStyle: "italic",
           color: TEXT.textWorldTag,
@@ -131,6 +133,7 @@ export class WorldSelectScene extends Phaser.Scene {
         -8,
         "Chronicle",
         textStyle({
+          fontFamily: FONTS.title,
           fontSize: "15px",
           color: "#d6b15c",
           fontStyle: "bold",
@@ -157,6 +160,7 @@ export class WorldSelectScene extends Phaser.Scene {
         -8,
         "Destiny",
         textStyle({
+          fontFamily: FONTS.title,
           fontSize: "15px",
           color: "#d6b15c",
           fontStyle: "bold",
@@ -183,6 +187,7 @@ export class WorldSelectScene extends Phaser.Scene {
         -9,
         "?",
         textStyle({
+          fontFamily: FONTS.monospace,
           fontSize: "20px",
           color: "#d6b15c",
           fontStyle: "bold",
@@ -209,6 +214,7 @@ export class WorldSelectScene extends Phaser.Scene {
         -9,
         "S",
         textStyle({
+          fontFamily: FONTS.monospace,
           fontSize: "20px",
           color: "#d6b15c",
           fontStyle: "bold",
@@ -328,6 +334,7 @@ export class WorldSelectScene extends Phaser.Scene {
         -3,
         label,
         textStyle({
+          fontFamily: FONTS.monospace,
           fontSize: "46px",
           color: TEXT.textWorldTitle,
           fontStyle: "bold",
@@ -431,6 +438,7 @@ export class WorldSelectScene extends Phaser.Scene {
         -CARD_H / 2 + WORLD_SELECT_LAYOUT.nameY,
         display.name,
         textStyle({
+          fontFamily: FONTS.ui,
           fontSize: "17px",
           color: TEXT.textWorldTitle,
           fontStyle: "bold",
@@ -455,7 +463,8 @@ export class WorldSelectScene extends Phaser.Scene {
         tagLineY,
         display.tagline,
         textStyle({
-          fontSize: "12px",
+          fontFamily: FONTS.ui,
+          fontSize: "14px",
           color: TEXT.textWorldTag,
           fontStyle: "italic",
           align: "center",
@@ -479,7 +488,8 @@ export class WorldSelectScene extends Phaser.Scene {
         storyLineY,
         display.story,
         textStyle({
-          fontSize: "12px",
+          fontFamily: FONTS.ui,
+          fontSize: "13px",
           color: TEXT.textWorldStory,
           align: "center",
           wordWrap: { width: CARD_W - WORLD_SELECT_LAYOUT.textPadding },
@@ -510,7 +520,7 @@ export class WorldSelectScene extends Phaser.Scene {
     ];
     const badge = worldBadgeLabel(this.runStats?.lifetime().byWorld[worldId]);
     if (badge !== null) {
-      const badgeBg = this.add.rectangle(CARD_W / 2 - 48, CARD_H / 2 - 28, 70, 26, 0x0b0710, 0.88);
+      const badgeBg = this.add.rectangle(CARD_W / 2 - 48, CARD_H / 2 - 28, 74, 26, 0x0b0710, 0.88);
       badgeBg.setStrokeStyle(1, accentColor, 0.8);
       badgeBg.setRounded(8);
       const badgeText = this.add
@@ -519,6 +529,7 @@ export class WorldSelectScene extends Phaser.Scene {
           CARD_H / 2 - 36,
           badge,
           textStyle({
+            fontFamily: FONTS.monospace,
             fontSize: "13px",
             color: TEXT.textLight,
             fontStyle: "bold",
@@ -536,6 +547,7 @@ export class WorldSelectScene extends Phaser.Scene {
           CARD_H / 2 - 38,
           `Locked - Destiny${lockState.cost === null ? "" : ` ${lockState.cost} Fragments`}`,
           textStyle({
+            fontFamily: FONTS.ui,
             fontSize: "13px",
             color: "#f2d68a",
             fontStyle: "bold",

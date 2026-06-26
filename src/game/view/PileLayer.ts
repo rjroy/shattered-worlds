@@ -10,6 +10,7 @@
  */
 import Phaser from "phaser";
 import { textStyle, TEXT } from "./presentation";
+import { FONTS } from "./fonts";
 import { CommonLabel } from "./components";
 import { PILE_LAYOUT } from "./layout";
 import { addTooltip } from "./TooltipView";
@@ -94,7 +95,8 @@ export class PileLayer {
       PILE_LAYOUT.labelY,
       `${str}: ${count}`,
       textStyle({
-        fontSize: "10px",
+        fontFamily: FONTS.body,
+        fontSize: "12px",
         color: TEXT.textMuted,
       }),
     );
