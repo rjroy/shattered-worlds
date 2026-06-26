@@ -100,7 +100,7 @@ export class HUDView extends Phaser.GameObjects.Container {
     // The textured panel supplies the dark backing, so the labels no longer carry
     // their own translucent-black backgroundColor.
     const style = textStyle({
-      fontFamily: "Courier New",
+      fontFamily: "Courier",
       fontSize: "16px",
       fontStyle: "bold",
       color: TEXT.textLight,

@@ -100,6 +100,7 @@ export const EFFECT_ICON_PLACEHOLDERS: Record<IconId, IconPlaceholderSpec> = {
 
 /** Font size + horizontal indent for one compiled line. */
 export interface EffectLineStyle {
+  fontFamily: string;
   fontSize: number;
   /** Px the centred row shifts right of the block's centre line. */
   indent: number;
@@ -146,13 +147,14 @@ export function effectLineStyles(
     const hang = index > 0 ? geometry.hangIndent : 0;
     if (line.role === "rider") {
       styles.push({
+        fontFamily: "Helvetica",
         fontSize: geometry.riderFontSize,
         indent: Math.max(owningIndent, hang),
       });
       return;
     }
     const indent = hang + (line.role === "branch" ? geometry.branchIndent : 0);
-    styles.push({ fontSize: geometry.baseFontSize, indent });
+    styles.push({ fontFamily: "Helvetica", fontSize: geometry.baseFontSize, indent });
     owningIndent = indent;
   });
   return styles;
