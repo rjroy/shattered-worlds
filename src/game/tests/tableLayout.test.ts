@@ -14,17 +14,17 @@ import {
 
 describe('rowCardPositions', () => {
   it('returns no positions for an empty row', () => {
-    expect(rowCardPositions(0, TABLE_LAYOUT.handRowY)).toEqual([])
+    expect(rowCardPositions(true, 0, TABLE_LAYOUT.handRowY)).toEqual([])
   })
 
   it('centers a single card on the row', () => {
-    expect(rowCardPositions(1, TABLE_LAYOUT.handRowY)).toEqual([
+    expect(rowCardPositions(true, 1, TABLE_LAYOUT.handRowY)).toEqual([
       { x: TABLE_LAYOUT.rowCenterX, y: TABLE_LAYOUT.handRowY },
     ])
   })
 
   it('uses natural spacing while the row fits', () => {
-    const positions = rowCardPositions(3, TABLE_LAYOUT.worldRowY)
+    const positions = rowCardPositions(false, 3, TABLE_LAYOUT.worldRowY)
 
     expect(positions).toEqual([
       { x: TABLE_LAYOUT.rowCenterX - TABLE_LAYOUT.cardSpacing, y: TABLE_LAYOUT.worldRowY },
@@ -34,7 +34,7 @@ describe('rowCardPositions', () => {
   })
 
   it('compresses wide rows to fit inside the table bounds', () => {
-    const positions = rowCardPositions(6, TABLE_LAYOUT.handRowY)
+    const positions = rowCardPositions(false, 6, TABLE_LAYOUT.worldRowY)
     const maxWidth = CANVAS_W - TABLE_LAYOUT.cardSpacing - TABLE_LAYOUT.rowWidthPadding
 
     expect(positions[0]!.x).toBeCloseTo(TABLE_LAYOUT.rowCenterX - maxWidth / 2)
@@ -45,7 +45,7 @@ describe('rowCardPositions', () => {
 
 describe('rowWindowLayout', () => {
   it('returns an empty first window for an empty row', () => {
-    expect(rowWindowLayout([], 0, TABLE_LAYOUT.handRowY)).toEqual({
+    expect(rowWindowLayout(true, [], 0, TABLE_LAYOUT.handRowY)).toEqual({
       totalCount: 0,
       visibleLimit: ROW_WINDOW_VISIBLE_LIMIT,
       requestedOffset: 0,
@@ -62,7 +62,7 @@ describe('rowWindowLayout', () => {
   })
 
   it('keeps a one-card row centered without overflow', () => {
-    const layout = rowWindowLayout(['card-1'], 3, TABLE_LAYOUT.handRowY)
+    const layout = rowWindowLayout(true, ['card-1'], 3, TABLE_LAYOUT.handRowY)
 
     expect(layout.offset).toBe(0)
     expect(layout.visibleIds).toEqual(['card-1'])
@@ -72,10 +72,10 @@ describe('rowWindowLayout', () => {
   })
 
   it('keeps a five-card row centered at natural spacing without overflow', () => {
-    const layout = rowWindowLayout(['c1', 'c2', 'c3', 'c4', 'c5'], 0, TABLE_LAYOUT.worldRowY)
+    const layout = rowWindowLayout(false, ['c1', 'c2', 'c3', 'c4', 'c5'], 0, TABLE_LAYOUT.worldRowY)
 
     expect(layout.visibleIds).toEqual(['c1', 'c2', 'c3', 'c4', 'c5'])
-    expect(layout.positions).toEqual(rowCardPositions(5, TABLE_LAYOUT.worldRowY))
+    expect(layout.positions).toEqual(rowCardPositions(false, 5, TABLE_LAYOUT.worldRowY))
     expect(layout.rangeLabel).toBe('1-5 of 5')
     expect(layout.hasOverflow).toBe(false)
     expect(layout.canPageBackward).toBe(false)
@@ -83,10 +83,10 @@ describe('rowWindowLayout', () => {
   })
 
   it('windows a six-card overflow row at the readable visible limit', () => {
-    const layout = rowWindowLayout(['c1', 'c2', 'c3', 'c4', 'c5', 'c6'], 0, TABLE_LAYOUT.handRowY)
+    const layout = rowWindowLayout(true, ['c1', 'c2', 'c3', 'c4', 'c5', 'c6'], 0, TABLE_LAYOUT.handRowY)
 
     expect(layout.visibleIds).toEqual(['c1', 'c2', 'c3', 'c4', 'c5'])
-    expect(layout.positions).toEqual(rowCardPositions(5, TABLE_LAYOUT.handRowY))
+    expect(layout.positions).toEqual(rowCardPositions(true, 5, TABLE_LAYOUT.handRowY))
     expect(layout.rangeLabel).toBe('1-5 of 6')
     expect(layout.hasOverflow).toBe(true)
     expect(layout.canPageBackward).toBe(false)
@@ -95,7 +95,7 @@ describe('rowWindowLayout', () => {
 
   it('preserves stable order and labels middle windows in twenty-plus-card overflow rows', () => {
     const ids = Array.from({ length: 23 }, (_, i) => `card-${i + 1}`)
-    const layout = rowWindowLayout(ids, 5, TABLE_LAYOUT.worldRowY)
+    const layout = rowWindowLayout(false, ids, 5, TABLE_LAYOUT.worldRowY)
 
     expect(layout.offset).toBe(5)
     expect(layout.startIndex).toBe(5)
@@ -109,7 +109,7 @@ describe('rowWindowLayout', () => {
 
   it('clamps windows past the end to the last readable slice', () => {
     const ids = Array.from({ length: 23 }, (_, i) => `card-${i + 1}`)
-    const layout = rowWindowLayout(ids, 999, TABLE_LAYOUT.handRowY)
+    const layout = rowWindowLayout(true, ids, 999, TABLE_LAYOUT.handRowY)
 
     expect(layout.requestedOffset).toBe(999)
     expect(layout.offset).toBe(18)
@@ -185,10 +185,10 @@ describe('row navigation geometry', () => {
     }
   }
 
-  function fiveCardRowExclusion(rowY: number): Rect {
-    const positions = rowCardPositions(5, rowY)
-    const cardHalfWidth = CARD_FACE.width / 2 + TABLE_LAYOUT.rowNav.hoverSafePadding
-    const cardHalfHeight = CARD_FACE.height / 2 + TABLE_LAYOUT.rowNav.hoverSafePadding
+  function fiveCardRowExclusion(isPlayer: boolean, rowY: number, padding: number): Rect {
+    const positions = rowCardPositions(isPlayer, 5, rowY)
+    const cardHalfWidth = CARD_FACE.width / 2 + padding
+    const cardHalfHeight = CARD_FACE.height / 2 + padding
 
     return {
       left: positions[0]!.x - cardHalfWidth,
@@ -203,12 +203,22 @@ describe('row navigation geometry', () => {
   }
 
   it('keeps overflow controls outside five-card hover exclusion zones and away from bottom chrome', () => {
-    const fiveCardPositions = rowCardPositions(5, TABLE_LAYOUT.handRowY)
-    const cardCenterMinX = fiveCardPositions[0]!.x
-    const cardCenterMaxX = fiveCardPositions.at(-1)!.x
-    const cardHalfWidth = CARD_FACE.width / 2
-    const worldExclusion = fiveCardRowExclusion(TABLE_LAYOUT.worldRowY)
-    const playerExclusion = fiveCardRowExclusion(TABLE_LAYOUT.handRowY)
+    const worldFiveCardPositions = rowCardPositions(false, 5, TABLE_LAYOUT.worldRowY)
+    const playerFiveCardPositions = rowCardPositions(true, 5, TABLE_LAYOUT.handRowY)
+    const worldCardCenterMaxX = worldFiveCardPositions.at(-1)!.x
+    const playerCardCenterMinX = playerFiveCardPositions[0]!.x
+    const worldHoverExclusion = fiveCardRowExclusion(
+      false,
+      TABLE_LAYOUT.worldRowY,
+      TABLE_LAYOUT.rowNav.hoverSafePadding,
+    )
+    const playerHoverExclusion = fiveCardRowExclusion(
+      true,
+      TABLE_LAYOUT.handRowY,
+      TABLE_LAYOUT.rowNav.hoverSafePadding,
+    )
+    const worldCardExclusion = fiveCardRowExclusion(false, TABLE_LAYOUT.worldRowY, 0)
+    const playerCardExclusion = fiveCardRowExclusion(true, TABLE_LAYOUT.handRowY, 0)
     const worldLabelRect = centeredRect(
       TABLE_LAYOUT.rowNav.world.labelX,
       TABLE_LAYOUT.rowNav.world.labelY,
@@ -252,16 +262,16 @@ describe('row navigation geometry', () => {
       TABLE_LAYOUT.selectionHint.y,
     )
 
-    expect(TABLE_LAYOUT.rowNav.world.previousX).toBeLessThan(cardCenterMinX - cardHalfWidth)
-    expect(TABLE_LAYOUT.rowNav.world.nextX).toBeGreaterThan(cardCenterMaxX + cardHalfWidth)
-    expect(TABLE_LAYOUT.rowNav.player.previousX).toBeGreaterThan(cardCenterMinX)
-    expect(TABLE_LAYOUT.rowNav.player.nextX).toBeGreaterThan(cardCenterMaxX)
-    expect(intersects(worldLabelRect, worldExclusion)).toBe(false)
-    expect(intersects(playerLabelRect, playerExclusion)).toBe(false)
-    expect(intersects(worldPrevRect, worldExclusion)).toBe(false)
-    expect(intersects(worldNextRect, worldExclusion)).toBe(false)
-    expect(intersects(playerPrevRect, playerExclusion)).toBe(false)
-    expect(intersects(playerNextRect, playerExclusion)).toBe(false)
+    expect(TABLE_LAYOUT.rowNav.world.previousX).toBeGreaterThan(worldCardCenterMaxX)
+    expect(TABLE_LAYOUT.rowNav.world.nextX).toBeGreaterThan(worldCardCenterMaxX)
+    expect(TABLE_LAYOUT.rowNav.player.previousX).toBeLessThan(playerCardCenterMinX)
+    expect(TABLE_LAYOUT.rowNav.player.nextX).toBeLessThan(playerCardCenterMinX)
+    expect(intersects(worldLabelRect, worldHoverExclusion)).toBe(false)
+    expect(intersects(playerLabelRect, playerHoverExclusion)).toBe(false)
+    expect(intersects(worldPrevRect, worldCardExclusion)).toBe(false)
+    expect(intersects(worldNextRect, worldCardExclusion)).toBe(false)
+    expect(intersects(playerPrevRect, playerCardExclusion)).toBe(false)
+    expect(intersects(playerNextRect, playerCardExclusion)).toBe(false)
     expect(intersects(worldPrevRect, playerPrevRect)).toBe(false)
     expect(intersects(worldNextRect, playerNextRect)).toBe(false)
     expect(intersects(worldLabelRect, playerLabelRect)).toBe(false)
