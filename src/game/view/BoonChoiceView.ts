@@ -3,6 +3,7 @@ import type { BoonChoiceSource, Card, CardTemplate, CardTemplateId } from "../..
 import { parseKeyword } from "../../core/index";
 import { CARD_FACE, CANVAS_H, CANVAS_W, TABLE_LAYOUT } from "./layout";
 import { textStyle, getRealityPalette } from "./presentation";
+import { FONTS } from "./fonts";
 import type { VisualTheme } from "./themes/theme";
 import { CardView } from "./CardView";
 
@@ -88,6 +89,7 @@ export class BoonChoiceView extends Phaser.GameObjects.Container {
       108,
       config.title ?? "Choose a boon",
       textStyle({
+        fontFamily: FONTS.title,
         fontSize: "24px",
         color: getRealityPalette(config.theme, "title"),
         fontStyle: "bold",
@@ -104,6 +106,7 @@ export class BoonChoiceView extends Phaser.GameObjects.Container {
           ? "Pick one temporary card. It goes to your discard pile."
           : "Pick one temporary card. It goes directly to your hand."),
       textStyle({
+        fontFamily: FONTS.body,
         fontSize: "14px",
         color: getRealityPalette(config.theme, "text"),
       }),
@@ -122,6 +125,7 @@ export class BoonChoiceView extends Phaser.GameObjects.Container {
         CANVAS_H / 2,
         `Boon templates are missing:\n${missing.join(", ")}`,
         textStyle({
+          fontFamily: FONTS.body,
           fontSize: "16px",
           color: getRealityPalette(config.theme, "cancel"),
           fontStyle: "bold",
@@ -165,6 +169,7 @@ export class BoonChoiceView extends Phaser.GameObjects.Container {
         OPTION_Y + CARD_FACE.height / 2 + 22,
         `${index + 1}`,
         textStyle({
+          fontFamily: FONTS.monospace,
           fontSize: "13px",
           color: getRealityPalette(config.theme, "text"),
           fontStyle: "bold",

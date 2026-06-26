@@ -547,6 +547,7 @@ export class WorldSelectScene extends Phaser.Scene {
           CARD_H / 2 - 38,
           `Locked - Destiny${lockState.cost === null ? "" : ` ${lockState.cost} Fragments`}`,
           textStyle({
+            fontFamily: FONTS.ui,
             fontSize: "13px",
             color: "#f2d68a",
             fontStyle: "bold",

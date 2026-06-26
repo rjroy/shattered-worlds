@@ -120,10 +120,10 @@ function addCardText(
   opts: CardTextOpts,
 ): Phaser.GameObjects.Text[] {
   const style: Phaser.Types.GameObjects.Text.TextStyle = {
+    fontFamily: opts.fontFamily ?? FONTS.body,
     fontSize: opts.fontSize,
     color: opts.color,
   };
-  if (opts.fontFamily) style.fontFamily = opts.fontFamily;
   if (opts.bold === true) style.fontStyle = "bold";
   const text = scene.add.text(x, y, "", textStyle(style));
   text.setOrigin(0.5, opts.originY);

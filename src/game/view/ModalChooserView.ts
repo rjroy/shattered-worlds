@@ -6,6 +6,7 @@
 import Phaser from "phaser";
 import type { VisualTheme } from "./themes/theme";
 import { textStyle, getRealityPalette } from "./presentation";
+import { FONTS } from "./fonts";
 import { TABLE_LAYOUT } from "./layout";
 import { BranchLabel } from "../../core/view/branchLabels";
 
@@ -31,6 +32,7 @@ export class ModalChooserView extends Phaser.GameObjects.Container {
       -80,
       "Choose an effect:",
       textStyle({
+        fontFamily: FONTS.title,
         fontSize: "16px",
         color: getRealityPalette(theme, "title"),
         fontStyle: "bold",
@@ -47,6 +49,7 @@ export class ModalChooserView extends Phaser.GameObjects.Container {
         -80 + (idx + 1) * gap,
         branch.label,
         textStyle({
+          fontFamily: FONTS.body,
           fontSize: "14px",
           color: branch.isLegal
             ? getRealityPalette(theme, "text")
@@ -67,6 +70,7 @@ export class ModalChooserView extends Phaser.GameObjects.Container {
       80,
       "[ Cancel ]",
       textStyle({
+        fontFamily: FONTS.ui,
         fontSize: "13px",
         color: getRealityPalette(theme, "cancel"),
       }),

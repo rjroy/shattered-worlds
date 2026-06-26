@@ -231,7 +231,12 @@ export class HUDView extends Phaser.GameObjects.Container {
   }
 
   private addPowerUp(texture: string): PowerUpIndicator {
-    const style = textStyle({ fontSize: "16px", fontStyle: "bold", color: TEXT.textLight });
+    const style = textStyle({
+      fontFamily: FONTS.monospace,
+      fontSize: "16px",
+      fontStyle: "bold",
+      color: TEXT.textLight,
+    });
     const container = this.scene.add.container(0, 0);
     const icon = this.scene.add
       .image(0, 0, texture)

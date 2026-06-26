@@ -1,6 +1,7 @@
 import Phaser from 'phaser'
 
 import { CANVAS_W, CANVAS_H } from '../view/layout'
+import { FONTS } from '../view/fonts'
 import { textStyle, TEXT } from '../view/presentation'
 
 export class BootScene extends Phaser.Scene {
@@ -12,7 +13,12 @@ export class BootScene extends Phaser.Scene {
   create(): void {
       // subtitle only — logotype is in the image
     this.add.text(CANVAS_W / 2, CANVAS_H / 2, 'Loading...',
-      textStyle({ fontSize: '40px', fontStyle: 'italic', color: TEXT.textWorldTitle }),
+      textStyle({
+        fontFamily: FONTS.title,
+        fontSize: '40px',
+        fontStyle: 'italic',
+        color: TEXT.textWorldTitle,
+      }),
     ).setOrigin(0.5, 0.5)
   }
 

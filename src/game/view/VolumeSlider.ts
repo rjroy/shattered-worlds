@@ -1,5 +1,6 @@
 import Phaser from "phaser";
 import { TEXT, textStyle } from "./presentation";
+import { FONTS } from "./fonts";
 
 // ---------------------------------------------------------------------------
 // Pure slider math — extracted so the mapping logic is unit-testable without
@@ -93,7 +94,7 @@ export class VolumeSlider {
       x + halfW + 12,
       y,
       "",
-      textStyle({ fontSize: "13px", color: TEXT.textMuted }),
+      textStyle({ fontFamily: FONTS.monospace, fontSize: "13px", color: TEXT.textMuted }),
     );
     label.setOrigin(0, 0.5);
     container.add(label).setName("label");
