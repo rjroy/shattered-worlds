@@ -1,5 +1,10 @@
 import { describe, expect, it } from "bun:test";
-import { previewAction } from "../view/actionPreview";
+import {
+  CONCEALED_HOOK_WARNING,
+  DRAWN_HOOK_WARNING,
+  isConcealmentWarning,
+  previewAction,
+} from "../view/actionPreview";
 import {
   catalog,
   makePlayerCard,
@@ -105,6 +110,71 @@ describe("previewAction", () => {
     expect(text).toContain("Make 6 total Progress across 3 hazards");
     expect(text).toContain("Clear 3 hazards");
     expect(text).not.toContain("Partial effects trigger");
+  });
+
+  it("does not leak a world card drawn this action via a same-action DealProgressAll", () => {
+    // Plan = Sequence[Draw {player:3, world:1}, DealProgressAll base:2]. The world
+    // draw pulls the hidden top of worldDraw into hand, where DealProgressAll then
+    // deals it progress. The draw event is masked (revealedFromHidden), but the
+    // resulting ProgressDealt/HazardResolved naming the drawn card would re-expose
+    // the hidden deck order — including the fact that it resolves.
+    const [plan, s1] = mintPlayer(makeState(), "Plan");
+    const [rubble, s2] = mintWorld(s1, "Rubble"); // visible hazard already in hand, cost 1
+    const secret = makeWorldCard({ id: "SecretZombie", cost: 2 }); // 2 progress would clear it
+    const state = {
+      ...s2,
+      hand: [plan, rubble],
+      worldDraw: [secret, ...s2.worldDraw],
+      energy: 5,
+    };
+
+    const preview = previewAction(catalog, state, { type: "PlayCard", cardId: plan.id });
+    const text = preview.summaryLines.join("\n");
+
+    // The hidden drawn card's identity must never appear.
+    expect(text).not.toContain("SecretZombie");
+    // Nor may the preview reveal that the drawn card resolves (leaks its cost).
+    expect(text).not.toContain("Clear SecretZombie");
+    // The masked draw is still summarized generically.
+    expect(text).toContain("world card");
+    // Progress on the pre-existing VISIBLE hazard is still named honestly.
+    expect(text).toContain("Rubble");
+  });
+
+  it("does not leak the onCleared hook of a world card drawn this action", () => {
+    // When a same-action sweep clears the drawn card, its onCleared hook fires
+    // (Strange Sounds offers a boon). Naming that boon pool would re-expose the
+    // hidden draw, so the hook is masked to a generic warning.
+    const [plan, s1] = mintPlayer(makeState(), "Plan");
+    const [rubble, s2] = mintWorld(s1, "Rubble"); // visible hazard => Plan is playable
+    const [sounds, s3] = mintWorld(s2, "Strange Sounds"); // cost 2, onCleared OfferBoon
+    const state = {
+      ...s3,
+      hand: [plan, rubble],
+      worldDraw: [sounds, ...s3.worldDraw.filter((card) => card.id !== sounds.id)],
+      energy: 5,
+    };
+
+    const preview = previewAction(catalog, state, { type: "PlayCard", cardId: plan.id });
+    const text = preview.summaryLines.join("\n");
+
+    // The drawn card's boon pool (its identity tell) must not appear.
+    expect(text).not.toContain("Sound Reactions");
+    expect(text).not.toContain("Boon offered");
+    expect(text).not.toContain("Strange Sounds");
+    // A generic warning still flags that hidden effects triggered.
+    expect(text).toContain("newly drawn hazard effects may trigger");
+    // The visible hazard is still summarized honestly.
+    expect(text).toContain("Clear Rubble");
+  });
+
+  it("treats the drawn-hazard hook warning as a hidden-hook warning (kept in minimal preview)", () => {
+    // The minimal hover preview keeps only the first substantive line plus any
+    // hidden-hook warning. The drawn-hazard hook warning must qualify, exactly
+    // like its concealed sibling, so it is never silently trimmed.
+    expect(isConcealmentWarning(DRAWN_HOOK_WARNING)).toBe(true);
+    expect(isConcealmentWarning(CONCEALED_HOOK_WARNING)).toBe(true);
+    expect(isConcealmentWarning("Clear Rubble")).toBe(false);
   });
 
   it("masks concealed broad-effect previews without leaking hidden card data or hook text", () => {

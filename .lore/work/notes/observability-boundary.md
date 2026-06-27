@@ -125,6 +125,44 @@ Orchestrated implementation: each phase dispatched to sub-agents (implement → 
   regression to zero wins is invisible to the suite. Not part of this feature; noted
   for a possible follow-up.
 
+## Follow-up fix: DealProgressAll leaks a world card drawn this action
+
+- 2026-06-27: **Bug found post-implementation (user report).** Cards that draw a
+  world card then sweep it with `DealProgressAll` in the same action (live case:
+  **`Plan`** = `Sequence[Draw {player:3, world:1}, DealProgressAll base:2]`) leaked
+  the hidden draw. The `CardsDrawn(world)` event is masked (`revealedFromHidden`),
+  but the consequence events were not: (1) the `ProgressDealt`/`HazardResolved`/
+  `HazardPartial` naming the just-drawn hazard via `cardName`, and (2) the drawn
+  card's own `onCleared`/`onPartialClear` hook events (e.g. `BoonOffered from Sound
+  Reactions` when it clears Strange Sounds), which leak its identity/family.
+  Root cause: the `revealedFromHidden` stamp marks only the draw event; nothing
+  carried the taint to same-action references/consequences of the revealed card.
+- **Fix (src/core/view/actionPreview.ts):** track `revealedHazardIds` = world-card
+  ids surfaced from the hidden deck this action (`collectRevealedHazardIds`, from
+  `CardsDrawn` with `bHazard` + `revealedFromHidden`), stored on `PreviewContext`.
+  Then: (a) progress-family events *referencing* a revealed id are masked —
+  `ProgressDealt` → "Make Progress on a newly drawn world card", `HazardResolved`/
+  `HazardPartial` suppressed (revealing it clears leaks the hidden card's cost),
+  both in the individual and aggregated (`partitionHazardEvents`) paths; (b) events
+  *sourced from* a revealed id (the drawn card's hooks) are masked wholesale to a
+  new generic `DRAWN_HOOK_WARNING` ("newly drawn hazard effects may trigger"),
+  mirroring the concealed-source branch, with risk left intact so a hidden threat
+  still warns; (c) `classifyRisk` drops revealed-hazard *outcome* events so a hidden
+  resolution doesn't leak through severity either. Pre-existing VISIBLE hazards
+  still summarize/clear normally. Two new tests in `actionPreview.test.ts`. Gate:
+  lint/typecheck/`bun run test` (1370 pass, 1 skip)/build/sim all clean.
+- Note: the DRAWN-ONLY case (a sweep where only a drawn card resolves) is
+  unreachable today because `DealProgressAll.isPlayable` requires a visible world
+  card in hand (and `SequenceHandler.isPlayable` checks every step against the
+  pre-action state); the `classifyRisk` guard is therefore defensive for future
+  effects.
+- **Review finding fixed:** `DRAWN_HOOK_WARNING` was not recognized by
+  `isConcealmentWarning`, so the minimal hover preview (`TableScene.minimalPreviewLines`)
+  would trim it — an under-warn (not a leak) that broke the "a hidden hook must
+  never be silently dropped" invariant. Added it to `isConcealmentWarning` (now
+  documented as covering all hidden-hook warnings) + a regression test. Final gate
+  re-run: lint/typecheck/`bun run test` (1371 pass, 1 skip) clean.
+
 ## Flagged improvements for the user (non-blocking)
 
 1. **`hiddenZones` positional coupling (Step 5).** `determinize` splits

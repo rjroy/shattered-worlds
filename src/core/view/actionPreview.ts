@@ -34,6 +34,11 @@ type PreviewContext = {
   afterCards: ReadonlyMap<CardId, Card>;
   cursor: ResourceCursor;
   maskedResources: Set<keyof ResourceCursor>;
+  // World cards whose identity was revealed from the hidden deck *during this
+  // action* (see collectRevealedHazardIds). Progress dealt to them by a
+  // same-action sweep must stay hidden — naming them, or revealing that they
+  // resolve, re-exposes the hidden draw the revealedFromHidden stamp masked.
+  revealedHazardIds: ReadonlySet<CardId>;
 };
 
 type ProgressEvent = Extract<GameEvent, { type: "ProgressDealt" }>;
@@ -52,16 +57,28 @@ export const CONCEALED_EFFECT_WARNING = "Effect is concealed. Beware.";
 export const CONCEALED_HAZARD = "a concealed hazard";
 export const CONCEALED_HOOK_WARNING = "concealed hazard effects may trigger";
 
+/** Generic label for a world card surfaced from the hidden deck this action. */
+export const DRAWN_WORLD_CARD = "a newly drawn world card";
+
 /**
- * The full set of concealment-warning lines a summary may contain. A line counts
- * as a concealment warning if it equals one of these or embeds CONCEALED_HAZARD
- * (e.g. "a concealed hazard would clear"). Used by the renderer's minimal-preview
- * filter to keep these warnings visible even when detail is trimmed.
+ * Warning emitted when a world card drawn from the hidden deck this action is
+ * cleared/partialed by a same-action sweep and its hook fires. Like the concealed
+ * variant, it flags that hidden effects triggered without naming them.
+ */
+export const DRAWN_HOOK_WARNING = "newly drawn hazard effects may trigger";
+
+/**
+ * The hidden-hook warning lines a summary may contain — concealed-source hooks and
+ * newly-drawn-hazard hooks alike. A line counts if it equals one of these or
+ * embeds CONCEALED_HAZARD (e.g. "a concealed hazard would clear"). Used by the
+ * renderer's minimal-preview filter to keep these warnings visible even when
+ * detail is trimmed: a hidden hook must never be silently dropped.
  */
 export function isConcealmentWarning(line: string): boolean {
   return (
     line === CONCEALED_EFFECT_WARNING ||
     line === CONCEALED_HOOK_WARNING ||
+    line === DRAWN_HOOK_WARNING ||
     line.includes(CONCEALED_HAZARD)
   );
 }
@@ -113,6 +130,7 @@ function summarizeEvents(
       braceCharges: before.braceCharges,
     },
     maskedResources: new Set(),
+    revealedHazardIds: collectRevealedHazardIds(events),
   };
 
   // Index, by event, after which every hidden-flow summary must go generic.
@@ -127,6 +145,7 @@ function summarizeEvents(
 
   const lines: string[] = [];
   let concealedWarningEmitted = false;
+  let revealedHookWarningEmitted = false;
   const progress = events.filter((event): event is ProgressEvent => event.type === "ProgressDealt");
   const resolved = events.filter(
     (event): event is HazardResolvedEvent => event.type === "HazardResolved",
@@ -153,7 +172,8 @@ function summarizeEvents(
     // cards", "Freeze N at random") would betray the concealed hazard's effect.
     if (
       (event.randomized === true || event.revealedFromHidden === true) &&
-      !eventIsConcealed(event, context)
+      !eventIsConcealed(event, context) &&
+      !eventFromRevealedHazard(event, context)
     ) {
       lines.push(...summarizeStampedEvent(event, context));
       continue;
@@ -169,6 +189,20 @@ function summarizeEvents(
       if (!concealedWarningEmitted) {
         pushUnique(lines, CONCEALED_HOOK_WARNING);
         concealedWarningEmitted = true;
+      }
+      continue;
+    }
+
+    // Events emitted by a card surfaced from the hidden deck this action (its
+    // onCleared/onPartialClear hook fired after a same-action sweep) are masked
+    // wholesale: naming the boon, granted card, or damage would re-expose the
+    // hidden draw. Resource cursor is still advanced so later visible deltas read
+    // correctly. Risk is intentionally left intact (a hidden threat still warns).
+    if (eventFromRevealedHazard(event, context)) {
+      maskConcealedResource(event, context);
+      if (!revealedHookWarningEmitted) {
+        pushUnique(lines, DRAWN_HOOK_WARNING);
+        revealedHookWarningEmitted = true;
       }
       continue;
     }
@@ -221,6 +255,17 @@ function summarizeEvents(
 function eventIsConcealed(event: GameEvent, context: PreviewContext): boolean {
   if (event.sourceCardId === undefined) return false;
   return isConcealedCard(event.sourceCardId, context);
+}
+
+/**
+ * True when an event was emitted by a world card surfaced from the hidden deck
+ * this action — i.e. the drawn card's own `onCleared`/`onPartialClear` hook fired
+ * after a same-action sweep resolved it. Naming that hook's effect (a boon pool,
+ * a granted card, damage) would re-expose the hidden draw, so these events are
+ * masked wholesale like a concealed source.
+ */
+function eventFromRevealedHazard(event: GameEvent, context: PreviewContext): boolean {
+  return event.sourceCardId !== undefined && context.revealedHazardIds.has(event.sourceCardId);
 }
 
 /**
@@ -284,71 +329,96 @@ function summarizeAggregatedProgress(
 ): string[] {
   const lines: string[] = [];
   if (progress.length > 0) {
-    const visibleProgress = progress.filter((event) => !isConcealedEventHazard(event, context));
-    const concealedCount = progress.length - visibleProgress.length;
-    if (visibleProgress.length > 0) {
-      const totalProgress = sum(visibleProgress.map((event) => event.amount));
+    const { visible, concealed, revealed } = partitionHazardEvents(progress, context);
+    if (visible.length > 0) {
+      const totalProgress = sum(visible.map((event) => event.amount));
       lines.push(
-        `Make ${totalProgress} total Progress across ${visibleProgress.length} ${plural(
+        `Make ${totalProgress} total Progress across ${visible.length} ${plural(
           "hazard",
-          visibleProgress.length,
+          visible.length,
         )}`,
       );
     }
-    if (concealedCount > 0) {
+    if (concealed.length > 0) {
       pushUnique(lines, CONCEALED_EFFECT_WARNING);
       lines.push(
-        concealedCount === 1
+        concealed.length === 1
           ? `Make Progress on ${CONCEALED_HAZARD}`
-          : `Make Progress on ${concealedCount} concealed hazards`,
+          : `Make Progress on ${concealed.length} concealed hazards`,
+      );
+    }
+    if (revealed.length > 0) {
+      lines.push(
+        revealed.length === 1
+          ? `Make Progress on ${DRAWN_WORLD_CARD}`
+          : `Make Progress on ${revealed.length} newly drawn world cards`,
       );
     }
   }
 
   if (resolved.length > 0) {
-    const visibleResolved = resolved.filter((event) => !isConcealedEventHazard(event, context));
-    const concealedCount = resolved.length - visibleResolved.length;
-    if (visibleResolved.length > 0) {
+    // Revealed-this-action resolutions are suppressed entirely: surfacing them
+    // would leak that a hidden-deck card's cost was within reach this turn.
+    const { visible, concealed } = partitionHazardEvents(resolved, context);
+    if (visible.length > 0) {
       lines.push(
-        visibleResolved.length === 1
-          ? `Clear ${cardName(visibleResolved[0]!.hazardId, visibleResolved[0]!.templateId, context)}`
-          : `Clear ${visibleResolved.length} hazards: ${listNames(
-              visibleResolved.map((event) => cardName(event.hazardId, event.templateId, context)),
+        visible.length === 1
+          ? `Clear ${cardName(visible[0]!.hazardId, visible[0]!.templateId, context)}`
+          : `Clear ${visible.length} hazards: ${listNames(
+              visible.map((event) => cardName(event.hazardId, event.templateId, context)),
             )}`,
       );
     }
-    if (concealedCount > 0) {
+    if (concealed.length > 0) {
       lines.push(
-        concealedCount === 1
+        concealed.length === 1
           ? `${CONCEALED_HAZARD} would clear`
-          : `${concealedCount} concealed hazards would clear`,
+          : `${concealed.length} concealed hazards would clear`,
       );
     }
   }
 
   if (partial.length > 0) {
-    const visiblePartial = partial.filter((event) => !isConcealedEventHazard(event, context));
-    const concealedCount = partial.length - visiblePartial.length;
-    if (visiblePartial.length > 0) {
+    const { visible, concealed } = partitionHazardEvents(partial, context);
+    if (visible.length > 0) {
       lines.push(
-        visiblePartial.length === 1
+        visible.length === 1
           ? `Partial resolve on ${cardName(
-              visiblePartial[0]!.hazardId,
-              visiblePartial[0]!.templateId,
+              visible[0]!.hazardId,
+              visible[0]!.templateId,
               context,
             )}`
-          : `Partial resolves on ${visiblePartial.length} ${plural(
-              "hazard",
-              visiblePartial.length,
-            )}`,
+          : `Partial resolves on ${visible.length} ${plural("hazard", visible.length)}`,
       );
     }
-    if (concealedCount > 0) {
+    if (concealed.length > 0) {
       pushUnique(lines, CONCEALED_HOOK_WARNING);
     }
   }
 
   return lines;
+}
+
+/**
+ * Split a hazard-event family into three disjoint buckets by how the preview may
+ * describe each: `revealed` (surfaced from the hidden deck this action — must
+ * stay hidden), `concealed` (on the board but identity-masked at this Light), and
+ * `visible` (freely nameable). `revealed` takes priority so a drawn card that is
+ * also concealed is held to the stricter hidden-draw standard.
+ */
+function partitionHazardEvents<T extends ProgressEvent | HazardResolvedEvent | HazardPartialEvent>(
+  events: readonly T[],
+  context: PreviewContext,
+): { visible: T[]; concealed: T[]; revealed: T[] } {
+  const visible: T[] = [];
+  const concealed: T[] = [];
+  const revealed: T[] = [];
+  for (const event of events) {
+    if (isRevealedHazardOutcome(event, context.revealedHazardIds)) revealed.push(event);
+    else if (isConcealedEventHazard(event, context)) concealed.push(event);
+    else visible.push(event);
+  }
+  return { visible, concealed, revealed };
 }
 
 /**
@@ -382,6 +452,9 @@ function summarizeEvent(event: GameEvent, context: PreviewContext): readonly str
     case "CardPlayed":
       return [`Play ${cardName(event.cardId, event.templateId, context)}`];
     case "ProgressDealt": {
+      if (isRevealedHazardOutcome(event, context.revealedHazardIds)) {
+        return [`Make Progress on ${DRAWN_WORLD_CARD}`];
+      }
       if (isConcealedEventHazard(event, context)) {
         return [CONCEALED_EFFECT_WARNING, `Make Progress on ${CONCEALED_HAZARD}`];
       }
@@ -399,14 +472,21 @@ function summarizeEvent(event: GameEvent, context: PreviewContext): readonly str
       ];
     }
     case "HazardResolved":
+      // A drawn-this-action hazard resolving must stay hidden: revealing it
+      // clears leaks that the hidden card's cost was within reach.
+      if (isRevealedHazardOutcome(event, context.revealedHazardIds)) return EMPTY_LINES;
       return isConcealedEventHazard(event, context)
         ? [`${CONCEALED_HAZARD} would clear`]
         : [`Clear ${cardName(event.hazardId, event.templateId, context)}`];
     case "HazardPartial":
+      if (isRevealedHazardOutcome(event, context.revealedHazardIds)) return EMPTY_LINES;
       return isConcealedEventHazard(event, context)
         ? [CONCEALED_HOOK_WARNING]
         : [`Partial resolve on ${cardName(event.hazardId, event.templateId, context)}`];
     case "HazardDiscarded":
+      if (isRevealedHazardOutcome(event, context.revealedHazardIds)) {
+        return [`Discard ${DRAWN_WORLD_CARD}`];
+      }
       return isConcealedEventHazard(event, context)
         ? [CONCEALED_EFFECT_WARNING, `Discard ${CONCEALED_HAZARD}`]
         : [`Discard ${cardName(event.cardId, event.templateId, context)}`];
@@ -502,9 +582,15 @@ function classifyRisk(
   events: readonly GameEvent[],
   action: GameEventAction,
 ): ActionPreviewRisk {
+  // A hazard drawn from the hidden deck this action and resolved/partialed by a
+  // same-action sweep must not leak its outcome through risk either: drop those
+  // events before classifying, so severity reflects only what the player can see.
+  const revealedIds = collectRevealedHazardIds(events);
+  const riskEvents = events.filter((event) => !isRevealedHazardOutcome(event, revealedIds));
+
   if (
     (action.type === "EndTurn" && hasConcealedWorldCard(before)) ||
-    events.some(
+    riskEvents.some(
       (event) => isHarmfulEvent(event) || eventTouchesConcealedHazard(event, before, after),
     ) ||
     after.pendingForceDestroy > after.braceCharges
@@ -512,7 +598,7 @@ function classifyRisk(
     return "harmful";
   }
 
-  if (events.some(isAttentionEvent)) {
+  if (riskEvents.some(isAttentionEvent)) {
     return "attention";
   }
 
@@ -589,6 +675,46 @@ function isConcealedEventHazard(
 ): boolean {
   const id = event.type === "HazardDiscarded" ? event.cardId : event.hazardId;
   return isConcealedCard(id, context);
+}
+
+/**
+ * World-card ids surfaced from the hidden world deck during this action. A
+ * `drawWorld` pull lands a hidden card in hand (CardsDrawn, bHazard, stamped
+ * `revealedFromHidden`); a same-action `DealProgressAll` then deals it progress,
+ * and the resulting ProgressDealt/HazardResolved/HazardPartial name it — which
+ * would re-expose the very draw the stamp masked, including whether it resolves.
+ * Collecting these ids lets the progress-family summaries (and risk) keep them
+ * hidden the same way the draw event itself is. Only world draws qualify: player
+ * draw ids can never match a hazardId, and exiled/returned cards never receive
+ * progress.
+ */
+function collectRevealedHazardIds(events: readonly GameEvent[]): ReadonlySet<CardId> {
+  const ids = new Set<CardId>();
+  for (const event of events) {
+    if (event.revealedFromHidden === true && event.type === "CardsDrawn" && event.bHazard) {
+      for (const id of event.ids) ids.add(id);
+    }
+  }
+  return ids;
+}
+
+/**
+ * True when a progress-family event targets a hazard whose identity was revealed
+ * from the hidden deck this action. Such events must be summarized name-free, and
+ * their resolution outcome suppressed, so the preview reveals no more than "a
+ * world card was drawn and dealt progress".
+ */
+function isRevealedHazardOutcome(event: GameEvent, revealedIds: ReadonlySet<CardId>): boolean {
+  switch (event.type) {
+    case "ProgressDealt":
+    case "HazardResolved":
+    case "HazardPartial":
+      return revealedIds.has(event.hazardId);
+    case "HazardDiscarded":
+      return revealedIds.has(event.cardId);
+    default:
+      return false;
+  }
 }
 
 function isConcealedCard(id: CardId, context: PreviewContext): boolean {
