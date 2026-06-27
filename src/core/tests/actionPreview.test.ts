@@ -386,14 +386,16 @@ describe("previewAction", () => {
     expect(preview.previewable).toBe(true);
     expect(text).toContain("concealed hazard effects may trigger");
     expect(text).toContain("Discard player cards");
-    expect(text).toContain("Draw cards");
+    // The turn-end refill draw is stamped revealedFromHidden, so the stamp path
+    // masks it to the generic "Draw N player cards": a count but no card names.
+    // The concealed hook's own draw ("Draw 2") stays masked by concealment.
+    expect(text).toMatch(/Draw \d+ player cards/);
     expect(text).toContain("Energy 0 -> 1 (+1)");
     expect(text).not.toContain("Mist Cache");
     expect(text).not.toContain("Hidden Draw A");
     expect(text).not.toContain("Hidden Draw B");
     expect(text).not.toContain("Discard 3 cards");
     expect(text).not.toContain("Draw 2 cards");
-    expect(text).not.toContain("Draw 5 cards");
   });
 
   it("masks downstream EndTurn shuffles caused by concealed draw hooks", () => {
@@ -427,15 +429,15 @@ describe("previewAction", () => {
 
     expect(preview.previewable).toBe(true);
     expect(text).toContain("concealed hazard effects may trigger");
-    expect(text).toContain("Deck changes");
-    expect(text).toContain("Draw cards");
+    // DeckShuffled carries no card names, so it keeps its generic "Shuffle the
+    // deck" copy; the turn-end refill draw masks to a name-free "Draw N ...".
+    expect(text).toContain("Shuffle the deck");
+    expect(text).toMatch(/Draw \d+ player cards/);
     expect(text).not.toContain("Mist Cache");
     expect(text).not.toContain("Hidden Draw A");
     expect(text).not.toContain("Hidden Draw B");
-    expect(text).not.toContain("Shuffle the deck");
     expect(text).not.toContain("Discard 3 cards");
     expect(text).not.toContain("Draw 2 cards");
-    expect(text).not.toContain("Draw 3 cards");
   });
 
   it("preserves visible EndTurn hook consequences after concealed draw hooks", () => {
@@ -476,11 +478,12 @@ describe("previewAction", () => {
     expect(preview.previewable).toBe(true);
     expect(text).toContain("Light 0 -> 2 (+2)");
     expect(text).toContain("concealed hazard effects may trigger");
-    expect(text).toContain("Deck changes");
+    // DeckShuffled keeps its generic "Shuffle the deck" copy (no card names);
+    // the visible GainLight stays specific and no hidden card name leaks.
+    expect(text).toContain("Shuffle the deck");
     expect(text).not.toContain("Mist Cache");
     expect(text).not.toContain("Hidden Draw A");
     expect(text).not.toContain("Hidden Draw B");
-    expect(text).not.toContain("Shuffle the deck");
     expect(text).not.toContain("Draw 3 cards");
   });
 
@@ -718,5 +721,90 @@ describe("previewAction", () => {
     });
 
     expect(text).toContain("Gain Sprint to discard");
+  });
+
+  it("masks the rng ForceDestroy snatch from a visible source (leak fix), risk unchanged", () => {
+    // A VISIBLE world card queues the destroy, so the deferred CardDestroyed is
+    // not concealed-source — before the stamp fix it fell through to the named
+    // summary and leaked the rng-chosen victim. The randomized stamp must mask it.
+    const snatcher = makeWorldCard({
+      id: "open-snatcher",
+      templateId: "Open Snatcher",
+      name: "Open Snatcher",
+      onEndOfTurn: { kind: "ForceDestroy", amount: 1 },
+    });
+    const held = makePlayerCard({ id: "held-tool", templateId: "Held Tool", name: "Held Tool" });
+    const refillCards = Array.from({ length: 5 }, (_, index) =>
+      makePlayerCard({
+        id: `loot-${index}`,
+        templateId: `Loot ${index}`,
+        name: `Loot ${index}`,
+      }),
+    );
+    const state = makeState({ hand: [snatcher, held], playerDraw: refillCards, light: 0 });
+
+    const preview = previewAction(catalog, state, { type: "EndTurn" });
+    const text = preview.summaryLines.join("\n");
+
+    expect(preview.previewable).toBe(true);
+    // resolveForceDestroy resolves the pending snatch this turn, so a
+    // CardDestroyed event exists in the stream...
+    expect(preview.events.some((event) => event.type === "CardDestroyed")).toBe(true);
+    // ...yet the rng-chosen victim is never named; the summary reads generically.
+    expect(text).toContain("Destroy 1 player card");
+    for (let index = 0; index < refillCards.length; index++) {
+      expect(text).not.toContain(`Loot ${index}`);
+    }
+    // Risk/severity unchanged: the turn-end player discard keeps it harmful.
+    expect(preview.risk).toBe("harmful");
+    expect(preview.severity).toBe("danger");
+  });
+
+  it("masks ExileTopWorldCards: never names the exiled top of the world deck (leak fix)", () => {
+    const exiler = makePlayerCard({
+      id: "exile-tool",
+      templateId: "Exile Tool",
+      name: "Exile Tool",
+      effect: { kind: "ExileTopWorldCards", amount: 2 },
+    });
+    const topZombie = makeWorldCard({ id: "top-zombie", templateId: "Zombie", name: "Zombie" });
+    const topRubble = makeWorldCard({ id: "top-rubble", templateId: "Rubble", name: "Rubble" });
+    const state = makeState({ hand: [exiler], worldDraw: [topZombie, topRubble] });
+
+    const preview = previewAction(catalog, state, { type: "PlayCard", cardId: exiler.id });
+    const text = preview.summaryLines.join("\n");
+
+    expect(preview.events.some((event) => event.type === "WorldCardsExiled")).toBe(true);
+    // The exiled cards come off the hidden world deck; only the count shows.
+    expect(text).toContain("Exile top 2 world cards");
+    expect(text).not.toContain("Zombie");
+    expect(text).not.toContain("Rubble");
+    // WorldCardsExiled classifies as attention; masking does not change that.
+    expect(preview.risk).toBe("attention");
+    expect(preview.severity).toBe("warning");
+  });
+
+  it("keeps a masked rng freeze classified as harmful (risk preserved)", () => {
+    const freezer = makePlayerCard({
+      id: "freeze-tool",
+      templateId: "Freeze Tool",
+      name: "Freeze Tool",
+      effect: { kind: "FreezeCards", amount: 2, duration: 1 },
+    });
+    const targetA = makePlayerCard({ id: "target-a", templateId: "Target A", name: "Target A" });
+    const targetB = makePlayerCard({ id: "target-b", templateId: "Target B", name: "Target B" });
+    const state = makeState({ hand: [freezer, targetA, targetB], light: 0 });
+
+    const preview = previewAction(catalog, state, { type: "PlayCard", cardId: freezer.id });
+    const text = preview.summaryLines.join("\n");
+
+    expect(preview.events.some((event) => event.type === "CardsFrozen")).toBe(true);
+    // The rng pick is summarized generically (no frozen card is named)...
+    expect(text).toContain("Freeze 2 cards at random");
+    expect(text).not.toContain("Target A");
+    expect(text).not.toContain("Target B");
+    // ...and the freeze still reads as harmful: the stamp masks copy, not risk.
+    expect(preview.risk).toBe("harmful");
+    expect(preview.severity).toBe("danger");
   });
 });

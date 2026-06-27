@@ -141,6 +141,24 @@ function summarizeEvents(
   for (let index = 0; index < events.length; index++) {
     const event = events[index]!;
 
+    // Observability stamp (see model/observability.ts) is the PRIMARY mask: an
+    // event whose card identities were chosen by rng, or revealed from a hidden
+    // zone, must never name cards. Checking it first (ahead of the taint path
+    // below) is what lets the taint machinery carry no cases for stamped events.
+    //
+    // A stamped event can ALSO originate from a concealed source (a concealed
+    // hook's deferred random ForceDestroy is both rng-selected and concealed).
+    // Such an event is left to the concealed-source branch directly below, which
+    // masks it wholesale: even the generic stamped line ("Destroy N player
+    // cards", "Freeze N at random") would betray the concealed hazard's effect.
+    if (
+      (event.randomized === true || event.revealedFromHidden === true) &&
+      !eventIsConcealed(event, context)
+    ) {
+      lines.push(...summarizeStampedEvent(event, context));
+      continue;
+    }
+
     // Events that come from a concealed source (its hook fired) reveal nothing
     // beyond the generic warning. We still advance the resource cursor for any
     // resource change so a later visible change reads its delta from the masked
@@ -333,6 +351,32 @@ function summarizeAggregatedProgress(
   return lines;
 }
 
+/**
+ * Name-free summary for an event the observability model flags as `randomized`
+ * or `revealedFromHidden`. Only the cases whose normal (named) summary would
+ * leak a rng-chosen identity need an override here; every other stamped event
+ * already has generic copy in `summarizeEvent`, so it is delegated unchanged.
+ */
+function summarizeStampedEvent(event: GameEvent, context: PreviewContext): readonly string[] {
+  switch (event.type) {
+    case "CardDestroyed":
+      // The only stamped CardDestroyed is the rng-selected ForceDestroy snatch,
+      // which always takes player cards from the just-refilled hand.
+      return [`Destroy ${event.ids.length} player ${plural("card", event.ids.length)}`];
+    case "CardGained":
+      // GainRandomCard's blind roll: name the pool (label data), never the
+      // rolled template or its rarity. setName is always present on a randomized
+      // grant; the fallback only guards against an unexpected stamp.
+      return event.setName !== undefined
+        ? [`Gain a random card from ${event.setName}`]
+        : ["Gain a random card"];
+    default:
+      // CardsDrawn, CardsFrozen, WorldCardsExiled, HazardAdded,
+      // PlayerDiscardRecalled, and BoonOffered already produce name-free copy.
+      return summarizeEvent(event, context);
+  }
+}
+
 function summarizeEvent(event: GameEvent, context: PreviewContext): readonly string[] {
   switch (event.type) {
     case "CardPlayed":
@@ -415,11 +459,9 @@ function summarizeEvent(event: GameEvent, context: PreviewContext): readonly str
         )}`,
       ];
     case "WorldCardsExiled":
-      return [
-        `Exile ${event.ids.length} world ${plural("card", event.ids.length)}: ${listNames(
-          namesFromIds(event.ids, event.templateIds, context),
-        )}`,
-      ];
+      // Always exiles the top of the hidden world deck (stamped
+      // revealedFromHidden), so never name what surfaced — only the count.
+      return [`Exile top ${event.ids.length} world ${plural("card", event.ids.length)}`];
     case "HazardAdded":
       // Hide the details of this action.
       // Don't review hidden information. Also its a duplicate of CardsDrawn.
@@ -435,14 +477,10 @@ function summarizeEvent(event: GameEvent, context: PreviewContext): readonly str
     case "WorldLost":
       return ["Lose the world"];
     case "CardGained":
-      // GainRandomCard stamps setName on its grant event (D3): the roll is
-      // unrevealed until commit, so name the pool, never the rolled
-      // template or its rarity. Fixed grants (GainCard and friends) leave
-      // setName undefined and keep naming the template — they were always
-      // authored/revealed, not a blind roll.
-      return event.setName !== undefined
-        ? [`Gain a random card from ${event.setName}`]
-        : [`Gain ${event.templateId} to ${destLabel(event.dest)}`];
+      // Fixed grants only. A randomized roll (GainRandomCard) is masked earlier
+      // by the stamp path (summarizeStampedEvent), so reaching here means the
+      // template was always authored/revealed and is safe to name.
+      return [`Gain ${event.templateId} to ${destLabel(event.dest)}`];
     case "CardsDrawn":
       return [
         `Draw ${event.ids.length} ${event.bHazard ? "world" : "player"} ${plural("card", event.ids.length)}`,
@@ -608,6 +646,16 @@ function namesFromIds(
  * deck disturbance. Returns `null` when the event is NOT hidden-flow, so the
  * caller falls through to the normal (named) summary for unaffected events such
  * as resource changes that happen to follow the taint point.
+ *
+ * The observability stamp (handled first in the per-event loop) now masks every
+ * event whose identities are rng-chosen or revealed from a hidden zone, so the
+ * refill events that used to be masked here by index alone — CardsDrawn,
+ * HazardAdded — no longer need a case (they are always stamped
+ * `revealedFromHidden`). DeckShuffled carries no card names, so its normal
+ * "Shuffle the deck" summary is already generic and needs no taint case either.
+ * What remains are the downstream, *unstamped* events that still ride card flow:
+ * the turn-end player discard, thaw, and the concealed-hook destroy/burn/gain
+ * paths.
  */
 function summarizeMaskedHiddenFlowEvent(
   event: GameEvent,
@@ -616,17 +664,10 @@ function summarizeMaskedHiddenFlowEvent(
   switch (event.type) {
     case "CardsDiscarded":
       return ["Discard player cards"];
-    case "DeckShuffled":
-      return ["Deck changes"];
     case "CardsFrozen":
       return ["Freeze player cards"];
     case "CardsThawed":
       return ["Thaw player cards"];
-    case "HazardAdded":
-      // A world card the fog spawned has surfaced via the refill — never name it.
-      return ["A concealed hazard joins the world"];
-    case "CardsDrawn":
-      return ["Draw cards"];
     case "CardDestroyed":
       return event.ids.some((id) => cardKind(id, context) === "player")
         ? ["Destroy player cards"]

@@ -383,4 +383,10 @@ export type GameEvent = (
       source: "latest" | "random" | "lowestCost" | "highestCost" | "panicFirst" | "playerSelected";
       dest: "playerDrawTop";
     }
-) & { readonly sourceCardId?: CardId };
+) & {
+  readonly sourceCardId?: CardId;
+  // Stamped at the emit site (not at a boundary): within one effect some events
+  // are random and some are not, so the flags ride the individual event.
+  readonly randomized?: boolean; // outcome chosen via rng at resolution
+  readonly revealedFromHidden?: boolean; // identities came from a hidden zone
+};

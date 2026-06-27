@@ -23,6 +23,7 @@ export type { CardTemplate } from "./model/cards";
 export type { RarityTier } from "./model/rarity";
 export { RARITY_ORDER, RARITY_WEIGHTS } from "./model/rarity";
 export { parseKeyword, keywordNames, hasKeyword, concealOf, isConcealed } from "./model/keywords";
+export { hiddenZones, isHidden } from "./model/observability";
 export { CatalogError } from "./model/errors";
 export type { GameCore } from "./engine/game";
 export { createGame } from "./engine/game";

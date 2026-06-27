@@ -190,6 +190,16 @@ function buildPlayAction(
 // ---------------------------------------------------------------------------
 
 /**
+ * A decision function: given a (player-honest) `view` of the game and a random
+ * source, return the action to take. The runner is responsible for handing the
+ * policy a determinized snapshot and applying the chosen action to the real
+ * state — the policy itself never sees, and so cannot cheat on, hidden info it
+ * isn't shown. `rng` stays in `() => number` closure form; the runner owns the
+ * bridge from the pure `RngState` it threads to this closure.
+ */
+export type Policy = (view: GameState, rng: Rng) => Action;
+
+/**
  * Selects a uniformly random legal action from the current state.
  * All randomness goes through `rng` — the game state RNG is unaffected.
  * Pass `() => Math.random()` for live play, or a seeded closure for tests.
@@ -244,3 +254,11 @@ export function pickAction(state: GameState, rng: Rng): Action {
 
   return pick(actions, rng);
 }
+
+/**
+ * The baseline policy: `pickAction` exactly. It ignores hidden information
+ * entirely (it only ever reads the hand, resources, and the live board), so it
+ * plays identically whether handed the real state or a determinized snapshot —
+ * which is precisely why the seam is behavior-preserving for it.
+ */
+export const randomPolicy: Policy = pickAction;

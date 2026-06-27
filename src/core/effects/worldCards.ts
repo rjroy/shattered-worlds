@@ -219,7 +219,9 @@ export class ExileTopWorldCardsHandler extends EffectHandler<ExileTopWorldCardsE
     }
 
     const current: GameState = { ...ctx.state, worldDraw: nextDraw };
-    const events: GameEvent[] = [{ type: "WorldCardsExiled", ids: exiledIds, templateIds }];
+    const events: GameEvent[] = [
+      { type: "WorldCardsExiled", ids: exiledIds, templateIds, revealedFromHidden: true },
+    ];
     return { state: current, events };
   }
 

@@ -153,7 +153,9 @@ export class GainRandomCardHandler extends EffectHandler<GainRandomCardEffect> {
     return {
       state: result.state,
       events: result.events.map((event) =>
-        event.type === "CardGained" ? { ...event, setName: effect.setName } : event,
+        event.type === "CardGained"
+          ? { ...event, setName: effect.setName, randomized: true }
+          : event,
       ),
     };
   }

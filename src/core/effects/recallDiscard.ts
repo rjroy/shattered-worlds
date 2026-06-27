@@ -216,7 +216,20 @@ export class RecallPlayerDiscardHandler extends EffectHandler<RecallPlayerDiscar
     const policy = effect.policy ?? "latest";
     const { ids, rng } = resolveAutoRecall(ctx.state, count, policy);
     if (ids.length === 0) return { state: ctx.state, events: [] };
-    return recallToTop({ ...ctx.state, rng }, ids, policy);
+    const result = recallToTop({ ...ctx.state, rng }, ids, policy);
+
+    // Only the `random` policy chooses victims via rng, so only it gets the
+    // stamp. recallToTop is shared with the deterministic policies and the
+    // playerSelected path, so we stamp here (the auto-recall caller) rather
+    // than changing recallToTop's signature. PlayerDiscardRecalled is the only
+    // event recallToTop emits.
+    if (policy !== "random") return result;
+    return {
+      state: result.state,
+      events: result.events.map((event) =>
+        event.type === "PlayerDiscardRecalled" ? { ...event, randomized: true } : event,
+      ),
+    };
   }
 
   override describe(effect: RecallPlayerDiscardEffect): string[] {

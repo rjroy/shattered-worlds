@@ -73,6 +73,9 @@ export function createBoonOffer(
           bToDiscard: config.bToDiscard ?? false,
         };
 
+  // The offered templates are rolled via weightedDraw, so the offer is
+  // rng-chosen. Stamped here so both callers (createActBoonOffer and
+  // OfferBoonHandler) inherit it.
   const event: GameEvent =
     config.source === "act"
       ? {
@@ -83,6 +86,7 @@ export function createBoonOffer(
           act: config.act,
           templateIds: offeredTemplateIds,
           rarities: offeredRarities,
+          randomized: true,
         }
       : {
           type: "BoonOffered",
@@ -91,6 +95,7 @@ export function createBoonOffer(
           setName: config.setName,
           templateIds: offeredTemplateIds,
           rarities: offeredRarities,
+          randomized: true,
         };
 
   return {

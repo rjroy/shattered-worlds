@@ -101,6 +101,8 @@ export class FreezeCardsHandler extends EffectHandler<FreezeCardsEffect> {
           type: "CardsFrozen",
           ids: selected.map((card) => card.id),
           templateIds: selected.map((card) => card.templateId),
+          // The shuffle above picks which cards freeze, so the outcome is rng-chosen.
+          randomized: true,
         },
       ],
     };
