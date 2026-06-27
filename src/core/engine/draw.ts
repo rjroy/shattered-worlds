@@ -58,7 +58,13 @@ export function drawPlayer(state: GameState, n: number): { state: GameState; eve
   }
 
   if (drawnIds.length > 0) {
-    events.push({ type: "CardsDrawn", ids: drawnIds, templateIds, bHazard: false });
+    events.push({
+      type: "CardsDrawn",
+      ids: drawnIds,
+      templateIds,
+      bHazard: false,
+      revealedFromHidden: true,
+    });
   }
 
   return { state: current, events };
@@ -110,12 +116,18 @@ export function drawWorld(state: GameState, n: number): { state: GameState; even
     };
     drawnIds.push(card.id);
     templateIds.push(card.templateId);
-    events.push({ type: "HazardAdded", templateId: card.name });
+    events.push({ type: "HazardAdded", templateId: card.name, revealedFromHidden: true });
     remaining--;
   }
 
   if (drawnIds.length > 0) {
-    events.push({ type: "CardsDrawn", ids: drawnIds, templateIds, bHazard: true });
+    events.push({
+      type: "CardsDrawn",
+      ids: drawnIds,
+      templateIds,
+      bHazard: true,
+      revealedFromHidden: true,
+    });
   }
 
   return { state: current, events };
@@ -259,6 +271,9 @@ export function resolveForceDestroy(state: GameState): {
     type: "CardDestroyed",
     ids: [...doomedIds],
     templateIds,
+    // The shuffle above picks victims, so the outcome is rng-chosen. This rides
+    // alongside the withSource provenance stamp; the two flags coexist.
+    randomized: true,
   });
 
   return { state: final, events: [...events, destroyEvent] };
