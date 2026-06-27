@@ -53,6 +53,7 @@ export class WorldSelectScene extends Phaser.Scene {
   private readonly runStats: RunStatsReader | undefined;
   private readonly unlocksStore: UnlocksStore | undefined;
   private readonly userSettings: UserSettingsStore | undefined;
+  private loadingLabel?: Phaser.GameObjects.Text;
 
   constructor(
     runStats?: RunStatsReader,
@@ -67,15 +68,43 @@ export class WorldSelectScene extends Phaser.Scene {
 
   preload(): void {
     loadAssets(this);
+    this.loadingLabel = this.add
+      .text(
+        CANVAS_W / 2,
+        CANVAS_H / 2,
+        "Loading...",
+        textStyle({
+          fontFamily: FONTS.title,
+          fontSize: "40px",
+          fontStyle: "italic",
+          color: TEXT.textWorldTitle,
+        }),
+      )
+      .setOrigin(0.5, 0.5);
   }
 
   create(): void {
     startMainTheme(this, this.userSettings);
 
     // title image fills canvas
-    this.add
+    const bgImg = this.add
       .image(CANVAS_W / 2, CANVAS_H / 2, "world-select-bg")
       .setDisplaySize(CANVAS_W, CANVAS_H);
+
+    const loadingTween = this.tweens.add({
+      targets: this.loadingLabel,
+      alpha: { from: 1, to: 0 },
+      duration: 500,
+      ease: "Cubic.easeIn",
+    });
+    loadingTween.on("complete", () => this.tweens.remove(loadingTween));
+    const bgTween = this.tweens.add({
+      targets: bgImg,
+      alpha: { from: 0, to: 1 },
+      duration: 300,
+      ease: "Cubic.easeIn",
+    });
+    bgTween.on("complete", () => this.tweens.remove(bgTween));
 
     this.time.delayedCall(2000, () => {
       const uiObjects = [];
