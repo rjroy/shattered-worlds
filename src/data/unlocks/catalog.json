@@ -252,7 +252,7 @@
     "name": "Strong Barricades",
     "description": "Barricades apply progress to every world card and can return more cards, but have increased cost.",
     "cost": 30,
-    "destinyWeight": 2,
+    "destinyWeight": 1,
     "effect": {
       "type": "playerCardModifier",
       "modifier": {

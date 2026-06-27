@@ -1,10 +1,9 @@
 {
   "worldId": "contractor",
   "starterDeck": [
-    { "templateId": "Sprint", "count": 1 },
-    { "templateId": "Explore", "count": 3 },
+    { "templateId": "Explore", "count": 4 },
     { "templateId": "Barricade", "count": 3 },
-    { "templateId": "Med Kit", "count": 2 },
-    { "templateId": "Adrenaline", "count": 1 }
+    { "templateId": "Med Kit", "count": 1 },
+    { "templateId": "Adrenaline", "count": 2 }
   ]
 }
