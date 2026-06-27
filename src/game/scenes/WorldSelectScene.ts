@@ -77,51 +77,68 @@ export class WorldSelectScene extends Phaser.Scene {
       .image(CANVAS_W / 2, CANVAS_H / 2, "world-select-bg")
       .setDisplaySize(CANVAS_W, CANVAS_H);
 
-    // subtitle only — logotype is in the image
-    this.add
-      .text(
-        CANVAS_W / 2,
-        SUBTITLE_Y,
-        "Choose your shard",
-        textStyle({
-          fontFamily: FONTS.title,
-          fontSize: "20px",
-          fontStyle: "italic",
-          color: TEXT.textWorldTag,
-        }),
-      )
-      .setOrigin(0.5, 0.5);
+    this.time.delayedCall(2000, () => {
+      const uiObjects = [];
+      // subtitle only — logotype is in the image
+      uiObjects.push(
+        this.add
+          .text(
+            CANVAS_W / 2,
+            SUBTITLE_Y,
+            "Choose your shard ",
+            textStyle({
+              fontFamily: FONTS.title,
+              fontSize: "20px",
+              fontStyle: "italic",
+              color: TEXT.textWorldTag,
+            }),
+          )
+          .setOrigin(0.5, 0.5),
+      );
 
-    this.worldIds = Object.keys(worldManifest);
-    this.worldIds.sort((a, b) => {
-      const lockA = this.getWorldLockState(a);
-      const lockB = this.getWorldLockState(b);
-      if (lockB.locked && !lockA.locked) return -1;
-      if (lockA.locked && !lockB.locked) return 1;
+      this.worldIds = Object.keys(worldManifest);
+      this.worldIds.sort((a, b) => {
+        const lockA = this.getWorldLockState(a);
+        const lockB = this.getWorldLockState(b);
+        if (lockB.locked && !lockA.locked) return -1;
+        if (lockA.locked && !lockB.locked) return 1;
 
-      if (lockA.locked && lockB.locked) {
-        const costDelta = (lockA.cost ?? 0) - (lockB.cost ?? 0);
-        if (costDelta !== 0) return costDelta;
-      }
+        if (lockA.locked && lockB.locked) {
+          const costDelta = (lockA.cost ?? 0) - (lockB.cost ?? 0);
+          if (costDelta !== 0) return costDelta;
+        }
 
-      const nameA = worldManifest[a]?.name ?? "";
-      const nameB = worldManifest[b]?.name ?? "";
-      return nameA.localeCompare(nameB);
-    });
-    this.visibleStartIndex = 0;
-    this.createChronicleButton();
-    this.createDestinyButton();
-    this.createHelpButton();
-    this.createSettingsButton();
-    this.createArrows();
-    this.renderVisibleWorlds();
+        const nameA = worldManifest[a]?.name ?? "";
+        const nameB = worldManifest[b]?.name ?? "";
+        return nameA.localeCompare(nameB);
+      });
+      this.visibleStartIndex = 0;
+      uiObjects.push(this.createChronicleButton());
+      uiObjects.push(this.createDestinyButton());
+      uiObjects.push(this.createHelpButton());
+      uiObjects.push(this.createSettingsButton());
+      const arrows = this.createArrows();
 
-    this.input.keyboard?.on("keydown-ESC", () => {
-      if (this.helpOverlay?.visible) this.helpOverlay.setVisible(false);
+      arrows.forEach((arrow) => arrow.setAlpha(0));
+
+      const firstLoadTween = this.tweens.add({
+        targets: uiObjects,
+        alpha: { from: 0, to: 1 },
+        duration: 1000,
+        ease: "Cubic.easeIn",
+      });
+      firstLoadTween.on("complete", () => {
+        this.tweens.remove(firstLoadTween);
+        this.renderVisibleWorlds();
+      });
+
+      this.input.keyboard?.on("keydown-ESC", () => {
+        if (this.helpOverlay?.visible) this.helpOverlay.setVisible(false);
+      });
     });
   }
 
-  private createChronicleButton(): void {
+  private createChronicleButton(): Phaser.GameObjects.Container {
     const button = this.add.container(CANVAS_W - 88, 34);
     const bg = this.add.rectangle(0, 0, 132, 34, 0x0f0b15, 0.82);
     bg.setStrokeStyle(1, 0xd6b15c, 0.9);
@@ -146,9 +163,10 @@ export class WorldSelectScene extends Phaser.Scene {
     bg.on("pointerdown", () => {
       if (this.scene.isActive()) this.scene.start("Chronicle");
     });
+    return button;
   }
 
-  private createDestinyButton(): void {
+  private createDestinyButton(): Phaser.GameObjects.Container {
     const button = this.add.container(CANVAS_W - 256, 34);
     const bg = this.add.rectangle(0, 0, 108, 34, 0x0f0b15, 0.82);
     bg.setStrokeStyle(1, 0xd6b15c, 0.9);
@@ -173,9 +191,10 @@ export class WorldSelectScene extends Phaser.Scene {
     bg.on("pointerdown", () => {
       if (this.scene.isActive()) this.scene.start("Destiny");
     });
+    return button;
   }
 
-  private createHelpButton(): void {
+  private createHelpButton(): Phaser.GameObjects.Container {
     const button = this.add.container(CANVAS_W - 178, 34);
     const bg = this.add.rectangle(0, 0, 34, 34, 0x0f0b15, 0.82);
     bg.setStrokeStyle(1, 0xd6b15c, 0.9);
@@ -200,9 +219,10 @@ export class WorldSelectScene extends Phaser.Scene {
     bg.on("pointerdown", () => {
       if (this.scene.isActive()) this.showHelpOverlay();
     });
+    return button;
   }
 
-  private createSettingsButton(): void {
+  private createSettingsButton(): Phaser.GameObjects.Container {
     const button = this.add.container(CANVAS_W - 335, 34);
     const bg = this.add.rectangle(0, 0, 34, 34, 0x0f0b15, 0.82);
     bg.setStrokeStyle(1, 0xd6b15c, 0.9);
@@ -227,6 +247,7 @@ export class WorldSelectScene extends Phaser.Scene {
     bg.on("pointerdown", () => {
       if (this.scene.isActive()) this.showSettingsOverlay();
     });
+    return button;
   }
 
   private showHelpOverlay(): void {
@@ -259,6 +280,7 @@ export class WorldSelectScene extends Phaser.Scene {
   }
 
   private renderVisibleWorlds(): void {
+    const bFirstLoad = this.cards.length == 0;
     this.cards.forEach((card) => {
       const disappearTween = this.tweens.add({
         targets: card.container,
@@ -295,8 +317,8 @@ export class WorldSelectScene extends Phaser.Scene {
       const appearTween = this.tweens.add({
         targets: newCard.container,
         alpha: { from: 0, to: 1 },
-        scale: { from: 0.8, to: 1 },
-        duration: 300,
+        scale: { from: bFirstLoad ? 0 : 0.8, to: 1 },
+        duration: bFirstLoad ? 1000 : 300,
         ease: "Cubic.easeOut",
       });
       appearTween.on("complete", () => this.tweens.remove(appearTween));
@@ -305,7 +327,7 @@ export class WorldSelectScene extends Phaser.Scene {
     this.updateArrowState();
   }
 
-  private createArrows(): void {
+  private createArrows(): Phaser.GameObjects.Container[] {
     const visibleW = VISIBLE_WORLD_COUNT * CARD_W + (VISIBLE_WORLD_COUNT - 1) * CARD_GAP;
     const rowLeft = (CANVAS_W - visibleW) / 2;
     const rowRight = rowLeft + visibleW;
@@ -322,6 +344,7 @@ export class WorldSelectScene extends Phaser.Scene {
       this.visibleStartIndex = next;
       this.renderVisibleWorlds();
     });
+    return [this.leftArrow.container, this.rightArrow.container];
   }
 
   private createArrow(x: number, y: number, label: string, onClick: () => void): WorldSelectArrow {
@@ -361,7 +384,13 @@ export class WorldSelectScene extends Phaser.Scene {
 
   private setArrowEnabled(arrow: WorldSelectArrow | undefined, enabled: boolean): void {
     if (arrow === undefined) return;
-    arrow.container.setAlpha(enabled ? 1 : TEXT.dimAlpha);
+    const tween = this.tweens.add({
+      targets: arrow.container,
+      alpha: { from: 0, to: enabled ? 1 : TEXT.dimAlpha },
+      duration: 1000,
+      ease: "Cubic.easeIn",
+    });
+    tween.on("complete", () => this.tweens.remove(tween));
     arrow.hitArea.setInteractive({ useHandCursor: enabled });
     if (!enabled) {
       arrow.hitArea.disableInteractive();
