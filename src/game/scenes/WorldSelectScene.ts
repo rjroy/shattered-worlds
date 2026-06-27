@@ -54,6 +54,7 @@ export class WorldSelectScene extends Phaser.Scene {
   private readonly unlocksStore: UnlocksStore | undefined;
   private readonly userSettings: UserSettingsStore | undefined;
   private loadingLabel?: Phaser.GameObjects.Text;
+  private progressTween: Phaser.Tweens.Tween | undefined = undefined;
 
   constructor(
     runStats?: RunStatsReader,
@@ -81,6 +82,18 @@ export class WorldSelectScene extends Phaser.Scene {
         }),
       )
       .setOrigin(0.5, 0.5);
+    this.progressTween = this.tweens.add({
+      targets: this.loadingLabel,
+      x: {
+        start: this.loadingLabel.x,
+        from: this.loadingLabel.x - 50,
+        to: this.loadingLabel.x + 50,
+      },
+      duration: 1000,
+      yoyo: true,
+      repeat: -1,
+      ease: "Cubic.easeInOut",
+    });
   }
 
   create(): void {
@@ -97,7 +110,14 @@ export class WorldSelectScene extends Phaser.Scene {
       duration: 500,
       ease: "Cubic.easeIn",
     });
-    loadingTween.on("complete", () => this.tweens.remove(loadingTween));
+    loadingTween.on("complete", () => {
+      this.tweens.remove(loadingTween);
+      if (this.progressTween) {
+        this.progressTween.stop();
+        this.tweens.remove(this.progressTween);
+        this.progressTween = undefined;
+      }
+    });
     const bgTween = this.tweens.add({
       targets: bgImg,
       alpha: { from: 0, to: 1 },
