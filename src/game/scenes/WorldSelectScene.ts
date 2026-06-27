@@ -318,7 +318,7 @@ export class WorldSelectScene extends Phaser.Scene {
         targets: newCard.container,
         alpha: { from: 0, to: 1 },
         scale: { from: bFirstLoad ? 0 : 0.8, to: 1 },
-        duration: bFirstLoad ? 1000 : 300,
+        duration: bFirstLoad ? 1000 : 500,
         ease: "Cubic.easeOut",
       });
       appearTween.on("complete", () => this.tweens.remove(appearTween));
@@ -366,6 +366,7 @@ export class WorldSelectScene extends Phaser.Scene {
       .setOrigin(0.5, 0.5);
 
     container.add([hitArea, text]);
+    container.setAlpha(0);
     hitArea.setInteractive({ useHandCursor: true });
     hitArea.on("pointerover", () => container.setScale(1.08));
     hitArea.on("pointerout", () => container.setScale(1.0));
@@ -386,8 +387,8 @@ export class WorldSelectScene extends Phaser.Scene {
     if (arrow === undefined) return;
     const tween = this.tweens.add({
       targets: arrow.container,
-      alpha: { from: 0, to: enabled ? 1 : TEXT.dimAlpha },
-      duration: 1000,
+      alpha: { from: arrow.container.alpha, to: enabled ? 1 : TEXT.dimAlpha },
+      duration: 500,
       ease: "Cubic.easeIn",
     });
     tween.on("complete", () => this.tweens.remove(tween));
