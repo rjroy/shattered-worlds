@@ -111,4 +111,5 @@ export const WORLD_SELECT_LAYOUT = {
   storyMinY: 90,
   textGap: 10,
   textPadding: 24,
+  pipFontSize: 14, // difficulty pips in the bottom-left card footer
 } as const;
