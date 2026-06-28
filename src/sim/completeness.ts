@@ -29,7 +29,7 @@ import { DEFAULT_EVAL_WEIGHTS, type EvalWeights } from "./eval";
 import { evalPolicyFactory } from "./evalPolicy";
 import { playOut } from "./playOut";
 
-const MAX_ACTIONS_PER_WORLD = 500;
+const MAX_ACTIONS_PER_WORLD = 1000;
 
 // ---------------------------------------------------------------------------
 // Parameters
@@ -173,7 +173,10 @@ export function buildAllWorlds(): BuiltWorld[] {
  * stream across every seed and every world. The rng entering each play-out is
  * the rng leaving the previous one (REQ-SCC-16).
  */
-export function runCompleteness(params: CompletenessParams, worlds: BuiltWorld[]): WorldAggregate[] {
+export function runCompleteness(
+  params: CompletenessParams,
+  worlds: BuiltWorld[],
+): WorldAggregate[] {
   let agentRng: RngState = createRng(params.agentSeed);
   const aggregates: WorldAggregate[] = [];
 
@@ -260,12 +263,16 @@ function formatWorldBlock(agg: WorldAggregate, threshold: number): string {
   lines.push(`  Wins:    ${agg.wins}  (${pct(agg.wins, agg.games)})`);
   lines.push(`  Losses:  ${agg.losses}`);
   lines.push(`  Capped:  ${agg.capped}`);
-  lines.push(`  Avg turns survived: ${(agg.games > 0 ? agg.totalTurns / agg.games : 0).toFixed(1)}`);
+  lines.push(
+    `  Avg turns survived: ${(agg.games > 0 ? agg.totalTurns / agg.games : 0).toFixed(1)}`,
+  );
   lines.push(`  Loss by cause: ${formatCauseMap(agg.lossByCause)}`);
   lines.push(`  Loss by act:   ${formatActMap(agg.lossByAct, agg.totalActs)}`);
 
   if (winRate <= threshold) {
-    lines.push(`  [FLAGGED] win-rate ${pct(agg.wins, agg.games)} <= ${(threshold * 100).toFixed(1)}%`);
+    lines.push(
+      `  [FLAGGED] win-rate ${pct(agg.wins, agg.games)} <= ${(threshold * 100).toFixed(1)}%`,
+    );
     const domCause = dominant(agg.lossByCause);
     const domAct = dominant(agg.lossByAct);
     if (domCause !== undefined) {
@@ -294,7 +301,9 @@ export function formatReport(params: CompletenessParams, aggregates: WorldAggreg
     blocks.push(formatWorldBlock(agg, params.threshold));
     blocks.push("");
   }
-  const flagged = aggregates.filter((a) => (a.games > 0 ? a.wins / a.games : 0) <= params.threshold);
+  const flagged = aggregates.filter(
+    (a) => (a.games > 0 ? a.wins / a.games : 0) <= params.threshold,
+  );
   blocks.push(`Flagged worlds: ${flagged.length}/${aggregates.length}`);
   return blocks.join("\n");
 }

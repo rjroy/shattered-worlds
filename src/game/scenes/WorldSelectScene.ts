@@ -10,7 +10,7 @@ import { selectTheme } from "../view/themes/themeManifest";
 import { textStyle, TEXT } from "../view/presentation";
 import { FONTS } from "../view/fonts";
 import { CANVAS_W, CANVAS_H, WORLD_SELECT_LAYOUT } from "../view/layout";
-import { worldBadgeLabel } from "../view/worldBadge";
+import { worldBadgeLabel, difficultyPips } from "../view/worldBadge";
 import { HelpOverlayView } from "../view/HelpOverlayView";
 import { SettingsOverlayView } from "../view/SettingsOverlayView";
 import { canPageLeft, canPageRight, pageLeft, pageRight } from "./worldSelectPaging";
@@ -156,6 +156,11 @@ export class WorldSelectScene extends Phaser.Scene {
           const costDelta = (lockA.cost ?? 0) - (lockB.cost ?? 0);
           if (costDelta !== 0) return costDelta;
         }
+
+        const difficultyA = worldDisplayManifest[a]?.difficulty ?? 6;
+        const difficultyB = worldDisplayManifest[b]?.difficulty ?? 6;
+        const difficultyDelta = difficultyA - difficultyB;
+        if (difficultyDelta !== 0) return difficultyDelta;
 
         const nameA = worldManifest[a]?.name ?? "";
         const nameB = worldManifest[b]?.name ?? "";
@@ -642,6 +647,30 @@ export class WorldSelectScene extends Phaser.Scene {
       lockBg.setStrokeStyle(1, 0xf2d68a, 0.72);
       contents.push(overlay, lockBg, lockLabel);
     }
+
+    // Difficulty pips — bottom-left footer, mirroring the wins/runs badge on the
+    // right. Pushed after the lock block so they stay readable on locked cards.
+    const pipX = -(CARD_W / 2 - 30);
+    const pipY = CARD_H / 2 - 18;
+    const pipText = this.add
+      .text(
+        pipX,
+        pipY,
+        difficultyPips(display.difficulty),
+        textStyle({
+          fontFamily: FONTS.monospace,
+          fontSize: `${WORLD_SELECT_LAYOUT.pipFontSize}px`,
+          color: TEXT.textLight,
+          fontStyle: "bold",
+        }),
+      )
+      .setOrigin(0.5, 0.5);
+    const pipBg = this.add
+      .rectangle(pipText.x, pipText.y, pipText.width + 12, pipText.height + 6, 0x0b0710, 0.88)
+      .setOrigin(0.5, 0.5)
+      .setRounded(8);
+    pipBg.setStrokeStyle(1, accentColor, 0.8);
+    contents.push(pipBg, pipText);
 
     container.add(contents);
 

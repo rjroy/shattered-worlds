@@ -5,7 +5,7 @@ export const THE_TIDAL_ARCHIVE_DISPLAY: WorldDisplayData = {
   tagline: "A floating library that remebers everything by where it was kept.",
   story:
     "Calm turquoise waters and gold-lit stacks kept every memory filed by place, until the Walker crossed it and broke the index. Buildings now drift from their histories, roads bend back into yesterday, and every route curves toward the Walker's single footprint, where the Door waits.",
-  difficulty: 4,
+  difficulty: 3,
   backgroundKey: "the-tidal-archive-bg",
 };
 
