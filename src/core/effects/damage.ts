@@ -19,7 +19,7 @@ export function damage(state: GameState, n: number): EffectResult {
 
   if (newHp <= 0) {
     current = { ...current, status: "lost" };
-    events.push({ type: "WorldLost" });
+    events.push({ type: "WorldLost", cause: "hp" });
   }
 
   return { state: current, events };

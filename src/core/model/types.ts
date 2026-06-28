@@ -303,6 +303,11 @@ export interface AvailableActions {
   legalTargets(cardId: CardId, step: number, choice?: number): readonly CardId[];
 }
 
+// Why a world was lost, attached to the `WorldLost` event so downstream
+// consumers (notably the sim layer) can attribute failures. Optional on the
+// event itself for low blast radius; existing consumers ignore it.
+export type WorldLostCause = "hp" | "noPlayerCards" | "exhausted" | "worldLivelock";
+
 // Every GameEvent variant gains an optional `sourceCardId` via the trailing
 // intersection. Intersection distributes over the union — `(A | B) & P` is
 // `(A & P) | (B & P)` — so each variant keeps its `type` discriminant and also
@@ -370,7 +375,7 @@ export type GameEvent = (
     }
   | { type: "TurnEnded" }
   | { type: "WorldWon" }
-  | { type: "WorldLost" }
+  | { type: "WorldLost"; cause?: WorldLostCause }
   | { type: "BraceChanged"; braceCharges: number }
   | { type: "BraceConsumed"; absorbed: number; remaining: number }
   | { type: "WorldCardsExiled"; ids: readonly CardId[]; templateIds: readonly CardTemplateId[] }
