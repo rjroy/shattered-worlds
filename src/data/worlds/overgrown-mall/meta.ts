@@ -5,7 +5,7 @@ export const OVERGROWN_MALL_DISPLAY: WorldDisplayData = {
   tagline: "The mall is being reclaimed by nature. As you watch.",
   story:
     "The skylight gave way before the alarms did. Vines move through the concourse faster than evacuation signs can point, turning kiosks and planters into a damp green maze. Somewhere past the food court, the emergency doors are already buried.",
-  difficulty: 2,
+  difficulty: 4,
   backgroundKey: "overgrown-mall-bg",
 };
 

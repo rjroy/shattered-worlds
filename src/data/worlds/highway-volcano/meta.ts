@@ -5,7 +5,7 @@ export const HIGHWAY_VOLCANO_DISPLAY: WorldDisplayData = {
   tagline: "Rush hour. Lava flow. Pick one.",
   story:
     "The highway is packed with cars, but no one is honking. The rumbling starts as a low vibration, but quickly escalates into a deafening roar. The ground splits open.",
-  difficulty: 1,
+  difficulty: 2,
   backgroundKey: "highway-volcano-bg",
 };
 

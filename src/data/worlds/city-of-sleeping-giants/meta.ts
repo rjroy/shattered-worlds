@@ -5,7 +5,7 @@ export const CITY_OF_SLEEPING_GIANTS_DISPLAY: WorldDisplayData = {
   tagline: "A metropolis raised across the bodies of sleeping giants.",
   story:
     "Clever vein-roads and bone anchors kept the sleeping giants under. Then the Walker crossed, and they began to remember. Ignored tremors return as fingerquakes; exploited districts are recalled at a larger scale. The movement returns heavier each time until the giant turns fully. The Door waits past the last ward, if the city remains standing.",
-  difficulty: 5,
+  difficulty: 3,
   backgroundKey: "city-of-sleeping-giants-bg",
 };
 
