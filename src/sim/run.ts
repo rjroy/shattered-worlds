@@ -1,9 +1,6 @@
-import { createWorld } from '../core/engine/world'
-import { reduce } from '../core/engine/reduce'
-import { createRng, nextFloat, rngFromSeed } from '../core/engine/rng'
+import { createRng } from '../core/engine/rng'
 import type { RngState } from '../core/model/types'
-import { checkIdAccounting } from './accounting'
-import { determinize } from './determinize'
+import { playOut } from './playOut'
 import { randomPolicy, catalog, worldData } from './policy'
 
 
@@ -31,43 +28,19 @@ let hadError = false
 
 for (let seed = 1; seed <= N; seed++) {
   try {
-    let state = createWorld(catalog, worldData, seed).state
-    let turns = 0
-    let actions = 0
+    // playOut owns the decide-on-view / commit loop and the checkIdAccounting
+    // call sites. We thread finalAgentRng forward exactly as the inline loop
+    // threaded agentRng, so the random stream — and this output — is unchanged.
+    const outcome = playOut(catalog, worldData, seed, policy, agentRng, {
+      maxActions: MAX_ACTIONS_PER_WORLD,
+    })
+    agentRng = outcome.finalAgentRng
 
-    while (state.status === 'playing' && actions < MAX_ACTIONS_PER_WORLD) {
-      checkIdAccounting(state)
-
-      // Decide on a determinized, player-honest snapshot; apply to the REAL
-      // state. determinize advances the threaded agent rng (its reshuffles), and
-      // we carry the returned state forward so no two decisions repeat.
-      const [view, rngAfterDet] = determinize(state, agentRng)
-
-      // Bridge the pure RngState the runner threads to the `() => number` closure
-      // the policy wants: pull one value, expand it into a stateful sfc32
-      // closure, and thread the post-pull rng state forward. The closure's own
-      // advances during a single decision stay local; only `agentRng` persists.
-      const [seedValue, rngAfterPolicy] = nextFloat(rngAfterDet)
-      const policyRng = rngFromSeed(Math.floor(seedValue * 0x100000000))
-      agentRng = rngAfterPolicy
-
-      // Boon choices ride the same path: determinize hides the unreached acts /
-      // draw piles, the policy decides on the snapshot, and the action lands on
-      // the real state. `pickAction` resolves a pending boon before anything else.
-      const action = policy(view, policyRng)
-      const result = reduce(catalog, state, action)
-      state = result.state
-      if (action.type === 'EndTurn') turns++
-      actions++
-    }
-
-    checkIdAccounting(state)
-
-    if (state.status === 'won') wins++
-    else if (state.status === 'lost') losses++
+    if (outcome.status === 'won') wins++
+    else if (outcome.status === 'lost') losses++
     else violations++ // hit action cap without reaching a terminal state
 
-    totalTurns += turns
+    totalTurns += outcome.turns
   } catch (err) {
     hadError = true
     const msg = err instanceof Error ? err.message : String(err)

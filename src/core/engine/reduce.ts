@@ -253,7 +253,7 @@ function handleEndTurn(catalog: CardCatalog, state: GameState): ReduceResult {
   // both "no room because hazards filled the hand" and "player deck exhausted".
   if (afterRefill.status === "playing" && turnStartResult.playerCardsDrawn === 0) {
     const lostState: GameState = { ...afterRefill, status: "lost" };
-    events.push({ type: "WorldLost" });
+    events.push({ type: "WorldLost", cause: "noPlayerCards" });
     return { state: lostState, events };
   }
 
@@ -271,7 +271,7 @@ function handleEndTurn(catalog: CardCatalog, state: GameState): ReduceResult {
       const noProgressPossible = avail.playable.length === 0 && avail.discardable.length === 0;
       if (noProgressPossible) {
         const lostState: GameState = { ...afterRefill, status: "lost" };
-        events.push({ type: "WorldLost" });
+        events.push({ type: "WorldLost", cause: "exhausted" });
         return { state: lostState, events };
       }
     }
@@ -316,7 +316,7 @@ function handleEndTurn(catalog: CardCatalog, state: GameState): ReduceResult {
       });
       if (!canIntroduceWorld) {
         const lostState: GameState = { ...afterRefill, status: "lost" };
-        events.push({ type: "WorldLost" });
+        events.push({ type: "WorldLost", cause: "worldLivelock" });
         return { state: lostState, events };
       }
     }

@@ -10,7 +10,8 @@
     "test": "bun test --preload ./src/game/tests/testSetup.ts",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
-    "sim": "bun run src/sim/run.ts"
+    "sim": "bun run src/sim/run.ts",
+    "sim:complete": "bun run src/sim/completeness.ts"
   },
   "dependencies": {
     "phaser": "3.90.0",
