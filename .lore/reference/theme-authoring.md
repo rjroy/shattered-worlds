@@ -77,23 +77,25 @@ Map the world's fiction onto these roles.
 3. **Signature threat creature** - costly world card, usually `Creature` + `Slow`, with end-of-turn pressure and a discard penalty.
 4. **Tool fetch** - `Obstructed` world card that grants the weapon/tool countering the threat.
 5. **Reaction player cards** - rewards gained mid-run, tuned to the threat.
-6. **Signature player verb** - the world's exclusive mechanical identity. This is not a code field; it is an authorship invariant.
+6. **Signature player verb** - the world's *signature* mechanical identity: the main mechanic the world is built around and known for. This is not a code field; it is an authorship invariant. It is exclusivity of *identity*, not of *effects* (see the rule below the table).
 
 | World | Signature verb | Reward-card implication |
 | --- | --- | --- |
 | `zombie-big-box` | sweep and noise | Interact with `Creature`/`Slow` clusters and multi-clear moments |
 | `highway-volcano` | everything is fuel | Convert discards or exhaust triggers into resources |
 | `bird-building` | travel light | Trim hand size, recycle cheap cards, prefer efficiency over force |
-| `overgrown-mall` | prune and profit | Self-pruning `Spore`; `Bloom` scales from Spores; owns `DealProgressScaled` |
-| `fog-beach-party` | reveal and endure | Light economy; owns `GainLight`; reveals `Concealed` hazards |
-| `whiteout-parking-garage` | freeze | Heat economy; owns `GainHeat`, `FreezeCards`, `ThawCards`, frozen cards stop hand usability |
-| `the-tidal-archive` | displace | Owns discard/deck-order recall; rewards set up the top of the player deck deliberately (`ReturnPlayerDiscardToTop`); hazards/passive recall discards automatically (`RecallPlayerDiscard`) |
-| `the-ember-orchard` | incubate | Owns incubation-as-delayed-known-cost: warmth/benefit now that seeds a known future hazard; rewards trade immediate gain for top-decked threats that hatch into stronger cards at end of turn |
-| `city-of-sleeping-giants` | stir | Owns stirring-as-recurrence/escalation from unresolved or exploited body movement: hazards left unresolved (or whose movement is exploited) return and escalate; recurrence is delivered by re-seeding the top of the world deck |
+| `overgrown-mall` | prune and profit | Self-pruning `Spore`; `Bloom` scales from Spores; leads with `DealProgressScaled` |
+| `fog-beach-party` | reveal and endure | Light economy; leads with `GainLight`; reveals `Concealed` hazards |
+| `whiteout-parking-garage` | freeze | Heat economy; leads with `GainHeat`, `FreezeCards`, `ThawCards`, frozen cards stop hand usability |
+| `the-tidal-archive` | displace | Leads with discard/deck-order recall; rewards set up the top of the player deck deliberately (`ReturnPlayerDiscardToTop`); hazards/passive recall discards automatically (`RecallPlayerDiscard`) |
+| `the-ember-orchard` | incubate | Leads with incubation-as-delayed-known-cost: warmth/benefit now that seeds a known future hazard; rewards trade immediate gain for top-decked threats that hatch into stronger cards at end of turn |
+| `city-of-sleeping-giants` | stir | Leads with stirring-as-recurrence/escalation from unresolved or exploited body movement: hazards left unresolved (or whose movement is exploited) return and escalate; recurrence is delivered by re-seeding the top of the world deck |
 
-This is a living registry — each new world adds an entry. The verb captures the exclusive mechanical identity of that world; no two worlds should feel interchangeable.
+This is a living registry — each new world adds an entry. The verb captures the *signature* mechanical identity of that world; no two worlds should feel interchangeable.
 
-**SV1:** Enforce the signature verb at authorship time. If a reward card would fit another world's verb, reconsider whether it adds something genuinely new or just duplicates mechanical territory.
+**No mechanic is exclusive; identity is.** There are no off-limits effects or keywords. Any world may use any entry in the effect/keyword vocabulary as a supporting tool. What must stay distinct is each world's *signature* — the main mechanic it is built around. The "leads with"/"signature of" columns elsewhere in this doc record which world a mechanic is the *identity* of; they are not a permission gate. The only constraint is: **do not build a new world's main identity on a mechanic that is already another world's signature.** (A separate, purely mechanical coupling can still make some effects poor fits — see the signature-effects note below — but that is engineering, not ownership.)
+
+**SV1:** Enforce the signature *identity* at authorship time. A reward card may reuse an effect another world is known for as an incidental supporting tool; what to avoid is making that effect the new world's main mechanic. If a card's *identity* would fit another world's verb, redesign it.
 
 ---
 
@@ -122,11 +124,11 @@ The threat resurfaces next turn rather than replacing the card in hand. Canonica
 <details>
 <summary>Complete effect kinds (expand)</summary>
 
-**Progress / Damage:** `DealProgress`, `DealProgressScaled` _(overgrown-mall exclusive)_, `DealProgressAll`, `Damage`, `DamageScaled`
+**Progress / Damage:** `DealProgress`, `DealProgressScaled` _(overgrown-mall signature)_, `DealProgressAll`, `Damage`, `DamageScaled`
 
 **Draw / Return:** `Draw`, `DiscardThenDraw`, `ReturnWorldCards` _(inert on world auto-hooks: it is boon-signed and no-ops when fired from a world card's automatic `onEndOfTurn`/`onClear`/etc. hooks; use `AddWorldCardToDeck { bTop: true }` to re-seed recurrence)_, `ReturnPlayerDiscardToTop` _(Tidal: player-selected recall to draw top)_, `RecallPlayerDiscard` _(Tidal: automatic recall from discard)_
 
-**Resource:** `Heal`, `GainEnergy`, `AddCard`, `AddPlayerCardToTop`, `AddWorldCardToDeck` (use `bTop: true` for top-of-deck placement), `AddThreatToWorldDeck`, `GainRandomCard` _(rolled from named pool)_, `GainLight` _(fog-beach-party exclusive)_, `GainHeat`
+**Resource:** `Heal`, `GainEnergy`, `AddCard`, `AddPlayerCardToTop`, `AddWorldCardToDeck` (use `bTop: true` for top-of-deck placement), `AddThreatToWorldDeck`, `GainRandomCard` _(rolled from named pool)_, `GainLight` _(fog-beach-party signature)_, `GainHeat`
 
 **Hand / discard manipulation:** `DestroyCardInHand`, `ExileTopWorldCards`, `ForceDestroy`, `Brace`
 
@@ -134,14 +136,14 @@ The threat resurfaces next turn rather than replacing the card in hand. Canonica
 
 </details>
 
-Theme-owned exclusive effects — reuse across worlds requires coordination:
+**Signature effects.** Each effect below is the *identity* of one world — the mechanic that world is built around. This is **not** a permission gate: any world may use these as supporting tools. The only constraint is identity (do not make one your *main* mechanic if it is already another world's signature; see "No mechanic is exclusive; identity is" above). Two rows also carry a *mechanical coupling* — an engineering fact, separate from the identity point — that makes the effect a poor fit elsewhere regardless of intent.
 
-| Effect | Owner | Note |
+| Effect | Signature of | Note |
 | --- | --- | --- |
-| `DealProgressScaled` | `overgrown-mall` | Exclusive now; others may use it with design review |
-| `GainLight` | `fog-beach-party` | The only way to lift `Concealed:N` depth — tied to Light resource |
-| `GainHeat`, `FreezeCards`, `ThawCards` | `whiteout-parking-garage` | Heat/freeze/thaw economy suite
-| `ReturnPlayerDiscardToTop`, `RecallPlayerDiscard` | `the-tidal-archive` | Owns discard/deck-order recall — moving real player card instances from `playerDiscard` to the top of `playerDraw`
+| `DealProgressScaled` | `overgrown-mall` | Its scaling-from-Spores identity. Freely reusable as a supporting tool. |
+| `GainLight` | `fog-beach-party` | **Coupled:** the only way to lift `Concealed:N` depth. A world that authors `Concealed` hazards must supply a Light source, which makes Light part of that world's identity whether intended or not. |
+| `GainHeat`, `FreezeCards`, `ThawCards` | `whiteout-parking-garage` | **Coupled:** a Heat/freeze/thaw suite; pulling in the suite pulls in the freeze identity. |
+| `ReturnPlayerDiscardToTop`, `RecallPlayerDiscard` | `the-tidal-archive` | Its discard/deck-order recall identity — moving real player card instances from `playerDiscard` to the top of `playerDraw`. |
 
 **C1a:** `DestroySelf` removes the firing world card from hand. It is only meaningful in `onEndOfTurn`, where the engine has a `selfId`.
 

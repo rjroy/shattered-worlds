@@ -2,7 +2,7 @@
 title: Eden Prime world
 date: 2026-06-29
 status: draft
-tags: [world-design, eden-prime, startle, alarm, keyword-gate, deck-pressure, core-engine]
+tags: [world-design, eden-prime, startle, alarm, applied-keywords, keyword-gate, progress-gate, deck-pressure, core-engine]
 modules: [world-data, themes, game-view, core-engine]
 related: [.lore/reference/theme-authoring.md, src/game/assets/themes/eden-prime/CATACLYSM.md, .lore/work/specs/the-ember-orchard.md, .lore/work/specs/city-of-sleeping-giants.md]
 req-prefix: EDEN
@@ -14,7 +14,7 @@ Eden Prime is a green paradise that has never needed the idea of danger. Animals
 
 Threat verb: **startle**. Eden Prime attacks by turning harmless abundance into involuntary reaction. Its hazards begin as gentle, low-pressure opportunities (fruit to take, creatures to pass, light to use). They stay harmless until the world becomes *alarmed* — and the thing that alarms the world is the player's own greed. Taking gifts, drawing more than your base hand, and pushing high-Progress turns teach paradise to flinch, converting future generosity into tempo shocks: forced discard, returned hazards, top-decked threats, and Panic.
 
-This spec targets a complete first implementation. Unlike `the-ember-orchard` and `city-of-sleeping-giants`, Eden Prime **does** take a bounded core-engine slice: it adds the **Alarm** transient keyword plus two general effect primitives (apply-keyword and a keyword-presence gate). These are not an Eden-Prime-only subsystem; they generalize patterns the engine already has (`DealProgress.bonus.tag`, `CounterSpec`, `frozen`), and are authored to be reusable by future worlds. The brief's fuller "alarm chain that auto-spreads from hazard to hazard" is captured as deferred future work.
+This spec targets a complete first implementation. Unlike `the-ember-orchard` and `city-of-sleeping-giants`, Eden Prime **does** take a bounded core-engine slice: it adds a general **applied-keyword** mechanism (a transient, runtime-applied keyword collection separate from authored keywords), with **Alarm** as its first instance, plus the effect primitives that drive it (apply-keyword, a keyword-presence gate, a progress gate, a keyword-removal, and a guard-granting effect). These are not an Eden-Prime-only subsystem; they generalize patterns the engine already has (`DealProgress.bonus.tag`, `CounterSpec`, `frozen`), and are authored to be reusable by future worlds (e.g. New Derelict's `Lockdown`). The brief's fuller "alarm chain that auto-spreads from hazard to hazard" is captured as deferred future work.
 
 ## Ratified decisions (2026-06-29)
 
@@ -37,7 +37,19 @@ A fresh-context spec review found the Alarm primitives and three reward cards we
 - **Alarm reduction is a named primitive, not the Brace model.** Two engine additions: `RemoveKeyword { keyword: "Alarm", target, amount }` (clears Alarm), and an `alarmGuard` charge (analogous to `braceCharges`) that absorbs the next Alarm-caused disruption. `Brace` is left as the `ForceDestroy`-only absorber it is.
 - **`Follow the Shade` uses a fixed-template top-deck**, not a player-chosen hand card, to keep the core slice bounded (a chosen-hand-card move would need a new `TargetSpec` and `PlayCard` field). Flagged as a deliberate scope-narrowing; revisit if the agency loss hurts the card's identity.
 - **The greed signal is tracked state.** `Flowers Face the Wrong Sun` reads a new `GameState.progressDealtThisTurn` (and the existing `turnPlayHistory`); this tracking field is part of the core-engine slice because the greed-tax identity depends on it.
-- **`Alarm` requires a new optional field on both `PlayerCard` and `WorldCard`** (analogous to `PlayerCard.frozen`, which exists only on player cards today). The mint path and the Alarm-application event shape are part of the core slice.
+- **`Alarm` requires a new optional field on both `PlayerCard` and `WorldCard`** (analogous to `PlayerCard.frozen`, which exists only on player cards today). The mint path and the Alarm-application event shape are part of the core slice. *(Generalized below: the field is the shared `appliedKeywords` collection, not an Alarm-named field.)*
+
+### Plan-derived resolutions (2026-06-29)
+
+Folded back from the implementation plan ([.lore/work/plans/eden-prime.md](../plans/eden-prime.md)) and a fresh-context plan review. These are normative and supersede the conflicting earlier wording above:
+
+- **The transient field is a general `appliedKeywords?: readonly Keyword[]` on both card interfaces, not an `Alarm`-named field.** Alarm is the first applied keyword; the collection is general so future worlds reuse it. This supersedes the "field analogous to `PlayerCard.frozen`" / "the `Alarm` field" wording in REQ-EDEN-9/14/40/44 (same intent — transient numeric-lifetime instance state separate from authored keywords — generalized). An applied keyword's `value` is its lifetime; "Alarm-bearing" means an applied `Alarm` entry with `value > 0`.
+- **`hasKeyword`/`keywordNames` union the authored `keywords` array and the `appliedKeywords` collection.** This makes `KeywordGate`, `CounterSpec.KeywordInHand` (REQ-EDEN-29), and `DealProgress.bonus.tag` recognize applied Alarm with no change to `resolveCounter`.
+- **The `alarmGuard` charge is granted by a new `GainAlarmGuard { amount }` effect** (parallel to `Brace`). The charge is consumed inside `KeywordGate`: when a gate passes threshold and `alarmGuard > 0`, one guard is spent and the inner effect is suppressed.
+- **`progressDealtThisTurn` is read by a new `ProgressGate { min, then }` effect** (parallel to `KeywordGate`, conditioning on `state.progressDealtThisTurn >= min`). Without it, REQ-EDEN-27's preferred greed-conditioned form is unimplementable, since the keyword/guard effects can only count cards, not read a `GameState` number. It does not consume `alarmGuard` (it is a greed signal, not an Alarm-caused disruption).
+- **The full core-effect set is five:** `ApplyKeyword`, `KeywordGate`, `ProgressGate`, `RemoveKeyword`, `GainAlarmGuard`. This supersedes REQ-EDEN-14's literal three-effect list.
+- **`firstWorldCardInHand` resolves by numeric id** (`parseInt(card.id, 10)`), not string comparison: ids are `String(nextId)`, so lexicographic order inverts at id ≥ 10 (`"10" < "2"`). This is a determinism contract and must be tested past 9 minted cards.
+- **`Follow the Shade`'s fixed slow-step top-deck is a distinct named template** (`Tread Softly`), not the reward card itself (REQ-EDEN-20).
 
 ## World Contract
 
@@ -85,7 +97,7 @@ These requirements describe a small, general engine extension. Exact type names 
 
 <div id="REQ-EDEN-9"></div>
 
-**REQ-EDEN-9:** Add `Alarm` to the engine keyword vocabulary (`KeywordName`) as the first **transient** keyword. Unlike the static keywords (`Obstructed`, `Creature`, `Slow`, `Spore`), `Alarm` is applied to a card instance at runtime and carries a numeric lifetime. This requires a new optional field analogous to `PlayerCard.frozen` on **both** `PlayerCard` and `WorldCard` (today `frozen` exists only on `PlayerCard`), wired through the mint path. The default applied value is **2** (the card stays alarmed for two turn-start ticks); this value is tuning but must have a concrete default so decay and threshold tests are writable.
+**REQ-EDEN-9:** Add `Alarm` to the engine keyword vocabulary (`KeywordName`) as the first **transient** keyword. Unlike the static keywords (`Obstructed`, `Creature`, `Slow`, `Spore`), `Alarm` is applied to a card instance at runtime and carries a numeric lifetime. This requires a new general optional field `appliedKeywords?: readonly Keyword[]` on **both** `PlayerCard` and `WorldCard` (a transient, runtime-applied keyword collection separate from the authored `keywords` array; see Plan-derived resolutions). `hasKeyword`/`keywordNames` must union the authored and applied sets so the existing counting machinery recognizes applied Alarm. The default applied value is **2** (the card stays alarmed for two turn-start ticks); this value is tuning but must have a concrete default so decay and threshold tests are writable.
 
 <div id="REQ-EDEN-10"></div>
 
@@ -94,7 +106,7 @@ These requirements describe a small, general engine extension. Exact type names 
 - **`"hand"`** — cards currently in hand (applies immediately to matching cards in `state.hand`).
 - **`"nextWorldCard"`** — the next world card drawn, via a deferred `GameState` flag modeled on `pendingForceDestroy` (set now, consumed and cleared in the draw handler).
 - **`"self"`** — the world card whose hook is firing, available only where the engine has a `selfId` (`onEndOfTurn`/`onPartialClear`); used by `First Warning Cry` to alarm itself (REQ-EDEN-24).
-- **`"firstWorldCardInHand"`** — the world card with the smallest mint-order `id` currently in hand, for deterministic targeting; used by REQ-EDEN-24/27.
+- **`"firstWorldCardInHand"`** — the world card with the smallest mint-order `id` currently in hand, for deterministic targeting; used by REQ-EDEN-24/27. Resolve by numeric id (`parseInt(card.id, 10)`), **not** string comparison: ids are `String(nextId)`, so lexicographic order inverts at id ≥ 10 (`"10" < "2"`).
 
 It must be deterministic and seedable (same seed plus same actions applies Alarm to the same card instances) and emit an event the renderer reads so applied Alarm is visible. Note: tagging "the cards a prior `Draw` step just drew" is intentionally **not** a target — `Sequence` cannot pipe a step's output — so the greed-on-draw loop is approximated by drawing and then applying Alarm to the hand. (New Derelict reuses these targets for `Lockdown` and adds none of its own — see `.lore/work/specs/new-derelict.md` REQ-DERELICT-9/15.)
 
@@ -104,7 +116,7 @@ It must be deterministic and seedable (same seed plus same actions applies Alarm
 
 <div id="REQ-EDEN-11a"></div>
 
-**REQ-EDEN-11a:** Add the Alarm pressure-valve primitives the reward kit depends on (the `Brace` model does not apply — `Brace` only absorbs `ForceDestroy`): `RemoveKeyword { keyword: "Alarm", target, amount }` which clears Alarm from up to `amount` cards in the target zone, and an `alarmGuard` charge on `GameState` (analogous to `braceCharges`) that absorbs the next Alarm-caused disruption (a gated startle is suppressed and one guard is consumed instead). Both are deterministic and emit events.
+**REQ-EDEN-11a:** Add the Alarm pressure-valve primitives the reward kit depends on (the `Brace` model does not apply — `Brace` only absorbs `ForceDestroy`): `RemoveKeyword { keyword: "Alarm", target, amount }` which clears Alarm from up to `amount` cards in the target zone, and an `alarmGuard` charge on `GameState` (analogous to `braceCharges`) granted by a new `GainAlarmGuard { amount }` effect (parallel to `Brace`) that absorbs the next Alarm-caused disruption (consumed inside `KeywordGate`: a gated startle is suppressed and one guard is consumed instead). All are deterministic and emit events.
 
 <div id="REQ-EDEN-12"></div>
 
@@ -112,7 +124,7 @@ It must be deterministic and seedable (same seed plus same actions applies Alarm
 
 <div id="REQ-EDEN-12a"></div>
 
-**REQ-EDEN-12a:** Add `GameState.progressDealtThisTurn: number` (reset at turn start, incremented on every `DealProgress`/`DealProgressAll`/scaled-progress resolution) so `Flowers Face the Wrong Sun` (REQ-EDEN-27) can read a concrete greed signal. This field is part of the core-engine slice and defaults to a no-op everywhere (it is written but read only by Eden Prime).
+**REQ-EDEN-12a:** Add `GameState.progressDealtThisTurn: number` (reset at turn start, incremented on every `DealProgress`/`DealProgressAll`/scaled-progress resolution via the shared `dealProgress()` choke point) so `Flowers Face the Wrong Sun` (REQ-EDEN-27) can read a concrete greed signal. The reader is a new `ProgressGate { min, then }` effect (parallel to `KeywordGate`) that runs `then` only when `progressDealtThisTurn >= min`. This field and effect are part of the core-engine slice and default to a no-op everywhere (written but read only by Eden Prime).
 
 <div id="REQ-EDEN-13"></div>
 
@@ -120,7 +132,7 @@ It must be deterministic and seedable (same seed plus same actions applies Alarm
 
 <div id="REQ-EDEN-14"></div>
 
-**REQ-EDEN-14:** The core-engine slice adds exactly: the `Alarm` keyword, the `Alarm` field on both card interfaces, `ApplyKeyword`, `KeywordGate`, `RemoveKeyword`, the `alarmGuard` charge, `progressDealtThisTurn`, and their handlers/events. Eden Prime must not introduce a second new keyword or a timer system beyond Alarm. The brief's auto-spreading "alarm chain" (Alarm jumping hazard-to-hazard on its own each time the player draws/discards/over-spends) is explicitly deferred; the shipped version spreads Alarm only through authored card effects.
+**REQ-EDEN-14:** The core-engine slice adds exactly: the `Alarm` keyword, the general `appliedKeywords` field on both card interfaces, the five effects `ApplyKeyword`, `KeywordGate`, `ProgressGate`, `RemoveKeyword`, `GainAlarmGuard`, the `alarmGuard` charge, `progressDealtThisTurn`, and their handlers/events. Eden Prime must not introduce a second new keyword or a timer system beyond Alarm. The brief's auto-spreading "alarm chain" (Alarm jumping hazard-to-hazard on its own each time the player draws/discards/over-spends) is explicitly deferred; the shipped version spreads Alarm only through authored card effects.
 
 <div id="REQ-EDEN-15"></div>
 
@@ -148,7 +160,7 @@ The following numbers are initial tuning. Costs, counts, and exact values may ch
 
 <div id="REQ-EDEN-20"></div>
 
-**REQ-EDEN-20:** `Follow the Shade` must be a slow-and-survive reward expressing "the player survives by moving slowly enough that the world can predict them without panicking." Initial effect: `Sequence` of `AddPlayerCardToTop { template: "&lt;fixed slow-step template&gt;" }` and a small `Heal 2`. *(Scope decision 2026-06-29: uses a fixed-template top-deck rather than a player-chosen hand card, which would require a new `TargetSpec` and `PlayCard` field beyond the Alarm core slice. Revisit if the fixed template weakens the card's identity.)* It must not duplicate Tidal's discard-recall identity.
+**REQ-EDEN-20:** `Follow the Shade` must be a slow-and-survive reward expressing "the player survives by moving slowly enough that the world can predict them without panicking." Initial effect: `Sequence` of `AddPlayerCardToTop { template: "Tread Softly" }` (a distinct named slow-step player template authored in `allCards.json`, **not** the reward card itself) and a small `Heal 2`. *(Scope decision 2026-06-29: uses a fixed-template top-deck rather than a player-chosen hand card, which would require a new `TargetSpec` and `PlayCard` field beyond the Alarm core slice. Revisit if the fixed template weakens the card's identity.)* It must not duplicate Tidal's discard-recall identity.
 
 <div id="REQ-EDEN-21"></div>
 
@@ -156,7 +168,7 @@ The following numbers are initial tuning. Costs, counts, and exact values may ch
 
 <div id="REQ-EDEN-22"></div>
 
-**REQ-EDEN-22:** Eden Prime reward cards must not claim another world's exclusive mechanics as their main identity. They must not use `GainLight`, `GainHeat`, `FreezeCards`, `ThawCards`, `DealProgressScaled`, `Concealed`, `Spore`, `ReturnPlayerDiscardToTop`, or `RecallPlayerDiscard`.
+**REQ-EDEN-22:** No effect is off-limits to Eden Prime, but its reward cards must not build their *main identity* on a mechanic that is another world's signature (see "No mechanic is exclusive; identity is" in `.lore/reference/theme-authoring.md`). The startle/greed-tax identity must not read as Light, the Heat/freeze suite, `DealProgressScaled` (overgrown-mall), `Concealed`/`Spore`, or the Tidal discard recalls (`ReturnPlayerDiscardToTop`/`RecallPlayerDiscard`). Incidental use of a shared effect as a supporting tool is permitted as long as it is not the card's identity. Note the genuine couplings still make some of these poor fits regardless of intent: authoring a `Concealed` hazard would require a `GainLight` source (pulling in the Fog identity), and the Heat/freeze/thaw suite is a unit.
 
 ## World Card Recipe
 
@@ -178,7 +190,7 @@ The following numbers are initial tuning. Costs, counts, and exact values may ch
 
 <div id="REQ-EDEN-27"></div>
 
-**REQ-EDEN-27:** `Flowers Face the Wrong Sun` must be the act-2 momentum-reader, reading the player's tempo as weather. Initial shape: cost 3, `Obstructed`, discardable; `onCleared: None`; `onDiscarded: None`; `onPartialClear: None`; `onEndOfTurn: KeywordGate { keyword: ..., ... }` is **not** used here — instead its `onEndOfTurn` is a greed-gated apply expressed against `GameState.progressDealtThisTurn` (REQ-EDEN-12a): when `progressDealtThisTurn` exceeds a threshold (initial default **4**), apply `Alarm` (value 2) to the first world card in hand; otherwise no-op. It is the engine that punishes high-Progress turns. *(If a clean `progressDealtThisTurn`-conditioned apply is not authored in slice 1, fall back to applying Alarm every end of turn it is present, but the greed-conditioned form is preferred because it preserves the "greed, not time" invariant.)*
+**REQ-EDEN-27:** `Flowers Face the Wrong Sun` must be the act-2 momentum-reader, reading the player's tempo as weather. Initial shape: cost 3, `Obstructed`, discardable; `onCleared: None`; `onDiscarded: None`; `onPartialClear: None`; `onEndOfTurn: ProgressGate { min: 5, then: ApplyKeyword { keyword: "Alarm", value: 2, target: "firstWorldCardInHand" } }` — when `progressDealtThisTurn >= 5` (i.e. more than 4), apply `Alarm` to the first world card in hand; otherwise no-op. It is the engine that punishes high-Progress turns. The `ProgressGate` reader (REQ-EDEN-12a) makes this greed-conditioned form the shipped one, preserving the "greed, not time" invariant.
 
 <div id="REQ-EDEN-28"></div>
 
@@ -262,13 +274,13 @@ Counts are tuning values; act roles and the fixed Walker closer are not.
 
 <div id="REQ-EDEN-44"></div>
 
-**REQ-EDEN-44:** Any implementation plan derived from this spec must split the work into at least four reviewable slices, each carrying its own tests (tests are not deferred to a final slice): (1) the **core-engine Alarm slice** — `Alarm` keyword, the `Alarm` field on `PlayerCard` and `WorldCard` plus mint wiring, `ApplyKeyword` (with its `"hand"`, `"nextWorldCard"` deferred-flag, `"self"`, and `"firstWorldCardInHand"` targets), `KeywordGate`, `RemoveKeyword`, the `alarmGuard` charge, `GameState.progressDealtThisTurn`, handlers, events, and the determinism/threshold/decay/no-op tests of REQ-EDEN-45; (2) world data and registration; (3) assets/presentation/help; (4) full conformance and seeded gameplay validation. The core slice must land and be green before the world data depends on it.
+**REQ-EDEN-44:** Any implementation plan derived from this spec must split the work into at least four reviewable slices, each carrying its own tests (tests are not deferred to a final slice): (1) the **core-engine Alarm slice** — `Alarm` keyword, the general `appliedKeywords` field on `PlayerCard` and `WorldCard`, `ApplyKeyword` (with its `"hand"`, `"nextWorldCard"` deferred-flag, `"self"`, and `"firstWorldCardInHand"` targets), `KeywordGate`, `ProgressGate`, `RemoveKeyword`, `GainAlarmGuard` + the `alarmGuard` charge, `GameState.progressDealtThisTurn`, handlers, events, and the determinism/threshold/decay/no-op tests of REQ-EDEN-45; (2) world data and registration; (3) assets/presentation/help; (4) full conformance and seeded gameplay validation. The core slice must land and be green before the world data depends on it.
 
 ## Tests And Validation
 
 <div id="REQ-EDEN-45"></div>
 
-**REQ-EDEN-45:** Core-engine tests must cover the Alarm primitives independent of Eden Prime: `ApplyKeyword` places `Alarm` (value 2) deterministically on the intended cards for all four targets (`"hand"`, the `"nextWorldCard"` deferred-flag target, `"self"`, and `"firstWorldCardInHand"` resolving to the smallest mint-order id) and emits an event; `KeywordGate` runs its inner effect at and above `min` and is a no-op below it (boundary tested at `min-1`, `min`, `min+1` for the default `min: 2`); `RemoveKeyword` and `alarmGuard` clear/absorb Alarm deterministically; Alarm decays by one per turn-start tick and the keyword is removed at zero; and a world that applies no Alarm produces byte-identical state and events to before the slice (the no-op guarantee, including `progressDealtThisTurn` and `alarmGuard` being written-but-unread).
+**REQ-EDEN-45:** Core-engine tests must cover the Alarm primitives independent of Eden Prime: `ApplyKeyword` places `Alarm` (value 2) deterministically on the intended cards for all four targets (`"hand"`, the `"nextWorldCard"` deferred-flag target consumed on the next world draw, `"self"`, and `"firstWorldCardInHand"` resolving to the smallest mint-order id **including a board with ≥ 10 minted cards to catch string-vs-numeric id ordering**) and emits an event; `KeywordGate` and `ProgressGate` run their inner effect at and above `min` and are a no-op below it (boundary tested at `min-1`, `min`, `min+1`); `RemoveKeyword`, `GainAlarmGuard`, and gate-consumption clear/absorb Alarm deterministically; Alarm decays by one per turn-start tick (in the fixed turn-start order) and the keyword is removed at zero; and a world that applies no Alarm produces byte-identical state and events to before the slice (the no-op guarantee, including `progressDealtThisTurn` and `alarmGuard` being written-but-unread).
 
 <div id="REQ-EDEN-46"></div>
 
