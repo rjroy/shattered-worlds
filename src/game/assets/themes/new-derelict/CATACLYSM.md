@@ -165,18 +165,23 @@ The reality backdrop remains the busy starship commons: Deck 7 corridor
 signage, engineering and crew-mess arrows, administration desks, systems
 panels, supply crates, fluorescent ceiling strips, and crew moving through
 ordinary work. The intrusion overlay should show the Abandonment Drill around
-the perimeter:
+the perimeter by transforming that same corridor into its post-Walker emergency
+state. It should preserve the central hallway opening while making the edges
+look as though the ship's own systems have begun sealing the image:
 
-- red emergency light bars cutting across ceiling panels and bulkhead seams;
-- sealed doors and half-dropped blast shutters intruding from side corridors;
-- floating tools, mugs, tablets, and paperwork where gravity has begun to
-  flicker;
-- fractured announcement text shapes and warning diagrams distorted into
-  unreadable procedural noise;
-- violet-white Walker geometry replacing normal route arrows and evacuation
-  paths;
-- crew silhouettes caught mid-task, still calm in posture but isolated behind
-  glass, pressure doors, or lockdown fields.
+- turn the existing ceiling light strips and wall seams into red emergency
+  bars, warning strobes, and sealed bulkhead outlines;
+- drop blast shutters and pressure doors from the side corridors, engineering
+  sign, administration desk, and crew-mess openings;
+- lift tools, mugs, tablets, paperwork, and small supply objects from the
+  workstation edges where gravity has begun to flicker;
+- corrupt systems panels, daily-assignment boards, and route signage into
+  fractured announcement blocks and unreadable procedural warnings;
+- replace ordinary arrows and corridor wayfinding with violet-white Walker
+  geometry that points every route toward the same impossible evacuation path;
+- isolate crew silhouettes from the original commons behind glass, pressure
+  doors, warning light, or lockdown fields while keeping their calm workday
+  posture.
 
 Keep the central play area readable. The catastrophe should feel like a normal
 workday being reorganized into a shipwide emergency faster than anyone can

@@ -167,19 +167,24 @@ The reality backdrop remains the enormous inter-reality terminal: glass roof,
 iron arches, platform numbers, departure boards, mixed-era trains, portal
 tunnels, realm signage, ticketed crowds, luggage, and station staff maintaining
 routine order. The intrusion overlay should show the Service Suspension around
-the perimeter:
+the perimeter by turning those visible station systems into their post-Walker
+quarantine state. It should feel like the same terminal has updated every sign,
+gate, platform, and route to contain one impossible passenger:
 
-- departure boards flipping simultaneously to SERVICE SUSPENDED, ENTITY
-  DETECTED, and DO NOT BOARD in fragmented, partially unreadable text;
-- red and violet warning bands crossing platform signs, clocks, and ticket
-  barriers;
-- trains from incompatible realities halted nose-to-nose or arriving through
-  the wrong portals;
-- quarantine gates, rope lines, stamped notices, and glowing platform seals
-  spreading from the side tracks;
-- route maps and rail lines bending into repeated Walker footprint geometry;
-- passengers and staff caught mid-transfer, separated by glass, warning light,
-  or impossible gaps between platforms.
+- flip the existing departure boards and platform signs toward SERVICE
+  SUSPENDED, ENTITY DETECTED, and DO NOT BOARD, with enough fragmentation that
+  they read as warning shapes rather than clean UI;
+- cross the glass roof, iron arches, clocks, ticket barriers, and platform
+  numbers with red and violet quarantine bands;
+- halt the mixed-era trains at the side platforms nose-to-nose with trains from
+  incompatible realities, or show them arriving through the wrong portal mouths;
+- grow quarantine gates, rope lines, stamped notices, and glowing platform
+  seals out of the side tracks and boarding queues;
+- bend route maps, rails, and platform edges into repeated Walker footprint
+  geometry that redirects every line toward the same point;
+- trap passengers, luggage, and station staff from the original scene
+  mid-transfer behind glass, warning light, ticket barriers, or impossible gaps
+  between platforms.
 
 Keep the central play area readable. The catastrophe should feel like the
 world's most competent transit system discovering one traveler it cannot route

@@ -64,27 +64,7 @@ discards, or spends too much Progress in one turn.
 ### Act I: Open Hands
 
 Paradise still assumes everything is welcome.
-You walk into a functioning starship.
 
-Crew members are busy.
-
-Someone mistakes you for administrative paperwork.
-
-Nobody panics.
-
-Someone gives directions without looking up from a tablet.
-
-That makes the later shift much stronger.
-
-Five minutes later:
-
-Lights go red.
-Bulkheads seal.
-Gravity flickers.
-The captain never finishes her announcement.
-Every corridor becomes a survival scenario.
-
-The contrast sells it.
 - Minor hazards offer fruit, draw, or easy Progress before introducing Alarm.
 - Animals and plants react incorrectly rather than aggressively.
 - The player learns that receiving a gift may be enough to frighten the giver.
@@ -182,39 +162,23 @@ paradise's gifts, but every hurried choice teaches the garden to flee faster.
 The reality backdrop remains the gentle green valley: terraced garden
 structures grown into cliffs, clear water, flowering plants, offered fruit,
 curious birds and insects, and long-necked grazers that do not know how to run.
-The intrusion overlay should show the First Alarm around the perimeter:
+The intrusion overlay should transform those exact edge elements into Eden
+Prime after the Walker has taught it fear. It should read as the same paradise
+misinterpreting its own abundance, not as a separate disaster pasted over it.
+Build the First Alarm as an irregular perimeter frame:
 
-- a second sun burning low at the edge of the sky, casting doubled shadows in
-  conflicting directions;
-- sauropod-like herds beginning to stampede while still looking confused rather
-  than fierce;
-- fruit splitting open early, dropping seeds and pulp as if the trees are
-  surrendering their harvest;
-- birds and insects forming startled spiral paths around the new light;
-- flowers and vines turning away from the player and toward impossiblYou walk into a functioning starship.
-
-Crew members are busy.
-
-Someone mistakes you for administrative paperwork.
-
-Nobody panics.
-
-Someone gives directions without looking up from a tablet.
-
-That makes the later shift much stronger.
-
-Five minutes later:
-
-Lights go red.
-Bulkheads seal.
-Gravity flickers.
-The captain never finishes her announcement.
-Every corridor becomes a survival scenario.
-
-The contrast sells it.e
-  violet-white glare;
-- fine alarm geometry: repeated footprint shapes, tremor lines, and forked
-  shadows spreading through leaves, water, and terrace walls.
+- let the second sun intrude from an upper corner, casting doubled shadows from
+  existing vines, fruit, terraces, and grazers in conflicting directions;
+- turn the long-necked grazers near the side fields into the first confused
+  stampede, still gentle-faced but moving too fast for a world without flight;
+- split the hanging and foreground fruit early, dropping seeds, pulp, and
+  pollen as if the plants are surrendering harvest before they are touched;
+- bend birds and insects from the open sky into startled spiral flight paths
+  around the new light;
+- make flowers, broad leaves, and terrace vines recoil from the central play
+  area and face the impossible violet-white glare instead;
+- carry repeated footprint shapes, tremor lines, and forked shadow geometry
+  through water, leaves, terrace walls, and path edges.
 
 Keep the central play area readable. The catastrophe should feel like a world
 with no word for fear trying to invent one all at once.
