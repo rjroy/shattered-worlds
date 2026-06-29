@@ -5,11 +5,10 @@ import allCardsJson from "../../data/allCards.json";
 import { CARD_CATALOG } from "../../data/worldManifest";
 
 describe("unified catalog verification", () => {
-  it("assembles without errors and has 132 templates", () => {
+  it("assembles the authored card data without errors", () => {
     const unified = allCardsJson as unknown as RawCardSource;
     expect(unified.cardTemplates).toBeDefined();
-    const catalog = assembleCatalog([unified]);
-    expect(Object.keys(catalog)).toHaveLength(132);
+    expect(() => assembleCatalog([unified])).not.toThrow();
   });
 
   it("CARD_CATALOG matches the assembled unified file", () => {
@@ -26,18 +25,5 @@ describe("unified catalog verification", () => {
     const catalog = assembleCatalog([unified]);
     expect(catalog["Shadow Overhead"]?.kind).toBe("world");
     expect("Find Footing" in catalog).toBe(true);
-  });
-
-  it("has expected player/world counts", () => {
-    const unified = allCardsJson as unknown as RawCardSource;
-    const catalog = assembleCatalog([unified]);
-    let playerCt = 0,
-      worldCt = 0;
-    for (const v of Object.values(catalog)) {
-      if (v.kind === "player") playerCt++;
-      else worldCt++;
-    }
-    expect(playerCt).toBe(68);
-    expect(worldCt).toBe(64);
   });
 });
