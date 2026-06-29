@@ -4,8 +4,10 @@ export const THE_EMBER_ORCHARD_DISPLAY: WorldDisplayData = {
   name: "The Ember Orchard",
   tagline: "A mystical orchard that stores summer heat in star-fruit.",
   story:
-    "Rows of star-fruit stored warmth until the Walker came, making the orchard count itself wrong. The heat is real, but every dormant star is an egg hatching in the dark below.",
+    "Rows of star-fruit stored warmth until the Walker came, making the orchard count itself " +
+    "wrong. The heat is real, but every dormant star is an egg hatching in the dark below.",
   difficulty: 4,
+  cycle: 3,
   backgroundKey: "the-ember-orchard-bg",
 };
 

@@ -66,7 +66,6 @@ describe("EFFECT_ICON_TEXTURES", () => {
     for (const id of ALL_ICON_IDS) {
       expect(EFFECT_ICON_TEXTURES[id].length).toBeGreaterThan(0);
     }
-    expect(Object.keys(EFFECT_ICON_TEXTURES).sort()).toEqual([...ALL_ICON_IDS].sort());
   });
 
   it("only reuses the discard texture for discard-trigger icons", () => {

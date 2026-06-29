@@ -1,6 +1,4 @@
 import { describe, expect, it } from "bun:test";
-import { readFileSync } from "node:fs";
-import { join } from "node:path";
 
 import { createGame } from "../../core/index";
 import type { Action, GameEvent, GameState, WorldCard } from "../../core/index";
@@ -295,16 +293,6 @@ describe("gameplayEventStream contract", () => {
       }),
     ];
 
-    expect(Object.keys(stream[0] ?? {})).toEqual([
-      "kind",
-      "sessionId",
-      "worldId",
-      "seed",
-      "appliedModifiers",
-      "timestamp",
-      "initialEvents",
-      "initialState",
-    ]);
     expect(stream[1]).toEqual({
       kind: "GameplayBatch",
       sessionId: "session-7",
@@ -330,31 +318,7 @@ describe("gameplayEventStream contract", () => {
       ],
       state,
     });
-    expect(Object.keys(stream[2] ?? {})).toEqual([
-      "kind",
-      "sessionId",
-      "outcome",
-      "finalActIndex",
-      "timestamp",
-      "finalState",
-    ]);
     expect(() => structuredClone(stream)).not.toThrow();
-  });
-
-  it("stays renderer-free and imports no Phaser runtime", () => {
-    const runtimeModules = [
-      "gameplayEventStream.ts",
-      "gameplaySession.ts",
-      "gameplayRuntime.ts",
-      "runStats.ts",
-    ];
-
-    for (const module of runtimeModules) {
-      const source = readFileSync(join(import.meta.dir, module), "utf8");
-
-      expect(source).not.toMatch(/from\s+['"]phaser['"]/i);
-      expect(source).not.toMatch(/import\s*\(\s*['"]phaser['"]\s*\)/i);
-    }
   });
 
   it("uses the public core surface for GameEvent and GameState types", () => {

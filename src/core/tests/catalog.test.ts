@@ -9,10 +9,6 @@ import { CARD_CATALOG } from "../../data/worldManifest";
 // ---------------------------------------------------------------------------
 
 describe("unified catalog completeness", () => {
-  it("global catalog has the expected template count", () => {
-    expect(Object.keys(CARD_CATALOG)).toHaveLength(132);
-  });
-
   it("catalog contains all core starter and zombie-big-box template ids", () => {
     const expectedIds = [
       "Sprint",

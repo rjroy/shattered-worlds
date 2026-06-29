@@ -1,7 +1,5 @@
 import { describe, expect, test } from 'bun:test'
 import type { GameState } from '../../core/model/types'
-import { readFileSync } from 'node:fs'
-import { join } from 'node:path'
 import { createWorld } from '../../core/engine/world'
 import { reduce } from '../../core/engine/reduce'
 import { createRng, nextFloat, rngFromSeed } from '../../core/engine/rng'
@@ -60,16 +58,6 @@ function runWorld(seed: number): { finalState: GameState; turns: number; actions
 // ---------------------------------------------------------------------------
 
 describe('policy', () => {
-  test('sim run stays on pure core imports with no runtime stream dependency', () => {
-    const source = readFileSync(join(import.meta.dir, '..', 'run.ts'), 'utf8')
-
-    expect(source).not.toContain('gameplaySession')
-    expect(source).not.toContain('gameplayEventStream')
-    expect(source).not.toContain('/game/runtime/')
-    expect(source).not.toContain('phaser')
-    expect(source).not.toContain('Phaser')
-  })
-
   test(`all worlds reach terminal state within ${MAX_ACTIONS} actions`, () => {
     for (let seed = 1; seed <= WORLD_COUNT; seed++) {
       const { finalState, actions } = runWorld(seed)

@@ -22,6 +22,7 @@ export interface WorldDisplayData {
   name: string;
   tagline: string;
   story: string;
+  cycle: number; // 1-3, release cycle. These are the story cycles.
   difficulty: number; // 1-5, 5 being the hardest
   backgroundKey?: string;
 }

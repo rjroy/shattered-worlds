@@ -10,22 +10,11 @@ import { selectTheme } from "../view/themes/themeManifest";
 import { textStyle, TEXT } from "../view/presentation";
 import { FONTS } from "../view/fonts";
 import { CANVAS_W, CANVAS_H, WORLD_SELECT_LAYOUT } from "../view/layout";
-import { worldBadgeLabel, difficultyPips } from "../view/worldBadge";
+import { worldBadgeLabel, difficultyPips, cycleLabel } from "../view/worldBadge";
 import { HelpOverlayView } from "../view/HelpOverlayView";
 import { SettingsOverlayView } from "../view/SettingsOverlayView";
 import { canPageLeft, canPageRight, pageLeft, pageRight } from "./worldSelectPaging";
 import { UserSettingsStore } from "../runtime/userSettings";
-
-const CARD_W = WORLD_SELECT_LAYOUT.cardWidth;
-const CARD_H = WORLD_SELECT_LAYOUT.cardHeight;
-const CARD_GAP = WORLD_SELECT_LAYOUT.cardGap;
-const CARD_Y = WORLD_SELECT_LAYOUT.cardY; // card center y — over the stone-path area of the title image
-const SUBTITLE_Y = WORLD_SELECT_LAYOUT.subtitleY;
-const VISIBLE_WORLD_COUNT = WORLD_SELECT_LAYOUT.visibleWorldCount;
-const ARROW_Y = CARD_Y;
-const ARROW_W = WORLD_SELECT_LAYOUT.arrowWidth;
-const ARROW_H = WORLD_SELECT_LAYOUT.arrowHeight;
-const ARROW_GAP = WORLD_SELECT_LAYOUT.arrowGap;
 
 // Common return type for the world card background, which may be either an image or a simple colored rectangle
 type WorldCardBackground = Phaser.GameObjects.Image | Phaser.GameObjects.Rectangle;
@@ -71,8 +60,8 @@ export class WorldSelectScene extends Phaser.Scene {
     loadAssets(this);
     this.loadingLabel = this.add
       .text(
-        CANVAS_W / 2,
-        CANVAS_H / 2,
+        WORLD_SELECT_LAYOUT.center.x,
+        WORLD_SELECT_LAYOUT.center.y,
         "Loading...",
         textStyle({
           fontFamily: FONTS.title,
@@ -101,7 +90,7 @@ export class WorldSelectScene extends Phaser.Scene {
 
     // title image fills canvas
     const bgImg = this.add
-      .image(CANVAS_W / 2, CANVAS_H / 2, "world-select-bg")
+      .image(WORLD_SELECT_LAYOUT.center.x, WORLD_SELECT_LAYOUT.center.y, "world-select-bg")
       .setDisplaySize(CANVAS_W, CANVAS_H);
 
     const loadingTween = this.tweens.add({
@@ -132,8 +121,8 @@ export class WorldSelectScene extends Phaser.Scene {
       uiObjects.push(
         this.add
           .text(
-            CANVAS_W / 2,
-            SUBTITLE_Y,
+            WORLD_SELECT_LAYOUT.selection.x,
+            WORLD_SELECT_LAYOUT.selection.y,
             "Choose your shard ",
             textStyle({
               fontFamily: FONTS.title,
@@ -145,20 +134,16 @@ export class WorldSelectScene extends Phaser.Scene {
           .setOrigin(0.5, 0.5),
       );
 
+      const INF_CYCLE = 100;
       this.worldIds = Object.keys(worldManifest);
       this.worldIds.sort((a, b) => {
-        const lockA = this.getWorldLockState(a);
-        const lockB = this.getWorldLockState(b);
-        if (lockB.locked && !lockA.locked) return -1;
-        if (lockA.locked && !lockB.locked) return 1;
+        const cycleA = worldDisplayManifest[a]?.cycle ?? INF_CYCLE;
+        const cycleB = worldDisplayManifest[b]?.cycle ?? INF_CYCLE;
+        const cycleDelta = cycleA - cycleB;
+        if (cycleDelta !== 0) return cycleDelta;
 
-        if (lockA.locked && lockB.locked) {
-          const costDelta = (lockA.cost ?? 0) - (lockB.cost ?? 0);
-          if (costDelta !== 0) return costDelta;
-        }
-
-        const difficultyA = worldDisplayManifest[a]?.difficulty ?? 6;
-        const difficultyB = worldDisplayManifest[b]?.difficulty ?? 6;
+        const difficultyA = worldDisplayManifest[a]?.difficulty ?? INF_CYCLE;
+        const difficultyB = worldDisplayManifest[b]?.difficulty ?? INF_CYCLE;
         const difficultyDelta = difficultyA - difficultyB;
         if (difficultyDelta !== 0) return difficultyDelta;
 
@@ -193,26 +178,41 @@ export class WorldSelectScene extends Phaser.Scene {
   }
 
   private createChronicleButton(): Phaser.GameObjects.Container {
-    const button = this.add.container(CANVAS_W - 88, 34);
-    const bg = this.add.rectangle(0, 0, 132, 34, 0x0f0b15, 0.82);
-    bg.setStrokeStyle(1, 0xd6b15c, 0.9);
-    bg.setRounded(6);
+    const button = this.add.container(
+      WORLD_SELECT_LAYOUT.buttons.chronicle.x,
+      WORLD_SELECT_LAYOUT.buttons.chronicle.y,
+    );
+    const bg = this.add.rectangle(
+      0,
+      0,
+      WORLD_SELECT_LAYOUT.buttons.chronicle.width,
+      WORLD_SELECT_LAYOUT.buttons.chronicle.height,
+      WORLD_SELECT_LAYOUT.buttons.bg.color,
+      WORLD_SELECT_LAYOUT.buttons.bg.alpha,
+    );
+    bg.setStrokeStyle(
+      WORLD_SELECT_LAYOUT.buttons.stroke.width,
+      WORLD_SELECT_LAYOUT.buttons.stroke.color,
+      WORLD_SELECT_LAYOUT.buttons.stroke.alpha,
+    );
+
+    bg.setRounded(WORLD_SELECT_LAYOUT.buttons.bg.rounded);
     bg.setInteractive({ useHandCursor: true });
     const label = this.add
       .text(
         0,
-        -8,
+        0,
         "Chronicle",
         textStyle({
           fontFamily: FONTS.title,
-          fontSize: "15px",
-          color: "#d6b15c",
+          fontSize: WORLD_SELECT_LAYOUT.buttons.chronicle.fontSize,
+          color: TEXT.textSelect,
           fontStyle: "bold",
         }),
       )
-      .setOrigin(0.5, 0);
+      .setOrigin(0.5, 0.5);
     button.add([bg, label]);
-    bg.on("pointerover", () => button.setScale(1.08));
+    bg.on("pointerover", () => button.setScale(WORLD_SELECT_LAYOUT.buttons.hoverScale));
     bg.on("pointerout", () => button.setScale(1));
     bg.on("pointerdown", () => {
       if (this.scene.isActive()) this.scene.start("Chronicle");
@@ -221,26 +221,40 @@ export class WorldSelectScene extends Phaser.Scene {
   }
 
   private createDestinyButton(): Phaser.GameObjects.Container {
-    const button = this.add.container(CANVAS_W - 256, 34);
-    const bg = this.add.rectangle(0, 0, 108, 34, 0x0f0b15, 0.82);
-    bg.setStrokeStyle(1, 0xd6b15c, 0.9);
-    bg.setRounded(6);
+    const button = this.add.container(
+      WORLD_SELECT_LAYOUT.buttons.destiny.x,
+      WORLD_SELECT_LAYOUT.buttons.destiny.y,
+    );
+    const bg = this.add.rectangle(
+      0,
+      0,
+      WORLD_SELECT_LAYOUT.buttons.destiny.width,
+      WORLD_SELECT_LAYOUT.buttons.destiny.height,
+      WORLD_SELECT_LAYOUT.buttons.bg.color,
+      WORLD_SELECT_LAYOUT.buttons.bg.alpha,
+    );
+    bg.setStrokeStyle(
+      WORLD_SELECT_LAYOUT.buttons.stroke.width,
+      WORLD_SELECT_LAYOUT.buttons.stroke.color,
+      WORLD_SELECT_LAYOUT.buttons.stroke.alpha,
+    );
+    bg.setRounded(WORLD_SELECT_LAYOUT.buttons.bg.rounded);
     bg.setInteractive({ useHandCursor: true });
     const label = this.add
       .text(
         0,
-        -8,
+        0,
         "Destiny",
         textStyle({
           fontFamily: FONTS.title,
-          fontSize: "15px",
-          color: "#d6b15c",
+          fontSize: WORLD_SELECT_LAYOUT.buttons.destiny.fontSize,
+          color: TEXT.textSelect,
           fontStyle: "bold",
         }),
       )
-      .setOrigin(0.5, 0);
+      .setOrigin(0.5, 0.5);
     button.add([bg, label]);
-    bg.on("pointerover", () => button.setScale(1.08));
+    bg.on("pointerover", () => button.setScale(WORLD_SELECT_LAYOUT.buttons.hoverScale));
     bg.on("pointerout", () => button.setScale(1));
     bg.on("pointerdown", () => {
       if (this.scene.isActive()) this.scene.start("Destiny");
@@ -249,26 +263,40 @@ export class WorldSelectScene extends Phaser.Scene {
   }
 
   private createHelpButton(): Phaser.GameObjects.Container {
-    const button = this.add.container(CANVAS_W - 178, 34);
-    const bg = this.add.rectangle(0, 0, 34, 34, 0x0f0b15, 0.82);
-    bg.setStrokeStyle(1, 0xd6b15c, 0.9);
-    bg.setRounded(6);
+    const button = this.add.container(
+      WORLD_SELECT_LAYOUT.buttons.help.x,
+      WORLD_SELECT_LAYOUT.buttons.help.y,
+    );
+    const bg = this.add.rectangle(
+      0,
+      0,
+      WORLD_SELECT_LAYOUT.buttons.help.width,
+      WORLD_SELECT_LAYOUT.buttons.help.height,
+      WORLD_SELECT_LAYOUT.buttons.bg.color,
+      WORLD_SELECT_LAYOUT.buttons.bg.alpha,
+    );
+    bg.setStrokeStyle(
+      WORLD_SELECT_LAYOUT.buttons.stroke.width,
+      WORLD_SELECT_LAYOUT.buttons.stroke.color,
+      WORLD_SELECT_LAYOUT.buttons.stroke.alpha,
+    );
+    bg.setRounded(WORLD_SELECT_LAYOUT.buttons.bg.rounded);
     bg.setInteractive({ useHandCursor: true });
     const label = this.add
       .text(
         0,
-        -9,
+        0,
         "?",
         textStyle({
           fontFamily: FONTS.monospace,
-          fontSize: "20px",
-          color: "#d6b15c",
+          fontSize: WORLD_SELECT_LAYOUT.buttons.help.fontSize,
+          color: TEXT.textSelect,
           fontStyle: "bold",
         }),
       )
-      .setOrigin(0.5, 0);
+      .setOrigin(0.5, 0.5);
     button.add([bg, label]);
-    bg.on("pointerover", () => button.setScale(1.08));
+    bg.on("pointerover", () => button.setScale(WORLD_SELECT_LAYOUT.buttons.hoverScale));
     bg.on("pointerout", () => button.setScale(1));
     bg.on("pointerdown", () => {
       if (this.scene.isActive()) this.showHelpOverlay();
@@ -277,26 +305,40 @@ export class WorldSelectScene extends Phaser.Scene {
   }
 
   private createSettingsButton(): Phaser.GameObjects.Container {
-    const button = this.add.container(CANVAS_W - 335, 34);
-    const bg = this.add.rectangle(0, 0, 34, 34, 0x0f0b15, 0.82);
-    bg.setStrokeStyle(1, 0xd6b15c, 0.9);
-    bg.setRounded(6);
+    const button = this.add.container(
+      WORLD_SELECT_LAYOUT.buttons.setting.x,
+      WORLD_SELECT_LAYOUT.buttons.setting.y,
+    );
+    const bg = this.add.rectangle(
+      0,
+      0,
+      WORLD_SELECT_LAYOUT.buttons.setting.width,
+      WORLD_SELECT_LAYOUT.buttons.setting.height,
+      WORLD_SELECT_LAYOUT.buttons.bg.color,
+      WORLD_SELECT_LAYOUT.buttons.bg.alpha,
+    );
+    bg.setStrokeStyle(
+      WORLD_SELECT_LAYOUT.buttons.stroke.width,
+      WORLD_SELECT_LAYOUT.buttons.stroke.color,
+      WORLD_SELECT_LAYOUT.buttons.stroke.alpha,
+    );
+    bg.setRounded(WORLD_SELECT_LAYOUT.buttons.bg.rounded);
     bg.setInteractive({ useHandCursor: true });
     const label = this.add
       .text(
         0,
-        -9,
+        0,
         "S",
         textStyle({
           fontFamily: FONTS.monospace,
-          fontSize: "20px",
-          color: "#d6b15c",
+          fontSize: WORLD_SELECT_LAYOUT.buttons.setting.fontSize,
+          color: TEXT.textSelect,
           fontStyle: "bold",
         }),
       )
-      .setOrigin(0.5, 0);
+      .setOrigin(0.5, 0.5);
     button.add([bg, label]);
-    bg.on("pointerover", () => button.setScale(1.08));
+    bg.on("pointerover", () => button.setScale(WORLD_SELECT_LAYOUT.buttons.hoverScale));
     bg.on("pointerout", () => button.setScale(1));
     bg.on("pointerdown", () => {
       if (this.scene.isActive()) this.showSettingsOverlay();
@@ -352,10 +394,12 @@ export class WorldSelectScene extends Phaser.Scene {
 
     const visibleWorldIds = this.worldIds.slice(
       this.visibleStartIndex,
-      this.visibleStartIndex + VISIBLE_WORLD_COUNT,
+      this.visibleStartIndex + WORLD_SELECT_LAYOUT.visibleWorldCount,
     );
-    const totalW = visibleWorldIds.length * CARD_W + (visibleWorldIds.length - 1) * CARD_GAP;
-    const startX = (CANVAS_W - totalW) / 2 + CARD_W / 2;
+    const totalW =
+      visibleWorldIds.length * WORLD_SELECT_LAYOUT.card.width +
+      (visibleWorldIds.length - 1) * WORLD_SELECT_LAYOUT.card.gap;
+    const startX = (CANVAS_W - totalW) / 2 + WORLD_SELECT_LAYOUT.card.width / 2;
 
     visibleWorldIds.forEach((worldId, i) => {
       const display = worldDisplayManifest[worldId];
@@ -365,14 +409,22 @@ export class WorldSelectScene extends Phaser.Scene {
       const accentColor = Phaser.Display.Color.HexStringToColor(
         selectTheme(worldId).intrusionHue,
       ).color;
-      const cardX = startX + i * (CARD_W + CARD_GAP);
-      const newCard = this.createWorldCard(worldId, cardX, CARD_Y, display, accentColor);
+      const cardX = startX + i * (WORLD_SELECT_LAYOUT.card.width + WORLD_SELECT_LAYOUT.card.gap);
+      const newCard = this.createWorldCard(
+        worldId,
+        cardX,
+        WORLD_SELECT_LAYOUT.card.y,
+        display,
+        accentColor,
+      );
       this.cards.push(newCard);
       const appearTween = this.tweens.add({
         targets: newCard.container,
         alpha: { from: 0, to: 1 },
-        scale: { from: bFirstLoad ? 0 : 0.8, to: 1 },
-        duration: bFirstLoad ? 1000 : 500,
+        scale: { from: bFirstLoad ? 0 : WORLD_SELECT_LAYOUT.card.repeatScale, to: 1 },
+        duration: bFirstLoad
+          ? WORLD_SELECT_LAYOUT.card.delay.first
+          : WORLD_SELECT_LAYOUT.card.delay.repeat,
         ease: "Cubic.easeOut",
       });
       appearTween.on("complete", () => this.tweens.remove(appearTween));
@@ -382,37 +434,64 @@ export class WorldSelectScene extends Phaser.Scene {
   }
 
   private createArrows(): Phaser.GameObjects.Container[] {
-    const visibleW = VISIBLE_WORLD_COUNT * CARD_W + (VISIBLE_WORLD_COUNT - 1) * CARD_GAP;
+    const visibleW =
+      WORLD_SELECT_LAYOUT.visibleWorldCount * WORLD_SELECT_LAYOUT.card.width +
+      (WORLD_SELECT_LAYOUT.visibleWorldCount - 1) * WORLD_SELECT_LAYOUT.card.gap;
     const rowLeft = (CANVAS_W - visibleW) / 2;
     const rowRight = rowLeft + visibleW;
 
-    this.leftArrow = this.createArrow(rowLeft - ARROW_GAP, ARROW_Y, "<", () => {
-      const next = pageLeft(this.visibleStartIndex, VISIBLE_WORLD_COUNT);
-      if (next === this.visibleStartIndex) return;
-      this.visibleStartIndex = next;
-      this.renderVisibleWorlds();
-    });
-    this.rightArrow = this.createArrow(rowRight + ARROW_GAP, ARROW_Y, ">", () => {
-      const next = pageRight(this.visibleStartIndex, this.worldIds.length, VISIBLE_WORLD_COUNT);
-      if (next === this.visibleStartIndex) return;
-      this.visibleStartIndex = next;
-      this.renderVisibleWorlds();
-    });
+    this.leftArrow = this.createArrow(
+      rowLeft - WORLD_SELECT_LAYOUT.arrow.gap,
+      WORLD_SELECT_LAYOUT.arrow.y,
+      "<",
+      () => {
+        const next = pageLeft(this.visibleStartIndex, WORLD_SELECT_LAYOUT.visibleWorldCount);
+        if (next === this.visibleStartIndex) return;
+        this.visibleStartIndex = next;
+        this.renderVisibleWorlds();
+      },
+    );
+    this.rightArrow = this.createArrow(
+      rowRight + WORLD_SELECT_LAYOUT.arrow.gap,
+      WORLD_SELECT_LAYOUT.arrow.y,
+      ">",
+      () => {
+        const next = pageRight(
+          this.visibleStartIndex,
+          this.worldIds.length,
+          WORLD_SELECT_LAYOUT.visibleWorldCount,
+        );
+        if (next === this.visibleStartIndex) return;
+        this.visibleStartIndex = next;
+        this.renderVisibleWorlds();
+      },
+    );
     return [this.leftArrow.container, this.rightArrow.container];
   }
 
   private createArrow(x: number, y: number, label: string, onClick: () => void): WorldSelectArrow {
     const container = this.add.container(x, y);
-    const hitArea = this.add.rectangle(0, 0, ARROW_W, ARROW_H, 0x160f1f, 0.66);
-    hitArea.setStrokeStyle(2, 0xc178bc, 0.9);
+    const hitArea = this.add.rectangle(
+      0,
+      0,
+      WORLD_SELECT_LAYOUT.arrow.width,
+      WORLD_SELECT_LAYOUT.arrow.height,
+      WORLD_SELECT_LAYOUT.arrow.bg.color,
+      WORLD_SELECT_LAYOUT.arrow.bg.alpha,
+    );
+    hitArea.setStrokeStyle(
+      WORLD_SELECT_LAYOUT.arrow.stroke.width,
+      WORLD_SELECT_LAYOUT.arrow.stroke.color,
+      WORLD_SELECT_LAYOUT.arrow.stroke.alpha,
+    );
     const text = this.add
       .text(
         0,
-        -3,
+        0,
         label,
         textStyle({
           fontFamily: FONTS.monospace,
-          fontSize: "46px",
+          fontSize: WORLD_SELECT_LAYOUT.arrow.fontSize,
           color: TEXT.textWorldTitle,
           fontStyle: "bold",
         }),
@@ -433,7 +512,11 @@ export class WorldSelectScene extends Phaser.Scene {
     this.setArrowEnabled(this.leftArrow, canPageLeft(this.visibleStartIndex));
     this.setArrowEnabled(
       this.rightArrow,
-      canPageRight(this.visibleStartIndex, this.worldIds.length, VISIBLE_WORLD_COUNT),
+      canPageRight(
+        this.visibleStartIndex,
+        this.worldIds.length,
+        WORLD_SELECT_LAYOUT.visibleWorldCount,
+      ),
     );
   }
 
@@ -442,7 +525,7 @@ export class WorldSelectScene extends Phaser.Scene {
     const tween = this.tweens.add({
       targets: arrow.container,
       alpha: { from: arrow.container.alpha, to: enabled ? 1 : TEXT.dimAlpha },
-      duration: 500,
+      duration: WORLD_SELECT_LAYOUT.card.delay.repeat,
       ease: "Cubic.easeIn",
     });
     tween.on("complete", () => this.tweens.remove(tween));
@@ -461,20 +544,23 @@ export class WorldSelectScene extends Phaser.Scene {
       const img = this.add.image(0, 0, display.backgroundKey);
 
       const tintColor = Phaser.Display.Color.Interpolate.ColorWithColor(
-        Phaser.Display.Color.ValueToColor(0x5f4580),
+        Phaser.Display.Color.ValueToColor(WORLD_SELECT_LAYOUT.card.blend.color),
         Phaser.Display.Color.HexStringToColor(selectTheme(worldId).intrusionHue),
-        100,
-        20,
+        WORLD_SELECT_LAYOUT.card.blend.scale,
+        WORLD_SELECT_LAYOUT.card.blend.weight,
       );
       img.setTint(tintColor.color);
 
-      const scale = Math.max(CARD_W / img.width, CARD_H / img.height);
+      const scale = Math.max(
+        WORLD_SELECT_LAYOUT.card.width / img.width,
+        WORLD_SELECT_LAYOUT.card.height / img.height,
+      );
       img.setScale(scale);
 
-      const cropX = (img.width - CARD_W / scale) / 2;
-      const cropY = (img.height - CARD_H / scale) / 2;
-      const cropW = CARD_W / scale;
-      const cropH = CARD_H / scale;
+      const cropX = (img.width - WORLD_SELECT_LAYOUT.card.width / scale) / 2;
+      const cropY = (img.height - WORLD_SELECT_LAYOUT.card.height / scale) / 2;
+      const cropW = WORLD_SELECT_LAYOUT.card.width / scale;
+      const cropH = WORLD_SELECT_LAYOUT.card.height / scale;
       img.setCrop(cropX, cropY, cropW, cropH);
 
       // interactivity on background rect
@@ -492,7 +578,13 @@ export class WorldSelectScene extends Phaser.Scene {
       });
       return img;
     } else {
-      const bg = this.add.rectangle(0, 0, CARD_W, CARD_H, 0x181c28);
+      const bg = this.add.rectangle(
+        0,
+        0,
+        WORLD_SELECT_LAYOUT.card.width,
+        WORLD_SELECT_LAYOUT.card.height,
+        WORLD_SELECT_LAYOUT.card.blend.color,
+      );
       bg.setInteractive({ useHandCursor: true });
       return bg;
     }
@@ -511,35 +603,47 @@ export class WorldSelectScene extends Phaser.Scene {
 
     // background + accent border
     const bg = this.createWorldCardBackground(worldId, display);
-    const border = this.add.rectangle(0, 0, CARD_W, CARD_H);
-    border.setStrokeStyle(2, accentColor);
+    const border = this.add.rectangle(
+      0,
+      0,
+      WORLD_SELECT_LAYOUT.card.width,
+      WORLD_SELECT_LAYOUT.card.height,
+    );
+    border.setStrokeStyle(WORLD_SELECT_LAYOUT.card.strokeWidth, accentColor);
     border.setFillStyle(); // transparent fill
 
     // content
     const nameText = this.add
       .text(
         0,
-        -CARD_H / 2 + WORLD_SELECT_LAYOUT.nameY,
+        WORLD_SELECT_LAYOUT.card.name.y,
         display.name,
         textStyle({
           fontFamily: FONTS.ui,
-          fontSize: "17px",
+          fontSize: WORLD_SELECT_LAYOUT.card.name.fontSize,
           color: TEXT.textWorldTitle,
           fontStyle: "bold",
           align: "center",
-          wordWrap: { width: CARD_W - WORLD_SELECT_LAYOUT.textPadding },
+          wordWrap: { width: WORLD_SELECT_LAYOUT.card.wordWrap },
         }),
       )
       .setOrigin(0.5, 0);
 
     const nameBg = this.add
-      .rectangle(nameText.x, nameText.y - 2, nameText.width + 4, nameText.height + 4, 0x0b0710, 0.6)
+      .rectangle(
+        nameText.x,
+        nameText.y - 2,
+        nameText.width + 4,
+        nameText.height + 4,
+        WORLD_SELECT_LAYOUT.card.text.bg.color,
+        WORLD_SELECT_LAYOUT.card.text.bg.alpha,
+      )
       .setOrigin(0.5, 0)
-      .setRounded(4);
+      .setRounded(WORLD_SELECT_LAYOUT.card.text.bg.rounded);
 
     const tagLineY = Math.max(
-      -CARD_H / 2 + WORLD_SELECT_LAYOUT.tagMinY,
-      nameText.y + nameText.height + WORLD_SELECT_LAYOUT.textGap,
+      WORLD_SELECT_LAYOUT.card.tag.y,
+      nameText.y + nameText.height + WORLD_SELECT_LAYOUT.card.text.gap,
     );
     const tagText = this.add
       .text(
@@ -548,23 +652,30 @@ export class WorldSelectScene extends Phaser.Scene {
         display.tagline,
         textStyle({
           fontFamily: FONTS.ui,
-          fontSize: "14px",
+          fontSize: WORLD_SELECT_LAYOUT.card.tag.fontSize,
           color: TEXT.textWorldTag,
           fontStyle: "italic",
           align: "center",
-          wordWrap: { width: CARD_W - WORLD_SELECT_LAYOUT.textPadding },
+          wordWrap: { width: WORLD_SELECT_LAYOUT.card.wordWrap },
         }),
       )
       .setOrigin(0.5, 0);
 
     const tagBg = this.add
-      .rectangle(tagText.x, tagText.y - 2, tagText.width + 4, tagText.height + 4, 0x0b0710, 0.6)
+      .rectangle(
+        tagText.x,
+        tagText.y - 2,
+        tagText.width + 4,
+        tagText.height + 4,
+        WORLD_SELECT_LAYOUT.card.text.bg.color,
+        WORLD_SELECT_LAYOUT.card.text.bg.alpha,
+      )
       .setOrigin(0.5, 0)
-      .setRounded(4);
+      .setRounded(WORLD_SELECT_LAYOUT.card.text.bg.rounded);
 
     const storyLineY = Math.max(
-      -CARD_H / 2 + WORLD_SELECT_LAYOUT.storyMinY,
-      tagText.y + tagText.height + WORLD_SELECT_LAYOUT.textGap,
+      WORLD_SELECT_LAYOUT.card.story.y,
+      tagText.y + tagText.height + WORLD_SELECT_LAYOUT.card.text.gap,
     );
     const storyText = this.add
       .text(
@@ -573,10 +684,10 @@ export class WorldSelectScene extends Phaser.Scene {
         display.story,
         textStyle({
           fontFamily: FONTS.ui,
-          fontSize: "13px",
+          fontSize: WORLD_SELECT_LAYOUT.card.story.fontSize,
           color: TEXT.textWorldStory,
           align: "center",
-          wordWrap: { width: CARD_W - WORLD_SELECT_LAYOUT.textPadding },
+          wordWrap: { width: WORLD_SELECT_LAYOUT.card.wordWrap },
         }),
       )
       .setOrigin(0.5, 0);
@@ -586,11 +697,11 @@ export class WorldSelectScene extends Phaser.Scene {
         storyText.y - 2,
         storyText.width + 4,
         storyText.height + 4,
-        0x0b0710,
-        0.6,
+        WORLD_SELECT_LAYOUT.card.text.bg.color,
+        WORLD_SELECT_LAYOUT.card.text.bg.alpha,
       )
       .setOrigin(0.5, 0)
-      .setRounded(4);
+      .setRounded(WORLD_SELECT_LAYOUT.card.text.bg.rounded);
 
     const contents: Phaser.GameObjects.GameObject[] = [
       bg,
@@ -604,54 +715,128 @@ export class WorldSelectScene extends Phaser.Scene {
     ];
     const badge = worldBadgeLabel(this.runStats?.lifetime().byWorld[worldId]);
     if (badge !== null) {
-      const badgeBg = this.add.rectangle(CARD_W / 2 - 48, CARD_H / 2 - 28, 74, 26, 0x0b0710, 0.88);
-      badgeBg.setStrokeStyle(1, accentColor, 0.8);
-      badgeBg.setRounded(8);
       const badgeText = this.add
         .text(
-          CARD_W / 2 - 48,
-          CARD_H / 2 - 36,
+          WORLD_SELECT_LAYOUT.card.badge.x,
+          WORLD_SELECT_LAYOUT.card.badge.y,
           badge,
           textStyle({
             fontFamily: FONTS.monospace,
-            fontSize: "13px",
+            fontSize: WORLD_SELECT_LAYOUT.card.badge.fontSize,
             color: TEXT.textLight,
             fontStyle: "bold",
           }),
         )
-        .setOrigin(0.5, 0);
-      contents.push(badgeBg, badgeText);
+        .setOrigin(0.5, 0.5);
+      const badgeTitle = this.add
+        .text(
+          badgeText.x,
+          badgeText.y - badgeText.height - 6,
+          "win rate",
+          textStyle({
+            fontFamily: FONTS.body,
+            fontSize: WORLD_SELECT_LAYOUT.card.badge.fontSize,
+            color: TEXT.textLight,
+          }),
+        )
+        .setOrigin(0.5, 0.5);
+      const badgeBg = this.add.rectangle(
+        WORLD_SELECT_LAYOUT.card.badge.x,
+        WORLD_SELECT_LAYOUT.card.badge.y,
+        badgeText.width + 14,
+        badgeText.height + 6,
+        WORLD_SELECT_LAYOUT.card.text.bg.color,
+        WORLD_SELECT_LAYOUT.card.text.bg.alpha,
+      );
+      badgeBg.setStrokeStyle(1, accentColor, WORLD_SELECT_LAYOUT.card.text.bg.alpha);
+      badgeBg.setRounded(WORLD_SELECT_LAYOUT.card.badge.rounded);
+      contents.push(badgeBg, badgeTitle, badgeText);
     }
 
+    const cycleText = this.add
+      .text(
+        WORLD_SELECT_LAYOUT.card.cycle.x,
+        WORLD_SELECT_LAYOUT.card.cycle.y,
+        cycleLabel(display.cycle),
+        textStyle({
+          fontFamily: FONTS.monospace,
+          fontSize: WORLD_SELECT_LAYOUT.card.cycle.fontSize,
+          color: TEXT.textLight,
+          fontStyle: "bold",
+        }),
+      )
+      .setOrigin(0.5, 0.5);
+    const cycleTitle = this.add
+      .text(
+        cycleText.x,
+        cycleText.y - cycleText.height - 6,
+        "cycle",
+        textStyle({
+          fontFamily: FONTS.body,
+          fontSize: WORLD_SELECT_LAYOUT.card.cycle.fontSize,
+          color: TEXT.textLight,
+        }),
+      )
+      .setOrigin(0.5, 0.5);
+    const cycleBg = this.add.rectangle(
+      WORLD_SELECT_LAYOUT.card.cycle.x,
+      WORLD_SELECT_LAYOUT.card.cycle.y,
+      cycleText.width + 14,
+      cycleText.height + 6,
+      WORLD_SELECT_LAYOUT.card.text.bg.color,
+      WORLD_SELECT_LAYOUT.card.text.bg.alpha,
+    );
+    cycleBg.setStrokeStyle(1, accentColor, WORLD_SELECT_LAYOUT.card.text.bg.alpha);
+    cycleBg.setRounded(WORLD_SELECT_LAYOUT.card.cycle.rounded);
+    contents.push(cycleBg, cycleTitle, cycleText);
+
     if (locked) {
-      const overlay = this.add.rectangle(0, 0, CARD_W, CARD_H, 0x050409, 0.52);
+      const overlay = this.add.rectangle(
+        0,
+        0,
+        WORLD_SELECT_LAYOUT.card.width,
+        WORLD_SELECT_LAYOUT.card.height,
+        WORLD_SELECT_LAYOUT.card.locked.overlay.color,
+        WORLD_SELECT_LAYOUT.card.locked.overlay.alpha,
+      );
       const lockLabel = this.add
         .text(
           0,
-          CARD_H / 2 - 38,
+          WORLD_SELECT_LAYOUT.card.locked.y,
           `Locked - Destiny${lockState.cost === null ? "" : ` ${lockState.cost} Fragments`}`,
           textStyle({
             fontFamily: FONTS.ui,
-            fontSize: "13px",
-            color: "#f2d68a",
+            fontSize: WORLD_SELECT_LAYOUT.card.locked.fontSize,
+            color: WORLD_SELECT_LAYOUT.card.locked.textColor,
             fontStyle: "bold",
             align: "center",
-            wordWrap: { width: CARD_W - 20 },
+            wordWrap: { width: WORLD_SELECT_LAYOUT.card.wordWrap },
           }),
         )
-        .setOrigin(0.5, 0);
+        .setOrigin(0.5, 0.5);
       const lockBg = this.add
-        .rectangle(0, lockLabel.y - 3, lockLabel.width + 14, lockLabel.height + 6, 0x0b0710, 0.9)
-        .setOrigin(0.5, 0)
-        .setRounded(5);
-      lockBg.setStrokeStyle(1, 0xf2d68a, 0.72);
+        .rectangle(
+          0,
+          lockLabel.y,
+          lockLabel.width + 14,
+          lockLabel.height + 6,
+          WORLD_SELECT_LAYOUT.card.text.bg.color,
+          WORLD_SELECT_LAYOUT.card.locked.alpha,
+        )
+        .setOrigin(0.5, 0.5)
+        .setRounded(WORLD_SELECT_LAYOUT.card.locked.rounded);
+      lockBg.setStrokeStyle(
+        1,
+        WORLD_SELECT_LAYOUT.card.locked.stroke.color,
+        WORLD_SELECT_LAYOUT.card.locked.stroke.alpha,
+      );
       contents.push(overlay, lockBg, lockLabel);
     }
 
     // Difficulty pips — bottom-left footer, mirroring the wins/runs badge on the
     // right. Pushed after the lock block so they stay readable on locked cards.
-    const pipX = -(CARD_W / 2 - 30);
-    const pipY = CARD_H / 2 - 18;
+    const pipX = WORLD_SELECT_LAYOUT.card.pip.x;
+    const pipY = WORLD_SELECT_LAYOUT.card.pip.y;
     const pipText = this.add
       .text(
         pipX,
@@ -659,22 +844,45 @@ export class WorldSelectScene extends Phaser.Scene {
         difficultyPips(display.difficulty),
         textStyle({
           fontFamily: FONTS.monospace,
-          fontSize: `${WORLD_SELECT_LAYOUT.pipFontSize}px`,
+          fontSize: WORLD_SELECT_LAYOUT.card.pip.fontSize,
           color: TEXT.textLight,
           fontStyle: "bold",
         }),
       )
       .setOrigin(0.5, 0.5);
+    const pipTitle = this.add
+      .text(
+        pipText.x,
+        pipText.y - pipText.height - 6,
+        "difficulty",
+        textStyle({
+          fontFamily: FONTS.body,
+          fontSize: WORLD_SELECT_LAYOUT.card.pip.fontSize,
+          color: TEXT.textLight,
+        }),
+      )
+      .setOrigin(0.5, 0.5);
     const pipBg = this.add
-      .rectangle(pipText.x, pipText.y, pipText.width + 12, pipText.height + 6, 0x0b0710, 0.88)
+      .rectangle(
+        pipText.x,
+        pipText.y,
+        pipText.width + 12,
+        pipText.height + 6,
+        WORLD_SELECT_LAYOUT.card.text.bg.color,
+        WORLD_SELECT_LAYOUT.card.text.bg.alpha,
+      )
       .setOrigin(0.5, 0.5)
-      .setRounded(8);
+      .setRounded(WORLD_SELECT_LAYOUT.card.pip.rounded);
     pipBg.setStrokeStyle(1, accentColor, 0.8);
-    contents.push(pipBg, pipText);
+    contents.push(pipBg, pipText, pipTitle);
 
     container.add(contents);
 
-    bg.on("pointerover", () => container.setScale(locked ? 1.015 : WORLD_SELECT_LAYOUT.hoverScale));
+    bg.on("pointerover", () =>
+      container.setScale(
+        locked ? WORLD_SELECT_LAYOUT.card.locked.scale : WORLD_SELECT_LAYOUT.hoverScale,
+      ),
+    );
     bg.on("pointerout", () => container.setScale(1.0));
     bg.on("pointerdown", () => {
       if (locked) {
