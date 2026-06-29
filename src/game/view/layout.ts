@@ -96,20 +96,112 @@ export const PILE_LAYOUT = {
 } as const;
 
 export const WORLD_SELECT_LAYOUT = {
-  cardWidth: 240,
-  cardHeight: 350,
-  cardGap: 30,
-  cardY: 390,
+  card: {
+    blend: {
+      color: 0x5f4580,
+      scale: 100,
+      weight: 20,
+    },
+    y: 390,
+    width: 240,
+    height: 350,
+    wordWrap: 240 - 24,
+    gap: 30,
+    repeatScale: 0.8,
+    delay: {
+      first: 1000,
+      repeat: 500,
+    },
+    strokeWidth: 2,
+    name: {
+      y: 30 - 350 / 2,
+      fontSize: "17px",
+    },
+    tag: {
+      y: 60 - 350 / 2,
+      fontSize: "14px",
+    },
+    story: {
+      y: 90 - 350 / 2,
+      fontSize: "13px",
+    },
+    badge: {
+      x: 240 / 2 - 48,
+      y: 350 / 2 - 20,
+      fontSize: "13px",
+      rounded: 6,
+    },
+    cycle: {
+      x: -10,
+      y: 350 / 2 - 20,
+      fontSize: "11px",
+      rounded: 6,
+    },
+    pip: {
+      x: 40 - 240 / 2,
+      y: 350 / 2 - 20,
+      fontSize: "14px",
+      rounded: 6,
+    },
+    locked: {
+      y: 350 / 2 - 68,
+      fontSize: "13px",
+      textColor: "#f2d68a",
+      overlay: {
+        color: 0x050409,
+        alpha: 0.52,
+      },
+      stroke: {
+        color: 0xf2d68a,
+        alpha: 0.72,
+      },
+      alpha: 0.9,
+      rounded: 5,
+      scale: 1.05,
+    },
+    text: {
+      bg: {
+        color: 0x0b0710,
+        alpha: 0.6,
+        rounded: 4,
+      },
+      gap: 10,
+      padding: 24,
+    },
+  },
+  arrow: {
+    y: 390,
+    fontSize: "46px",
+    width: 44,
+    height: 72,
+    gap: 32,
+    bg: {
+      alpha: 0.66,
+      color: 0x160f1f,
+    },
+    stroke: {
+      width: 2,
+      color: 0xc178bc,
+      alpha: 0.9,
+    },
+  },
+  center: {
+    x: CANVAS_W / 2,
+    y: CANVAS_H / 2,
+  },
+  selection: {
+    x: CANVAS_W / 2,
+    y: CANVAS_H - 20,
+  },
+  buttons: {
+    hoverScale: 1.08,
+    bg: { color: 0x0f0b15, alpha: 0.82, rounded: 6 },
+    stroke: { width: 1, color: 0xd6b15c, alpha: 0.9 },
+    chronicle: { fontSize: "15px", x: CANVAS_W - 64, y: 34, width: 88, height: 34 },
+    help: { fontSize: "20px", x: CANVAS_W - 130, y: 34, width: 34, height: 34 },
+    destiny: { fontSize: "15px", x: CANVAS_W - 196, y: 34, width: 88, height: 34 },
+    setting: { fontSize: "20px", x: CANVAS_W - 264, y: 34, width: 34, height: 34 },
+  },
   visibleWorldCount: 3,
-  arrowWidth: 44,
-  arrowHeight: 72,
-  arrowGap: 32,
-  subtitleY: CANVAS_H - 20,
   hoverScale: 1.15,
-  nameY: 30,
-  tagMinY: 60,
-  storyMinY: 90,
-  textGap: 10,
-  textPadding: 24,
-  pipFontSize: 14, // difficulty pips in the bottom-left card footer
 } as const;

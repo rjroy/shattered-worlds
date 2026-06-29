@@ -4,8 +4,11 @@ export const CITY_OF_SLEEPING_GIANTS_DISPLAY: WorldDisplayData = {
   name: "City of Sleeping Giants",
   tagline: "A metropolis raised across the bodies of sleeping giants.",
   story:
-    "Clever vein-roads and bone anchors kept the sleeping giants under. Then the Walker crossed, and they began to remember. Ignored tremors return as fingerquakes; exploited districts are recalled at a larger scale. The movement returns heavier each time until the giant turns fully. The Door waits past the last ward, if the city remains standing.",
+    "Vein-roads and bone anchors allowed the giants to sleep. Then the Walker crossed, and they " +
+    "began to wake. It movement starts in the fingers; then districts are reclaimed en masse. " +
+    "The movement returns heavier each time until the giant turns fully.",
   difficulty: 3,
+  cycle: 3,
   backgroundKey: "city-of-sleeping-giants-bg",
 };
 

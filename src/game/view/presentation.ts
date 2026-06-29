@@ -26,6 +26,9 @@ export { CANVAS_W, CANVAS_H } from "./layout";
 // Text colors are theme-independent — all pass WCAG AA against the frame
 // backgrounds used by every current theme.
 export const TEXT = {
+  dimAlpha: 0.35,
+  bgEnergy: 0x002244,
+  textSelect: "#d6b15c",
   textLight: "#e8eaf0",
   textMuted: "#b6c0d1",
   textCost: "#ffcc44",
@@ -37,9 +40,7 @@ export const TEXT = {
   textHeld: "#ffaa66",
   textDiscard: "#ffaa44",
   textEnergy: "#ffeebb",
-  bgEnergy: 0x002244,
   textHp: "#ff8888",
-  dimAlpha: 0.35,
   textWorldTitle: "#d4c8e0",
   textWorldTag: "#c178bc",
   textWorldStory: "#cbc0d3",

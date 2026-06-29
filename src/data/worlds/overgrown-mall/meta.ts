@@ -6,6 +6,7 @@ export const OVERGROWN_MALL_DISPLAY: WorldDisplayData = {
   story:
     "The skylight gave way before the alarms did. Vines move through the concourse faster than evacuation signs can point, turning kiosks and planters into a damp green maze. Somewhere past the food court, the emergency doors are already buried.",
   difficulty: 4,
+  cycle: 1,
   backgroundKey: "overgrown-mall-bg",
 };
 

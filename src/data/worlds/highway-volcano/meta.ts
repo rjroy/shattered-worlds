@@ -6,6 +6,7 @@ export const HIGHWAY_VOLCANO_DISPLAY: WorldDisplayData = {
   story:
     "The highway is packed with cars, but no one is honking. The rumbling starts as a low vibration, but quickly escalates into a deafening roar. The ground splits open.",
   difficulty: 2,
+  cycle: 1,
   backgroundKey: "highway-volcano-bg",
 };
 

@@ -6,6 +6,7 @@ export const ZOMBIE_BIG_BOX_DISPLAY: WorldDisplayData = {
   story:
     "The store never closes. You're halfway through a shift when the lights start flickering — the kind of flicker that isn't a power surge. The PA goes silent mid-announcement. Something is moving in the stockroom.",
   difficulty: 1,
+  cycle: 1,
   backgroundKey: "bigbox-reality",
 };
 

@@ -241,7 +241,7 @@
     },
     "District Recall": {
       "kind": "world",
-      "name": "District Recall",
+      "name": "District Reclaimed",
       "rarity": "rare",
       "insetKey": "giants-inset-district-recall",
       "cost": 4,

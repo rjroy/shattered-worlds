@@ -1,11 +1,14 @@
 import type { WorldDisplayData, WorldHelpData } from "../types";
 
 export const WHITEOUT_PARKING_GARAGE_DISPLAY: WorldDisplayData = {
-  name: "Whiteout Parking Garage",
-  tagline: "An empty concrete deck was already cold. Now the new ice age starts there.",
+  name: "Numb Parking Garage",
+  tagline: "You've been numb inside for awhile. Now you're numb outside.",
   story:
-    "The upper level was gray, salted, and impersonal before the impossible. The Walker crossed the ramp, bringing a sideways blizzard that sealed cars into stalls and froze every tool in your hand. The Door opens past the exit lane, under ice thick enough to remember you.",
+    "The upper level was gray, salted, and impersonal before the impossible. The Walker crossed " +
+    "the ramp, bringing a sideways blizzard that sealed cars into stalls and froze every tool in " +
+    "your hand. The Door opens past the exit lane, under ice thick enough to remember you.",
   difficulty: 3,
+  cycle: 2,
   backgroundKey: "whiteout-parking-garage-bg",
 };
 

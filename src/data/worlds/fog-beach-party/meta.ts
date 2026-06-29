@@ -1,11 +1,12 @@
 import type { WorldDisplayData, WorldHelpData } from "../types";
 
 export const FOG_BEACH_PARTY_DISPLAY: WorldDisplayData = {
-  name: "Fog Beach Party",
-  tagline: "Golden hour on the sand. Then the fog rolls in, and there is something in it.",
+  name: "Beach Party",
+  tagline: "The Party goes on, too long. The mental fog is ... visible.",
   story:
     "The bonfires were lit, the music was good, and the light held warm and low over the water. Then the fog came off the sea faster than fog should, cold and total, swallowing the party string by string. The shapes moving through it are still close. You just can't see which ones mean to hurt you.",
   difficulty: 3,
+  cycle: 2,
   backgroundKey: "fog-beach-party-bg",
 };
 
