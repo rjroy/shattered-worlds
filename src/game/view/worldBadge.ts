@@ -15,7 +15,7 @@ export function difficultyPips(difficulty: number, max = 5): string {
   return "●".repeat(filled) + "○".repeat(max - filled);
 }
 
-const CYCLE_LABELS = ["choices", "no choose", "not home"];
+const CYCLE_LABELS = ["choices", "no choice", "not home"];
 export function cycleLabel(cycle: number): string {
   const index = Math.max(0, Math.min(cycle - 1, CYCLE_LABELS.length - 1));
   return CYCLE_LABELS[index] ?? "(impossible)";
