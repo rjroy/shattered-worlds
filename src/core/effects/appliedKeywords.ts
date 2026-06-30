@@ -65,8 +65,6 @@ export function previewAppliedKeywordEvent(
       const count = event.ids.length;
       return [`Remove ${event.keyword} from ${count} ${context.plural("card", count)}`];
     }
-    case "KeywordGuardConsumed":
-      return [`Keyword Guard absorbs the trigger; ${event.remaining} remaining`];
     default:
       return null;
   }
@@ -170,6 +168,11 @@ export class KeywordGateHandler extends EffectHandler<KeywordGateEffect> {
     }
 
     return ctx.apply(ctx, effect.then);
+  }
+
+  override previewEvent(event: GameEvent, _ctx: PreviewFormatContext): PreviewEventSummary {
+    if (event.type !== "KeywordGuardConsumed") return null;
+    return [`Keyword Guard absorbs the trigger; ${event.remaining} remaining`];
   }
 
   override describe(effect: KeywordGateEffect): string[] {

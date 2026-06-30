@@ -45,19 +45,28 @@ export function worldThreatTemplateByWorldId(worldId: string): CardTemplateId | 
   return WORLD_THREAT_BY_WORLD_ID[worldId];
 }
 
-export function previewGainCardEvent(
-  event: GameEvent,
-  context: PreviewFormatContext,
-): PreviewEventSummary {
-  if (event.type !== "CardGained") return null;
+/**
+ * Shared base for the six card-gaining kinds (`AddCard`, `GainCard`,
+ * `GainRandomCard`, `AddPlayerCardToTop`, `AddWorldCardToDeck`,
+ * `AddThreatToWorldDeck`). All emit `CardGained` through the `gainCard()` helper
+ * with identical preview copy, so the `previewEvent` override lives here once and
+ * every `sourceKind` resolves to it via the EFFECTS registry. Stays abstract:
+ * `apply` / `describe` / `compile` differ per kind.
+ */
+abstract class GainCardLikeHandler<E extends CardEffect> extends EffectHandler<E> {
+  override previewEvent(event: GameEvent, ctx: PreviewFormatContext): PreviewEventSummary {
+    if (event.type !== "CardGained") return null;
 
-  if (event.randomized === true) {
-    return event.setName !== undefined
-      ? [`Gain a random card from ${event.setName}`]
-      : ["Gain a random card"];
+    // The setName random-mask branch reads an event field stamped by
+    // GainRandomCard, not preview policy, so it stays inside the shared copy.
+    if (event.randomized === true) {
+      return event.setName !== undefined
+        ? [`Gain a random card from ${event.setName}`]
+        : ["Gain a random card"];
+    }
+
+    return [`Gain ${event.templateId} to ${ctx.destLabel(event.dest)}`];
   }
-
-  return [`Gain ${event.templateId} to ${context.destLabel(event.dest)}`];
 }
 
 export function gainCard(
@@ -105,7 +114,7 @@ export function gainCard(
   return { state: current, events };
 }
 
-export class AddCardHandler extends EffectHandler<AddCardEffect> {
+export class AddCardHandler extends GainCardLikeHandler<AddCardEffect> {
   override apply(ctx: EffectContext, effect: AddCardEffect): EffectResult {
     return gainCard(ctx.catalog, ctx.state, effect.template, effect.dest);
   }
@@ -119,7 +128,7 @@ export class AddCardHandler extends EffectHandler<AddCardEffect> {
   }
 }
 
-export class GainCardHandler extends EffectHandler<GainCardEffect> {
+export class GainCardHandler extends GainCardLikeHandler<GainCardEffect> {
   override apply(ctx: EffectContext, effect: GainCardEffect): EffectResult {
     return gainCard(ctx.catalog, ctx.state, effect.template, "playerDiscard");
   }
@@ -143,7 +152,7 @@ export class GainCardHandler extends EffectHandler<GainCardEffect> {
 // every fixed-reward handler uses, then stamps setName onto the single
 // CardGained event gainCard() returns so the action-preview layer (D3) can
 // mask the rolled template's identity before the player commits.
-export class GainRandomCardHandler extends EffectHandler<GainRandomCardEffect> {
+export class GainRandomCardHandler extends GainCardLikeHandler<GainRandomCardEffect> {
   override apply(ctx: EffectContext, effect: GainRandomCardEffect): EffectResult {
     const poolTemplateIds = resolvePool(effect.setId);
     const legalIds = filterLegalPlayerCandidates(ctx.catalog, poolTemplateIds ?? []);
@@ -190,7 +199,7 @@ export class GainRandomCardHandler extends EffectHandler<GainRandomCardEffect> {
   }
 }
 
-export class AddPlayerCardToTopHandler extends EffectHandler<AddPlayerCardToTopEffect> {
+export class AddPlayerCardToTopHandler extends GainCardLikeHandler<AddPlayerCardToTopEffect> {
   override apply(ctx: EffectContext, effect: AddPlayerCardToTopEffect): EffectResult {
     return gainCard(ctx.catalog, ctx.state, effect.template, "playerDrawTop");
   }
@@ -211,7 +220,7 @@ export class AddPlayerCardToTopHandler extends EffectHandler<AddPlayerCardToTopE
   }
 }
 
-export class AddWorldCardToDeckHandler extends EffectHandler<AddWorldCardToDeckEffect> {
+export class AddWorldCardToDeckHandler extends GainCardLikeHandler<AddWorldCardToDeckEffect> {
   override apply(ctx: EffectContext, effect: AddWorldCardToDeckEffect): EffectResult {
     return gainCard(
       ctx.catalog,
@@ -230,7 +239,7 @@ export class AddWorldCardToDeckHandler extends EffectHandler<AddWorldCardToDeckE
   }
 }
 
-export class AddThreatToWorldDeckHandler extends EffectHandler<AddThreatToWorldDeckEffect> {
+export class AddThreatToWorldDeckHandler extends GainCardLikeHandler<AddThreatToWorldDeckEffect> {
   override apply(ctx: EffectContext, _effect: AddThreatToWorldDeckEffect): EffectResult {
     const template = worldThreatTemplateByWorldId(ctx.state.worldId);
     return template !== undefined

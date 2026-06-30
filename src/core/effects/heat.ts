@@ -23,8 +23,6 @@ export function previewHeatEvent(
   context: PreviewFormatContext,
 ): PreviewEventSummary {
   switch (event.type) {
-    case "CardsFrozen":
-      return [`Freeze ${event.ids.length} ${context.plural("card", event.ids.length)} at random`];
     case "CardsThawed":
       return [
         `Thaw ${event.ids.length} ${context.plural("card", event.ids.length)}: ${context.listNames(
@@ -131,6 +129,11 @@ export class FreezeCardsHandler extends EffectHandler<FreezeCardsEffect> {
         },
       ],
     };
+  }
+
+  override previewEvent(event: GameEvent, ctx: PreviewFormatContext): PreviewEventSummary {
+    if (event.type !== "CardsFrozen") return null;
+    return [`Freeze ${event.ids.length} ${ctx.plural("card", event.ids.length)} at random`];
   }
 
   override describe(effect: FreezeCardsEffect): string[] {

@@ -33,14 +33,6 @@ export function previewWorldCardsEvent(
           context.namesFromIds(event.ids, event.templateIds),
         )}`,
       ];
-    case "WorldCardsReturned":
-      return [
-        `Return ${event.ids.length} world ${context.plural("card", event.ids.length)}: ${context.listNames(
-          context.namesFromIds(event.ids, event.templateIds),
-        )}`,
-      ];
-    case "WorldCardsExiled":
-      return [`Exile top ${event.ids.length} world ${context.plural("card", event.ids.length)}`];
     default:
       return null;
   }
@@ -98,6 +90,15 @@ export function destroyInHand(state: GameState, ids: readonly CardId[]): EffectR
 export class ReturnWorldCardsHandler extends EffectHandler<ReturnWorldCardsEffect> {
   override apply(ctx: EffectContext, _effect: ReturnWorldCardsEffect): EffectResult {
     return returnToActiveWorldDeck(ctx.state, ctx.returnIds ?? []);
+  }
+
+  override previewEvent(event: GameEvent, ctx: PreviewFormatContext): PreviewEventSummary {
+    if (event.type !== "WorldCardsReturned") return null;
+    return [
+      `Return ${event.ids.length} world ${ctx.plural("card", event.ids.length)}: ${ctx.listNames(
+        ctx.namesFromIds(event.ids, event.templateIds),
+      )}`,
+    ];
   }
 
   override describe(effect: ReturnWorldCardsEffect): string[] {
@@ -248,6 +249,11 @@ export class ExileTopWorldCardsHandler extends EffectHandler<ExileTopWorldCardsE
       { type: "WorldCardsExiled", ids: exiledIds, templateIds, revealedFromHidden: true },
     ];
     return { state: current, events };
+  }
+
+  override previewEvent(event: GameEvent, ctx: PreviewFormatContext): PreviewEventSummary {
+    if (event.type !== "WorldCardsExiled") return null;
+    return [`Exile top ${event.ids.length} world ${ctx.plural("card", event.ids.length)}`];
   }
 
   override describe(effect: ExileTopWorldCardsEffect): string[] {

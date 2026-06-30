@@ -463,6 +463,11 @@ export type GameEvent = (
     }
 ) & {
   readonly sourceCardId?: CardId;
+  // Stamped at the dispatch() boundary (innermost wins), mirroring sourceCardId:
+  // the originating CardEffect kind for events that flow through an effect handler.
+  // Engine-emitted events (turn-start ticks, exhaust, act cascades) bypass
+  // dispatch() and stay unstamped.
+  readonly sourceKind?: CardEffect["kind"];
   // Stamped at the emit site (not at a boundary): within one effect some events
   // are random and some are not, so the flags ride the individual event.
   readonly randomized?: boolean; // outcome chosen via rng at resolution

@@ -1,10 +1,8 @@
 import { reduce } from "../engine/reduce";
+import { EFFECTS } from "../effects/registry";
 import { previewBoonOfferedEvent } from "../engine/actBoonPreview";
 import { previewAppliedKeywordEvent } from "../effects/appliedKeywords";
-import { previewDamageEvent } from "../effects/damage";
-import { previewGainCardEvent } from "../effects/gainCard";
 import { previewHeatEvent } from "../effects/heat";
-import { previewkeywordGuardEvent, previewHealEvent } from "../effects/resources";
 import { previewWorldCardsEvent } from "../effects/worldCards";
 import { isConcealed } from "../model/keywords";
 import type { Card, CardId, GameEvent, GameState } from "../model/types";
@@ -63,17 +61,9 @@ const EMPTY_LINES: readonly string[] = [];
 const EXTERNAL_PREVIEW_FORMATTERS = {
   KeywordApplied: previewAppliedKeywordEvent,
   KeywordRemoved: previewAppliedKeywordEvent,
-  KeywordGuardConsumed: previewAppliedKeywordEvent,
-  keywordGuardChanged: previewkeywordGuardEvent,
-  DamageDealt: previewDamageEvent,
-  HealReceived: previewHealEvent,
-  CardsFrozen: previewHeatEvent,
   CardsThawed: previewHeatEvent,
   CardsBurnedForHeat: previewHeatEvent,
   CardDestroyed: previewWorldCardsEvent,
-  WorldCardsReturned: previewWorldCardsEvent,
-  WorldCardsExiled: previewWorldCardsEvent,
-  CardGained: previewGainCardEvent,
   BoonOffered: previewBoonOfferedEvent,
 } as const satisfies Partial<Record<GameEvent["type"], ExternalPreviewFormatter>>;
 
@@ -475,8 +465,23 @@ function summarizeStampedEvent(event: GameEvent, context: PreviewContext): reado
 }
 
 function summarizeOwnedEvent(event: GameEvent, context: PreviewContext): readonly string[] {
+  // Try the polymorphic handler path first: an event stamped with the effect
+  // kind that emitted it routes to that handler's previewEvent. Today every
+  // handler inherits the base null default, so this always falls through to the
+  // existing external-formatter registry and then summarizeEvent. Subsequent
+  // steps move copy onto handlers, at which point this becomes the live path.
+  const effectSummary = previewEffectOwnedEvent(event, context);
+  if (effectSummary !== null) return effectSummary;
   const externalSummary = previewExternallyOwnedEvent(event, context);
   return externalSummary ?? summarizeEvent(event, context);
+}
+
+function previewEffectOwnedEvent(
+  event: GameEvent,
+  context: PreviewContext,
+): PreviewEventSummary {
+  if (event.sourceKind === undefined) return null;
+  return EFFECTS[event.sourceKind].previewEvent(event, previewFormatContext(context));
 }
 
 function previewExternallyOwnedEvent(
@@ -573,20 +578,23 @@ function summarizeEvent(event: GameEvent, context: PreviewContext): readonly str
       return [
         `Recall ${event.cardIds.length} ${plural("card", event.cardIds.length)} from discard to the top of your deck`,
       ];
+    // Dual-path and speculative events keep explicit arms: their copy is served
+    // by the owning handler's previewEvent for dispatch-stamped instances, and
+    // (Steps 6/7) by a shared helper here for engine-emitted, unstamped
+    // instances. They are not effect-only, so they cannot rely on previewEvent
+    // alone. Listing them keeps the categorization visible for those steps.
     case "KeywordApplied":
     case "KeywordRemoved":
-    case "keywordGuardChanged":
-    case "KeywordGuardConsumed":
-    case "DamageDealt":
-    case "HealReceived":
-    case "CardsFrozen":
     case "CardsThawed":
     case "CardsBurnedForHeat":
     case "CardDestroyed":
-    case "WorldCardsReturned":
-    case "WorldCardsExiled":
-    case "CardGained":
     case "BoonOffered":
+      return EMPTY_LINES;
+    // Effect-only events (KeywordGuardConsumed, keywordGuardChanged, DamageDealt,
+    // HealReceived, CardsFrozen, WorldCardsReturned, WorldCardsExiled, CardGained)
+    // always flow through dispatch with a sourceKind, so they route to their
+    // handler's previewEvent and never reach this switch. Step 7 finalizes this.
+    default:
       return EMPTY_LINES;
   }
 }

@@ -108,5 +108,16 @@ export function applyEffect(
  */
 function dispatch(ctx: EffectContext, effect: CardEffect): EffectResult {
   const h = EFFECTS[effect.kind];
-  return h.apply(ctx, effect as never);
+  const result = h.apply(ctx, effect as never);
+  // Stamp the originating effect kind onto every event this dispatch produced
+  // whose `sourceKind` is still undefined — innermost wins, mirroring the
+  // `sourceCardId` rule in `applyEffect`. Composite handlers (Modal/Sequence)
+  // recurse through here, so a `DamageDealt` born inside a `Sequence` is already
+  // stamped `"Damage"` by the inner dispatch and the outer dispatch leaves it.
+  return {
+    state: result.state,
+    events: result.events.map((event) =>
+      event.sourceKind === undefined ? { ...event, sourceKind: effect.kind } : event,
+    ),
+  };
 }

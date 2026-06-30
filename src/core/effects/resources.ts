@@ -11,22 +11,6 @@ type BraceEffect = Extract<CardEffect, { kind: "Brace" }>;
 type GainLightEffect = Extract<CardEffect, { kind: "GainLight" }>;
 type GainKeywordGuardEffect = Extract<CardEffect, { kind: "GainKeywordGuard" }>;
 
-export function previewkeywordGuardEvent(
-  event: GameEvent,
-  _context: PreviewFormatContext,
-): PreviewEventSummary {
-  if (event.type !== "keywordGuardChanged") return null;
-  return [`Keyword Guard now ${event.keywordGuard}`];
-}
-
-export function previewHealEvent(
-  event: GameEvent,
-  _context: PreviewFormatContext,
-): PreviewEventSummary {
-  if (event.type !== "HealReceived") return null;
-  return [`Heal ${event.amount} HP`];
-}
-
 export function heal(state: GameState, n: number): EffectResult {
   const newHp = state.hp + n;
   return {
@@ -49,6 +33,11 @@ export function gainEnergy(state: GameState, n: number): EffectResult {
 export class HealHandler extends EffectHandler<HealEffect> {
   override apply(ctx: EffectContext, effect: HealEffect): EffectResult {
     return heal(ctx.state, effect.amount);
+  }
+
+  override previewEvent(event: GameEvent, _ctx: PreviewFormatContext): PreviewEventSummary {
+    if (event.type !== "HealReceived") return null;
+    return [`Heal ${event.amount} HP`];
   }
 
   override describe(effect: HealEffect): string[] {
@@ -115,6 +104,11 @@ export class GainKeywordGuardHandler extends EffectHandler<GainKeywordGuardEffec
     const keywordGuard = ctx.state.keywordGuard + effect.amount;
     const current: GameState = { ...ctx.state, keywordGuard };
     return { state: current, events: [{ type: "keywordGuardChanged", keywordGuard }] };
+  }
+
+  override previewEvent(event: GameEvent, _ctx: PreviewFormatContext): PreviewEventSummary {
+    if (event.type !== "keywordGuardChanged") return null;
+    return [`Keyword Guard now ${event.keywordGuard}`];
   }
 
   override describe(effect: GainKeywordGuardEffect): string[] {

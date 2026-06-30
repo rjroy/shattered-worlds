@@ -9,12 +9,18 @@ import { resolveCounter } from "./dealProgress";
 type DamageEffect = Extract<CardEffect, { kind: "Damage" }>;
 type DamageScaledEffect = Extract<CardEffect, { kind: "DamageScaled" }>;
 
-export function previewDamageEvent(
-  event: GameEvent,
-  _context: PreviewFormatContext,
-): PreviewEventSummary {
-  if (event.type !== "DamageDealt") return null;
-  return [`Take ${event.amount} damage`];
+/**
+ * Shared base for the two damage-dealing kinds (`Damage`, `DamageScaled`). Both
+ * emit `DamageDealt` through the `damage()` helper with identical preview copy,
+ * so the `previewEvent` override lives here once and both `sourceKind`s resolve
+ * to the same method via the EFFECTS registry. Stays abstract: `apply` /
+ * `describe` / `compile` differ per kind.
+ */
+abstract class DamageLikeHandler<E extends CardEffect> extends EffectHandler<E> {
+  override previewEvent(event: GameEvent, _ctx: PreviewFormatContext): PreviewEventSummary {
+    if (event.type !== "DamageDealt") return null;
+    return [`Take ${event.amount} damage`];
+  }
 }
 
 export function damage(state: GameState, n: number): EffectResult {
@@ -34,7 +40,7 @@ export function damage(state: GameState, n: number): EffectResult {
   return { state: current, events };
 }
 
-export class DamageHandler extends EffectHandler<DamageEffect> {
+export class DamageHandler extends DamageLikeHandler<DamageEffect> {
   override apply(ctx: EffectContext, effect: DamageEffect): EffectResult {
     return damage(ctx.state, effect.amount);
   }
@@ -48,7 +54,7 @@ export class DamageHandler extends EffectHandler<DamageEffect> {
   }
 }
 
-export class DamageScaledHandler extends EffectHandler<DamageScaledEffect> {
+export class DamageScaledHandler extends DamageLikeHandler<DamageScaledEffect> {
   override apply(ctx: EffectContext, effect: DamageScaledEffect): EffectResult {
     const amount = effect.base + effect.amount * resolveCounter(ctx.state, effect.per);
     return damage(ctx.state, amount);
