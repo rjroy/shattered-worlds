@@ -5,7 +5,7 @@ date: 2026-06-10
 status: current
 tags: theme, world, authoring, rules, the-walker, deck, visual-theme, reference
 fg-type: architecture
-fg-sources: .lore/work/specs/overgrown-mall.html, .lore/work/specs/fog-beach-party.html, .lore/work/brainstorm/shard-response-archetypes.html
+fg-sources: .lore/work/specs/overgrown-mall.html, .lore/work/specs/fog-beach-party.html, .lore/work/brainstorm/shard-response-archetypes.html, src/game/assets/themes/README.md, src/game/assets/themes/zombie-big-box/insets/README.md, src/game/assets/themes/highway-volcano/insets/README.md, src/game/assets/themes/bird-building/insets/README.md, src/game/assets/themes/overgrown-mall/insets/README.md, src/game/assets/themes/the-tidal-archive/insets/README.md, src/game/assets/themes/the-ember-orchard/insets/README.md, src/game/assets/themes/city-of-sleeping-giants/insets/README.md
 related: .lore/reference/visual-direction.md, .lore/reference/vision.md
 fg-evidence:
   code:
@@ -193,6 +193,18 @@ Optional but common:
 - one inset per themed card
 
 **W2:** Inset keys must be unique and registered. A card's `insetKey` in JSON must have a matching asset binding. Shared cards use shared `inset-*` keys.
+
+### Inset Art Direction
+
+Card insets are thumbnail-first event illustrations, not small reality backdrops. Most themes define per-world inset art guidance in `src/game/assets/themes/<worldId>/insets/README.md`; add or update that README when adding a new inset set.
+
+**W2a:** Author insets as square `600x600` source assets and validate them at the runtime thumbnail scale, especially `100x100`. The subject must still read clearly after downscaling.
+
+**W2b:** Each inset should have one large foreground subject, hazard, tool, or world object; a bold silhouette; a simplified darker background; and only one or two environmental cues. Avoid tiny debris, crowded props, busy skylines/shelves/botany, malformed text, logos, or anything competing with the main subject.
+
+**W2c:** Inset style should match the world's reality/backdrop language while sharpening the theme's identity: a stable palette, a consistent accent color or intrusion wrongness, recurring nouns, and the world's signature verb expressed visually. Examples: `the-tidal-archive` uses displacement, water, shelves, coral bridges, and rare violet map lines; `the-ember-orchard` uses incubating star-fruit, lantern heat, and rare violet-white cores; `city-of-sleeping-giants` uses stone/anatomy blur, vein-roads, bone anchors, violet cracks, and emerald pulse.
+
+**W2d:** Use a repeatable finishing pass for consistency unless the art pipeline changes. Current inset sets are fit to `600x600`, then adjusted with contrast `1.12`, brightness `0.99`, and unsharp mask radius `1.1`, percent `80`, threshold `4`, followed by a `100x100` contact-sheet review.
 
 **W3:** A new world is wired in these places:
 
