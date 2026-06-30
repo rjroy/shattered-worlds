@@ -28,11 +28,15 @@ Rewards and Eden player cards:
 
 ## Direction
 
-Match the shared theme art direction: gritty ink-and-wash concept art on warm
-weathered paper, dense scratch linework, restrained paint, imperfect black
-borders, tactile grain, desaturated reality, and vivid color reserved for the
-intrusion, Alarm, and the shared Door. Eden Prime should stay gentle paradise
-green and garden gold, pierced by a sparse violet-white second sun.
+Match the realized inset house style of the recent worlds (the Ember Orchard,
+City of Sleeping Giants): bold graphic-novel comic illustration with heavy black
+ink linework, dramatic chiaroscuro, a strong rim-lit single subject, and rich
+saturated lighting. Insets are deliberately more vivid than the desaturated
+ink-and-wash reality backdrops; the shared backdrop direction does not apply
+here. Vivid color carries the focal subject, with one glowing accent reserved
+for the intrusion, Alarm, and the shared Door. Eden Prime stays gentle paradise
+green and garden gold under a deep glowing sky, pierced by a sparse
+violet-white second sun.
 
 The threat verb is **startle**: gifts, curiosity, and abundance becoming an
 involuntary flinch. Insets should read as a paradise with no word for danger
@@ -77,19 +81,24 @@ Per-card intent to guide the subject:
 
 ## Prompt Template
 
+Describe the silhouette intent in words; never quote the literal card name or the
+word "card" into the prompt. flux-2-pro renders quoted titles as on-image text
+and a card frame, which insets must not have.
+
 ```text
-Square 600x600 game card inset illustration for a mythic paradise survival game,
-gentle Eden valley palette of desaturated garden green, warm fruit gold, clear
-water blue, and weathered paper texture, gritty ink-and-wash concept art with
-dense scratch linework and restrained paint. Subject: [ONE CLEAR FOREGROUND
-SUBJECT, a fruit/hand/bird/swarm/herd/flower/grove/footstep], large and
-unmistakable, arranged as a bold readable silhouette, readable as "[CARD NAME]"
-at 100x100 pixels. Background: [EDEN LOCATION], heavily simplified and darker,
-only [1-2 CUES]. High contrast value hierarchy: [SUBJECT] against quiet green
-shadow. A sparse violet-white second-sun accent and forked shadow geometry show
-the First Alarm without taking over the image. No text, no logos, no monsters,
-no gore, no neon poison green, no crowded botany, no tiny debris competing with
-the subject.
+Full-bleed square illustration, bold graphic-novel comic art with heavy black
+ink linework and dramatic chiaroscuro, painted in rich saturated light, instantly
+recognizable in silhouette at thumbnail size. Mythic Eden valley palette of lush
+garden green and warm fruit gold under a deep glowing sunset-toned sky. Subject:
+[ONE CLEAR FOREGROUND SUBJECT, a fruit/hand/bird/swarm/herd/flower/grove/footstep],
+large and unmistakable, rim-lit against shadow as a bold silhouette. Background:
+[EDEN LOCATION], heavily simplified and darker, only [1-2 CUES] in silhouette.
+High value contrast: glowing [SUBJECT] against deep green shadow. One sparse
+violet-white second-sun accent and forked shadow geometry signal the startle
+without taking over the image. Full-bleed art only: no border, no frame, no card
+layout, no title banner, no UI panel, no text, no caption, no lettering, no logos,
+no monsters, no gore, no neon poison green, no crowded botany, no tiny debris
+competing with the subject.
 ```
 
 ## Finishing Pass
