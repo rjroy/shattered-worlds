@@ -403,7 +403,7 @@ describe("applyEffect GainLight", () => {
 
     expect(after.light).toBe(3);
     const lightEvent = events.find((e) => e.type === "LightChanged");
-    expect(lightEvent).toEqual({ type: "LightChanged", light: 3 });
+    expect(lightEvent).toEqual({ type: "LightChanged", light: 3, sourceKind: "GainLight" });
   });
 
   it("is playable with no target (no-target effect, base playability)", () => {

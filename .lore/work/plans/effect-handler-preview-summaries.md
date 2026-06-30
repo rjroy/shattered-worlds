@@ -1,13 +1,22 @@
 ---
 title: "Implementation plan: effect-handler-preview-summaries"
 date: 2026-06-30
-status: draft
+status: archived
 tags: [plan, refactor, action-preview, effect-handler]
 modules: [core-effects, action-preview]
 related: [.lore/reference/action-preview-confirmation-system.md, .lore/reference/effect-system-extension-pattern.md, .lore/work/design/observability-boundary.md]
 ---
 
 # Implementation plan: effect-handler-preview-summaries
+
+> **Archived (superseded).** The implementation shipped from this plan added a
+> parallel `EXTERNAL_PREVIEW_FORMATTERS` registry keyed by `GameEvent["type"]`,
+> which reintroduced the very switch-dispatch pattern `EffectHandler` exists to
+> remove. It was corrected and replaced by
+> [`.lore/work/plans/effect-handler-preview-polymorphism.md`](effect-handler-preview-polymorphism.md),
+> which deletes that registry and routes effect-owned preview copy through a
+> polymorphic `previewEvent` method on the handler subclass. Keep this document
+> for the decision history; do not implement from it.
 
 ## Goal
 

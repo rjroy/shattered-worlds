@@ -22,19 +22,38 @@ type ForceDestroyEffect = Extract<CardEffect, { kind: "ForceDestroy" }>;
 type ExileTopWorldCardsEffect = Extract<CardEffect, { kind: "ExileTopWorldCards" }>;
 type SurviveWorldEffect = Extract<CardEffect, { kind: "SurviveWorld" }>;
 
-export function previewWorldCardsEvent(
-  event: GameEvent,
+/**
+ * Shared preview copy for `CardDestroyed`. Single source for both call sites:
+ * the destroy handlers' `previewEvent` (the `DestroyCardInHand`/`DestroySelf`
+ * dispatch-stamped instances, via `DestroyInHandLikeHandler` below) and the
+ * `summarizeEvent` switch arm (the unstamped exhaust-branch instance from
+ * `reduce.ts`, which does not pass through dispatch). The rng-selected turn-start
+ * ForceDestroy snatch is stamped `randomized` and takes its own masked path in
+ * `summarizeStampedEvent`, so it never reaches either call site here.
+ */
+export function cardDestroyedLine(
+  event: Extract<GameEvent, { type: "CardDestroyed" }>,
   context: PreviewFormatContext,
-): PreviewEventSummary {
-  switch (event.type) {
-    case "CardDestroyed":
-      return [
-        `Destroy ${event.ids.length} ${context.plural("card", event.ids.length)}: ${context.listNames(
-          context.namesFromIds(event.ids, event.templateIds),
-        )}`,
-      ];
-    default:
-      return null;
+): readonly string[] {
+  return [
+    `Destroy ${event.ids.length} ${context.plural("card", event.ids.length)}: ${context.listNames(
+      context.namesFromIds(event.ids, event.templateIds),
+    )}`,
+  ];
+}
+
+/**
+ * Shared base for the two in-hand destroy kinds (`DestroyCardInHand`,
+ * `DestroySelf`). Both emit `CardDestroyed` through the `destroyInHand()` helper
+ * with identical preview copy, so the `previewEvent` override lives here once and
+ * both `sourceKind`s resolve to the same method via the EFFECTS registry. Mirrors
+ * `DamageLikeHandler` in damage.ts. Stays abstract: `apply` / `describe` /
+ * `compile` differ per kind.
+ */
+abstract class DestroyInHandLikeHandler<E extends CardEffect> extends EffectHandler<E> {
+  override previewEvent(event: GameEvent, ctx: PreviewFormatContext): PreviewEventSummary {
+    if (event.type !== "CardDestroyed") return null;
+    return cardDestroyedLine(event, ctx);
   }
 }
 
@@ -130,7 +149,7 @@ export class ReturnWorldCardsHandler extends EffectHandler<ReturnWorldCardsEffec
   }
 }
 
-export class DestroyCardInHandHandler extends EffectHandler<DestroyCardInHandEffect> {
+export class DestroyCardInHandHandler extends DestroyInHandLikeHandler<DestroyCardInHandEffect> {
   override apply(ctx: EffectContext, _effect: DestroyCardInHandEffect): EffectResult {
     return destroyInHand(ctx.state, ctx.destroyIds ?? []);
   }
@@ -176,7 +195,7 @@ export class DestroyCardInHandHandler extends EffectHandler<DestroyCardInHandEff
   }
 }
 
-export class DestroySelfHandler extends EffectHandler<DestroySelfEffect> {
+export class DestroySelfHandler extends DestroyInHandLikeHandler<DestroySelfEffect> {
   override apply(ctx: EffectContext, _effect: DestroySelfEffect): EffectResult {
     return destroyInHand(ctx.state, ctx.selfId ? [ctx.selfId] : []);
   }

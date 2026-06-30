@@ -1,9 +1,9 @@
 import { reduce } from "../engine/reduce";
 import { EFFECTS } from "../effects/registry";
-import { previewBoonOfferedEvent } from "../engine/actBoonPreview";
-import { previewAppliedKeywordEvent } from "../effects/appliedKeywords";
-import { previewHeatEvent } from "../effects/heat";
-import { previewWorldCardsEvent } from "../effects/worldCards";
+import { boonOfferedLine } from "../effects/boonChoice";
+import { keywordAppliedLine, keywordRemovedLine } from "../effects/appliedKeywords";
+import { cardsThawedLine } from "../effects/heat";
+import { cardDestroyedLine } from "../effects/worldCards";
 import { isConcealed } from "../model/keywords";
 import type { Card, CardId, GameEvent, GameState } from "../model/types";
 import type { CardCatalog } from "../model/catalog";
@@ -50,28 +50,9 @@ type PreviewContext = {
 type ProgressEvent = Extract<GameEvent, { type: "ProgressDealt" }>;
 type HazardResolvedEvent = Extract<GameEvent, { type: "HazardResolved" }>;
 type HazardPartialEvent = Extract<GameEvent, { type: "HazardPartial" }>;
-type ExternalPreviewFormatter = (
-  event: GameEvent,
-  context: PreviewFormatContext,
-) => PreviewEventSummary;
 
 const EMPTY_EVENTS: readonly GameEvent[] = [];
 const EMPTY_LINES: readonly string[] = [];
-
-const EXTERNAL_PREVIEW_FORMATTERS = {
-  KeywordApplied: previewAppliedKeywordEvent,
-  KeywordRemoved: previewAppliedKeywordEvent,
-  CardsThawed: previewHeatEvent,
-  CardsBurnedForHeat: previewHeatEvent,
-  CardDestroyed: previewWorldCardsEvent,
-  BoonOffered: previewBoonOfferedEvent,
-} as const satisfies Partial<Record<GameEvent["type"], ExternalPreviewFormatter>>;
-
-type ExternallyPreviewedEventType = keyof typeof EXTERNAL_PREVIEW_FORMATTERS;
-
-export const EXTERNALLY_PREVIEWED_EVENT_TYPES = Object.freeze(
-  Object.keys(EXTERNAL_PREVIEW_FORMATTERS).sort(),
-) as readonly ExternallyPreviewedEventType[];
 
 /**
  * Concealment warning copy emitted into `summaryLines`. Exported so renderer-side
@@ -466,14 +447,11 @@ function summarizeStampedEvent(event: GameEvent, context: PreviewContext): reado
 
 function summarizeOwnedEvent(event: GameEvent, context: PreviewContext): readonly string[] {
   // Try the polymorphic handler path first: an event stamped with the effect
-  // kind that emitted it routes to that handler's previewEvent. Today every
-  // handler inherits the base null default, so this always falls through to the
-  // existing external-formatter registry and then summarizeEvent. Subsequent
-  // steps move copy onto handlers, at which point this becomes the live path.
+  // kind that emitted it routes to that handler's previewEvent. Effect-only
+  // events resolve here; dual-path events resolve here for their dispatch-stamped
+  // instance and fall through to summarizeEvent for the engine-emitted instance.
   const effectSummary = previewEffectOwnedEvent(event, context);
-  if (effectSummary !== null) return effectSummary;
-  const externalSummary = previewExternallyOwnedEvent(event, context);
-  return externalSummary ?? summarizeEvent(event, context);
+  return effectSummary ?? summarizeEvent(event, context);
 }
 
 function previewEffectOwnedEvent(
@@ -482,15 +460,6 @@ function previewEffectOwnedEvent(
 ): PreviewEventSummary {
   if (event.sourceKind === undefined) return null;
   return EFFECTS[event.sourceKind].previewEvent(event, previewFormatContext(context));
-}
-
-function previewExternallyOwnedEvent(
-  event: GameEvent,
-  context: PreviewContext,
-): PreviewEventSummary {
-  const formatter = EXTERNAL_PREVIEW_FORMATTERS[event.type as ExternallyPreviewedEventType];
-  if (!formatter) return null;
-  return formatter(event, previewFormatContext(context));
 }
 
 function summarizeEvent(event: GameEvent, context: PreviewContext): readonly string[] {
@@ -578,18 +547,32 @@ function summarizeEvent(event: GameEvent, context: PreviewContext): readonly str
       return [
         `Recall ${event.cardIds.length} ${plural("card", event.cardIds.length)} from discard to the top of your deck`,
       ];
-    // Dual-path and speculative events keep explicit arms: their copy is served
-    // by the owning handler's previewEvent for dispatch-stamped instances, and
-    // (Steps 6/7) by a shared helper here for engine-emitted, unstamped
-    // instances. They are not effect-only, so they cannot rely on previewEvent
-    // alone. Listing them keeps the categorization visible for those steps.
+    // Dual-path events: one shared helper, two call sites. The owning handler's
+    // previewEvent serves the dispatch-stamped instance; these arms serve the
+    // engine-emitted instance that bypasses dispatch and so carries no
+    // sourceKind (turn-start decay, the exhaust branch, the act cascade). For
+    // KeywordApplied the arm is also the catch-all for the Draw-stamped deferred
+    // nextWorldCard instance, which routes to DrawHandler (no previewEvent) and
+    // falls through to here.
     case "KeywordApplied":
+      return keywordAppliedLine(event, previewFormatContext(context));
     case "KeywordRemoved":
+      return keywordRemovedLine(event, previewFormatContext(context));
     case "CardsThawed":
-    case "CardsBurnedForHeat":
+      return cardsThawedLine(event, previewFormatContext(context));
     case "CardDestroyed":
+      return cardDestroyedLine(event, previewFormatContext(context));
     case "BoonOffered":
-      return EMPTY_LINES;
+      return boonOfferedLine(event, previewFormatContext(context));
+    // Speculative: the type is defined but no emitter exists yet, so no instance
+    // carries a sourceKind to route via previewEvent. A real arm here means an
+    // unstamped future emitter would still preview correctly.
+    case "CardsBurnedForHeat":
+      return [
+        `Burn ${event.ids.length} ${plural("card", event.ids.length)} for Heat: ${listNames(
+          namesFromIds(event.ids, event.templateIds, context),
+        )}`,
+      ];
     // Effect-only events (KeywordGuardConsumed, keywordGuardChanged, DamageDealt,
     // HealReceived, CardsFrozen, WorldCardsReturned, WorldCardsExiled, CardGained)
     // always flow through dispatch with a sourceKind, so they route to their

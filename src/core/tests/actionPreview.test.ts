@@ -199,6 +199,28 @@ describe("previewAction", () => {
     expect(removed.summaryLines).toContain("Remove Alarm from 1 card");
   });
 
+  it("previews a turn-start Alarm expiry via EndTurn (unstamped KeywordRemoved path)", () => {
+    // The PlayCard removal above is dispatch-stamped (sourceKind "RemoveKeyword")
+    // and routes to RemoveKeywordHandler.previewEvent. This case is the OTHER
+    // call site for the same copy: an Alarm keyword decaying to zero at turn
+    // start emits KeywordRemoved from tickAppliedKeywordsAtTurnStart, which never
+    // passes through dispatch and so carries no sourceKind. It must fall through
+    // to the summarizeEvent switch arm and still produce the line. This is the
+    // gap that would let the refactor silently drop copy if the arm were missing.
+    const alarmed = makeWorldCard({
+      id: "expiring-alarm",
+      name: "Expiring Alarm",
+      appliedKeywords: [{ name: "Alarm", value: 1 }],
+    });
+    const expiry = previewAction(catalog, makeState({ hand: [alarmed] }), { type: "EndTurn" });
+
+    // The triggering event is the engine-emitted, unstamped instance.
+    const removedEvent = expiry.events.find((event) => event.type === "KeywordRemoved");
+    expect(removedEvent).toBeDefined();
+    expect(removedEvent?.sourceKind).toBeUndefined();
+    expect(expiry.summaryLines).toContain("Remove Alarm from 1 card");
+  });
+
   it("previews Keyword Guard gain and consumption lines", () => {
     const guard = makePlayerCard({
       id: "guard",

@@ -1,7 +1,7 @@
 ---
 title: "Implementation plan: effect-handler-preview-polymorphism"
 date: 2026-06-30
-status: draft
+status: executed
 tags: [plan, refactor, action-preview, effect-handler, polymorphism]
 modules: [core-effects, action-preview, core-engine]
 related: [.lore/work/plans/effect-handler-preview-summaries.md, .lore/reference/effect-system-extension-pattern.md]

@@ -18,26 +18,21 @@ type GainHeatEffect = Extract<CardEffect, { kind: "GainHeat" }>;
 type FreezeCardsEffect = Extract<CardEffect, { kind: "FreezeCards" }>;
 type ThawCardsEffect = Extract<CardEffect, { kind: "ThawCards" }>;
 
-export function previewHeatEvent(
-  event: GameEvent,
+/**
+ * Shared preview copy for `CardsThawed`. Single source for both call sites:
+ * `ThawCardsHandler.previewEvent` (the dispatch-stamped instance) and the
+ * `summarizeEvent` switch arm (the unstamped `thawFrozenCardsAtTurnStart` decay
+ * instance, which does not pass through dispatch).
+ */
+export function cardsThawedLine(
+  event: Extract<GameEvent, { type: "CardsThawed" }>,
   context: PreviewFormatContext,
-): PreviewEventSummary {
-  switch (event.type) {
-    case "CardsThawed":
-      return [
-        `Thaw ${event.ids.length} ${context.plural("card", event.ids.length)}: ${context.listNames(
-          context.namesFromIds(event.ids, event.templateIds),
-        )}`,
-      ];
-    case "CardsBurnedForHeat":
-      return [
-        `Burn ${event.ids.length} ${context.plural("card", event.ids.length)} for Heat: ${context.listNames(
-          context.namesFromIds(event.ids, event.templateIds),
-        )}`,
-      ];
-    default:
-      return null;
-  }
+): readonly string[] {
+  return [
+    `Thaw ${event.ids.length} ${context.plural("card", event.ids.length)}: ${context.listNames(
+      context.namesFromIds(event.ids, event.templateIds),
+    )}`,
+  ];
 }
 
 function isFrozen(card: PlayerCard): boolean {
@@ -178,6 +173,11 @@ export class ThawCardsHandler extends EffectHandler<ThawCardsEffect> {
       },
     ];
     return { state: { ...ctx.state, hand, heat }, events };
+  }
+
+  override previewEvent(event: GameEvent, ctx: PreviewFormatContext): PreviewEventSummary {
+    if (event.type !== "CardsThawed") return null;
+    return cardsThawedLine(event, ctx);
   }
 
   override describe(effect: ThawCardsEffect): string[] {

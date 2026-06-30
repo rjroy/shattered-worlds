@@ -102,12 +102,23 @@ describe("Whiteout frozen cards and heat", () => {
       thawIds: [frozen.id],
     });
 
-    expect(gained.events).toContainEqual({ type: "HeatChanged", heat: 2, delta: 2 });
-    expect(thawed.events).toContainEqual({ type: "HeatChanged", heat: 1, delta: -1 });
+    expect(gained.events).toContainEqual({
+      type: "HeatChanged",
+      heat: 2,
+      delta: 2,
+      sourceKind: "GainHeat",
+    });
+    expect(thawed.events).toContainEqual({
+      type: "HeatChanged",
+      heat: 1,
+      delta: -1,
+      sourceKind: "ThawCards",
+    });
     expect(thawed.events).toContainEqual({
       type: "CardsThawed",
       ids: [frozen.id],
       templateIds: ["Explore"],
+      sourceKind: "ThawCards",
     });
     const thawedCard = thawed.state.hand.find(
       (card): card is PlayerCard => card.id === frozen.id && card.kind === "player",

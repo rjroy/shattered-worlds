@@ -323,6 +323,7 @@ describe("PlayCard effective card snapshots", () => {
       type: "WorldCardsReturned",
       ids: [returned.id],
       templateIds: [returned.templateId],
+      sourceKind: "ReturnWorldCards",
     });
     expect(result.events).toContainEqual({
       type: "ProgressDealt",
@@ -330,11 +331,13 @@ describe("PlayCard effective card snapshots", () => {
       templateId: swept.templateId,
       amount: 1,
       hazardTurnTotal: 1,
+      sourceKind: "DealProgressAll",
     });
     expect(result.events).toContainEqual({
       type: "HazardResolved",
       hazardId: swept.id,
       templateId: swept.templateId,
+      sourceKind: "DealProgressAll",
     });
   });
 
@@ -881,6 +884,7 @@ describe("Adrenaline discardPlayer", () => {
       type: "CardsDiscarded",
       cardIds: [explore.id],
       templateIds: [explore.templateId],
+      sourceKind: "DiscardThenDraw",
     });
     expect(types.indexOf("CardsDiscarded")).toBeLessThan(types.indexOf("CardsDrawn"));
 

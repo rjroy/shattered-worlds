@@ -1,7 +1,7 @@
 ---
 title: "Implementation notes: effect-handler-preview-polymorphism"
 date: 2026-06-30
-status: in_progress
+status: complete
 tags: [implementation, notes, refactor, action-preview, effect-handler, polymorphism]
 source: .lore/work/plans/effect-handler-preview-polymorphism.md
 modules: [core-effects, action-preview, core-engine]
@@ -24,10 +24,12 @@ byte-for-byte identical.
 - [x] Step 3 — Stamp `sourceKind` at the dispatch boundary
 - [x] Step 4 — Bridge the preview loop to `previewEvent`
 - [x] Step 5 — Move copy onto handlers for effect-only events
-- [ ] Step 6 — Handle dual-path events with a shared helper
-- [ ] Step 7 — Delete the apparatus
-- [ ] Step 8 — Tighten and document
-- [ ] Final validation (holistic review against plan)
+- [x] Step 6 — Handle dual-path events with a shared helper (review clean; suite has 1
+      expected failure, the obsolete `eventOwnership.test.ts`, deleted in Step 7)
+- [x] Step 7 — Delete the apparatus (suite fully green, 1365 pass / 2 skip / 0 fail)
+- [x] Step 8 — Tighten and document (reference doc updated, prior plan archived, this
+      plan marked executed; lint/typecheck/build clean)
+- [x] Final validation (holistic review against plan) — all 10 plan items PASS
 
 ## Emitter topology table (filled by Step 1)
 
@@ -118,6 +120,109 @@ Routing summary:
   exhaustiveness tripwire — a future new event type with no override AND no arm would
   silently preview empty. Plan accepts this (eventOwnership.test deleted in Step 7).
   Revisit at finalization whether a test-level guard should replace it.
+
+### Interruption (between Step 5 and Step 6)
+- Steps 1-5 were committed during a session-limit gap as `e646855 "Partial refactor
+  of effect handler"`. Baseline verified green after the gap: typecheck clean, 78 pass/1 skip.
+- An UNRELATED commit `654e933 "simple balance pass on Eden Prime"` (allCards.json,
+  6 lines) landed on top during the gap — not part of this refactor; left untouched.
+- The first Step 6 agent hit the session limit mid-run; its changes were NOT committed
+  and are absent from the working tree. Step 6 re-dispatched from the clean baseline.
+
+### DISCOVERED DIVERGENCE (Step 3 fallout, surfaced at Step 6 full-suite run)
+- Running the FULL suite (first time since Step 2) revealed 5 engine-apply tests
+  failing because Step 3's `sourceKind` stamp adds a field to events, and these tests
+  assert EXACT event shape via `toContainEqual`/equality. Root cause confirmed by
+  reading received output (e.g. `WorldCardsReturned` now carries
+  `sourceKind: "ReturnWorldCards"`). NOT pre-existing — introduced by this refactor's
+  Step 3; undetected because Steps 3-5 only ran targeted preview/observability tests.
+- Affected: `reduce.test.ts` (applyEffect GainLight, Panic snapshot, Adrenaline
+  discardPlayer), Whiteout HeatChanged, fog-beach-party GainLight.
+- Fix: update the expected event shapes to include the correct `sourceKind` (the events
+  genuinely carry it now by design). Faithful to existing exact-shape test style.
+- Plan gap: Step 3 only named `observability-conformance` as the provenance test to
+  keep green; it missed exact-shape engine tests elsewhere. LESSON: a field added to a
+  widely-emitted event type needs a full-suite run, not just targeted tests.
+- 6th failure `eventOwnership.test.ts` is the registry-police test; plan deletes it in Step 7.
+
+### Step 6 (complete)
+- 5 dual-path events migrated to "one shared helper, two call sites": `keywordRemovedLine`,
+  `cardsThawedLine`, `boonOfferedLine` (in `engine/actBoonPreview.ts`, renamed from
+  `previewBoonOfferedEvent`), `keywordAppliedLine`, `cardDestroyedLine`. Each called by the
+  owning handler's `previewEvent` AND a real `summarizeEvent` switch arm.
+- KeywordApplied trap: `ApplyKeywordHandler.previewEvent` serves `"ApplyKeyword"`-stamped
+  hand instance; switch arm is catch-all for `"Draw"`-stamped (deferred nextWorldCard via
+  DrawHandler) + unstamped (turn-start refill). DrawHandler has NO previewEvent.
+- CardDestroyed: new `DestroyInHandLikeHandler` base (mirrors DamageLikeHandler) extended by
+  DestroyCardInHand + DestroySelf; switch arm serves unstamped exhaust/forcedestroy; rng
+  ForceDestroy snatch keeps its masked stamped path.
+- `EXTERNAL_PREVIEW_FORMATTERS` now holds only `CardsBurnedForHeat`. Deleted
+  `previewAppliedKeywordEvent`/`previewWorldCardsEvent`; stripped `previewHeatEvent` to the
+  `CardsBurnedForHeat` branch only.
+- Mandatory regression test added (`actionPreview.test.ts:202`): EndTurn Alarm expiry asserts
+  `KeywordRemoved.sourceKind === undefined` (rides switch arm, not previewEvent) + "Remove
+  Alarm from 1 card".
+- Review clean on all technical points. Suite: 1367 pass/2 skip/1 fail (eventOwnership only).
+
+### Step 7 (complete)
+- Deleted the parallel-registry apparatus from `view/actionPreview.ts`:
+  `EXTERNAL_PREVIEW_FORMATTERS`, `ExternallyPreviewedEventType`,
+  `EXTERNALLY_PREVIEWED_EVENT_TYPES`, `previewExternallyOwnedEvent`, and the now-unused
+  `ExternalPreviewFormatter` type. `summarizeOwnedEvent` is now just
+  `previewEffectOwnedEvent(event, ctx) ?? summarizeEvent(event, context)`.
+- Speculative `CardsBurnedForHeat`: copy moved (byte-for-byte) from the deleted
+  `previewHeatEvent` branch into a REAL `case "CardsBurnedForHeat"` arm in
+  `summarizeEvent` (uses local `plural`/`listNames`/`namesFromIds`, identical output),
+  so an unstamped future emitter still previews. `previewHeatEvent` deleted entirely.
+- `boonOfferedLine` relocated from `engine/actBoonPreview.ts` (which held ONLY that
+  formatter) into `effects/boonChoice.ts` next to `OfferBoonHandler`; `actBoonPreview.ts`
+  deleted. `boonChoice.ts` does NOT import `actionPreview.ts`; `actionPreview.ts` imports
+  `boonOfferedLine` from `boonChoice.ts` (same direction as the existing EFFECTS dep — no
+  new cycle).
+- Deleted `tests/eventOwnership.test.ts` (registry-police test; imported the deleted
+  `EXTERNALLY_PREVIEWED_EVENT_TYPES`).
+- `summarizeEvent` final shape: real arms for the 5 dual-path events + speculative
+  `CardsBurnedForHeat` + all engine/policy events; `default: return EMPTY_LINES` for the
+  effect-only events that always route via `previewEvent`. NO `EMPTY_LINES` stub arms
+  remain (the conditional revealed-hazard `EMPTY_LINES` in HazardResolved/HazardPartial are
+  policy, not stubs; default is the only blanket one).
+- Verify: typecheck clean, lint clean, targeted preview tests 77 pass/1 skip, full suite
+  1365 pass/2 skip/0 fail. grep confirms zero references to any deleted symbol across src/.
+
+## Finalization summary
+
+All 8 plan steps done + holistic validation passed. Full suite green (1365 pass / 2
+skip / 0 fail); typecheck, lint, build all clean.
+
+**What was built:** the new "preview copy" concern is now polymorphic on `EffectHandler`
+(`previewEvent`, default `null`), routed by a `sourceKind` field stamped at the
+`dispatch()` boundary (innermost wins). 8 effect-only events override `previewEvent`;
+5 dual-path events use one shared helper called by both the handler override and a real
+`summarizeEvent` switch arm; 1 speculative event (`CardsBurnedForHeat`) is a switch arm.
+The parallel `EXTERNAL_PREVIEW_FORMATTERS` registry, `previewExternallyOwnedEvent`, its
+type/const helpers, `engine/actBoonPreview.ts`, `eventOwnership.test.ts`, and all 14
+`EMPTY_LINES` stub arms are gone. Preview copy is byte-for-byte identical.
+
+**Divergences from the plan (all recorded above):**
+1. `KeywordApplied` reclassified effect-only → dual-path (Step 1 grep; plan prose was
+   wrong). Handled via Step 6's shared-helper + catch-all switch arm because it stamps
+   `"Draw"` (deferred nextWorldCard) or is unstamped (turn-start refill), not only
+   `"ApplyKeyword"`. `CardDestroyed` similarly multi-emitter.
+2. Discovered + fixed an integration gap the plan missed: Step 3's `sourceKind` field
+   broke 5 exact-shape engine tests (`effects/reduce/whiteout/fogBeachParty`). Updated
+   their expected event shapes to include the correct `sourceKind`. Lesson: a field
+   added to a widely-emitted event needs a full-suite run, not just targeted tests.
+3. Soft line-count target: apparatus removal is net down as predicted, but total
+   production is +83 due to doc comments + reusable scaffolding (no duplication).
+
+**Process note:** Steps 1-5 were committed mid-run as `e646855` during a session-limit
+gap (an unrelated `654e933` balance commit also landed); the first Step 6 agent's work
+was lost to the limit and redone from the clean baseline. Steps 6-8 + test fixes remain
+uncommitted in the working tree.
+
+**Deferred (not blocking):** the `default: return EMPTY_LINES` removes the compiler's
+exhaustiveness tripwire for new event types (plan-sanctioned); micro-opt in `dispatch`
+allocates an array per call even without stamping (reviewer: negligible).
 
 ## Log
 

@@ -52,22 +52,33 @@ type RemoveKeywordEffect = Extract<CardEffect, { kind: "RemoveKeyword" }>;
 // registry import would leave the gate handlers undefined when registry builds
 // its EFFECTS map. compile() recurses safely via the ctx.compile seam instead.
 
-export function previewAppliedKeywordEvent(
-  event: GameEvent,
+/**
+ * Shared preview copy for `KeywordApplied`. Single source for both call sites:
+ * `ApplyKeywordHandler.previewEvent` (the `ApplyKeyword`-stamped hand instance)
+ * and the `summarizeEvent` switch arm (the `Draw`-stamped deferred nextWorldCard
+ * instance and the unstamped turn-start refill instance, neither of which routes
+ * to this handler).
+ */
+export function keywordAppliedLine(
+  event: Extract<GameEvent, { type: "KeywordApplied" }>,
   context: PreviewFormatContext,
-): PreviewEventSummary {
-  switch (event.type) {
-    case "KeywordApplied": {
-      const count = event.ids.length;
-      return [`Apply ${event.keyword} to ${count} ${context.plural("card", count)}`];
-    }
-    case "KeywordRemoved": {
-      const count = event.ids.length;
-      return [`Remove ${event.keyword} from ${count} ${context.plural("card", count)}`];
-    }
-    default:
-      return null;
-  }
+): readonly string[] {
+  const count = event.ids.length;
+  return [`Apply ${event.keyword} to ${count} ${context.plural("card", count)}`];
+}
+
+/**
+ * Shared preview copy for `KeywordRemoved`. Single source for both call sites:
+ * `RemoveKeywordHandler.previewEvent` (the dispatch-stamped instance) and the
+ * `summarizeEvent` switch arm (the unstamped `tickAppliedKeywordsAtTurnStart`
+ * decay instance, which does not pass through dispatch).
+ */
+export function keywordRemovedLine(
+  event: Extract<GameEvent, { type: "KeywordRemoved" }>,
+  context: PreviewFormatContext,
+): readonly string[] {
+  const count = event.ids.length;
+  return [`Remove ${event.keyword} from ${count} ${context.plural("card", count)}`];
 }
 
 /**
@@ -140,6 +151,11 @@ export class ApplyKeywordHandler extends EffectHandler<ApplyKeywordEffect> {
         return applyToHandIds(state, [first.id], kw);
       }
     }
+  }
+
+  override previewEvent(event: GameEvent, ctx: PreviewFormatContext): PreviewEventSummary {
+    if (event.type !== "KeywordApplied") return null;
+    return keywordAppliedLine(event, ctx);
   }
 
   override describe(effect: ApplyKeywordEffect): string[] {
@@ -235,6 +251,11 @@ export class RemoveKeywordHandler extends EffectHandler<RemoveKeywordEffect> {
         },
       ],
     };
+  }
+
+  override previewEvent(event: GameEvent, ctx: PreviewFormatContext): PreviewEventSummary {
+    if (event.type !== "KeywordRemoved") return null;
+    return keywordRemovedLine(event, ctx);
   }
 
   override describe(effect: RemoveKeywordEffect): string[] {
