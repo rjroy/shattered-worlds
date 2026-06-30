@@ -2,6 +2,7 @@ import type { GameState } from "../model/types";
 import { refillHand, resolveForceDestroy } from "./draw";
 import type { EffectResult } from "../effects/EffectContext";
 import { thawFrozenCardsAtTurnStart } from "../effects/heat";
+import { tickAppliedKeywordsAtTurnStart } from "../effects/appliedKeywords";
 
 // Light dims one step per turn. A constant (not per-world tuning): the decay
 // model is "untended light fades", and the per-world dial is starting Light,
@@ -90,18 +91,20 @@ function decayLight(state: GameState): EffectResult {
 }
 
 /**
- * Compose decayLight, thaw frozen cards, gainEnergy, refillHand, and resolveForceDestroy to
- * represent a complete turn start.
+ * Compose decayLight, thaw frozen cards, decay applied keywords, gainEnergy,
+ * refillHand, and resolveForceDestroy to represent a complete turn start.
  *
- * Order guarantee: Light decay happens FIRST, then frozen cards tick down
- * before +1 energy and before the hand refill. Then +1 energy happens BEFORE hand refill. Forced destruction runs
- * LAST, so it acts on the just-dealt hand. This ordering is FIXED: it
- * determines the event sequence, hence determinism.
+ * Order guarantee (FIXED — it determines the event sequence, hence
+ * determinism): light decay → thaw frozen cards → applied-keyword decay →
+ * +1 energy → hand refill → resolveForceDestroy. Forced destruction runs LAST,
+ * so it acts on the just-dealt hand.
  *
  * Returns: { state, events }. In a light-world (light > 0) LightChanged is
  * emitted first, BEFORE EnergyChanged; in every other world decay emits nothing
- * and the stream opens with EnergyChanged exactly as before. Then all
- * draw/shuffle events, then any CardDestroyed events from pending ForceDestroy.
+ * and the stream opens with EnergyChanged exactly as before. Applied-keyword
+ * decay emits KeywordRemoved only when something expired (no Alarm in play =>
+ * no event), keeping non-Eden streams byte-identical. Then all draw/shuffle
+ * events, then any CardDestroyed events from pending ForceDestroy.
  */
 export function startTurn(state: GameState): StartTurnResult {
   // Light decay first — before energy, refill, and force-destroy.
@@ -110,8 +113,11 @@ export function startTurn(state: GameState): StartTurnResult {
 
   const afterThaw = thawFrozenCardsAtTurnStart(afterDecay.state);
 
+  // Applied keywords (Alarm) decay one tick after thaw, before energy.
+  const afterTick = tickAppliedKeywordsAtTurnStart(afterThaw.state);
+
   // Gain 1 energy
-  const afterGain = gainEnergy(afterThaw.state);
+  const afterGain = gainEnergy(afterTick.state);
   const stateWithEnergy = afterGain.state;
   const energyEvents = afterGain.events;
 
@@ -131,6 +137,7 @@ export function startTurn(state: GameState): StartTurnResult {
     events: [
       ...decayEvents,
       ...afterThaw.events,
+      ...afterTick.events,
       ...energyEvents,
       ...refillResult.events,
       ...destroyResult.events,

@@ -573,6 +573,16 @@ function summarizeEvent(event: GameEvent, context: PreviewContext): readonly str
       return [
         `Recall ${event.cardIds.length} ${plural("card", event.cardIds.length)} from discard to the top of your deck`,
       ];
+    case "KeywordApplied":
+      return [`Apply ${event.keyword} to ${event.ids.length} ${plural("card", event.ids.length)}`];
+    case "KeywordRemoved":
+      return [
+        `Remove ${event.keyword} from ${event.ids.length} ${plural("card", event.ids.length)}`,
+      ];
+    case "AlarmGuardChanged":
+      return [`Alarm Guard now ${event.alarmGuard}`];
+    case "AlarmGuardConsumed":
+      return [`Alarm Guard absorbs the trigger; ${event.remaining} remaining`];
   }
 }
 

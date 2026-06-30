@@ -2,12 +2,13 @@ import type { CardEffect, GameState } from "../model/types";
 import type { EffectLine } from "../view/effectGlyphs";
 import type { CompileContext, EffectContext, EffectResult } from "./EffectContext";
 import { EffectHandler } from "./EffectHandler";
-import { icon, main, value } from "./tokens";
+import { icon, main, text, value } from "./tokens";
 
 type HealEffect = Extract<CardEffect, { kind: "Heal" }>;
 type GainEnergyEffect = Extract<CardEffect, { kind: "GainEnergy" }>;
 type BraceEffect = Extract<CardEffect, { kind: "Brace" }>;
 type GainLightEffect = Extract<CardEffect, { kind: "GainLight" }>;
+type GainAlarmGuardEffect = Extract<CardEffect, { kind: "GainAlarmGuard" }>;
 
 export function heal(state: GameState, n: number): EffectResult {
   const newHp = state.hp + n;
@@ -89,5 +90,25 @@ export class BraceHandler extends EffectHandler<BraceEffect> {
 
   override compile(effect: BraceEffect, _ctx: CompileContext): EffectLine[] {
     return [main([value(`+${effect.amount}`, "brace"), icon("brace")])];
+  }
+}
+
+export class GainAlarmGuardHandler extends EffectHandler<GainAlarmGuardEffect> {
+  override apply(ctx: EffectContext, effect: GainAlarmGuardEffect): EffectResult {
+    const alarmGuard = ctx.state.alarmGuard + effect.amount;
+    const current: GameState = { ...ctx.state, alarmGuard };
+    return { state: current, events: [{ type: "AlarmGuardChanged", alarmGuard }] };
+  }
+
+  override describe(effect: GainAlarmGuardEffect): string[] {
+    return [
+      effect.amount === 1
+        ? "Gain an Alarm Guard (absorb the next Alarm trigger)"
+        : `Gain ${effect.amount} Alarm Guards`,
+    ];
+  }
+
+  override compile(effect: GainAlarmGuardEffect, _ctx: CompileContext): EffectLine[] {
+    return [main([value(`+${effect.amount}`, "brace"), text("Alarm Guard")])];
   }
 }

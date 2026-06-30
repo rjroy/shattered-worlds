@@ -22,7 +22,19 @@ import {
 import { FreezeCardsHandler, GainHeatHandler, ThawCardsHandler } from "./heat";
 import { NoneHandler } from "./none";
 import { RecallPlayerDiscardHandler, ReturnPlayerDiscardToTopHandler } from "./recallDiscard";
-import { BraceHandler, GainEnergyHandler, GainLightHandler, HealHandler } from "./resources";
+import {
+  BraceHandler,
+  GainAlarmGuardHandler,
+  GainEnergyHandler,
+  GainLightHandler,
+  HealHandler,
+} from "./resources";
+import {
+  ApplyKeywordHandler,
+  KeywordGateHandler,
+  ProgressGateHandler,
+  RemoveKeywordHandler,
+} from "./appliedKeywords";
 import {
   DestroyCardInHandHandler,
   DestroySelfHandler,
@@ -67,6 +79,11 @@ export const EFFECTS: {
   ThawCards: new ThawCardsHandler(),
   SurviveWorld: new SurviveWorldHandler(),
   None: new NoneHandler(),
+  ApplyKeyword: new ApplyKeywordHandler(),
+  KeywordGate: new KeywordGateHandler(),
+  ProgressGate: new ProgressGateHandler(),
+  RemoveKeyword: new RemoveKeywordHandler(),
+  GainAlarmGuard: new GainAlarmGuardHandler(),
 };
 
 export function connectorStyleOf(effect: CardEffect): ConnectorStyle | null {

@@ -229,6 +229,18 @@ function cloneEffect(effect: CardEffect): CardEffect {
       return { ...effect };
     case "RecallPlayerDiscard":
       return { ...effect };
+    case "ApplyKeyword":
+      return { ...effect };
+    // Gates carry a nested `then` effect — deep-clone it so the clone shares no
+    // mutable child with the original.
+    case "KeywordGate":
+      return { ...effect, then: cloneEffect(effect.then) };
+    case "ProgressGate":
+      return { ...effect, then: cloneEffect(effect.then) };
+    case "RemoveKeyword":
+      return { ...effect };
+    case "GainAlarmGuard":
+      return { ...effect };
   }
 }
 

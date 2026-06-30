@@ -33,6 +33,7 @@ const WORLD_THREAT_BY_WORLD_ID: Record<string, CardTemplateId> = {
   "the-tidal-archive": "The Same Footprint",
   "the-ember-orchard": "Ground Constellation",
   "city-of-sleeping-giants": "The Giant Turns In Sleep",
+  "eden-prime": "Paradise Runs",
 };
 
 export function worldThreatByWorldId(worldId: string): string {

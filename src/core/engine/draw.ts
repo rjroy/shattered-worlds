@@ -1,5 +1,6 @@
 import type { CardId, CardTemplateId, GameEvent, GameState, WorldCard } from "../model/types";
 import { effectiveHandSize, WORLD_CONSTS } from "./world";
+import { withAppliedKeyword } from "../model/keywords";
 import { shuffle } from "./rng";
 
 // ---------------------------------------------------------------------------
@@ -108,7 +109,27 @@ export function drawWorld(state: GameState, n: number): { state: GameState; even
     }
 
     // noUncheckedIndexedAccess: worldDraw is non-empty here (guarded above).
-    const card = current.worldDraw[0]!;
+    const pulled = current.worldDraw[0]!;
+
+    // Eden Prime — consume a queued "next world card" Alarm (ApplyKeyword target
+    // "nextWorldCard"). Stamp the FIRST world card pulled while the flag is set,
+    // then clear it (consume-and-clear, mirroring resolveForceDestroy). When the
+    // flag is absent (every non-Eden draw) this branch never runs and the event
+    // stream is byte-identical.
+    let card = pulled;
+    if (current.pendingAlarmNextWorldCard !== undefined) {
+      const lifetime = current.pendingAlarmNextWorldCard;
+      card = withAppliedKeyword(pulled, { name: "Alarm", value: lifetime });
+      current = { ...current, pendingAlarmNextWorldCard: undefined };
+      events.push({
+        type: "KeywordApplied",
+        ids: [card.id],
+        templateIds: [card.templateId],
+        keyword: "Alarm",
+        value: lifetime,
+      });
+    }
+
     current = {
       ...current,
       worldDraw: current.worldDraw.slice(1),

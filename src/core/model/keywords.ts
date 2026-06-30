@@ -17,6 +17,7 @@ const KEYWORD_NAMES: readonly KeywordName[] = [
   "Slow",
   "Spore",
   "Concealed",
+  "Alarm",
 ];
 
 function isKeywordName(s: string): s is KeywordName {
@@ -47,14 +48,91 @@ export function parseKeyword(s: string): Keyword {
   return { name, value };
 }
 
-/** The names of every keyword on a card (ignoring values). */
+/**
+ * The names of every keyword on a card (ignoring values). Unions the authored
+ * `keywords` with the transient `appliedKeywords`, so a runtime-applied keyword
+ * (e.g. Alarm) is reported here exactly like an authored one. Authored names
+ * come first, applied names follow, each in source order.
+ */
 export function keywordNames(card: Card): KeywordName[] {
-  return card.keywords.map((k) => k.name);
+  const applied = card.appliedKeywords ?? [];
+  return [...card.keywords, ...applied].map((k) => k.name);
 }
 
-/** Whether the card carries a keyword with the given name (value ignored). */
+/**
+ * Whether the card carries a keyword with the given name (value ignored). True
+ * iff the name is in the authored `keywords` OR the transient
+ * `appliedKeywords` — so KeywordGate counting, CounterSpec.KeywordInHand, and
+ * DealProgress.bonus.tag all recognize applied keywords with no further change.
+ */
 export function hasKeyword(card: Card, name: KeywordName): boolean {
-  return card.keywords.some((k) => k.name === name);
+  if (card.keywords.some((k) => k.name === name)) return true;
+  return (card.appliedKeywords ?? []).some((k) => k.name === name);
+}
+
+// ---------------------------------------------------------------------------
+// Applied (transient) keyword helpers — pure and generic over PlayerCard /
+// WorldCard. They mirror the `frozen` lifecycle (refresh-don't-shorten on
+// apply, decrement-and-drop at turn start), generalized to a keyword list.
+// ---------------------------------------------------------------------------
+
+/**
+ * Return `card` with `kw` present in its `appliedKeywords`. If an applied entry
+ * of the same name already exists, its lifetime is raised to the larger of the
+ * two values (refresh, never shorten — mirrors setPlayerFrozen's Math.max).
+ */
+export function withAppliedKeyword<C extends Card>(card: C, kw: Keyword): C {
+  const existing = card.appliedKeywords ?? [];
+  const prior = existing.find((k) => k.name === kw.name);
+  const merged: Keyword =
+    prior !== undefined ? { name: kw.name, value: Math.max(prior.value ?? 0, kw.value ?? 0) } : kw;
+  const appliedKeywords: readonly Keyword[] = [
+    ...existing.filter((k) => k.name !== kw.name),
+    merged,
+  ];
+  return { ...card, appliedKeywords } as C;
+}
+
+/**
+ * Return `card` with any applied keyword named `name` removed. When the last
+ * applied entry is removed, the `appliedKeywords` property is dropped entirely
+ * so the card is byte-identical to one that never carried it (mirrors how the
+ * thaw path strips `frozen`).
+ */
+export function withoutAppliedKeyword<C extends Card>(card: C, name: KeywordName): C {
+  const existing = card.appliedKeywords;
+  if (existing === undefined) return card;
+  const next = existing.filter((k) => k.name !== name);
+  if (next.length === existing.length) return card;
+  if (next.length === 0) {
+    const { appliedKeywords: _dropped, ...rest } = card;
+    return rest as C;
+  }
+  return { ...card, appliedKeywords: next } as C;
+}
+
+/** The lifetime of the card's applied keyword `name`, or 0 when absent. */
+export function appliedKeywordValue(card: Card, name: KeywordName): number {
+  const entry = (card.appliedKeywords ?? []).find((k) => k.name === name);
+  return entry?.value ?? 0;
+}
+
+/**
+ * Decrement every applied keyword's lifetime by one and drop entries that reach
+ * zero. When the list empties, the `appliedKeywords` property is removed (see
+ * withoutAppliedKeyword). Pure: returns a new card, never mutates.
+ */
+export function tickAppliedKeywords<C extends Card>(card: C): C {
+  const existing = card.appliedKeywords;
+  if (existing === undefined || existing.length === 0) return card;
+  const next = existing
+    .map((kw) => ({ name: kw.name, value: (kw.value ?? 0) - 1 }))
+    .filter((kw) => kw.value > 0);
+  if (next.length === 0) {
+    const { appliedKeywords: _dropped, ...rest } = card;
+    return rest as C;
+  }
+  return { ...card, appliedKeywords: next } as C;
 }
 
 /**
