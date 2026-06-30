@@ -182,6 +182,14 @@
     "effect": { "type": "worldUnlock", "worldId": "city-of-sleeping-giants" }
   },
   {
+    "id": "world-eden-prime",
+    "name": "Eden Prime",
+    "description": "Opens Eden Prime in World Select.",
+    "cost": 15,
+    "destinyWeight": 0,
+    "effect": { "type": "worldUnlock", "worldId": "eden-prime" }
+  },
+  {
     "id": "first-sprint-free",
     "name": "Burst of Speed",
     "description": "The first Sprint you play each turn costs 0 energy, but isn't as effective.",

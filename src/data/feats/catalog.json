@@ -31,6 +31,20 @@
     "reward": { "items": [{ "type": "memoryFragments", "amount": 5 }] }
   },
   {
+    "id": "big-box-tier-2",
+    "name": "Frequent Shopper",
+    "description": "Win the Big Box 5 or more times.",
+    "conditions": [{ "statId": "world.big-box.wins", "operator": "gte", "value": 5 }],
+    "reward": { "items": [{ "type": "memoryFragments", "amount": 10 }] }
+  },
+  {
+    "id": "big-box-tier-3",
+    "name": "Secret Shopper",
+    "description": "Win the Big Box 10 or more times.",
+    "conditions": [{ "statId": "world.big-box.wins", "operator": "gte", "value": 10 }],
+    "reward": { "items": [{ "type": "memoryFragments", "amount": 20 }] }
+  },
+  {
     "id": "first-bird-building",
     "name": "First Flight",
     "description": "Win your first run of Last Day at the Office.",
@@ -39,6 +53,20 @@
       { "statId": "worldId", "operator": "is", "value": "bird-building" }
     ],
     "reward": { "items": [{ "type": "memoryFragments", "amount": 5 }] }
+  },
+  {
+    "id": "bird-building-tier-2",
+    "name": "Buisness Class",
+    "description": "Win the Last Day at the Office 5 or more times.",
+    "conditions": [{ "statId": "world.bird-building.wins", "operator": "gte", "value": 5 }],
+    "reward": { "items": [{ "type": "memoryFragments", "amount": 10 }] }
+  },
+  {
+    "id": "bird-building-tier-3",
+    "name": "First Class",
+    "description": "Win the Last Day at the Office 10 or more times.",
+    "conditions": [{ "statId": "world.bird-building.wins", "operator": "gte", "value": 10 }],
+    "reward": { "items": [{ "type": "memoryFragments", "amount": 20 }] }
   },
   {
     "id": "first-highway-volcano",
@@ -51,6 +79,20 @@
     "reward": { "items": [{ "type": "memoryFragments", "amount": 5 }] }
   },
   {
+    "id": "highway-volcano-tier-2",
+    "name": "Car Pool Lane",
+    "description": "Win the Highway Eruption 5 or more times.",
+    "conditions": [{ "statId": "world.highway-volcano.wins", "operator": "gte", "value": 5 }],
+    "reward": { "items": [{ "type": "memoryFragments", "amount": 10 }] }
+  },
+  {
+    "id": "highway-volcano-tier-3",
+    "name": "Driving on the Shoulder",
+    "description": "Win the Highway Eruption 10 or more times.",
+    "conditions": [{ "statId": "world.highway-volcano.wins", "operator": "gte", "value": 10 }],
+    "reward": { "items": [{ "type": "memoryFragments", "amount": 20 }] }
+  },
+  {
     "id": "first-overgrown-mall",
     "name": "First Mall Rat",
     "description": "Win your first run of the Mall Reclaimnation.",
@@ -59,6 +101,20 @@
       { "statId": "worldId", "operator": "is", "value": "overgrown-mall" }
     ],
     "reward": { "items": [{ "type": "memoryFragments", "amount": 10 }] }
+  },
+  {
+    "id": "overgrown-mall-tier-2",
+    "name": "Sad Mall Visitor",
+    "description": "Win the Mall Reclaimnation 5 or more times.",
+    "conditions": [{ "statId": "world.overgrown-mall.wins", "operator": "gte", "value": 5 }],
+    "reward": { "items": [{ "type": "memoryFragments", "amount": 10 }] }
+  },
+  {
+    "id": "overgrown-mall-tier-3",
+    "name": "Sad Mall Owner",
+    "description": "Win the Mall Reclaimnation 10 or more times.",
+    "conditions": [{ "statId": "world.overgrown-mall.wins", "operator": "gte", "value": 10 }],
+    "reward": { "items": [{ "type": "memoryFragments", "amount": 20 }] }
   },
   {
     "id": "first-fog-beach-party",
@@ -71,6 +127,20 @@
     "reward": { "items": [{ "type": "memoryFragments", "amount": 10 }] }
   },
   {
+    "id": "fog-beach-party-tier-2",
+    "name": "Beach Bum",
+    "description": "Win the Fog Beach Party 5 or more times.",
+    "conditions": [{ "statId": "world.fog-beach-party.wins", "operator": "gte", "value": 5 }],
+    "reward": { "items": [{ "type": "memoryFragments", "amount": 10 }] }
+  },
+  {
+    "id": "fog-beach-party-tier-3",
+    "name": "Private Beach",
+    "description": "Win the Fog Beach Party 10 or more times.",
+    "conditions": [{ "statId": "world.fog-beach-party.wins", "operator": "gte", "value": 10 }],
+    "reward": { "items": [{ "type": "memoryFragments", "amount": 20 }] }
+  },
+  {
     "id": "first-whiteout-parking-garage",
     "name": "First Thaw",
     "description": "Win your first run of the Whiteout Parking Garage.",
@@ -79,6 +149,24 @@
       { "statId": "worldId", "operator": "is", "value": "whiteout-parking-garage" }
     ],
     "reward": { "items": [{ "type": "memoryFragments", "amount": 10 }] }
+  },
+  {
+    "id": "whiteout-parking-garage-tier-2",
+    "name": "Paid Parking",
+    "description": "Win the Whiteout Parking Garage 5 or more times.",
+    "conditions": [
+      { "statId": "world.whiteout-parking-garage.wins", "operator": "gte", "value": 5 }
+    ],
+    "reward": { "items": [{ "type": "memoryFragments", "amount": 10 }] }
+  },
+  {
+    "id": "whiteout-parking-garage-tier-3",
+    "name": "Assigned Parking",
+    "description": "Win the Whiteout Parking Garage 10 or more times.",
+    "conditions": [
+      { "statId": "world.whiteout-parking-garage.wins", "operator": "gte", "value": 10 }
+    ],
+    "reward": { "items": [{ "type": "memoryFragments", "amount": 20 }] }
   },
   {
     "id": "first-the-tidal-archive",
@@ -91,6 +179,20 @@
     "reward": { "items": [{ "type": "memoryFragments", "amount": 15 }] }
   },
   {
+    "id": "the-tidal-archive-tier-2",
+    "name": "Low Tide",
+    "description": "Win the The Tidal Archive 5 or more times.",
+    "conditions": [{ "statId": "world.the-tidal-archive.wins", "operator": "gte", "value": 5 }],
+    "reward": { "items": [{ "type": "memoryFragments", "amount": 10 }] }
+  },
+  {
+    "id": "the-tidal-archive-tier-3",
+    "name": "High Tide",
+    "description": "Win the The Tidal Archive 10 or more times.",
+    "conditions": [{ "statId": "world.the-tidal-archive.wins", "operator": "gte", "value": 10 }],
+    "reward": { "items": [{ "type": "memoryFragments", "amount": 20 }] }
+  },
+  {
     "id": "first-the-ember-orcharc",
     "name": "First Harvest",
     "description": "Win your first run of The Ember Orchard.",
@@ -101,6 +203,20 @@
     "reward": { "items": [{ "type": "memoryFragments", "amount": 15 }] }
   },
   {
+    "id": "the-ember-orchard-tier-2",
+    "name": "Gardener",
+    "description": "Win the The Ember Orchard 5 or more times.",
+    "conditions": [{ "statId": "world.the-ember-orchard.wins", "operator": "gte", "value": 5 }],
+    "reward": { "items": [{ "type": "memoryFragments", "amount": 10 }] }
+  },
+  {
+    "id": "the-ember-orchard-tier-3",
+    "name": "Farmer",
+    "description": "Win the The Ember Orchard 10 or more times.",
+    "conditions": [{ "statId": "world.the-ember-orchard.wins", "operator": "gte", "value": 10 }],
+    "reward": { "items": [{ "type": "memoryFragments", "amount": 20 }] }
+  },
+  {
     "id": "first-city-of-sleeping-giants",
     "name": "First Metropolis",
     "description": "Win your first run of the City of Sleeping Giants.",
@@ -109,6 +225,48 @@
       { "statId": "worldId", "operator": "is", "value": "city-of-sleeping-giants" }
     ],
     "reward": { "items": [{ "type": "memoryFragments", "amount": 15 }] }
+  },
+  {
+    "id": "city-of-sleeping-giants-tier-2",
+    "name": "Palm Reader",
+    "description": "Win the City of Sleeping Giants 5 or more times.",
+    "conditions": [
+      { "statId": "world.city-of-sleeping-giants.wins", "operator": "gte", "value": 5 }
+    ],
+    "reward": { "items": [{ "type": "memoryFragments", "amount": 10 }] }
+  },
+  {
+    "id": "city-of-sleeping-giants-tier-3",
+    "name": "Dream Interpreter",
+    "description": "Win the City of Sleeping Giants 10 or more times.",
+    "conditions": [
+      { "statId": "world.city-of-sleeping-giants.wins", "operator": "gte", "value": 10 }
+    ],
+    "reward": { "items": [{ "type": "memoryFragments", "amount": 20 }] }
+  },
+  {
+    "id": "first-eden-prime",
+    "name": "First Disaster",
+    "description": "Win your first run of the Eden Prime .",
+    "conditions": [
+      { "statId": "outcome", "operator": "is", "value": "won" },
+      { "statId": "worldId", "operator": "is", "value": "eden-prime" }
+    ],
+    "reward": { "items": [{ "type": "memoryFragments", "amount": 15 }] }
+  },
+  {
+    "id": "eden-prime-tier-2",
+    "name": "Sour Taste",
+    "description": "Win the Eden Prime 5 or more times.",
+    "conditions": [{ "statId": "world.eden-prime.wins", "operator": "gte", "value": 5 }],
+    "reward": { "items": [{ "type": "memoryFragments", "amount": 10 }] }
+  },
+  {
+    "id": "eden-prime-tier-3",
+    "name": "Poisioned Fruit",
+    "description": "Win the Eden Prime 10 or more times.",
+    "conditions": [{ "statId": "world.eden-prime.wins", "operator": "gte", "value": 10 }],
+    "reward": { "items": [{ "type": "memoryFragments", "amount": 20 }] }
   },
   {
     "id": "swift-clear",
