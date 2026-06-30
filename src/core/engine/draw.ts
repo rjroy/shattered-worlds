@@ -87,6 +87,7 @@ export function drawWorld(state: GameState, n: number): { state: GameState; even
   const events: GameEvent[] = [];
   const drawnIds: string[] = [];
   const templateIds: CardTemplateId[] = [];
+  const pendingKeywordEvents: GameEvent[] = [];
   let remaining = n;
 
   while (remaining > 0) {
@@ -111,22 +112,25 @@ export function drawWorld(state: GameState, n: number): { state: GameState; even
     // noUncheckedIndexedAccess: worldDraw is non-empty here (guarded above).
     const pulled = current.worldDraw[0]!;
 
-    // Eden Prime — consume a queued "next world card" Alarm (ApplyKeyword target
-    // "nextWorldCard"). Stamp the FIRST world card pulled while the flag is set,
+    // Eden Prime — consume a queued "next world card" keyword (ApplyKeyword
+    // target "nextWorldCard"). Stamp the FIRST world card pulled while the flag is set,
     // then clear it (consume-and-clear, mirroring resolveForceDestroy). When the
     // flag is absent (every non-Eden draw) this branch never runs and the event
     // stream is byte-identical.
+    const pendingKeyword = current.pendingAlarmNextWorldCard;
     let card = pulled;
-    if (current.pendingAlarmNextWorldCard !== undefined) {
-      const lifetime = current.pendingAlarmNextWorldCard;
-      card = withAppliedKeyword(pulled, { name: "Alarm", value: lifetime });
+    if (pendingKeyword !== undefined) {
+      card = withAppliedKeyword(pulled, {
+        name: pendingKeyword.keyword,
+        value: pendingKeyword.value,
+      });
       current = { ...current, pendingAlarmNextWorldCard: undefined };
-      events.push({
+      pendingKeywordEvents.push({
         type: "KeywordApplied",
         ids: [card.id],
         templateIds: [card.templateId],
-        keyword: "Alarm",
-        value: lifetime,
+        keyword: pendingKeyword.keyword,
+        value: pendingKeyword.value,
       });
     }
 
@@ -149,6 +153,7 @@ export function drawWorld(state: GameState, n: number): { state: GameState; even
       bHazard: true,
       revealedFromHidden: true,
     });
+    events.push(...pendingKeywordEvents);
   }
 
   return { state: current, events };

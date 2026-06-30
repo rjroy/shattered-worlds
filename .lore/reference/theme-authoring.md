@@ -90,6 +90,7 @@ Map the world's fiction onto these roles.
 | `the-tidal-archive` | displace | Leads with discard/deck-order recall; rewards set up the top of the player deck deliberately (`ReturnPlayerDiscardToTop`); hazards/passive recall discards automatically (`RecallPlayerDiscard`) |
 | `the-ember-orchard` | incubate | Leads with incubation-as-delayed-known-cost: warmth/benefit now that seeds a known future hazard; rewards trade immediate gain for top-decked threats that hatch into stronger cards at end of turn |
 | `city-of-sleeping-giants` | stir | Leads with stirring-as-recurrence/escalation from unresolved or exploited body movement: hazards left unresolved (or whose movement is exploited) return and escalate; recurrence is delivered by re-seeding the top of the world deck |
+| `eden-prime` | startle | Leads with greed-tax escalation: gifts, extra draw, and high-progress turns raise transient `Alarm`; restraint and valve rewards spend or absorb it before hazards startle |
 
 This is a living registry — each new world adds an entry. The verb captures the *signature* mechanical identity of that world; no two worlds should feel interchangeable.
 
@@ -128,9 +129,11 @@ The threat resurfaces next turn rather than replacing the card in hand. Canonica
 
 **Draw / Return:** `Draw`, `DiscardThenDraw`, `ReturnWorldCards` _(inert on world auto-hooks: it is boon-signed and no-ops when fired from a world card's automatic `onEndOfTurn`/`onClear`/etc. hooks; use `AddWorldCardToDeck { bTop: true }` to re-seed recurrence)_, `ReturnPlayerDiscardToTop` _(Tidal: player-selected recall to draw top)_, `RecallPlayerDiscard` _(Tidal: automatic recall from discard)_
 
-**Resource:** `Heal`, `GainEnergy`, `AddCard`, `AddPlayerCardToTop`, `AddWorldCardToDeck` (use `bTop: true` for top-of-deck placement), `AddThreatToWorldDeck`, `GainRandomCard` _(rolled from named pool)_, `GainLight` _(fog-beach-party signature)_, `GainHeat`
+**Resource:** `Heal`, `GainEnergy`, `AddCard`, `AddPlayerCardToTop`, `AddWorldCardToDeck` (use `bTop: true` for top-of-deck placement), `AddThreatToWorldDeck`, `GainRandomCard` _(rolled from named pool)_, `GainLight` _(fog-beach-party signature)_, `GainHeat`, `GainAlarmGuard` _(Eden-introduced general guard charge that absorbs the next passing `Alarm` gate)_
 
 **Hand / discard manipulation:** `DestroyCardInHand`, `ExileTopWorldCards`, `ForceDestroy`, `Brace`
+
+**Applied keywords / gates:** `ApplyKeyword` _(applies a transient keyword to cards in hand, the firing card, the first world card in hand, or the next world card drawn)_, `KeywordGate` _(runs an inner effect when enough cards in hand carry a keyword)_, `ProgressGate` _(runs an inner effect when enough progress has been dealt this turn)_, `RemoveKeyword` _(removes an applied keyword from cards in hand)_
 
 **State change / terminal:** `FreezeCards`, `ThawCards`, `OfferBoon` _(boon selection)_, `Modal` _(player choice between branches)_, `Sequence` _(ordered steps)_, `DestroySelf` _(world card self-removal in onEndOfTurn)_, `SurviveWorld`, `None`
 
@@ -144,12 +147,13 @@ The threat resurfaces next turn rather than replacing the card in hand. Canonica
 | `GainLight` | `fog-beach-party` | **Coupled:** the only way to lift `Concealed:N` depth. A world that authors `Concealed` hazards must supply a Light source, which makes Light part of that world's identity whether intended or not. |
 | `GainHeat`, `FreezeCards`, `ThawCards` | `whiteout-parking-garage` | **Coupled:** a Heat/freeze/thaw suite; pulling in the suite pulls in the freeze identity. |
 | `ReturnPlayerDiscardToTop`, `RecallPlayerDiscard` | `the-tidal-archive` | Its discard/deck-order recall identity — moving real player card instances from `playerDiscard` to the top of `playerDraw`. |
+| `ApplyKeyword`, `KeywordGate`, `ProgressGate`, `RemoveKeyword`, `GainAlarmGuard` | `eden-prime` | General primitives introduced for Eden's startle identity. Freely reusable as supporting tools, but Eden owns the greed-tax reward space where taking gifts, extra draw, or overextension raises `Alarm` and restraint/valves spend it. |
 
 **C1a:** `DestroySelf` removes the firing world card from hand. It is only meaningful in `onEndOfTurn`, where the engine has a `selfId`.
 
-**C2:** The current keyword vocabulary is `Obstructed`, `Creature`, `Slow`, `Spore`, and `Concealed`. These cover the engine's supported keyword semantics today. Introducing a new keyword is a valid design decision when a theme needs a semantic category that doesn't map to any existing one — but it requires wiring an engine handler.
+**C2:** The current keyword vocabulary is `Obstructed`, `Creature`, `Slow`, `Spore`, `Concealed`, and `Alarm`. `Alarm` is the first transient/applied keyword: it usually lives in a card's runtime `appliedKeywords` field rather than in authored JSON, decays at turn start, and is read by `KeywordGate`/counter helpers through the same keyword API as authored keywords. Introducing a new keyword is a valid design decision when a theme needs a semantic category that doesn't map to any existing one — but it requires wiring parser support plus any engine behavior that should read it.
 
-**C2a:** Keywords are authored as strings in `keywords`: `"Name"` or `"Name:N"`. A bare keyword has no value; a numeric keyword parses to `{ name, value }`. Currently only `Concealed` uses a value (Light depth); future keywords can adopt other structures with engine support.
+**C2a:** Authored keywords are strings in `keywords`: `"Name"` or `"Name:N"`. A bare keyword has no value; a numeric keyword parses to `{ name, value }`. Applied keywords use the same structured `{ name, value }` shape in `appliedKeywords`, but are written by effects at runtime and removed by decay or `RemoveKeyword`; authoring JSON should not pre-fill `appliedKeywords`. Currently `Concealed` uses an authored value (Light depth), while `Alarm` uses its applied value as a transient lifetime.
 
 **C3:** Every world card defines `onDiscarded`, `onCleared`, and `onEndOfTurn`; use `{ "kind": "None" }` when a hook does nothing. Player cards define `effect`.
 

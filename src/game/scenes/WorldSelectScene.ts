@@ -44,6 +44,7 @@ export class WorldSelectScene extends Phaser.Scene {
   private readonly userSettings: UserSettingsStore | undefined;
   private loadingLabel?: Phaser.GameObjects.Text;
   private progressTween: Phaser.Tweens.Tween | undefined = undefined;
+  private bFirstLoad: boolean = true;
 
   constructor(
     runStats?: RunStatsReader,
@@ -115,7 +116,7 @@ export class WorldSelectScene extends Phaser.Scene {
     });
     bgTween.on("complete", () => this.tweens.remove(bgTween));
 
-    this.time.delayedCall(2000, () => {
+    this.time.delayedCall(this.bFirstLoad ? WORLD_SELECT_LAYOUT.card.delay.first : 0, () => {
       const uiObjects = [];
       // subtitle only — logotype is in the image
       uiObjects.push(
@@ -163,7 +164,9 @@ export class WorldSelectScene extends Phaser.Scene {
       const firstLoadTween = this.tweens.add({
         targets: uiObjects,
         alpha: { from: 0, to: 1 },
-        duration: 1000,
+        duration: this.bFirstLoad
+          ? WORLD_SELECT_LAYOUT.card.delay.first
+          : WORLD_SELECT_LAYOUT.card.delay.repeat,
         ease: "Cubic.easeIn",
       });
       firstLoadTween.on("complete", () => {
@@ -174,6 +177,8 @@ export class WorldSelectScene extends Phaser.Scene {
       this.input.keyboard?.on("keydown-ESC", () => {
         if (this.helpOverlay?.visible) this.helpOverlay.setVisible(false);
       });
+
+      this.bFirstLoad = true;
     });
   }
 
@@ -376,7 +381,6 @@ export class WorldSelectScene extends Phaser.Scene {
   }
 
   private renderVisibleWorlds(): void {
-    const bFirstLoad = this.cards.length == 0;
     this.cards.forEach((card) => {
       const disappearTween = this.tweens.add({
         targets: card.container,
@@ -421,8 +425,8 @@ export class WorldSelectScene extends Phaser.Scene {
       const appearTween = this.tweens.add({
         targets: newCard.container,
         alpha: { from: 0, to: 1 },
-        scale: { from: bFirstLoad ? 0 : WORLD_SELECT_LAYOUT.card.repeatScale, to: 1 },
-        duration: bFirstLoad
+        scale: { from: this.bFirstLoad ? 0 : WORLD_SELECT_LAYOUT.card.repeatScale, to: 1 },
+        duration: this.bFirstLoad
           ? WORLD_SELECT_LAYOUT.card.delay.first
           : WORLD_SELECT_LAYOUT.card.delay.repeat,
         ease: "Cubic.easeOut",

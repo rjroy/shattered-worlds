@@ -286,7 +286,9 @@ export interface GameState {
   // value, then the flag is cleared. Omitted (absent) when no Alarm is queued;
   // the explicit `| undefined` allows the consume-and-clear reset under
   // exactOptionalPropertyTypes (mirrors pendingForceDestroySource).
-  pendingAlarmNextWorldCard?: number | undefined;
+  pendingAlarmNextWorldCard?:
+    | { readonly keyword: KeywordName; readonly value: number }
+    | undefined;
   pendingBoonChoices: readonly PendingBoonChoice[];
   // The per-world end-turn passive, threaded onto state once by createWorld
   // (reduce() does not receive WorldData). Defaults to { kind: "None" } for

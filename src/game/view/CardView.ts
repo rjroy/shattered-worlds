@@ -46,6 +46,17 @@ export function formatKeywords(keywords: readonly Keyword[]): string {
   return keywords.map(formatKeyword).join(" · ");
 }
 
+/** Runtime-applied Alarm is shown as a state badge, not in authored keywords. */
+export function appliedAlarmValue(card: Pick<Card, "appliedKeywords">): number | undefined {
+  const value = card.appliedKeywords?.find((keyword) => keyword.name === "Alarm")?.value;
+  return value !== undefined && value > 0 ? value : undefined;
+}
+
+export function formatAppliedAlarm(card: Pick<Card, "appliedKeywords">): string | undefined {
+  const value = appliedAlarmValue(card);
+  return value === undefined ? undefined : `Alarm ${value}`;
+}
+
 // ---------------------------------------------------------------------------
 // Card dimensions
 // ---------------------------------------------------------------------------
@@ -79,6 +90,29 @@ function drawGlow(glow: Phaser.GameObjects.Graphics, color: number, alpha: numbe
   const h = CARD_H + EMPHASIS_GLOW_PAD * 2;
   glow.lineStyle(EMPHASIS_GLOW_LINE, color, alpha);
   glow.strokeRoundedRect(-w / 2, -h / 2, w, h, EMPHASIS_GLOW_RADIUS);
+}
+
+function addAppliedAlarmOverlay(
+  scene: Phaser.Scene,
+  container: Phaser.GameObjects.Container,
+  label: string,
+): void {
+  const alarm = scene.add
+    .rectangle(0, 0, CARD_W - 8, CARD_H - 8, 0xffe08a, 0.1)
+    .setOrigin(0.5, 0.5)
+    .setRounded(10);
+  alarm.setStrokeStyle(2, 0xefeaff, 0.72);
+  container.add(alarm);
+
+  addCardText(scene, container, -CARD_W / 2 + 39, -CARD_H / 2 + 15, label, {
+    fontFamily: FONTS.body,
+    fontSize: "10px",
+    color: "#fff2b8",
+    bold: true,
+    originY: 0.5,
+    background: 0x352045,
+    maxWidth: 70,
+  });
 }
 
 // ---------------------------------------------------------------------------
@@ -522,6 +556,11 @@ export class CardView extends Phaser.GameObjects.Container {
       // with the live Light, so a card concealed at spawn snaps to fog with no
       // flicker (the table draws once, synchronously, right after creation).
       this.setObjectsVisible(this.fogObjects, false);
+    }
+
+    const alarmLabel = formatAppliedAlarm(card);
+    if (alarmLabel !== undefined) {
+      addAppliedAlarmOverlay(scene, this, alarmLabel);
     }
 
     this.playWhileVisible();

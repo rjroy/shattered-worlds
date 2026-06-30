@@ -1,0 +1,30 @@
+{
+  "worldId": "eden-prime",
+  "deckComposition": {
+    "acts": [
+      {
+        "cards": [
+          { "templateId": "Fruit Offered Too Quickly", "count": 3 },
+          { "templateId": "First Warning Cry", "count": 2 },
+          { "templateId": "The Quiet Grove", "count": 2 }
+        ]
+      },
+      {
+        "cards": [
+          { "templateId": "Curious Swarm", "count": 3 },
+          { "templateId": "The Herd Misunderstands", "count": 2 },
+          { "templateId": "Flowers Face the Wrong Sun", "count": 2 },
+          { "templateId": "The Quiet Grove", "count": 1 }
+        ]
+      },
+      {
+        "cards": [
+          { "templateId": "Curious Swarm", "count": 2 },
+          { "templateId": "The Herd Misunderstands", "count": 2 },
+          { "templateId": "Paradise Runs", "count": 2 },
+          { "templateId": "The Walker", "count": 1 }
+        ]
+      }
+    ]
+  }
+}

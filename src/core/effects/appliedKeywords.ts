@@ -8,7 +8,7 @@
  *   - ApplyKeyword  — stamp a keyword on cards (hand / self / first world card /
  *                     the next world card drawn).
  *   - KeywordGate   — fire a nested effect when enough cards carry a keyword,
- *                     unless an alarmGuard charge absorbs the trigger.
+ *                     unless an alarmGuard charge absorbs an Alarm trigger.
  *   - ProgressGate  — fire a nested effect when enough Progress was dealt this
  *                     turn (a greed signal; never touches alarmGuard).
  *   - RemoveKeyword — strip an applied keyword from cards in the hand.
@@ -89,7 +89,13 @@ export class ApplyKeywordHandler extends EffectHandler<ApplyKeywordEffect> {
       case "nextWorldCard":
         // Deferred: no card changes now. drawWorld consumes the flag and stamps
         // the next world card pulled into hand.
-        return { state: { ...state, pendingAlarmNextWorldCard: effect.value }, events: [] };
+        return {
+          state: {
+            ...state,
+            pendingAlarmNextWorldCard: { keyword: effect.keyword, value: effect.value },
+          },
+          events: [],
+        };
 
       case "self":
         return ctx.selfId !== undefined
@@ -133,7 +139,7 @@ export class KeywordGateHandler extends EffectHandler<KeywordGateEffect> {
     const count = state.hand.filter((c) => hasKeyword(c, effect.keyword)).length;
     if (count < effect.min) return { state, events: [] };
 
-    if (state.alarmGuard > 0) {
+    if (effect.keyword === "Alarm" && state.alarmGuard > 0) {
       // A guard charge defuses the disruption: spend it and suppress `then`.
       const remaining = state.alarmGuard - 1;
       return {

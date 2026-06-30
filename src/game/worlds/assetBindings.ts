@@ -40,6 +40,10 @@ import giantsRealityUrl from "../assets/themes/city-of-sleeping-giants/city-of-s
 import giantsOverlayUrl from "../assets/themes/city-of-sleeping-giants/intrusion-overlay.webp";
 import giantsCardfrontUrl from "../assets/themes/city-of-sleeping-giants/city-of-sleeping-giants-cardfront.webp";
 
+import edenRealityUrl from "../assets/themes/eden-prime/eden-prime-reality.webp";
+import edenOverlayUrl from "../assets/themes/eden-prime/intrusion-overlay.webp";
+import edenCardfrontUrl from "../assets/themes/eden-prime/eden-prime-cardfront.webp";
+
 // ---------------------------------------------------------------------------
 // World inset imports
 // ---------------------------------------------------------------------------
@@ -322,6 +326,10 @@ export const worldAssetUrls: Record<string, string> = {
   "giants-inset-brace-the-ward": giantsInsetBraceTheWardUrl,
   "giants-inset-bone-pin": giantsInsetBonePinUrl,
   "giants-inset-contour-map": giantsInsetContourMapUrl,
+  // eden-prime
+  "eden-prime-bg": edenRealityUrl,
+  "eden-prime-overlay": edenOverlayUrl,
+  "eden-prime-cardfront": edenCardfrontUrl,
 };
 
 export interface WorldMusicAsset {
@@ -340,4 +348,5 @@ export const worldMusicManifest: Record<string, WorldMusicAsset> = {
   "the-tidal-archive": { key: "music-the-tidal-archive", url: tidalMusicUrl },
   "the-ember-orchard": { key: "music-the-ember-orchard", url: orchardMusicUrl },
   "city-of-sleeping-giants": { key: "music-city-of-sleeping-giants", url: giantsMusicUrl },
+  "eden-prime": { key: "music-eden-prime", url: orchardMusicUrl },
 };
