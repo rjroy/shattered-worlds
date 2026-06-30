@@ -8,6 +8,7 @@ import type {
   WorldCard,
 } from "../model/types";
 import type { EffectLine } from "../view/effectGlyphs";
+import type { PreviewEventSummary, PreviewFormatContext } from "../view/previewFormat";
 import { shuffle } from "../engine/rng";
 import type { CompileContext, ConnectorStyle, EffectContext, EffectResult } from "./EffectContext";
 import { EffectHandler } from "./EffectHandler";
@@ -20,6 +21,30 @@ type DestroySelfEffect = Extract<CardEffect, { kind: "DestroySelf" }>;
 type ForceDestroyEffect = Extract<CardEffect, { kind: "ForceDestroy" }>;
 type ExileTopWorldCardsEffect = Extract<CardEffect, { kind: "ExileTopWorldCards" }>;
 type SurviveWorldEffect = Extract<CardEffect, { kind: "SurviveWorld" }>;
+
+export function previewWorldCardsEvent(
+  event: GameEvent,
+  context: PreviewFormatContext,
+): PreviewEventSummary {
+  switch (event.type) {
+    case "CardDestroyed":
+      return [
+        `Destroy ${event.ids.length} ${context.plural("card", event.ids.length)}: ${context.listNames(
+          context.namesFromIds(event.ids, event.templateIds),
+        )}`,
+      ];
+    case "WorldCardsReturned":
+      return [
+        `Return ${event.ids.length} world ${context.plural("card", event.ids.length)}: ${context.listNames(
+          context.namesFromIds(event.ids, event.templateIds),
+        )}`,
+      ];
+    case "WorldCardsExiled":
+      return [`Exile top ${event.ids.length} world ${context.plural("card", event.ids.length)}`];
+    default:
+      return null;
+  }
+}
 
 export function returnToActiveWorldDeck(state: GameState, ids: readonly CardId[]): EffectResult {
   if (ids.length === 0) {

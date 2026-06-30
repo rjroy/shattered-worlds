@@ -36,6 +36,7 @@ import {
   withoutAppliedKeyword,
 } from "../model/keywords";
 import type { EffectLine } from "../view/effectGlyphs";
+import type { PreviewEventSummary, PreviewFormatContext } from "../view/previewFormat";
 import type { CompileContext, EffectContext, EffectResult } from "./EffectContext";
 import { EffectHandler } from "./EffectHandler";
 import { icon, main, text, value } from "./tokens";
@@ -50,6 +51,26 @@ type RemoveKeywordEffect = Extract<CardEffect, { kind: "RemoveKeyword" }>;
 // (for tickAppliedKeywordsAtTurnStart) *before* registry loads, so a top-level
 // registry import would leave the gate handlers undefined when registry builds
 // its EFFECTS map. compile() recurses safely via the ctx.compile seam instead.
+
+export function previewAppliedKeywordEvent(
+  event: GameEvent,
+  context: PreviewFormatContext,
+): PreviewEventSummary {
+  switch (event.type) {
+    case "KeywordApplied": {
+      const count = event.ids.length;
+      return [`Apply ${event.keyword} to ${count} ${context.plural("card", count)}`];
+    }
+    case "KeywordRemoved": {
+      const count = event.ids.length;
+      return [`Remove ${event.keyword} from ${count} ${context.plural("card", count)}`];
+    }
+    case "AlarmGuardConsumed":
+      return [`Alarm Guard absorbs the trigger; ${event.remaining} remaining`];
+    default:
+      return null;
+  }
+}
 
 /**
  * Stamp `kw` onto the hand cards whose ids are in `ids`, emitting a single

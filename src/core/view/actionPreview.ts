@@ -1,7 +1,15 @@
 import { reduce } from "../engine/reduce";
+import { previewBoonOfferedEvent } from "../engine/actBoonPreview";
+import { previewAppliedKeywordEvent } from "../effects/appliedKeywords";
+import { previewDamageEvent } from "../effects/damage";
+import { previewGainCardEvent } from "../effects/gainCard";
+import { previewHeatEvent } from "../effects/heat";
+import { previewAlarmGuardEvent, previewHealEvent } from "../effects/resources";
+import { previewWorldCardsEvent } from "../effects/worldCards";
 import { isConcealed } from "../model/keywords";
 import type { Card, CardId, GameEvent, GameState } from "../model/types";
 import type { CardCatalog } from "../model/catalog";
+import type { PreviewEventSummary, PreviewFormatContext } from "./previewFormat";
 
 export type ActionPreviewSeverity = "info" | "notice" | "warning" | "danger";
 
@@ -44,9 +52,36 @@ type PreviewContext = {
 type ProgressEvent = Extract<GameEvent, { type: "ProgressDealt" }>;
 type HazardResolvedEvent = Extract<GameEvent, { type: "HazardResolved" }>;
 type HazardPartialEvent = Extract<GameEvent, { type: "HazardPartial" }>;
+type ExternalPreviewFormatter = (
+  event: GameEvent,
+  context: PreviewFormatContext,
+) => PreviewEventSummary;
 
 const EMPTY_EVENTS: readonly GameEvent[] = [];
 const EMPTY_LINES: readonly string[] = [];
+
+const EXTERNAL_PREVIEW_FORMATTERS = {
+  KeywordApplied: previewAppliedKeywordEvent,
+  KeywordRemoved: previewAppliedKeywordEvent,
+  AlarmGuardConsumed: previewAppliedKeywordEvent,
+  AlarmGuardChanged: previewAlarmGuardEvent,
+  DamageDealt: previewDamageEvent,
+  HealReceived: previewHealEvent,
+  CardsFrozen: previewHeatEvent,
+  CardsThawed: previewHeatEvent,
+  CardsBurnedForHeat: previewHeatEvent,
+  CardDestroyed: previewWorldCardsEvent,
+  WorldCardsReturned: previewWorldCardsEvent,
+  WorldCardsExiled: previewWorldCardsEvent,
+  CardGained: previewGainCardEvent,
+  BoonOffered: previewBoonOfferedEvent,
+} as const satisfies Partial<Record<GameEvent["type"], ExternalPreviewFormatter>>;
+
+type ExternallyPreviewedEventType = keyof typeof EXTERNAL_PREVIEW_FORMATTERS;
+
+export const EXTERNALLY_PREVIEWED_EVENT_TYPES = Object.freeze(
+  Object.keys(EXTERNAL_PREVIEW_FORMATTERS).sort(),
+) as readonly ExternallyPreviewedEventType[];
 
 /**
  * Concealment warning copy emitted into `summaryLines`. Exported so renderer-side
@@ -226,7 +261,7 @@ function summarizeEvents(
       continue;
     }
 
-    lines.push(...summarizeEvent(event, context));
+    lines.push(...summarizeOwnedEvent(event, context));
   }
 
   if (after.pendingForceDestroy > 0) {
@@ -265,7 +300,10 @@ function eventIsConcealed(event: GameEvent, context: PreviewContext): boolean {
  * masked wholesale like a concealed source.
  */
 function eventFromRevealedHazard(event: GameEvent, context: PreviewContext): boolean {
-  return event.sourceCardId !== undefined && context.revealedHazardIds.has(event.sourceCardId);
+  return (
+    (event.sourceCardId !== undefined && context.revealedHazardIds.has(event.sourceCardId)) ||
+    eventTouchesRevealedHazard(event, context.revealedHazardIds)
+  );
 }
 
 /**
@@ -433,18 +471,25 @@ function summarizeStampedEvent(event: GameEvent, context: PreviewContext): reado
       // The only stamped CardDestroyed is the rng-selected ForceDestroy snatch,
       // which always takes player cards from the just-refilled hand.
       return [`Destroy ${event.ids.length} player ${plural("card", event.ids.length)}`];
-    case "CardGained":
-      // GainRandomCard's blind roll: name the pool (label data), never the
-      // rolled template or its rarity. setName is always present on a randomized
-      // grant; the fallback only guards against an unexpected stamp.
-      return event.setName !== undefined
-        ? [`Gain a random card from ${event.setName}`]
-        : ["Gain a random card"];
     default:
       // CardsDrawn, CardsFrozen, WorldCardsExiled, HazardAdded,
       // PlayerDiscardRecalled, and BoonOffered already produce name-free copy.
-      return summarizeEvent(event, context);
+      return summarizeOwnedEvent(event, context);
   }
+}
+
+function summarizeOwnedEvent(event: GameEvent, context: PreviewContext): readonly string[] {
+  const externalSummary = previewExternallyOwnedEvent(event, context);
+  return externalSummary ?? summarizeEvent(event, context);
+}
+
+function previewExternallyOwnedEvent(
+  event: GameEvent,
+  context: PreviewContext,
+): PreviewEventSummary {
+  const formatter = EXTERNAL_PREVIEW_FORMATTERS[event.type as ExternallyPreviewedEventType];
+  if (!formatter) return null;
+  return formatter(event, previewFormatContext(context));
 }
 
 function summarizeEvent(event: GameEvent, context: PreviewContext): readonly string[] {
@@ -490,12 +535,8 @@ function summarizeEvent(event: GameEvent, context: PreviewContext): readonly str
       return isConcealedEventHazard(event, context)
         ? [CONCEALED_EFFECT_WARNING, `Discard ${CONCEALED_HAZARD}`]
         : [`Discard ${cardName(event.cardId, event.templateId, context)}`];
-    case "DamageDealt":
-      return [`Take ${event.amount} damage`];
     case "HpChanged":
       return [updateResource(context, "hp", "HP", event.hp)];
-    case "HealReceived":
-      return [`Heal ${event.amount} HP`];
     case "EnergyChanged":
       return [updateResource(context, "energy", "Energy", event.energy)];
     case "LightChanged":
@@ -512,42 +553,10 @@ function summarizeEvent(event: GameEvent, context: PreviewContext): readonly str
           namesFromIds(event.cardIds, event.templateIds, context),
         )}`,
       ];
-    case "CardDestroyed":
-      return [
-        `Destroy ${event.ids.length} ${plural("card", event.ids.length)}: ${listNames(
-          namesFromIds(event.ids, event.templateIds, context),
-        )}`,
-      ];
-    case "CardsFrozen":
-      return [`Freeze ${event.ids.length} ${plural("card", event.ids.length)} at random`];
-    case "CardsThawed":
-      return [
-        `Thaw ${event.ids.length} ${plural("card", event.ids.length)}: ${listNames(
-          namesFromIds(event.ids, event.templateIds, context),
-        )}`,
-      ];
-    case "CardsBurnedForHeat":
-      return [
-        `Burn ${event.ids.length} ${plural("card", event.ids.length)} for Heat: ${listNames(
-          namesFromIds(event.ids, event.templateIds, context),
-        )}`,
-      ];
-    case "WorldCardsReturned":
-      return [
-        `Return ${event.ids.length} world ${plural("card", event.ids.length)}: ${listNames(
-          namesFromIds(event.ids, event.templateIds, context),
-        )}`,
-      ];
-    case "WorldCardsExiled":
-      // Always exiles the top of the hidden world deck (stamped
-      // revealedFromHidden), so never name what surfaced — only the count.
-      return [`Exile top ${event.ids.length} world ${plural("card", event.ids.length)}`];
     case "HazardAdded":
       // Hide the details of this action.
       // Don't review hidden information. Also its a duplicate of CardsDrawn.
       return [];
-    case "BoonOffered":
-      return [`Boon offered from ${event.setName}`];
     case "BoonCardGranted":
       return [`Gain boon ${event.templateId} to ${destLabel(event.dest)}`];
     case "ActAdvanced":
@@ -556,11 +565,6 @@ function summarizeEvent(event: GameEvent, context: PreviewContext): readonly str
       return ["Win the world"];
     case "WorldLost":
       return ["Lose the world"];
-    case "CardGained":
-      // Fixed grants only. A randomized roll (GainRandomCard) is masked earlier
-      // by the stamp path (summarizeStampedEvent), so reaching here means the
-      // template was always authored/revealed and is safe to name.
-      return [`Gain ${event.templateId} to ${destLabel(event.dest)}`];
     case "CardsDrawn":
       return [
         `Draw ${event.ids.length} ${event.bHazard ? "world" : "player"} ${plural("card", event.ids.length)}`,
@@ -574,16 +578,35 @@ function summarizeEvent(event: GameEvent, context: PreviewContext): readonly str
         `Recall ${event.cardIds.length} ${plural("card", event.cardIds.length)} from discard to the top of your deck`,
       ];
     case "KeywordApplied":
-      return [`Apply ${event.keyword} to ${event.ids.length} ${plural("card", event.ids.length)}`];
     case "KeywordRemoved":
-      return [
-        `Remove ${event.keyword} from ${event.ids.length} ${plural("card", event.ids.length)}`,
-      ];
     case "AlarmGuardChanged":
-      return [`Alarm Guard now ${event.alarmGuard}`];
     case "AlarmGuardConsumed":
-      return [`Alarm Guard absorbs the trigger; ${event.remaining} remaining`];
+    case "DamageDealt":
+    case "HealReceived":
+    case "CardsFrozen":
+    case "CardsThawed":
+    case "CardsBurnedForHeat":
+    case "CardDestroyed":
+    case "WorldCardsReturned":
+    case "WorldCardsExiled":
+    case "CardGained":
+    case "BoonOffered":
+      return EMPTY_LINES;
   }
+}
+
+function previewFormatContext(context: PreviewContext): PreviewFormatContext {
+  return {
+    before: context.before,
+    after: context.after,
+    beforeCards: context.beforeCards,
+    afterCards: context.afterCards,
+    cardName: (id, templateId) => cardName(id, templateId, context),
+    namesFromIds: (ids, templateIds) => namesFromIds(ids, templateIds, context),
+    destLabel,
+    plural,
+    listNames,
+  };
 }
 
 function classifyRisk(
@@ -715,6 +738,10 @@ function collectRevealedHazardIds(events: readonly GameEvent[]): ReadonlySet<Car
  * world card was drawn and dealt progress".
  */
 function isRevealedHazardOutcome(event: GameEvent, revealedIds: ReadonlySet<CardId>): boolean {
+  return eventTouchesRevealedHazard(event, revealedIds);
+}
+
+function eventTouchesRevealedHazard(event: GameEvent, revealedIds: ReadonlySet<CardId>): boolean {
   switch (event.type) {
     case "ProgressDealt":
     case "HazardResolved":
@@ -722,6 +749,9 @@ function isRevealedHazardOutcome(event: GameEvent, revealedIds: ReadonlySet<Card
       return revealedIds.has(event.hazardId);
     case "HazardDiscarded":
       return revealedIds.has(event.cardId);
+    case "KeywordApplied":
+    case "KeywordRemoved":
+      return event.ids.some((id) => revealedIds.has(id));
     default:
       return false;
   }

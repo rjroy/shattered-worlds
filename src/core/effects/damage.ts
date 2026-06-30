@@ -1,5 +1,6 @@
 import type { CardEffect, GameEvent, GameState } from "../model/types";
 import type { EffectLine } from "../view/effectGlyphs";
+import type { PreviewEventSummary, PreviewFormatContext } from "../view/previewFormat";
 import type { CompileContext, EffectContext, EffectResult } from "./EffectContext";
 import { EffectHandler } from "./EffectHandler";
 import { counterLabel, icon, main, perRider, value } from "./tokens";
@@ -7,6 +8,14 @@ import { resolveCounter } from "./dealProgress";
 
 type DamageEffect = Extract<CardEffect, { kind: "Damage" }>;
 type DamageScaledEffect = Extract<CardEffect, { kind: "DamageScaled" }>;
+
+export function previewDamageEvent(
+  event: GameEvent,
+  _context: PreviewFormatContext,
+): PreviewEventSummary {
+  if (event.type !== "DamageDealt") return null;
+  return [`Take ${event.amount} damage`];
+}
 
 export function damage(state: GameState, n: number): EffectResult {
   const newHp = state.hp - n;

@@ -168,6 +168,164 @@ describe("previewAction", () => {
     expect(text).toContain("Clear Rubble");
   });
 
+  it("previews applied keyword apply and removal lines", () => {
+    const primer = makePlayerCard({
+      id: "primer",
+      templateId: "Alarm Primer",
+      name: "Alarm Primer",
+      effect: { kind: "ApplyKeyword", keyword: "Alarm", value: 2, target: "hand" },
+    });
+    const quiet = makeWorldCard({ id: "quiet-hazard", name: "Quiet Hazard" });
+    const state = makeState({ hand: [primer, quiet] });
+
+    const applied = previewAction(catalog, state, { type: "PlayCard", cardId: primer.id });
+    expect(applied.summaryLines).toContain("Apply Alarm to 1 card");
+
+    const cleaner = makePlayerCard({
+      id: "cleaner",
+      templateId: "Alarm Cleaner",
+      name: "Alarm Cleaner",
+      effect: { kind: "RemoveKeyword", keyword: "Alarm", target: "hand", amount: 1 },
+    });
+    const alarmed = makeWorldCard({
+      id: "alarmed-hazard",
+      name: "Alarmed Hazard",
+      appliedKeywords: [{ name: "Alarm", value: 2 }],
+    });
+    const removed = previewAction(catalog, makeState({ hand: [cleaner, alarmed] }), {
+      type: "PlayCard",
+      cardId: cleaner.id,
+    });
+    expect(removed.summaryLines).toContain("Remove Alarm from 1 card");
+  });
+
+  it("previews Alarm Guard gain and consumption lines", () => {
+    const guard = makePlayerCard({
+      id: "guard",
+      templateId: "Guard",
+      name: "Guard",
+      effect: { kind: "GainAlarmGuard", amount: 2 },
+    });
+    const gained = previewAction(catalog, makeState({ hand: [guard] }), {
+      type: "PlayCard",
+      cardId: guard.id,
+    });
+    expect(gained.summaryLines).toContain("Alarm Guard now 2");
+
+    const trigger = makePlayerCard({
+      id: "trigger",
+      templateId: "Trigger",
+      name: "Trigger",
+      effect: {
+        kind: "KeywordGate",
+        keyword: "Alarm",
+        min: 2,
+        zone: "hand",
+        then: { kind: "Damage", amount: 3 },
+      },
+    });
+    const alarmedA = makeWorldCard({
+      id: "alarmed-a",
+      appliedKeywords: [{ name: "Alarm", value: 2 }],
+    });
+    const alarmedB = makeWorldCard({
+      id: "alarmed-b",
+      appliedKeywords: [{ name: "Alarm", value: 2 }],
+    });
+    const consumed = previewAction(
+      catalog,
+      makeState({ hand: [trigger, alarmedA, alarmedB], alarmGuard: 1, hp: 10 }),
+      { type: "PlayCard", cardId: trigger.id },
+    );
+    const text = consumed.summaryLines.join("\n");
+    expect(text).toContain("Alarm Guard absorbs the trigger; 0 remaining");
+    expect(text).not.toContain("Take 3 damage");
+  });
+
+  it("masks applied keyword details from concealed and newly drawn hazard hooks", () => {
+    const concealed = makeWorldCard({
+      id: "hidden-alarm",
+      templateId: "Hidden Alarm",
+      name: "Hidden Alarm",
+      keywords: [{ name: "Concealed", value: 5 }],
+      onEndOfTurn: { kind: "ApplyKeyword", keyword: "Alarm", value: 2, target: "hand" },
+    });
+    const concealedPreview = previewAction(
+      catalog,
+      makeState({ hand: [concealed], light: 0 }),
+      { type: "EndTurn" },
+    );
+    const concealedText = concealedPreview.summaryLines.join("\n");
+    expect(concealedText).toContain("concealed hazard effects may trigger");
+    expect(concealedText).not.toContain("Apply Alarm");
+    expect(concealedText).not.toContain("Hidden Alarm");
+
+    const [plan, s1] = mintPlayer(makeState(), "Plan");
+    const [rubble, s2] = mintWorld(s1, "Rubble");
+    const survivor = makeWorldCard({
+      id: "survivor",
+      templateId: "Survivor",
+      name: "Survivor",
+      cost: 9,
+    });
+    const hiddenSpore = makeWorldCard({
+      id: "hidden-spore",
+      templateId: "Hidden Spore",
+      name: "Hidden Spore",
+      cost: 1,
+      onCleared: { kind: "ApplyKeyword", keyword: "Spore", value: 3, target: "hand" },
+    });
+    const drawnPreview = previewAction(
+      catalog,
+      { ...s2, hand: [plan, rubble, survivor], worldDraw: [hiddenSpore], energy: 5 },
+      { type: "PlayCard", cardId: plan.id },
+    );
+    const drawnText = drawnPreview.summaryLines.join("\n");
+    expect(drawnText).toContain("newly drawn hazard effects may trigger");
+    expect(drawnText).not.toContain("Apply Spore");
+    expect(drawnText).not.toContain("Hidden Spore");
+  });
+
+  it("masks ApplyKeyword nextWorldCard details when the keyword lands on a hidden world draw", () => {
+    const trapSetter = makePlayerCard({
+      id: "trap-setter",
+      templateId: "Trap Setter",
+      name: "Trap Setter",
+      effect: {
+        kind: "Sequence",
+        steps: [
+          { kind: "ApplyKeyword", keyword: "Alarm", value: 2, target: "nextWorldCard" },
+          { kind: "Draw", world: 1 },
+        ],
+      },
+    });
+    const hiddenTarget = makeWorldCard({
+      id: "hidden-target",
+      templateId: "Hidden Target",
+      name: "Hidden Target",
+    });
+
+    const preview = previewAction(
+      catalog,
+      makeState({ hand: [trapSetter], worldDraw: [hiddenTarget] }),
+      { type: "PlayCard", cardId: trapSetter.id },
+    );
+    const text = preview.summaryLines.join("\n");
+
+    expect(preview.events).toContainEqual(
+      expect.objectContaining({
+        type: "KeywordApplied",
+        ids: [hiddenTarget.id],
+        keyword: "Alarm",
+        value: 2,
+      }),
+    );
+    expect(text).toContain("Draw 1 world card");
+    expect(text).toContain("newly drawn hazard effects may trigger");
+    expect(text).not.toContain("Apply Alarm");
+    expect(text).not.toContain("Hidden Target");
+  });
+
   it("treats the drawn-hazard hook warning as a hidden-hook warning (kept in minimal preview)", () => {
     // The minimal hover preview keeps only the first substantive line plus any
     // hidden-hook warning. The drawn-hazard hook warning must qualify, exactly

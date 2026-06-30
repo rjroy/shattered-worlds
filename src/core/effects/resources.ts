@@ -1,5 +1,6 @@
-import type { CardEffect, GameState } from "../model/types";
+import type { CardEffect, GameEvent, GameState } from "../model/types";
 import type { EffectLine } from "../view/effectGlyphs";
+import type { PreviewEventSummary, PreviewFormatContext } from "../view/previewFormat";
 import type { CompileContext, EffectContext, EffectResult } from "./EffectContext";
 import { EffectHandler } from "./EffectHandler";
 import { icon, main, text, value } from "./tokens";
@@ -9,6 +10,22 @@ type GainEnergyEffect = Extract<CardEffect, { kind: "GainEnergy" }>;
 type BraceEffect = Extract<CardEffect, { kind: "Brace" }>;
 type GainLightEffect = Extract<CardEffect, { kind: "GainLight" }>;
 type GainAlarmGuardEffect = Extract<CardEffect, { kind: "GainAlarmGuard" }>;
+
+export function previewAlarmGuardEvent(
+  event: GameEvent,
+  _context: PreviewFormatContext,
+): PreviewEventSummary {
+  if (event.type !== "AlarmGuardChanged") return null;
+  return [`Alarm Guard now ${event.alarmGuard}`];
+}
+
+export function previewHealEvent(
+  event: GameEvent,
+  _context: PreviewFormatContext,
+): PreviewEventSummary {
+  if (event.type !== "HealReceived") return null;
+  return [`Heal ${event.amount} HP`];
+}
 
 export function heal(state: GameState, n: number): EffectResult {
   const newHp = state.hp + n;

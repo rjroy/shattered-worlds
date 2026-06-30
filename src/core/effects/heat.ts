@@ -7,6 +7,7 @@ import type {
   TargetSpec,
 } from "../model/types";
 import type { EffectLine } from "../view/effectGlyphs";
+import type { PreviewEventSummary, PreviewFormatContext } from "../view/previewFormat";
 import { shuffle } from "../engine/rng";
 import type { CompileContext, EffectContext, EffectResult } from "./EffectContext";
 import { EffectHandler } from "./EffectHandler";
@@ -16,6 +17,30 @@ import { playerCardsInHand } from "./handState";
 type GainHeatEffect = Extract<CardEffect, { kind: "GainHeat" }>;
 type FreezeCardsEffect = Extract<CardEffect, { kind: "FreezeCards" }>;
 type ThawCardsEffect = Extract<CardEffect, { kind: "ThawCards" }>;
+
+export function previewHeatEvent(
+  event: GameEvent,
+  context: PreviewFormatContext,
+): PreviewEventSummary {
+  switch (event.type) {
+    case "CardsFrozen":
+      return [`Freeze ${event.ids.length} ${context.plural("card", event.ids.length)} at random`];
+    case "CardsThawed":
+      return [
+        `Thaw ${event.ids.length} ${context.plural("card", event.ids.length)}: ${context.listNames(
+          context.namesFromIds(event.ids, event.templateIds),
+        )}`,
+      ];
+    case "CardsBurnedForHeat":
+      return [
+        `Burn ${event.ids.length} ${context.plural("card", event.ids.length)} for Heat: ${context.listNames(
+          context.namesFromIds(event.ids, event.templateIds),
+        )}`,
+      ];
+    default:
+      return null;
+  }
+}
 
 function isFrozen(card: PlayerCard): boolean {
   return (card.frozen ?? 0) > 0;

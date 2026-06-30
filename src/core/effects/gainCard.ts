@@ -8,6 +8,7 @@ import type {
 } from "../model/types";
 import type { CardCatalog } from "../model/catalog";
 import type { EffectLine } from "../view/effectGlyphs";
+import type { PreviewEventSummary, PreviewFormatContext } from "../view/previewFormat";
 import { mintCard } from "../model/cards";
 import { shuffle } from "../engine/rng";
 import { filterLegalPlayerCandidates, weightedDraw } from "../engine/weightedDraw";
@@ -42,6 +43,21 @@ export function worldThreatByWorldId(worldId: string): string {
 
 export function worldThreatTemplateByWorldId(worldId: string): CardTemplateId | undefined {
   return WORLD_THREAT_BY_WORLD_ID[worldId];
+}
+
+export function previewGainCardEvent(
+  event: GameEvent,
+  context: PreviewFormatContext,
+): PreviewEventSummary {
+  if (event.type !== "CardGained") return null;
+
+  if (event.randomized === true) {
+    return event.setName !== undefined
+      ? [`Gain a random card from ${event.setName}`]
+      : ["Gain a random card"];
+  }
+
+  return [`Gain ${event.templateId} to ${context.destLabel(event.dest)}`];
 }
 
 export function gainCard(
