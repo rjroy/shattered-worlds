@@ -8,9 +8,9 @@
  *   - ApplyKeyword  — stamp a keyword on cards (hand / self / first world card /
  *                     the next world card drawn).
  *   - KeywordGate   — fire a nested effect when enough cards carry a keyword,
- *                     unless an alarmGuard charge absorbs an Alarm trigger.
+ *                     unless an keywordGuard charge absorbs an Alarm trigger.
  *   - ProgressGate  — fire a nested effect when enough Progress was dealt this
- *                     turn (a greed signal; never touches alarmGuard).
+ *                     turn (a greed signal; never touches keywordGuard).
  *   - RemoveKeyword — strip an applied keyword from cards in the hand.
  *
  * `tickAppliedKeywordsAtTurnStart` is the turn-start decay step, mirroring
@@ -65,8 +65,8 @@ export function previewAppliedKeywordEvent(
       const count = event.ids.length;
       return [`Remove ${event.keyword} from ${count} ${context.plural("card", count)}`];
     }
-    case "AlarmGuardConsumed":
-      return [`Alarm Guard absorbs the trigger; ${event.remaining} remaining`];
+    case "KeywordGuardConsumed":
+      return [`Keyword Guard absorbs the trigger; ${event.remaining} remaining`];
     default:
       return null;
   }
@@ -113,7 +113,7 @@ export class ApplyKeywordHandler extends EffectHandler<ApplyKeywordEffect> {
         return {
           state: {
             ...state,
-            pendingAlarmNextWorldCard: { keyword: effect.keyword, value: effect.value },
+            pendingKeywordNextWorldCard: { keyword: effect.keyword, value: effect.value },
           },
           events: [],
         };
@@ -160,12 +160,12 @@ export class KeywordGateHandler extends EffectHandler<KeywordGateEffect> {
     const count = state.hand.filter((c) => hasKeyword(c, effect.keyword)).length;
     if (count < effect.min) return { state, events: [] };
 
-    if (effect.keyword === "Alarm" && state.alarmGuard > 0) {
+    if (state.keywordGuard > 0) {
       // A guard charge defuses the disruption: spend it and suppress `then`.
-      const remaining = state.alarmGuard - 1;
+      const remaining = state.keywordGuard - 1;
       return {
-        state: { ...state, alarmGuard: remaining },
-        events: [{ type: "AlarmGuardConsumed", absorbed: 1, remaining }],
+        state: { ...state, keywordGuard: remaining },
+        events: [{ type: "KeywordGuardConsumed", absorbed: 1, remaining }],
       };
     }
 

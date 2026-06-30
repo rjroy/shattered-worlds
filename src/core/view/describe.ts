@@ -137,7 +137,7 @@ function dealProgressOf(
     case "KeywordGate":
     case "ProgressGate":
     case "RemoveKeyword":
-    case "GainAlarmGuard":
+    case "GainKeywordGuard":
       return null;
   }
 }

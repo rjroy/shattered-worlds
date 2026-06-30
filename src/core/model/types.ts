@@ -128,7 +128,7 @@ export type CardEffect =
   //   "self"               — the world card whose hook is firing (ctx.selfId)
   //   "firstWorldCardInHand" — the world card in hand with the smallest mint id
   //   "nextWorldCard"      — deferred: stamps the next world card pulled into
-  //                          hand (queued via pendingAlarmNextWorldCard, applied
+  //                          hand (queued via pendingKeywordNextWorldCard, applied
   //                          in drawWorld), not any card present now.
   | {
       kind: "ApplyKeyword";
@@ -137,19 +137,19 @@ export type CardEffect =
       target: "hand" | "nextWorldCard" | "self" | "firstWorldCardInHand";
     }
   // Fires `then` only when at least `min` cards in `zone` carry `keyword`
-  // (authored OR applied). An available alarmGuard charge absorbs the trigger:
+  // (authored OR applied). An available keywordGuard charge absorbs the trigger:
   // the charge is spent and `then` is suppressed (the greed disruption is
   // defused). Below `min` it is a silent no-op.
   | { kind: "KeywordGate"; keyword: KeywordName; min: number; zone: "hand"; then: CardEffect }
   // Fires `then` only when progressDealtThisTurn >= min. A greed signal that
-  // reads the per-turn progress meter; it never consumes alarmGuard.
+  // reads the per-turn progress meter; it never consumes keywordGuard.
   | { kind: "ProgressGate"; min: number; then: CardEffect }
   // Strips an applied `keyword` from up to `amount` cards in the hand, in
   // ascending mint-id order. Only removes applied entries, never authored ones.
   | { kind: "RemoveKeyword"; keyword: KeywordName; target: "hand"; amount: number }
-  // Grants alarmGuard charges (a GameState counter, like braceCharges) that
+  // Grants keywordGuard charges (a GameState counter, like braceCharges) that
   // absorb KeywordGate triggers.
-  | { kind: "GainAlarmGuard"; amount: number };
+  | { kind: "GainKeywordGuard"; amount: number };
 
 export interface PlayerCard {
   kind: "player";
@@ -274,9 +274,9 @@ export interface GameState {
   // cards. Granted by the Brace effect; consumed in resolveForceDestroy.
   braceCharges: number;
   // Eden Prime — charges that absorb a KeywordGate (Alarm) trigger before it
-  // disrupts. Granted by GainAlarmGuard; consumed inside KeywordGate. Mirrors
+  // disrupts. Granted by GainKeywordGuard; consumed inside KeywordGate. Mirrors
   // braceCharges; 0 everywhere but Eden Prime.
-  alarmGuard: number;
+  keywordGuard: number;
   // Eden Prime — running total of Progress dealt this turn, incremented at the
   // single dealProgress() choke point and read by ProgressGate. Reset to 0 at
   // the turn boundary alongside turnPlayHistory.
@@ -286,7 +286,7 @@ export interface GameState {
   // value, then the flag is cleared. Omitted (absent) when no Alarm is queued;
   // the explicit `| undefined` allows the consume-and-clear reset under
   // exactOptionalPropertyTypes (mirrors pendingForceDestroySource).
-  pendingAlarmNextWorldCard?:
+  pendingKeywordNextWorldCard?:
     | { readonly keyword: KeywordName; readonly value: number }
     | undefined;
   pendingBoonChoices: readonly PendingBoonChoice[];
@@ -449,8 +449,8 @@ export type GameEvent = (
       keyword: KeywordName;
     }
   // Mirrors BraceChanged / BraceConsumed.
-  | { type: "AlarmGuardChanged"; alarmGuard: number }
-  | { type: "AlarmGuardConsumed"; absorbed: number; remaining: number }
+  | { type: "keywordGuardChanged"; keywordGuard: number }
+  | { type: "KeywordGuardConsumed"; absorbed: number; remaining: number }
   | { type: "WorldCardsExiled"; ids: readonly CardId[]; templateIds: readonly CardTemplateId[] }
   | { type: "HealReceived"; amount: number }
   | { type: "HazardAdded"; templateId: CardTemplateId }

@@ -199,7 +199,7 @@ describe("previewAction", () => {
     expect(removed.summaryLines).toContain("Remove Alarm from 1 card");
   });
 
-  it("previews Alarm Guard gain and consumption lines", () => {
+  it("previews Keyword Guard gain and consumption lines", () => {
     const guard = makePlayerCard({
       id: "guard",
       templateId: "Guard",
@@ -210,7 +210,7 @@ describe("previewAction", () => {
       type: "PlayCard",
       cardId: guard.id,
     });
-    expect(gained.summaryLines).toContain("Alarm Guard now 2");
+    expect(gained.summaryLines).toContain("Keyword Guard now 2");
 
     const trigger = makePlayerCard({
       id: "trigger",
@@ -238,7 +238,7 @@ describe("previewAction", () => {
       { type: "PlayCard", cardId: trigger.id },
     );
     const text = consumed.summaryLines.join("\n");
-    expect(text).toContain("Alarm Guard absorbs the trigger; 0 remaining");
+    expect(text).toContain("Keyword Guard absorbs the trigger; 0 remaining");
     expect(text).not.toContain("Take 3 damage");
   });
 
@@ -250,11 +250,9 @@ describe("previewAction", () => {
       keywords: [{ name: "Concealed", value: 5 }],
       onEndOfTurn: { kind: "ApplyKeyword", keyword: "Alarm", value: 2, target: "hand" },
     });
-    const concealedPreview = previewAction(
-      catalog,
-      makeState({ hand: [concealed], light: 0 }),
-      { type: "EndTurn" },
-    );
+    const concealedPreview = previewAction(catalog, makeState({ hand: [concealed], light: 0 }), {
+      type: "EndTurn",
+    });
     const concealedText = concealedPreview.summaryLines.join("\n");
     expect(concealedText).toContain("concealed hazard effects may trigger");
     expect(concealedText).not.toContain("Apply Alarm");

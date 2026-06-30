@@ -24,7 +24,7 @@ import { NoneHandler } from "./none";
 import { RecallPlayerDiscardHandler, ReturnPlayerDiscardToTopHandler } from "./recallDiscard";
 import {
   BraceHandler,
-  GainAlarmGuardHandler,
+  GainKeywordGuardHandler,
   GainEnergyHandler,
   GainLightHandler,
   HealHandler,
@@ -83,7 +83,7 @@ export const EFFECTS: {
   KeywordGate: new KeywordGateHandler(),
   ProgressGate: new ProgressGateHandler(),
   RemoveKeyword: new RemoveKeywordHandler(),
-  GainAlarmGuard: new GainAlarmGuardHandler(),
+  GainKeywordGuard: new GainKeywordGuardHandler(),
 };
 
 export function connectorStyleOf(effect: CardEffect): ConnectorStyle | null {

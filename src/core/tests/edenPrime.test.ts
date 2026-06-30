@@ -33,7 +33,7 @@ const ALARM_EVENT_TYPES: ReadonlySet<GameEvent["type"]> = new Set([
   "KeywordApplied",
   "KeywordRemoved",
   "AlarmGuardChanged",
-  "AlarmGuardConsumed",
+  "KeywordGuardConsumed",
 ]);
 
 const EDEN_WORLD_ID = "eden-prime";
@@ -60,7 +60,7 @@ function normalizeNoAlarmState(state: GameState): unknown {
   const copy = JSON.parse(JSON.stringify(state)) as Record<string, unknown>;
   delete copy.alarmGuard;
   delete copy.progressDealtThisTurn;
-  delete copy.pendingAlarmNextWorldCard;
+  delete copy.pendingKeywordNextWorldCard;
   return copy;
 }
 
@@ -155,13 +155,13 @@ describe("Eden Prime — ApplyKeyword (REQ-EDEN-9,10)", () => {
     // String order would pick "10" ("10" < "2"); numeric order picks "2". The
     // hand spans ids past 9 to catch the lexicographic-vs-numeric bug.
     const state = makeState({
-      hand: [
-        makeWorldCard({ id: "10" }),
-        makeWorldCard({ id: "2" }),
-        makePlayerCard({ id: "11" }),
-      ],
+      hand: [makeWorldCard({ id: "10" }), makeWorldCard({ id: "2" }), makePlayerCard({ id: "11" })],
     });
-    const { state: after, events } = applyEffect(catalog, state, applyToHand("firstWorldCardInHand"));
+    const { state: after, events } = applyEffect(
+      catalog,
+      state,
+      applyToHand("firstWorldCardInHand"),
+    );
 
     expect(appliedKeywordValue(after.hand.find((c) => c.id === "2")!, "Alarm")).toBe(2);
     expect(appliedKeywordValue(after.hand.find((c) => c.id === "10")!, "Alarm")).toBe(0);
@@ -183,13 +183,13 @@ describe("Eden Prime — ApplyKeyword (REQ-EDEN-9,10)", () => {
 
     // Apply now: no card changes, no event — only the queue flag is set.
     const queued = applyEffect(catalog, state, queue);
-    expect(queued.state.pendingAlarmNextWorldCard).toEqual({ keyword: "Spore", value: 3 });
+    expect(queued.state.pendingKeywordNextWorldCard).toEqual({ keyword: "Spore", value: 3 });
     expect(queued.events).toHaveLength(0);
     expect(queued.state.hand).toHaveLength(0);
 
     // The next world card pulled into hand is stamped and the flag is cleared.
     const drawn = drawWorld(queued.state, 1);
-    expect(drawn.state.pendingAlarmNextWorldCard).toBeUndefined();
+    expect(drawn.state.pendingKeywordNextWorldCard).toBeUndefined();
     const card20 = drawn.state.hand.find((c) => c.id === "20")!;
     expect(appliedKeywordValue(card20, "Spore")).toBe(3);
 
@@ -216,7 +216,11 @@ function keywordGate(min: number): CardEffect {
 
 describe("Eden Prime — KeywordGate (REQ-EDEN-11,11a)", () => {
   // Counts cards that carry Alarm (applied here). hand has exactly two.
-  const handWithTwoAlarms = () => [alarmedWorld("1", 2), alarmedWorld("2", 2), makeWorldCard({ id: "3" })];
+  const handWithTwoAlarms = () => [
+    alarmedWorld("1", 2),
+    alarmedWorld("2", 2),
+    makeWorldCard({ id: "3" }),
+  ];
 
   it("is a no-op below min", () => {
     const state = makeState({ hand: handWithTwoAlarms(), hp: 10 });
@@ -270,11 +274,16 @@ describe("Eden Prime — ProgressGate (REQ-EDEN-12)", () => {
     // ProgressGate reads it. Target a 1-cost hazard so the meter rises by 3.
     const hazard = makeWorldCard({ id: "9", cost: 99 });
     const state = makeState({ hand: [hazard], progressDealtThisTurn: 0 });
-    const dealt = applyEffect(catalog, state, { kind: "DealProgress", base: 3 }, {
-      type: "PlayCard",
-      cardId: "src",
-      targetId: "9",
-    });
+    const dealt = applyEffect(
+      catalog,
+      state,
+      { kind: "DealProgress", base: 3 },
+      {
+        type: "PlayCard",
+        cardId: "src",
+        targetId: "9",
+      },
+    );
     expect(dealt.state.progressDealtThisTurn).toBe(3);
   });
 });
@@ -328,9 +337,9 @@ describe("Eden Prime — GainAlarmGuard absorbs a gate trigger (REQ-EDEN-12a)", 
 
     expect(after.alarmGuard).toBe(0);
     expect(after.hp).toBe(15);
-    expect(events.filter((e) => e.type === "AlarmGuardConsumed")).toHaveLength(1);
+    expect(events.filter((e) => e.type === "KeywordGuardConsumed")).toHaveLength(1);
     expect(events.filter((e) => e.type === "HpChanged")).toHaveLength(1);
-    expect(events.findIndex((e) => e.type === "AlarmGuardConsumed")).toBeLessThan(
+    expect(events.findIndex((e) => e.type === "KeywordGuardConsumed")).toBeLessThan(
       events.findIndex((e) => e.type === "HpChanged"),
     );
   });
@@ -355,7 +364,7 @@ describe("Eden Prime — GainAlarmGuard absorbs a gate trigger (REQ-EDEN-12a)", 
     expect(after.hp).toBe(15);
     expect(after.alarmGuard).toBe(1);
     expect(events.some((e) => e.type === "HpChanged")).toBe(true);
-    expect(events.some((e) => e.type === "AlarmGuardConsumed")).toBe(false);
+    expect(events.some((e) => e.type === "KeywordGuardConsumed")).toBe(false);
   });
 });
 
@@ -415,11 +424,16 @@ describe("Eden Prime — applied-keyword decay (REQ-EDEN-15)", () => {
 describe("Eden Prime — no-op guarantee (REQ-EDEN-45)", () => {
   it("a normal world turn is byte-identical after normalizing intentionally added fields", () => {
     const { catalog: cat, worldData } = buildWorld("the-ember-orchard");
-    const { state: opened, openingEvents } = createWorld(cat, worldData, 1234, DEFAULT_RUN_MODIFIERS);
+    const { state: opened, openingEvents } = createWorld(
+      cat,
+      worldData,
+      1234,
+      DEFAULT_RUN_MODIFIERS,
+    );
 
     expect(opened.alarmGuard).toBe(0);
     expect(opened.progressDealtThisTurn).toBe(0);
-    expect(opened.pendingAlarmNextWorldCard).toBeUndefined();
+    expect(opened.pendingKeywordNextWorldCard).toBeUndefined();
 
     const ended = reduce(cat, opened, { type: "EndTurn" });
     const legacyEnded = reduce(cat, asPreSliceNoAlarmState(opened), { type: "EndTurn" });
@@ -432,7 +446,7 @@ describe("Eden Prime — no-op guarantee (REQ-EDEN-45)", () => {
     expect(normalizeNoAlarmState(ended.state)).toEqual(normalizeNoAlarmState(legacyEnded.state));
     expect(ended.state.alarmGuard).toBe(0);
     expect(ended.state.progressDealtThisTurn).toBe(0);
-    expect(ended.state.pendingAlarmNextWorldCard).toBeUndefined();
+    expect(ended.state.pendingKeywordNextWorldCard).toBeUndefined();
   });
 
   it("maps the Eden Prime world threat to Paradise Runs (REQ-EDEN-14)", () => {
@@ -510,7 +524,7 @@ describe("Eden Prime — shipped startle patterns (REQ-EDEN-47)", () => {
     expect(appliedKeywordValue(drawn.state.hand[0]!, "Alarm")).toBe(2);
 
     const fromHazard = applyEffect(edenCatalog, { ...base, worldDraw: [] }, fruitHazard.onCleared);
-    expect(fromHazard.state.pendingAlarmNextWorldCard).toEqual({ keyword: "Alarm", value: 2 });
+    expect(fromHazard.state.pendingKeywordNextWorldCard).toEqual({ keyword: "Alarm", value: 2 });
   });
 
   it("Curious Swarm is inert when calm and disrupts an alarmed hand", () => {
@@ -609,7 +623,7 @@ describe("Eden Prime — shipped startle patterns (REQ-EDEN-47)", () => {
     const guarded = applyEffect(catalog, makeState({ hand, alarmGuard: 0 }), stillness.effect);
     const suppressed = applyEffect(catalog, guarded.state, keywordGate(2));
     expect(suppressed.state.alarmGuard).toBe(0);
-    expect(suppressed.events.some((e) => e.type === "AlarmGuardConsumed")).toBe(true);
+    expect(suppressed.events.some((e) => e.type === "KeywordGuardConsumed")).toBe(true);
     expect(suppressed.events.some((e) => e.type === "HpChanged")).toBe(false);
 
     const hushed = applyEffect(catalog, makeState({ hand }), hush.effect);
@@ -736,13 +750,13 @@ describe("Eden Prime — seeded greed-tax gameplay identity (REQ-EDEN-50)", () =
       cardId: explore.id,
       targetId: greedyFruit.id,
     });
-    expect(tookGift.state.pendingAlarmNextWorldCard).toEqual({ keyword: "Alarm", value: 2 });
+    expect(tookGift.state.pendingKeywordNextWorldCard).toEqual({ keyword: "Alarm", value: 2 });
 
     const playedFruit = reduce(edenCatalog, tookGift.state, {
       type: "PlayCard",
       cardId: takeFruit.id,
     });
-    expect(playedFruit.state.pendingAlarmNextWorldCard).toEqual({ keyword: "Alarm", value: 2 });
+    expect(playedFruit.state.pendingKeywordNextWorldCard).toEqual({ keyword: "Alarm", value: 2 });
 
     const overDrew = reduce(edenCatalog, playedFruit.state, {
       type: "PlayCard",
@@ -760,11 +774,11 @@ describe("Eden Prime — seeded greed-tax gameplay identity (REQ-EDEN-50)", () =
       undefined,
       greedyWarning.id,
     );
-    expect(alarmedCardsInHand(warningStartle.state).map((c) => c.templateId).sort()).toEqual([
-      "Curious Swarm",
-      "First Warning Cry",
-      "The Herd Misunderstands",
-    ]);
+    expect(
+      alarmedCardsInHand(warningStartle.state)
+        .map((c) => c.templateId)
+        .sort(),
+    ).toEqual(["Curious Swarm", "First Warning Cry", "The Herd Misunderstands"]);
 
     const greedySwarm = warningStartle.state.hand.find(
       (c): c is WorldCard => c.kind === "world" && c.templateId === "Curious Swarm",

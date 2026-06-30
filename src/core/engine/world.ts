@@ -102,10 +102,10 @@ export function createWorld(
     // pendingForceDestroySource is omitted (undefined): no destroy queued yet.
     // exactOptionalPropertyTypes forbids an explicit `undefined` literal here.
     braceCharges: mods.extraStartBrace,
-    // Eden Prime — Alarm counters init at 0 everywhere; pendingAlarmNextWorldCard
+    // Keyworld guard counters init at 0 everywhere; pendingKeywordNextWorldCard
     // is omitted (absent, not `undefined`) exactly like pendingForceDestroySource,
     // since exactOptionalPropertyTypes forbids an explicit `undefined` literal.
-    alarmGuard: 0,
+    keywordGuard: 0,
     progressDealtThisTurn: 0,
     pendingBoonChoices: [],
     // The per-world end-turn passive (Tidal Memory). reduce() never sees

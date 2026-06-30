@@ -32,8 +32,8 @@ Folded in before drafting, on top of the spec's own ratified/post-review decisio
 | Keyword vocab | `src/core/model/types.ts:12` `KeywordName` | add `"Alarm"` |
 | Card fields | `types.ts:142` `PlayerCard.frozen`; `WorldCard` ~L151-171 | add `appliedKeywords?: readonly Keyword[]` to **both** |
 | Effect union | `types.ts:41` `CardEffect` | add `ApplyKeyword`, `KeywordGate`, `ProgressGate`, `RemoveKeyword`, `GainAlarmGuard` |
-| GameState | `types.ts:204` | add `alarmGuard: number`, `progressDealtThisTurn: number`, `pendingAlarmNextWorldCard?: number \| undefined` |
-| Events | `types.ts:319` `GameEvent` | add `KeywordApplied`, `KeywordRemoved`, `AlarmGuardChanged`, `AlarmGuardConsumed` |
+| GameState | `types.ts:204` | add `alarmGuard: number`, `progressDealtThisTurn: number`, `pendingKeywordNextWorldCard?: number \| undefined` |
+| Events | `types.ts:319` `GameEvent` | add `KeywordApplied`, `KeywordRemoved`, `AlarmGuardChanged`, `KeywordGuardConsumed` |
 | Keyword parse/query | `src/core/model/keywords.ts:14` `KEYWORD_NAMES`, `hasKeyword`, `keywordNames` | add `"Alarm"`; union authored + applied sets; add apply/remove/tick helpers |
 | Effect registry | `src/core/effects/registry.ts` `EFFECTS` | exhaustive map — must register the 4 new handlers |
 | New handlers | new `src/core/effects/appliedKeywords.ts` | `ApplyKeywordHandler`, `KeywordGateHandler`, `RemoveKeywordHandler`; `GainAlarmGuardHandler` may live in `resources.ts` beside `BraceHandler` |
@@ -41,8 +41,8 @@ Folded in before drafting, on top of the spec's own ratified/post-review decisio
 | Progress choke point | `dealProgress.ts` `dealProgress()` | increment `progressDealtThisTurn` by `amount` |
 | Turn-start decay | `src/core/engine/energy.ts` `startTurn` (mirror `thawFrozenCardsAtTurnStart`) | add applied-keyword tick step |
 | Turn-boundary reset | `src/core/engine/reduce.ts:208` (with `turnPlayHistory`) | set `progressDealtThisTurn: 0` |
-| World-card draw | `src/core/engine/draw.ts` `drawWorld` (card pulled ~L111); model on `resolveForceDestroy` ~L211 | consume `pendingAlarmNextWorldCard` on first world card drawn |
-| GameState init | `src/core/engine/world.ts:110` | init `alarmGuard:0`, `progressDealtThisTurn:0`, `pendingAlarmNextWorldCard:undefined` |
+| World-card draw | `src/core/engine/draw.ts` `drawWorld` (card pulled ~L111); model on `resolveForceDestroy` ~L211 | consume `pendingKeywordNextWorldCard` on first world card drawn |
+| GameState init | `src/core/engine/world.ts:110` | init `alarmGuard:0`, `progressDealtThisTurn:0`, `pendingKeywordNextWorldCard:undefined` |
 | `selfId` in hooks | confirmed: `dealProgress` passes `hazardId` as `selfId` to `onCleared`/`onPartialClear`; `DestroySelf` proves `onEndOfTurn` has `selfId` | REQ-EDEN-24's `target:"self"` works in `onEndOfTurn`/`onPartialClear` |
 | Threat map | `src/core/effects/gainCard.ts` `worldThreatTemplateByWorldId` | add `"eden-prime": "Paradise Runs"` |
 | World registry | `src/data/worlds/registry.ts` | append `EDEN_PRIME_BUNDLE` |
@@ -73,13 +73,13 @@ The spec (REQ-EDEN-44) mandates ≥4 reviewable slices, each with its own tests;
 
 Covers REQ-EDEN-9, 10, 11, 11a, 12, 12a, 13, 14, 15, 45.
 
-**Step 1.1 — Types.** In `types.ts`: add `"Alarm"` to `KeywordName`; add `appliedKeywords?: readonly Keyword[]` to `PlayerCard` and `WorldCard`; add the five `CardEffect` variants (`ApplyKeyword { keyword, value, target }` with `target: "hand" | "nextWorldCard" | "self" | "firstWorldCardInHand"`; `KeywordGate { keyword, min, zone, then }`; `ProgressGate { min, then }`; `RemoveKeyword { keyword, target, amount }`; `GainAlarmGuard { amount }`); add `alarmGuard`, `progressDealtThisTurn`, `pendingAlarmNextWorldCard` to `GameState`; add the four `GameEvent` variants (`KeywordApplied`, `KeywordRemoved`, `AlarmGuardChanged`, `AlarmGuardConsumed`).
+**Step 1.1 — Types.** In `types.ts`: add `"Alarm"` to `KeywordName`; add `appliedKeywords?: readonly Keyword[]` to `PlayerCard` and `WorldCard`; add the five `CardEffect` variants (`ApplyKeyword { keyword, value, target }` with `target: "hand" | "nextWorldCard" | "self" | "firstWorldCardInHand"`; `KeywordGate { keyword, min, zone, then }`; `ProgressGate { min, then }`; `RemoveKeyword { keyword, target, amount }`; `GainAlarmGuard { amount }`); add `alarmGuard`, `progressDealtThisTurn`, `pendingKeywordNextWorldCard` to `GameState`; add the four `GameEvent` variants (`KeywordApplied`, `KeywordRemoved`, `AlarmGuardChanged`, `KeywordGuardConsumed`).
 
 **Step 1.2 — Keyword helpers.** In `keywords.ts`: add `"Alarm"` to `KEYWORD_NAMES`; change `hasKeyword`/`keywordNames` to union `card.keywords` and `card.appliedKeywords`; add pure helpers `withAppliedKeyword(card, kw)`, `withoutAppliedKeyword(card, name)`, `appliedKeywordValue(card, name)`, and `tickAppliedKeywords(card)` (decrement each value, drop at 0).
 
 **Step 1.3 — Effect handlers.** New `src/core/effects/appliedKeywords.ts`:
-- `ApplyKeywordHandler`: resolve target → `"hand"` (all cards in `state.hand`), `"self"` (`ctx.selfId`; available in `onEndOfTurn`/`onPartialClear` — confirmed), `"firstWorldCardInHand"` (world card in hand with the smallest mint-order id, **sorted by `parseInt(card.id, 10)` — NOT string comparison**, since ids are `String(nextId)` and lexicographic order inverts at id ≥ 10, e.g. `"10" < "2"`; a string sort is a latent determinism bug that only surfaces past 9 minted cards), `"nextWorldCard"` (set `pendingAlarmNextWorldCard = value`, no immediate card change). Apply via `withAppliedKeyword`, emit `KeywordApplied`.
-- `KeywordGateHandler`: `count = cards in zone where hasKeyword(c, keyword)`. If `count >= min`: if `alarmGuard > 0`, decrement guard, emit `AlarmGuardConsumed`, **suppress** `then`; else `ctx.apply(ctx, then)`. If `count < min`: no-op (no else-branch — REQ-EDEN-11).
+- `ApplyKeywordHandler`: resolve target → `"hand"` (all cards in `state.hand`), `"self"` (`ctx.selfId`; available in `onEndOfTurn`/`onPartialClear` — confirmed), `"firstWorldCardInHand"` (world card in hand with the smallest mint-order id, **sorted by `parseInt(card.id, 10)` — NOT string comparison**, since ids are `String(nextId)` and lexicographic order inverts at id ≥ 10, e.g. `"10" < "2"`; a string sort is a latent determinism bug that only surfaces past 9 minted cards), `"nextWorldCard"` (set `pendingKeywordNextWorldCard = value`, no immediate card change). Apply via `withAppliedKeyword`, emit `KeywordApplied`.
+- `KeywordGateHandler`: `count = cards in zone where hasKeyword(c, keyword)`. If `count >= min`: if `alarmGuard > 0`, decrement guard, emit `KeywordGuardConsumed`, **suppress** `then`; else `ctx.apply(ctx, then)`. If `count < min`: no-op (no else-branch — REQ-EDEN-11).
 - `ProgressGateHandler`: if `state.progressDealtThisTurn >= min`, `ctx.apply(ctx, then)`; else no-op. Same no-else-branch shape as `KeywordGate`. (Does **not** consume `alarmGuard` — it is a greed signal, not an Alarm-caused disruption.)
 - `RemoveKeywordHandler`: clear `keyword` from up to `amount` cards in target zone (deterministic order by numeric id), emit `KeywordRemoved`.
 - `GainAlarmGuardHandler` (in `resources.ts` beside `BraceHandler`): `alarmGuard += amount`, emit `AlarmGuardChanged`.
@@ -88,9 +88,9 @@ Covers REQ-EDEN-9, 10, 11, 11a, 12, 12a, 13, 14, 15, 45.
 
 **Step 1.4 — Progress signal.** In `dealProgress.ts` `dealProgress()`: increment `state.progressDealtThisTurn` by `amount` (single choke point for all three progress effects).
 
-**Step 1.5 — Turn lifecycle.** In `energy.ts` `startTurn`: add an applied-keyword decay step (new `tickAppliedKeywordsAtTurnStart(state)` mirroring `thawFrozenCardsAtTurnStart`), emit-on-change `KeywordRemoved` for entries that expire. **Fixed order: light decay → thaw → applied-keyword decay → energy gain → refill → resolveForceDestroy.** Decay runs after thaw (both are "turn-start unfreeze" semantics) and before energy/refill; this order is load-bearing for the event stream and must be asserted by tests. In `reduce.ts:208`: reset `progressDealtThisTurn: 0` alongside `turnPlayHistory`. In `world.ts:110`: init `alarmGuard: 0`, `progressDealtThisTurn: 0`, and **omit** `pendingAlarmNextWorldCard` (optional field; a present-but-`undefined` literal is a compile error under `exactOptionalPropertyTypes`, matching the `pendingForceDestroySource` precedent at `world.ts:103`).
+**Step 1.5 — Turn lifecycle.** In `energy.ts` `startTurn`: add an applied-keyword decay step (new `tickAppliedKeywordsAtTurnStart(state)` mirroring `thawFrozenCardsAtTurnStart`), emit-on-change `KeywordRemoved` for entries that expire. **Fixed order: light decay → thaw → applied-keyword decay → energy gain → refill → resolveForceDestroy.** Decay runs after thaw (both are "turn-start unfreeze" semantics) and before energy/refill; this order is load-bearing for the event stream and must be asserted by tests. In `reduce.ts:208`: reset `progressDealtThisTurn: 0` alongside `turnPlayHistory`. In `world.ts:110`: init `alarmGuard: 0`, `progressDealtThisTurn: 0`, and **omit** `pendingKeywordNextWorldCard` (optional field; a present-but-`undefined` literal is a compile error under `exactOptionalPropertyTypes`, matching the `pendingForceDestroySource` precedent at `world.ts:103`).
 
-**Step 1.6 — Deferred next-world-card.** In `draw.ts` `drawWorld`: when a world card is pulled into hand and `pendingAlarmNextWorldCard` is set, apply the Alarm to that card, clear the flag, emit `KeywordApplied` (model exactly on `resolveForceDestroy`'s consume-and-clear pattern).
+**Step 1.6 — Deferred next-world-card.** In `draw.ts` `drawWorld`: when a world card is pulled into hand and `pendingKeywordNextWorldCard` is set, apply the Alarm to that card, clear the flag, emit `KeywordApplied` (model exactly on `resolveForceDestroy`'s consume-and-clear pattern).
 
 **Step 1.7 — Threat map.** In `gainCard.ts` `worldThreatTemplateByWorldId`: add `"eden-prime": "Paradise Runs"`.
 

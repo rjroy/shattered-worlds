@@ -9,14 +9,14 @@ type HealEffect = Extract<CardEffect, { kind: "Heal" }>;
 type GainEnergyEffect = Extract<CardEffect, { kind: "GainEnergy" }>;
 type BraceEffect = Extract<CardEffect, { kind: "Brace" }>;
 type GainLightEffect = Extract<CardEffect, { kind: "GainLight" }>;
-type GainAlarmGuardEffect = Extract<CardEffect, { kind: "GainAlarmGuard" }>;
+type GainKeywordGuardEffect = Extract<CardEffect, { kind: "GainKeywordGuard" }>;
 
-export function previewAlarmGuardEvent(
+export function previewkeywordGuardEvent(
   event: GameEvent,
   _context: PreviewFormatContext,
 ): PreviewEventSummary {
-  if (event.type !== "AlarmGuardChanged") return null;
-  return [`Alarm Guard now ${event.alarmGuard}`];
+  if (event.type !== "keywordGuardChanged") return null;
+  return [`Keyword Guard now ${event.keywordGuard}`];
 }
 
 export function previewHealEvent(
@@ -110,22 +110,22 @@ export class BraceHandler extends EffectHandler<BraceEffect> {
   }
 }
 
-export class GainAlarmGuardHandler extends EffectHandler<GainAlarmGuardEffect> {
-  override apply(ctx: EffectContext, effect: GainAlarmGuardEffect): EffectResult {
-    const alarmGuard = ctx.state.alarmGuard + effect.amount;
-    const current: GameState = { ...ctx.state, alarmGuard };
-    return { state: current, events: [{ type: "AlarmGuardChanged", alarmGuard }] };
+export class GainKeywordGuardHandler extends EffectHandler<GainKeywordGuardEffect> {
+  override apply(ctx: EffectContext, effect: GainKeywordGuardEffect): EffectResult {
+    const keywordGuard = ctx.state.keywordGuard + effect.amount;
+    const current: GameState = { ...ctx.state, keywordGuard };
+    return { state: current, events: [{ type: "keywordGuardChanged", keywordGuard }] };
   }
 
-  override describe(effect: GainAlarmGuardEffect): string[] {
+  override describe(effect: GainKeywordGuardEffect): string[] {
     return [
       effect.amount === 1
-        ? "Gain an Alarm Guard (absorb the next Alarm trigger)"
-        : `Gain ${effect.amount} Alarm Guards`,
+        ? "Gain an Keyword Guard (absorb the next Keyword trigger)"
+        : `Gain ${effect.amount} Keyword Guards`,
     ];
   }
 
-  override compile(effect: GainAlarmGuardEffect, _ctx: CompileContext): EffectLine[] {
-    return [main([value(`+${effect.amount}`, "brace"), text("Alarm Guard")])];
+  override compile(effect: GainKeywordGuardEffect, _ctx: CompileContext): EffectLine[] {
+    return [main([value(`+${effect.amount}`, "brace"), text("Keyword Guard")])];
   }
 }

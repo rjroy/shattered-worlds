@@ -4,7 +4,7 @@ import { previewAppliedKeywordEvent } from "../effects/appliedKeywords";
 import { previewDamageEvent } from "../effects/damage";
 import { previewGainCardEvent } from "../effects/gainCard";
 import { previewHeatEvent } from "../effects/heat";
-import { previewAlarmGuardEvent, previewHealEvent } from "../effects/resources";
+import { previewkeywordGuardEvent, previewHealEvent } from "../effects/resources";
 import { previewWorldCardsEvent } from "../effects/worldCards";
 import { isConcealed } from "../model/keywords";
 import type { Card, CardId, GameEvent, GameState } from "../model/types";
@@ -63,8 +63,8 @@ const EMPTY_LINES: readonly string[] = [];
 const EXTERNAL_PREVIEW_FORMATTERS = {
   KeywordApplied: previewAppliedKeywordEvent,
   KeywordRemoved: previewAppliedKeywordEvent,
-  AlarmGuardConsumed: previewAppliedKeywordEvent,
-  AlarmGuardChanged: previewAlarmGuardEvent,
+  KeywordGuardConsumed: previewAppliedKeywordEvent,
+  keywordGuardChanged: previewkeywordGuardEvent,
   DamageDealt: previewDamageEvent,
   HealReceived: previewHealEvent,
   CardsFrozen: previewHeatEvent,
@@ -421,11 +421,7 @@ function summarizeAggregatedProgress(
     if (visible.length > 0) {
       lines.push(
         visible.length === 1
-          ? `Partial resolve on ${cardName(
-              visible[0]!.hazardId,
-              visible[0]!.templateId,
-              context,
-            )}`
+          ? `Partial resolve on ${cardName(visible[0]!.hazardId, visible[0]!.templateId, context)}`
           : `Partial resolves on ${visible.length} ${plural("hazard", visible.length)}`,
       );
     }
@@ -579,8 +575,8 @@ function summarizeEvent(event: GameEvent, context: PreviewContext): readonly str
       ];
     case "KeywordApplied":
     case "KeywordRemoved":
-    case "AlarmGuardChanged":
-    case "AlarmGuardConsumed":
+    case "keywordGuardChanged":
+    case "KeywordGuardConsumed":
     case "DamageDealt":
     case "HealReceived":
     case "CardsFrozen":

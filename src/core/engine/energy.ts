@@ -113,7 +113,7 @@ export function startTurn(state: GameState): StartTurnResult {
 
   const afterThaw = thawFrozenCardsAtTurnStart(afterDecay.state);
 
-  // Applied keywords (Alarm) decay one tick after thaw, before energy.
+  // Applied keywords (i.e.: Alarm) decay one tick after thaw, before energy.
   const afterTick = tickAppliedKeywordsAtTurnStart(afterThaw.state);
 
   // Gain 1 energy

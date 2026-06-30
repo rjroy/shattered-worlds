@@ -32,7 +32,7 @@ classification, resource cursor replay, and summary ordering.
   - `KeywordApplied`
   - `KeywordRemoved`
   - `AlarmGuardChanged`
-  - `AlarmGuardConsumed`
+  - `KeywordGuardConsumed`
 - `GameEvent` values do not record the originating `CardEffect.kind`; they only
   carry optional provenance/observability fields such as `sourceCardId`,
   `randomized`, and `revealedFromHidden`.
@@ -98,7 +98,7 @@ Initial classification:
   `BraceConsumed`.
 - `terminal-status`: `WorldWon`, `WorldLost`.
 - `effect-family`: `KeywordApplied`, `KeywordRemoved`, `AlarmGuardChanged`,
-  `AlarmGuardConsumed`, `DamageDealt`, `HealReceived`, `CardsFrozen`,
+  `KeywordGuardConsumed`, `DamageDealt`, `HealReceived`, `CardsFrozen`,
   `CardsThawed`, `CardDestroyed`, `WorldCardsReturned`, `WorldCardsExiled`,
   `CardGained`, `BoonOffered`, `HazardDiscarded`.
 
@@ -198,7 +198,7 @@ Ownership:
 - `appliedKeywords.ts`
   - `KeywordApplied`
   - `KeywordRemoved`
-  - `AlarmGuardConsumed`
+  - `KeywordGuardConsumed`
 - `resources.ts`
   - `AlarmGuardChanged`
 
@@ -215,7 +215,7 @@ Focused tests should assert:
 
 - applying Alarm/Spore keywords previews the applied keyword line;
 - removing a keyword previews the removal line;
-- Alarm Guard gain and consumption preview through `previewAction`;
+- Keyword Guard gain and consumption preview through `previewAction`;
 - concealed/drawn hazard masking still suppresses exact keyword hook details.
 
 Validation:

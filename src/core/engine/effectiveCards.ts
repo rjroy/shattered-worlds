@@ -239,7 +239,7 @@ function cloneEffect(effect: CardEffect): CardEffect {
       return { ...effect, then: cloneEffect(effect.then) };
     case "RemoveKeyword":
       return { ...effect };
-    case "GainAlarmGuard":
+    case "GainKeywordGuard":
       return { ...effect };
   }
 }

@@ -164,6 +164,20 @@ import giantsInsetBraceTheWardUrl from "../assets/themes/city-of-sleeping-giants
 import giantsInsetBonePinUrl from "../assets/themes/city-of-sleeping-giants/insets/inset-bone-pin.webp";
 import giantsInsetContourMapUrl from "../assets/themes/city-of-sleeping-giants/insets/inset-contour-map.webp";
 
+import edenInsetFruitOfferedTooQuicklyUrl from "../assets/themes/eden-prime/insets/inset-fruit-offered-too-quickly.webp";
+import edenInsetFirstWarningCryUrl from "../assets/themes/eden-prime/insets/inset-first-warning-cry.webp";
+import edenInsetCuriousSwarmUrl from "../assets/themes/eden-prime/insets/inset-curious-swarm.webp";
+import edenInsetTheHerdMisunderstandsUrl from "../assets/themes/eden-prime/insets/inset-the-herd-misunderstands.webp";
+import edenInsetFlowersFaceTheWrongSunUrl from "../assets/themes/eden-prime/insets/inset-flowers-face-the-wrong-sun.webp";
+import edenInsetTheQuietGroveUrl from "../assets/themes/eden-prime/insets/inset-the-quiet-grove.webp";
+import edenInsetParadiseRunsUrl from "../assets/themes/eden-prime/insets/inset-paradise-runs.webp";
+import edenInsetTakeTheFruitUrl from "../assets/themes/eden-prime/insets/inset-take-the-fruit.webp";
+import edenInsetGentleApproachUrl from "../assets/themes/eden-prime/insets/inset-gentle-approach.webp";
+import edenInsetStillnessLessonUrl from "../assets/themes/eden-prime/insets/inset-stillness-lesson.webp";
+import edenInsetFollowTheShadeUrl from "../assets/themes/eden-prime/insets/inset-follow-the-shade.webp";
+import edenInsetHushTheValleyUrl from "../assets/themes/eden-prime/insets/inset-hush-the-valley.webp";
+import edenInsetTreadSoftlyUrl from "../assets/themes/eden-prime/insets/inset-tread-softly.webp";
+
 // ---------------------------------------------------------------------------
 // World music imports
 // ---------------------------------------------------------------------------
@@ -330,6 +344,19 @@ export const worldAssetUrls: Record<string, string> = {
   "eden-prime-bg": edenRealityUrl,
   "eden-prime-overlay": edenOverlayUrl,
   "eden-prime-cardfront": edenCardfrontUrl,
+  "eden-inset-fruit-offered-too-quickly": edenInsetFruitOfferedTooQuicklyUrl,
+  "eden-inset-first-warning-cry": edenInsetFirstWarningCryUrl,
+  "eden-inset-curious-swarm": edenInsetCuriousSwarmUrl,
+  "eden-inset-the-herd-misunderstands": edenInsetTheHerdMisunderstandsUrl,
+  "eden-inset-flowers-face-the-wrong-sun": edenInsetFlowersFaceTheWrongSunUrl,
+  "eden-inset-the-quiet-grove": edenInsetTheQuietGroveUrl,
+  "eden-inset-paradise-runs": edenInsetParadiseRunsUrl,
+  "eden-inset-take-the-fruit": edenInsetTakeTheFruitUrl,
+  "eden-inset-gentle-approach": edenInsetGentleApproachUrl,
+  "eden-inset-stillness-lesson": edenInsetStillnessLessonUrl,
+  "eden-inset-follow-the-shade": edenInsetFollowTheShadeUrl,
+  "eden-inset-hush-the-valley": edenInsetHushTheValleyUrl,
+  "eden-inset-tread-softly": edenInsetTreadSoftlyUrl,
 };
 
 export interface WorldMusicAsset {

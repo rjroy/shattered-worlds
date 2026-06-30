@@ -980,7 +980,7 @@
       "effect": {
         "kind": "Sequence",
         "steps": [
-          { "kind": "GainAlarmGuard", "amount": 1 },
+          { "kind": "GainKeywordGuard", "amount": 1 },
           { "kind": "Heal", "amount": 1 }
         ]
       }
