@@ -204,7 +204,7 @@ describe("previewAction", () => {
       id: "guard",
       templateId: "Guard",
       name: "Guard",
-      effect: { kind: "GainAlarmGuard", amount: 2 },
+      effect: { kind: "GainKeywordGuard", amount: 2 },
     });
     const gained = previewAction(catalog, makeState({ hand: [guard] }), {
       type: "PlayCard",
@@ -234,7 +234,7 @@ describe("previewAction", () => {
     });
     const consumed = previewAction(
       catalog,
-      makeState({ hand: [trigger, alarmedA, alarmedB], alarmGuard: 1, hp: 10 }),
+      makeState({ hand: [trigger, alarmedA, alarmedB], keywordGuard: 1, hp: 10 }),
       { type: "PlayCard", cardId: trigger.id },
     );
     const text = consumed.summaryLines.join("\n");

@@ -32,7 +32,7 @@ import {
 const ALARM_EVENT_TYPES: ReadonlySet<GameEvent["type"]> = new Set([
   "KeywordApplied",
   "KeywordRemoved",
-  "AlarmGuardChanged",
+  "keywordGuardChanged",
   "KeywordGuardConsumed",
 ]);
 
@@ -58,7 +58,7 @@ const EDEN_REWARDS = [
 
 function normalizeNoAlarmState(state: GameState): unknown {
   const copy = JSON.parse(JSON.stringify(state)) as Record<string, unknown>;
-  delete copy.alarmGuard;
+  delete copy.keywordGuard;
   delete copy.progressDealtThisTurn;
   delete copy.pendingKeywordNextWorldCard;
   return copy;
@@ -248,19 +248,19 @@ describe("Eden Prime — ProgressGate (REQ-EDEN-12)", () => {
     return { kind: "ProgressGate", min, then: HEAL_FIVE };
   }
 
-  it("is a no-op below min and does not touch alarmGuard", () => {
-    const state = makeState({ hp: 10, progressDealtThisTurn: 1, alarmGuard: 1 });
+  it("is a no-op below min and does not touch keywordGuard", () => {
+    const state = makeState({ hp: 10, progressDealtThisTurn: 1, keywordGuard: 1 });
     const { state: after, events } = applyEffect(catalog, state, progressGate(2));
     expect(after.hp).toBe(10);
-    expect(after.alarmGuard).toBe(1);
+    expect(after.keywordGuard).toBe(1);
     expect(events).toHaveLength(0);
   });
 
-  it("fires at min without consuming alarmGuard", () => {
-    const state = makeState({ hp: 10, progressDealtThisTurn: 2, alarmGuard: 1 });
+  it("fires at min without consuming keywordGuard", () => {
+    const state = makeState({ hp: 10, progressDealtThisTurn: 2, keywordGuard: 1 });
     const { state: after } = applyEffect(catalog, state, progressGate(2));
     expect(after.hp).toBe(15);
-    expect(after.alarmGuard).toBe(1);
+    expect(after.keywordGuard).toBe(1);
   });
 
   it("fires above min", () => {
@@ -289,7 +289,7 @@ describe("Eden Prime — ProgressGate (REQ-EDEN-12)", () => {
 });
 
 // ---------------------------------------------------------------------------
-// RemoveKeyword / GainAlarmGuard.
+// RemoveKeyword / GainKeywordGuard.
 // ---------------------------------------------------------------------------
 
 describe("Eden Prime — RemoveKeyword (REQ-EDEN-13)", () => {
@@ -314,14 +314,14 @@ describe("Eden Prime — RemoveKeyword (REQ-EDEN-13)", () => {
   });
 });
 
-describe("Eden Prime — GainAlarmGuard absorbs a gate trigger (REQ-EDEN-12a)", () => {
+describe("Eden Prime — GainKeywordGuard absorbs a gate trigger (REQ-EDEN-12a)", () => {
   it("one guard charge suppresses exactly one gated disruption", () => {
-    const gained = applyEffect(catalog, makeState({ alarmGuard: 0 }), {
-      kind: "GainAlarmGuard",
+    const gained = applyEffect(catalog, makeState({ keywordGuard: 0 }), {
+      kind: "GainKeywordGuard",
       amount: 1,
     });
-    expect(gained.state.alarmGuard).toBe(1);
-    expect(gained.events.some((e) => e.type === "AlarmGuardChanged")).toBe(true);
+    expect(gained.state.keywordGuard).toBe(1);
+    expect(gained.events.some((e) => e.type === "keywordGuardChanged")).toBe(true);
 
     // With one charge in hand, the first gate spends the charge and the second
     // gate runs normally. This proves one guard suppresses exactly one trigger.
@@ -335,36 +335,13 @@ describe("Eden Prime — GainAlarmGuard absorbs a gate trigger (REQ-EDEN-12a)", 
       steps: [keywordGate(2), keywordGate(2)],
     });
 
-    expect(after.alarmGuard).toBe(0);
+    expect(after.keywordGuard).toBe(0);
     expect(after.hp).toBe(15);
     expect(events.filter((e) => e.type === "KeywordGuardConsumed")).toHaveLength(1);
     expect(events.filter((e) => e.type === "HpChanged")).toHaveLength(1);
     expect(events.findIndex((e) => e.type === "KeywordGuardConsumed")).toBeLessThan(
       events.findIndex((e) => e.type === "HpChanged"),
     );
-  });
-
-  it("does not consume alarmGuard for a non-Alarm KeywordGate", () => {
-    const state = makeState({
-      hp: 10,
-      alarmGuard: 1,
-      hand: [
-        makeWorldCard({ id: "1", keywords: [{ name: "Spore" }] }),
-        makeWorldCard({ id: "2", keywords: [{ name: "Spore" }] }),
-      ],
-    });
-    const { state: after, events } = applyEffect(catalog, state, {
-      kind: "KeywordGate",
-      keyword: "Spore",
-      min: 2,
-      zone: "hand",
-      then: HEAL_FIVE,
-    });
-
-    expect(after.hp).toBe(15);
-    expect(after.alarmGuard).toBe(1);
-    expect(events.some((e) => e.type === "HpChanged")).toBe(true);
-    expect(events.some((e) => e.type === "KeywordGuardConsumed")).toBe(false);
   });
 });
 
@@ -431,7 +408,7 @@ describe("Eden Prime — no-op guarantee (REQ-EDEN-45)", () => {
       DEFAULT_RUN_MODIFIERS,
     );
 
-    expect(opened.alarmGuard).toBe(0);
+    expect(opened.keywordGuard).toBe(0);
     expect(opened.progressDealtThisTurn).toBe(0);
     expect(opened.pendingKeywordNextWorldCard).toBeUndefined();
 
@@ -444,7 +421,7 @@ describe("Eden Prime — no-op guarantee (REQ-EDEN-45)", () => {
 
     expect(ended.events).toEqual(legacyEnded.events);
     expect(normalizeNoAlarmState(ended.state)).toEqual(normalizeNoAlarmState(legacyEnded.state));
-    expect(ended.state.alarmGuard).toBe(0);
+    expect(ended.state.keywordGuard).toBe(0);
     expect(ended.state.progressDealtThisTurn).toBe(0);
     expect(ended.state.pendingKeywordNextWorldCard).toBeUndefined();
   });
@@ -620,9 +597,9 @@ describe("Eden Prime — shipped startle patterns (REQ-EDEN-47)", () => {
       0,
     );
 
-    const guarded = applyEffect(catalog, makeState({ hand, alarmGuard: 0 }), stillness.effect);
+    const guarded = applyEffect(catalog, makeState({ hand, keywordGuard: 0 }), stillness.effect);
     const suppressed = applyEffect(catalog, guarded.state, keywordGate(2));
-    expect(suppressed.state.alarmGuard).toBe(0);
+    expect(suppressed.state.keywordGuard).toBe(0);
     expect(suppressed.events.some((e) => e.type === "KeywordGuardConsumed")).toBe(true);
     expect(suppressed.events.some((e) => e.type === "HpChanged")).toBe(false);
 

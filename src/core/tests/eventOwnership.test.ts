@@ -38,7 +38,7 @@ const EVENT_OWNERSHIP = {
 
   KeywordApplied: "effect-family",
   KeywordRemoved: "effect-family",
-  AlarmGuardChanged: "effect-family",
+  keywordGuardChanged: "effect-family",
   KeywordGuardConsumed: "effect-family",
   DamageDealt: "effect-family",
   HealReceived: "effect-family",
@@ -61,7 +61,7 @@ type EffectFamilyEventType = {
 const EFFECT_FAMILY_OWNERS = {
   KeywordApplied: "appliedKeywords",
   KeywordRemoved: "appliedKeywords",
-  AlarmGuardChanged: "resources",
+  keywordGuardChanged: "resources",
   KeywordGuardConsumed: "appliedKeywords",
   DamageDealt: "damage",
   HealReceived: "resources",

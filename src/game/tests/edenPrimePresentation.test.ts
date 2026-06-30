@@ -2,10 +2,11 @@ import { describe, expect, it } from "bun:test";
 import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { assetManifest } from "../data/assetManifest";
-import { appliedAlarmValue, formatAppliedAlarm } from "../view/CardView";
+import { formatAppliedKeywords } from "../view/CardView";
 import { selectTheme } from "../view/themes/themeManifest";
 import { CARD_CATALOG } from "../../data/worldManifest";
 import { EDEN_PRIME_THEME } from "../../data/worlds/eden-prime/theme";
+import { Card } from "../../core";
 
 const WORLD_ID = "eden-prime";
 const EDEN_BASE_KEYS = ["eden-prime-bg", "eden-prime-overlay", "eden-prime-cardfront"] as const;
@@ -81,15 +82,25 @@ describe("Eden Prime - inset art guidance (REQ-EDEN-3, REQ-EDEN-40, REQ-EDEN-48)
 describe("Eden Prime - applied Alarm presentation helpers (REQ-EDEN-49)", () => {
   it("formats applied Alarm without treating authored keywords as applied state", () => {
     expect(
-      formatAppliedAlarm({
+      // NOTE: this only tests `appliedKeywords` so this typecast hack isn't dangerous
+      formatAppliedKeywords({
         appliedKeywords: [{ name: "Alarm", value: 2 }],
-      }),
+      } as unknown as Card),
     ).toBe("Alarm 2");
 
     expect(
-      appliedAlarmValue({
-        appliedKeywords: [{ name: "Slow" }],
-      }),
+      // NOTE: this only tests `appliedKeywords` so this typecast hack isn't dangerous
+      formatAppliedKeywords({} as unknown as Card),
     ).toBeUndefined();
+
+    expect(
+      // NOTE: this only tests `appliedKeywords` so this typecast hack isn't dangerous
+      formatAppliedKeywords({
+        appliedKeywords: [
+          { name: "Alarm", value: 3 },
+          { name: "Concealed", value: 1 },
+        ],
+      } as unknown as Card),
+    ).toBe("Alarm 3 · Concealed 1");
   });
 });

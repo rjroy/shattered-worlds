@@ -129,7 +129,7 @@ The threat resurfaces next turn rather than replacing the card in hand. Canonica
 
 **Draw / Return:** `Draw`, `DiscardThenDraw`, `ReturnWorldCards` _(inert on world auto-hooks: it is boon-signed and no-ops when fired from a world card's automatic `onEndOfTurn`/`onClear`/etc. hooks; use `AddWorldCardToDeck { bTop: true }` to re-seed recurrence)_, `ReturnPlayerDiscardToTop` _(Tidal: player-selected recall to draw top)_, `RecallPlayerDiscard` _(Tidal: automatic recall from discard)_
 
-**Resource:** `Heal`, `GainEnergy`, `AddCard`, `AddPlayerCardToTop`, `AddWorldCardToDeck` (use `bTop: true` for top-of-deck placement), `AddThreatToWorldDeck`, `GainRandomCard` _(rolled from named pool)_, `GainLight` _(fog-beach-party signature)_, `GainHeat`, `GainAlarmGuard` _(Eden-introduced general guard charge that absorbs the next passing `Alarm` gate)_
+**Resource:** `Heal`, `GainEnergy`, `AddCard`, `AddPlayerCardToTop`, `AddWorldCardToDeck` (use `bTop: true` for top-of-deck placement), `AddThreatToWorldDeck`, `GainRandomCard` _(rolled from named pool)_, `GainLight` _(fog-beach-party signature)_, `GainHeat`, `GainKeywordGuard` _(Eden-introduced general guard charge that absorbs the next passing `Alarm` gate)_
 
 **Hand / discard manipulation:** `DestroyCardInHand`, `ExileTopWorldCards`, `ForceDestroy`, `Brace`
 
@@ -147,7 +147,7 @@ The threat resurfaces next turn rather than replacing the card in hand. Canonica
 | `GainLight` | `fog-beach-party` | **Coupled:** the only way to lift `Concealed:N` depth. A world that authors `Concealed` hazards must supply a Light source, which makes Light part of that world's identity whether intended or not. |
 | `GainHeat`, `FreezeCards`, `ThawCards` | `whiteout-parking-garage` | **Coupled:** a Heat/freeze/thaw suite; pulling in the suite pulls in the freeze identity. |
 | `ReturnPlayerDiscardToTop`, `RecallPlayerDiscard` | `the-tidal-archive` | Its discard/deck-order recall identity — moving real player card instances from `playerDiscard` to the top of `playerDraw`. |
-| `ApplyKeyword`, `KeywordGate`, `ProgressGate`, `RemoveKeyword`, `GainAlarmGuard` | `eden-prime` | General primitives introduced for Eden's startle identity. Freely reusable as supporting tools, but Eden owns the greed-tax reward space where taking gifts, extra draw, or overextension raises `Alarm` and restraint/valves spend it. |
+| `ApplyKeyword`, `KeywordGate`, `ProgressGate`, `RemoveKeyword`, `GainKeywordGuard` | `eden-prime` | General primitives introduced for Eden's startle identity. Freely reusable as supporting tools, but Eden owns the greed-tax reward space where taking gifts, extra draw, or overextension raises `Alarm` and restraint/valves spend it. |
 
 **C1a:** `DestroySelf` removes the firing world card from hand. It is only meaningful in `onEndOfTurn`, where the engine has a `selfId`.
 

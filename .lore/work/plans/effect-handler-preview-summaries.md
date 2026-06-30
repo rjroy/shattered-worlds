@@ -31,7 +31,7 @@ classification, resource cursor replay, and summary ordering.
   `actionPreview.ts`:
   - `KeywordApplied`
   - `KeywordRemoved`
-  - `AlarmGuardChanged`
+  - `keywordGuardChanged`
   - `KeywordGuardConsumed`
 - `GameEvent` values do not record the originating `CardEffect.kind`; they only
   carry optional provenance/observability fields such as `sourceCardId`,
@@ -97,7 +97,7 @@ Initial classification:
   `ActAdvanced`, `HazardAdded`, `BoonCardGranted`, `PlayerDiscardRecalled`,
   `BraceConsumed`.
 - `terminal-status`: `WorldWon`, `WorldLost`.
-- `effect-family`: `KeywordApplied`, `KeywordRemoved`, `AlarmGuardChanged`,
+- `effect-family`: `KeywordApplied`, `KeywordRemoved`, `keywordGuardChanged`,
   `KeywordGuardConsumed`, `DamageDealt`, `HealReceived`, `CardsFrozen`,
   `CardsThawed`, `CardDestroyed`, `WorldCardsReturned`, `WorldCardsExiled`,
   `CardGained`, `BoonOffered`, `HazardDiscarded`.
@@ -200,7 +200,7 @@ Ownership:
   - `KeywordRemoved`
   - `KeywordGuardConsumed`
 - `resources.ts`
-  - `AlarmGuardChanged`
+  - `keywordGuardChanged`
 
 Keep these preview-owned:
 

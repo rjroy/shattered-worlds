@@ -60,8 +60,8 @@ No `.lore/lore-agents.md`, so all three roles fall back to `general-purpose`.
 - **Correction pass dispatched** to original impl agent: Fix A (carry keyword through pending field), Fix B (emit KeywordApplied after CardsDrawn), Fix C (document hand-scoped lifetime), + harden tests #5/#6/#7. All within Slice 1 scope; not a divergence.
 - **Correction pass completed**: deferred next-world-card application now carries `{ keyword, value }` instead of hardcoding Alarm; draw emits `CardsDrawn` before `KeywordApplied`; Gate G1 tests now cover non-Alarm deferred carry-through, exact single guard consumption, full turn-start lifecycle order, and normalized byte-identical no-op behavior. Impl reported `rtk bun test src/core/tests/edenPrime.test.ts` = 17 pass / 0 fail; `rtk bun run typecheck`, `rtk bun run lint`, and `rtk bun run test` clean (1326 pass, 2 skip).
 - **Re-test clean**: independent verifier confirmed `rtk bun test src/core/tests/edenPrime.test.ts --preload ./src/game/tests/testSetup.ts` = 17 pass / 0 fail; full `rtk bun run test` = 1326 pass / 2 skip / 0 fail; typecheck and lint pass.
-- **Re-review found one material risk**: `alarmGuard` was suppressing any passing `KeywordGate`, but REQ-EDEN-11a scopes the guard to Alarm-caused disruptions only.
-- **Guard-scope fix completed**: `KeywordGateHandler` now consumes/suppresses only when `effect.keyword === "Alarm"`. Added regression proving a passing `Spore` gate runs, leaves `alarmGuard` unchanged, and emits no `KeywordGuardConsumed`.
+- **Re-review found one material risk**: `keywordGuard` was suppressing any passing `KeywordGate`, but REQ-EDEN-11a scopes the guard to Alarm-caused disruptions only.
+- **Guard-scope fix completed**: `KeywordGateHandler` now consumes/suppresses only when `effect.keyword === "Alarm"`. Added regression proving a passing `Spore` gate runs, leaves `keywordGuard` unchanged, and emits no `KeywordGuardConsumed`.
 - **Guard-scope verification clean**: focused Eden test now 18 pass / 0 fail; typecheck pass. Follow-up review clean. Residual coverage note: non-Keyword guard regression uses authored `Spore`, not applied `Spore`, but implementation path remains general through `hasKeyword`.
 
 ### Slice 2 — world data + registration (2026-06-30)
@@ -83,7 +83,7 @@ No `.lore/lore-agents.md`, so all three roles fall back to `general-purpose`.
 
 ### Slice 4 — conformance + seeded gameplay + docs (2026-06-30)
 - Added REQ-EDEN-50 seeded gameplay coverage in `src/core/tests/edenPrime.test.ts`: a restrained line discards `Fruit Offered Too Quickly` and `First Warning Cry`, keeps Alarm absent, and proves `Curious Swarm`, `The Quiet Grove`, and `The Herd Misunderstands` remain inert; a greedy line clears a gift with `Explore`, plays `Take the Fruit`, overdraws with `Sprint`, lets `First Warning Cry` spread Alarm past thresholds, and proves the same hazard family fires `DiscardThenDraw`, top-decked `Curious Swarm`, and `Panic`.
-- Updated `.lore/reference/theme-authoring.md` for REQ-EDEN-43: Eden Prime added to the signature verb table as `startle`; `Alarm` documented as the first transient/applied keyword; `ApplyKeyword`, `KeywordGate`, `ProgressGate`, `RemoveKeyword`, and `GainAlarmGuard` documented as Eden-introduced general primitives; C2a now distinguishes authored `keywords` from runtime `appliedKeywords`; Eden's greed-tax startle reward space is explicitly owned by Eden.
+- Updated `.lore/reference/theme-authoring.md` for REQ-EDEN-43: Eden Prime added to the signature verb table as `startle`; `Alarm` documented as the first transient/applied keyword; `ApplyKeyword`, `KeywordGate`, `ProgressGate`, `RemoveKeyword`, and `GainKeywordGuard` documented as Eden-introduced general primitives; C2a now distinguishes authored `keywords` from runtime `appliedKeywords`; Eden's greed-tax startle reward space is explicitly owned by Eden.
 - Validation commands:
   - `rtk bun test src/core/tests/edenPrime.test.ts --preload ./src/game/tests/testSetup.ts` = 31 pass / 0 fail.
   - `rtk bun run test` = 1359 pass / 2 skip / 0 fail.
@@ -109,7 +109,7 @@ No `.lore/lore-agents.md`, so all three roles fall back to `general-purpose`.
 - **Research findings:**
   - Sibling `.lore/work/notes/` + `plans/` were deleted after distillation; replaced by reference docs.
   - Canonical guide for the core slice: `.lore/reference/effect-system-extension-pattern.md` (effect = union member + handler/registry + apply case + describe.ts text + playability/target-spec + data/catalog tests; deferred-effect pattern via GameState field resolved at a turn-cycle point).
-  - Sibling reference docs: `.lore/reference/ember-orchard-world.md`, `.lore/reference/city-of-sleeping-giants-world.md`. `GainAlarmGuard` is the structural analog of Ember's Brace charges.
+  - Sibling reference docs: `.lore/reference/ember-orchard-world.md`, `.lore/reference/city-of-sleeping-giants-world.md`. `GainKeywordGuard` is the structural analog of Ember's Brace charges.
   - Core has zero existing Alarm/ApplyKeyword/KeywordGate primitives — Eden is genuinely first.
   - Model bundle on the four-file shape at `src/data/worlds/the-ember-orchard/` (index.ts, meta.ts, cards.json, theme.ts). Card templates go in `src/data/allCards.json`, NOT per-world cards.json.
   - Mirror tests: `src/core/tests/emberOrchard.test.ts`, `src/core/tests/cityOfSleepingGiants.test.ts`, `src/game/tests/emberOrchardPresentation.test.ts`.
