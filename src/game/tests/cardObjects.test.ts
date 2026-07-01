@@ -2332,6 +2332,10 @@ function makeFakeText(
       tracked.content = s;
       return text;
     },
+    setColor(c: string): unknown {
+      tracked.color = c;
+      return text;
+    },
     // The real implementation wraps via canvas measurement; splitting on
     // explicit newlines is enough here because every string under test is
     // shorter than the wrap width.
