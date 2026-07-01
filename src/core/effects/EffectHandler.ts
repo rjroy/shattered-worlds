@@ -82,7 +82,7 @@ export abstract class HazardTargetingHandler<E extends CardEffect> extends Effec
   override isPlayable(_effect: E, state: GameState, _selfId: CardId): boolean {
     // A single-target hazard play needs at least one UNCONCEALED world card.
     // Gating on legal targets (not merely "any world card in hand") means the
-    // card goes unplayable when every world card is lost in the fog, rather
+    // card goes unplayable when every world card is lost in shadow, rather
     // than presenting a dead-end click with zero legal targets. In worlds with
     // no concealment nothing is concealed (light === 0, concealOf === 0), so
     // this matches the old "any world card in hand" behavior exactly.

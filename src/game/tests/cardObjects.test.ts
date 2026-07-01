@@ -2273,8 +2273,8 @@ const childProtocol = {
     this.interactive = true;
     return this;
   },
-  // CardView's fog-back toggles identity vs. fog via setVisible; every fake
-  // child records the last value so the concealment tests can read it.
+  // CardView's shadow overlay toggles identity vs. shadow via setVisible; every
+  // fake child records the last value so the concealment tests can read it.
   setVisible(this: { visible: boolean }, v: boolean): unknown {
     this.visible = v;
     return this;
@@ -2304,8 +2304,8 @@ function makeFakeText(
     width: 40,
     height: 12,
     displayWidth: 40,
-    // The fog-back toggles identity via setVisible; mirror it onto the tracked
-    // record so the concealment tests can read each line's visibility.
+    // The shadow overlay toggles identity via setVisible; mirror it onto the
+    // tracked record so the concealment tests can read each line's visibility.
     setVisible(v: boolean): unknown {
       tracked.visible = v;
       return text;
@@ -2822,17 +2822,17 @@ describe("CardView world-card trigger blocks", () => {
 });
 
 // ---------------------------------------------------------------------------
-// CardView fog-back (concealment, REQ-FOG-28)
+// CardView shadow overlay (concealment, REQ-FOG-28)
 //
-// A world card carrying `Concealed:N` renders a fog-back that shows ONLY its
-// depth chip ("Concealed 3") and hides every identity object (name, cost,
+// A world card carrying `Concealed:N` renders a shadow overlay that shows ONLY
+// its depth chip ("Concealed 3") and hides every identity object (name, cost,
 // effect tokens). applyConcealment(light) is the cosmetic reconcile the table
 // runs every drawAll cycle: it reads `state.light` and toggles the two groups,
 // never touching core. Raising light past the depth reveals the card.
 // ---------------------------------------------------------------------------
 
-describe("CardView fog-back concealment", () => {
-  const fogCatalog: CardCatalog = {
+describe("CardView shadow overlay concealment", () => {
+  const concealmentCatalog: CardCatalog = {
     "Something in the Mist": {
       kind: "world",
       name: "Something in the Mist",
@@ -2859,8 +2859,8 @@ describe("CardView fog-back concealment", () => {
     },
   };
 
-  function mintFogWorld(templateId: string): WorldCard {
-    const [card] = mintCard(fogCatalog, makeMintState(), templateId);
+  function mintConcealedWorld(templateId: string): WorldCard {
+    const [card] = mintCard(concealmentCatalog, makeMintState(), templateId);
     if (card.kind !== "world") throw new Error(`expected ${templateId} to mint a world card`);
     return card;
   }
@@ -2871,12 +2871,12 @@ describe("CardView fog-back concealment", () => {
   }
 
   it("renders the structured-keyword depth chip ('Concealed 3')", () => {
-    const rendered = renderCard(mintFogWorld("Something in the Mist"));
+    const rendered = renderCard(mintConcealedWorld("Something in the Mist"));
     expect(allTexts(rendered)).toContain("Concealed 3");
   });
 
   it("shows the depth chip and hides identity when concealed (Light below depth)", () => {
-    const rendered = renderCard(mintFogWorld("Something in the Mist"));
+    const rendered = renderCard(mintConcealedWorld("Something in the Mist"));
     // Light 1 < depth 3 → concealed.
     rendered.view.applyConcealment(1);
 
@@ -2887,8 +2887,8 @@ describe("CardView fog-back concealment", () => {
     expect(name!.visible).toBe(false);
   });
 
-  it("reveals identity and hides the fog chip once Light reaches the depth", () => {
-    const rendered = renderCard(mintFogWorld("Something in the Mist"));
+  it("reveals identity and hides the depth chip once Light reaches the depth", () => {
+    const rendered = renderCard(mintConcealedWorld("Something in the Mist"));
     rendered.view.applyConcealment(1); // concealed
     rendered.view.applyConcealment(3); // Light 3 >= depth 3 → revealed
 
@@ -2899,12 +2899,12 @@ describe("CardView fog-back concealment", () => {
   });
 
   it("never conceals a card without a Concealed keyword (depth 0 is a no-op)", () => {
-    const rendered = renderCard(mintFogWorld("Plain Hazard"));
+    const rendered = renderCard(mintConcealedWorld("Plain Hazard"));
     // Even at Light 0 a non-concealable card stays fully revealed.
     rendered.view.applyConcealment(0);
     const name = rendered.texts.find((t) => t.content === "Plain Hazard");
     expect(name!.visible).toBe(true);
-    // No fog depth chip exists for a card with no Concealed keyword.
+    // No depth chip exists for a card with no Concealed keyword.
     expect(allTexts(rendered)).not.toContain("Concealed 0");
   });
 });
@@ -3265,9 +3265,9 @@ describe("TableScene idle world-card and End Turn previews", () => {
     expect(scene.previewSlot.text).not.toContain("Take 2 damage");
   });
 
-  it("shows only the concealment warning for a fogged world card on idle hover", () => {
+  it("shows only the concealment warning for a concealed world card on idle hover", () => {
     const hazard = makeWorldCard({
-      id: "idle-fog",
+      id: "idle-concealed",
       name: "Hidden Terror",
       keywords: [{ name: "Concealed", value: 2 }],
       onDraw: { kind: "None" },

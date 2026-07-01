@@ -57,12 +57,12 @@ export function previewPlay(
   state: GameState,
   branchIndex?: number,
 ): string | null {
-  // A concealed target hides its identity behind the fog. Suppress the
+  // A concealed target hides its identity in shadow. Suppress the
   // name/cost/effect math entirely and show only the Light needed to reveal it
   // (its Concealed:N depth) — light management needs that number. This is the
-  // core seam for Decision 4; the card-face fog-back is the Phase 3 renderer half.
+  // core seam for Decision 4; the card-face shadow overlay is the Phase 3 renderer half.
   if (isConcealed(target, state.light)) {
-    return `lost in the fog (needs Light ${concealOf(target)})`;
+    return `hidden in shadow (needs Light ${concealOf(target)})`;
   }
 
   const deal = dealProgressOf(card.effect, branchIndex);

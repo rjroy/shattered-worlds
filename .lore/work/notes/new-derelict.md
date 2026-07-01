@@ -13,7 +13,7 @@ modules: [core, data, game, sim]
 
 - [x] Phase 1 — Core-engine Lockdown and persistent effective-cost modifier
 - [x] Phase 2 — New Derelict world data, registration, and threat mapping
-- [ ] Phase 3 — Assets, presentation, and theme-authoring reference
+- [x] Phase 3 — Assets, presentation, and theme-authoring reference
 - [ ] Phase 4 — Full validation and closeout
 
 ## Log
@@ -44,3 +44,11 @@ modules: [core, data, game, sim]
 - Reused `music-eden-prime` temporarily as authorized. `Follow the Checklist` uses `ReturnPlayerDiscardToTop`; `Gravity Priority Shift` uses `RecallPlayerDiscard` with `highestCost`.
 - Full-suite testing exposed a bad Act-1/Act-2 test fixture, stale world-count expectation, and TableScene test doubles missing `updateCostLabel`; all were corrected. Asset binding failures remain intentionally pending Phase 3.
 - Review required an end-to-end clustered-clear comparison and explicit `Manual Release` coverage; both were added and passed review.
+
+### Phase 3 — Assets and presentation
+
+- Retained the three canonical base assets after visual review.
+- Generated eleven distinct inset images with the built-in image generator, applied the specified finishing pass, saved 600×600 WebPs, and validated the set on a 100×100 contact sheet.
+- Added asset/music bindings, presentation tests, the inset authoring README, and theme-authoring reference updates.
+- Testing passed 82 focused tests. Existing base dimensions are noncanonical but visually and functionally accepted by the source contract.
+- Review required clearer C1 placement of persistent modifiers and corrected C2a lifecycle language for persistent Lockdown; documentation was updated and re-review passed.

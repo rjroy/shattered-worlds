@@ -194,14 +194,14 @@ export class CardView extends Phaser.GameObjects.Container {
 
   // Concealment (world cards only). `concealDepth` is the card's Concealed:N
   // value (0 = never concealable). `revealObjects` is the identity face shown
-  // when revealed; `fogObjects` is the fog-back shown only its depth chip. The
-  // two groups are toggled by `applyConcealment(light)` — a purely cosmetic
-  // read of `state.light` that NEVER feeds back into core. `concealedNow`
-  // tracks the last applied state so an unchanged light is idempotent (no tween
-  // restart, no flicker) on the per-cycle reconcile path.
+  // when revealed; `shadowObjects` is the shadow overlay showing only its
+  // depth chip. The two groups are toggled by `applyConcealment(light)` — a
+  // purely cosmetic read of `state.light` that NEVER feeds back into core.
+  // `concealedNow` tracks the last applied state so an unchanged light is
+  // idempotent (no tween restart, no flicker) on the per-cycle reconcile path.
   private concealDepth = 0;
   private readonly revealObjects: Phaser.GameObjects.GameObject[] = [];
-  private readonly fogObjects: Phaser.GameObjects.GameObject[] = [];
+  private readonly shadowObjects: Phaser.GameObjects.GameObject[] = [];
   private concealedNow: boolean | undefined = undefined;
 
   private pickBadge?: Phaser.GameObjects.Container;
@@ -394,8 +394,8 @@ export class CardView extends Phaser.GameObjects.Container {
       const worldCard = card as WorldCard;
 
       // The world card's full identity face. Each piece is pushed onto
-      // `revealObjects` so the fog-back can hide all of it at once when the card
-      // is concealed; the name (built above) is part of that identity too.
+      // `revealObjects` so the shadow overlay can hide all of it at once when
+      // the card is concealed; the name (built above) is part of that identity too.
       const reveal = this.revealObjects;
       for (const line of nameText) reveal.push(line);
 
@@ -438,8 +438,8 @@ export class CardView extends Phaser.GameObjects.Container {
       this.add(costRingHit);
       reveal.push(costRingHit);
 
-      // Keywords. The whole keyword line is identity (hidden under fog); the
-      // Concealed:N depth chip is rendered separately on the fog-back below.
+      // Keywords. The whole keyword line is identity (hidden in shadow); the
+      // Concealed:N depth chip is rendered separately on the shadow overlay below.
       if (worldCard.keywords.length > 0) {
         for (const line of addCardText(
           scene,
@@ -530,18 +530,18 @@ export class CardView extends Phaser.GameObjects.Container {
         }
       }
 
-      // Fog-back overlay. A world card with `Concealed:N` hides its identity
-      // behind fog until Light reaches N; only the depth chip stays visible so
+      // Shadow overlay. A world card with `Concealed:N` hides its identity
+      // in shadow until Light reaches N; only the depth chip stays visible so
       // the player knows how much Light the card demands. Built unconditionally
       // (depth 0 means it never shows) and toggled by `applyConcealment(light)`,
-      // a cosmetic read of `state.light` that never touches core. `buildFogBack`
-      // assigns `this.concealDepth` and populates `this.fogObjects`.
+      // a cosmetic read of `state.light` that never touches core. `buildShadowOverlay`
+      // assigns `this.concealDepth` and populates `this.shadowObjects`.
       this.concealDepth = concealOf(worldCard);
-      this.buildFogBack(scene);
+      this.buildShadowOverlay(scene);
       // Start revealed; the first reconcile cycle calls applyConcealment(light)
-      // with the live Light, so a card concealed at spawn snaps to fog with no
+      // with the live Light, so a card concealed at spawn snaps to shadow with no
       // flicker (the table draws once, synchronously, right after creation).
-      this.setObjectsVisible(this.fogObjects, false);
+      this.setObjectsVisible(this.shadowObjects, false);
     }
 
     const appliedKeywordLabel = formatAppliedKeywords(card);
@@ -564,23 +564,24 @@ export class CardView extends Phaser.GameObjects.Container {
   }
 
   /**
-   * Build the fog-back: a translucent fog panel over the card face plus the
-   * `Concealed:N` depth chip. Cosmetic only — it reads no GameState and feeds
+   * Build the shadow overlay: a translucent shadow panel over the card face plus
+   * the `Concealed:N` depth chip. Cosmetic only — it reads no GameState and feeds
    * nothing back into core. Hidden by default; `applyConcealment` reveals it.
    */
-  private buildFogBack(scene: Phaser.Scene): void {
+  private buildShadowOverlay(scene: Phaser.Scene): void {
     if (this.concealDepth <= 0) return;
 
     // Translucent panel that veils the identity face beneath it.
-    const fog = scene.add
+    const shadow = scene.add
       .rectangle(0, 0, CARD_W - 8, CARD_H - 8, 0x2a3a4a, 0.92)
       .setOrigin(0.5, 0.5)
       .setRounded(10);
-    this.add(fog);
-    this.fogObjects.push(fog);
+    this.add(shadow);
+    this.shadowObjects.push(shadow);
 
-    // Depth chip: the only thing legible through the fog. Reuses the structured
-    // keyword formatter so "Concealed 3" matches the on-face keyword language.
+    // Depth chip: the only thing legible through the shadow. Reuses the
+    // structured keyword formatter so "Concealed 3" matches the on-face
+    // keyword language.
     for (const line of addCardText(
       scene,
       this,
@@ -595,16 +596,17 @@ export class CardView extends Phaser.GameObjects.Container {
         originY: 0.5,
       },
     )) {
-      this.fogObjects.push(line);
+      this.shadowObjects.push(line);
     }
   }
 
   /**
-   * Toggle the fog-back against the current Light. Pure cosmetic reconcile:
-   * called every drawAll cycle (and so on every LightChanged, since EndTurn
-   * decay and GainLight both repaint), it reads `light` and shows the fog-back
-   * when `isConcealed`, the identity face otherwise. Idempotent on an unchanged
-   * concealment state. No-op for cards that can never be concealed (depth 0).
+   * Toggle the shadow overlay against the current Light. Pure cosmetic
+   * reconcile: called every drawAll cycle (and so on every LightChanged, since
+   * EndTurn decay and GainLight both repaint), it reads `light` and shows the
+   * shadow overlay when `isConcealed`, the identity face otherwise. Idempotent
+   * on an unchanged concealment state. No-op for cards that can never be
+   * concealed (depth 0).
    */
   applyConcealment(light: number): void {
     if (this.concealDepth <= 0) return;
@@ -614,7 +616,7 @@ export class CardView extends Phaser.GameObjects.Container {
     if (this.concealedNow === concealed) return;
     this.concealedNow = concealed;
     this.setObjectsVisible(this.revealObjects, !concealed);
-    this.setObjectsVisible(this.fogObjects, concealed);
+    this.setObjectsVisible(this.shadowObjects, concealed);
   }
 
   private setObjectsVisible(

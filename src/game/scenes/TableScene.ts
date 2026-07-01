@@ -739,7 +739,7 @@ export class TableScene extends Phaser.Scene {
         container.clearEmphasis();
       }
 
-      // Only world cards have a progress ring/fog-back; re-read state.progress
+      // Only world cards have a progress ring/shadow overlay; re-read state.progress
       // and state.light every cycle since neither has its own change event.
       if (card.kind === "world") {
         const progress = this.game_.state.progress[card.id] ?? 0;

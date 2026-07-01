@@ -43,6 +43,9 @@ import giantsCardfrontUrl from "../assets/themes/city-of-sleeping-giants/city-of
 import edenRealityUrl from "../assets/themes/eden-prime/eden-prime-reality.webp";
 import edenOverlayUrl from "../assets/themes/eden-prime/intrusion-overlay.webp";
 import edenCardfrontUrl from "../assets/themes/eden-prime/eden-prime-cardfront.webp";
+import derelictRealityUrl from "../assets/themes/new-derelict/new-derelict-reality.webp";
+import derelictOverlayUrl from "../assets/themes/new-derelict/intrusion-overlay.webp";
+import derelictCardfrontUrl from "../assets/themes/new-derelict/new-derelict-cardfront.webp";
 
 // ---------------------------------------------------------------------------
 // World inset imports
@@ -177,6 +180,17 @@ import edenInsetStillnessLessonUrl from "../assets/themes/eden-prime/insets/inse
 import edenInsetFollowTheShadeUrl from "../assets/themes/eden-prime/insets/inset-follow-the-shade.webp";
 import edenInsetHushTheValleyUrl from "../assets/themes/eden-prime/insets/inset-hush-the-valley.webp";
 import edenInsetTreadSoftlyUrl from "../assets/themes/eden-prime/insets/inset-tread-softly.webp";
+import derelictInsetBulkheadUrl from "../assets/themes/new-derelict/insets/inset-bulkhead-7-c-seals.webp";
+import derelictInsetAddressUrl from "../assets/themes/new-derelict/insets/inset-unfinished-captains-address.webp";
+import derelictInsetGravityUrl from "../assets/themes/new-derelict/insets/inset-gravity-priority-shift.webp";
+import derelictInsetMisfileUrl from "../assets/themes/new-derelict/insets/inset-administrative-misfile.webp";
+import derelictInsetLifeboatUrl from "../assets/themes/new-derelict/insets/inset-corridor-becomes-lifeboat.webp";
+import derelictInsetPanelUrl from "../assets/themes/new-derelict/insets/inset-systems-panel.webp";
+import derelictInsetOrderUrl from "../assets/themes/new-derelict/insets/inset-the-order-arrives.webp";
+import derelictInsetRouteUrl from "../assets/themes/new-derelict/insets/inset-emergency-route.webp";
+import derelictInsetBadgeUrl from "../assets/themes/new-derelict/insets/inset-override-badge.webp";
+import derelictInsetReleaseUrl from "../assets/themes/new-derelict/insets/inset-manual-release.webp";
+import derelictInsetChecklistUrl from "../assets/themes/new-derelict/insets/inset-follow-the-checklist.webp";
 
 // ---------------------------------------------------------------------------
 // World music imports
@@ -358,6 +372,21 @@ export const worldAssetUrls: Record<string, string> = {
   "eden-inset-follow-the-shade": edenInsetFollowTheShadeUrl,
   "eden-inset-hush-the-valley": edenInsetHushTheValleyUrl,
   "eden-inset-tread-softly": edenInsetTreadSoftlyUrl,
+  // new-derelict
+  "new-derelict-bg": derelictRealityUrl,
+  "new-derelict-overlay": derelictOverlayUrl,
+  "new-derelict-cardfront": derelictCardfrontUrl,
+  "derelict-inset-bulkhead-7-c-seals": derelictInsetBulkheadUrl,
+  "derelict-inset-unfinished-captains-address": derelictInsetAddressUrl,
+  "derelict-inset-gravity-priority-shift": derelictInsetGravityUrl,
+  "derelict-inset-administrative-misfile": derelictInsetMisfileUrl,
+  "derelict-inset-corridor-becomes-lifeboat": derelictInsetLifeboatUrl,
+  "derelict-inset-systems-panel": derelictInsetPanelUrl,
+  "derelict-inset-the-order-arrives": derelictInsetOrderUrl,
+  "derelict-inset-emergency-route": derelictInsetRouteUrl,
+  "derelict-inset-override-badge": derelictInsetBadgeUrl,
+  "derelict-inset-manual-release": derelictInsetReleaseUrl,
+  "derelict-inset-follow-the-checklist": derelictInsetChecklistUrl,
 };
 
 export interface WorldMusicAsset {
@@ -377,4 +406,5 @@ export const worldMusicManifest: Record<string, WorldMusicAsset> = {
   "the-ember-orchard": { key: "music-the-ember-orchard", url: orchardMusicUrl },
   "city-of-sleeping-giants": { key: "music-city-of-sleeping-giants", url: giantsMusicUrl },
   "eden-prime": { key: "music-eden-prime", url: edenPrimeMusicUrl },
+  "new-derelict": { key: "music-eden-prime", url: edenPrimeMusicUrl },
 };

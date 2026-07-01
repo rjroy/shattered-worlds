@@ -9,6 +9,7 @@ import { worldThreatTemplateByWorldId } from "../effects/gainCard";
 import { appliedKeywordValue } from "../model/keywords";
 import { mintCard } from "../model/cards";
 import { dealProgress } from "../effects/dealProgress";
+import { drawWorld } from "../engine/draw";
 import type { GameState, WorldCard } from "../model/types";
 
 const WORLD_ID = "new-derelict";
@@ -201,5 +202,80 @@ describe("New Derelict isolate effects", () => {
     const result = applyEffect(catalog, { ...state, hand: [hazard] }, worldTemplate("The Order Arrives").onEndOfTurn);
     expect(result.events).toContainEqual(expect.objectContaining({ type: "DamageDealt", amount: 3 }));
     expect(result.state.worldDraw[0]?.templateId).toBe("The Order Arrives");
+  });
+});
+
+describe("New Derelict seeded policy lines", () => {
+  it("prompt clearing stays open while shortcuts cluster, then Manual Release collapses the tax", () => {
+    const { catalog, worldData } = buildWorld(WORLD_ID);
+    const { state: seeded } = createWorld(catalog, worldData, 20260630, DEFAULT_RUN_MODIFIERS);
+
+    // Prompt-clearing line: stage each sealing hazard alone and pay its base
+    // cost immediately. No end-turn sealing hook is allowed to fire.
+    let prompt = seeded;
+    let promptProgress = 0;
+    for (let i = 0; i < 3; i++) {
+      const [card, next] = mintCard(catalog, prompt, "Bulkhead 7-C Seals");
+      if (card.kind !== "world") throw new Error("Bulkhead must mint a world card");
+      prompt = { ...next, hand: [card] };
+      const cleared = dealProgress(catalog, prompt, card.id, card.cost);
+      prompt = cleared.state;
+      promptProgress += card.cost;
+      expect(cleared.events.some((event) => event.type === "HazardResolved")).toBe(true);
+      expect(prompt.hand.filter((held) => appliedKeywordValue(held, "Lockdown") > 0)).toHaveLength(0);
+    }
+    expect(promptProgress).toBe(6);
+
+    // Shortcut line: Emergency Route seals the next deterministic world draw,
+    // then two ignored self-sealing hazards create a three-card cluster.
+    const route = catalog["Emergency Route"];
+    const release = catalog["Manual Release"];
+    if (route?.kind !== "player" || release?.kind !== "player") {
+      throw new Error("New Derelict policy rewards missing");
+    }
+    const shortcutQueued = applyEffect(catalog, seeded, route.effect);
+    const shortcutDrawn = drawWorld(shortcutQueued.state, 1);
+    const shortcutHazard = shortcutDrawn.state.hand.find(
+      (card): card is WorldCard =>
+        card.kind === "world" && appliedKeywordValue(card, "Lockdown") > 0,
+    )!;
+    expect(appliedKeywordValue(shortcutHazard, "Lockdown")).toBe(1);
+
+    const [bulkheadA, afterA] = mintCard(catalog, shortcutDrawn.state, "Bulkhead 7-C Seals");
+    const [bulkheadB, afterB] = mintCard(catalog, afterA, "Bulkhead 7-C Seals");
+    if (bulkheadA.kind !== "world" || bulkheadB.kind !== "world") {
+      throw new Error("Bulkhead must mint world cards");
+    }
+    let clustered: GameState = {
+      ...afterB,
+      hand: [shortcutHazard, bulkheadA, bulkheadB],
+      worldDraw: [],
+    };
+    clustered = applyEffect(
+      catalog,
+      clustered,
+      { kind: "ApplyKeyword", keyword: "Lockdown", value: 1, target: "self" },
+      undefined,
+      bulkheadA.id,
+    ).state;
+    clustered = applyEffect(
+      catalog,
+      clustered,
+      { kind: "ApplyKeyword", keyword: "Lockdown", value: 1, target: "self" },
+      undefined,
+      bulkheadB.id,
+    ).state;
+    const lockedCards = clustered.hand.filter(
+      (card): card is WorldCard => card.kind === "world" && appliedKeywordValue(card, "Lockdown") > 0,
+    );
+    expect(lockedCards).toHaveLength(3);
+    expect(effectiveWorldCardCost(lockedCards[1]!, clustered)).toBe(lockedCards[1]!.cost + 2);
+
+    const released = applyEffect(catalog, clustered, release.effect);
+    expect(released.state.hand.every((card) => appliedKeywordValue(card, "Lockdown") === 0)).toBe(true);
+    const reopened = released.state.hand.find(
+      (card): card is WorldCard => card.kind === "world" && card.id === lockedCards[1]!.id,
+    )!;
+    expect(effectiveWorldCardCost(reopened, released.state)).toBe(reopened.cost);
   });
 });
