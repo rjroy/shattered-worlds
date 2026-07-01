@@ -105,10 +105,10 @@ export function withoutAppliedKeyword<C extends Card>(card: C, name: KeywordName
   const next = existing.filter((k) => k.name !== name);
   if (next.length === existing.length) return card;
   if (next.length === 0) {
-    const { appliedKeywords: _dropped, ...rest } = card;
-    return rest as C;
+    return { ...card, appliedKeywords: [] };
+  } else {
+    return { ...card, appliedKeywords: next };
   }
-  return { ...card, appliedKeywords: next } as C;
 }
 
 /** The lifetime of the card's applied keyword `name`, or 0 when absent. */

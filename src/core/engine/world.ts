@@ -108,6 +108,7 @@ export function createWorld(
     keywordGuard: 0,
     progressDealtThisTurn: 0,
     pendingBoonChoices: [],
+    pendingKeywordNextWorldCard: [],
     // The per-world end-turn passive (Tidal Memory). reduce() never sees
     // WorldData, so it is threaded here once. Default None for every other world.
     endOfTurnPassive: world.onEndOfTurnPassive ?? { kind: "None" },

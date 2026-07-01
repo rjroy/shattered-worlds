@@ -117,21 +117,21 @@ export function drawWorld(state: GameState, n: number): { state: GameState; even
     // then clear it (consume-and-clear, mirroring resolveForceDestroy). When the
     // flag is absent (every non-Eden draw) this branch never runs and the event
     // stream is byte-identical.
-    const pendingKeyword = current.pendingKeywordNextWorldCard;
+    const pendingKeywords = current.pendingKeywordNextWorldCard;
     let card = pulled;
-    if (pendingKeyword !== undefined) {
-      card = withAppliedKeyword(pulled, {
-        name: pendingKeyword.keyword,
-        value: pendingKeyword.value,
+    if (pendingKeywords?.length ?? 0 > 0) {
+      card = pendingKeywords.reduce((partial, kw) => withAppliedKeyword(partial, kw), card);
+      current = { ...current, pendingKeywordNextWorldCard: [] };
+      const newEvents = pendingKeywords.map((kw) => {
+        return {
+          type: "KeywordApplied",
+          ids: [card.id],
+          templateIds: [card.templateId],
+          keyword: kw.name,
+          value: kw.value,
+        } as GameEvent;
       });
-      current = { ...current, pendingKeywordNextWorldCard: undefined };
-      pendingKeywordEvents.push({
-        type: "KeywordApplied",
-        ids: [card.id],
-        templateIds: [card.templateId],
-        keyword: pendingKeyword.keyword,
-        value: pendingKeyword.value,
-      });
+      pendingKeywordEvents.push(...newEvents);
     }
 
     current = {

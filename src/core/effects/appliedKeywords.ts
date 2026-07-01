@@ -123,7 +123,10 @@ export class ApplyKeywordHandler extends EffectHandler<ApplyKeywordEffect> {
         return {
           state: {
             ...state,
-            pendingKeywordNextWorldCard: { keyword: effect.keyword, value: effect.value },
+            pendingKeywordNextWorldCard: [
+              ...state.pendingKeywordNextWorldCard,
+              { name: effect.keyword, value: effect.value },
+            ],
           },
           events: [],
         };

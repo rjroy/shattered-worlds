@@ -59,7 +59,7 @@ const HUD_TOOLTIPS = {
 interface PowerUpIndicator {
   container: Phaser.GameObjects.Container;
   countText: Phaser.GameObjects.Text;
-  icon: Phaser.GameObjects.Image;
+  icon?: Phaser.GameObjects.Image;
 }
 
 export class HUDView extends Phaser.GameObjects.Container {
@@ -72,6 +72,7 @@ export class HUDView extends Phaser.GameObjects.Container {
   private forceDestroyIndicator: PowerUpIndicator | undefined;
   private lightIndicator: PowerUpIndicator | undefined;
   private heatIndicator: PowerUpIndicator | undefined;
+  private keywordIndicators: Record<string, PowerUpIndicator> = {};
   private powerUpPanel: Phaser.GameObjects.NineSlice;
 
   constructor(scene: Phaser.Scene) {
@@ -167,7 +168,9 @@ export class HUDView extends Phaser.GameObjects.Container {
     if (state.light > 0) {
       if (this.lightIndicator === undefined) {
         this.lightIndicator = this.addPowerUp("effect-icon-light");
-        addTooltip(this.scene, this.lightIndicator.icon, HUD_TOOLTIPS.light);
+        if (this.lightIndicator.icon) {
+          addTooltip(this.scene, this.lightIndicator.icon, HUD_TOOLTIPS.light);
+        }
       }
       this.setPowerUpValue(this.lightIndicator, state.light);
     } else if (this.lightIndicator !== undefined) {
@@ -176,7 +179,9 @@ export class HUDView extends Phaser.GameObjects.Container {
     if (state.heat > 0) {
       if (this.heatIndicator === undefined) {
         this.heatIndicator = this.addPowerUp("effect-icon-heat");
-        addTooltip(this.scene, this.heatIndicator.icon, HUD_TOOLTIPS.heat);
+        if (this.heatIndicator.icon) {
+          addTooltip(this.scene, this.heatIndicator.icon, HUD_TOOLTIPS.heat);
+        }
       }
       this.setPowerUpValue(this.heatIndicator, state.heat);
     } else if (this.heatIndicator !== undefined) {
@@ -185,7 +190,9 @@ export class HUDView extends Phaser.GameObjects.Container {
     if (state.braceCharges > 0) {
       if (this.braceIndicator === undefined) {
         this.braceIndicator = this.addPowerUp("effect-icon-brace");
-        addTooltip(this.scene, this.braceIndicator.icon, HUD_TOOLTIPS.brace);
+        if (this.braceIndicator.icon) {
+          addTooltip(this.scene, this.braceIndicator.icon, HUD_TOOLTIPS.brace);
+        }
       }
       this.setPowerUpValue(this.braceIndicator, state.braceCharges);
     } else {
@@ -196,13 +203,27 @@ export class HUDView extends Phaser.GameObjects.Container {
     if (state.pendingForceDestroy > 0) {
       if (this.forceDestroyIndicator === undefined) {
         this.forceDestroyIndicator = this.addPowerUp("effect-icon-destroy");
-        addTooltip(this.scene, this.forceDestroyIndicator.icon, HUD_TOOLTIPS.forceDestroy);
+        if (this.forceDestroyIndicator.icon) {
+          addTooltip(this.scene, this.forceDestroyIndicator.icon, HUD_TOOLTIPS.forceDestroy);
+        }
       }
       this.setPowerUpValue(this.forceDestroyIndicator, state.pendingForceDestroy);
     } else {
       if (this.forceDestroyIndicator !== undefined) {
         this.forceDestroyIndicator.container.setVisible(false);
       }
+    }
+    Object.keys(this.keywordIndicators).forEach((key) => {
+      this.keywordIndicators[key]?.container.setVisible(false);
+    });
+    if (state.pendingKeywordNextWorldCard.length > 0) {
+      state.pendingKeywordNextWorldCard.forEach((kw) => {
+        if (kw.value ?? 0 > 0) {
+          const indicator = this.keywordIndicators[kw.name] ?? this.addKeyword(kw.name);
+          this.keywordIndicators[kw.name] = indicator;
+          this.setPowerUpValue(indicator, kw.value ?? 0);
+        }
+      });
     }
     let minX: number | undefined = undefined;
     let maxX: number | undefined = undefined;
@@ -254,6 +275,40 @@ export class HUDView extends Phaser.GameObjects.Container {
     this.powerUps.add(container);
 
     const indicator: PowerUpIndicator = { container, countText, icon };
+    this.powerUpIndicators.push(indicator);
+    return indicator;
+  }
+
+  private addKeyword(keyword: string): PowerUpIndicator {
+    const kwStyle = textStyle({
+      fontFamily: FONTS.monospace,
+      fontSize: "16px",
+      fontStyle: "bold",
+      color: TEXT.textPenalty,
+    });
+    const style = textStyle({
+      fontFamily: FONTS.monospace,
+      fontSize: "16px",
+      fontStyle: "bold",
+      color: TEXT.textLight,
+    });
+    const container = this.scene.add.container(0, 0);
+    const keytext = this.scene.add
+      .text(0, 0, keyword, kwStyle)
+      .setDisplaySize(HUD_POWER_UPS.iconSize, HUD_POWER_UPS.iconSize);
+    const countText = this.scene.add.text(
+      HUD_POWER_UPS.iconSize + HUD_POWER_UPS.countGap,
+      0,
+      "",
+      style,
+    );
+
+    keytext.setOrigin(0, 0.5);
+    countText.setOrigin(0, 0.5);
+    container.add([keytext, countText]);
+    this.powerUps.add(container);
+
+    const indicator: PowerUpIndicator = { container, countText };
     this.powerUpIndicators.push(indicator);
     return indicator;
   }
