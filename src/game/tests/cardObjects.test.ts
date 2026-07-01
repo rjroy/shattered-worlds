@@ -239,7 +239,7 @@ function makeDrawAllHarness(state: GameState): {
   scene.worldRowOffset = 0;
   scene.playerRowOffset = 0;
   scene.cardObjects = new Map();
-  scene.playerCardDisplaySignatures = new Map();
+  scene.cardDisplaySignatures = new Map();
   scene.modalChooser = null;
   scene.discardChooser = null;
   scene.boonChoiceView = null;
@@ -947,6 +947,51 @@ describe("TableScene effective player-card layout", () => {
       playerCards.slice(0, 5).map((card) => card.id),
     );
     expect(harness.playerRows.at(-1)?.map((card) => card.id)).toContain(snapshot.id);
+  });
+});
+
+describe("TableScene applied-keyword display refresh", () => {
+  // World card containers persist across drawAll cycles (see obtainCardContainer),
+  // so a state change invisible to the container's construction args (e.g. Alarm
+  // applied/removed by ApplyKeyword/RemoveKeyword after the card is already on the
+  // table) must trigger a rebuild, or the on-face keyword label goes stale even
+  // though core state is correct. Regression coverage for that gap.
+  it("rebuilds a world card's container when RemoveKeyword clears an applied keyword", () => {
+    const alarmed = makeWorldCard({
+      id: "alarmed-1",
+      appliedKeywords: [{ name: "Alarm", value: 2 }],
+    });
+    const state = makeCoreState({ hand: [alarmed] });
+    const harness = makeDrawAllHarness(state);
+    const scene = harness.scene as typeof harness.scene & { game_: { state: GameState } };
+
+    harness.scene.drawAll();
+    const beforeView = scene.cardObjects.get(alarmed.id);
+    expect(beforeView).toBeInstanceOf(CardView);
+
+    const cleared: WorldCard = { ...alarmed, appliedKeywords: [] };
+    scene.game_.state = { ...scene.game_.state, hand: [cleared] };
+    harness.scene.drawAll();
+    const afterView = scene.cardObjects.get(alarmed.id);
+
+    expect(afterView).toBeInstanceOf(CardView);
+    expect(afterView).not.toBe(beforeView);
+  });
+
+  it("keeps the same container when no display-relevant field changes", () => {
+    const worldCard = makeWorldCard({ id: "steady-1" });
+    const state = makeCoreState({ hand: [worldCard] });
+    const harness = makeDrawAllHarness(state);
+    const scene = harness.scene as typeof harness.scene & { game_: { state: GameState } };
+
+    harness.scene.drawAll();
+    const beforeView = scene.cardObjects.get(worldCard.id);
+
+    scene.game_.state = { ...scene.game_.state, hand: [{ ...worldCard }] };
+    harness.scene.drawAll();
+    const afterView = scene.cardObjects.get(worldCard.id);
+
+    expect(afterView).toBe(beforeView);
   });
 });
 
@@ -2523,6 +2568,7 @@ function makeMintState(): GameState {
     keywordGuard: 0,
     progressDealtThisTurn: 0,
     pendingBoonChoices: [],
+    pendingKeywordNextWorldCard: [],
     endOfTurnPassive: { kind: "None" },
     runModifiers: DEFAULT_RUN_MODIFIERS,
     turnPlayHistory: { cardsPlayedThisTurn: 0, byTemplateId: {} },

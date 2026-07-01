@@ -219,7 +219,7 @@ export class HUDView extends Phaser.GameObjects.Container {
     });
     if (state.pendingKeywordNextWorldCard.length > 0) {
       state.pendingKeywordNextWorldCard.forEach((kw) => {
-        if (kw.value ?? 0 > 0) {
+        if ((kw.value ?? 0) > 0) {
           const indicator = this.keywordIndicators[kw.name] ?? this.addKeyword(kw.name);
           this.keywordIndicators[kw.name] = indicator;
           this.setPowerUpValue(indicator, kw.value ?? 0);
@@ -230,7 +230,7 @@ export class HUDView extends Phaser.GameObjects.Container {
       if (this.guardIndicator === undefined) {
         this.guardIndicator = this.addKeyword("Guard");
       }
-      this.setPowerUpValue(this.guardIndicator, state.pendingForceDestroy);
+      this.setPowerUpValue(this.guardIndicator, state.keywordGuard);
     } else {
       if (this.guardIndicator !== undefined) {
         this.guardIndicator.container.setVisible(false);

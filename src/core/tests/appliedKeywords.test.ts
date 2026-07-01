@@ -148,13 +148,13 @@ describe("ApplyKeyword", () => {
 
     // Apply now: no card changes, no event — only the queue flag is set.
     const queued = applyEffect(catalog, state, queue);
-    expect(queued.state.pendingKeywordNextWorldCard).toEqual({ keyword: "Spore", value: 3 });
+    expect(queued.state.pendingKeywordNextWorldCard).toEqual([{ name: "Spore", value: 3 }]);
     expect(queued.events).toHaveLength(0);
     expect(queued.state.hand).toHaveLength(0);
 
     // The next world card pulled into hand is stamped and the flag is cleared.
     const drawn = drawWorld(queued.state, 1);
-    expect(drawn.state.pendingKeywordNextWorldCard).toBeUndefined();
+    expect(drawn.state.pendingKeywordNextWorldCard).toEqual([]);
     const card20 = drawn.state.hand.find((c) => c.id === "20")!;
     expect(appliedKeywordValue(card20, "Spore")).toBe(3);
 

@@ -119,7 +119,7 @@ export function drawWorld(state: GameState, n: number): { state: GameState; even
     // stream is byte-identical.
     const pendingKeywords = current.pendingKeywordNextWorldCard;
     let card = pulled;
-    if (pendingKeywords?.length ?? 0 > 0) {
+    if (pendingKeywords.length > 0) {
       card = pendingKeywords.reduce((partial, kw) => withAppliedKeyword(partial, kw), card);
       current = { ...current, pendingKeywordNextWorldCard: [] };
       const newEvents = pendingKeywords.map((kw) => {
