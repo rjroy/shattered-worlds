@@ -180,10 +180,7 @@ export class KeywordGateHandler extends EffectHandler<KeywordGateEffect> {
   override apply(ctx: EffectContext, effect: KeywordGateEffect): EffectResult {
     const { state } = ctx;
     // NOTE: zone = "hand" is the only legal value right now.
-
-    console.log(`testing: ${state.hand.map((c) => c.id).join(", ")}`);
     const total = state.hand.reduce((sum, c) => sum + appliedKeywordValue(c, effect.keyword), 0);
-    console.log(`>>> Total ${effect.keyword} = ${total}`);
     if (total < effect.min) return { state, events: [] };
 
     if (state.keywordGuard > 0) {
@@ -195,7 +192,6 @@ export class KeywordGateHandler extends EffectHandler<KeywordGateEffect> {
       };
     }
 
-    console.log(`BOOM ${effect.then.kind}`);
     return ctx.apply(ctx, effect.then);
   }
 
