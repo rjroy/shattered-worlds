@@ -174,7 +174,11 @@ describe("New Derelict isolate effects", () => {
     const badge = catalog["Override Badge"]!;
     const route = catalog["Emergency Route"]!;
     if (badge.kind !== "player" || route.kind !== "player") throw new Error("rewards missing");
-    const released = applyEffect(catalog, { ...state, hand: [hazard] }, badge.effect, hazard.id);
+    const released = applyEffect(catalog, { ...state, hand: [hazard] }, badge.effect, {
+      type: "PlayCard",
+      cardId: badge.name,
+      targetId: hazard.id,
+    });
     expect(appliedKeywordValue(released.state.hand[0]!, "Lockdown")).toBe(0);
     const queued = applyEffect(catalog, state, route.effect);
     expect(queued.state.pendingKeywordNextWorldCard).toContainEqual({ name: "Lockdown", value: 1 });
