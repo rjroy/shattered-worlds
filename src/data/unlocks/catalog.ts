@@ -140,7 +140,6 @@ export function resolveStarterDeckId(
   profile: UnlocksProfile,
   catalog: readonly UnlockDefinition[],
 ): string | undefined {
-  console.log(`testing: ${profile.activated.join(", ")}`);
   for (const id of profile.activated) {
     const def = catalog.find((candidate) => candidate.id === id);
     if (def?.effect.type === "starterDeckOverride") return def.effect.starterDeckId;
@@ -164,7 +163,6 @@ export function canActivate(
   catalog: readonly UnlockDefinition[],
 ): boolean {
   // Only 1 starter deck is allowed at a time.
-  console.log(`testing: ${profile.activated.join(", ")}`);
   if (
     def?.effect.type === "starterDeckOverride" &&
     resolveStarterDeckId(profile, catalog) !== undefined

@@ -24,34 +24,28 @@
     "id": "first-big-box",
     "name": "First Shopping Trip",
     "description": "Win your first run of the Big Box.",
-    "conditions": [
-      { "statId": "outcome", "operator": "is", "value": "won" },
-      { "statId": "worldId", "operator": "is", "value": "zombie-big-box" }
-    ],
+    "conditions": [{ "statId": "world.zombie-big-box.wins", "operator": "gte", "value": 1 }],
     "reward": { "items": [{ "type": "memoryFragments", "amount": 5 }] }
   },
   {
     "id": "big-box-tier-2",
     "name": "Frequent Shopper",
     "description": "Win the Big Box 5 or more times.",
-    "conditions": [{ "statId": "world.big-box.wins", "operator": "gte", "value": 5 }],
+    "conditions": [{ "statId": "world.zombie-big-box.wins", "operator": "gte", "value": 5 }],
     "reward": { "items": [{ "type": "memoryFragments", "amount": 10 }] }
   },
   {
     "id": "big-box-tier-3",
     "name": "Secret Shopper",
     "description": "Win the Big Box 10 or more times.",
-    "conditions": [{ "statId": "world.big-box.wins", "operator": "gte", "value": 10 }],
+    "conditions": [{ "statId": "world.zombie-big-box.wins", "operator": "gte", "value": 10 }],
     "reward": { "items": [{ "type": "memoryFragments", "amount": 20 }] }
   },
   {
     "id": "first-bird-building",
     "name": "First Flight",
     "description": "Win your first run of Last Day at the Office.",
-    "conditions": [
-      { "statId": "outcome", "operator": "is", "value": "won" },
-      { "statId": "worldId", "operator": "is", "value": "bird-building" }
-    ],
+    "conditions": [{ "statId": "world.bird-building.wins", "operator": "gte", "value": 1 }],
     "reward": { "items": [{ "type": "memoryFragments", "amount": 5 }] }
   },
   {
@@ -72,10 +66,7 @@
     "id": "first-highway-volcano",
     "name": "First Lava Rush",
     "description": "Win your first run of the Highway Eruption.",
-    "conditions": [
-      { "statId": "outcome", "operator": "is", "value": "won" },
-      { "statId": "worldId", "operator": "is", "value": "highway-volcano" }
-    ],
+    "conditions": [{ "statId": "world.highway-volcano.wins", "operator": "gte", "value": 1 }],
     "reward": { "items": [{ "type": "memoryFragments", "amount": 5 }] }
   },
   {
@@ -96,10 +87,7 @@
     "id": "first-overgrown-mall",
     "name": "First Mall Rat",
     "description": "Win your first run of the Mall Reclaimnation.",
-    "conditions": [
-      { "statId": "outcome", "operator": "is", "value": "won" },
-      { "statId": "worldId", "operator": "is", "value": "overgrown-mall" }
-    ],
+    "conditions": [{ "statId": "world.overgrown-mall.wins", "operator": "gte", "value": 1 }],
     "reward": { "items": [{ "type": "memoryFragments", "amount": 10 }] }
   },
   {
@@ -120,10 +108,7 @@
     "id": "first-fog-beach-party",
     "name": "First Beach Party",
     "description": "Win your first run of the Fog Beach Party.",
-    "conditions": [
-      { "statId": "outcome", "operator": "is", "value": "won" },
-      { "statId": "worldId", "operator": "is", "value": "fog-beach-party" }
-    ],
+    "conditions": [{ "statId": "world.fog-beach-party.wins", "operator": "gte", "value": 1 }],
     "reward": { "items": [{ "type": "memoryFragments", "amount": 10 }] }
   },
   {
@@ -145,8 +130,7 @@
     "name": "First Thaw",
     "description": "Win your first run of the Whiteout Parking Garage.",
     "conditions": [
-      { "statId": "outcome", "operator": "is", "value": "won" },
-      { "statId": "worldId", "operator": "is", "value": "whiteout-parking-garage" }
+      { "statId": "world.whiteout-parking-garage.wins", "operator": "gte", "value": 1 }
     ],
     "reward": { "items": [{ "type": "memoryFragments", "amount": 10 }] }
   },
@@ -172,10 +156,7 @@
     "id": "first-the-tidal-archive",
     "name": "First Flood",
     "description": "Win your first run of The Tidal Archive.",
-    "conditions": [
-      { "statId": "outcome", "operator": "is", "value": "won" },
-      { "statId": "worldId", "operator": "is", "value": "the-tidal-archive" }
-    ],
+    "conditions": [{ "statId": "world.the-tidal-archive.wins", "operator": "gte", "value": 1 }],
     "reward": { "items": [{ "type": "memoryFragments", "amount": 15 }] }
   },
   {
@@ -196,10 +177,7 @@
     "id": "first-the-ember-orcharc",
     "name": "First Harvest",
     "description": "Win your first run of The Ember Orchard.",
-    "conditions": [
-      { "statId": "outcome", "operator": "is", "value": "won" },
-      { "statId": "worldId", "operator": "is", "value": "the-ember-orchard" }
-    ],
+    "conditions": [{ "statId": "world.the-ember-orchard.wins", "operator": "gte", "value": 1 }],
     "reward": { "items": [{ "type": "memoryFragments", "amount": 15 }] }
   },
   {
@@ -221,8 +199,7 @@
     "name": "First Metropolis",
     "description": "Win your first run of the City of Sleeping Giants.",
     "conditions": [
-      { "statId": "outcome", "operator": "is", "value": "won" },
-      { "statId": "worldId", "operator": "is", "value": "city-of-sleeping-giants" }
+      { "statId": "world.city-of-sleeping-giants.wins", "operator": "gte", "value": 1 }
     ],
     "reward": { "items": [{ "type": "memoryFragments", "amount": 15 }] }
   },
@@ -248,10 +225,7 @@
     "id": "first-eden-prime",
     "name": "First Disaster",
     "description": "Win your first run of the Eden Prime.",
-    "conditions": [
-      { "statId": "outcome", "operator": "is", "value": "won" },
-      { "statId": "worldId", "operator": "is", "value": "eden-prime" }
-    ],
+    "conditions": [{ "statId": "world.eden-prime.wins", "operator": "gte", "value": 1 }],
     "reward": { "items": [{ "type": "memoryFragments", "amount": 20 }] }
   },
   {
@@ -272,10 +246,7 @@
     "id": "first-new-derelict",
     "name": "First Lockdown",
     "description": "Win your first run of the New Derelict.",
-    "conditions": [
-      { "statId": "outcome", "operator": "is", "value": "won" },
-      { "statId": "worldId", "operator": "is", "value": "new-derelict" }
-    ],
+    "conditions": [{ "statId": "world.new-derelict.wins", "operator": "gte", "value": 1 }],
     "reward": { "items": [{ "type": "memoryFragments", "amount": 20 }] }
   },
   {

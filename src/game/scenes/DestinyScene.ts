@@ -11,7 +11,7 @@ import {
 } from "../../data/unlocks/catalog";
 import type { UnlockDefinition, UnlockEffect } from "../../data/unlocks/types";
 import type { FeatsStore } from "../runtime/featsProfile";
-import { isUnlocksProfile, type UnlocksStore } from "../runtime/unlocksProfile";
+import { type UnlocksStore } from "../runtime/unlocksProfile";
 import { unlockCardState } from "../view/unlockShop";
 import { CANVAS_W, CANVAS_H } from "../view/layout";
 import { FONTS } from "../view/fonts";
