@@ -123,7 +123,7 @@ The threat resurfaces next turn rather than replacing the card in hand. Canonica
 
 **C1:** The effect vocabulary is defined by the `CardEffect` union type in [`src/core/model/types.ts`](../../src/core/model/types.ts). This list below is organized by domain for readability. Add new kinds only when a theme needs mechanics that don't map to any existing one; that requires wiring an engine handler.
 
-Persistent modifiers are card-field behavior, not `CardEffect` entries. They continuously alter a card's effective read model while their condition holds and therefore belong on the world-card template/runtime shape rather than in a triggered hook.
+Persistent modifiers are keyword-registry behavior, not `CardEffect` entries. They are declared once per keyword in the centralized `KEYWORD_COST_MODIFIERS` registry and apply uniformly to any card carrying that keyword, whether authored in `keywords` or added at runtime through `appliedKeywords`.
 
 <details>
 <summary>Complete effect kinds (expand)</summary>
@@ -158,7 +158,7 @@ Persistent modifiers are card-field behavior, not `CardEffect` entries. They con
 
 **C2a:** Authored keywords are strings in `keywords`: `"Name"` or `"Name:N"`. A bare keyword has no value; a numeric keyword parses to `{ name, value }`. Applied keywords use the same structured `{ name, value }` shape in `appliedKeywords` and are written by effects at runtime; authoring JSON should not pre-fill `appliedKeywords`. Transient applied keywords such as `Alarm` decay at turn start or can be removed by `RemoveKeyword`. Persistent applied keywords such as `Lockdown` skip turn-start decay and remain until explicitly removed by `RemoveKeyword` or until the card leaves play. Currently `Concealed` uses an authored value (Light depth), while `Alarm` uses its applied value as a transient lifetime and `Lockdown` uses presence as persistent state.
 
-**C3:** Every world card defines `onDiscarded`, `onCleared`, `onPartialClear`, `onEndOfTurn`, and `onDraw`; use `{ "kind": "None" }` when a hook does nothing. Player cards define `effect`. A world card may also declare a world-agnostic `persistent` modifier. The first modifier vocabulary entry is `ClearCostPerKeyword`, which adjusts effective clear cost per other hand card carrying a named keyword while this card also carries it; worlds that omit the field are unchanged.
+**C3:** Every world card defines `onDiscarded`, `onCleared`, `onPartialClear`, `onEndOfTurn`, and `onDraw`; use `{ "kind": "None" }` when a hook does nothing. Player cards define `effect`. A keyword may carry a registered cost modifier in `KEYWORD_COST_MODIFIERS`; any card carrying that keyword, whether authored or applied, is taxed automatically with no per-template authoring step. `WorldCard` no longer has a `persistent` field.
 
 **C3a:** A world may define a per-world **end-turn passive** via the optional root field `onEndOfTurnPassive: CardEffect` on the card source (default `{ "kind": "None" }`). It runs once each turn after unretained player cards are discarded and before the turn-start refill, threaded onto `GameState.endOfTurnPassive` at `createWorld` time (the reducer never sees `WorldData`). The Tidal Archive uses it for Tidal Memory: `{ "kind": "RecallPlayerDiscard", "policy": "latest" }` recalls the most recent discard to the top of the deck every turn. Worlds that omit it are byte-identical to before — the `None` passive emits no events.
 

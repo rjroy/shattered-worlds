@@ -1,11 +1,18 @@
-import { describe, expect, it } from "bun:test";
+import { describe, expect, it, mock } from "bun:test";
 import { BoonChoiceView } from "../view/BoonChoiceView";
-import { TableScene } from "../scenes/TableScene";
 import { selectTheme } from "../view/themes/themeManifest";
 import { rarityStyle } from "../view/rarity";
-import { RARITY_STROKE_WIDTH } from "../view/CardView";
+import { CardView, RARITY_STROKE_WIDTH } from "../view/CardView";
 import { DEFAULT_RUN_MODIFIERS } from "../../data/unlocks/types";
 import type { Action, CardTemplate, GameState } from "../../core/index";
+
+// TableScene only needs the audio manifest at runtime. Mock that boundary so
+// this headless view suite does not ask Bun to parse Vite-managed media assets.
+mock.module("../data/audioManifest", () => ({
+  mainThemeMusic: { key: "music-main-theme", url: "/assets/audio/main-theme.mp3" },
+  worldMusicManifest: {},
+}));
+const { TableScene } = await import("../scenes/TableScene");
 
 interface FakeGameObject {
   readonly kind: string;
@@ -19,6 +26,7 @@ interface FakeGameObject {
   displayHeight: number;
   strokeWidth: number;
   strokeColor: number;
+  visible: boolean;
   handlers: Record<string, () => void>;
   parentContainer?: unknown;
   setOrigin(...args: unknown[]): FakeGameObject;
@@ -39,7 +47,7 @@ interface FakeGameObject {
   setRounded(...args: unknown[]): FakeGameObject;
   setPosition(x: number, y: number): FakeGameObject;
   setY(y: number): FakeGameObject;
-  setVisible(...args: unknown[]): FakeGameObject;
+  setVisible(visible: boolean): FakeGameObject;
   setText(text: string): FakeGameObject;
   setAbove(...args: unknown[]): FakeGameObject;
   getWrappedText(text: string): string[];
@@ -70,6 +78,7 @@ function makeObject(kind: string, text = ""): FakeGameObject {
     displayHeight: 18,
     strokeWidth: 0,
     strokeColor: 0,
+    visible: true,
     handlers: {},
     setOrigin() {
       return this;
@@ -143,7 +152,8 @@ function makeObject(kind: string, text = ""): FakeGameObject {
       this.y = y;
       return this;
     },
-    setVisible() {
+    setVisible(visible: boolean) {
+      this.visible = visible;
       return this;
     },
     setText(textValue: string) {
@@ -187,6 +197,9 @@ function makeObject(kind: string, text = ""): FakeGameObject {
     },
     add(child: unknown) {
       this.list?.push(child);
+      if (typeof child === "object" && child !== null) {
+        (child as { parentContainer?: unknown }).parentContainer = this;
+      }
       return this;
     },
     destroy() {},
@@ -427,6 +440,49 @@ describe("BoonChoiceView", () => {
       .map((obj) => obj.text);
     expect(renderedText.some((text) => text?.includes("Concealed 3"))).toBe(true);
     expect(renderedText).not.toContain("Concealed:3 · Hidden");
+  });
+
+  it("renders a carried keyword cost modifier and conceals it with the card face", () => {
+    const scene = makeScene();
+    const worldTemplate: CardTemplate = {
+      kind: "world",
+      name: "Sealed Panel",
+      cost: 3,
+      keywords: ["Concealed:3", "Lockdown"],
+      discardable: false,
+      onDiscarded: { kind: "None" },
+      onCleared: { kind: "None" },
+      onEndOfTurn: { kind: "None" },
+      onPartialClear: { kind: "None" },
+      onDraw: { kind: "None" },
+    };
+
+    new BoonChoiceView(scene, {
+      theme: selectTheme("zombie-big-box"),
+      source: "act",
+      bToDiscard: false,
+      options: [{ templateId: "Sealed Panel", template: worldTemplate }],
+      resolveTheme: selectTheme,
+      onChoose() {},
+    });
+
+    const modifierText = scene.objects.find(
+      (obj): obj is FakeGameObject =>
+        (obj as FakeGameObject).kind === "text" &&
+        (obj as FakeGameObject).text ===
+          "Lockdown: +1 cost per other Lockdown card in hand",
+    );
+    expect(modifierText).toBeDefined();
+    const modifierRow = modifierText?.parentContainer as FakeGameObject | undefined;
+    const modifierBlock = modifierRow?.parentContainer as FakeGameObject | undefined;
+    const cardView = scene.objects.find((obj): obj is CardView => obj instanceof CardView);
+    expect(modifierBlock).toBeDefined();
+    expect(cardView).toBeDefined();
+
+    cardView?.applyConcealment(0);
+    expect(modifierBlock?.visible).toBe(false);
+    cardView?.applyConcealment(3);
+    expect(modifierBlock?.visible).toBe(true);
   });
 
   it("dispatches the selected template from pointer selection", () => {

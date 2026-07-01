@@ -148,6 +148,21 @@ describe("New Derelict isolate effects", () => {
     expect(firstCost + secondCost).toBeGreaterThan(isolatedProgress);
   });
 
+  it("taxes a previously untaxed template when it joins a Lockdown cluster", () => {
+    const { catalog, worldData } = buildWorld(WORLD_ID);
+    const { state } = createWorld(catalog, worldData, 2, DEFAULT_RUN_MODIFIERS);
+    const [systemsCard, afterSystems] = mintCard(catalog, state, "Systems Panel");
+    const [bulkheadCard] = mintCard(catalog, afterSystems, "Bulkhead 7-C Seals");
+    if (systemsCard.kind !== "world" || bulkheadCard.kind !== "world") {
+      throw new Error("New Derelict hazard templates must mint world cards");
+    }
+    const systems = locked(systemsCard);
+    const bulkhead = locked(bulkheadCard);
+    const clusteredState = { ...state, hand: [systems, bulkhead] };
+
+    expect(effectiveWorldCardCost(systems, clusteredState)).toBe(systems.cost + 1);
+  });
+
   it("Misfile seals the first hazard and grants Override Badge when cleared", () => {
     const { catalog, worldData } = buildWorld(WORLD_ID);
     const { state } = createWorld(catalog, worldData, 3, DEFAULT_RUN_MODIFIERS);

@@ -312,20 +312,11 @@ describe("effectivePlayerCard", () => {
 });
 
 describe("effectiveWorldCardCost", () => {
-  const locked = (id: string, persistent = true) =>
+  const locked = (id: string) =>
     makeWorldCard({
       id,
       cost: 3,
       appliedKeywords: [{ name: "Lockdown", value: 1 }],
-      ...(persistent
-        ? {
-            persistent: {
-              kind: "ClearCostPerKeyword" as const,
-              keyword: "Lockdown" as const,
-              costPerOther: 1,
-            },
-          }
-        : {}),
     });
 
   it("adds one clear cost per other Locked card", () => {
@@ -335,17 +326,16 @@ describe("effectiveWorldCardCost", () => {
     expect(effectiveWorldCardCost(cards[0]!, makeState({ hand: cards }))).toBe(5);
   });
 
-  it("returns base cost when the card lacks the condition or modifier", () => {
+  it("returns base cost when the card lacks a registered modifier", () => {
     const unlocked = makeWorldCard({
       id: "1",
       cost: 3,
-      persistent: {
-        kind: "ClearCostPerKeyword",
-        keyword: "Lockdown",
-        costPerOther: 1,
-      },
     });
-    const noModifier = locked("2", false);
+    const noModifier = makeWorldCard({
+      id: "2",
+      cost: 3,
+      keywords: [{ name: "Obstructed" }],
+    });
     const state = makeState({ hand: [unlocked, noModifier, locked("3")] });
     expect(effectiveWorldCardCost(unlocked, state)).toBe(3);
     expect(effectiveWorldCardCost(noModifier, state)).toBe(3);

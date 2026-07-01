@@ -9,7 +9,12 @@
  */
 import Phaser from "phaser";
 import type { Card, CardEffect, Keyword, WorldCard } from "../../core/index";
-import { concealOf, PERSISTENT_KEYWORDS } from "../../core/index";
+import {
+  concealOf,
+  KEYWORD_COST_MODIFIERS,
+  keywordNames,
+  PERSISTENT_KEYWORDS,
+} from "../../core/index";
 import { CARD_FX_BASE, effectiveVolume } from "../audio/audioVolume";
 import type { FrameStyle, VisualTheme } from "./themes/theme";
 import { compileEffect, type IconId } from "../../core/view/effectGlyphs";
@@ -516,9 +521,40 @@ export class CardView extends Phaser.GameObjects.Container {
         currY += height + effectLineSpacing;
       }
 
+      const modifierLines = [...new Set(keywordNames(worldCard))].flatMap((name) => {
+        const modifier = KEYWORD_COST_MODIFIERS[name];
+        if (modifier === undefined) return [];
+        return [
+          {
+            tokens: [
+              {
+                kind: "text" as const,
+                text: `${name}: +${modifier.costPerOther} cost per other ${name} card in hand`,
+              },
+            ],
+          },
+        ];
+      });
+      const modifierBlock = addEffectLines(scene, modifierLines, {
+        maxWidth: CARD_W - 18,
+        baseColor: TEXT.textPenalty,
+        fontSize: 12,
+        background: { color: 0x000000, alpha: 0.8 },
+        warnLabel: card.name,
+      });
+      if (modifierBlock.height === 0) {
+        modifierBlock.container.destroy();
+      } else {
+        modifierBlock.container.setPosition(0, currY);
+        this.add(modifierBlock.container);
+        reveal.push(modifierBlock.container);
+        currY += modifierBlock.height + effectLineSpacing;
+      }
+
       // Discard indicator.
       if (worldCard.discardable) {
-        for (const line of addCardText(scene, this, 0, CARD_H / 2 - 22, "click to discard", {
+        const discardY = Math.min(currY, CARD_H / 2 - 22);
+        for (const line of addCardText(scene, this, 0, discardY, "click to discard", {
           fontFamily: FONTS.body,
           fontSize: "9px",
           color: TEXT.textDiscard,

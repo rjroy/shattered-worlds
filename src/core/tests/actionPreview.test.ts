@@ -30,21 +30,14 @@ describe("previewAction", () => {
       name: "Explore",
       effect: { kind: "DealProgress", base: 1 },
     });
-    const persistent = {
-      kind: "ClearCostPerKeyword" as const,
-      keyword: "Lockdown" as const,
-      costPerOther: 1,
-    };
     const target = makeWorldCard({
       id: "1",
       name: "Locked Target",
       cost: 1,
-      persistent,
       appliedKeywords: [{ name: "Lockdown", value: 1 }],
     });
     const sibling = makeWorldCard({
       id: "2",
-      persistent,
       appliedKeywords: [{ name: "Lockdown", value: 1 }],
     });
     const state = makeState({ hand: [explore, target, sibling], energy: 1, progress: {} });
