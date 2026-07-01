@@ -12,8 +12,9 @@
  * Pure core — no Phaser, no DOM. Lint enforces the boundary.
  */
 import { isConcealed } from "../model/keywords";
-import type { CardEffect, CardId, GameState, TargetSpec } from "../model/types";
+import type { CardEffect, CardId, GameEvent, GameState, TargetSpec } from "../model/types";
 import type { EffectLine } from "../view/effectGlyphs";
+import type { PreviewEventSummary, PreviewFormatContext } from "../view/previewFormat";
 import type { CompileContext, ConnectorStyle, EffectContext, EffectResult } from "./EffectContext";
 import { worldCardsInHand } from "./handState";
 
@@ -56,6 +57,11 @@ export abstract class EffectHandler<E extends CardEffect> {
 
   /** The visual connector the play draws toward its target, or none. */
   connectorStyle(_effect: E): ConnectorStyle | null {
+    return null;
+  }
+
+  /** Player-facing preview line(s) for an event this handler emitted, or null. */
+  previewEvent(_event: GameEvent, _ctx: PreviewFormatContext): PreviewEventSummary {
     return null;
   }
 }

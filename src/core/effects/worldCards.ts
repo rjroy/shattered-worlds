@@ -8,6 +8,7 @@ import type {
   WorldCard,
 } from "../model/types";
 import type { EffectLine } from "../view/effectGlyphs";
+import type { PreviewEventSummary, PreviewFormatContext } from "../view/previewFormat";
 import { shuffle } from "../engine/rng";
 import type { CompileContext, ConnectorStyle, EffectContext, EffectResult } from "./EffectContext";
 import { EffectHandler } from "./EffectHandler";
@@ -20,6 +21,41 @@ type DestroySelfEffect = Extract<CardEffect, { kind: "DestroySelf" }>;
 type ForceDestroyEffect = Extract<CardEffect, { kind: "ForceDestroy" }>;
 type ExileTopWorldCardsEffect = Extract<CardEffect, { kind: "ExileTopWorldCards" }>;
 type SurviveWorldEffect = Extract<CardEffect, { kind: "SurviveWorld" }>;
+
+/**
+ * Shared preview copy for `CardDestroyed`. Single source for both call sites:
+ * the destroy handlers' `previewEvent` (the `DestroyCardInHand`/`DestroySelf`
+ * dispatch-stamped instances, via `DestroyInHandLikeHandler` below) and the
+ * `summarizeEvent` switch arm (the unstamped exhaust-branch instance from
+ * `reduce.ts`, which does not pass through dispatch). The rng-selected turn-start
+ * ForceDestroy snatch is stamped `randomized` and takes its own masked path in
+ * `summarizeStampedEvent`, so it never reaches either call site here.
+ */
+export function cardDestroyedLine(
+  event: Extract<GameEvent, { type: "CardDestroyed" }>,
+  context: PreviewFormatContext,
+): readonly string[] {
+  return [
+    `Destroy ${event.ids.length} ${context.plural("card", event.ids.length)}: ${context.listNames(
+      context.namesFromIds(event.ids, event.templateIds),
+    )}`,
+  ];
+}
+
+/**
+ * Shared base for the two in-hand destroy kinds (`DestroyCardInHand`,
+ * `DestroySelf`). Both emit `CardDestroyed` through the `destroyInHand()` helper
+ * with identical preview copy, so the `previewEvent` override lives here once and
+ * both `sourceKind`s resolve to the same method via the EFFECTS registry. Mirrors
+ * `DamageLikeHandler` in damage.ts. Stays abstract: `apply` / `describe` /
+ * `compile` differ per kind.
+ */
+abstract class DestroyInHandLikeHandler<E extends CardEffect> extends EffectHandler<E> {
+  override previewEvent(event: GameEvent, ctx: PreviewFormatContext): PreviewEventSummary {
+    if (event.type !== "CardDestroyed") return null;
+    return cardDestroyedLine(event, ctx);
+  }
+}
 
 export function returnToActiveWorldDeck(state: GameState, ids: readonly CardId[]): EffectResult {
   if (ids.length === 0) {
@@ -75,6 +111,15 @@ export class ReturnWorldCardsHandler extends EffectHandler<ReturnWorldCardsEffec
     return returnToActiveWorldDeck(ctx.state, ctx.returnIds ?? []);
   }
 
+  override previewEvent(event: GameEvent, ctx: PreviewFormatContext): PreviewEventSummary {
+    if (event.type !== "WorldCardsReturned") return null;
+    return [
+      `Return ${event.ids.length} world ${ctx.plural("card", event.ids.length)}: ${ctx.listNames(
+        ctx.namesFromIds(event.ids, event.templateIds),
+      )}`,
+    ];
+  }
+
   override describe(effect: ReturnWorldCardsEffect): string[] {
     return [describeReturn(effect.min, effect.max)];
   }
@@ -104,7 +149,7 @@ export class ReturnWorldCardsHandler extends EffectHandler<ReturnWorldCardsEffec
   }
 }
 
-export class DestroyCardInHandHandler extends EffectHandler<DestroyCardInHandEffect> {
+export class DestroyCardInHandHandler extends DestroyInHandLikeHandler<DestroyCardInHandEffect> {
   override apply(ctx: EffectContext, _effect: DestroyCardInHandEffect): EffectResult {
     return destroyInHand(ctx.state, ctx.destroyIds ?? []);
   }
@@ -150,7 +195,7 @@ export class DestroyCardInHandHandler extends EffectHandler<DestroyCardInHandEff
   }
 }
 
-export class DestroySelfHandler extends EffectHandler<DestroySelfEffect> {
+export class DestroySelfHandler extends DestroyInHandLikeHandler<DestroySelfEffect> {
   override apply(ctx: EffectContext, _effect: DestroySelfEffect): EffectResult {
     return destroyInHand(ctx.state, ctx.selfId ? [ctx.selfId] : []);
   }
@@ -223,6 +268,11 @@ export class ExileTopWorldCardsHandler extends EffectHandler<ExileTopWorldCardsE
       { type: "WorldCardsExiled", ids: exiledIds, templateIds, revealedFromHidden: true },
     ];
     return { state: current, events };
+  }
+
+  override previewEvent(event: GameEvent, ctx: PreviewFormatContext): PreviewEventSummary {
+    if (event.type !== "WorldCardsExiled") return null;
+    return [`Exile top ${event.ids.length} world ${ctx.plural("card", event.ids.length)}`];
   }
 
   override describe(effect: ExileTopWorldCardsEffect): string[] {

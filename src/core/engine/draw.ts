@@ -1,5 +1,6 @@
 import type { CardId, CardTemplateId, GameEvent, GameState, WorldCard } from "../model/types";
 import { effectiveHandSize, WORLD_CONSTS } from "./world";
+import { withAppliedKeyword } from "../model/keywords";
 import { shuffle } from "./rng";
 
 // ---------------------------------------------------------------------------
@@ -86,6 +87,7 @@ export function drawWorld(state: GameState, n: number): { state: GameState; even
   const events: GameEvent[] = [];
   const drawnIds: string[] = [];
   const templateIds: CardTemplateId[] = [];
+  const pendingKeywordEvents: GameEvent[] = [];
   let remaining = n;
 
   while (remaining > 0) {
@@ -108,7 +110,30 @@ export function drawWorld(state: GameState, n: number): { state: GameState; even
     }
 
     // noUncheckedIndexedAccess: worldDraw is non-empty here (guarded above).
-    const card = current.worldDraw[0]!;
+    const pulled = current.worldDraw[0]!;
+
+    // Eden Prime — consume a queued "next world card" keyword (ApplyKeyword
+    // target "nextWorldCard"). Stamp the FIRST world card pulled while the flag is set,
+    // then clear it (consume-and-clear, mirroring resolveForceDestroy). When the
+    // flag is absent (every non-Eden draw) this branch never runs and the event
+    // stream is byte-identical.
+    const pendingKeyword = current.pendingKeywordNextWorldCard;
+    let card = pulled;
+    if (pendingKeyword !== undefined) {
+      card = withAppliedKeyword(pulled, {
+        name: pendingKeyword.keyword,
+        value: pendingKeyword.value,
+      });
+      current = { ...current, pendingKeywordNextWorldCard: undefined };
+      pendingKeywordEvents.push({
+        type: "KeywordApplied",
+        ids: [card.id],
+        templateIds: [card.templateId],
+        keyword: pendingKeyword.keyword,
+        value: pendingKeyword.value,
+      });
+    }
+
     current = {
       ...current,
       worldDraw: current.worldDraw.slice(1),
@@ -128,6 +153,7 @@ export function drawWorld(state: GameState, n: number): { state: GameState; even
       bHazard: true,
       revealedFromHidden: true,
     });
+    events.push(...pendingKeywordEvents);
   }
 
   return { state: current, events };

@@ -1,13 +1,15 @@
-import type { CardEffect, GameState } from "../model/types";
+import type { CardEffect, GameEvent, GameState } from "../model/types";
 import type { EffectLine } from "../view/effectGlyphs";
+import type { PreviewEventSummary, PreviewFormatContext } from "../view/previewFormat";
 import type { CompileContext, EffectContext, EffectResult } from "./EffectContext";
 import { EffectHandler } from "./EffectHandler";
-import { icon, main, value } from "./tokens";
+import { icon, main, text, value } from "./tokens";
 
 type HealEffect = Extract<CardEffect, { kind: "Heal" }>;
 type GainEnergyEffect = Extract<CardEffect, { kind: "GainEnergy" }>;
 type BraceEffect = Extract<CardEffect, { kind: "Brace" }>;
 type GainLightEffect = Extract<CardEffect, { kind: "GainLight" }>;
+type GainKeywordGuardEffect = Extract<CardEffect, { kind: "GainKeywordGuard" }>;
 
 export function heal(state: GameState, n: number): EffectResult {
   const newHp = state.hp + n;
@@ -31,6 +33,11 @@ export function gainEnergy(state: GameState, n: number): EffectResult {
 export class HealHandler extends EffectHandler<HealEffect> {
   override apply(ctx: EffectContext, effect: HealEffect): EffectResult {
     return heal(ctx.state, effect.amount);
+  }
+
+  override previewEvent(event: GameEvent, _ctx: PreviewFormatContext): PreviewEventSummary {
+    if (event.type !== "HealReceived") return null;
+    return [`Heal ${event.amount} HP`];
   }
 
   override describe(effect: HealEffect): string[] {
@@ -89,5 +96,30 @@ export class BraceHandler extends EffectHandler<BraceEffect> {
 
   override compile(effect: BraceEffect, _ctx: CompileContext): EffectLine[] {
     return [main([value(`+${effect.amount}`, "brace"), icon("brace")])];
+  }
+}
+
+export class GainKeywordGuardHandler extends EffectHandler<GainKeywordGuardEffect> {
+  override apply(ctx: EffectContext, effect: GainKeywordGuardEffect): EffectResult {
+    const keywordGuard = ctx.state.keywordGuard + effect.amount;
+    const current: GameState = { ...ctx.state, keywordGuard };
+    return { state: current, events: [{ type: "keywordGuardChanged", keywordGuard }] };
+  }
+
+  override previewEvent(event: GameEvent, _ctx: PreviewFormatContext): PreviewEventSummary {
+    if (event.type !== "keywordGuardChanged") return null;
+    return [`Keyword Guard now ${event.keywordGuard}`];
+  }
+
+  override describe(effect: GainKeywordGuardEffect): string[] {
+    return [
+      effect.amount === 1
+        ? "Gain an Keyword Guard (absorb the next Keyword trigger)"
+        : `Gain ${effect.amount} Keyword Guards`,
+    ];
+  }
+
+  override compile(effect: GainKeywordGuardEffect, _ctx: CompileContext): EffectLine[] {
+    return [main([value(`+${effect.amount}`, "brace"), text("Keyword Guard")])];
   }
 }

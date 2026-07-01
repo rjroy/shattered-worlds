@@ -9,7 +9,7 @@ export type CardId = string;
 // 'Zombie' | 'Find Baseball Bat' | 'The Walker' | 'Door'
 export type CardTemplateId = string;
 
-export type KeywordName = "Obstructed" | "Creature" | "Slow" | "Spore" | "Concealed";
+export type KeywordName = "Obstructed" | "Creature" | "Slow" | "Spore" | "Concealed" | "Alarm";
 
 // A keyword as it lives on a minted card: a name plus an optional numeric
 // value (e.g. "Concealed:3" authors as { name: "Concealed", value: 3 }).
@@ -120,7 +120,36 @@ export type CardEffect =
       kind: "RecallPlayerDiscard";
       count?: number;
       policy?: "latest" | "random" | "lowestCost" | "highestCost" | "panicFirst";
-    };
+    }
+  // Eden Prime — applied-keyword family. `ApplyKeyword` stamps a transient
+  // keyword (e.g. Alarm) onto cards. `value` is the lifetime in turn-start ticks
+  // (see appliedKeywords / tickAppliedKeywords). Targets:
+  //   "hand"               — every card currently in hand
+  //   "self"               — the world card whose hook is firing (ctx.selfId)
+  //   "firstWorldCardInHand" — the world card in hand with the smallest mint id
+  //   "nextWorldCard"      — deferred: stamps the next world card pulled into
+  //                          hand (queued via pendingKeywordNextWorldCard, applied
+  //                          in drawWorld), not any card present now.
+  | {
+      kind: "ApplyKeyword";
+      keyword: KeywordName;
+      value: number;
+      target: "hand" | "nextWorldCard" | "self" | "firstWorldCardInHand";
+    }
+  // Fires `then` only when at least `min` cards in `zone` carry `keyword`
+  // (authored OR applied). An available keywordGuard charge absorbs the trigger:
+  // the charge is spent and `then` is suppressed (the greed disruption is
+  // defused). Below `min` it is a silent no-op.
+  | { kind: "KeywordGate"; keyword: KeywordName; min: number; zone: "hand"; then: CardEffect }
+  // Fires `then` only when progressDealtThisTurn >= min. A greed signal that
+  // reads the per-turn progress meter; it never consumes keywordGuard.
+  | { kind: "ProgressGate"; min: number; then: CardEffect }
+  // Strips an applied `keyword` from up to `amount` cards in the hand, in
+  // ascending mint-id order. Only removes applied entries, never authored ones.
+  | { kind: "RemoveKeyword"; keyword: KeywordName; target: "hand"; amount: number }
+  // Grants keywordGuard charges (a GameState counter, like braceCharges) that
+  // absorb KeywordGate triggers.
+  | { kind: "GainKeywordGuard"; amount: number };
 
 export interface PlayerCard {
   kind: "player";
@@ -143,6 +172,11 @@ export interface PlayerCard {
   // Always present on minted cards (empty when the template omits keywords),
   // matching WorldCard so consumers never need undefined checks.
   keywords: readonly Keyword[];
+  // Transient keywords stamped at runtime (e.g. Alarm), distinct from the
+  // authored `keywords` array. Absent on minted cards (mirrors `frozen`); each
+  // entry's `value` is its remaining lifetime in turn-start ticks. hasKeyword /
+  // keywordNames union this set with `keywords`.
+  appliedKeywords?: readonly Keyword[];
   // Always concrete on minted cards (template.rarity ?? "common").
   rarity: RarityTier;
   fx?: CardFx[];
@@ -156,6 +190,10 @@ export interface WorldCard {
   insetKey: string | undefined;
   cost: number;
   keywords: readonly Keyword[];
+  // Transient keywords stamped at runtime (e.g. Alarm), distinct from the
+  // authored `keywords` array. Absent on minted cards; each entry's `value` is
+  // its remaining lifetime in turn-start ticks. See PlayerCard.appliedKeywords.
+  appliedKeywords?: readonly Keyword[];
   discardable: boolean;
   // When false, ExileTopWorldCards skips this card in place. Defaults to true
   // at mint time (template.canExile ?? true). Set to false for persistent cards
@@ -235,6 +273,22 @@ export interface GameState {
   // Charges that absorb ForceDestroy snatches before they destroy player
   // cards. Granted by the Brace effect; consumed in resolveForceDestroy.
   braceCharges: number;
+  // Eden Prime — charges that absorb a KeywordGate (Alarm) trigger before it
+  // disrupts. Granted by GainKeywordGuard; consumed inside KeywordGate. Mirrors
+  // braceCharges; 0 everywhere but Eden Prime.
+  keywordGuard: number;
+  // Eden Prime — running total of Progress dealt this turn, incremented at the
+  // single dealProgress() choke point and read by ProgressGate. Reset to 0 at
+  // the turn boundary alongside turnPlayHistory.
+  progressDealtThisTurn: number;
+  // Eden Prime — lifetime queued by ApplyKeyword target "nextWorldCard". The
+  // next world card pulled into hand (drawWorld) is stamped with Alarm at this
+  // value, then the flag is cleared. Omitted (absent) when no Alarm is queued;
+  // the explicit `| undefined` allows the consume-and-clear reset under
+  // exactOptionalPropertyTypes (mirrors pendingForceDestroySource).
+  pendingKeywordNextWorldCard?:
+    | { readonly keyword: KeywordName; readonly value: number }
+    | undefined;
   pendingBoonChoices: readonly PendingBoonChoice[];
   // The per-world end-turn passive, threaded onto state once by createWorld
   // (reduce() does not receive WorldData). Defaults to { kind: "None" } for
@@ -378,6 +432,25 @@ export type GameEvent = (
   | { type: "WorldLost"; cause?: WorldLostCause }
   | { type: "BraceChanged"; braceCharges: number }
   | { type: "BraceConsumed"; absorbed: number; remaining: number }
+  // Eden Prime — applied-keyword lifecycle. Mirror the CardsFrozen/CardsThawed
+  // shape (ids + templateIds) so the renderer can target the affected cards,
+  // plus the keyword name (and lifetime, for KeywordApplied).
+  | {
+      type: "KeywordApplied";
+      ids: readonly CardId[];
+      templateIds: readonly CardTemplateId[];
+      keyword: KeywordName;
+      value: number;
+    }
+  | {
+      type: "KeywordRemoved";
+      ids: readonly CardId[];
+      templateIds: readonly CardTemplateId[];
+      keyword: KeywordName;
+    }
+  // Mirrors BraceChanged / BraceConsumed.
+  | { type: "keywordGuardChanged"; keywordGuard: number }
+  | { type: "KeywordGuardConsumed"; absorbed: number; remaining: number }
   | { type: "WorldCardsExiled"; ids: readonly CardId[]; templateIds: readonly CardTemplateId[] }
   | { type: "HealReceived"; amount: number }
   | { type: "HazardAdded"; templateId: CardTemplateId }
@@ -390,6 +463,11 @@ export type GameEvent = (
     }
 ) & {
   readonly sourceCardId?: CardId;
+  // Stamped at the dispatch() boundary (innermost wins), mirroring sourceCardId:
+  // the originating CardEffect kind for events that flow through an effect handler.
+  // Engine-emitted events (turn-start ticks, exhaust, act cascades) bypass
+  // dispatch() and stay unstamped.
+  readonly sourceKind?: CardEffect["kind"];
   // Stamped at the emit site (not at a boundary): within one effect some events
   // are random and some are not, so the flags ride the individual event.
   readonly randomized?: boolean; // outcome chosen via rng at resolution

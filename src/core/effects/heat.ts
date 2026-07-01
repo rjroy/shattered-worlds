@@ -7,6 +7,7 @@ import type {
   TargetSpec,
 } from "../model/types";
 import type { EffectLine } from "../view/effectGlyphs";
+import type { PreviewEventSummary, PreviewFormatContext } from "../view/previewFormat";
 import { shuffle } from "../engine/rng";
 import type { CompileContext, EffectContext, EffectResult } from "./EffectContext";
 import { EffectHandler } from "./EffectHandler";
@@ -16,6 +17,23 @@ import { playerCardsInHand } from "./handState";
 type GainHeatEffect = Extract<CardEffect, { kind: "GainHeat" }>;
 type FreezeCardsEffect = Extract<CardEffect, { kind: "FreezeCards" }>;
 type ThawCardsEffect = Extract<CardEffect, { kind: "ThawCards" }>;
+
+/**
+ * Shared preview copy for `CardsThawed`. Single source for both call sites:
+ * `ThawCardsHandler.previewEvent` (the dispatch-stamped instance) and the
+ * `summarizeEvent` switch arm (the unstamped `thawFrozenCardsAtTurnStart` decay
+ * instance, which does not pass through dispatch).
+ */
+export function cardsThawedLine(
+  event: Extract<GameEvent, { type: "CardsThawed" }>,
+  context: PreviewFormatContext,
+): readonly string[] {
+  return [
+    `Thaw ${event.ids.length} ${context.plural("card", event.ids.length)}: ${context.listNames(
+      context.namesFromIds(event.ids, event.templateIds),
+    )}`,
+  ];
+}
 
 function isFrozen(card: PlayerCard): boolean {
   return (card.frozen ?? 0) > 0;
@@ -108,6 +126,11 @@ export class FreezeCardsHandler extends EffectHandler<FreezeCardsEffect> {
     };
   }
 
+  override previewEvent(event: GameEvent, ctx: PreviewFormatContext): PreviewEventSummary {
+    if (event.type !== "CardsFrozen") return null;
+    return [`Freeze ${event.ids.length} ${ctx.plural("card", event.ids.length)} at random`];
+  }
+
   override describe(effect: FreezeCardsEffect): string[] {
     const noun = effect.amount === 1 ? "card" : "cards";
     return [
@@ -150,6 +173,11 @@ export class ThawCardsHandler extends EffectHandler<ThawCardsEffect> {
       },
     ];
     return { state: { ...ctx.state, hand, heat }, events };
+  }
+
+  override previewEvent(event: GameEvent, ctx: PreviewFormatContext): PreviewEventSummary {
+    if (event.type !== "CardsThawed") return null;
+    return cardsThawedLine(event, ctx);
   }
 
   override describe(effect: ThawCardsEffect): string[] {

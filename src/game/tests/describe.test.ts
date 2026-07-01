@@ -24,6 +24,8 @@ function makeState(progress: Record<string, number> = {}): GameState {
     heat: 0,
     pendingForceDestroy: 0,
     braceCharges: 0,
+    keywordGuard: 0,
+    progressDealtThisTurn: 0,
     pendingBoonChoices: [],
     endOfTurnPassive: { kind: "None" },
     runModifiers: DEFAULT_RUN_MODIFIERS,

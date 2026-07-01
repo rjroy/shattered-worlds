@@ -133,6 +133,11 @@ function dealProgressOf(
     case "ExileTopWorldCards":
     case "ReturnPlayerDiscardToTop":
     case "RecallPlayerDiscard":
+    case "ApplyKeyword":
+    case "KeywordGate":
+    case "ProgressGate":
+    case "RemoveKeyword":
+    case "GainKeywordGuard":
       return null;
   }
 }

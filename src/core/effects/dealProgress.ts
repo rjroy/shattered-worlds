@@ -86,7 +86,14 @@ export function dealProgress(
     { type: "ProgressDealt", hazardId, templateId: hazard.templateId, amount, hazardTurnTotal },
   ];
 
-  let current: GameState = { ...state, progress: newProgress };
+  // Single choke point for the per-turn Progress meter (Eden Prime ProgressGate
+  // reads it). Every progress effect — DealProgress, DealProgressScaled,
+  // DealProgressAll — routes through here, so this is the one place to count.
+  let current: GameState = {
+    ...state,
+    progress: newProgress,
+    progressDealtThisTurn: state.progressDealtThisTurn + amount,
+  };
 
   if (hazardTurnTotal >= hazard.cost) {
     // Remove hazard from hand (excess progress is wasted — do NOT touch progress)

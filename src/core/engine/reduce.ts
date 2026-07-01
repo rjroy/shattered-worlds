@@ -206,6 +206,8 @@ function handleEndTurn(catalog: CardCatalog, state: GameState): ReduceResult {
     playerDiscard: [...unfrozenPlayerCards, ...current.playerDiscard],
     progress: {},
     turnPlayHistory: { cardsPlayedThisTurn: 0, byTemplateId: {} },
+    // Reset the per-turn Progress meter alongside turnPlayHistory (Eden Prime).
+    progressDealtThisTurn: 0,
   };
 
   if (discardedIds.length > 0) {

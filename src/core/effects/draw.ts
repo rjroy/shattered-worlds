@@ -5,6 +5,7 @@ import type { CompileContext, EffectContext, EffectResult } from "./EffectContex
 import { EffectHandler } from "./EffectHandler";
 import { icon, main, text, value } from "./tokens";
 import { playerCardsInHand } from "./handState";
+import { shuffle } from "../engine/rng";
 
 type DrawEffect = Extract<CardEffect, { kind: "Draw" }>;
 type DiscardThenDrawEffect = Extract<CardEffect, { kind: "DiscardThenDraw" }>;
@@ -53,7 +54,19 @@ export class DrawHandler extends EffectHandler<DrawEffect> {
 export class DiscardThenDrawHandler extends EffectHandler<DiscardThenDrawEffect> {
   override apply(ctx: EffectContext, effect: DiscardThenDrawEffect): EffectResult {
     const discardId = ctx.discardId;
-    if (discardId === undefined) return { state: ctx.state, events: [] };
+    if (discardId === undefined) {
+      // If no discardId is provided, choose one at random.
+      const playerCards = ctx.state.hand.filter((c) => c.kind === "player");
+      if (playerCards.length == 0) return { state: ctx.state, events: [] };
+      const [shuffled, nextRng] = shuffle(playerCards, ctx.state.rng);
+      const newDiscardCard = shuffled[0];
+      if (newDiscardCard !== undefined) {
+        const newState = { ...ctx.state, rng: nextRng, discardId: newDiscardCard.id };
+        return this.apply({ ...ctx, state: newState }, effect);
+      } else {
+        return { state: { ...ctx.state, rng: nextRng }, events: [] };
+      }
+    }
 
     const discardedCard = ctx.state.hand.find((c) => c.id === discardId);
     if (discardedCard === undefined) return { state: ctx.state, events: [] };

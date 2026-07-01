@@ -40,6 +40,10 @@ import giantsRealityUrl from "../assets/themes/city-of-sleeping-giants/city-of-s
 import giantsOverlayUrl from "../assets/themes/city-of-sleeping-giants/intrusion-overlay.webp";
 import giantsCardfrontUrl from "../assets/themes/city-of-sleeping-giants/city-of-sleeping-giants-cardfront.webp";
 
+import edenRealityUrl from "../assets/themes/eden-prime/eden-prime-reality.webp";
+import edenOverlayUrl from "../assets/themes/eden-prime/intrusion-overlay.webp";
+import edenCardfrontUrl from "../assets/themes/eden-prime/eden-prime-cardfront.webp";
+
 // ---------------------------------------------------------------------------
 // World inset imports
 // ---------------------------------------------------------------------------
@@ -160,6 +164,20 @@ import giantsInsetBraceTheWardUrl from "../assets/themes/city-of-sleeping-giants
 import giantsInsetBonePinUrl from "../assets/themes/city-of-sleeping-giants/insets/inset-bone-pin.webp";
 import giantsInsetContourMapUrl from "../assets/themes/city-of-sleeping-giants/insets/inset-contour-map.webp";
 
+import edenInsetFruitOfferedTooQuicklyUrl from "../assets/themes/eden-prime/insets/inset-fruit-offered-too-quickly.webp";
+import edenInsetFirstWarningCryUrl from "../assets/themes/eden-prime/insets/inset-first-warning-cry.webp";
+import edenInsetCuriousSwarmUrl from "../assets/themes/eden-prime/insets/inset-curious-swarm.webp";
+import edenInsetTheHerdMisunderstandsUrl from "../assets/themes/eden-prime/insets/inset-the-herd-misunderstands.webp";
+import edenInsetFlowersFaceTheWrongSunUrl from "../assets/themes/eden-prime/insets/inset-flowers-face-the-wrong-sun.webp";
+import edenInsetTheQuietGroveUrl from "../assets/themes/eden-prime/insets/inset-the-quiet-grove.webp";
+import edenInsetParadiseRunsUrl from "../assets/themes/eden-prime/insets/inset-paradise-runs.webp";
+import edenInsetTakeTheFruitUrl from "../assets/themes/eden-prime/insets/inset-take-the-fruit.webp";
+import edenInsetGentleApproachUrl from "../assets/themes/eden-prime/insets/inset-gentle-approach.webp";
+import edenInsetStillnessLessonUrl from "../assets/themes/eden-prime/insets/inset-stillness-lesson.webp";
+import edenInsetFollowTheShadeUrl from "../assets/themes/eden-prime/insets/inset-follow-the-shade.webp";
+import edenInsetHushTheValleyUrl from "../assets/themes/eden-prime/insets/inset-hush-the-valley.webp";
+import edenInsetTreadSoftlyUrl from "../assets/themes/eden-prime/insets/inset-tread-softly.webp";
+
 // ---------------------------------------------------------------------------
 // World music imports
 // ---------------------------------------------------------------------------
@@ -173,6 +191,7 @@ import whiteoutMusicUrl from "../assets/audio/whiteout-parking-garage-music.mp3?
 import orchardMusicUrl from "../assets/audio/the-ember-orchard-music.mp3?url";
 import tidalMusicUrl from "../assets/audio/the-tidal-archive-music.mp3?url";
 import giantsMusicUrl from "../assets/audio/city-of-sleeping-giants-music.mp3?url";
+import edenPrimeMusicUrl from "../assets/audio/eden-prime-music.mp3?url";
 
 // ---------------------------------------------------------------------------
 // Exports
@@ -322,6 +341,23 @@ export const worldAssetUrls: Record<string, string> = {
   "giants-inset-brace-the-ward": giantsInsetBraceTheWardUrl,
   "giants-inset-bone-pin": giantsInsetBonePinUrl,
   "giants-inset-contour-map": giantsInsetContourMapUrl,
+  // eden-prime
+  "eden-prime-bg": edenRealityUrl,
+  "eden-prime-overlay": edenOverlayUrl,
+  "eden-prime-cardfront": edenCardfrontUrl,
+  "eden-inset-fruit-offered-too-quickly": edenInsetFruitOfferedTooQuicklyUrl,
+  "eden-inset-first-warning-cry": edenInsetFirstWarningCryUrl,
+  "eden-inset-curious-swarm": edenInsetCuriousSwarmUrl,
+  "eden-inset-the-herd-misunderstands": edenInsetTheHerdMisunderstandsUrl,
+  "eden-inset-flowers-face-the-wrong-sun": edenInsetFlowersFaceTheWrongSunUrl,
+  "eden-inset-the-quiet-grove": edenInsetTheQuietGroveUrl,
+  "eden-inset-paradise-runs": edenInsetParadiseRunsUrl,
+  "eden-inset-take-the-fruit": edenInsetTakeTheFruitUrl,
+  "eden-inset-gentle-approach": edenInsetGentleApproachUrl,
+  "eden-inset-stillness-lesson": edenInsetStillnessLessonUrl,
+  "eden-inset-follow-the-shade": edenInsetFollowTheShadeUrl,
+  "eden-inset-hush-the-valley": edenInsetHushTheValleyUrl,
+  "eden-inset-tread-softly": edenInsetTreadSoftlyUrl,
 };
 
 export interface WorldMusicAsset {
@@ -340,4 +376,5 @@ export const worldMusicManifest: Record<string, WorldMusicAsset> = {
   "the-tidal-archive": { key: "music-the-tidal-archive", url: tidalMusicUrl },
   "the-ember-orchard": { key: "music-the-ember-orchard", url: orchardMusicUrl },
   "city-of-sleeping-giants": { key: "music-city-of-sleeping-giants", url: giantsMusicUrl },
+  "eden-prime": { key: "music-eden-prime", url: edenPrimeMusicUrl },
 };

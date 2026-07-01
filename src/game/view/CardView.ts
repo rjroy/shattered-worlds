@@ -46,6 +46,11 @@ export function formatKeywords(keywords: readonly Keyword[]): string {
   return keywords.map(formatKeyword).join(" · ");
 }
 
+/** Join a card's applied keywords into the on-face line ("Alarm · Frozen") */
+export function formatAppliedKeywords(card: Card): string | undefined {
+  return card.appliedKeywords?.map(formatKeyword).join(" · ");
+}
+
 // ---------------------------------------------------------------------------
 // Card dimensions
 // ---------------------------------------------------------------------------
@@ -405,7 +410,13 @@ export class CardView extends Phaser.GameObjects.Container {
         CARD_W / 2 - 21,
         CARD_H / 2 - 21,
         String(worldCard.cost),
-        { fontFamily: FONTS.monospace, fontSize: "30px", color: TEXT.textCost, bold: true, originY: 0.5 },
+        {
+          fontFamily: FONTS.monospace,
+          fontSize: "30px",
+          color: TEXT.textCost,
+          bold: true,
+          originY: 0.5,
+        },
       )) {
         reveal.push(line);
       }
@@ -522,6 +533,18 @@ export class CardView extends Phaser.GameObjects.Container {
       // with the live Light, so a card concealed at spawn snaps to fog with no
       // flicker (the table draws once, synchronously, right after creation).
       this.setObjectsVisible(this.fogObjects, false);
+    }
+
+    const appliedKeywordLabel = formatAppliedKeywords(card);
+    if (appliedKeywordLabel !== undefined) {
+      addCardText(scene, this, 0, CARD_H / 2 - 35, appliedKeywordLabel, {
+        fontFamily: FONTS.body,
+        fontSize: "10px",
+        color: "#fff2b8",
+        bold: true,
+        originY: 0.5,
+        background: 0x352045,
+      });
     }
 
     this.playWhileVisible();

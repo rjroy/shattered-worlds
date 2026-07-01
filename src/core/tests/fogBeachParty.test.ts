@@ -79,7 +79,11 @@ describe("fog-beach-party integration", () => {
       );
 
       expect(after.light).toBe(beforeLight + card.effect.amount);
-      expect(events).toContainEqual({ type: "LightChanged", light: after.light });
+      expect(events).toContainEqual({
+        type: "LightChanged",
+        light: after.light,
+        sourceKind: "GainLight",
+      });
     }
   });
 

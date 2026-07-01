@@ -5,7 +5,7 @@ date: 2026-06-10
 status: current
 tags: theme, world, authoring, rules, the-walker, deck, visual-theme, reference
 fg-type: architecture
-fg-sources: .lore/work/specs/overgrown-mall.html, .lore/work/specs/fog-beach-party.html, .lore/work/brainstorm/shard-response-archetypes.html
+fg-sources: .lore/work/specs/overgrown-mall.html, .lore/work/specs/fog-beach-party.html, .lore/work/brainstorm/shard-response-archetypes.html, src/game/assets/themes/README.md, src/game/assets/themes/zombie-big-box/insets/README.md, src/game/assets/themes/highway-volcano/insets/README.md, src/game/assets/themes/bird-building/insets/README.md, src/game/assets/themes/overgrown-mall/insets/README.md, src/game/assets/themes/the-tidal-archive/insets/README.md, src/game/assets/themes/the-ember-orchard/insets/README.md, src/game/assets/themes/city-of-sleeping-giants/insets/README.md
 related: .lore/reference/visual-direction.md, .lore/reference/vision.md
 fg-evidence:
   code:
@@ -77,23 +77,26 @@ Map the world's fiction onto these roles.
 3. **Signature threat creature** - costly world card, usually `Creature` + `Slow`, with end-of-turn pressure and a discard penalty.
 4. **Tool fetch** - `Obstructed` world card that grants the weapon/tool countering the threat.
 5. **Reaction player cards** - rewards gained mid-run, tuned to the threat.
-6. **Signature player verb** - the world's exclusive mechanical identity. This is not a code field; it is an authorship invariant.
+6. **Signature player verb** - the world's *signature* mechanical identity: the main mechanic the world is built around and known for. This is not a code field; it is an authorship invariant. It is exclusivity of *identity*, not of *effects* (see the rule below the table).
 
 | World | Signature verb | Reward-card implication |
 | --- | --- | --- |
 | `zombie-big-box` | sweep and noise | Interact with `Creature`/`Slow` clusters and multi-clear moments |
 | `highway-volcano` | everything is fuel | Convert discards or exhaust triggers into resources |
 | `bird-building` | travel light | Trim hand size, recycle cheap cards, prefer efficiency over force |
-| `overgrown-mall` | prune and profit | Self-pruning `Spore`; `Bloom` scales from Spores; owns `DealProgressScaled` |
-| `fog-beach-party` | reveal and endure | Light economy; owns `GainLight`; reveals `Concealed` hazards |
-| `whiteout-parking-garage` | freeze | Heat economy; owns `GainHeat`, `FreezeCards`, `ThawCards`, frozen cards stop hand usability |
-| `the-tidal-archive` | displace | Owns discard/deck-order recall; rewards set up the top of the player deck deliberately (`ReturnPlayerDiscardToTop`); hazards/passive recall discards automatically (`RecallPlayerDiscard`) |
-| `the-ember-orchard` | incubate | Owns incubation-as-delayed-known-cost: warmth/benefit now that seeds a known future hazard; rewards trade immediate gain for top-decked threats that hatch into stronger cards at end of turn |
-| `city-of-sleeping-giants` | stir | Owns stirring-as-recurrence/escalation from unresolved or exploited body movement: hazards left unresolved (or whose movement is exploited) return and escalate; recurrence is delivered by re-seeding the top of the world deck |
+| `overgrown-mall` | prune and profit | Self-pruning `Spore`; `Bloom` scales from Spores; leads with `DealProgressScaled` |
+| `fog-beach-party` | reveal and endure | Light economy; leads with `GainLight`; reveals `Concealed` hazards |
+| `whiteout-parking-garage` | freeze | Heat economy; leads with `GainHeat`, `FreezeCards`, `ThawCards`, frozen cards stop hand usability |
+| `the-tidal-archive` | displace | Leads with discard/deck-order recall; rewards set up the top of the player deck deliberately (`ReturnPlayerDiscardToTop`); hazards/passive recall discards automatically (`RecallPlayerDiscard`) |
+| `the-ember-orchard` | incubate | Leads with incubation-as-delayed-known-cost: warmth/benefit now that seeds a known future hazard; rewards trade immediate gain for top-decked threats that hatch into stronger cards at end of turn |
+| `city-of-sleeping-giants` | stir | Leads with stirring-as-recurrence/escalation from unresolved or exploited body movement: hazards left unresolved (or whose movement is exploited) return and escalate; recurrence is delivered by re-seeding the top of the world deck |
+| `eden-prime` | startle | Leads with greed-tax escalation: gifts, extra draw, and high-progress turns raise transient `Alarm`; restraint and valve rewards spend or absorb it before hazards startle |
 
-This is a living registry — each new world adds an entry. The verb captures the exclusive mechanical identity of that world; no two worlds should feel interchangeable.
+This is a living registry — each new world adds an entry. The verb captures the *signature* mechanical identity of that world; no two worlds should feel interchangeable.
 
-**SV1:** Enforce the signature verb at authorship time. If a reward card would fit another world's verb, reconsider whether it adds something genuinely new or just duplicates mechanical territory.
+**No mechanic is exclusive; identity is.** There are no off-limits effects or keywords. Any world may use any entry in the effect/keyword vocabulary as a supporting tool. What must stay distinct is each world's *signature* — the main mechanic it is built around. The "leads with"/"signature of" columns elsewhere in this doc record which world a mechanic is the *identity* of; they are not a permission gate. The only constraint is: **do not build a new world's main identity on a mechanic that is already another world's signature.** (A separate, purely mechanical coupling can still make some effects poor fits — see the signature-effects note below — but that is engineering, not ownership.)
+
+**SV1:** Enforce the signature *identity* at authorship time. A reward card may reuse an effect another world is known for as an incidental supporting tool; what to avoid is making that effect the new world's main mechanic. If a card's *identity* would fit another world's verb, redesign it.
 
 ---
 
@@ -122,32 +125,35 @@ The threat resurfaces next turn rather than replacing the card in hand. Canonica
 <details>
 <summary>Complete effect kinds (expand)</summary>
 
-**Progress / Damage:** `DealProgress`, `DealProgressScaled` _(overgrown-mall exclusive)_, `DealProgressAll`, `Damage`, `DamageScaled`
+**Progress / Damage:** `DealProgress`, `DealProgressScaled` _(overgrown-mall signature)_, `DealProgressAll`, `Damage`, `DamageScaled`
 
 **Draw / Return:** `Draw`, `DiscardThenDraw`, `ReturnWorldCards` _(inert on world auto-hooks: it is boon-signed and no-ops when fired from a world card's automatic `onEndOfTurn`/`onClear`/etc. hooks; use `AddWorldCardToDeck { bTop: true }` to re-seed recurrence)_, `ReturnPlayerDiscardToTop` _(Tidal: player-selected recall to draw top)_, `RecallPlayerDiscard` _(Tidal: automatic recall from discard)_
 
-**Resource:** `Heal`, `GainEnergy`, `AddCard`, `AddPlayerCardToTop`, `AddWorldCardToDeck` (use `bTop: true` for top-of-deck placement), `AddThreatToWorldDeck`, `GainRandomCard` _(rolled from named pool)_, `GainLight` _(fog-beach-party exclusive)_, `GainHeat`
+**Resource:** `Heal`, `GainEnergy`, `AddCard`, `AddPlayerCardToTop`, `AddWorldCardToDeck` (use `bTop: true` for top-of-deck placement), `AddThreatToWorldDeck`, `GainRandomCard` _(rolled from named pool)_, `GainLight` _(fog-beach-party signature)_, `GainHeat`, `GainKeywordGuard` _(Eden-introduced general guard charge that absorbs the next passing `Alarm` gate)_
 
 **Hand / discard manipulation:** `DestroyCardInHand`, `ExileTopWorldCards`, `ForceDestroy`, `Brace`
+
+**Applied keywords / gates:** `ApplyKeyword` _(applies a transient keyword to cards in hand, the firing card, the first world card in hand, or the next world card drawn)_, `KeywordGate` _(runs an inner effect when enough cards in hand carry a keyword)_, `ProgressGate` _(runs an inner effect when enough progress has been dealt this turn)_, `RemoveKeyword` _(removes an applied keyword from cards in hand)_
 
 **State change / terminal:** `FreezeCards`, `ThawCards`, `OfferBoon` _(boon selection)_, `Modal` _(player choice between branches)_, `Sequence` _(ordered steps)_, `DestroySelf` _(world card self-removal in onEndOfTurn)_, `SurviveWorld`, `None`
 
 </details>
 
-Theme-owned exclusive effects — reuse across worlds requires coordination:
+**Signature effects.** Each effect below is the *identity* of one world — the mechanic that world is built around. This is **not** a permission gate: any world may use these as supporting tools. The only constraint is identity (do not make one your *main* mechanic if it is already another world's signature; see "No mechanic is exclusive; identity is" above). Two rows also carry a *mechanical coupling* — an engineering fact, separate from the identity point — that makes the effect a poor fit elsewhere regardless of intent.
 
-| Effect | Owner | Note |
+| Effect | Signature of | Note |
 | --- | --- | --- |
-| `DealProgressScaled` | `overgrown-mall` | Exclusive now; others may use it with design review |
-| `GainLight` | `fog-beach-party` | The only way to lift `Concealed:N` depth — tied to Light resource |
-| `GainHeat`, `FreezeCards`, `ThawCards` | `whiteout-parking-garage` | Heat/freeze/thaw economy suite
-| `ReturnPlayerDiscardToTop`, `RecallPlayerDiscard` | `the-tidal-archive` | Owns discard/deck-order recall — moving real player card instances from `playerDiscard` to the top of `playerDraw`
+| `DealProgressScaled` | `overgrown-mall` | Its scaling-from-Spores identity. Freely reusable as a supporting tool. |
+| `GainLight` | `fog-beach-party` | **Coupled:** the only way to lift `Concealed:N` depth. A world that authors `Concealed` hazards must supply a Light source, which makes Light part of that world's identity whether intended or not. |
+| `GainHeat`, `FreezeCards`, `ThawCards` | `whiteout-parking-garage` | **Coupled:** a Heat/freeze/thaw suite; pulling in the suite pulls in the freeze identity. |
+| `ReturnPlayerDiscardToTop`, `RecallPlayerDiscard` | `the-tidal-archive` | Its discard/deck-order recall identity — moving real player card instances from `playerDiscard` to the top of `playerDraw`. |
+| `ApplyKeyword`, `KeywordGate`, `ProgressGate`, `RemoveKeyword`, `GainKeywordGuard` | `eden-prime` | General primitives introduced for Eden's startle identity. Freely reusable as supporting tools, but Eden owns the greed-tax reward space where taking gifts, extra draw, or overextension raises `Alarm` and restraint/valves spend it. |
 
 **C1a:** `DestroySelf` removes the firing world card from hand. It is only meaningful in `onEndOfTurn`, where the engine has a `selfId`.
 
-**C2:** The current keyword vocabulary is `Obstructed`, `Creature`, `Slow`, `Spore`, and `Concealed`. These cover the engine's supported keyword semantics today. Introducing a new keyword is a valid design decision when a theme needs a semantic category that doesn't map to any existing one — but it requires wiring an engine handler.
+**C2:** The current keyword vocabulary is `Obstructed`, `Creature`, `Slow`, `Spore`, `Concealed`, and `Alarm`. `Alarm` is the first transient/applied keyword: it usually lives in a card's runtime `appliedKeywords` field rather than in authored JSON, decays at turn start, and is read by `KeywordGate`/counter helpers through the same keyword API as authored keywords. Introducing a new keyword is a valid design decision when a theme needs a semantic category that doesn't map to any existing one — but it requires wiring parser support plus any engine behavior that should read it.
 
-**C2a:** Keywords are authored as strings in `keywords`: `"Name"` or `"Name:N"`. A bare keyword has no value; a numeric keyword parses to `{ name, value }`. Currently only `Concealed` uses a value (Light depth); future keywords can adopt other structures with engine support.
+**C2a:** Authored keywords are strings in `keywords`: `"Name"` or `"Name:N"`. A bare keyword has no value; a numeric keyword parses to `{ name, value }`. Applied keywords use the same structured `{ name, value }` shape in `appliedKeywords`, but are written by effects at runtime and removed by decay or `RemoveKeyword`; authoring JSON should not pre-fill `appliedKeywords`. Currently `Concealed` uses an authored value (Light depth), while `Alarm` uses its applied value as a transient lifetime.
 
 **C3:** Every world card defines `onDiscarded`, `onCleared`, and `onEndOfTurn`; use `{ "kind": "None" }` when a hook does nothing. Player cards define `effect`.
 
@@ -191,6 +197,18 @@ Optional but common:
 - one inset per themed card
 
 **W2:** Inset keys must be unique and registered. A card's `insetKey` in JSON must have a matching asset binding. Shared cards use shared `inset-*` keys.
+
+### Inset Art Direction
+
+Card insets are thumbnail-first event illustrations, not small reality backdrops. Most themes define per-world inset art guidance in `src/game/assets/themes/<worldId>/insets/README.md`; add or update that README when adding a new inset set.
+
+**W2a:** Author insets as square `600x600` source assets and validate them at the runtime thumbnail scale, especially `100x100`. The subject must still read clearly after downscaling.
+
+**W2b:** Each inset should have one large foreground subject, hazard, tool, or world object; a bold silhouette; a simplified darker background; and only one or two environmental cues. Avoid tiny debris, crowded props, busy skylines/shelves/botany, malformed text, logos, or anything competing with the main subject.
+
+**W2c:** Inset style should match the world's reality/backdrop language while sharpening the theme's identity: a stable palette, a consistent accent color or intrusion wrongness, recurring nouns, and the world's signature verb expressed visually. Examples: `the-tidal-archive` uses displacement, water, shelves, coral bridges, and rare violet map lines; `the-ember-orchard` uses incubating star-fruit, lantern heat, and rare violet-white cores; `city-of-sleeping-giants` uses stone/anatomy blur, vein-roads, bone anchors, violet cracks, and emerald pulse.
+
+**W2d:** Use a repeatable finishing pass for consistency unless the art pipeline changes. Current inset sets are fit to `600x600`, then adjusted with contrast `1.12`, brightness `0.99`, and unsharp mask radius `1.1`, percent `80`, threshold `4`, followed by a `100x100` contact-sheet review.
 
 **W3:** A new world is wired in these places:
 
