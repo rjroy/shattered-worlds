@@ -1131,14 +1131,14 @@
         "keyword": "Alarm",
         "min": 2,
         "zone": "hand",
-        "then": { "kind": "draw", "player": 1, "world": 1 }
+        "then": { "kind": "Draw", "player": 1, "world": 1 }
       },
       "onDraw": {
         "kind": "KeywordGate",
         "keyword": "Alarm",
         "min": 2,
         "zone": "hand",
-        "then": { "kind": "draw", "player": 1, "world": 1 }
+        "then": { "kind": "Draw", "player": 1, "world": 1 }
       },
       "onEndOfTurn": {
         "kind": "KeywordGate",
