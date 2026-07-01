@@ -213,12 +213,22 @@ describe("isWorldUnlocked", () => {
 
 describe("Destiny budget helpers", () => {
   it("sums active weight and ignores unknown ids", () => {
-    expect(activeWeight(["extra-hp", "keyword-bonus", "unknown"], UNLOCK_CATALOG)).toBe(3);
+    expect(
+      activeWeight(
+        { activated: ["extra-hp", "keyword-bonus", "unknown"] } as unknown as UnlocksProfile,
+        UNLOCK_CATALOG,
+      ),
+    ).toBe(3);
   });
 
   it("counts world unlocks as zero active weight", () => {
     expect(
-      activeWeight(["world-fog-beach-party", "world-whiteout-parking-garage"], UNLOCK_CATALOG),
+      activeWeight(
+        {
+          activated: ["world-fog-beach-party", "world-whiteout-parking-garage"],
+        } as unknown as UnlocksProfile,
+        UNLOCK_CATALOG,
+      ),
     ).toBe(0);
   });
 
@@ -226,9 +236,27 @@ describe("Destiny budget helpers", () => {
     const extraHp = UNLOCK_CATALOG.find((def) => def.id === "extra-hp")!;
     const starter = UNLOCK_CATALOG.find((def) => def.id === "starter-footballer")!;
 
-    expect(canActivate(extraHp, ["keyword-bonus"], UNLOCK_CATALOG)).toBe(true);
-    expect(canActivate(starter, ["keyword-bonus", "min-energy"], UNLOCK_CATALOG)).toBe(false);
-    expect(canActivate(extraHp, ["extra-hp"], UNLOCK_CATALOG)).toBe(false);
+    expect(
+      canActivate(
+        extraHp,
+        { activated: ["keyword-bonus"] } as unknown as UnlocksProfile,
+        UNLOCK_CATALOG,
+      ),
+    ).toBe(true);
+    expect(
+      canActivate(
+        starter,
+        { activated: ["keyword-bonus", "min-energy"] } as unknown as UnlocksProfile,
+        UNLOCK_CATALOG,
+      ),
+    ).toBe(false);
+    expect(
+      canActivate(
+        extraHp,
+        { activated: ["extra-hp"] } as unknown as UnlocksProfile,
+        UNLOCK_CATALOG,
+      ),
+    ).toBe(false);
     expect(DESTINY_BUDGET).toBe(5);
   });
 });

@@ -135,7 +135,7 @@ export class DestinyScene extends Phaser.Scene {
 
     const profile = this.unlocksStore.getProfile();
     const balance = computeSpendableBalance(this.featsStore.getProfile(), profile);
-    const used = activeWeight(profile.activated, UNLOCK_CATALOG);
+    const used = activeWeight(profile, UNLOCK_CATALOG);
     const pips = "●".repeat(used) + "○".repeat(Math.max(0, DESTINY_BUDGET - used));
 
     this.addPanel(44, 74, 812, 28);
@@ -360,7 +360,7 @@ export class DestinyScene extends Phaser.Scene {
     profile: ReturnType<UnlocksStore["getProfile"]>,
   ): void {
     const active = profile.activated.includes(def.id);
-    const enabled = active || canActivate(def, profile.activated, UNLOCK_CATALOG);
+    const enabled = active || canActivate(def, profile, UNLOCK_CATALOG);
     const label = active ? "◉ ACTIVE" : "○ inactive";
     const color = active ? TEXT.textReward : enabled ? "#d6b15c" : TEXT.textMuted;
     const toggle = this.add.text(

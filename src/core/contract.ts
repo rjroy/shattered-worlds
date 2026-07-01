@@ -30,6 +30,7 @@ export {
   concealOf,
   isConcealed,
   PERSISTENT_KEYWORDS,
+  KEYWORD_COST_MODIFIERS,
 } from "./model/keywords";
 export { hiddenZones, isHidden } from "./model/observability";
 export { CatalogError } from "./model/errors";

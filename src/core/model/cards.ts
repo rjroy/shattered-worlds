@@ -3,7 +3,6 @@ import type {
   CardFx,
   CardTemplateId,
   GameState,
-  PersistentModifier,
   PlayerCard,
   WorldCard,
 } from "./types";
@@ -40,7 +39,6 @@ export interface PlayerCardTemplate extends BasicCardTemplate {
 export interface WorldCardTemplate extends BasicCardTemplate {
   kind: "world";
   cost: number;
-  persistent?: PersistentModifier;
   // Authored as strings ("Name" or "Name:N"); parsed to structured Keywords at
   // mint.
   keywords: readonly string[];
@@ -103,7 +101,6 @@ export function mintCard(
     name: template.name,
     insetKey: template.insetKey,
     cost: template.cost,
-    ...(template.persistent === undefined ? {} : { persistent: template.persistent }),
     keywords: template.keywords.map(parseKeyword),
     discardable: template.discardable,
     canExile: template.canExile ?? true,

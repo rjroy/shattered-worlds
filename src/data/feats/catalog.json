@@ -247,7 +247,7 @@
   {
     "id": "first-eden-prime",
     "name": "First Disaster",
-    "description": "Win your first run of the Eden Prime .",
+    "description": "Win your first run of the Eden Prime.",
     "conditions": [
       { "statId": "outcome", "operator": "is", "value": "won" },
       { "statId": "worldId", "operator": "is", "value": "eden-prime" }
@@ -266,6 +266,30 @@
     "name": "Poisioned Fruit",
     "description": "Win the Eden Prime 10 or more times.",
     "conditions": [{ "statId": "world.eden-prime.wins", "operator": "gte", "value": 10 }],
+    "reward": { "items": [{ "type": "memoryFragments", "amount": 20 }] }
+  },
+  {
+    "id": "first-new-derelict",
+    "name": "First Lockdown",
+    "description": "Win your first run of the New Derelict.",
+    "conditions": [
+      { "statId": "outcome", "operator": "is", "value": "won" },
+      { "statId": "worldId", "operator": "is", "value": "new-derelict" }
+    ],
+    "reward": { "items": [{ "type": "memoryFragments", "amount": 15 }] }
+  },
+  {
+    "id": "new-derelict-tier-2",
+    "name": "Security Officer",
+    "description": "Win the New Derelict 5 or more times.",
+    "conditions": [{ "statId": "world.new-derelict.wins", "operator": "gte", "value": 5 }],
+    "reward": { "items": [{ "type": "memoryFragments", "amount": 10 }] }
+  },
+  {
+    "id": "new-derelict-tier-3",
+    "name": "Security Chief",
+    "description": "Win the New Derelict 10 or more times.",
+    "conditions": [{ "statId": "world.new-derelict.wins", "operator": "gte", "value": 10 }],
     "reward": { "items": [{ "type": "memoryFragments", "amount": 20 }] }
   },
   {
@@ -374,7 +398,7 @@
     "name": "Zombie Slayer",
     "description": "Defeat 25 Zombies across all runs.",
     "conditions": [{ "statId": "witness.Zombie.resolvedCount", "operator": "gte", "value": 25 }],
-    "reward": { "items": [{ "type": "memoryFragments", "amount": 20 }] }
+    "reward": { "items": [{ "type": "memoryFragments", "amount": 25 }] }
   },
   {
     "id": "bird-slayer",
@@ -383,14 +407,14 @@
     "conditions": [
       { "statId": "witness.Gripping Talon.resolvedCount", "operator": "gte", "value": 25 }
     ],
-    "reward": { "items": [{ "type": "memoryFragments", "amount": 30 }] }
+    "reward": { "items": [{ "type": "memoryFragments", "amount": 35 }] }
   },
   {
     "id": "lava-slayer",
     "name": "Lava Racer",
     "description": "Speed past 25 Lava Flows across all runs.",
     "conditions": [{ "statId": "witness.Lava Flow.resolvedCount", "operator": "gte", "value": 25 }],
-    "reward": { "items": [{ "type": "memoryFragments", "amount": 20 }] }
+    "reward": { "items": [{ "type": "memoryFragments", "amount": 25 }] }
   },
   {
     "id": "plant-slayer",
@@ -399,7 +423,7 @@
     "conditions": [
       { "statId": "witness.Something in the Atrium.resolvedCount", "operator": "gte", "value": 25 }
     ],
-    "reward": { "items": [{ "type": "memoryFragments", "amount": 20 }] }
+    "reward": { "items": [{ "type": "memoryFragments", "amount": 25 }] }
   },
   {
     "id": "mist-slayer",
@@ -408,7 +432,7 @@
     "conditions": [
       { "statId": "witness.Something in the Mist.resolvedCount", "operator": "gte", "value": 25 }
     ],
-    "reward": { "items": [{ "type": "memoryFragments", "amount": 30 }] }
+    "reward": { "items": [{ "type": "memoryFragments", "amount": 35 }] }
   },
   {
     "id": "freeze-slayer",
@@ -417,7 +441,7 @@
     "conditions": [
       { "statId": "witness.The Garage Freezes Shut.resolvedCount", "operator": "gte", "value": 25 }
     ],
-    "reward": { "items": [{ "type": "memoryFragments", "amount": 30 }] }
+    "reward": { "items": [{ "type": "memoryFragments", "amount": 35 }] }
   },
   {
     "id": "giant-slayer",
@@ -426,7 +450,7 @@
     "conditions": [
       { "statId": "witness.The Giant Turns In Sleep.resolvedCount", "operator": "gte", "value": 25 }
     ],
-    "reward": { "items": [{ "type": "memoryFragments", "amount": 40 }] }
+    "reward": { "items": [{ "type": "memoryFragments", "amount": 45 }] }
   },
   {
     "id": "ember-slayer",
@@ -435,7 +459,7 @@
     "conditions": [
       { "statId": "witness.Ground Constellation.resolvedCount", "operator": "gte", "value": 25 }
     ],
-    "reward": { "items": [{ "type": "memoryFragments", "amount": 40 }] }
+    "reward": { "items": [{ "type": "memoryFragments", "amount": 45 }] }
   },
   {
     "id": "tidal-slayer",
@@ -444,7 +468,25 @@
     "conditions": [
       { "statId": "witness.The Same Footprint.resolvedCount", "operator": "gte", "value": 25 }
     ],
-    "reward": { "items": [{ "type": "memoryFragments", "amount": 40 }] }
+    "reward": { "items": [{ "type": "memoryFragments", "amount": 45 }] }
+  },
+  {
+    "id": "eden-slayer",
+    "name": "Herder",
+    "description": "Resolve 25 encounters with Paradise Runs hazards across all runs.",
+    "conditions": [
+      { "statId": "witness.Paradise Runs.resolvedCount", "operator": "gte", "value": 25 }
+    ],
+    "reward": { "items": [{ "type": "memoryFragments", "amount": 45 }] }
+  },
+  {
+    "id": "derelict-slayer",
+    "name": "Lock Breaker",
+    "description": "Resolve 25 encounters with The Order Arrives hazards across all runs.",
+    "conditions": [
+      { "statId": "witness.The Order Arrives.resolvedCount", "operator": "gte", "value": 25 }
+    ],
+    "reward": { "items": [{ "type": "memoryFragments", "amount": 45 }] }
   },
   {
     "id": "lost-in-the-void",

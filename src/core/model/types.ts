@@ -25,7 +25,6 @@ export type Keyword = { name: KeywordName; value?: number };
 
 export type PersistentModifier = {
   kind: "ClearCostPerKeyword";
-  keyword: KeywordName;
   costPerOther: number;
 };
 
@@ -203,7 +202,6 @@ export interface WorldCard {
   name: string;
   insetKey: string | undefined;
   cost: number;
-  persistent?: PersistentModifier;
   keywords: readonly Keyword[];
   // Transient keywords stamped at runtime (e.g. Alarm), distinct from the
   // authored `keywords` array. Absent on minted cards; each entry's `value` is

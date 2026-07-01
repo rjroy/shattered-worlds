@@ -7,7 +7,7 @@
  *
  * Pure core — no Phaser, no DOM.
  */
-import type { Card, Keyword, KeywordName } from "./types";
+import type { Card, Keyword, KeywordName, PersistentModifier } from "./types";
 
 // The closed set of valid keyword names. Kept in sync with `KeywordName`;
 // used at parse time to reject unknown authoring strings.
@@ -22,6 +22,10 @@ export const KEYWORD_NAMES: readonly KeywordName[] = [
 ];
 
 export const PERSISTENT_KEYWORDS: ReadonlySet<KeywordName> = new Set(["Lockdown"]);
+
+export const KEYWORD_COST_MODIFIERS: Partial<Record<KeywordName, PersistentModifier>> = {
+  Lockdown: { kind: "ClearCostPerKeyword", costPerOther: 1 },
+};
 
 function isKeywordName(s: string): s is KeywordName {
   return (KEYWORD_NAMES as readonly string[]).includes(s);

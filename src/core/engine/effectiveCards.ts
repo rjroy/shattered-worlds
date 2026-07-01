@@ -5,16 +5,23 @@ import type {
   PlayerCardModifierTarget,
 } from "../../data/unlocks/types";
 import type { Card, CardEffect, GameState, Keyword, PlayerCard, WorldCard } from "../model/types";
-import { hasKeyword } from "../model/keywords";
+import { hasKeyword, keywordNames, KEYWORD_COST_MODIFIERS } from "../model/keywords";
 
 export function effectiveWorldCardCost(card: WorldCard, state: GameState): number {
-  const modifier = card.persistent;
-  if (modifier === undefined || !hasKeyword(card, modifier.keyword)) return card.cost;
+  // Dedupe: keywordNames concatenates authored + applied lists without
+  // deduping, so a keyword present in both would otherwise double-count.
+  const uniqueNames = new Set(keywordNames(card));
 
-  const matchingCards = state.hand.filter((candidate) =>
-    hasKeyword(candidate, modifier.keyword),
-  ).length;
-  return card.cost + Math.max(0, matchingCards - 1) * modifier.costPerOther;
+  let extraCost = 0;
+  for (const name of uniqueNames) {
+    const modifier = KEYWORD_COST_MODIFIERS[name];
+    if (modifier === undefined) continue;
+
+    const matchingCards = state.hand.filter((candidate) => hasKeyword(candidate, name)).length;
+    extraCost += Math.max(0, matchingCards - 1) * modifier.costPerOther;
+  }
+
+  return card.cost + extraCost;
 }
 
 export function effectivePlayerCard(card: PlayerCard, state: GameState): PlayerCard {
