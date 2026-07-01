@@ -71,8 +71,9 @@ export function spendEnergy(state: GameState, cost: number): EffectResult {
 /**
  * Apply Light decay: light = max(0, light − LIGHT_DECAY), emitting LightChanged
  * ONLY when light was above 0. Emit-on-change is load-bearing for determinism:
- * non-Fog worlds always run with light === 0, so they emit no LightChanged here
- * and their event streams stay byte-identical to the pre-Light engine.
+ * worlds that never raise light always run with light === 0, so they emit no
+ * LightChanged here and their event streams stay byte-identical to the
+ * pre-Light engine.
  */
 function decayLight(state: GameState): EffectResult {
   const floor = state.runModifiers.minLightPerTurn;

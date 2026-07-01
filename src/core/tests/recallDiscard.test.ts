@@ -311,11 +311,11 @@ describe("RecallPlayerDiscard", () => {
   // ---------------------------------------------------------------------------
 
   describe("end-turn passive recall ordering", () => {
-    // A synthetic Tidal-like world: the shared starter deck + a trivial 1-act
-    // composition, plus the Tidal Memory passive. Does not depend on Slice B data.
+    // A synthetic world with an end-turn recall passive: the shared starter
+    // deck + a trivial 1-act composition. Does not depend on Slice B data.
     function passiveWorld(passive: CardEffect): WorldData {
       return {
-        worldId: "synthetic-tidal",
+        worldId: "synthetic-passive-world",
         starterDeck: worldData.starterDeck,
         deckComposition: { acts: [{ cards: [{ templateId: "The Walker", count: 1 }] }] },
         onEndOfTurnPassive: passive,
@@ -363,10 +363,10 @@ describe("RecallPlayerDiscard", () => {
   });
 
   // ---------------------------------------------------------------------------
-  // Non-Tidal regression — REQ-TIDAL-18
+  // Default-passive regression — REQ-TIDAL-18
   // ---------------------------------------------------------------------------
 
-  describe("non-Tidal worlds (default passive)", () => {
+  describe("worlds without an end-turn passive (default passive)", () => {
     it("emit no PlayerDiscardRecalled and an identical end-turn event sequence", () => {
       // Baseline: a real world (zombie-big-box) with the default None passive.
       const { state: base } = createWorld(catalog, worldData, 999);

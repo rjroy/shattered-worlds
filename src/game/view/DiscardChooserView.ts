@@ -1,5 +1,5 @@
 /**
- * Tidal Archive discard-recall chooser (REQ-TIDAL-14).
+ * Discard-recall chooser (REQ-TIDAL-14).
  *
  * A compact overlay listing the player's `playerDiscard` cards so the player can
  * pick which to return to the top of their deck for `ReturnPlayerDiscardToTop`

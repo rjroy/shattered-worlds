@@ -34,6 +34,43 @@ const applyToHand = (target: "hand" | "self" | "firstWorldCardInHand"): CardEffe
 // ---------------------------------------------------------------------------
 
 describe("ApplyKeyword", () => {
+  it("applies persistent Lockdown through every New Derelict target", () => {
+    const effect = (target: "hand" | "self" | "firstWorldCardInHand" | "nextWorldCard") =>
+      ({ kind: "ApplyKeyword", keyword: "Lockdown", value: 1, target }) as const;
+
+    const hand = [makeWorldCard({ id: "2" }), makeWorldCard({ id: "1" })];
+    const handResult = applyEffect(catalog, makeState({ hand }), effect("hand"));
+    expect(handResult.state.hand.every((card) => appliedKeywordValue(card, "Lockdown") === 1)).toBe(
+      true,
+    );
+
+    const selfResult = applyEffect(
+      catalog,
+      makeState({ hand }),
+      effect("self"),
+      undefined,
+      "2",
+    );
+    expect(appliedKeywordValue(selfResult.state.hand[0]!, "Lockdown")).toBe(1);
+    expect(appliedKeywordValue(selfResult.state.hand[1]!, "Lockdown")).toBe(0);
+
+    const firstResult = applyEffect(
+      catalog,
+      makeState({ hand }),
+      effect("firstWorldCardInHand"),
+    );
+    expect(appliedKeywordValue(firstResult.state.hand.find((card) => card.id === "1")!, "Lockdown"))
+      .toBe(1);
+
+    const queued = applyEffect(
+      catalog,
+      makeState({ worldDraw: [makeWorldCard({ id: "3" })] }),
+      effect("nextWorldCard"),
+    );
+    const drawn = drawWorld(queued.state, 1);
+    expect(appliedKeywordValue(drawn.state.hand[0]!, "Lockdown")).toBe(1);
+    expect(drawn.events.some((event) => event.type === "KeywordApplied")).toBe(true);
+  });
   it("target 'hand' alarms every card in hand and emits one event", () => {
     const state = makeState({
       hand: [makeWorldCard({ id: "3" }), makePlayerCard({ id: "4" })],
@@ -287,6 +324,27 @@ describe("ProgressGate", () => {
 // ---------------------------------------------------------------------------
 
 describe("RemoveKeyword", () => {
+  it("removes Lockdown deterministically in ascending numeric id order", () => {
+    const locked = (id: string) =>
+      makeWorldCard({ id, appliedKeywords: [{ name: "Lockdown", value: 1 }] });
+    const state = makeState({ hand: [locked("10"), locked("2"), locked("1")] });
+    const result = applyEffect(catalog, state, {
+      kind: "RemoveKeyword",
+      keyword: "Lockdown",
+      target: "hand",
+      amount: 2,
+    });
+
+    expect(
+      result.state.hand
+        .filter((card) => appliedKeywordValue(card, "Lockdown") > 0)
+        .map((card) => card.id),
+    ).toEqual(["10"]);
+    const removed = result.events.find((event) => event.type === "KeywordRemoved");
+    expect(removed?.type === "KeywordRemoved" && removed.ids).toEqual(["1", "2"]);
+    expect(removed?.type === "KeywordRemoved" && removed.templateIds).toEqual(["1", "2"]);
+    expect(removed?.type === "KeywordRemoved" && removed.keyword).toBe("Lockdown");
+  });
   it("clears applied Alarm from up to `amount` cards in ascending numeric id order", () => {
     const state = makeState({
       hand: [alarmedWorld("3", 2), alarmedWorld("1", 2), alarmedWorld("2", 2)],
@@ -328,6 +386,27 @@ describe("RemoveKeyword", () => {
 // ---------------------------------------------------------------------------
 
 describe("tickAppliedKeywordsAtTurnStart", () => {
+  it("preserves Lockdown while Alarm decays at the actual turn-start boundary", () => {
+    const card = makeWorldCard({
+      id: "1",
+      appliedKeywords: [
+        { name: "Lockdown", value: 1 },
+        { name: "Alarm", value: 1 },
+      ],
+    });
+    const result = tickAppliedKeywordsAtTurnStart(makeState({ hand: [card] }));
+    const after = result.state.hand[0]!;
+
+    expect(appliedKeywordValue(after, "Lockdown")).toBe(1);
+    expect(appliedKeywordValue(after, "Alarm")).toBe(0);
+    expect(result.events).toContainEqual({
+      type: "KeywordRemoved",
+      ids: ["1"],
+      templateIds: ["1"],
+      keyword: "Alarm",
+    });
+  });
+
   it("is a no-op (identical state, no events) when no card carries an applied keyword", () => {
     const state = makeState({ hand: [makeWorldCard({ id: "1" }), makePlayerCard({ id: "2" })] });
     const { state: after, events } = tickAppliedKeywordsAtTurnStart(state);

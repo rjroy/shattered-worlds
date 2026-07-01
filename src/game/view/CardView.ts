@@ -9,7 +9,7 @@
  */
 import Phaser from "phaser";
 import type { Card, CardEffect, Keyword, WorldCard } from "../../core/index";
-import { concealOf } from "../../core/index";
+import { concealOf, PERSISTENT_KEYWORDS } from "../../core/index";
 import { CARD_FX_BASE, effectiveVolume } from "../audio/audioVolume";
 import type { FrameStyle, VisualTheme } from "./themes/theme";
 import { compileEffect, type IconId } from "../../core/view/effectGlyphs";
@@ -38,7 +38,9 @@ import { FONTS } from "./fonts";
  * keyword carries a value (e.g. "Concealed 3"). Keywords are text, never icons.
  */
 export function formatKeyword(keyword: Keyword): string {
-  return keyword.value === undefined ? keyword.name : `${keyword.name} ${keyword.value}`;
+  return keyword.value === undefined || PERSISTENT_KEYWORDS.has(keyword.name)
+    ? keyword.name
+    : `${keyword.name} ${keyword.value}`;
 }
 
 /** Join a card's keywords into the on-face line ("Spore · Slow"). */
@@ -186,6 +188,7 @@ export class CardView extends Phaser.GameObjects.Container {
   private highlightRect: Phaser.GameObjects.Rectangle;
   private rarityRect: Phaser.GameObjects.Rectangle;
   private costRing?: CostRing;
+  private costText?: Phaser.GameObjects.Text;
   private targetGlow?: Phaser.GameObjects.Graphics;
   private emphasized = false;
 
@@ -418,6 +421,7 @@ export class CardView extends Phaser.GameObjects.Container {
           originY: 0.5,
         },
       )) {
+        this.costText = line;
         reveal.push(line);
       }
       for (const line of addCardText(scene, this, CARD_W / 2 - 21, CARD_H / 2 - 3, "to clear", {
@@ -647,6 +651,15 @@ export class CardView extends Phaser.GameObjects.Container {
   updateCostRing(fraction: number, ringAccent: number): void {
     if (this.costRing === undefined) return;
     updateRingObject(this.scene, this.costRing, fraction, ringAccent);
+  }
+
+  /** Reconcile a world card's live effective clear cost and modifier colour. */
+  updateCostLabel(cost: number, baseCost: number): void {
+    if (this.costText === undefined) return;
+    this.costText.setText(String(cost));
+    const color =
+      cost > baseCost ? TEXT.textPenalty : cost < baseCost ? TEXT.textReward : TEXT.textCost;
+    this.costText.setColor(color);
   }
 
   /** Make this hovered legal target the loudest card on the board. */

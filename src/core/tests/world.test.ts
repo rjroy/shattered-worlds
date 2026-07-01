@@ -238,7 +238,7 @@ describe("RunModifiers in createWorld", () => {
 });
 
 // ---------------------------------------------------------------------------
-// 10. Light: initialization, decay clock, and the non-Fog invariant
+// 10. Light: initialization, decay clock, and the no-concealment invariant
 // ---------------------------------------------------------------------------
 
 /** A light-using world descriptor: the zombie world with a starting Light. */
@@ -313,11 +313,12 @@ describe("Light decay clock (startTurn)", () => {
   });
 });
 
-describe("non-Fog Light invariant", () => {
-  it("a non-Fog world runs with light === 0 throughout and emits NO LightChanged", () => {
+describe("no-concealment Light invariant", () => {
+  it("a world without concealment runs with light === 0 throughout and emits NO LightChanged", () => {
     // Play several turns of the real zombie world; light must never move off 0
     // and the event stream must carry no LightChanged at all. This is what keeps
-    // the decay/concealment additions byte-identical for every non-Fog run.
+    // the decay/concealment additions byte-identical for every world that
+    // doesn't use concealment.
     const game = createGame(catalog, worldData, 42);
     expect(game.state.light).toBe(0);
 

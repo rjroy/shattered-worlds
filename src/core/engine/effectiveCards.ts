@@ -4,7 +4,18 @@ import type {
   PlayerCardPatch,
   PlayerCardModifierTarget,
 } from "../../data/unlocks/types";
-import type { Card, CardEffect, GameState, Keyword, PlayerCard } from "../model/types";
+import type { Card, CardEffect, GameState, Keyword, PlayerCard, WorldCard } from "../model/types";
+import { hasKeyword } from "../model/keywords";
+
+export function effectiveWorldCardCost(card: WorldCard, state: GameState): number {
+  const modifier = card.persistent;
+  if (modifier === undefined || !hasKeyword(card, modifier.keyword)) return card.cost;
+
+  const matchingCards = state.hand.filter((candidate) =>
+    hasKeyword(candidate, modifier.keyword),
+  ).length;
+  return card.cost + Math.max(0, matchingCards - 1) * modifier.costPerOther;
+}
 
 export function effectivePlayerCard(card: PlayerCard, state: GameState): PlayerCard {
   let effective: PlayerCard = clonePlayerCard(card);

@@ -1,6 +1,13 @@
 import { describe, expect, it } from "bun:test";
 import type { Card, PlayerCard, WorldCard } from "../model/types";
-import { concealOf, hasKeyword, isConcealed, keywordNames, parseKeyword } from "../model/keywords";
+import {
+  concealOf,
+  hasKeyword,
+  isConcealed,
+  keywordNames,
+  parseKeyword,
+  tickAppliedKeywords,
+} from "../model/keywords";
 
 // ---------------------------------------------------------------------------
 // Helpers — minimal cards built directly, independent of catalog/mint.
@@ -65,6 +72,22 @@ describe("parseKeyword", () => {
   it("throws on an unknown name (with or without a value)", () => {
     expect(() => parseKeyword("Bogus")).toThrow();
     expect(() => parseKeyword("Bogus:2")).toThrow();
+  });
+});
+
+describe("persistent applied keywords", () => {
+  it("keeps Lockdown while decaying Alarm", () => {
+    const card = {
+      ...worldWith([]),
+      appliedKeywords: [
+        { name: "Lockdown" as const, value: 1 },
+        { name: "Alarm" as const, value: 1 },
+      ],
+    };
+
+    expect(tickAppliedKeywords(card).appliedKeywords).toEqual([
+      { name: "Lockdown", value: 1 },
+    ]);
   });
 });
 

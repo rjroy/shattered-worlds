@@ -39,6 +39,12 @@
     "Follow the Shade",
     "Hush the Valley"
   ],
+  "pool-derelict-override": [
+    "Emergency Route",
+    "Override Badge",
+    "Manual Release",
+    "Follow the Checklist"
+  ],
   "pool-ember-cellar": [
     "Leave One",
     "Star-Pruner",

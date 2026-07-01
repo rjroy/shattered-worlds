@@ -5,6 +5,7 @@ import { keywordAppliedLine, keywordRemovedLine } from "../effects/appliedKeywor
 import { cardsThawedLine } from "../effects/heat";
 import { cardDestroyedLine } from "../effects/worldCards";
 import { isConcealed } from "../model/keywords";
+import { effectiveWorldCardCost } from "../engine/effectiveCards";
 import type { Card, CardId, GameEvent, GameState } from "../model/types";
 import type { CardCatalog } from "../model/catalog";
 import type { PreviewEventSummary, PreviewFormatContext } from "./previewFormat";
@@ -475,7 +476,7 @@ function summarizeEvent(event: GameEvent, context: PreviewContext): readonly str
       }
       const card =
         context.beforeCards.get(event.hazardId) ?? context.afterCards.get(event.hazardId);
-      const cost = card?.kind === "world" ? card.cost : undefined;
+      const cost = card?.kind === "world" ? effectiveWorldCardCost(card, context.before) : undefined;
       const progress =
         cost !== undefined ? ` (${Math.min(event.hazardTurnTotal, cost)}/${cost})` : "";
       return [

@@ -1,6 +1,10 @@
 import { describe, expect, it } from "bun:test";
 import { DEFAULT_RUN_MODIFIERS, type PlayerCardModifier } from "../../data/unlocks/types";
-import { effectiveHand, effectivePlayerCard } from "../engine/effectiveCards";
+import {
+  effectiveHand,
+  effectivePlayerCard,
+  effectiveWorldCardCost,
+} from "../engine/effectiveCards";
 import type { GameState, PlayerCard } from "../model/types";
 import { makePlayerCard, makeState, makeWorldCard, mintPlayers } from "./testFixture";
 
@@ -304,5 +308,46 @@ describe("effectivePlayerCard", () => {
     expect(hand[0]).toBe(world);
     expect(hand[1]).toEqual({ ...player, energyCost: 0, modified: true, name: "sprint-free" });
     expect(hand[1]).not.toBe(player);
+  });
+});
+
+describe("effectiveWorldCardCost", () => {
+  const locked = (id: string, persistent = true) =>
+    makeWorldCard({
+      id,
+      cost: 3,
+      appliedKeywords: [{ name: "Lockdown", value: 1 }],
+      ...(persistent
+        ? {
+            persistent: {
+              kind: "ClearCostPerKeyword" as const,
+              keyword: "Lockdown" as const,
+              costPerOther: 1,
+            },
+          }
+        : {}),
+    });
+
+  it("adds one clear cost per other Locked card", () => {
+    const cards = [locked("1"), locked("2"), locked("3")];
+    expect(effectiveWorldCardCost(cards[0]!, makeState({ hand: cards.slice(0, 1) }))).toBe(3);
+    expect(effectiveWorldCardCost(cards[0]!, makeState({ hand: cards.slice(0, 2) }))).toBe(4);
+    expect(effectiveWorldCardCost(cards[0]!, makeState({ hand: cards }))).toBe(5);
+  });
+
+  it("returns base cost when the card lacks the condition or modifier", () => {
+    const unlocked = makeWorldCard({
+      id: "1",
+      cost: 3,
+      persistent: {
+        kind: "ClearCostPerKeyword",
+        keyword: "Lockdown",
+        costPerOther: 1,
+      },
+    });
+    const noModifier = locked("2", false);
+    const state = makeState({ hand: [unlocked, noModifier, locked("3")] });
+    expect(effectiveWorldCardCost(unlocked, state)).toBe(3);
+    expect(effectiveWorldCardCost(noModifier, state)).toBe(3);
   });
 });

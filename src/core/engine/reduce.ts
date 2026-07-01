@@ -212,7 +212,7 @@ function handleEndTurn(catalog: CardCatalog, state: GameState): ReduceResult {
     playerDiscard: [...unfrozenPlayerCards, ...current.playerDiscard],
     progress: {},
     turnPlayHistory: { cardsPlayedThisTurn: 0, byTemplateId: {} },
-    // Reset the per-turn Progress meter alongside turnPlayHistory (Eden Prime).
+    // Reset the per-turn Progress meter alongside turnPlayHistory.
     progressDealtThisTurn: 0,
   };
 
@@ -220,11 +220,12 @@ function handleEndTurn(catalog: CardCatalog, state: GameState): ReduceResult {
     events.push({ type: "CardsDiscarded", cardIds: discardedIds, templateIds });
   }
 
-  // Per-world end-turn passive (Tidal Memory): recall from playerDiscard to the
-  // top of playerDraw, AFTER this turn's cards have been discarded so the tide
-  // can return a card the just-ended turn dropped, and BEFORE the turn-start
-  // refill draws from the top. Skipped entirely (no event) when None, so
-  // non-Tidal worlds produce a byte-identical end-turn event sequence.
+  // Per-world end-turn passive: worlds can configure a recall from
+  // playerDiscard to the top of playerDraw, run AFTER this turn's cards have
+  // been discarded (so it can return a card the just-ended turn dropped) and
+  // BEFORE the turn-start refill draws from the top. Skipped entirely (no
+  // event) when None, so worlds without one produce a byte-identical
+  // end-turn event sequence.
   let afterPassive = stateAfterDiscard;
   if (afterPassive.endOfTurnPassive.kind !== "None") {
     const passiveResult = applyEffect(

@@ -2441,6 +2441,7 @@ interface FakeContainer {
   addedToScene(): void;
   setPosition(x: number, y: number): unknown;
   setScale(s: number): unknown;
+  updateCostLabel(cost: number, baseCost: number): void;
   add(child: unknown): unknown;
   destroy(): void;
 }
@@ -2462,6 +2463,7 @@ function makeFakeContainer(sink: FakeContainer[]): FakeContainer {
       container.scale = s;
       return container;
     },
+    updateCostLabel(): void {},
     add(child: unknown): unknown {
       container.children.push(child);
       return container;

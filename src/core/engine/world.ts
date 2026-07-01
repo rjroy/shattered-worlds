@@ -94,7 +94,7 @@ export function createWorld(
     progress: {},
     hp: WORLD_CONSTS.startHp + mods.extraStartHp,
     energy: mods.extraStartEnergy,
-    // Per-world starting Light. 0 everywhere but Fog (world.startLight unset),
+    // Per-world starting Light. 0 for worlds that leave world.startLight unset,
     // which is the invariant keeping decay and concealment no-ops elsewhere.
     light: (world.startLight ?? 0) + mods.extraStartLight,
     heat: (world.startHeat ?? 0) + mods.extraStartHeat,
@@ -109,7 +109,7 @@ export function createWorld(
     progressDealtThisTurn: 0,
     pendingBoonChoices: [],
     pendingKeywordNextWorldCard: [],
-    // The per-world end-turn passive (Tidal Memory). reduce() never sees
+    // The per-world end-turn passive. reduce() never sees
     // WorldData, so it is threaded here once. Default None for every other world.
     endOfTurnPassive: world.onEndOfTurnPassive ?? { kind: "None" },
     runModifiers: mods,

@@ -36,7 +36,7 @@ export function hiddenZones(state: GameState): readonly (readonly Card[])[] {
 /**
  * Whether a card is hidden from the player: either it lives in a hidden zone
  * (a draw pile or an unreached act) or it is concealed in hand. Concealment is
- * folded in via `isConcealed` rather than reimplemented, so fog visibility
+ * folded in via `isConcealed` rather than reimplemented, so visibility
  * stays defined in exactly one place.
  */
 export function isHidden(card: Card, state: GameState): boolean {

@@ -17,7 +17,12 @@ import { createGameplayRuntime, type GameplayRuntime } from "../runtime/gameplay
 import type { GameplaySession } from "../runtime/gameplaySession";
 import { selectTheme } from "../view/themes/themeManifest";
 import type { VisualTheme } from "../view/themes/theme";
-import { availableActions, effectiveHand, effectivePlayerCard } from "../../core/index";
+import {
+  availableActions,
+  effectiveHand,
+  effectivePlayerCard,
+  effectiveWorldCardCost,
+} from "../../core/index";
 import type {
   Card,
   CardId,
@@ -738,8 +743,10 @@ export class TableScene extends Phaser.Scene {
       // and state.light every cycle since neither has its own change event.
       if (card.kind === "world") {
         const progress = this.game_.state.progress[card.id] ?? 0;
-        const fraction = ringFraction(progress, card.cost);
+        const effectiveCost = effectiveWorldCardCost(card, this.game_.state);
+        const fraction = ringFraction(progress, effectiveCost);
         container.updateCostRing(fraction, this.theme_.frameStyle.ringAccent);
+        container.updateCostLabel(effectiveCost, card.cost);
         container.applyConcealment(this.game_.state.light);
       }
     });
@@ -1155,7 +1162,7 @@ export class TableScene extends Phaser.Scene {
     );
   }
 
-  // The current targeting step when it is a Tidal discard-recall step, else null.
+  // The current targeting step when it is a discard-recall step, else null.
   private activeRecallStep(): Extract<TargetSpec, { kind: "recallTarget" }> | null {
     if (this.sel.phase !== "targeting" || isComplete(this.sel)) return null;
     const step = this.sel.steps[this.sel.stepIdx];

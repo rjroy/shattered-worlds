@@ -1,15 +1,14 @@
 /**
- * Tidal Archive discard-recall effects.
+ * Discard-recall effects, for worlds that displace cards instead of losing them.
  *
  * Mirrors the structure of `worldCards.ts`: one shared zone-move helper
- * (`recallToTop`) plus two handlers. The Tidal signature verb is "displace" —
- * these effects move existing player card *instances* from playerDiscard to the
- * top of playerDraw without minting copies, so a discarded card is never gone,
- * only relocated.
+ * (`recallToTop`) plus two handlers. These effects move existing player card
+ * *instances* from playerDiscard to the top of playerDraw without minting
+ * copies, so a discarded card is never gone, only relocated.
  *
  * `ReturnPlayerDiscardToTop` is the player-selected reward form (the chooser
  * supplies ids). `RecallPlayerDiscard` is the automatic form fired by hazards
- * and the world end-turn passive — never played from hand.
+ * and a world's end-turn passive — never played from hand.
  *
  * Pure core — no Phaser, no DOM. Lint enforces the boundary.
  */
@@ -154,7 +153,7 @@ function resolveAutoRecall(
 }
 
 /**
- * Player-selected recall (Tidal reward cards). Reads ctx.recallIds (validated
+ * Player-selected recall (reward cards). Reads ctx.recallIds (validated
  * against [min,max] by the runtime gate before apply) and moves them to the
  * top of playerDraw. min: 0 makes an empty selection a legal no-op.
  */

@@ -20,7 +20,7 @@ export type StepResult =
   | { kind: "destroyHand"; destroyIds: readonly CardId[] } // undefined = skipped optional destroy
   | { kind: "thawHand"; thawIds: readonly CardId[] }
   | { kind: "returnWorld"; returnIds: readonly CardId[] }
-  | { kind: "recallTarget"; recallIds: readonly CardId[] } // Tidal discard-recall chooser; [] = optional skip
+  | { kind: "recallTarget"; recallIds: readonly CardId[] } // discard-recall chooser; [] = optional skip
   | { kind: "discardPlayer"; discardId: CardId };
 
 export type SelectionState =
@@ -43,7 +43,7 @@ export const IDLE: SelectionState = { phase: "idle" };
 // ---------------------------------------------------------------------------
 
 /**
- * Empty-pile / min:0 flow for the Tidal recall chooser (REQ-TIDAL-14):
+ * Empty-pile / min:0 flow for the recall chooser (REQ-TIDAL-14):
  *
  * The recall chooser targets cards in `playerDiscard`, which this pure state
  * machine cannot see (it has no GameState). So the EMPTY-PILE auto-skip is the

@@ -1,5 +1,5 @@
 /**
- * Eden Prime — the applied-keyword effect family.
+ * The applied-keyword effect family.
  *
  * `Alarm` is the first applied keyword, but nothing here is Alarm-specific: the
  * handlers operate on the general `appliedKeywords` collection (see
@@ -31,6 +31,7 @@ import type {
 } from "../model/types";
 import {
   appliedKeywordValue,
+  PERSISTENT_KEYWORDS,
   tickAppliedKeywords,
   withAppliedKeyword,
   withoutAppliedKeyword,
@@ -171,11 +172,14 @@ export class ApplyKeywordHandler extends EffectHandler<ApplyKeywordEffect> {
   }
 
   override describe(effect: ApplyKeywordEffect): string[] {
-    return [`Apply ${effect.keyword} (${effect.value}) to ${effect.target}`];
+    const suffix = PERSISTENT_KEYWORDS.has(effect.keyword) ? "" : ` (${effect.value})`;
+    return [`Apply ${effect.keyword}${suffix} to ${effect.target}`];
   }
 
   override compile(effect: ApplyKeywordEffect, _ctx: CompileContext): EffectLine[] {
-    return [main([text("apply"), text(effect.keyword), value(`${effect.value}`, "penalty")])];
+    const tokens = [text("apply"), text(effect.keyword)];
+    if (!PERSISTENT_KEYWORDS.has(effect.keyword)) tokens.push(value(`${effect.value}`, "penalty"));
+    return [main(tokens)];
   }
 }
 

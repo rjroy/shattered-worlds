@@ -301,8 +301,9 @@ const WORLD_CONSUME_SCALE = 8;
  *
  * Counting cards-REMAINING (not progress-for-its-own-sake) is deliberate: it
  * rewards genuine consumption and PENALIZES recurrence — a card that recurs back
- * into the deck (tidal/giants) raises the count again, so the agent cannot farm
- * the term by re-progressing recurring cards; it must actually deplete the world.
+ * into the deck (some worlds' recurrence mechanics) raises the count again, so
+ * the agent cannot farm the term by re-progressing recurring cards; it must
+ * actually deplete the world.
  *
  * It is NOT an escape signal (that is `escapeProximity`): it rewards advancing
  * the world even before any `SurviveWorld` door is reachable.

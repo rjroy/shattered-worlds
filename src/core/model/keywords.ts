@@ -11,14 +11,17 @@ import type { Card, Keyword, KeywordName } from "./types";
 
 // The closed set of valid keyword names. Kept in sync with `KeywordName`;
 // used at parse time to reject unknown authoring strings.
-const KEYWORD_NAMES: readonly KeywordName[] = [
+export const KEYWORD_NAMES: readonly KeywordName[] = [
   "Obstructed",
   "Creature",
   "Slow",
   "Spore",
   "Concealed",
   "Alarm",
+  "Lockdown",
 ];
+
+export const PERSISTENT_KEYWORDS: ReadonlySet<KeywordName> = new Set(["Lockdown"]);
 
 function isKeywordName(s: string): s is KeywordName {
   return (KEYWORD_NAMES as readonly string[]).includes(s);
@@ -126,8 +129,10 @@ export function tickAppliedKeywords<C extends Card>(card: C): C {
   const existing = card.appliedKeywords;
   if (existing === undefined || existing.length === 0) return card;
   const next = existing
-    .map((kw) => ({ name: kw.name, value: (kw.value ?? 0) - 1 }))
-    .filter((kw) => kw.value > 0);
+    .map((kw) =>
+      PERSISTENT_KEYWORDS.has(kw.name) ? kw : { name: kw.name, value: (kw.value ?? 0) - 1 },
+    )
+    .filter((kw) => PERSISTENT_KEYWORDS.has(kw.name) || (kw.value ?? 0) > 0);
   if (next.length === 0) {
     const { appliedKeywords: _dropped, ...rest } = card;
     return rest as C;
@@ -137,7 +142,7 @@ export function tickAppliedKeywords<C extends Card>(card: C): C {
 
 /**
  * The card's Concealed depth — the value of its `Concealed` keyword, or 0 when
- * the card carries no `Concealed` keyword (so non-fog cards are never concealed).
+ * the card carries no `Concealed` keyword.
  */
 export function concealOf(card: Card): number {
   const concealed = card.keywords.find((k) => k.name === "Concealed");
@@ -145,7 +150,7 @@ export function concealOf(card: Card): number {
 }
 
 /**
- * Whether the card is hidden by fog at the given Light level. Visibility is
+ * Whether the card is hidden at the given Light level. Visibility is
  * recomputed live from `light` and the keyword — there is no stored "revealed"
  * flag. A card is concealed iff its depth strictly exceeds Light, so a card at
  * `concealOf === light` is REVEALED (the threshold is inclusive of seeing).

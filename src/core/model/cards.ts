@@ -1,4 +1,12 @@
-import type { CardEffect, CardFx, CardTemplateId, GameState, PlayerCard, WorldCard } from "./types";
+import type {
+  CardEffect,
+  CardFx,
+  CardTemplateId,
+  GameState,
+  PersistentModifier,
+  PlayerCard,
+  WorldCard,
+} from "./types";
 import type { CardCatalog } from "./catalog";
 import type { RarityTier } from "./rarity";
 import { parseKeyword } from "./keywords";
@@ -32,6 +40,7 @@ export interface PlayerCardTemplate extends BasicCardTemplate {
 export interface WorldCardTemplate extends BasicCardTemplate {
   kind: "world";
   cost: number;
+  persistent?: PersistentModifier;
   // Authored as strings ("Name" or "Name:N"); parsed to structured Keywords at
   // mint.
   keywords: readonly string[];
@@ -94,6 +103,7 @@ export function mintCard(
     name: template.name,
     insetKey: template.insetKey,
     cost: template.cost,
+    ...(template.persistent === undefined ? {} : { persistent: template.persistent }),
     keywords: template.keywords.map(parseKeyword),
     discardable: template.discardable,
     canExile: template.canExile ?? true,
