@@ -73,6 +73,7 @@ export class HUDView extends Phaser.GameObjects.Container {
   private lightIndicator: PowerUpIndicator | undefined;
   private heatIndicator: PowerUpIndicator | undefined;
   private keywordIndicators: Record<string, PowerUpIndicator> = {};
+  private guardIndicator: PowerUpIndicator | undefined;
   private powerUpPanel: Phaser.GameObjects.NineSlice;
 
   constructor(scene: Phaser.Scene) {
@@ -224,6 +225,16 @@ export class HUDView extends Phaser.GameObjects.Container {
           this.setPowerUpValue(indicator, kw.value ?? 0);
         }
       });
+    }
+    if (state.keywordGuard > 0) {
+      if (this.guardIndicator === undefined) {
+        this.guardIndicator = this.addKeyword("Guard");
+      }
+      this.setPowerUpValue(this.guardIndicator, state.pendingForceDestroy);
+    } else {
+      if (this.guardIndicator !== undefined) {
+        this.guardIndicator.container.setVisible(false);
+      }
     }
     let minX: number | undefined = undefined;
     let maxX: number | undefined = undefined;
