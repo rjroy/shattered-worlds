@@ -2673,6 +2673,7 @@ describe("CardView world-card trigger blocks", () => {
       cost: 3,
       keywords: [],
       discardable: false,
+      onDraw: { kind: "None" },
       onEndOfTurn: { kind: "Damage", amount: 1 },
       onDiscarded: { kind: "None" },
       onCleared: { kind: "GainEnergy", amount: 1 },
@@ -2686,6 +2687,7 @@ describe("CardView world-card trigger blocks", () => {
       cost: 5,
       keywords: [],
       discardable: false,
+      onDraw: { kind: "None" },
       onEndOfTurn: { kind: "Brace", amount: 2 },
       onDiscarded: { kind: "AddThreatToWorldDeck" },
       onCleared: { kind: "ExileTopWorldCards", amount: 1 },
@@ -2789,6 +2791,7 @@ describe("CardView fog-back concealment", () => {
       cost: 3,
       keywords: ["Concealed:3", "Obstructed"],
       discardable: false,
+      onDraw: { kind: "None" },
       onEndOfTurn: { kind: "Damage", amount: 2 },
       onDiscarded: { kind: "None" },
       onCleared: { kind: "None" },
@@ -2800,6 +2803,7 @@ describe("CardView fog-back concealment", () => {
       cost: 2,
       keywords: [],
       discardable: false,
+      onDraw: { kind: "None" },
       onEndOfTurn: { kind: "Damage", amount: 1 },
       onDiscarded: { kind: "None" },
       onCleared: { kind: "None" },
@@ -3162,6 +3166,7 @@ describe("TableScene idle world-card and End Turn previews", () => {
       name: "Decaying Wreck",
       discardable: false,
       onEndOfTurn: { kind: "Damage", amount: 3 },
+      onDraw: { kind: "None" },
     });
     const state = makeCoreState({ hand: [hazard], light: 0 });
     const { scene } = makeSelectionHarness(state);
@@ -3176,6 +3181,7 @@ describe("TableScene idle world-card and End Turn previews", () => {
       id: "idle-discard",
       name: "Brittle Debris",
       discardable: true,
+      onDraw: { kind: "None" },
       onEndOfTurn: { kind: "None" },
       onDiscarded: { kind: "Damage", amount: 4 },
     });
@@ -3197,6 +3203,7 @@ describe("TableScene idle world-card and End Turn previews", () => {
       id: "idle-both",
       name: "Volatile Pile",
       discardable: true,
+      onDraw: { kind: "None" },
       onEndOfTurn: { kind: "Damage", amount: 2 },
       onDiscarded: { kind: "Damage", amount: 6 },
     });
@@ -3215,6 +3222,7 @@ describe("TableScene idle world-card and End Turn previews", () => {
       id: "idle-fog",
       name: "Hidden Terror",
       keywords: [{ name: "Concealed", value: 2 }],
+      onDraw: { kind: "None" },
       onEndOfTurn: { kind: "Damage", amount: 9 },
       onDiscarded: { kind: "Damage", amount: 9 },
     });
@@ -3236,6 +3244,7 @@ describe("TableScene idle world-card and End Turn previews", () => {
       id: "idle-inert",
       name: "Inert Rubble",
       discardable: false,
+      onDraw: { kind: "None" },
       onEndOfTurn: { kind: "None" },
       onDiscarded: { kind: "None" },
     });

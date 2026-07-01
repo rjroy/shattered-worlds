@@ -34,6 +34,7 @@ function world(id: string, discardable = false): WorldCard {
     onCleared: { kind: "None" },
     onEndOfTurn: { kind: "None" },
     onPartialClear: { kind: "None" },
+    onDraw: { kind: "None" },
     rarity: "common",
   };
 }

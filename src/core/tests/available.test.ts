@@ -328,6 +328,7 @@ describe("legalTargets Sprint (modal)", () => {
       onCleared: { kind: "None" },
       onEndOfTurn: { kind: "None" },
       onPartialClear: { kind: "None" },
+      onDraw: { kind: "None" },
       rarity: "common",
     };
     const otherCard: WorldCard = {
@@ -344,6 +345,7 @@ describe("legalTargets Sprint (modal)", () => {
       onCleared: { kind: "None" },
       onEndOfTurn: { kind: "None" },
       onPartialClear: { kind: "None" },
+      onDraw: { kind: "None" },
       rarity: "common",
     };
     const state = { ...s1, hand: [sprint, slowCard, otherCard], energy: 1 };
@@ -890,6 +892,7 @@ function makeExilable(id: string): WorldCard {
     onCleared: { kind: "None" },
     onEndOfTurn: { kind: "None" },
     onPartialClear: { kind: "None" },
+    onDraw: { kind: "None" },
     rarity: "common",
   };
 }

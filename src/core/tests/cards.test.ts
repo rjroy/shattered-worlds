@@ -352,6 +352,7 @@ describe("rarity stamping", () => {
         onCleared: { kind: "None" },
         onEndOfTurn: { kind: "None" },
         onPartialClear: { kind: "None" },
+        onDraw: { kind: "None" },
         rarity: "rare",
       },
     };

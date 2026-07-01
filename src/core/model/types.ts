@@ -403,6 +403,7 @@ export type GameEvent = (
       // presence to mask the rolled template's identity before commit.
       setName?: string;
     }
+  | { type: "PendingCardDestroy"; count: number }
   | { type: "CardDestroyed"; ids: readonly CardId[]; templateIds: readonly CardTemplateId[] }
   | { type: "WorldCardsReturned"; ids: readonly CardId[]; templateIds: readonly CardTemplateId[] }
   | { type: "HpChanged"; hp: number }

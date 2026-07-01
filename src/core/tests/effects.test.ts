@@ -64,6 +64,7 @@ function offerBoonHazard(effect: CardEffect): WorldCard {
     onCleared: effect,
     onEndOfTurn: { kind: "None" },
     onPartialClear: { kind: "None" },
+    onDraw: { kind: "None" },
     rarity: "common",
   };
 }
@@ -94,6 +95,7 @@ function gainRandomCardHazard(effect: CardEffect): WorldCard {
     onCleared: effect,
     onEndOfTurn: { kind: "None" },
     onPartialClear: { kind: "None" },
+    onDraw: { kind: "None" },
     rarity: "common",
   };
 }
@@ -780,6 +782,7 @@ describe("DealProgressAll", () => {
       onCleared: { kind: "None" },
       onEndOfTurn: { kind: "None" },
       onPartialClear: { kind: "None" },
+      onDraw: { kind: "None" },
       rarity: "common",
     };
     // light 0: the card is concealed (5 > 0) and not single-targetable, yet the
@@ -915,6 +918,7 @@ function exilable(id: string): WorldCard {
     onCleared: { kind: "None" },
     onEndOfTurn: { kind: "None" },
     onPartialClear: { kind: "None" },
+    onDraw: { kind: "None" },
     rarity: "common",
   };
 }
@@ -1338,6 +1342,7 @@ describe("OfferBoon", () => {
         onCleared: { kind: "None" },
         onEndOfTurn: { kind: "None" },
         onPartialClear: { kind: "None" },
+        onDraw: { kind: "None" },
       };
     }
 
@@ -1381,6 +1386,7 @@ describe("OfferBoon", () => {
         onCleared: { kind: "None" },
         onEndOfTurn: { kind: "None" },
         onPartialClear: { kind: "None" },
+        onDraw: { kind: "None" },
       };
     }
     const pending = {
@@ -1478,6 +1484,7 @@ describe("GainRandomCard", () => {
         onCleared: { kind: "None" },
         onEndOfTurn: { kind: "None" },
         onPartialClear: { kind: "None" },
+        onDraw: { kind: "None" },
       };
     }
     const before = makeState();

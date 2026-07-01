@@ -59,6 +59,7 @@ function crusherTemplate(damage: number): CardTemplate {
     onCleared: { kind: "None" }, // no SurviveWorld anywhere => unwinnable
     onEndOfTurn: { kind: "Damage", amount: damage },
     onPartialClear: { kind: "None" },
+    onDraw: { kind: "None" },
   };
 }
 
@@ -162,18 +163,22 @@ describe("completeness detects an unwinnable world (REQ-SCC-14)", () => {
     expect(report).toContain("Flagged worlds: 1/1");
   });
 
-  test("a known-winnable world (zombie-big-box) is NOT flagged at the same threshold", () => {
-    const { catalog, worldData } = buildWorld("zombie-big-box");
-    const built: BuiltWorld = { id: "zombie-big-box", catalog, worldData };
-    const [agg] = runCompleteness(params(), [built]);
-    if (agg === undefined) throw new Error("runCompleteness returned no aggregate");
+  test(
+    "a known-winnable world (zombie-big-box) is NOT flagged at the same threshold",
+    () => {
+      const { catalog, worldData } = buildWorld("zombie-big-box");
+      const built: BuiltWorld = { id: "zombie-big-box", catalog, worldData };
+      const [agg] = runCompleteness(params(), [built]);
+      if (agg === undefined) throw new Error("runCompleteness returned no aggregate");
 
-    // The fixture world is winnable, so the same threshold must NOT flag it.
-    expect(agg.wins).toBeGreaterThan(0);
-    expect(agg.wins / agg.games).toBeGreaterThan(THRESHOLD);
+      // The fixture world is winnable, so the same threshold must NOT flag it.
+      expect(agg.wins).toBeGreaterThan(0);
+      expect(agg.wins / agg.games).toBeGreaterThan(THRESHOLD);
 
-    const report = formatReport(params(), [agg]);
-    expect(report).not.toContain("[FLAGGED]");
-    expect(report).toContain("Flagged worlds: 0/1");
-  }, { timeout: 30000 });
+      const report = formatReport(params(), [agg]);
+      expect(report).not.toContain("[FLAGGED]");
+      expect(report).toContain("Flagged worlds: 0/1");
+    },
+    { timeout: 30000 },
+  );
 });

@@ -409,6 +409,7 @@ describe("BoonChoiceView", () => {
       onCleared: { kind: "None" },
       onEndOfTurn: { kind: "None" },
       onPartialClear: { kind: "None" },
+      onDraw: { kind: "None" },
     };
 
     new BoonChoiceView(scene, {

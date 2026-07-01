@@ -216,28 +216,28 @@ function keywordGate(min: number): CardEffect {
 
 describe("Eden Prime — KeywordGate (REQ-EDEN-11,11a)", () => {
   // Counts cards that carry Alarm (applied here). hand has exactly two.
-  const handWithTwoAlarms = () => [
-    alarmedWorld("1", 2),
-    alarmedWorld("2", 2),
+  const handWithTwoAlarm = () => [
+    alarmedWorld("1", 1),
+    alarmedWorld("2", 1),
     makeWorldCard({ id: "3" }),
   ];
 
   it("is a no-op below min", () => {
-    const state = makeState({ hand: handWithTwoAlarms(), hp: 10 });
+    const state = makeState({ hand: handWithTwoAlarm(), hp: 10 });
     const { state: after, events } = applyEffect(catalog, state, keywordGate(3));
     expect(after.hp).toBe(10);
     expect(events).toHaveLength(0);
   });
 
   it("fires at min", () => {
-    const state = makeState({ hand: handWithTwoAlarms(), hp: 10 });
+    const state = makeState({ hand: handWithTwoAlarm(), hp: 10 });
     const { state: after, events } = applyEffect(catalog, state, keywordGate(2));
     expect(after.hp).toBe(15);
     expect(events.some((e) => e.type === "HpChanged")).toBe(true);
   });
 
   it("fires above min", () => {
-    const state = makeState({ hand: handWithTwoAlarms(), hp: 10 });
+    const state = makeState({ hand: handWithTwoAlarm(), hp: 10 });
     const { state: after } = applyEffect(catalog, state, keywordGate(1));
     expect(after.hp).toBe(15);
   });
@@ -508,25 +508,19 @@ describe("Eden Prime — shipped startle patterns (REQ-EDEN-47)", () => {
     const swarm = edenTemplate("Curious Swarm");
     if (swarm.kind !== "world") throw new Error("Curious Swarm missing");
 
-    const calm = makeState({ hp: 10, hand: [makeWorldCard({ id: "1" })] });
+    const swarmCard = makeWorldCard({ id: "1" });
+    const calm = makeState({ hp: 10, hand: [swarmCard] });
     const calmResult = applyEffect(catalog, calm, swarm.onEndOfTurn);
     expect(calmResult.events).toHaveLength(0);
 
     const target = makePlayerCard({ id: "p1" });
     const alarmed = makeState({
-      hand: [alarmedWorld("1", 2), alarmedWorld("2", 2), target],
+      hand: [alarmedWorld("1", 1), alarmedWorld("2", 1), target],
       playerDraw: [makePlayerCard({ id: "d1" }), makePlayerCard({ id: "d2" })],
     });
-    const startled = applyEffect(
-      catalog,
-      alarmed,
-      swarm.onEndOfTurn,
-      { type: "PlayCard", cardId: "source", discardId: target.id },
-      "1",
-    );
+    const startled = applyEffect(catalog, alarmed, swarm.onEndOfTurn, undefined, swarmCard.id);
 
-    expect(startled.events.some((e) => e.type === "CardsDiscarded")).toBe(true);
-    expect(startled.events.some((e) => e.type === "CardsDrawn")).toBe(true);
+    expect(startled.events.some((e) => e.type === "PendingCardDestroy")).toBe(true);
   });
 
   it("The Herd Misunderstands only recurs and adds Panic after Alarm thresholds", () => {

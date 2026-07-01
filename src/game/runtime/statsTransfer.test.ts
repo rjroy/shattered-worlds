@@ -193,7 +193,7 @@ describe("statsTransfer", () => {
         seed: 1,
         appliedModifiers: [],
         timestamp: 0,
-        initialEvents: [{ type: "HazardAdded", templateId: "Zombie" }],
+        initialEvents: [{ type: "HazardAdded", templateId: "Zombie", id: "1" }],
         initialState: stubState,
       }),
     );
@@ -234,7 +234,7 @@ describe("statsTransfer", () => {
         seed: 1,
         appliedModifiers: [],
         timestamp: 0,
-        initialEvents: [{ type: "HazardAdded", templateId: "Ghost" }],
+        initialEvents: [{ type: "HazardAdded", templateId: "Ghost", id: "1" }],
         initialState: stubState,
       }),
     );

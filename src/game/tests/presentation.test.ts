@@ -65,6 +65,7 @@ const worldCard: WorldCard = {
   onCleared: { kind: "None" },
   onEndOfTurn: { kind: "None" },
   onPartialClear: { kind: "None" },
+  onDraw: { kind: "None" },
   rarity: "common",
 };
 
