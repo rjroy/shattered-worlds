@@ -2,7 +2,7 @@ import type { VisualTheme } from "../../../game/view/themes/theme";
 
 export const NEW_DERELICT_THEME: VisualTheme = {
   worldId: "new-derelict",
-  intrusionHue: "#eee8ff",
+  intrusionHue: "#1401ba",
   realityPalette: {
     title: "#e9ffff",
     text: "#b7d8d8",
@@ -10,8 +10,8 @@ export const NEW_DERELICT_THEME: VisualTheme = {
     confirm: "#63d5df",
     cancel: "#ff7766",
   },
-  doorGlowTint: 0xeee8ff,
-  doorTint: 0xa58cff,
+  doorGlowTint: 0x1401ba,
+  doorTint: 0x014bba,
   frameStyle: {
     selectedBorder: 0x63d5df,
     targetBorder: 0x83d9ce,
