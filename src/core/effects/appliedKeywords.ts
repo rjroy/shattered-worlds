@@ -40,6 +40,7 @@ import type { PreviewEventSummary, PreviewFormatContext } from "../view/previewF
 import type { CompileContext, EffectContext, EffectResult } from "./EffectContext";
 import { EffectHandler } from "./EffectHandler";
 import { icon, main, text, value } from "./tokens";
+import { nextInt } from "../engine/rng";
 
 type ApplyKeywordEffect = Extract<CardEffect, { kind: "ApplyKeyword" }>;
 type KeywordGateEffect = Extract<CardEffect, { kind: "KeywordGate" }>;
@@ -149,6 +150,14 @@ export class ApplyKeywordHandler extends EffectHandler<ApplyKeywordEffect> {
           parseInt(candidate.id, 10) < parseInt(lowest.id, 10) ? candidate : lowest,
         );
         return applyToHandIds(state, [first.id], kw);
+      }
+      case "randomWorldCardInHand": {
+        const worldCards = state.hand.filter((c): c is WorldCard => c.kind === "world");
+        if (worldCards.length === 0) return { state, events: [] };
+        const [index, newRng] = nextInt(state.rng, worldCards.length - 1);
+        const afterPick = { ...state, rng: newRng };
+        if (worldCards[index] === undefined) return { state: afterPick, events: [] };
+        return applyToHandIds(afterPick, [worldCards[index].id], kw);
       }
     }
   }

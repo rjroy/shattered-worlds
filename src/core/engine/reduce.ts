@@ -23,16 +23,22 @@ function applyActBoonCascades(catalog: CardCatalog, result: ReduceResult): Reduc
 
   const eventReducer = (curr: ReduceResult, event: GameEvent): ReduceResult => {
     switch (event.type) {
+      case "HazardAdded": {
+        const card = curr.state.hand.find((c) => c.id === event.id);
+        if (card === null || card?.kind !== "world") return curr;
+        if (card.onDraw.kind === "None") return curr;
+        const effectResult = applyEffect(catalog, curr.state, card.onDraw, undefined, card.id);
+        events.push(...effectResult.events);
+        return { state: effectResult.state, events };
+      }
       case "ActAdvanced": {
         const actBoon = curr.state.runModifiers.actBoon;
-        if (actBoon !== null && !hasPendingActBoonChoice(curr.state, event.act)) {
-          const offer = createActBoonOffer(catalog, curr.state, actBoon, event.act);
-          if (offer.event !== null) {
-            events.push(offer.event);
-            return eventReducer({ state: offer.state, events }, offer.event);
-          }
-          return { state: offer.state, events };
-        }
+        if (actBoon === null) return curr;
+        if (hasPendingActBoonChoice(curr.state, event.act)) return curr;
+        const offer = createActBoonOffer(catalog, curr.state, actBoon, event.act);
+        if (offer.event === null) return { state: offer.state, events };
+        events.push(offer.event);
+        return eventReducer({ state: offer.state, events }, offer.event);
       }
     }
 
