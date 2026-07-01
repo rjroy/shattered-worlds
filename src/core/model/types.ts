@@ -127,6 +127,7 @@ export type CardEffect =
   //   "hand"               — every card currently in hand
   //   "self"               — the world card whose hook is firing (ctx.selfId)
   //   "firstWorldCardInHand" — the world card in hand with the smallest mint id
+  //   "randomWorldCardInHand" — a random world card in hand
   //   "nextWorldCard"      — deferred: stamps the next world card pulled into
   //                          hand (queued via pendingKeywordNextWorldCard, applied
   //                          in drawWorld), not any card present now.
@@ -134,7 +135,7 @@ export type CardEffect =
       kind: "ApplyKeyword";
       keyword: KeywordName;
       value: number;
-      target: "hand" | "nextWorldCard" | "self" | "firstWorldCardInHand";
+      target: "hand" | "nextWorldCard" | "self" | "firstWorldCardInHand" | "randomWorldCardInHand";
     }
   // Fires `then` only when at least `min` cards in `zone` carry `keyword`
   // (authored OR applied). An available keywordGuard charge absorbs the trigger:
@@ -203,6 +204,7 @@ export interface WorldCard {
   onCleared: CardEffect;
   onEndOfTurn: CardEffect;
   onPartialClear: CardEffect;
+  onDraw: CardEffect;
   // Always concrete on minted cards (template.rarity ?? "common").
   rarity: RarityTier;
   fx?: CardFx[];
@@ -286,9 +288,7 @@ export interface GameState {
   // value, then the flag is cleared. Omitted (absent) when no Alarm is queued;
   // the explicit `| undefined` allows the consume-and-clear reset under
   // exactOptionalPropertyTypes (mirrors pendingForceDestroySource).
-  pendingKeywordNextWorldCard?:
-    | { readonly keyword: KeywordName; readonly value: number }
-    | undefined;
+  pendingKeywordNextWorldCard: readonly Keyword[];
   pendingBoonChoices: readonly PendingBoonChoice[];
   // The per-world end-turn passive, threaded onto state once by createWorld
   // (reduce() does not receive WorldData). Defaults to { kind: "None" } for
@@ -401,6 +401,7 @@ export type GameEvent = (
       // presence to mask the rolled template's identity before commit.
       setName?: string;
     }
+  | { type: "PendingCardDestroy"; count: number }
   | { type: "CardDestroyed"; ids: readonly CardId[]; templateIds: readonly CardTemplateId[] }
   | { type: "WorldCardsReturned"; ids: readonly CardId[]; templateIds: readonly CardTemplateId[] }
   | { type: "HpChanged"; hp: number }
@@ -453,7 +454,7 @@ export type GameEvent = (
   | { type: "KeywordGuardConsumed"; absorbed: number; remaining: number }
   | { type: "WorldCardsExiled"; ids: readonly CardId[]; templateIds: readonly CardTemplateId[] }
   | { type: "HealReceived"; amount: number }
-  | { type: "HazardAdded"; templateId: CardTemplateId }
+  | { type: "HazardAdded"; templateId: CardTemplateId; id: CardId }
   | {
       type: "PlayerDiscardRecalled";
       cardIds: readonly CardId[];

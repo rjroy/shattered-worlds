@@ -61,6 +61,7 @@ function makeWorldCard(name: string): WorldCard {
     onCleared: { kind: "None" },
     onEndOfTurn: { kind: "None" },
     onPartialClear: { kind: "None" },
+    onDraw: { kind: "None" },
     rarity: "common",
   };
 }
@@ -83,7 +84,7 @@ describe("createWitnessCollector", () => {
         seed: 1,
         appliedModifiers: [],
         timestamp: 1_000,
-        initialEvents: [{ type: "HazardAdded", templateId: "Zombie" }],
+        initialEvents: [{ type: "HazardAdded", templateId: "Zombie", id: "1" }],
         initialState: stubState,
       }),
     );
@@ -95,7 +96,7 @@ describe("createWitnessCollector", () => {
         { type: "EndTurn" },
         {
           state: stubState,
-          events: [{ type: "HazardAdded", templateId: "Zombie" }],
+          events: [{ type: "HazardAdded", templateId: "Zombie", id: "1" }],
         },
         1_100,
       ),
@@ -151,7 +152,7 @@ describe("createWitnessCollector", () => {
         seed: 2,
         appliedModifiers: [],
         timestamp: 2_000,
-        initialEvents: [{ type: "HazardAdded", templateId: "Zombie" }],
+        initialEvents: [{ type: "HazardAdded", templateId: "Zombie", id: "1" }],
         initialState: stubState,
       }),
     );
@@ -263,7 +264,7 @@ describe("createWitnessCollector", () => {
         seed: 10,
         appliedModifiers: [],
         timestamp: 100,
-        initialEvents: [{ type: "HazardAdded", templateId: "Zombie" }],
+        initialEvents: [{ type: "HazardAdded", templateId: "Zombie", id: "1" }],
         initialState: stubState,
       }),
     );
@@ -286,7 +287,7 @@ describe("createWitnessCollector", () => {
         seed: 11,
         appliedModifiers: [],
         timestamp: 300,
-        initialEvents: [{ type: "HazardAdded", templateId: "Zombie" }],
+        initialEvents: [{ type: "HazardAdded", templateId: "Zombie", id: "1" }],
         initialState: stubState,
       }),
     );

@@ -112,26 +112,26 @@ export function drawWorld(state: GameState, n: number): { state: GameState; even
     // noUncheckedIndexedAccess: worldDraw is non-empty here (guarded above).
     const pulled = current.worldDraw[0]!;
 
-    // Eden Prime — consume a queued "next world card" keyword (ApplyKeyword
+    // Some worlds — consume a queued "next world card" keyword (ApplyKeyword
     // target "nextWorldCard"). Stamp the FIRST world card pulled while the flag is set,
     // then clear it (consume-and-clear, mirroring resolveForceDestroy). When the
     // flag is absent (every non-Eden draw) this branch never runs and the event
     // stream is byte-identical.
-    const pendingKeyword = current.pendingKeywordNextWorldCard;
+    const pendingKeywords = current.pendingKeywordNextWorldCard;
     let card = pulled;
-    if (pendingKeyword !== undefined) {
-      card = withAppliedKeyword(pulled, {
-        name: pendingKeyword.keyword,
-        value: pendingKeyword.value,
+    if (pendingKeywords.length > 0) {
+      card = pendingKeywords.reduce((partial, kw) => withAppliedKeyword(partial, kw), card);
+      current = { ...current, pendingKeywordNextWorldCard: [] };
+      const newEvents = pendingKeywords.map((kw) => {
+        return {
+          type: "KeywordApplied",
+          ids: [card.id],
+          templateIds: [card.templateId],
+          keyword: kw.name,
+          value: kw.value,
+        } as GameEvent;
       });
-      current = { ...current, pendingKeywordNextWorldCard: undefined };
-      pendingKeywordEvents.push({
-        type: "KeywordApplied",
-        ids: [card.id],
-        templateIds: [card.templateId],
-        keyword: pendingKeyword.keyword,
-        value: pendingKeyword.value,
-      });
+      pendingKeywordEvents.push(...newEvents);
     }
 
     current = {
@@ -141,7 +141,12 @@ export function drawWorld(state: GameState, n: number): { state: GameState; even
     };
     drawnIds.push(card.id);
     templateIds.push(card.templateId);
-    events.push({ type: "HazardAdded", templateId: card.name, revealedFromHidden: true });
+    events.push({
+      type: "HazardAdded",
+      templateId: card.name,
+      id: card.id,
+      revealedFromHidden: true,
+    });
     remaining--;
   }
 

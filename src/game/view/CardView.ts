@@ -483,6 +483,11 @@ export class CardView extends Phaser.GameObjects.Container {
           effect: worldCard.onEndOfTurn,
           color: TEXT.textHeld,
         },
+        {
+          leadIcon: "worldDraw",
+          effect: worldCard.onDraw,
+          color: TEXT.textHeld,
+        },
       ];
       for (const block of triggerBlocks) {
         const { container, height } = addEffectLines(

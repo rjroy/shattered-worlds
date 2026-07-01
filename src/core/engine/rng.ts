@@ -52,6 +52,16 @@ export function rngFromSeed(seed: number): () => number {
   };
 }
 
+// Scale raw [0,1) to [0, i+1) and floor to get a swap index in [0, i].
+export function nextInt(rng: RngState, max: number): [value: number, next: RngState] {
+  const [raw, next] = nextFloat(rng);
+
+  // Scale raw [0,1) to [0, i+1) and floor to get a swap index in [0, i].
+  const result = Math.floor(raw * (max + 1));
+
+  return [result, next];
+}
+
 /**
  * Fisher-Yates shuffle using the provided rng state.
  * Returns a new array and the advanced rng state. Neither the input array
@@ -62,11 +72,9 @@ export function shuffle<T>(items: readonly T[], rng: RngState): [shuffled: T[], 
   let state = rng;
 
   for (let i = result.length - 1; i > 0; i--) {
-    const [raw, next] = nextFloat(state);
-    state = next;
-
     // Scale raw [0,1) to [0, i+1) and floor to get a swap index in [0, i].
-    const j = Math.floor(raw * (i + 1));
+    const [j, next] = nextInt(state, i);
+    state = next;
 
     // i and j are always valid indices (loop bounds + floor above); the `!`
     // satisfies noUncheckedIndexedAccess without a branch that can never run.

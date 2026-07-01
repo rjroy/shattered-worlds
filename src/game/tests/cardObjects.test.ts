@@ -239,7 +239,7 @@ function makeDrawAllHarness(state: GameState): {
   scene.worldRowOffset = 0;
   scene.playerRowOffset = 0;
   scene.cardObjects = new Map();
-  scene.playerCardDisplaySignatures = new Map();
+  scene.cardDisplaySignatures = new Map();
   scene.modalChooser = null;
   scene.discardChooser = null;
   scene.boonChoiceView = null;
@@ -947,6 +947,51 @@ describe("TableScene effective player-card layout", () => {
       playerCards.slice(0, 5).map((card) => card.id),
     );
     expect(harness.playerRows.at(-1)?.map((card) => card.id)).toContain(snapshot.id);
+  });
+});
+
+describe("TableScene applied-keyword display refresh", () => {
+  // World card containers persist across drawAll cycles (see obtainCardContainer),
+  // so a state change invisible to the container's construction args (e.g. Alarm
+  // applied/removed by ApplyKeyword/RemoveKeyword after the card is already on the
+  // table) must trigger a rebuild, or the on-face keyword label goes stale even
+  // though core state is correct. Regression coverage for that gap.
+  it("rebuilds a world card's container when RemoveKeyword clears an applied keyword", () => {
+    const alarmed = makeWorldCard({
+      id: "alarmed-1",
+      appliedKeywords: [{ name: "Alarm", value: 2 }],
+    });
+    const state = makeCoreState({ hand: [alarmed] });
+    const harness = makeDrawAllHarness(state);
+    const scene = harness.scene as typeof harness.scene & { game_: { state: GameState } };
+
+    harness.scene.drawAll();
+    const beforeView = scene.cardObjects.get(alarmed.id);
+    expect(beforeView).toBeInstanceOf(CardView);
+
+    const cleared: WorldCard = { ...alarmed, appliedKeywords: [] };
+    scene.game_.state = { ...scene.game_.state, hand: [cleared] };
+    harness.scene.drawAll();
+    const afterView = scene.cardObjects.get(alarmed.id);
+
+    expect(afterView).toBeInstanceOf(CardView);
+    expect(afterView).not.toBe(beforeView);
+  });
+
+  it("keeps the same container when no display-relevant field changes", () => {
+    const worldCard = makeWorldCard({ id: "steady-1" });
+    const state = makeCoreState({ hand: [worldCard] });
+    const harness = makeDrawAllHarness(state);
+    const scene = harness.scene as typeof harness.scene & { game_: { state: GameState } };
+
+    harness.scene.drawAll();
+    const beforeView = scene.cardObjects.get(worldCard.id);
+
+    scene.game_.state = { ...scene.game_.state, hand: [{ ...worldCard }] };
+    harness.scene.drawAll();
+    const afterView = scene.cardObjects.get(worldCard.id);
+
+    expect(afterView).toBe(beforeView);
   });
 });
 
@@ -2523,6 +2568,7 @@ function makeMintState(): GameState {
     keywordGuard: 0,
     progressDealtThisTurn: 0,
     pendingBoonChoices: [],
+    pendingKeywordNextWorldCard: [],
     endOfTurnPassive: { kind: "None" },
     runModifiers: DEFAULT_RUN_MODIFIERS,
     turnPlayHistory: { cardsPlayedThisTurn: 0, byTemplateId: {} },
@@ -2673,6 +2719,7 @@ describe("CardView world-card trigger blocks", () => {
       cost: 3,
       keywords: [],
       discardable: false,
+      onDraw: { kind: "None" },
       onEndOfTurn: { kind: "Damage", amount: 1 },
       onDiscarded: { kind: "None" },
       onCleared: { kind: "GainEnergy", amount: 1 },
@@ -2686,6 +2733,7 @@ describe("CardView world-card trigger blocks", () => {
       cost: 5,
       keywords: [],
       discardable: false,
+      onDraw: { kind: "None" },
       onEndOfTurn: { kind: "Brace", amount: 2 },
       onDiscarded: { kind: "AddThreatToWorldDeck" },
       onCleared: { kind: "ExileTopWorldCards", amount: 1 },
@@ -2789,6 +2837,7 @@ describe("CardView fog-back concealment", () => {
       cost: 3,
       keywords: ["Concealed:3", "Obstructed"],
       discardable: false,
+      onDraw: { kind: "None" },
       onEndOfTurn: { kind: "Damage", amount: 2 },
       onDiscarded: { kind: "None" },
       onCleared: { kind: "None" },
@@ -2800,6 +2849,7 @@ describe("CardView fog-back concealment", () => {
       cost: 2,
       keywords: [],
       discardable: false,
+      onDraw: { kind: "None" },
       onEndOfTurn: { kind: "Damage", amount: 1 },
       onDiscarded: { kind: "None" },
       onCleared: { kind: "None" },
@@ -3162,6 +3212,7 @@ describe("TableScene idle world-card and End Turn previews", () => {
       name: "Decaying Wreck",
       discardable: false,
       onEndOfTurn: { kind: "Damage", amount: 3 },
+      onDraw: { kind: "None" },
     });
     const state = makeCoreState({ hand: [hazard], light: 0 });
     const { scene } = makeSelectionHarness(state);
@@ -3176,6 +3227,7 @@ describe("TableScene idle world-card and End Turn previews", () => {
       id: "idle-discard",
       name: "Brittle Debris",
       discardable: true,
+      onDraw: { kind: "None" },
       onEndOfTurn: { kind: "None" },
       onDiscarded: { kind: "Damage", amount: 4 },
     });
@@ -3197,6 +3249,7 @@ describe("TableScene idle world-card and End Turn previews", () => {
       id: "idle-both",
       name: "Volatile Pile",
       discardable: true,
+      onDraw: { kind: "None" },
       onEndOfTurn: { kind: "Damage", amount: 2 },
       onDiscarded: { kind: "Damage", amount: 6 },
     });
@@ -3215,6 +3268,7 @@ describe("TableScene idle world-card and End Turn previews", () => {
       id: "idle-fog",
       name: "Hidden Terror",
       keywords: [{ name: "Concealed", value: 2 }],
+      onDraw: { kind: "None" },
       onEndOfTurn: { kind: "Damage", amount: 9 },
       onDiscarded: { kind: "Damage", amount: 9 },
     });
@@ -3236,6 +3290,7 @@ describe("TableScene idle world-card and End Turn previews", () => {
       id: "idle-inert",
       name: "Inert Rubble",
       discardable: false,
+      onDraw: { kind: "None" },
       onEndOfTurn: { kind: "None" },
       onDiscarded: { kind: "None" },
     });

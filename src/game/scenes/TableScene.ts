@@ -135,21 +135,34 @@ const TABLE_TOOLTIPS = {
   },
 };
 
-// A modifier (e.g. a buff changing energyCost or effect) can change how a
-// player card displays without changing its id, so reconciliation needs this
-// signature to detect "same card, different face" and rebuild the container.
-function playerCardDisplaySignature(card: Extract<Card, { kind: "player" }>): string {
-  return JSON.stringify({
-    templateId: card.templateId,
-    sourceWorldId: card.sourceWorldId,
-    name: card.name,
-    insetKey: card.insetKey,
-    energyCost: card.energyCost,
-    effect: card.effect,
-    keywords: card.keywords,
-    exhaust: card.exhaust,
-    frozen: card.frozen,
-  });
+// A modifier (e.g. a buff changing energyCost or effect) — or a runtime
+// applied keyword like Alarm — can change how a card displays without
+// changing its id, so reconciliation needs this signature to detect "same
+// card, different face" and rebuild the container. Covers both card kinds:
+// world cards carry no energyCost/effect/exhaust/frozen, but they do carry
+// appliedKeywords (Alarm's ApplyKeyword/RemoveKeyword targets are almost
+// always world cards), so that field must be checked regardless of kind.
+function cardDisplaySignature(card: Card): string {
+  return card.kind === "player"
+    ? JSON.stringify({
+        templateId: card.templateId,
+        sourceWorldId: card.sourceWorldId,
+        name: card.name,
+        insetKey: card.insetKey,
+        energyCost: card.energyCost,
+        effect: card.effect,
+        keywords: card.keywords,
+        exhaust: card.exhaust,
+        frozen: card.frozen,
+        appliedKeywords: card.appliedKeywords,
+      })
+    : JSON.stringify({
+        templateId: card.templateId,
+        name: card.name,
+        insetKey: card.insetKey,
+        keywords: card.keywords,
+        appliedKeywords: card.appliedKeywords,
+      });
 }
 
 // ---------------------------------------------------------------------------
@@ -163,7 +176,7 @@ export class TableScene extends Phaser.Scene {
 
   /** All live card containers, keyed by card id. */
   private cardObjects: Map<string, CardView> = new Map();
-  private playerCardDisplaySignatures: Map<string, string> = new Map();
+  private cardDisplaySignatures: Map<string, string> = new Map();
 
   // Tracked outside Phaser's pointer events so drawAll can re-assert the base
   // transform on every non-hovered card during a repaint, not just on pointerout.
@@ -238,7 +251,7 @@ export class TableScene extends Phaser.Scene {
     this.seed_ = data.seed ?? Math.floor(Math.random() * 2 ** 32);
     this.terminalSummaryShown_ = false;
     this.cardObjects = new Map();
-    this.playerCardDisplaySignatures = new Map();
+    this.cardDisplaySignatures = new Map();
     this.selectedCardSnapshot = null;
     this.worldRowOffset = 0;
     this.playerRowOffset = 0;
@@ -574,7 +587,7 @@ export class TableScene extends Phaser.Scene {
       if (this.hoveredCardId === id) this.hoveredCardId = null;
       container.destroy();
       this.cardObjects.delete(id);
-      this.playerCardDisplaySignatures.delete(id);
+      this.cardDisplaySignatures.delete(id);
     }
 
     // HUD
@@ -917,25 +930,21 @@ export class TableScene extends Phaser.Scene {
   private obtainCardContainer(card: Card): CardView {
     const existing = this.cardObjects.get(card.id);
     if (existing !== undefined) {
-      if (card.kind !== "player") return existing;
-
-      const signature = playerCardDisplaySignature(card);
-      if (this.playerCardDisplaySignatures.get(card.id) === signature) return existing;
+      const signature = cardDisplaySignature(card);
+      if (this.cardDisplaySignatures.get(card.id) === signature) return existing;
 
       this.tweens.killTweensOf(existing);
       this.tweens.killTweensOf(existing.list);
       existing.destroy();
       this.cardObjects.delete(card.id);
-      this.playerCardDisplaySignatures.delete(card.id);
+      this.cardDisplaySignatures.delete(card.id);
     }
 
     const container = new CardView(this, card, 0, 0, this.theme_, selectTheme, () =>
       fxGain(this.runtime_.userSettings.get()),
     );
     this.cardObjects.set(card.id, container);
-    if (card.kind === "player") {
-      this.playerCardDisplaySignatures.set(card.id, playerCardDisplaySignature(card));
-    }
+    this.cardDisplaySignatures.set(card.id, cardDisplaySignature(card));
 
     container.setSize(CARD_FACE.width, CARD_FACE.height);
     container.setInteractive({ useHandCursor: true });

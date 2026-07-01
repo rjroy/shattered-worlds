@@ -31,6 +31,7 @@ function makeEmptyState(nextId = 0): GameState {
     keywordGuard: 0,
     progressDealtThisTurn: 0,
     pendingBoonChoices: [],
+    pendingKeywordNextWorldCard: [],
     endOfTurnPassive: { kind: "None" },
     runModifiers: DEFAULT_RUN_MODIFIERS,
     turnPlayHistory: { cardsPlayedThisTurn: 0, byTemplateId: {} },
@@ -352,6 +353,7 @@ describe("rarity stamping", () => {
         onCleared: { kind: "None" },
         onEndOfTurn: { kind: "None" },
         onPartialClear: { kind: "None" },
+        onDraw: { kind: "None" },
         rarity: "rare",
       },
     };

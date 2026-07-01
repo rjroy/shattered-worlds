@@ -11,6 +11,7 @@
       "onDiscarded": { "kind": "None" },
       "onCleared": { "kind": "GainCard", "template": "Find Footing" },
       "onPartialClear": { "kind": "None" },
+      "onDraw": { "kind": "None" },
       "onEndOfTurn": { "kind": "DestroySelf" }
     },
     "Sliding Debris": {
@@ -28,6 +29,7 @@
         "template": "Sliding Debris",
         "bTop": true
       },
+      "onDraw": { "kind": "None" },
       "onEndOfTurn": { "kind": "None" }
     },
     "Groaning Girders": {
@@ -41,6 +43,7 @@
       "onDiscarded": { "kind": "GainCard", "template": "Panic" },
       "onCleared": { "kind": "GainCard", "template": "Steady" },
       "onPartialClear": { "kind": "None" },
+      "onDraw": { "kind": "None" },
       "onEndOfTurn": { "kind": "None" },
       "fx": [
         { "kind": "EndTurn", "key": "groaning-girder-fx" },
@@ -58,6 +61,7 @@
       "onDiscarded": { "kind": "ForceDestroy", "amount": 2 },
       "onCleared": { "kind": "None" },
       "onPartialClear": { "kind": "Damage", "amount": 2 },
+      "onDraw": { "kind": "None" },
       "onEndOfTurn": { "kind": "ForceDestroy", "amount": 1 }
     },
     "Find Fire Axe": {
@@ -71,6 +75,7 @@
       "onDiscarded": { "kind": "None" },
       "onCleared": { "kind": "GainCard", "template": "Fire Axe" },
       "onPartialClear": { "kind": "None" },
+      "onDraw": { "kind": "None" },
       "onEndOfTurn": { "kind": "None" }
     },
     "Find Footing": {
@@ -137,6 +142,7 @@
       "onCleared": { "kind": "None" },
       "onDiscarded": { "kind": "None" },
       "onPartialClear": { "kind": "None" },
+      "onDraw": { "kind": "None" },
       "onEndOfTurn": {
         "kind": "Sequence",
         "steps": [
@@ -156,6 +162,7 @@
       "onCleared": { "kind": "GainCard", "template": "Quiet Survey" },
       "onDiscarded": { "kind": "AddPlayerCardToTop", "template": "Panic" },
       "onPartialClear": { "kind": "None" },
+      "onDraw": { "kind": "None" },
       "onEndOfTurn": { "kind": "AddPlayerCardToTop", "template": "Panic" }
     },
     "Fingerquake Ward": {
@@ -169,6 +176,7 @@
       "onCleared": { "kind": "GainCard", "template": "Brace The Ward" },
       "onDiscarded": { "kind": "ForceDestroy", "amount": 1 },
       "onPartialClear": { "kind": "AddWorldCardToDeck", "template": "Minor Tremor", "bTop": true },
+      "onDraw": { "kind": "None" },
       "onEndOfTurn": {
         "kind": "Sequence",
         "steps": [
@@ -194,6 +202,7 @@
       },
       "onDiscarded": { "kind": "AddWorldCardToDeck", "template": "Minor Tremor", "bTop": true },
       "onPartialClear": { "kind": "None" },
+      "onDraw": { "kind": "None" },
       "onEndOfTurn": { "kind": "AddWorldCardToDeck", "template": "Vein-Road Surge", "bTop": true }
     },
     "Vein-Road Surge": {
@@ -213,6 +222,7 @@
       },
       "onDiscarded": { "kind": "RecallPlayerDiscard", "policy": "random" },
       "onPartialClear": { "kind": "RecallPlayerDiscard", "policy": "lowestCost" },
+      "onDraw": { "kind": "None" },
       "onEndOfTurn": {
         "kind": "Sequence",
         "steps": [
@@ -237,6 +247,7 @@
         "template": "Fingerquake Ward",
         "bTop": true
       },
+      "onDraw": { "kind": "None" },
       "onEndOfTurn": { "kind": "Damage", "amount": 2 }
     },
     "District Recall": {
@@ -254,6 +265,7 @@
         "template": "Vein-Road Surge",
         "bTop": true
       },
+      "onDraw": { "kind": "None" },
       "onEndOfTurn": {
         "kind": "Sequence",
         "steps": [
@@ -273,6 +285,7 @@
       "onCleared": { "kind": "None" },
       "onDiscarded": { "kind": "ForceDestroy", "amount": 2 },
       "onPartialClear": { "kind": "AddThreatToWorldDeck" },
+      "onDraw": { "kind": "None" },
       "onEndOfTurn": {
         "kind": "Sequence",
         "steps": [
@@ -373,6 +386,7 @@
       "onDiscarded": { "kind": "None" },
       "onCleared": { "kind": "None" },
       "onPartialClear": { "kind": "None" },
+      "onDraw": { "kind": "None" },
       "onEndOfTurn": { "kind": "Damage", "amount": 1 }
     },
     "Abandoned Cooler": {
@@ -390,6 +404,7 @@
         "setName": "Cooler Stash"
       },
       "onPartialClear": { "kind": "None" },
+      "onDraw": { "kind": "None" },
       "onEndOfTurn": { "kind": "None" }
     },
     "The Bonfire": {
@@ -410,6 +425,7 @@
         ]
       },
       "onPartialClear": { "kind": "None" },
+      "onDraw": { "kind": "None" },
       "onEndOfTurn": { "kind": "None" },
       "fx": [
         { "kind": "Clear", "key": "bonfire-fx" },
@@ -427,6 +443,7 @@
       "onDiscarded": { "kind": "Damage", "amount": 2 },
       "onCleared": { "kind": "None" },
       "onPartialClear": { "kind": "Damage", "amount": 1 },
+      "onDraw": { "kind": "None" },
       "onEndOfTurn": { "kind": "Damage", "amount": 2 }
     },
     "The Tide Coming In": {
@@ -440,6 +457,7 @@
       "onDiscarded": { "kind": "Damage", "amount": 2 },
       "onCleared": { "kind": "None" },
       "onPartialClear": { "kind": "None" },
+      "onDraw": { "kind": "None" },
       "onEndOfTurn": { "kind": "Damage", "amount": 2 }
     },
     "Whiteout": {
@@ -453,6 +471,7 @@
       "onDiscarded": { "kind": "Damage", "amount": 2 },
       "onCleared": { "kind": "None" },
       "onPartialClear": { "kind": "None" },
+      "onDraw": { "kind": "None" },
       "onEndOfTurn": {
         "kind": "DamageScaled",
         "base": 1,
@@ -471,6 +490,7 @@
       "onDiscarded": { "kind": "None" },
       "onCleared": { "kind": "GainCard", "template": "Push Through" },
       "onPartialClear": { "kind": "None" },
+      "onDraw": { "kind": "None" },
       "onEndOfTurn": { "kind": "DestroySelf" }
     },
     "Gridlock": {
@@ -484,6 +504,7 @@
       "onDiscarded": { "kind": "None" },
       "onCleared": { "kind": "GainCard", "template": "Nitro" },
       "onPartialClear": { "kind": "None" },
+      "onDraw": { "kind": "None" },
       "onEndOfTurn": { "kind": "AddWorldCardToDeck", "template": "Gridlock" }
     },
     "Ash Fall": {
@@ -497,6 +518,7 @@
       "onDiscarded": { "kind": "None" },
       "onCleared": { "kind": "GainCard", "template": "Ditch Gear" },
       "onPartialClear": { "kind": "None" },
+      "onDraw": { "kind": "None" },
       "onEndOfTurn": { "kind": "GainCard", "template": "Panic" }
     },
     "Lava Flow": {
@@ -510,6 +532,7 @@
       "onDiscarded": { "kind": "Damage", "amount": 5 },
       "onCleared": { "kind": "None" },
       "onPartialClear": { "kind": "None" },
+      "onDraw": { "kind": "None" },
       "onEndOfTurn": {
         "kind": "Sequence",
         "steps": [
@@ -529,6 +552,7 @@
       "onDiscarded": { "kind": "None" },
       "onCleared": { "kind": "GainCard", "template": "Floor It" },
       "onPartialClear": { "kind": "None" },
+      "onDraw": { "kind": "None" },
       "onEndOfTurn": { "kind": "None" }
     },
     "Push Through": {
@@ -612,6 +636,7 @@
       "onDiscarded": { "kind": "GainCard", "template": "Spore" },
       "onCleared": { "kind": "None" },
       "onPartialClear": { "kind": "None" },
+      "onDraw": { "kind": "None" },
       "onEndOfTurn": { "kind": "None" }
     },
     "Pollen Haze": {
@@ -625,6 +650,7 @@
       "onDiscarded": { "kind": "None" },
       "onCleared": { "kind": "None" },
       "onPartialClear": { "kind": "None" },
+      "onDraw": { "kind": "None" },
       "onEndOfTurn": { "kind": "GainCard", "template": "Spore" }
     },
     "Kudzu Curtain": {
@@ -638,6 +664,7 @@
       "onDiscarded": { "kind": "None" },
       "onCleared": { "kind": "None" },
       "onPartialClear": { "kind": "GainCard", "template": "Spore" },
+      "onDraw": { "kind": "None" },
       "onEndOfTurn": { "kind": "GainCard", "template": "Spore" }
     },
     "Something in the Atrium": {
@@ -651,6 +678,7 @@
       "onDiscarded": { "kind": "Damage", "amount": 3 },
       "onCleared": { "kind": "None" },
       "onPartialClear": { "kind": "Damage", "amount": 1 },
+      "onDraw": { "kind": "None" },
       "onEndOfTurn": { "kind": "Damage", "amount": 1 }
     },
     "Fountain Bloom": {
@@ -664,6 +692,7 @@
       "onDiscarded": { "kind": "None" },
       "onCleared": { "kind": "None" },
       "onPartialClear": { "kind": "GainCard", "template": "Spore" },
+      "onDraw": { "kind": "None" },
       "onEndOfTurn": {
         "kind": "Sequence",
         "steps": [
@@ -697,6 +726,7 @@
         ]
       },
       "onPartialClear": { "kind": "None" },
+      "onDraw": { "kind": "None" },
       "onEndOfTurn": { "kind": "None" }
     },
     "Pruning Shears": {
@@ -799,6 +829,7 @@
       "onCleared": { "kind": "GainCard", "template": "Dormant Star" },
       "onDiscarded": { "kind": "Damage", "amount": 1 },
       "onPartialClear": { "kind": "None" },
+      "onDraw": { "kind": "None" },
       "onEndOfTurn": {
         "kind": "Sequence",
         "steps": [
@@ -824,6 +855,7 @@
       },
       "onDiscarded": { "kind": "AddPlayerCardToTop", "template": "Dormant Star" },
       "onPartialClear": { "kind": "AddPlayerCardToTop", "template": "Dormant Star" },
+      "onDraw": { "kind": "None" },
       "onEndOfTurn": { "kind": "AddWorldCardToDeck", "template": "Rooted Meteor", "bTop": true }
     },
     "Rooted Meteor": {
@@ -837,6 +869,7 @@
       "onCleared": { "kind": "GainCard", "template": "Glasshouse Lantern" },
       "onDiscarded": { "kind": "Damage", "amount": 1 },
       "onPartialClear": { "kind": "AddWorldCardToDeck", "template": "Falling Fruit", "bTop": true },
+      "onDraw": { "kind": "None" },
       "onEndOfTurn": { "kind": "Damage", "amount": 1 }
     },
     "The Orchard Counts Wrong": {
@@ -850,6 +883,7 @@
       "onCleared": { "kind": "GainCard", "template": "Star-Pruner" },
       "onDiscarded": { "kind": "Damage", "amount": 2 },
       "onPartialClear": { "kind": "AddPlayerCardToTop", "template": "Dormant Star" },
+      "onDraw": { "kind": "None" },
       "onEndOfTurn": {
         "kind": "Sequence",
         "steps": [
@@ -878,6 +912,7 @@
       },
       "onDiscarded": { "kind": "None" },
       "onPartialClear": { "kind": "None" },
+      "onDraw": { "kind": "None" },
       "onEndOfTurn": {
         "kind": "Sequence",
         "steps": [
@@ -897,6 +932,7 @@
       "onCleared": { "kind": "None" },
       "onDiscarded": { "kind": "ForceDestroy", "amount": 2 },
       "onPartialClear": { "kind": "ForceDestroy", "amount": 1 },
+      "onDraw": { "kind": "None" },
       "onEndOfTurn": { "kind": "ForceDestroy", "amount": 1 }
     },
     "Lantern Brood": {
@@ -910,6 +946,7 @@
       "onCleared": { "kind": "GainCard", "template": "Leave One" },
       "onDiscarded": { "kind": "AddWorldCardToDeck", "template": "Ember Moth", "bTop": true },
       "onPartialClear": { "kind": "AddWorldCardToDeck", "template": "Ember Moth", "bTop": true },
+      "onDraw": { "kind": "None" },
       "onEndOfTurn": { "kind": "AddThreatToWorldDeck" }
     },
     "Ground Constellation": {
@@ -929,6 +966,7 @@
         ]
       },
       "onPartialClear": { "kind": "Damage", "amount": 1 },
+      "onDraw": { "kind": "None" },
       "onEndOfTurn": {
         "kind": "Sequence",
         "steps": [
@@ -1039,6 +1077,7 @@
         ]
       },
       "onPartialClear": { "kind": "None" },
+      "onDraw": { "kind": "None" },
       "onEndOfTurn": { "kind": "None" }
     },
     "First Warning Cry": {
@@ -1052,10 +1091,16 @@
       "onDiscarded": { "kind": "Draw", "world": 2 },
       "onCleared": { "kind": "None" },
       "onPartialClear": { "kind": "None" },
+      "onDraw": {
+        "kind": "ApplyKeyword",
+        "keyword": "Alarm",
+        "value": 1,
+        "target": "randomWorldCardInHand"
+      },
       "onEndOfTurn": {
         "kind": "Sequence",
         "steps": [
-          { "kind": "ApplyKeyword", "keyword": "Alarm", "value": 2, "target": "self" },
+          { "kind": "ApplyKeyword", "keyword": "Alarm", "value": 1, "target": "self" },
           {
             "kind": "KeywordGate",
             "keyword": "Alarm",
@@ -1086,14 +1131,21 @@
         "keyword": "Alarm",
         "min": 2,
         "zone": "hand",
-        "then": { "kind": "ForceDestroy", "amount": 1 }
+        "then": { "kind": "Draw", "player": 1, "world": 1 }
+      },
+      "onDraw": {
+        "kind": "KeywordGate",
+        "keyword": "Alarm",
+        "min": 2,
+        "zone": "hand",
+        "then": { "kind": "Draw", "player": 1, "world": 1 }
       },
       "onEndOfTurn": {
         "kind": "KeywordGate",
         "keyword": "Alarm",
         "min": 2,
         "zone": "hand",
-        "then": { "kind": "DiscardThenDraw", "player": 2 }
+        "then": { "kind": "ForceDestroy", "amount": 1 }
       }
     },
     "The Herd Misunderstands": {
@@ -1117,6 +1169,12 @@
           "bTop": true
         }
       },
+      "onDraw": {
+        "kind": "ApplyKeyword",
+        "keyword": "Alarm",
+        "value": 1,
+        "target": "randomWorldCardInHand"
+      },
       "onEndOfTurn": {
         "kind": "KeywordGate",
         "keyword": "Alarm",
@@ -1136,15 +1194,16 @@
       "onDiscarded": { "kind": "Draw", "world": 2 },
       "onCleared": { "kind": "None" },
       "onPartialClear": { "kind": "None" },
+      "onDraw": {
+        "kind": "ApplyKeyword",
+        "keyword": "Alarm",
+        "value": 1,
+        "target": "randomWorldCardInHand"
+      },
       "onEndOfTurn": {
         "kind": "ProgressGate",
         "min": 5,
-        "then": {
-          "kind": "ApplyKeyword",
-          "keyword": "Alarm",
-          "value": 2,
-          "target": "firstWorldCardInHand"
-        }
+        "then": { "kind": "Draw", "player": 2 }
       }
     },
     "The Quiet Grove": {
@@ -1164,6 +1223,7 @@
         "chooseCount": 1
       },
       "onPartialClear": { "kind": "None" },
+      "onDraw": { "kind": "None" },
       "onEndOfTurn": {
         "kind": "KeywordGate",
         "keyword": "Alarm",
@@ -1189,6 +1249,12 @@
         "zone": "hand",
         "then": { "kind": "AddWorldCardToDeck", "template": "Curious Swarm", "bTop": true }
       },
+      "onDraw": {
+        "kind": "ApplyKeyword",
+        "keyword": "Alarm",
+        "value": 1,
+        "target": "randomWorldCardInHand"
+      },
       "onEndOfTurn": {
         "kind": "Sequence",
         "steps": [
@@ -1213,6 +1279,7 @@
       "onDiscarded": { "kind": "None" },
       "onCleared": { "kind": "None" },
       "onPartialClear": { "kind": "None" },
+      "onDraw": { "kind": "None" },
       "onEndOfTurn": { "kind": "RecallPlayerDiscard", "policy": "latest" }
     },
     "Archivist Choice": {
@@ -1246,6 +1313,7 @@
         "chooseCount": 1
       },
       "onPartialClear": { "kind": "None" },
+      "onDraw": { "kind": "None" },
       "onEndOfTurn": { "kind": "None" }
     },
     "Misfiled Century": {
@@ -1259,6 +1327,7 @@
       "onDiscarded": { "kind": "Damage", "amount": 1 },
       "onCleared": { "kind": "None" },
       "onPartialClear": { "kind": "None" },
+      "onDraw": { "kind": "None" },
       "onEndOfTurn": { "kind": "AddThreatToWorldDeck" }
     },
     "Bridge to Yesterday": {
@@ -1272,6 +1341,7 @@
       "onDiscarded": { "kind": "Damage", "amount": 2 },
       "onCleared": { "kind": "AddWorldCardToDeck", "template": "Misfiled Century", "bTop": true },
       "onPartialClear": { "kind": "None" },
+      "onDraw": { "kind": "None" },
       "onEndOfTurn": { "kind": "None" }
     },
     "Borrowed Catastrophe": {
@@ -1285,6 +1355,7 @@
       "onDiscarded": { "kind": "Damage", "amount": 2 },
       "onCleared": { "kind": "GainCard", "template": "Waterproof Notes" },
       "onPartialClear": { "kind": "None" },
+      "onDraw": { "kind": "None" },
       "onEndOfTurn": { "kind": "AddWorldCardToDeck", "template": "Misfiled Century", "bTop": true }
     },
     "Chained Books Rising": {
@@ -1298,6 +1369,7 @@
       "onDiscarded": { "kind": "RecallPlayerDiscard", "policy": "latest" },
       "onCleared": { "kind": "GainCard", "template": "Anchor the Memory" },
       "onPartialClear": { "kind": "None" },
+      "onDraw": { "kind": "None" },
       "onEndOfTurn": {
         "kind": "Sequence",
         "steps": [
@@ -1317,6 +1389,7 @@
       "onDiscarded": { "kind": "Damage", "amount": 3 },
       "onCleared": { "kind": "GainCard", "template": "Shelf Map" },
       "onPartialClear": { "kind": "None" },
+      "onDraw": { "kind": "None" },
       "onEndOfTurn": {
         "kind": "Sequence",
         "steps": [
@@ -1361,6 +1434,7 @@
         "chooseCount": 1
       },
       "onPartialClear": { "kind": "None" },
+      "onDraw": { "kind": "None" },
       "onEndOfTurn": { "kind": "None" }
     },
     "Powder Drift": {
@@ -1374,6 +1448,7 @@
       "onDiscarded": { "kind": "None" },
       "onCleared": { "kind": "None" },
       "onPartialClear": { "kind": "None" },
+      "onDraw": { "kind": "None" },
       "onEndOfTurn": { "kind": "Damage", "amount": 1 }
     },
     "Frozen Puddle": {
@@ -1387,6 +1462,7 @@
       "onDiscarded": { "kind": "Damage", "amount": 1 },
       "onCleared": { "kind": "None" },
       "onPartialClear": { "kind": "FreezeCards", "amount": 1, "duration": 1 },
+      "onDraw": { "kind": "None" },
       "onEndOfTurn": { "kind": "FreezeCards", "amount": 1, "duration": 1 }
     },
     "Dead Battery": {
@@ -1400,6 +1476,7 @@
       "onDiscarded": { "kind": "Damage", "amount": 1 },
       "onCleared": { "kind": "GainCard", "template": "Hand Warmers" },
       "onPartialClear": { "kind": "None" },
+      "onDraw": { "kind": "None" },
       "onEndOfTurn": { "kind": "Damage", "amount": 1 }
     },
     "Black Ice Ramp": {
@@ -1413,6 +1490,7 @@
       "onDiscarded": { "kind": "Damage", "amount": 2 },
       "onCleared": { "kind": "None" },
       "onPartialClear": { "kind": "FreezeCards", "amount": 1, "duration": 2 },
+      "onDraw": { "kind": "None" },
       "onEndOfTurn": { "kind": "FreezeCards", "amount": 2, "duration": 1 }
     },
     "Snowblind Headlights": {
@@ -1426,6 +1504,7 @@
       "onDiscarded": { "kind": "Damage", "amount": 1 },
       "onCleared": { "kind": "GainHeat", "amount": 1 },
       "onPartialClear": { "kind": "Damage", "amount": 1 },
+      "onDraw": { "kind": "None" },
       "onEndOfTurn": { "kind": "Damage", "amount": 2 }
     },
     "Ice-Locked Door": {
@@ -1439,6 +1518,7 @@
       "onDiscarded": { "kind": "Damage", "amount": 2 },
       "onCleared": { "kind": "GainHeat", "amount": 2 },
       "onPartialClear": { "kind": "FreezeCards", "amount": 1, "duration": 2 },
+      "onDraw": { "kind": "None" },
       "onEndOfTurn": { "kind": "FreezeCards", "amount": 1, "duration": 2 }
     },
     "Plow Buried In Snow": {
@@ -1452,6 +1532,7 @@
       "onDiscarded": { "kind": "Damage", "amount": 2 },
       "onCleared": { "kind": "GainHeat", "amount": 5 },
       "onPartialClear": { "kind": "None" },
+      "onDraw": { "kind": "None" },
       "onEndOfTurn": { "kind": "FreezeCards", "amount": 1, "duration": 2 }
     },
     "The Garage Freezes Shut": {
@@ -1465,6 +1546,7 @@
       "onDiscarded": { "kind": "Damage", "amount": 3 },
       "onCleared": { "kind": "None" },
       "onPartialClear": { "kind": "FreezeCards", "amount": 1, "duration": 2 },
+      "onDraw": { "kind": "None" },
       "onEndOfTurn": {
         "kind": "Sequence",
         "steps": [
@@ -1490,6 +1572,7 @@
         "chooseCount": 1
       },
       "onPartialClear": { "kind": "None" },
+      "onDraw": { "kind": "None" },
       "onEndOfTurn": { "kind": "DestroySelf" }
     },
     "Rubble": {
@@ -1503,6 +1586,7 @@
       "onDiscarded": { "kind": "None" },
       "onCleared": { "kind": "None" },
       "onPartialClear": { "kind": "None" },
+      "onDraw": { "kind": "None" },
       "onEndOfTurn": { "kind": "Damage", "amount": 1 }
     },
     "Screams": {
@@ -1522,6 +1606,7 @@
       },
       "onCleared": { "kind": "GainCard", "template": "Regroup" },
       "onPartialClear": { "kind": "None" },
+      "onDraw": { "kind": "None" },
       "onEndOfTurn": { "kind": "DestroySelf" }
     },
     "Zombie": {
@@ -1535,6 +1620,7 @@
       "onDiscarded": { "kind": "Damage", "amount": 5 },
       "onCleared": { "kind": "GainEnergy", "amount": 1 },
       "onPartialClear": { "kind": "Damage", "amount": 1 },
+      "onDraw": { "kind": "None" },
       "onEndOfTurn": {
         "kind": "Sequence",
         "steps": [
@@ -1559,6 +1645,7 @@
       "onDiscarded": { "kind": "None" },
       "onCleared": { "kind": "GainCard", "template": "Baseball Bat" },
       "onPartialClear": { "kind": "None" },
+      "onDraw": { "kind": "None" },
       "onEndOfTurn": { "kind": "None" }
     },
     "Corpse": {
@@ -1572,6 +1659,7 @@
       "onDiscarded": { "kind": "None" },
       "onCleared": { "kind": "None" },
       "onPartialClear": { "kind": "None" },
+      "onDraw": { "kind": "None" },
       "onEndOfTurn": {
         "kind": "Sequence",
         "steps": [
@@ -1591,6 +1679,7 @@
       "onDiscarded": { "kind": "None" },
       "onCleared": { "kind": "GainCard", "template": "Shotgun" },
       "onPartialClear": { "kind": "None" },
+      "onDraw": { "kind": "None" },
       "onEndOfTurn": { "kind": "None" }
     },
     "Baseball Bat": {
@@ -1648,6 +1737,7 @@
       "onDiscarded": { "kind": "None" },
       "onCleared": { "kind": "GainCard", "template": "Shelf Sweep" },
       "onPartialClear": { "kind": "AddWorldCardToDeck", "template": "Echoing Aisles" },
+      "onDraw": { "kind": "None" },
       "onEndOfTurn": {
         "kind": "Sequence",
         "steps": [
@@ -2124,6 +2214,7 @@
       "onDiscarded": { "kind": "AddWorldCardToDeck", "template": "Door" },
       "onCleared": { "kind": "AddPlayerCardToTop", "template": "Summon Door" },
       "onPartialClear": { "kind": "None" },
+      "onDraw": { "kind": "None" },
       "onEndOfTurn": { "kind": "None" }
     },
     "Summon Door": {
@@ -2148,6 +2239,7 @@
       "onDiscarded": { "kind": "None" },
       "onCleared": { "kind": "SurviveWorld" },
       "onPartialClear": { "kind": "None" },
+      "onDraw": { "kind": "None" },
       "onEndOfTurn": { "kind": "AddThreatToWorldDeck" },
       "fx": [{ "kind": "WhileVisible", "key": "the-door-fx" }]
     }

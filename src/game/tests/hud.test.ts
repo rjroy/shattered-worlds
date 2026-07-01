@@ -61,6 +61,7 @@ interface FakeHUDView {
   powerUpIndicators: [];
   powerUps: FakeDisplayObject;
   powerUpPanel: FakeDisplayObject;
+  keywordIndicators: Record<string, unknown>;
   update: HUDView["update"];
 }
 
@@ -77,6 +78,7 @@ function makeFakeHUDView(): {
     powerUpIndicators: [],
     powerUps: makeFakeDisplayObject(),
     powerUpPanel: makeFakeDisplayObject(),
+    keywordIndicators: {},
   });
   return { view, energyText };
 }
@@ -106,6 +108,7 @@ describe("HUDView.update", () => {
       keywordGuard: 0,
       progressDealtThisTurn: 0,
       pendingBoonChoices: [],
+      pendingKeywordNextWorldCard: [],
       endOfTurnPassive: { kind: "None" },
       runModifiers: DEFAULT_RUN_MODIFIERS,
       turnPlayHistory: { cardsPlayedThisTurn: 0, byTemplateId: {} },
@@ -140,6 +143,7 @@ describe("HUDView.update", () => {
       keywordGuard: 0,
       progressDealtThisTurn: 0,
       pendingBoonChoices: [],
+      pendingKeywordNextWorldCard: [],
       endOfTurnPassive: { kind: "None" },
       runModifiers: DEFAULT_RUN_MODIFIERS,
       turnPlayHistory: { cardsPlayedThisTurn: 0, byTemplateId: {} },
@@ -221,6 +225,7 @@ describe("HUDView.update", () => {
       powerUpIndicators: indicators,
       powerUps: { add(): void {}, setVisible(): void {} },
       powerUpPanel: makeFakeDisplayObject(),
+      keywordIndicators: {},
       // addPowerUp is the real method; it pulls from this.scene.add and pushes
       // onto powerUpIndicators. Capture each indicator into our records so the
       // test can read the icon texture and the value the HUD set.
@@ -264,6 +269,7 @@ describe("HUDView.update", () => {
       keywordGuard: 0,
       progressDealtThisTurn: 0,
       pendingBoonChoices: [],
+      pendingKeywordNextWorldCard: [],
       endOfTurnPassive: { kind: "None" },
       runModifiers: DEFAULT_RUN_MODIFIERS,
       turnPlayHistory: { cardsPlayedThisTurn: 0, byTemplateId: {} },
@@ -337,6 +343,7 @@ describe("HUDView.update", () => {
       keywordGuard: 0,
       progressDealtThisTurn: 0,
       pendingBoonChoices: [],
+      pendingKeywordNextWorldCard: [],
       endOfTurnPassive: { kind: "None" },
       runModifiers: DEFAULT_RUN_MODIFIERS,
       turnPlayHistory: { cardsPlayedThisTurn: 0, byTemplateId: {} },

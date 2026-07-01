@@ -343,6 +343,7 @@ function pendingState(): GameState {
         bToDiscard: false,
       },
     ],
+    pendingKeywordNextWorldCard: [],
     endOfTurnPassive: { kind: "None" },
     runModifiers: DEFAULT_RUN_MODIFIERS,
     turnPlayHistory: { cardsPlayedThisTurn: 0, byTemplateId: {} },
@@ -409,6 +410,7 @@ describe("BoonChoiceView", () => {
       onCleared: { kind: "None" },
       onEndOfTurn: { kind: "None" },
       onPartialClear: { kind: "None" },
+      onDraw: { kind: "None" },
     };
 
     new BoonChoiceView(scene, {

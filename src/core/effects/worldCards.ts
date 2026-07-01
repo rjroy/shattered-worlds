@@ -226,7 +226,7 @@ export class ForceDestroyHandler extends EffectHandler<ForceDestroyEffect> {
           pendingForceDestroySource: ctx.selfId,
         }),
     };
-    return { state: current, events: [] };
+    return { state: current, events: [{ type: "PendingCardDestroy", count: effect.amount }] };
   }
 
   override describe(_effect: ForceDestroyEffect): string[] {

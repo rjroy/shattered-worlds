@@ -109,6 +109,7 @@ export function makeWorldCard(overrides: Partial<WorldCard> & Pick<WorldCard, "i
     onCleared: { kind: "None" },
     onEndOfTurn: { kind: "None" },
     onPartialClear: { kind: "None" },
+    onDraw: { kind: "None" },
     rarity: "common",
     ...overrides,
   };
