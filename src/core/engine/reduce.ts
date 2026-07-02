@@ -18,7 +18,7 @@ function hasPendingActBoonChoice(state: GameState, act: number): boolean {
   return state.pendingBoonChoices.some((choice) => choice.source === "act" && choice.act === act);
 }
 
-function applyChainEffects(catalog: CardCatalog, original: ReduceResult): ReduceResult {
+function applyCascadeEffects(catalog: CardCatalog, original: ReduceResult): ReduceResult {
   const events = original.events;
 
   const eventReducer = (curr: ReduceResult, event: GameEvent): ReduceResult => {
@@ -277,7 +277,7 @@ function handleEndTurn(catalog: CardCatalog, state: GameState): ReduceResult {
   const turnStartResult = startTurn(afterPassive);
   events.push(...turnStartResult.events);
 
-  const cascadeResult = applyChainEffects(catalog, {
+  const cascadeResult = applyCascadeEffects(catalog, {
     state: turnStartResult.state,
     events,
   });
@@ -470,5 +470,5 @@ export function reduce(catalog: CardCatalog, state: GameState, action: Action): 
       break;
   }
 
-  return applyChainEffects(catalog, result);
+  return applyCascadeEffects(catalog, result);
 }
