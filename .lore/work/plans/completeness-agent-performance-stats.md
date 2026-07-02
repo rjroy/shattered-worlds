@@ -1,7 +1,7 @@
 ---
 title: "Implementation plan: completeness agent performance stats"
 date: 2026-07-01
-status: draft
+status: executed
 tags: [plan, sim, completeness, agent, telemetry, statistics]
 modules: [sim]
 related: [.lore/work/specs/sim-completeness-checker.md, .lore/work/brainstorm/sim-completeness-checker.md]
