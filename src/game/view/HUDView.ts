@@ -228,7 +228,7 @@ export class HUDView extends Phaser.GameObjects.Container {
     }
     if (state.keywordGuard > 0) {
       if (this.guardIndicator === undefined) {
-        this.guardIndicator = this.addKeyword("Guard");
+        this.guardIndicator = this.addKeyword("Guard", false);
       }
       this.setPowerUpValue(this.guardIndicator, state.keywordGuard);
     } else {
@@ -290,12 +290,12 @@ export class HUDView extends Phaser.GameObjects.Container {
     return indicator;
   }
 
-  private addKeyword(keyword: string): PowerUpIndicator {
+  private addKeyword(keyword: string, bPenalty: boolean = true): PowerUpIndicator {
     const kwStyle = textStyle({
       fontFamily: FONTS.monospace,
       fontSize: "16px",
       fontStyle: "bold",
-      color: TEXT.textPenalty,
+      color: bPenalty ? TEXT.textPenalty : TEXT.textReward,
     });
     const style = textStyle({
       fontFamily: FONTS.monospace,
