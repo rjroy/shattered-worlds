@@ -86,9 +86,19 @@ describe("EFFECT_ICON_PLACEHOLDERS", () => {
     }
   });
 
-  it("gives every icon a distinct hue", () => {
-    const colors = Object.values(EFFECT_ICON_PLACEHOLDERS).map((spec) => spec.color);
-    expect(new Set(colors).size).toBe(colors.length);
+  it("only shares hues for intentional visual aliases", () => {
+    const idsByColor = Object.entries(EFFECT_ICON_PLACEHOLDERS).reduce<Record<string, string[]>>(
+      (groups, [id, spec]) => {
+        (groups[spec.color] ??= []).push(id);
+        return groups;
+      },
+      {},
+    );
+    const aliases = Object.values(idsByColor).filter((ids) => ids.length > 1);
+    expect(aliases).toEqual([
+      ["progress", "progressCost"],
+      ["onDraw", "onDiscard"],
+    ]);
   });
 
   it("uses valid #rrggbb colours", () => {

@@ -319,11 +319,17 @@ describe("effectiveWorldCardCost", () => {
       appliedKeywords: [{ name: "Lockdown", value: 1 }],
     });
 
-  it("adds one clear cost per other Locked card", () => {
+  it("adds clear cost from the card's own Lockdown value", () => {
     const cards = [locked("1"), locked("2"), locked("3")];
-    expect(effectiveWorldCardCost(cards[0]!, makeState({ hand: cards.slice(0, 1) }))).toBe(3);
+    expect(effectiveWorldCardCost(cards[0]!, makeState({ hand: cards.slice(0, 1) }))).toBe(4);
     expect(effectiveWorldCardCost(cards[0]!, makeState({ hand: cards.slice(0, 2) }))).toBe(4);
-    expect(effectiveWorldCardCost(cards[0]!, makeState({ hand: cards }))).toBe(5);
+    expect(effectiveWorldCardCost(cards[0]!, makeState({ hand: cards }))).toBe(4);
+
+    const doubleLocked = {
+      ...cards[0]!,
+      appliedKeywords: [{ name: "Lockdown" as const, value: 2 }],
+    };
+    expect(effectiveWorldCardCost(doubleLocked, makeState({ hand: [doubleLocked] }))).toBe(5);
   });
 
   it("returns base cost when the card lacks a registered modifier", () => {

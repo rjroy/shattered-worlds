@@ -107,7 +107,7 @@ describe("New Derelict isolate effects", () => {
     expect(result.state.worldDraw[0]?.templateId).toBe("Gravity Priority Shift");
   });
 
-  it("clearing two clustered Locked hazards consumes more total Progress than isolated clears", () => {
+  it("each Locked hazard pays its own Lockdown tax regardless of clustering", () => {
     const { catalog, worldData } = buildWorld(WORLD_ID);
     const { state } = createWorld(catalog, worldData, 2, DEFAULT_RUN_MODIFIERS);
     const [bulkheadCard, afterBulkhead] = mintCard(catalog, state, "Bulkhead 7-C Seals");
@@ -122,17 +122,19 @@ describe("New Derelict isolate effects", () => {
       catalog,
       { ...state, hand: [bulkhead] },
       bulkhead.id,
-      bulkhead.cost,
+      effectiveWorldCardCost(bulkhead, { ...state, hand: [bulkhead] }),
     );
     const isolatedGravity = dealProgress(
       catalog,
       { ...state, hand: [gravity] },
       gravity.id,
-      gravity.cost,
+      effectiveWorldCardCost(gravity, { ...state, hand: [gravity] }),
     );
     expect(isolatedBulkhead.events.some((event) => event.type === "HazardResolved")).toBe(true);
     expect(isolatedGravity.events.some((event) => event.type === "HazardResolved")).toBe(true);
-    const isolatedProgress = bulkhead.cost + gravity.cost;
+    const isolatedProgress =
+      effectiveWorldCardCost(bulkhead, { ...state, hand: [bulkhead] }) +
+      effectiveWorldCardCost(gravity, { ...state, hand: [gravity] });
 
     const clusteredState = { ...state, hand: [bulkhead, gravity] };
     const firstCost = effectiveWorldCardCost(bulkhead, clusteredState);
@@ -145,10 +147,10 @@ describe("New Derelict isolate effects", () => {
     const secondClear = dealProgress(catalog, firstClear.state, remaining.id, secondCost);
     expect(secondClear.events.some((event) => event.type === "HazardResolved")).toBe(true);
 
-    expect(firstCost + secondCost).toBeGreaterThan(isolatedProgress);
+    expect(firstCost + secondCost).toBe(isolatedProgress);
   });
 
-  it("taxes a previously untaxed template when it joins a Lockdown cluster", () => {
+  it("taxes a template carrying Lockdown", () => {
     const { catalog, worldData } = buildWorld(WORLD_ID);
     const { state } = createWorld(catalog, worldData, 2, DEFAULT_RUN_MODIFIERS);
     const [systemsCard, afterSystems] = mintCard(catalog, state, "Systems Panel");
@@ -288,7 +290,7 @@ describe("New Derelict seeded policy lines", () => {
       (card): card is WorldCard => card.kind === "world" && appliedKeywordValue(card, "Lockdown") > 0,
     );
     expect(lockedCards).toHaveLength(3);
-    expect(effectiveWorldCardCost(lockedCards[1]!, clustered)).toBe(lockedCards[1]!.cost + 2);
+    expect(effectiveWorldCardCost(lockedCards[1]!, clustered)).toBe(lockedCards[1]!.cost + 1);
 
     const released = applyEffect(catalog, clustered, release.effect);
     expect(released.state.hand.every((card) => appliedKeywordValue(card, "Lockdown") === 0)).toBe(true);

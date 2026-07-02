@@ -470,7 +470,7 @@ describe("BoonChoiceView", () => {
       (obj): obj is FakeGameObject =>
         (obj as FakeGameObject).kind === "text" &&
         (obj as FakeGameObject).text ===
-          "Lockdown: +1 cost per other Lockdown card in hand",
+          "+1 / self Lockdown",
     );
     expect(modifierText).toBeDefined();
     const modifierRow = modifierText?.parentContainer as FakeGameObject | undefined;

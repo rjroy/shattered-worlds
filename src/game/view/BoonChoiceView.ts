@@ -1,6 +1,7 @@
 import Phaser from "phaser";
 import type { BoonChoiceSource, Card, CardTemplate, CardTemplateId } from "../../core/index";
 import { parseKeyword } from "../../core/index";
+import { KEYWORD_COST_MODIFIERS } from "../../core/model/keywords";
 import { CARD_FACE, CANVAS_H, CANVAS_W, TABLE_LAYOUT } from "./layout";
 import { textStyle, getRealityPalette } from "./presentation";
 import { FONTS } from "./fonts";
@@ -154,7 +155,13 @@ export class BoonChoiceView extends Phaser.GameObjects.Container {
       const face = new CardView(
         scene,
         previewCard,
-        [],
+        previewCard.kind === "world"
+          ? previewCard.keywords
+              .map((keyword) => keyword.name)
+              .filter(
+                (name) => KEYWORD_COST_MODIFIERS[name]?.kind === "ClearCostPerSelfKeyword",
+              )
+          : [],
         x,
         OPTION_Y,
         config.theme,
