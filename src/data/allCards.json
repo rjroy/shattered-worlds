@@ -2205,6 +2205,7 @@
     "Emergency Route": {
       "kind": "player",
       "name": "Emergency Route",
+      "rarity": "common",
       "insetKey": "derelict-inset-emergency-route",
       "energyCost": 0,
       "exhaust": true,
@@ -2220,6 +2221,7 @@
     "Override Badge": {
       "kind": "player",
       "name": "Override Badge",
+      "rarity": "rare",
       "insetKey": "derelict-inset-override-badge",
       "energyCost": 1,
       "effect": {
@@ -2233,6 +2235,7 @@
     "Manual Release": {
       "kind": "player",
       "name": "Manual Release",
+      "rarity": "uncommon",
       "insetKey": "derelict-inset-manual-release",
       "energyCost": 1,
       "exhaust": true,
@@ -2241,8 +2244,9 @@
     "Follow the Checklist": {
       "kind": "player",
       "name": "Follow the Checklist",
+      "rarity": "uncommon",
       "insetKey": "derelict-inset-follow-the-checklist",
-      "energyCost": 1,
+      "energyCost": 0,
       "effect": {
         "kind": "Sequence",
         "steps": [
@@ -2254,6 +2258,7 @@
     "Bulkhead 7-C Seals": {
       "kind": "world",
       "name": "Bulkhead 7-C Seals",
+      "rarity": "uncommon",
       "insetKey": "derelict-inset-bulkhead-7-c-seals",
       "cost": 2,
       "keywords": [],
@@ -2273,6 +2278,7 @@
     "Unfinished Captain's Address": {
       "kind": "world",
       "name": "Unfinished Captain's Address",
+      "rarity": "rare",
       "insetKey": "derelict-inset-unfinished-captains-address",
       "cost": 1,
       "keywords": [],
@@ -2286,6 +2292,7 @@
     "Gravity Priority Shift": {
       "kind": "world",
       "name": "Gravity Priority Shift",
+      "rarity": "common",
       "insetKey": "derelict-inset-gravity-priority-shift",
       "cost": 3,
       "keywords": [],
@@ -2299,6 +2306,7 @@
     "Administrative Misfile": {
       "kind": "world",
       "name": "Administrative Misfile",
+      "rarity": "rare",
       "insetKey": "derelict-inset-administrative-misfile",
       "cost": 3,
       "keywords": ["Obstructed"],
@@ -2317,6 +2325,7 @@
     "Corridor Becomes Lifeboat": {
       "kind": "world",
       "name": "Corridor Becomes Lifeboat",
+      "rarity": "uncommon",
       "insetKey": "derelict-inset-corridor-becomes-lifeboat",
       "cost": 4,
       "keywords": ["Slow"],
@@ -2341,6 +2350,7 @@
     "Systems Panel": {
       "kind": "world",
       "name": "Systems Panel",
+      "rarity": "rare",
       "insetKey": "derelict-inset-systems-panel",
       "cost": 6,
       "keywords": ["Obstructed"],
@@ -2442,7 +2452,7 @@
     "Service Change": {
       "kind": "world",
       "name": "Service Change",
-      "rarity": "common",
+      "rarity": "uncommon",
       "insetKey": "transit-inset-service-change",
       "cost": 1,
       "keywords": [],
@@ -2463,7 +2473,7 @@
     "Platform Reassignment": {
       "kind": "world",
       "name": "Platform Reassignment",
-      "rarity": "common",
+      "rarity": "uncommon",
       "insetKey": "transit-inset-platform-reassignment",
       "cost": 2,
       "keywords": ["Obstructed"],
@@ -2504,7 +2514,7 @@
     "Train Arrives From Nowhere": {
       "kind": "world",
       "name": "Train Arrives From Nowhere",
-      "rarity": "uncommon",
+      "rarity": "common",
       "insetKey": "transit-inset-train-arrives-from-nowhere",
       "cost": 3,
       "keywords": ["Obstructed"],
