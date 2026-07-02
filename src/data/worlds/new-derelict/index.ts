@@ -10,5 +10,5 @@ export const NEW_DERELICT_BUNDLE: WorldDataBundle = {
   display: NEW_DERELICT_DISPLAY,
   help: NEW_DERELICT_HELP,
   // Temporary authorized reuse until New Derelict receives a dedicated track.
-  musicKey: "music-eden-prime",
+  musicKey: "music-new-derelict",
 };
