@@ -1,7 +1,7 @@
 ---
 title: "Implementation plan: The Transit Authority world"
 date: 2026-07-01
-status: draft
+status: executed
 tags: [world-design, transit-authority, reroute, forced-movement, deck-pressure, plan, keyword]
 modules: [world-data, themes, game-view, core-engine]
 related: [.lore/work/specs/transit-authority.md, .lore/reference/theme-authoring.md, .lore/work/specs/city-of-sleeping-giants.md]

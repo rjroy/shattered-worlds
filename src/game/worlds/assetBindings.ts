@@ -47,6 +47,10 @@ import derelictRealityUrl from "../assets/themes/new-derelict/new-derelict-reali
 import derelictOverlayUrl from "../assets/themes/new-derelict/intrusion-overlay.webp";
 import derelictCardfrontUrl from "../assets/themes/new-derelict/new-derelict-cardfront.webp";
 
+import transitRealityUrl from "../assets/themes/transit-authority/transit-authority-reality.webp";
+import transitOverlayUrl from "../assets/themes/transit-authority/intrusion-overlay.webp";
+import transitCardfrontUrl from "../assets/themes/transit-authority/transit-authority-cardfront.webp";
+
 // ---------------------------------------------------------------------------
 // World inset imports
 // ---------------------------------------------------------------------------
@@ -191,6 +195,19 @@ import derelictInsetRouteUrl from "../assets/themes/new-derelict/insets/inset-em
 import derelictInsetBadgeUrl from "../assets/themes/new-derelict/insets/inset-override-badge.webp";
 import derelictInsetReleaseUrl from "../assets/themes/new-derelict/insets/inset-manual-release.webp";
 import derelictInsetChecklistUrl from "../assets/themes/new-derelict/insets/inset-follow-the-checklist.webp";
+import transitInsetServiceChangeUrl from "../assets/themes/transit-authority/insets/inset-service-change.webp";
+import transitInsetPlatformReassignmentUrl from "../assets/themes/transit-authority/insets/inset-platform-reassignment.webp";
+import transitInsetTicketInvalidatedUrl from "../assets/themes/transit-authority/insets/inset-ticket-invalidated.webp";
+import transitInsetTrainArrivesFromNowhereUrl from "../assets/themes/transit-authority/insets/inset-train-arrives-from-nowhere.webp";
+import transitInsetDoNotBoardUnknownTrainsUrl from "../assets/themes/transit-authority/insets/inset-do-not-board-unknown-trains.webp";
+import transitInsetAllDeparturesSuspendedUrl from "../assets/themes/transit-authority/insets/inset-all-departures-suspended.webp";
+import transitInsetReissueCredentialsUrl from "../assets/themes/transit-authority/insets/inset-reissue-credentials.webp";
+import transitInsetEntityDetectedUrl from "../assets/themes/transit-authority/insets/inset-entity-detected.webp";
+import transitInsetTemporaryCredentialsUrl from "../assets/themes/transit-authority/insets/inset-temporary-credentials.webp";
+import transitInsetExpressTransferUrl from "../assets/themes/transit-authority/insets/inset-express-transfer.webp";
+import transitInsetCheckTheBoardUrl from "../assets/themes/transit-authority/insets/inset-check-the-board.webp";
+import transitInsetBoardAnywayUrl from "../assets/themes/transit-authority/insets/inset-board-anyway.webp";
+import transitInsetRightOfWayUrl from "../assets/themes/transit-authority/insets/inset-right-of-way.webp";
 
 // ---------------------------------------------------------------------------
 // World music imports
@@ -388,6 +405,23 @@ export const worldAssetUrls: Record<string, string> = {
   "derelict-inset-override-badge": derelictInsetBadgeUrl,
   "derelict-inset-manual-release": derelictInsetReleaseUrl,
   "derelict-inset-follow-the-checklist": derelictInsetChecklistUrl,
+  // transit-authority
+  "transit-authority-bg": transitRealityUrl,
+  "transit-authority-overlay": transitOverlayUrl,
+  "transit-authority-cardfront": transitCardfrontUrl,
+  "transit-inset-service-change": transitInsetServiceChangeUrl,
+  "transit-inset-platform-reassignment": transitInsetPlatformReassignmentUrl,
+  "transit-inset-ticket-invalidated": transitInsetTicketInvalidatedUrl,
+  "transit-inset-train-arrives-from-nowhere": transitInsetTrainArrivesFromNowhereUrl,
+  "transit-inset-do-not-board-unknown-trains": transitInsetDoNotBoardUnknownTrainsUrl,
+  "transit-inset-all-departures-suspended": transitInsetAllDeparturesSuspendedUrl,
+  "transit-inset-reissue-credentials": transitInsetReissueCredentialsUrl,
+  "transit-inset-entity-detected": transitInsetEntityDetectedUrl,
+  "transit-inset-temporary-credentials": transitInsetTemporaryCredentialsUrl,
+  "transit-inset-express-transfer": transitInsetExpressTransferUrl,
+  "transit-inset-check-the-board": transitInsetCheckTheBoardUrl,
+  "transit-inset-board-anyway": transitInsetBoardAnywayUrl,
+  "transit-inset-right-of-way": transitInsetRightOfWayUrl,
 };
 
 export interface WorldMusicAsset {

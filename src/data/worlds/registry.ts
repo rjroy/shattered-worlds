@@ -9,6 +9,7 @@ import { THE_EMBER_ORCHARD_BUNDLE } from "./the-ember-orchard/index";
 import { CITY_OF_SLEEPING_GIANTS_BUNDLE } from "./city-of-sleeping-giants/index";
 import { EDEN_PRIME_BUNDLE } from "./eden-prime/index";
 import { NEW_DERELICT_BUNDLE } from "./new-derelict/index";
+import { TRANSIT_AUTHORITY_BUNDLE } from "./transit-authority/index";
 import type { WorldDataBundle } from "./types";
 
 export const worldDataRegistry: readonly WorldDataBundle[] = [
@@ -23,4 +24,5 @@ export const worldDataRegistry: readonly WorldDataBundle[] = [
   CITY_OF_SLEEPING_GIANTS_BUNDLE,
   EDEN_PRIME_BUNDLE,
   NEW_DERELICT_BUNDLE,
+  TRANSIT_AUTHORITY_BUNDLE,
 ];

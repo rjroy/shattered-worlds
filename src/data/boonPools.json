@@ -55,5 +55,12 @@
   "pool-survey-results": ["Quiet Survey", "Brace The Ward", "Bone Pin", "Contour Map"],
   "pool-lights-lv1": ["Barricade", "Half-Dead Spotlight", "Cooler Snacks", "Loaded Shotgun"],
   "pool-lights-lv2": ["Flashlight", "Flare Gun", "Bonfire", "Searchlight"],
-  "pool-garden-tools": ["Pruning Shears", "Machete", "Weed Killer", "Bloom"]
+  "pool-garden-tools": ["Pruning Shears", "Machete", "Weed Killer", "Bloom"],
+  "pool-reissued-credentials": [
+    "Temporary Credentials",
+    "Express Transfer",
+    "Check the Board",
+    "Board Anyway",
+    "Right of Way"
+  ]
 }
