@@ -151,7 +151,15 @@ export class BoonChoiceView extends Phaser.GameObjects.Container {
         option.template,
         config.theme.worldId,
       );
-      const face = new CardView(scene, previewCard, x, OPTION_Y, config.theme, config.resolveTheme);
+      const face = new CardView(
+        scene,
+        previewCard,
+        [],
+        x,
+        OPTION_Y,
+        config.theme,
+        config.resolveTheme,
+      );
       face.setDepth(0);
       face.setSize(CARD_FACE.width, CARD_FACE.height);
       face.setInteractive({ useHandCursor: true });

@@ -89,6 +89,7 @@ import {
 } from "../view/tableLayout";
 import { addTooltip } from "../view/TooltipView";
 import { CONCEALED_HOOK_WARNING } from "../../core/view/actionPreview";
+import { activeKeywordCostModifiers } from "../../core/engine/effectiveCards";
 
 // ---------------------------------------------------------------------------
 // Layout constants
@@ -947,7 +948,9 @@ export class TableScene extends Phaser.Scene {
       this.cardDisplaySignatures.delete(card.id);
     }
 
-    const container = new CardView(this, card, 0, 0, this.theme_, selectTheme, () =>
+    const activeKeywords =
+      card.kind == "world" ? activeKeywordCostModifiers(card, this.game_.state) : [];
+    const container = new CardView(this, card, activeKeywords, 0, 0, this.theme_, selectTheme, () =>
       fxGain(this.runtime_.userSettings.get()),
     );
     this.cardObjects.set(card.id, container);

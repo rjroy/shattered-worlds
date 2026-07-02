@@ -2620,7 +2620,7 @@ interface RenderedCard {
 function renderCard(card: Card): RenderedCard {
   const { scene, texts, containers } = makeRenderScene();
   const theme = selectTheme("zombie-big-box");
-  const view = new CardView(scene as never, card, 0, 0, theme, () => theme);
+  const view = new CardView(scene as never, card, [], 0, 0, theme, () => theme);
   return { view, texts, containers };
 }
 

@@ -4,13 +4,60 @@ import type {
   PlayerCardPatch,
   PlayerCardModifierTarget,
 } from "../../data/unlocks/types";
-import type { Card, CardEffect, GameState, Keyword, PlayerCard, WorldCard } from "../model/types";
-import { hasKeyword, keywordNames, keywordValue, KEYWORD_COST_MODIFIERS } from "../model/keywords";
+import type {
+  Card,
+  CardEffect,
+  GameState,
+  Keyword,
+  KeywordName,
+  PlayerCard,
+  WorldCard,
+} from "../model/types";
+import { hasKeyword, keywordValue, KEYWORD_COST_MODIFIERS } from "../model/keywords";
 
-export function effectiveWorldCardCost(card: WorldCard, state: GameState): number {
+export function activeKeywordCostModifiers(card: WorldCard, state: GameState): KeywordName[] {
   // Dedupe: keywordNames concatenates authored + applied lists without
   // deduping, so a keyword present in both would otherwise double-count.
-  const uniqueNames = new Set(keywordNames(card));
+  const uniqueNames = new Set(Object.keys(KEYWORD_COST_MODIFIERS) as KeywordName[]);
+
+  const active: KeywordName[] = [];
+  for (const name of uniqueNames) {
+    const modifier = KEYWORD_COST_MODIFIERS[name];
+    if (modifier === undefined) continue;
+
+    switch (modifier.kind) {
+      case "ClearCostPerKeywordCount": {
+        const matchingCount = state.hand.reduce((sum, c) => sum + (hasKeyword(c, name) ? 1 : 0), 0);
+        if (matchingCount > 0) {
+          active.push(name);
+        }
+        break;
+      }
+      case "ClearCostPerOtherKeyword": {
+        const matchingValue = state.hand
+          .filter((c) => c.id !== card.id)
+          .reduce((sum, c) => sum + keywordValue(c, name), 0);
+        if (matchingValue > 0) {
+          active.push(name);
+        }
+        break;
+      }
+      case "ClearCostPerSelfKeyword": {
+        if (keywordValue(card, name)) {
+          active.push(name);
+        }
+        break;
+      }
+    }
+  }
+
+  return active;
+}
+
+export function extraWorldCardCost(card: WorldCard, state: GameState): number {
+  // Dedupe: keywordNames concatenates authored + applied lists without
+  // deduping, so a keyword present in both would otherwise double-count.
+  const uniqueNames = new Set(Object.keys(KEYWORD_COST_MODIFIERS) as KeywordName[]);
 
   let extraCost = 0;
   for (const name of uniqueNames) {
@@ -19,9 +66,7 @@ export function effectiveWorldCardCost(card: WorldCard, state: GameState): numbe
 
     switch (modifier.kind) {
       case "ClearCostPerKeywordCount": {
-        const matchingCount = state.hand
-          .filter((c) => c.id !== card.id)
-          .reduce((sum, c) => sum + (hasKeyword(c, name) ? 1 : 0), 0);
+        const matchingCount = state.hand.reduce((sum, c) => sum + (hasKeyword(c, name) ? 1 : 0), 0);
         extraCost += Math.max(0, matchingCount) * modifier.costPer;
         break;
       }
@@ -39,7 +84,11 @@ export function effectiveWorldCardCost(card: WorldCard, state: GameState): numbe
     }
   }
 
-  return card.cost + extraCost;
+  return extraCost;
+}
+
+export function effectiveWorldCardCost(card: WorldCard, state: GameState): number {
+  return card.cost + extraWorldCardCost(card, state);
 }
 
 export function effectivePlayerCard(card: PlayerCard, state: GameState): PlayerCard {

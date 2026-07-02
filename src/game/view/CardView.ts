@@ -8,13 +8,8 @@
  * for older call sites and tests.
  */
 import Phaser from "phaser";
-import type { Card, CardEffect, Keyword, WorldCard } from "../../core/index";
-import {
-  concealOf,
-  KEYWORD_COST_MODIFIERS,
-  keywordNames,
-  PERSISTENT_KEYWORDS,
-} from "../../core/index";
+import type { Card, CardEffect, Keyword, KeywordName, WorldCard } from "../../core/index";
+import { concealOf, KEYWORD_COST_MODIFIERS, PERSISTENT_KEYWORDS } from "../../core/index";
 import { CARD_FX_BASE, effectiveVolume } from "../audio/audioVolume";
 import type { FrameStyle, VisualTheme } from "./themes/theme";
 import { compileEffect, EffectLine, EffectToken, type IconId } from "../../core/view/effectGlyphs";
@@ -186,6 +181,7 @@ function addCardText(
 /** Create a Phaser Container representing a single card (player or world). */
 export class CardView extends Phaser.GameObjects.Container {
   readonly cardId: string;
+  readonly activeModifiers: KeywordName[];
   readonly worldId: string;
   readonly visibleFxKey?: string;
   private loopedFx?: Phaser.Sound.BaseSound;
@@ -218,6 +214,7 @@ export class CardView extends Phaser.GameObjects.Container {
   constructor(
     scene: Phaser.Scene,
     card: Card,
+    activeModifiers: KeywordName[],
     x: number,
     y: number,
     theme: VisualTheme,
@@ -226,6 +223,7 @@ export class CardView extends Phaser.GameObjects.Container {
   ) {
     super(scene, x, y);
     this.fxGain_ = fxGain;
+    this.activeModifiers = activeModifiers;
     scene.add.existing(this);
     this.cardId = card.id;
     this.worldId = theme.worldId;
@@ -493,7 +491,7 @@ export class CardView extends Phaser.GameObjects.Container {
           color: TEXT.textHeld,
         },
         {
-          leadIcon: "worldDraw",
+          leadIcon: "onDraw",
           effect: worldCard.onDraw,
           color: TEXT.textHeld,
         },
@@ -521,31 +519,38 @@ export class CardView extends Phaser.GameObjects.Container {
         currY += height + effectLineSpacing;
       }
 
-      const modifierLines: EffectLine[] = [...new Set(keywordNames(worldCard))].flatMap((name) => {
+      const modifierLines: EffectLine[] = activeModifiers.flatMap((name) => {
         const modifier = KEYWORD_COST_MODIFIERS[name];
         if (modifier === undefined) return [];
 
         const tokens: EffectToken[] = [];
         switch (modifier.kind) {
           case "ClearCostPerKeywordCount":
-            tokens.push({ kind: "text" as const, text: `+${modifier.costPer} / other ${name}` });
-            break;
+            tokens.push({
+              kind: "text" as const,
+              text: `+${modifier.costPer} / ${name}`,
+            });
+            return [{ tokens: tokens }];
           case "ClearCostPerOtherKeyword":
-            tokens.push({ kind: "text" as const, text: `+${modifier.costPer} / total ${name}` });
-            break;
+            tokens.push({
+              kind: "text" as const,
+              text: `+${modifier.costPer} / total ${name}`,
+            });
+            return [{ tokens: tokens }];
           case "ClearCostPerSelfKeyword":
             tokens.push({ kind: "text" as const, text: `+${modifier.costPer} / self ${name}` });
-            break;
+            return [{ tokens: tokens }];
         }
-        return [{ tokens: tokens }];
+        return [];
       });
+
       const modifierBlock = addEffectLines(scene, modifierLines, {
         maxWidth: CARD_W - 18,
         baseColor: TEXT.textPenalty,
         fontSize: 12,
         background: { color: 0x000000, alpha: 0.8 },
         warnLabel: card.name,
-        leadIcon: "progress",
+        leadIcon: "progressCost",
       });
       if (modifierBlock.height === 0) {
         modifierBlock.container.destroy();
@@ -785,13 +790,14 @@ export class CardView extends Phaser.GameObjects.Container {
 export function createCardObject(
   scene: Phaser.Scene,
   card: Card,
+  activeModifiers: KeywordName[],
   x: number,
   y: number,
   theme: VisualTheme,
   resolveTheme: (worldId: string) => VisualTheme,
   fxGain?: () => number,
 ): Phaser.GameObjects.Container {
-  return new CardView(scene, card, x, y, theme, resolveTheme, fxGain);
+  return new CardView(scene, card, activeModifiers, x, y, theme, resolveTheme, fxGain);
 }
 
 // ---------------------------------------------------------------------------

@@ -22,8 +22,10 @@ export type IconId =
   // resources & actions
   | "progress"
   | "progressAll"
+  | "progressCost"
   | "draw"
   | "worldDraw"
+  | "onDraw"
   | "hp"
   | "energy"
   | "light"

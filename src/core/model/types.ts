@@ -24,8 +24,11 @@ export type KeywordName =
 export type Keyword = { name: KeywordName; value?: number };
 
 export type PersistentModifier =
+  // Increases the clear cost per card with the keyword
   | { kind: "ClearCostPerKeywordCount"; costPer: number }
+  // Increases the clear cost based on the total value of the keyword on other cards
   | { kind: "ClearCostPerOtherKeyword"; costPer: number }
+  // Increases the clear cost based on the total value of the keyword on this cards
   | { kind: "ClearCostPerSelfKeyword"; costPer: number };
 
 export type Dest = "playerDiscard" | "playerDrawTop" | "worldDraw" | "worldDrawTop";
