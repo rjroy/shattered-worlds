@@ -8,11 +8,11 @@
  * for older call sites and tests.
  */
 import Phaser from "phaser";
-import type { Card, CardEffect, Keyword, WorldCard } from "../../core/index";
-import { concealOf } from "../../core/index";
+import type { Card, CardEffect, Keyword, KeywordName, WorldCard } from "../../core/index";
+import { concealOf, KEYWORD_COST_MODIFIERS, PERSISTENT_KEYWORDS } from "../../core/index";
 import { CARD_FX_BASE, effectiveVolume } from "../audio/audioVolume";
 import type { FrameStyle, VisualTheme } from "./themes/theme";
-import { compileEffect, type IconId } from "../../core/view/effectGlyphs";
+import { compileEffect, EffectLine, EffectToken, type IconId } from "../../core/view/effectGlyphs";
 import { ENERGY_COST_TOOLTIP, PROGRESS_RING_TOOLTIP } from "../../core/view/effectTooltips";
 import { addEffectLines } from "./effectLineView";
 import { rarityStyle, rarityTierShift } from "./rarity";
@@ -38,7 +38,9 @@ import { FONTS } from "./fonts";
  * keyword carries a value (e.g. "Concealed 3"). Keywords are text, never icons.
  */
 export function formatKeyword(keyword: Keyword): string {
-  return keyword.value === undefined ? keyword.name : `${keyword.name} ${keyword.value}`;
+  return keyword.value === undefined || PERSISTENT_KEYWORDS.has(keyword.name)
+    ? keyword.name
+    : `${keyword.name} ${keyword.value}`;
 }
 
 /** Join a card's keywords into the on-face line ("Spore · Slow"). */
@@ -179,6 +181,7 @@ function addCardText(
 /** Create a Phaser Container representing a single card (player or world). */
 export class CardView extends Phaser.GameObjects.Container {
   readonly cardId: string;
+  readonly activeModifiers: KeywordName[];
   readonly worldId: string;
   readonly visibleFxKey?: string;
   private loopedFx?: Phaser.Sound.BaseSound;
@@ -186,19 +189,20 @@ export class CardView extends Phaser.GameObjects.Container {
   private highlightRect: Phaser.GameObjects.Rectangle;
   private rarityRect: Phaser.GameObjects.Rectangle;
   private costRing?: CostRing;
+  private costText?: Phaser.GameObjects.Text;
   private targetGlow?: Phaser.GameObjects.Graphics;
   private emphasized = false;
 
   // Concealment (world cards only). `concealDepth` is the card's Concealed:N
   // value (0 = never concealable). `revealObjects` is the identity face shown
-  // when revealed; `fogObjects` is the fog-back shown only its depth chip. The
-  // two groups are toggled by `applyConcealment(light)` — a purely cosmetic
-  // read of `state.light` that NEVER feeds back into core. `concealedNow`
-  // tracks the last applied state so an unchanged light is idempotent (no tween
-  // restart, no flicker) on the per-cycle reconcile path.
+  // when revealed; `shadowObjects` is the shadow overlay showing only its
+  // depth chip. The two groups are toggled by `applyConcealment(light)` — a
+  // purely cosmetic read of `state.light` that NEVER feeds back into core.
+  // `concealedNow` tracks the last applied state so an unchanged light is
+  // idempotent (no tween restart, no flicker) on the per-cycle reconcile path.
   private concealDepth = 0;
   private readonly revealObjects: Phaser.GameObjects.GameObject[] = [];
-  private readonly fogObjects: Phaser.GameObjects.GameObject[] = [];
+  private readonly shadowObjects: Phaser.GameObjects.GameObject[] = [];
   private concealedNow: boolean | undefined = undefined;
 
   private pickBadge?: Phaser.GameObjects.Container;
@@ -210,6 +214,7 @@ export class CardView extends Phaser.GameObjects.Container {
   constructor(
     scene: Phaser.Scene,
     card: Card,
+    activeModifiers: KeywordName[],
     x: number,
     y: number,
     theme: VisualTheme,
@@ -218,6 +223,7 @@ export class CardView extends Phaser.GameObjects.Container {
   ) {
     super(scene, x, y);
     this.fxGain_ = fxGain;
+    this.activeModifiers = activeModifiers;
     scene.add.existing(this);
     this.cardId = card.id;
     this.worldId = theme.worldId;
@@ -391,8 +397,8 @@ export class CardView extends Phaser.GameObjects.Container {
       const worldCard = card as WorldCard;
 
       // The world card's full identity face. Each piece is pushed onto
-      // `revealObjects` so the fog-back can hide all of it at once when the card
-      // is concealed; the name (built above) is part of that identity too.
+      // `revealObjects` so the shadow overlay can hide all of it at once when
+      // the card is concealed; the name (built above) is part of that identity too.
       const reveal = this.revealObjects;
       for (const line of nameText) reveal.push(line);
 
@@ -418,6 +424,7 @@ export class CardView extends Phaser.GameObjects.Container {
           originY: 0.5,
         },
       )) {
+        this.costText = line;
         reveal.push(line);
       }
       for (const line of addCardText(scene, this, CARD_W / 2 - 21, CARD_H / 2 - 3, "to clear", {
@@ -434,8 +441,8 @@ export class CardView extends Phaser.GameObjects.Container {
       this.add(costRingHit);
       reveal.push(costRingHit);
 
-      // Keywords. The whole keyword line is identity (hidden under fog); the
-      // Concealed:N depth chip is rendered separately on the fog-back below.
+      // Keywords. The whole keyword line is identity (hidden in shadow); the
+      // Concealed:N depth chip is rendered separately on the shadow overlay below.
       if (worldCard.keywords.length > 0) {
         for (const line of addCardText(
           scene,
@@ -484,7 +491,7 @@ export class CardView extends Phaser.GameObjects.Container {
           color: TEXT.textHeld,
         },
         {
-          leadIcon: "worldDraw",
+          leadIcon: "onDraw",
           effect: worldCard.onDraw,
           color: TEXT.textHeld,
         },
@@ -512,9 +519,52 @@ export class CardView extends Phaser.GameObjects.Container {
         currY += height + effectLineSpacing;
       }
 
+      const modifierLines: EffectLine[] = activeModifiers.flatMap((name) => {
+        const modifier = KEYWORD_COST_MODIFIERS[name];
+        if (modifier === undefined) return [];
+
+        const tokens: EffectToken[] = [];
+        switch (modifier.kind) {
+          case "ClearCostPerKeywordCount":
+            tokens.push({
+              kind: "text" as const,
+              text: `+${modifier.costPer} / ${name}`,
+            });
+            return [{ tokens: tokens }];
+          case "ClearCostPerOtherKeyword":
+            tokens.push({
+              kind: "text" as const,
+              text: `+${modifier.costPer} / total ${name}`,
+            });
+            return [{ tokens: tokens }];
+          case "ClearCostPerSelfKeyword":
+            tokens.push({ kind: "text" as const, text: `+${modifier.costPer} / self ${name}` });
+            return [{ tokens: tokens }];
+        }
+        return [];
+      });
+
+      const modifierBlock = addEffectLines(scene, modifierLines, {
+        maxWidth: CARD_W - 18,
+        baseColor: TEXT.textPenalty,
+        fontSize: 12,
+        background: { color: 0x000000, alpha: 0.8 },
+        warnLabel: card.name,
+        leadIcon: "progressCost",
+      });
+      if (modifierBlock.height === 0) {
+        modifierBlock.container.destroy();
+      } else {
+        modifierBlock.container.setPosition(0, currY);
+        this.add(modifierBlock.container);
+        reveal.push(modifierBlock.container);
+        currY += modifierBlock.height + effectLineSpacing;
+      }
+
       // Discard indicator.
       if (worldCard.discardable) {
-        for (const line of addCardText(scene, this, 0, CARD_H / 2 - 22, "click to discard", {
+        const discardY = Math.min(currY, CARD_H / 2 - 22);
+        for (const line of addCardText(scene, this, 0, discardY, "click to discard", {
           fontFamily: FONTS.body,
           fontSize: "9px",
           color: TEXT.textDiscard,
@@ -526,18 +576,18 @@ export class CardView extends Phaser.GameObjects.Container {
         }
       }
 
-      // Fog-back overlay. A world card with `Concealed:N` hides its identity
-      // behind fog until Light reaches N; only the depth chip stays visible so
+      // Shadow overlay. A world card with `Concealed:N` hides its identity
+      // in shadow until Light reaches N; only the depth chip stays visible so
       // the player knows how much Light the card demands. Built unconditionally
       // (depth 0 means it never shows) and toggled by `applyConcealment(light)`,
-      // a cosmetic read of `state.light` that never touches core. `buildFogBack`
-      // assigns `this.concealDepth` and populates `this.fogObjects`.
+      // a cosmetic read of `state.light` that never touches core. `buildShadowOverlay`
+      // assigns `this.concealDepth` and populates `this.shadowObjects`.
       this.concealDepth = concealOf(worldCard);
-      this.buildFogBack(scene);
+      this.buildShadowOverlay(scene);
       // Start revealed; the first reconcile cycle calls applyConcealment(light)
-      // with the live Light, so a card concealed at spawn snaps to fog with no
+      // with the live Light, so a card concealed at spawn snaps to shadow with no
       // flicker (the table draws once, synchronously, right after creation).
-      this.setObjectsVisible(this.fogObjects, false);
+      this.setObjectsVisible(this.shadowObjects, false);
     }
 
     const appliedKeywordLabel = formatAppliedKeywords(card);
@@ -560,23 +610,24 @@ export class CardView extends Phaser.GameObjects.Container {
   }
 
   /**
-   * Build the fog-back: a translucent fog panel over the card face plus the
-   * `Concealed:N` depth chip. Cosmetic only — it reads no GameState and feeds
+   * Build the shadow overlay: a translucent shadow panel over the card face plus
+   * the `Concealed:N` depth chip. Cosmetic only — it reads no GameState and feeds
    * nothing back into core. Hidden by default; `applyConcealment` reveals it.
    */
-  private buildFogBack(scene: Phaser.Scene): void {
+  private buildShadowOverlay(scene: Phaser.Scene): void {
     if (this.concealDepth <= 0) return;
 
     // Translucent panel that veils the identity face beneath it.
-    const fog = scene.add
+    const shadow = scene.add
       .rectangle(0, 0, CARD_W - 8, CARD_H - 8, 0x2a3a4a, 0.92)
       .setOrigin(0.5, 0.5)
       .setRounded(10);
-    this.add(fog);
-    this.fogObjects.push(fog);
+    this.add(shadow);
+    this.shadowObjects.push(shadow);
 
-    // Depth chip: the only thing legible through the fog. Reuses the structured
-    // keyword formatter so "Concealed 3" matches the on-face keyword language.
+    // Depth chip: the only thing legible through the shadow. Reuses the
+    // structured keyword formatter so "Concealed 3" matches the on-face
+    // keyword language.
     for (const line of addCardText(
       scene,
       this,
@@ -591,16 +642,17 @@ export class CardView extends Phaser.GameObjects.Container {
         originY: 0.5,
       },
     )) {
-      this.fogObjects.push(line);
+      this.shadowObjects.push(line);
     }
   }
 
   /**
-   * Toggle the fog-back against the current Light. Pure cosmetic reconcile:
-   * called every drawAll cycle (and so on every LightChanged, since EndTurn
-   * decay and GainLight both repaint), it reads `light` and shows the fog-back
-   * when `isConcealed`, the identity face otherwise. Idempotent on an unchanged
-   * concealment state. No-op for cards that can never be concealed (depth 0).
+   * Toggle the shadow overlay against the current Light. Pure cosmetic
+   * reconcile: called every drawAll cycle (and so on every LightChanged, since
+   * EndTurn decay and GainLight both repaint), it reads `light` and shows the
+   * shadow overlay when `isConcealed`, the identity face otherwise. Idempotent
+   * on an unchanged concealment state. No-op for cards that can never be
+   * concealed (depth 0).
    */
   applyConcealment(light: number): void {
     if (this.concealDepth <= 0) return;
@@ -610,7 +662,7 @@ export class CardView extends Phaser.GameObjects.Container {
     if (this.concealedNow === concealed) return;
     this.concealedNow = concealed;
     this.setObjectsVisible(this.revealObjects, !concealed);
-    this.setObjectsVisible(this.fogObjects, concealed);
+    this.setObjectsVisible(this.shadowObjects, concealed);
   }
 
   private setObjectsVisible(
@@ -647,6 +699,15 @@ export class CardView extends Phaser.GameObjects.Container {
   updateCostRing(fraction: number, ringAccent: number): void {
     if (this.costRing === undefined) return;
     updateRingObject(this.scene, this.costRing, fraction, ringAccent);
+  }
+
+  /** Reconcile a world card's live effective clear cost and modifier colour. */
+  updateCostLabel(cost: number, baseCost: number): void {
+    if (this.costText === undefined) return;
+    this.costText.setText(String(cost));
+    const color =
+      cost > baseCost ? TEXT.textPenalty : cost < baseCost ? TEXT.textReward : TEXT.textCost;
+    this.costText.setColor(color);
   }
 
   /** Make this hovered legal target the loudest card on the board. */
@@ -729,13 +790,14 @@ export class CardView extends Phaser.GameObjects.Container {
 export function createCardObject(
   scene: Phaser.Scene,
   card: Card,
+  activeModifiers: KeywordName[],
   x: number,
   y: number,
   theme: VisualTheme,
   resolveTheme: (worldId: string) => VisualTheme,
   fxGain?: () => number,
 ): Phaser.GameObjects.Container {
-  return new CardView(scene, card, x, y, theme, resolveTheme, fxGain);
+  return new CardView(scene, card, activeModifiers, x, y, theme, resolveTheme, fxGain);
 }
 
 // ---------------------------------------------------------------------------

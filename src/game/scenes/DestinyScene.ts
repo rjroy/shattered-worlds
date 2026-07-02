@@ -9,9 +9,9 @@ import {
   DESTINY_BUDGET,
   UNLOCK_CATALOG,
 } from "../../data/unlocks/catalog";
-import type { UnlockDefinition } from "../../data/unlocks/types";
+import type { UnlockDefinition, UnlockEffect } from "../../data/unlocks/types";
 import type { FeatsStore } from "../runtime/featsProfile";
-import type { UnlocksStore } from "../runtime/unlocksProfile";
+import { type UnlocksStore } from "../runtime/unlocksProfile";
 import { unlockCardState } from "../view/unlockShop";
 import { CANVAS_W, CANVAS_H } from "../view/layout";
 import { FONTS } from "../view/fonts";
@@ -135,7 +135,7 @@ export class DestinyScene extends Phaser.Scene {
 
     const profile = this.unlocksStore.getProfile();
     const balance = computeSpendableBalance(this.featsStore.getProfile(), profile);
-    const used = activeWeight(profile.activated, UNLOCK_CATALOG);
+    const used = activeWeight(profile, UNLOCK_CATALOG);
     const pips = "●".repeat(used) + "○".repeat(Math.max(0, DESTINY_BUDGET - used));
 
     this.addPanel(44, 74, 812, 28);
@@ -146,11 +146,22 @@ export class DestinyScene extends Phaser.Scene {
     const rows = Math.ceil(totalUnlocks / 2);
     const maxOffset = Math.max(0, rows - VISIBLE_ROWS);
     this.scrollOffset = Math.min(this.scrollOffset, maxOffset);
+    const compareUnlockTypes = (a: UnlockEffect["type"], b: UnlockEffect["type"]) => {
+      const typeDelta = a.localeCompare(b);
+      if (typeDelta == 0) return 0;
+      if (a == "worldUnlock") return -1;
+      if (b == "worldUnlock") return +1;
+      if (a == "starterDeckOverride") return -1;
+      if (b == "starterDeckOverride") return +1;
+      return typeDelta;
+    };
     const sortedUnlock = [...UNLOCK_CATALOG].sort((a, b) => {
-      const costDelta = a.cost - b.cost;
-      if (costDelta != 0) return costDelta;
       const weightDelta = a.destinyWeight - b.destinyWeight;
       if (weightDelta != 0) return weightDelta;
+      const typeDelta = compareUnlockTypes(a.effect.type, b.effect.type);
+      if (typeDelta != 0) return typeDelta;
+      const costDelta = a.cost - b.cost;
+      if (costDelta != 0) return costDelta;
       return a.name.localeCompare(b.name);
     });
     const visible = sortedUnlock.slice(
@@ -360,7 +371,7 @@ export class DestinyScene extends Phaser.Scene {
     profile: ReturnType<UnlocksStore["getProfile"]>,
   ): void {
     const active = profile.activated.includes(def.id);
-    const enabled = active || canActivate(def, profile.activated, UNLOCK_CATALOG);
+    const enabled = active || canActivate(def, profile, UNLOCK_CATALOG);
     const label = active ? "◉ ACTIVE" : "○ inactive";
     const color = active ? TEXT.textReward : enabled ? "#d6b15c" : TEXT.textMuted;
     const toggle = this.add.text(

@@ -9,12 +9,27 @@ export type CardId = string;
 // 'Zombie' | 'Find Baseball Bat' | 'The Walker' | 'Door'
 export type CardTemplateId = string;
 
-export type KeywordName = "Obstructed" | "Creature" | "Slow" | "Spore" | "Concealed" | "Alarm";
+export type KeywordName =
+  | "Obstructed"
+  | "Creature"
+  | "Slow"
+  | "Spore"
+  | "Concealed"
+  | "Alarm"
+  | "Lockdown";
 
 // A keyword as it lives on a minted card: a name plus an optional numeric
 // value (e.g. "Concealed:3" authors as { name: "Concealed", value: 3 }).
 // Bare keywords carry no value.
 export type Keyword = { name: KeywordName; value?: number };
+
+export type PersistentModifier =
+  // Increases the clear cost per card with the keyword
+  | { kind: "ClearCostPerKeywordCount"; costPer: number }
+  // Increases the clear cost based on the total value of the keyword on other cards
+  | { kind: "ClearCostPerOtherKeyword"; costPer: number }
+  // Increases the clear cost based on the total value of the keyword on this cards
+  | { kind: "ClearCostPerSelfKeyword"; costPer: number };
 
 export type Dest = "playerDiscard" | "playerDrawTop" | "worldDraw" | "worldDrawTop";
 
@@ -64,7 +79,7 @@ export type CardEffect =
   | { kind: "Damage"; amount: number }
   | { kind: "DamageScaled"; base: number; per: CounterSpec; amount: number }
   // Raises the player's global Light level. No target; mirrors GainEnergy/Heal.
-  // Fog's exclusive signature effect: the only way to lift concealment.
+  // The only way to lift concealment.
   | { kind: "GainLight"; amount: number }
   | { kind: "GainCard"; template: CardTemplateId }
   // The rolled sibling of GainCard: draws one template from a named pool via
@@ -108,12 +123,12 @@ export type CardEffect =
   // Non-exilable cards (canExile: false) are skipped in place; stops gracefully
   // when fewer exilable cards exist than amount.
   | { kind: "ExileTopWorldCards"; amount: number }
-  // Tidal: the player-selected recall. Moves chosen cards from playerDiscard to
+  // The player-selected recall. Moves chosen cards from playerDiscard to
   // the top of playerDraw, preserving each card instance (no re-mint). The
   // chooser supplies the ids via PlayCard.recallIds; [min,max] bounds the
   // selection. min: 0 makes it an optional no-op.
   | { kind: "ReturnPlayerDiscardToTop"; min: number; max: number }
-  // Tidal: the automatic recall fired by hazards and the world end-turn passive.
+  // The automatic recall fired by hazards and a world's end-turn passive.
   // Picks `count ?? 1` cards from playerDiscard by `policy ?? "latest"` and moves
   // them to the top of playerDraw. Never played from hand.
   | {
@@ -121,7 +136,7 @@ export type CardEffect =
       count?: number;
       policy?: "latest" | "random" | "lowestCost" | "highestCost" | "panicFirst";
     }
-  // Eden Prime — applied-keyword family. `ApplyKeyword` stamps a transient
+  // Applied-keyword family. `ApplyKeyword` stamps a transient
   // keyword (e.g. Alarm) onto cards. `value` is the lifetime in turn-start ticks
   // (see appliedKeywords / tickAppliedKeywords). Targets:
   //   "hand"               — every card currently in hand
@@ -167,8 +182,8 @@ export interface PlayerCard {
   // When true, the card is destroyed (sent to no zone) on play instead of
   // recycling to playerDiscard.
   exhaust?: boolean;
-  // Whiteout-only transient instance state. Positive values mean the card is
-  // locked for that many turn-start thaw ticks; absent/0 means playable.
+  // Transient instance state for freeze mechanics. Positive values mean the
+  // card is locked for that many turn-start thaw ticks; absent/0 means playable.
   frozen?: number;
   // Always present on minted cards (empty when the template omits keywords),
   // matching WorldCard so consumers never need undefined checks.
@@ -222,7 +237,7 @@ export type Action =
       destroyIds?: readonly CardId[];
       thawIds?: readonly CardId[];
       discardId?: CardId;
-      // Player-selected discard ids for ReturnPlayerDiscardToTop (Tidal).
+      // Player-selected discard ids for ReturnPlayerDiscardToTop.
       recallIds?: readonly CardId[];
     }
   | { type: "DiscardHazard"; cardId: CardId }
@@ -255,11 +270,12 @@ export interface GameState {
   // The player's global Light level. A standing resource (not a pool): seeing
   // is free, light is only spent by turn-start decay and raised by GainLight.
   // A world card is concealed iff its Concealed:N depth exceeds `light`.
-  // Non-Fog worlds run with light === 0 throughout (startLight defaults to 0),
-  // which keeps decay (emit-on-change) and concealment no-ops everywhere but Fog.
+  // Worlds that don't set startLight run with light === 0 throughout, which
+  // keeps decay (emit-on-change) and concealment no-ops for them.
   light: number;
-  // Spendable warmth used by Whiteout thaw effects. Non-heat worlds may carry
-  // a number from unlocks, but it has no local meaning unless the world uses it.
+  // Spendable warmth used by thaw effects. Worlds that don't use heat may
+  // carry a number from unlocks, but it has no local meaning unless the world
+  // uses it.
   heat: number;
   // Count of random player cards to destroy from the next refilled hand.
   // Queued by the ForceDestroy effect; drained at turn start.
@@ -275,24 +291,24 @@ export interface GameState {
   // Charges that absorb ForceDestroy snatches before they destroy player
   // cards. Granted by the Brace effect; consumed in resolveForceDestroy.
   braceCharges: number;
-  // Eden Prime — charges that absorb a KeywordGate (Alarm) trigger before it
+  // Charges that absorb a KeywordGate (e.g. Alarm) trigger before it
   // disrupts. Granted by GainKeywordGuard; consumed inside KeywordGate. Mirrors
-  // braceCharges; 0 everywhere but Eden Prime.
+  // braceCharges; 0 for worlds that never grant any.
   keywordGuard: number;
-  // Eden Prime — running total of Progress dealt this turn, incremented at the
+  // Running total of Progress dealt this turn, incremented at the
   // single dealProgress() choke point and read by ProgressGate. Reset to 0 at
   // the turn boundary alongside turnPlayHistory.
   progressDealtThisTurn: number;
-  // Eden Prime — lifetime queued by ApplyKeyword target "nextWorldCard". The
-  // next world card pulled into hand (drawWorld) is stamped with Alarm at this
-  // value, then the flag is cleared. Omitted (absent) when no Alarm is queued;
-  // the explicit `| undefined` allows the consume-and-clear reset under
-  // exactOptionalPropertyTypes (mirrors pendingForceDestroySource).
+  // Lifetime queued by ApplyKeyword target "nextWorldCard". The
+  // next world card pulled into hand (drawWorld) is stamped with the queued
+  // keyword at this value, then the flag is cleared. Omitted (absent) when
+  // none is queued; the explicit `| undefined` allows the consume-and-clear
+  // reset under exactOptionalPropertyTypes (mirrors pendingForceDestroySource).
   pendingKeywordNextWorldCard: readonly Keyword[];
   pendingBoonChoices: readonly PendingBoonChoice[];
   // The per-world end-turn passive, threaded onto state once by createWorld
   // (reduce() does not receive WorldData). Defaults to { kind: "None" } for
-  // every world except those that author onEndOfTurnPassive (Tidal Memory).
+  // every world except those that author onEndOfTurnPassive.
   endOfTurnPassive: CardEffect;
   readonly runModifiers: RunModifiers;
   readonly turnPlayHistory: TurnPlayHistory;
@@ -344,7 +360,7 @@ export type TargetSpec =
   | { kind: "destroyHand"; min: number; max: number; maxCost?: number }
   | { kind: "thawHand"; amount: number; heatCost: number }
   | { kind: "discardPlayer" }
-  // Tidal: selecting cards from playerDiscard for ReturnPlayerDiscardToTop.
+  // Selecting cards from playerDiscard for ReturnPlayerDiscardToTop.
   // Named recallTarget (not playerDiscard) to avoid colliding with the
   // discardPlayer spec, which means "discard a hand card" — the opposite intent.
   | { kind: "recallTarget"; min: number; max: number }
@@ -433,7 +449,7 @@ export type GameEvent = (
   | { type: "WorldLost"; cause?: WorldLostCause }
   | { type: "BraceChanged"; braceCharges: number }
   | { type: "BraceConsumed"; absorbed: number; remaining: number }
-  // Eden Prime — applied-keyword lifecycle. Mirror the CardsFrozen/CardsThawed
+  // Applied-keyword lifecycle. Mirror the CardsFrozen/CardsThawed
   // shape (ids + templateIds) so the renderer can target the affected cards,
   // plus the keyword name (and lifetime, for KeywordApplied).
   | {

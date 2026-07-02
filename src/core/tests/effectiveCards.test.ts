@@ -1,6 +1,10 @@
 import { describe, expect, it } from "bun:test";
 import { DEFAULT_RUN_MODIFIERS, type PlayerCardModifier } from "../../data/unlocks/types";
-import { effectiveHand, effectivePlayerCard } from "../engine/effectiveCards";
+import {
+  effectiveHand,
+  effectivePlayerCard,
+  effectiveWorldCardCost,
+} from "../engine/effectiveCards";
 import type { GameState, PlayerCard } from "../model/types";
 import { makePlayerCard, makeState, makeWorldCard, mintPlayers } from "./testFixture";
 
@@ -304,5 +308,42 @@ describe("effectivePlayerCard", () => {
     expect(hand[0]).toBe(world);
     expect(hand[1]).toEqual({ ...player, energyCost: 0, modified: true, name: "sprint-free" });
     expect(hand[1]).not.toBe(player);
+  });
+});
+
+describe("effectiveWorldCardCost", () => {
+  const locked = (id: string) =>
+    makeWorldCard({
+      id,
+      cost: 3,
+      appliedKeywords: [{ name: "Lockdown", value: 1 }],
+    });
+
+  it("adds clear cost from the card's own Lockdown value", () => {
+    const cards = [locked("1"), locked("2"), locked("3")];
+    expect(effectiveWorldCardCost(cards[0]!, makeState({ hand: cards.slice(0, 1) }))).toBe(4);
+    expect(effectiveWorldCardCost(cards[0]!, makeState({ hand: cards.slice(0, 2) }))).toBe(4);
+    expect(effectiveWorldCardCost(cards[0]!, makeState({ hand: cards }))).toBe(4);
+
+    const doubleLocked = {
+      ...cards[0]!,
+      appliedKeywords: [{ name: "Lockdown" as const, value: 2 }],
+    };
+    expect(effectiveWorldCardCost(doubleLocked, makeState({ hand: [doubleLocked] }))).toBe(5);
+  });
+
+  it("returns base cost when the card lacks a registered modifier", () => {
+    const unlocked = makeWorldCard({
+      id: "1",
+      cost: 3,
+    });
+    const noModifier = makeWorldCard({
+      id: "2",
+      cost: 3,
+      keywords: [{ name: "Obstructed" }],
+    });
+    const state = makeState({ hand: [unlocked, noModifier, locked("3")] });
+    expect(effectiveWorldCardCost(unlocked, state)).toBe(3);
+    expect(effectiveWorldCardCost(noModifier, state)).toBe(3);
   });
 });

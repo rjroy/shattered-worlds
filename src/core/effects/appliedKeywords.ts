@@ -1,5 +1,5 @@
 /**
- * Eden Prime — the applied-keyword effect family.
+ * The applied-keyword effect family.
  *
  * `Alarm` is the first applied keyword, but nothing here is Alarm-specific: the
  * handlers operate on the general `appliedKeywords` collection (see
@@ -30,7 +30,8 @@ import type {
   WorldCard,
 } from "../model/types";
 import {
-  appliedKeywordValue,
+  keywordValue,
+  PERSISTENT_KEYWORDS,
   tickAppliedKeywords,
   withAppliedKeyword,
   withoutAppliedKeyword,
@@ -171,11 +172,14 @@ export class ApplyKeywordHandler extends EffectHandler<ApplyKeywordEffect> {
   }
 
   override describe(effect: ApplyKeywordEffect): string[] {
-    return [`Apply ${effect.keyword} (${effect.value}) to ${effect.target}`];
+    const suffix = PERSISTENT_KEYWORDS.has(effect.keyword) ? "" : ` (${effect.value})`;
+    return [`Apply ${effect.keyword}${suffix} to ${effect.target}`];
   }
 
   override compile(effect: ApplyKeywordEffect, _ctx: CompileContext): EffectLine[] {
-    return [main([text("apply"), text(effect.keyword), value(`${effect.value}`, "penalty")])];
+    const tokens = [text("apply"), text(effect.keyword)];
+    if (!PERSISTENT_KEYWORDS.has(effect.keyword)) tokens.push(value(`${effect.value}`, "penalty"));
+    return [main(tokens)];
   }
 }
 
@@ -183,7 +187,7 @@ export class KeywordGateHandler extends EffectHandler<KeywordGateEffect> {
   override apply(ctx: EffectContext, effect: KeywordGateEffect): EffectResult {
     const { state } = ctx;
     // NOTE: zone = "hand" is the only legal value right now.
-    const total = state.hand.reduce((sum, c) => sum + appliedKeywordValue(c, effect.keyword), 0);
+    const total = state.hand.reduce((sum, c) => sum + keywordValue(c, effect.keyword), 0);
     if (total < effect.min) return { state, events: [] };
 
     if (state.keywordGuard > 0) {

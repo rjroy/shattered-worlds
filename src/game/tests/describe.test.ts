@@ -104,7 +104,7 @@ describe("describeEffect", () => {
     expect(describeEffect({ kind: "Draw", player: 2 })).toEqual(["Draw 2"]);
   });
 
-  it("describes GainLight (Fog's reveal effect)", () => {
+  it("describes GainLight (the concealment reveal effect)", () => {
     expect(describeEffect({ kind: "GainLight", amount: 2 })).toEqual(["Gain 2 Light"]);
   });
 
@@ -318,8 +318,8 @@ describe("previewPlay", () => {
     expect(previewPlay(medkit, hazard({}), makeState())).toBeNull();
   });
 
-  it("shows the fog string (only the needed Light) for a concealed target", () => {
-    // Concealed:3 with light 1 → lost in the fog; identity (cost/effect math) is
+  it("shows the shadow string (only the needed Light) for a concealed target", () => {
+    // Concealed:3 with light 1 → hidden in shadow; identity (cost/effect math) is
     // suppressed in favor of the required Light. Threshold reveals at light 3.
     const explore = player({
       kind: "DealProgress",
@@ -331,8 +331,8 @@ describe("previewPlay", () => {
       cost: 3,
       keywords: [{ name: "Concealed", value: 3 }, { name: "Obstructed" }],
     });
-    const fogged = { ...makeState(), light: 1 };
-    expect(previewPlay(explore, mist, fogged)).toBe("lost in the fog (needs Light 3)");
+    const dim = { ...makeState(), light: 1 };
+    expect(previewPlay(explore, mist, dim)).toBe("hidden in shadow (needs Light 3)");
 
     // At light 3 it reveals and the normal Progress math returns (Hidden bonus lands).
     const lit = { ...makeState(), light: 3 };

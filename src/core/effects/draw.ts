@@ -60,11 +60,11 @@ export class DiscardThenDrawHandler extends EffectHandler<DiscardThenDrawEffect>
       if (playerCards.length == 0) return { state: ctx.state, events: [] };
       const [shuffled, nextRng] = shuffle(playerCards, ctx.state.rng);
       const newDiscardCard = shuffled[0];
+      const newState = { ...ctx.state, rng: nextRng };
       if (newDiscardCard !== undefined) {
-        const newState = { ...ctx.state, rng: nextRng, discardId: newDiscardCard.id };
-        return this.apply({ ...ctx, state: newState }, effect);
+        return this.apply({ ...ctx, state: newState, discardId: newDiscardCard.id }, effect);
       } else {
-        return { state: { ...ctx.state, rng: nextRng }, events: [] };
+        return { state: newState, events: [] };
       }
     }
 

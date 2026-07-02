@@ -91,6 +91,7 @@ Map the world's fiction onto these roles.
 | `the-ember-orchard` | incubate | Leads with incubation-as-delayed-known-cost: warmth/benefit now that seeds a known future hazard; rewards trade immediate gain for top-decked threats that hatch into stronger cards at end of turn |
 | `city-of-sleeping-giants` | stir | Leads with stirring-as-recurrence/escalation from unresolved or exploited body movement: hazards left unresolved (or whose movement is exploited) return and escalate; recurrence is delivered by re-seeding the top of the world deck |
 | `eden-prime` | startle | Leads with greed-tax escalation: gifts, extra draw, and high-progress turns raise transient `Alarm`; restraint and valve rewards spend or absorb it before hazards startle |
+| `new-derelict` | isolate | Leads with persistent `Lockdown`: shortcuts spread seals, release/valve cards strip them, and sealed hazards cost more to clear per other sealed card |
 
 This is a living registry — each new world adds an entry. The verb captures the *signature* mechanical identity of that world; no two worlds should feel interchangeable.
 
@@ -122,6 +123,8 @@ The threat resurfaces next turn rather than replacing the card in hand. Canonica
 
 **C1:** The effect vocabulary is defined by the `CardEffect` union type in [`src/core/model/types.ts`](../../src/core/model/types.ts). This list below is organized by domain for readability. Add new kinds only when a theme needs mechanics that don't map to any existing one; that requires wiring an engine handler.
 
+Persistent modifiers are keyword-registry behavior, not `CardEffect` entries. They are declared once per keyword in the centralized `KEYWORD_COST_MODIFIERS` registry and apply uniformly to any card carrying that keyword, whether authored in `keywords` or added at runtime through `appliedKeywords`.
+
 <details>
 <summary>Complete effect kinds (expand)</summary>
 
@@ -151,11 +154,11 @@ The threat resurfaces next turn rather than replacing the card in hand. Canonica
 
 **C1a:** `DestroySelf` removes the firing world card from hand. It is only meaningful in `onEndOfTurn`, where the engine has a `selfId`.
 
-**C2:** The current keyword vocabulary is `Obstructed`, `Creature`, `Slow`, `Spore`, `Concealed`, and `Alarm`. `Alarm` is the first transient/applied keyword: it usually lives in a card's runtime `appliedKeywords` field rather than in authored JSON, decays at turn start, and is read by `KeywordGate`/counter helpers through the same keyword API as authored keywords. Introducing a new keyword is a valid design decision when a theme needs a semantic category that doesn't map to any existing one — but it requires wiring parser support plus any engine behavior that should read it.
+**C2:** The current keyword vocabulary is `Obstructed`, `Creature`, `Slow`, `Spore`, `Concealed`, `Alarm`, and `Lockdown`. `Alarm` is the first transient/applied keyword: it usually lives in a card's runtime `appliedKeywords` field rather than in authored JSON, decays at turn start, and is read by `KeywordGate`/counter helpers through the same keyword API as authored keywords. `Lockdown` is the first **persistent** applied keyword: it remains until explicitly removed and reuses Eden Prime's `ApplyKeyword`, `RemoveKeyword`, and `KeywordGate` primitives. New Derelict owns the `isolate` access-cost identity built around it. Introducing a new keyword is a valid design decision when a theme needs a semantic category that doesn't map to any existing one — but it requires wiring parser support plus any engine behavior that should read it.
 
-**C2a:** Authored keywords are strings in `keywords`: `"Name"` or `"Name:N"`. A bare keyword has no value; a numeric keyword parses to `{ name, value }`. Applied keywords use the same structured `{ name, value }` shape in `appliedKeywords`, but are written by effects at runtime and removed by decay or `RemoveKeyword`; authoring JSON should not pre-fill `appliedKeywords`. Currently `Concealed` uses an authored value (Light depth), while `Alarm` uses its applied value as a transient lifetime.
+**C2a:** Authored keywords are strings in `keywords`: `"Name"` or `"Name:N"`. A bare keyword has no value; a numeric keyword parses to `{ name, value }`. Applied keywords use the same structured `{ name, value }` shape in `appliedKeywords` and are written by effects at runtime; authoring JSON should not pre-fill `appliedKeywords`. Transient applied keywords such as `Alarm` decay at turn start or can be removed by `RemoveKeyword`. Persistent applied keywords such as `Lockdown` skip turn-start decay and remain until explicitly removed by `RemoveKeyword` or until the card leaves play. Currently `Concealed` uses an authored value (Light depth), while `Alarm` uses its applied value as a transient lifetime and `Lockdown` uses presence as persistent state.
 
-**C3:** Every world card defines `onDiscarded`, `onCleared`, and `onEndOfTurn`; use `{ "kind": "None" }` when a hook does nothing. Player cards define `effect`.
+**C3:** Every world card defines `onDiscarded`, `onCleared`, `onPartialClear`, `onEndOfTurn`, and `onDraw`; use `{ "kind": "None" }` when a hook does nothing. Player cards define `effect`. A keyword may carry a registered cost modifier in `KEYWORD_COST_MODIFIERS`; any card carrying that keyword, whether authored or applied, is taxed automatically with no per-template authoring step. `WorldCard` no longer has a `persistent` field.
 
 **C3a:** A world may define a per-world **end-turn passive** via the optional root field `onEndOfTurnPassive: CardEffect` on the card source (default `{ "kind": "None" }`). It runs once each turn after unretained player cards are discarded and before the turn-start refill, threaded onto `GameState.endOfTurnPassive` at `createWorld` time (the reducer never sees `WorldData`). The Tidal Archive uses it for Tidal Memory: `{ "kind": "RecallPlayerDiscard", "policy": "latest" }` recalls the most recent discard to the top of the deck every turn. Worlds that omit it are byte-identical to before — the `None` passive emits no events.
 

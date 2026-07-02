@@ -19,11 +19,12 @@ export interface WorldData {
   worldId: string;
   starterDeck: CardCount[];
   deckComposition: DeckComposition;
-  // Starting Light level. Per-world (NOT a global const): only Fog sets this
-  // above 0, so every other world boots with light === 0. Defaults to 0.
+  // Starting Light level. Per-world (NOT a global const): only worlds that
+  // use concealment set this above 0, so every other world boots with
+  // light === 0. Defaults to 0.
   startLight?: number;
   startHeat?: number;
-  // Per-world end-turn passive (Tidal Memory). Threaded onto GameState by
+  // Per-world end-turn passive. Threaded onto GameState by
   // createWorld and applied in handleEndTurn. Absent ⇒ { kind: "None" }.
   onEndOfTurnPassive?: CardEffect;
 }

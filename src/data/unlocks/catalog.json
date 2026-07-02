@@ -84,7 +84,7 @@
     "name": "Builder's Instinct",
     "description": "A muscle memory from a different life. More Barricades, No Panic, Less Sprint.",
     "cost": 50,
-    "destinyWeight": 3,
+    "destinyWeight": 0,
     "effect": { "type": "starterDeckOverride", "starterDeckId": "contractor" }
   },
   {
@@ -92,7 +92,7 @@
     "name": "Athlete's Instinct",
     "description": "A muscle memory from a different life. More Sprint, No Barricades.",
     "cost": 50,
-    "destinyWeight": 3,
+    "destinyWeight": 0,
     "effect": { "type": "starterDeckOverride", "starterDeckId": "footballer" }
   },
   {
@@ -100,7 +100,7 @@
     "name": "Harvester of the Ember Orchard",
     "description": "A muscle memory from a different life. Harvester of the Ember Orchard.",
     "cost": 80,
-    "destinyWeight": 3,
+    "destinyWeight": 0,
     "effect": { "type": "starterDeckOverride", "starterDeckId": "harvester" }
   },
   {
@@ -108,7 +108,7 @@
     "name": "Tidal Archivist",
     "description": "A muscle memory from a different life. Archivist of the Tidal Archive.",
     "cost": 80,
-    "destinyWeight": 3,
+    "destinyWeight": 0,
     "effect": { "type": "starterDeckOverride", "starterDeckId": "archivist" }
   },
   {
@@ -116,7 +116,7 @@
     "name": "Giant Surveyor",
     "description": "A muscle memory from a different life. Surveyor of a Sleeping Giant.",
     "cost": 80,
-    "destinyWeight": 3,
+    "destinyWeight": 0,
     "effect": { "type": "starterDeckOverride", "starterDeckId": "surveyor" }
   },
   {
@@ -188,6 +188,14 @@
     "cost": 15,
     "destinyWeight": 0,
     "effect": { "type": "worldUnlock", "worldId": "eden-prime" }
+  },
+  {
+    "id": "world-new-derelict",
+    "name": "New Derelict",
+    "description": "Opens New Derelict in World Select.",
+    "cost": 15,
+    "destinyWeight": 0,
+    "effect": { "type": "worldUnlock", "worldId": "new-derelict" }
   },
   {
     "id": "first-sprint-free",

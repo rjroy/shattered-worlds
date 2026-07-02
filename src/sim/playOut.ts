@@ -3,6 +3,7 @@ import { reduce } from "../core/engine/reduce";
 import { nextFloat, rngFromSeed } from "../core/engine/rng";
 import type { CardCatalog, WorldData } from "../core/model/catalog";
 import type { RngState, WorldLostCause } from "../core/model/types";
+import type { RunModifiers } from "../data/unlocks/types";
 import { checkIdAccounting } from "./accounting";
 import { determinize } from "./determinize";
 import type { Policy } from "./policy";
@@ -27,6 +28,8 @@ export type PlayOutStatus = "won" | "lost" | "capped";
 export interface PlayOutOptions {
   /** Hard cap on actions before the play-out is declared `capped`. */
   maxActions: number;
+  /** Optional unlock-derived modifiers applied when constructing the run. */
+  runModifiers?: RunModifiers;
 }
 
 /**
@@ -73,7 +76,7 @@ export function playOut(
   agentRng: RngState,
   opts: PlayOutOptions,
 ): Outcome {
-  let state = createWorld(catalog, worldData, seed).state;
+  let state = createWorld(catalog, worldData, seed, opts.runModifiers).state;
   let rng = agentRng;
   let turns = 0;
   let actions = 0;

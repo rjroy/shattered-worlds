@@ -17,7 +17,12 @@ import { createGameplayRuntime, type GameplayRuntime } from "../runtime/gameplay
 import type { GameplaySession } from "../runtime/gameplaySession";
 import { selectTheme } from "../view/themes/themeManifest";
 import type { VisualTheme } from "../view/themes/theme";
-import { availableActions, effectiveHand, effectivePlayerCard } from "../../core/index";
+import {
+  availableActions,
+  effectiveHand,
+  effectivePlayerCard,
+  effectiveWorldCardCost,
+} from "../../core/index";
 import type {
   Card,
   CardId,
@@ -84,6 +89,7 @@ import {
 } from "../view/tableLayout";
 import { addTooltip } from "../view/TooltipView";
 import { CONCEALED_HOOK_WARNING } from "../../core/view/actionPreview";
+import { activeKeywordCostModifiers } from "../../core/engine/effectiveCards";
 
 // ---------------------------------------------------------------------------
 // Layout constants
@@ -734,12 +740,14 @@ export class TableScene extends Phaser.Scene {
         container.clearEmphasis();
       }
 
-      // Only world cards have a progress ring/fog-back; re-read state.progress
+      // Only world cards have a progress ring/shadow overlay; re-read state.progress
       // and state.light every cycle since neither has its own change event.
       if (card.kind === "world") {
         const progress = this.game_.state.progress[card.id] ?? 0;
-        const fraction = ringFraction(progress, card.cost);
+        const effectiveCost = effectiveWorldCardCost(card, this.game_.state);
+        const fraction = ringFraction(progress, effectiveCost);
         container.updateCostRing(fraction, this.theme_.frameStyle.ringAccent);
+        container.updateCostLabel(effectiveCost, card.cost);
         container.applyConcealment(this.game_.state.light);
       }
     });
@@ -940,7 +948,9 @@ export class TableScene extends Phaser.Scene {
       this.cardDisplaySignatures.delete(card.id);
     }
 
-    const container = new CardView(this, card, 0, 0, this.theme_, selectTheme, () =>
+    const activeKeywords =
+      card.kind == "world" ? activeKeywordCostModifiers(card, this.game_.state) : [];
+    const container = new CardView(this, card, activeKeywords, 0, 0, this.theme_, selectTheme, () =>
       fxGain(this.runtime_.userSettings.get()),
     );
     this.cardObjects.set(card.id, container);
@@ -1155,7 +1165,7 @@ export class TableScene extends Phaser.Scene {
     );
   }
 
-  // The current targeting step when it is a Tidal discard-recall step, else null.
+  // The current targeting step when it is a discard-recall step, else null.
   private activeRecallStep(): Extract<TargetSpec, { kind: "recallTarget" }> | null {
     if (this.sel.phase !== "targeting" || isComplete(this.sel)) return null;
     const step = this.sel.steps[this.sel.stepIdx];

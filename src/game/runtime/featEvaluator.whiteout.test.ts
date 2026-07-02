@@ -46,18 +46,35 @@ function makeCtx(overrides?: Partial<RunRecord>, witness?: WitnessProfile): Eval
 }
 
 describe("Whiteout feats", () => {
-  it("first-whiteout-parking-garage requires both win and Whiteout world id", () => {
+  it("first-whiteout-parking-garage requires a cumulative Whiteout win", () => {
     const feat = FEAT_CATALOG.find(
       (definition) => definition.id === "first-whiteout-parking-garage",
     )!;
+    const whiteoutStats = {
+      runs: 1,
+      wins: 1,
+      losses: 0,
+      abandoned: 0,
+    };
 
     expect(
-      evaluateFeat(feat, makeCtx({ outcome: "won", worldId: "whiteout-parking-garage" })),
+      evaluateFeat(feat, {
+        ...makeCtx(),
+        lifetime: {
+          ...makeCtx().lifetime,
+          byWorld: { "whiteout-parking-garage": whiteoutStats },
+        },
+      }),
     ).toBe(true);
     expect(
-      evaluateFeat(feat, makeCtx({ outcome: "lost", worldId: "whiteout-parking-garage" })),
+      evaluateFeat(feat, {
+        ...makeCtx(),
+        lifetime: {
+          ...makeCtx().lifetime,
+          byWorld: { "whiteout-parking-garage": { ...whiteoutStats, wins: 0 } },
+        },
+      }),
     ).toBe(false);
-    expect(evaluateFeat(feat, makeCtx({ outcome: "won", worldId: "fog-beach-party" }))).toBe(false);
   });
 
   it("heat-keeper reads finalResources.heat", () => {

@@ -136,11 +136,22 @@ export function isWorldUnlocked(
   return gate === undefined || profile.purchased.includes(gate.id);
 }
 
+export function resolveStarterDeckId(
+  profile: UnlocksProfile,
+  catalog: readonly UnlockDefinition[],
+): string | undefined {
+  for (const id of profile.activated) {
+    const def = catalog.find((candidate) => candidate.id === id);
+    if (def?.effect.type === "starterDeckOverride") return def.effect.starterDeckId;
+  }
+  return undefined;
+}
+
 export function activeWeight(
-  activeIds: readonly string[],
+  profile: UnlocksProfile,
   catalog: readonly UnlockDefinition[],
 ): number {
-  return activeIds.reduce((total, id) => {
+  return profile.activated.reduce((total, id) => {
     const def = catalog.find((candidate) => candidate.id === id);
     return total + (def?.destinyWeight ?? 0);
   }, 0);
@@ -148,11 +159,18 @@ export function activeWeight(
 
 export function canActivate(
   def: UnlockDefinition,
-  activeIds: readonly string[],
+  profile: UnlocksProfile,
   catalog: readonly UnlockDefinition[],
 ): boolean {
+  // Only 1 starter deck is allowed at a time.
+  if (
+    def?.effect.type === "starterDeckOverride" &&
+    resolveStarterDeckId(profile, catalog) !== undefined
+  ) {
+    return false;
+  }
   return (
-    !activeIds.includes(def.id) &&
-    activeWeight(activeIds, catalog) + def.destinyWeight <= DESTINY_BUDGET
+    !profile.activated.includes(def.id) &&
+    activeWeight(profile, catalog) + def.destinyWeight <= DESTINY_BUDGET
   );
 }

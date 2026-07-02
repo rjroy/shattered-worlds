@@ -23,6 +23,9 @@ function templateRefs(effect: CardEffect): string[] {
       return effect.branches.flatMap(templateRefs)
     case 'Sequence':
       return effect.steps.flatMap(templateRefs)
+    case 'KeywordGate':
+    case 'ProgressGate':
+      return templateRefs(effect.then)
     default:
       return []
   }
@@ -38,6 +41,8 @@ function allReferencedTemplates(catalog: CardCatalog): string[] {
       refs.push(...templateRefs(template.onDiscarded))
       refs.push(...templateRefs(template.onCleared))
       refs.push(...templateRefs(template.onEndOfTurn))
+      refs.push(...templateRefs(template.onPartialClear))
+      refs.push(...templateRefs(template.onDraw))
     }
   }
   return refs

@@ -7,7 +7,7 @@ export const EDEN_PRIME_DISPLAY: WorldDisplayData = {
     "Fruit, insects, flowers, and herds once approached every stranger as a gift. Then the " +
     "Walker gave the valley a violet second sun, and paradise learned fear from the player's " +
     "own hand.",
-  difficulty: 4,
+  difficulty: 5,
   cycle: 5,
   backgroundKey: "eden-prime-bg",
 };

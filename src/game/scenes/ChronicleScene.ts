@@ -398,8 +398,33 @@ export class ChronicleScene extends Phaser.Scene {
       const totalFragments = (r: FeatReward) =>
         r.items.reduce((acc, item) => acc + (item.type === "memoryFragments" ? item.amount : 0), 0);
 
+      const compareCondition = (
+        a: FeatCondition | undefined,
+        b: FeatCondition | undefined,
+      ): number => {
+        if (a === undefined) return b === undefined ? 0 : -1;
+        if (b === undefined) return +1;
+        const statDelta = a.statId.localeCompare(b.statId);
+        if (statDelta !== 0) return statDelta;
+        if (a.value == b.value) return 0;
+        switch (typeof a.value) {
+          case "boolean":
+            return a.value ? +1 : -1;
+          case "string":
+            if (typeof b.value !== "string") return -1;
+            return a.value.localeCompare(b.value);
+          case "number":
+            if (typeof b.value !== "number") return -1;
+            return a.value - b.value;
+        }
+      };
+
       const orderedFeats = [...FEAT_CATALOG];
       orderedFeats.sort((a, b) => {
+        for (let i = 0; i < a.conditions.length; i++) {
+          const conditionDelta = compareCondition(a.conditions[i], b.conditions[i]);
+          if (conditionDelta !== 0) return conditionDelta;
+        }
         const fragDelta = totalFragments(a.reward) - totalFragments(b.reward);
         if (fragDelta !== 0) return fragDelta;
         return a.name < b.name ? -1 : a.name > b.name ? 1 : 0;

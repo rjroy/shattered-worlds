@@ -418,7 +418,7 @@ describe("applyEffect GainLight", () => {
       templateId: "Flashlight",
       name: "Flashlight",
       insetKey: undefined,
-      sourceWorldId: "fog",
+      sourceWorldId: "test",
       canDestroy: true,
       effect: { kind: "GainLight", amount: 2 },
       energyCost: 1,
@@ -799,7 +799,7 @@ describe("DealProgressAll", () => {
       (e): e is Extract<typeof e, { type: "ProgressDealt" }> => e.type === "ProgressDealt",
     );
     expect(progress?.hazardId).toBe("mist");
-    expect(progress?.amount).toBe(2); // base 1 + Hidden bonus 1, blind through fog
+    expect(progress?.amount).toBe(2); // base 1 + Hidden bonus 1, blind in the dark
   });
 
   it("does not sweep cards spawned by a mid-sweep onCleared", () => {

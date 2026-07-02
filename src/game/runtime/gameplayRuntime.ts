@@ -1,4 +1,4 @@
-import type { AssembledWorld } from '../../core/index'
+import type { AssembledWorld } from "../../core/index";
 
 import {
   createGameplayEventStream,
@@ -6,26 +6,36 @@ import {
   type GameplayEventStream,
   type RunStreamSubscriber,
   type SubscriberFailureHandler,
-} from './gameplayEventStream'
-import { createGameplaySession, type GameplaySession, type GameplaySessionOptions } from './gameplaySession'
-import { createRunStatsCollector, type RunStatsReader, type RunStatsStorage } from './runStats'
-import { createStatsTransfer, type StatsTransfer } from './statsTransfer'
-import { createFeatsStore, type FeatsStore } from './featsProfile'
-import { createUnlocksStore, type UnlocksStore } from './unlocksProfile'
-import { createUserSettingsStore, type UserSettingsStore } from './userSettings'
-import { createWitnessCollector, type WitnessStore } from './witnessProfile'
-import { createFeatEvaluator, type FeatEvaluator } from './featEvaluator'
-import { FEAT_CATALOG } from '../../data/feats/catalog'
-import { buildWorld } from '../../data/worldManifest'
-import { buildRunModifiers, UNLOCK_CATALOG } from '../../data/unlocks/catalog'
-import type { UnlockDefinition } from '../../data/unlocks/types'
+} from "./gameplayEventStream";
+import {
+  createGameplaySession,
+  type GameplaySession,
+  type GameplaySessionOptions,
+} from "./gameplaySession";
+import { createRunStatsCollector, type RunStatsReader, type RunStatsStorage } from "./runStats";
+import { createStatsTransfer, type StatsTransfer } from "./statsTransfer";
+import { createFeatsStore, type FeatsStore } from "./featsProfile";
+import { createUnlocksStore, type UnlocksStore } from "./unlocksProfile";
+import { createUserSettingsStore, type UserSettingsStore } from "./userSettings";
+import { createWitnessCollector, type WitnessStore } from "./witnessProfile";
+import { createFeatEvaluator, type FeatEvaluator } from "./featEvaluator";
+import { FEAT_CATALOG } from "../../data/feats/catalog";
+import { buildWorld } from "../../data/worldManifest";
+import {
+  buildRunModifiers,
+  resolveStarterDeckId,
+  UNLOCK_CATALOG,
+} from "../../data/unlocks/catalog";
 
 // The runtime owns the stream, failure handling, and the clock — sessions it
 // starts must not override them, or cross-run consumers would see
 // inconsistently sourced items.
-type RuntimeSessionOptions = Omit<GameplaySessionOptions, 'stream' | 'onSubscriberFailure' | 'clock' | 'runModifiers' | 'appliedModifiers'> & {
-  readonly world?: AssembledWorld
-}
+type RuntimeSessionOptions = Omit<
+  GameplaySessionOptions,
+  "stream" | "onSubscriberFailure" | "clock" | "runModifiers" | "appliedModifiers"
+> & {
+  readonly world?: AssembledWorld;
+};
 
 /**
  * Composition root for gameplay observation. Owns the one long-lived stream
@@ -34,68 +44,70 @@ type RuntimeSessionOptions = Omit<GameplaySessionOptions, 'stream' | 'onSubscrib
  * session's full RunStarted → RunEnded history.
  */
 export interface GameplayRuntime {
-  readonly stream: GameplayEventStream
-  readonly runStats: RunStatsReader
-  readonly statsTransfer: StatsTransfer
-  readonly witnessStore: WitnessStore
-  readonly featsStore: FeatsStore
-  readonly unlocksStore: UnlocksStore
-  readonly userSettings: UserSettingsStore
-  readonly featEvaluator: FeatEvaluator
+  readonly stream: GameplayEventStream;
+  readonly runStats: RunStatsReader;
+  readonly statsTransfer: StatsTransfer;
+  readonly witnessStore: WitnessStore;
+  readonly featsStore: FeatsStore;
+  readonly unlocksStore: UnlocksStore;
+  readonly userSettings: UserSettingsStore;
+  readonly featEvaluator: FeatEvaluator;
   /** Runtime-wide observation: receives items from every session, correlated by sessionId. */
-  subscribe(subscriber: RunStreamSubscriber): () => void
-  startSession(
-    worldId: string,
-    seed: number,
-    options?: RuntimeSessionOptions,
-  ): GameplaySession
+  subscribe(subscriber: RunStreamSubscriber): () => void;
+  startSession(worldId: string, seed: number, options?: RuntimeSessionOptions): GameplaySession;
   /**
    * Closes every still-open session as 'abandoned'. Wire to page unload
    * (pagehide) so app-level exits close run streams the scene shutdown hook
    * never sees. No-op for sessions that already ended.
    */
-  abandonAll(): void
+  abandonAll(): void;
 }
 
 export interface GameplayRuntimeOptions {
   /** Omit for in-memory-only stats (tests, headless). */
-  readonly storage?: RunStatsStorage | undefined
-  readonly onSubscriberFailure?: SubscriberFailureHandler | undefined
+  readonly storage?: RunStatsStorage | undefined;
+  readonly onSubscriberFailure?: SubscriberFailureHandler | undefined;
   /** Stamps all sessions' stream items. Defaults to Date.now; inject in tests. */
-  readonly clock?: Clock | undefined
-  readonly visibility?: (() => boolean) | undefined
-  readonly subscribeVisibility?: ((onChange: () => void) => () => void) | undefined
+  readonly clock?: Clock | undefined;
+  readonly visibility?: (() => boolean) | undefined;
+  readonly subscribeVisibility?: ((onChange: () => void) => () => void) | undefined;
 }
 
 export function createGameplayRuntime(options: GameplayRuntimeOptions = {}): GameplayRuntime {
-  const stream = createGameplayEventStream(options.onSubscriberFailure)
+  const stream = createGameplayEventStream(options.onSubscriberFailure);
   const runStats = createRunStatsCollector({
     storage: options.storage,
     clock: options.clock,
     visibility: options.visibility,
     subscribeVisibility: options.subscribeVisibility,
-  })
-  const witnessStore = createWitnessCollector(options.storage)
-  const featsStore = createFeatsStore(options.storage)
-  const unlocksStore = createUnlocksStore(options.storage, featsStore)
-  const userSettings = createUserSettingsStore(options.storage)
-  const featEvaluator = createFeatEvaluator(FEAT_CATALOG, featsStore, runStats, witnessStore, options.clock ?? Date.now)
+  });
+  const witnessStore = createWitnessCollector(options.storage);
+  const featsStore = createFeatsStore(options.storage);
+  const unlocksStore = createUnlocksStore(options.storage, featsStore);
+  const userSettings = createUserSettingsStore(options.storage);
+  const featEvaluator = createFeatEvaluator(
+    FEAT_CATALOG,
+    featsStore,
+    runStats,
+    witnessStore,
+    options.clock ?? Date.now,
+  );
   const statsTransfer = createStatsTransfer({
     runStats,
     witness: witnessStore,
     feats: featsStore,
     clock: options.clock,
-  })
-  const openSessions = new Map<GameplaySession['sessionId'], GameplaySession>()
+  });
+  const openSessions = new Map<GameplaySession["sessionId"], GameplaySession>();
 
-  stream.subscribe(runStats.subscriber)
-  stream.subscribe(witnessStore.subscriber)
-  stream.subscribe(featEvaluator.subscriber)
+  stream.subscribe(runStats.subscriber);
+  stream.subscribe(witnessStore.subscriber);
+  stream.subscribe(featEvaluator.subscriber);
   stream.subscribe((item) => {
-    if (item.kind === 'RunEnded') {
-      openSessions.delete(item.sessionId)
+    if (item.kind === "RunEnded") {
+      openSessions.delete(item.sessionId);
     }
-  })
+  });
 
   return {
     stream,
@@ -108,43 +120,33 @@ export function createGameplayRuntime(options: GameplayRuntimeOptions = {}): Gam
     featEvaluator,
 
     subscribe(subscriber) {
-      return stream.subscribe(subscriber)
+      return stream.subscribe(subscriber);
     },
 
     startSession(worldId, seed, sessionOptions = {}) {
-      const { world: injectedWorld, ...forwardOptions } = sessionOptions
-      const activeIds = unlocksStore.getProfile().activated
+      const { world: injectedWorld, ...forwardOptions } = sessionOptions;
+      const activeProfile = unlocksStore.getProfile();
       const assembled =
-        injectedWorld ?? buildWorld(worldId, resolveStarterDeckId(activeIds, UNLOCK_CATALOG) ?? 'starter')
-      const runModifiers = buildRunModifiers(activeIds, UNLOCK_CATALOG)
-      const appliedModifiers = activeIds.map((id) => ({ kind: 'unlock', id }))
+        injectedWorld ??
+        buildWorld(worldId, resolveStarterDeckId(activeProfile, UNLOCK_CATALOG) ?? "starter");
+      const runModifiers = buildRunModifiers(activeProfile.activated, UNLOCK_CATALOG);
+      const appliedModifiers = activeProfile.activated.map((id) => ({ kind: "unlock", id }));
       const session = createGameplaySession(assembled.catalog, assembled.worldData, seed, {
         ...forwardOptions,
         runModifiers,
         appliedModifiers,
         stream,
         clock: options.clock,
-      })
-      openSessions.set(session.sessionId, session)
-      return session
+      });
+      openSessions.set(session.sessionId, session);
+      return session;
     },
 
     abandonAll() {
       // abandon() emits RunEnded, which prunes the map mid-loop; copy first.
       for (const session of [...openSessions.values()]) {
-        session.abandon()
+        session.abandon();
       }
     },
-  }
-}
-
-function resolveStarterDeckId(
-  activeIds: readonly string[],
-  catalog: readonly UnlockDefinition[],
-): string | undefined {
-  for (const id of activeIds) {
-    const def = catalog.find((candidate) => candidate.id === id)
-    if (def?.effect.type === 'starterDeckOverride') return def.effect.starterDeckId
-  }
-  return undefined
+  };
 }

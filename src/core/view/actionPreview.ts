@@ -5,6 +5,7 @@ import { keywordAppliedLine, keywordRemovedLine } from "../effects/appliedKeywor
 import { cardsThawedLine } from "../effects/heat";
 import { cardDestroyedLine } from "../effects/worldCards";
 import { isConcealed } from "../model/keywords";
+import { effectiveWorldCardCost } from "../engine/effectiveCards";
 import type { Card, CardId, GameEvent, GameState } from "../model/types";
 import type { CardCatalog } from "../model/catalog";
 import type { PreviewEventSummary, PreviewFormatContext } from "./previewFormat";
@@ -142,11 +143,12 @@ function summarizeEvents(
   // Index, by event, after which every hidden-flow summary must go generic.
   // Once a concealed source has altered deck composition (drew/discarded/
   // destroyed player cards, or spawned a world hazard), the turn-end discard and
-  // refill summaries would leak how many hidden cards moved or which hazard the
-  // fog spawned. Derived from provenance: the first concealed-source event that
-  // touches card flow. Its canonical case is a concealed hook spawning a world
-  // card — its later (refill-time) HazardAdded/CardsDrawn events are unstamped,
-  // so they are masked by index rather than by their own (absent) provenance.
+  // refill summaries would leak how many hidden cards moved or which hazard was
+  // spawned in shadow. Derived from provenance: the first concealed-source event
+  // that touches card flow. Its canonical case is a concealed hook spawning a
+  // world card — its later (refill-time) HazardAdded/CardsDrawn events are
+  // unstamped, so they are masked by index rather than by their own (absent)
+  // provenance.
   const maskFlowAfterIndex = hiddenFlowTaintIndex(events, context);
 
   const lines: string[] = [];
@@ -214,8 +216,8 @@ function summarizeEvents(
     }
 
     // Downstream taint: a hidden-flow event after a concealed source disturbed
-    // deck composition mixes hidden and visible cards (or names a fog-spawned
-    // hazard), so summarize it generically.
+    // deck composition mixes hidden and visible cards (or names a
+    // shadow-spawned hazard), so summarize it generically.
     if (maskFlowAfterIndex !== null && index >= maskFlowAfterIndex) {
       const masked = summarizeMaskedHiddenFlowEvent(event, context);
       if (masked !== null) {
@@ -475,7 +477,7 @@ function summarizeEvent(event: GameEvent, context: PreviewContext): readonly str
       }
       const card =
         context.beforeCards.get(event.hazardId) ?? context.afterCards.get(event.hazardId);
-      const cost = card?.kind === "world" ? card.cost : undefined;
+      const cost = card?.kind === "world" ? effectiveWorldCardCost(card, context.before) : undefined;
       const progress =
         cost !== undefined ? ` (${Math.min(event.hazardTurnTotal, cost)}/${cost})` : "";
       return [

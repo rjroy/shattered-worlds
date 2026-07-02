@@ -32,7 +32,7 @@ describe("DealProgress playability", () => {
   });
 });
 
-// Concealment gating (Fog): single-target progress vs concealed world cards.
+// Concealment gating: single-target progress vs concealed world cards.
 
 /** A WorldCard with a Concealed:N depth (cost 5). */
 function concealedWorld(id: string, depth: number, extra: WorldCard["keywords"] = []): WorldCard {
@@ -48,7 +48,7 @@ function explorePlayer(id: string): PlayerCard {
   return makePlayerCard({
     id,
     name: "Explore",
-    sourceWorldId: "fog",
+    sourceWorldId: "test",
     effect: { kind: "DealProgress", base: 1, bonus: { tag: "Obstructed", amount: 1 } },
     energyCost: 1,
   });

@@ -42,6 +42,7 @@ import type { CardCatalog } from "../model/catalog";
 import { hasKeyword, isConcealed } from "../model/keywords";
 import type { EffectLine } from "../view/effectGlyphs";
 import { applyEffect } from "../engine/effects";
+import { effectiveWorldCardCost } from "../engine/effectiveCards";
 import type { CompileContext, ConnectorStyle, EffectContext, EffectResult } from "./EffectContext";
 import { EffectHandler, HazardTargetingHandler } from "./EffectHandler";
 import { worldCardsInHand } from "./handState";
@@ -86,7 +87,7 @@ export function dealProgress(
     { type: "ProgressDealt", hazardId, templateId: hazard.templateId, amount, hazardTurnTotal },
   ];
 
-  // Single choke point for the per-turn Progress meter (Eden Prime ProgressGate
+  // Single choke point for the per-turn Progress meter (ProgressGate
   // reads it). Every progress effect — DealProgress, DealProgressScaled,
   // DealProgressAll — routes through here, so this is the one place to count.
   let current: GameState = {
@@ -95,7 +96,7 @@ export function dealProgress(
     progressDealtThisTurn: state.progressDealtThisTurn + amount,
   };
 
-  if (hazardTurnTotal >= hazard.cost) {
+  if (hazardTurnTotal >= effectiveWorldCardCost(hazard, current)) {
     // Remove hazard from hand (excess progress is wasted — do NOT touch progress)
     current = {
       ...current,
@@ -176,7 +177,7 @@ export class DealProgressHandler extends HazardTargetingHandler<DealProgressEffe
     state: GameState,
   ): readonly CardId[] {
     // Concealed hazards are never legal single-targets — you can't aim at what
-    // the fog hides (it is unfiltered when light === 0, the non-Fog case).
+    // you cannot see (it is unfiltered when light === 0, i.e. no concealment).
     const visible = worldCardsInHand(state).filter((c) => !isConcealed(c, state.light));
     if (effect.base === 0) {
       const tag = effect.bonus?.tag;

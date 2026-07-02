@@ -49,6 +49,8 @@ export const EFFECT_ICON_TEXTURES: Record<IconId, string> = {
   survive: "effect-icon-survive",
   vanish: "effect-icon-vanish",
   eachTurn: "effect-icon-each-turn",
+  progressCost: "effect-icon-progress",
+  onDraw: "effect-icon-world-draw",
   onDiscard: "effect-icon-discard",
   onClear: "effect-icon-on-clear",
   onPartialClear: "effect-icon-on-partial-clear",
@@ -70,6 +72,7 @@ export interface IconPlaceholderSpec {
  */
 export const EFFECT_ICON_PLACEHOLDERS: Record<IconId, IconPlaceholderSpec> = {
   progress: { letter: "P", color: "#f4c542" },
+  progressCost: { letter: "P", color: "#f4c542" },
   progressAll: { letter: "A", color: "#f0822e" },
   draw: { letter: "D", color: "#7fb4f0" },
   worldDraw: { letter: "W", color: "#b48ff0" },
@@ -90,6 +93,7 @@ export const EFFECT_ICON_PLACEHOLDERS: Record<IconId, IconPlaceholderSpec> = {
   survive: { letter: "S", color: "#8fc97f" },
   vanish: { letter: "V", color: "#d8d8e0" },
   eachTurn: { letter: "U", color: "#ffaa66" },
+  onDraw: { letter: "D", color: "#ff8888" },
   onDiscard: { letter: "O", color: "#ff8888" },
   onClear: { letter: "Y", color: "#88ee88" },
   onPartialClear: { letter: "%", color: "#d97b5e" },

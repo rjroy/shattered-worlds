@@ -16,12 +16,56 @@ import {
   mintWorlds,
 } from "./testFixture";
 import type { GameState, PlayerCard, WorldCard } from "../model/types";
+import { reduce } from "../engine/reduce";
 
 function linesText(state: GameState, action: Parameters<typeof previewAction>[2]): string {
   return previewAction(catalog, state, action).summaryLines.join("\n");
 }
 
 describe("previewAction", () => {
+  it("uses the same persistent effective cost for preview and resolution", () => {
+    const explore = makePlayerCard({
+      id: "10",
+      templateId: "Explore",
+      name: "Explore",
+      effect: { kind: "DealProgress", base: 1 },
+    });
+    const target = makeWorldCard({
+      id: "1",
+      name: "Locked Target",
+      cost: 1,
+      appliedKeywords: [{ name: "Lockdown", value: 1 }],
+    });
+    const sibling = makeWorldCard({
+      id: "2",
+      appliedKeywords: [{ name: "Lockdown", value: 1 }],
+    });
+    const state = makeState({ hand: [explore, target, sibling], energy: 1, progress: {} });
+    const action = { type: "PlayCard" as const, cardId: explore.id, targetId: target.id };
+
+    const preview = previewAction(catalog, state, action);
+    expect(preview.summaryLines).toContain("Make 1 Progress on Locked Target (1/2)");
+    expect(preview.events.some((event) => event.type === "HazardResolved")).toBe(false);
+
+    const first = reduce(catalog, state, action);
+    expect(first.events.some((event) => event.type === "HazardResolved")).toBe(false);
+    expect(first.state.progress[target.id]).toBe(1);
+
+    const secondExplore = { ...explore, id: "11" };
+    const secondState = { ...first.state, hand: [secondExplore, target, sibling], energy: 1 };
+    const secondAction = {
+      type: "PlayCard" as const,
+      cardId: secondExplore.id,
+      targetId: target.id,
+    };
+    const paidPreview = previewAction(catalog, secondState, secondAction);
+    expect(paidPreview.summaryLines).toContain("Make 1 Progress on Locked Target (2/2)");
+    expect(paidPreview.events.some((event) => event.type === "HazardResolved")).toBe(true);
+
+    const paid = reduce(catalog, secondState, secondAction);
+    expect(paid.events.some((event) => event.type === "HazardResolved")).toBe(true);
+    expect(paid.state.hand.some((card) => card.id === target.id)).toBe(false);
+  });
   it("previews simple DealProgress without committing the returned state", () => {
     const [explore, s1] = mintPlayer(makeState(), "Explore");
     const [rubble, s2] = mintWorld(s1, "Rubble");

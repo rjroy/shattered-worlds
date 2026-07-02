@@ -7,18 +7,26 @@
  *
  * Pure core — no Phaser, no DOM.
  */
-import type { Card, Keyword, KeywordName } from "./types";
+import type { Card, Keyword, KeywordName, PersistentModifier } from "./types";
 
 // The closed set of valid keyword names. Kept in sync with `KeywordName`;
 // used at parse time to reject unknown authoring strings.
-const KEYWORD_NAMES: readonly KeywordName[] = [
+export const KEYWORD_NAMES: readonly KeywordName[] = [
   "Obstructed",
   "Creature",
   "Slow",
   "Spore",
   "Concealed",
   "Alarm",
+  "Lockdown",
 ];
+
+export const PERSISTENT_KEYWORDS: ReadonlySet<KeywordName> = new Set(["Lockdown"]);
+
+export const KEYWORD_COST_MODIFIERS: Partial<Record<KeywordName, PersistentModifier>> = {
+  Lockdown: { kind: "ClearCostPerSelfKeyword", costPer: 1 },
+  Alarm: { kind: "ClearCostPerKeywordCount", costPer: 1 },
+};
 
 function isKeywordName(s: string): s is KeywordName {
   return (KEYWORD_NAMES as readonly string[]).includes(s);
@@ -70,6 +78,18 @@ export function hasKeyword(card: Card, name: KeywordName): boolean {
   return (card.appliedKeywords ?? []).some((k) => k.name === name);
 }
 
+/**
+ * Returns the value of the named keyword on this card, combining both authored
+ * and transient applied keywords. If no such keyword exists, returns 0.
+ */
+export function keywordValue(card: Card, name: KeywordName): number {
+  const keywordEntry = card.keywords.find((k) => k.name === name);
+  const keywordValue = keywordEntry === undefined ? 0 : Math.max(keywordEntry.value ?? 1, 1);
+  const appliedEntry = (card.appliedKeywords ?? []).find((k) => k.name === name);
+  const appliedValue = appliedEntry === undefined ? 0 : Math.max(appliedEntry.value ?? 1, 1);
+  return keywordValue + appliedValue;
+}
+
 // ---------------------------------------------------------------------------
 // Applied (transient) keyword helpers — pure and generic over PlayerCard /
 // WorldCard. They mirror the `frozen` lifecycle (refresh-don't-shorten on
@@ -114,7 +134,7 @@ export function withoutAppliedKeyword<C extends Card>(card: C, name: KeywordName
 /** The lifetime of the card's applied keyword `name`, or 0 when absent. */
 export function appliedKeywordValue(card: Card, name: KeywordName): number {
   const entry = (card.appliedKeywords ?? []).find((k) => k.name === name);
-  return entry?.value ?? 0;
+  return entry === undefined ? 0 : Math.max(entry.value ?? 1, 1);
 }
 
 /**
@@ -126,8 +146,10 @@ export function tickAppliedKeywords<C extends Card>(card: C): C {
   const existing = card.appliedKeywords;
   if (existing === undefined || existing.length === 0) return card;
   const next = existing
-    .map((kw) => ({ name: kw.name, value: (kw.value ?? 0) - 1 }))
-    .filter((kw) => kw.value > 0);
+    .map((kw) =>
+      PERSISTENT_KEYWORDS.has(kw.name) ? kw : { name: kw.name, value: (kw.value ?? 0) - 1 },
+    )
+    .filter((kw) => PERSISTENT_KEYWORDS.has(kw.name) || (kw.value ?? 0) > 0);
   if (next.length === 0) {
     const { appliedKeywords: _dropped, ...rest } = card;
     return rest as C;
@@ -137,7 +159,7 @@ export function tickAppliedKeywords<C extends Card>(card: C): C {
 
 /**
  * The card's Concealed depth — the value of its `Concealed` keyword, or 0 when
- * the card carries no `Concealed` keyword (so non-fog cards are never concealed).
+ * the card carries no `Concealed` keyword.
  */
 export function concealOf(card: Card): number {
   const concealed = card.keywords.find((k) => k.name === "Concealed");
@@ -145,7 +167,7 @@ export function concealOf(card: Card): number {
 }
 
 /**
- * Whether the card is hidden by fog at the given Light level. Visibility is
+ * Whether the card is hidden at the given Light level. Visibility is
  * recomputed live from `light` and the keyword — there is no stored "revealed"
  * flag. A card is concealed iff its depth strictly exceeds Light, so a card at
  * `concealOf === light` is REVEALED (the threshold is inclusive of seeing).

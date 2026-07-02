@@ -49,7 +49,9 @@ export function loadUnlocksProfile(
 
     const parsed: unknown = JSON.parse(raw);
     if (!isUnlocksProfile(parsed)) {
-      console.warn("[unlocksProfile] discarding stored unlocks profile with unknown shape", { key });
+      console.warn("[unlocksProfile] discarding stored unlocks profile with unknown shape", {
+        key,
+      });
       return emptyUnlocksProfile();
     }
 
@@ -107,9 +109,10 @@ export function createUnlocksStore(
       if (def.cost > balance) return "insufficient-fragments";
 
       const purchased = [...profile.purchased, id];
-      const activated = !isWorldUnlock(def) && canActivate(def, profile.activated, UNLOCK_CATALOG)
-        ? [...profile.activated, id]
-        : profile.activated;
+      const activated =
+        !isWorldUnlock(def) && canActivate(def, profile, UNLOCK_CATALOG)
+          ? [...profile.activated, id]
+          : profile.activated;
       setProfile({ version: 1, purchased, activated });
       return "ok";
     },
@@ -122,7 +125,7 @@ export function createUnlocksStore(
 
         const def = UNLOCK_CATALOG.find((candidate) => candidate.id === id);
         if (def !== undefined && isWorldUnlock(def)) return "ok";
-        if (def === undefined || !canActivate(def, profile.activated, UNLOCK_CATALOG)) {
+        if (def === undefined || !canActivate(def, profile, UNLOCK_CATALOG)) {
           return "over-budget";
         }
 
@@ -130,7 +133,10 @@ export function createUnlocksStore(
         return "ok";
       }
 
-      setProfile({ ...profile, activated: profile.activated.filter((activeId) => activeId !== id) });
+      setProfile({
+        ...profile,
+        activated: profile.activated.filter((activeId) => activeId !== id),
+      });
       return "ok";
     },
   };

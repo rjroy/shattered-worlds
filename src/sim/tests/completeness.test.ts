@@ -33,12 +33,7 @@ const MAX_ACTIONS = 500;
  * that world's aggregate. Worlds beyond `worldId` are skipped so the suite stays
  * fast while still exercising the shared aggregation code.
  */
-function aggregateWorld(
-  worldId: string,
-  N: number,
-  K: number,
-  agentSeed: number,
-): WorldAggregate {
+function aggregateWorld(worldId: string, N: number, K: number, agentSeed: number): WorldAggregate {
   const world = buildAllWorlds().find((w): w is BuiltWorld => w.id === worldId);
   if (world === undefined) throw new Error(`unknown world for test: ${worldId}`);
 
@@ -104,17 +99,21 @@ describe("completeness attribution integrity", () => {
     expect(sameTallies).toBe(false);
   });
 
-  test("all registered worlds build and run without throwing", () => {
-    // Mirrors completeness.ts's buildAllWorlds smoke check: every registered
-    // world must build with the default starter and produce a terminal-or-capped
-    // outcome under the eval policy.
-    expect(worldDataRegistry.length).toBe(10);
-    for (const bundle of worldDataRegistry) {
-      const agg = aggregateWorld(bundle.id, 2, 1, 999);
-      expect(agg.games).toBe(2);
-      expect(agg.wins + agg.losses + agg.capped).toBe(2);
-    }
-  }, { timeout: 30000 });
+  test(
+    "all registered worlds build and run without throwing",
+    () => {
+      // Mirrors completeness.ts's buildAllWorlds smoke check: every registered
+      // world must build with the default starter and produce a terminal-or-capped
+      // outcome under the eval policy.
+      expect(worldDataRegistry.length).toBe(11);
+      for (const bundle of worldDataRegistry) {
+        const agg = aggregateWorld(bundle.id, 2, 1, 999);
+        expect(agg.games).toBe(2);
+        expect(agg.wins + agg.losses + agg.capped).toBe(2);
+      }
+    },
+    { timeout: 3000 },
+  );
 });
 
 // ---------------------------------------------------------------------------
@@ -130,25 +129,31 @@ describe("completeness attribution integrity", () => {
 // K=5): random 0/50 (0.0%), eval 37/50 (74.0%). Eval dominates decisively.
 // ---------------------------------------------------------------------------
 describe("eval dominates random (REQ-SCC-9)", () => {
-  test.skip("eval win-rate > random win-rate on zombie-big-box (same seeds)", () => {
-    const { catalog, worldData } = buildWorld("zombie-big-box");
-    const N = 40;
-    const K = 5;
-    const AGENT_SEED = 777;
+  test.skip(
+    "eval win-rate > random win-rate on zombie-big-box (same seeds)",
+    () => {
+      const { catalog, worldData } = buildWorld("zombie-big-box");
+      const N = 40;
+      const K = 5;
+      const AGENT_SEED = 777;
 
-    const runWinRate = (policy: Parameters<typeof playOut>[3]): number => {
-      let agentRng: RngState = createRng(AGENT_SEED);
-      let wins = 0;
-      for (let seed = 1; seed <= N; seed++) {
-        const o = playOut(catalog, worldData, seed, policy, agentRng, { maxActions: MAX_ACTIONS });
-        agentRng = o.finalAgentRng;
-        if (o.status === "won") wins++;
-      }
-      return wins / N;
-    };
+      const runWinRate = (policy: Parameters<typeof playOut>[3]): number => {
+        let agentRng: RngState = createRng(AGENT_SEED);
+        let wins = 0;
+        for (let seed = 1; seed <= N; seed++) {
+          const o = playOut(catalog, worldData, seed, policy, agentRng, {
+            maxActions: MAX_ACTIONS,
+          });
+          agentRng = o.finalAgentRng;
+          if (o.status === "won") wins++;
+        }
+        return wins / N;
+      };
 
-    const randomRate = runWinRate(randomPolicy);
-    const evalRate = runWinRate(evalPolicyFactory(catalog, DEFAULT_EVAL_WEIGHTS, K));
-    expect(evalRate).toBeGreaterThan(randomRate);
-  }, { timeout: 30000 });
+      const randomRate = runWinRate(randomPolicy);
+      const evalRate = runWinRate(evalPolicyFactory(catalog, DEFAULT_EVAL_WEIGHTS, K));
+      expect(evalRate).toBeGreaterThan(randomRate);
+    },
+    { timeout: 30000 },
+  );
 });

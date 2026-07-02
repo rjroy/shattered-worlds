@@ -86,9 +86,18 @@ export const EFFECT_ICON_TOOLTIPS: Record<IconId, TooltipCopy> = {
     title: "Vanish",
     body: "This card exhausts: one use, then it is gone.",
   },
+  progressCost: {
+    title: "Extra cost",
+    body: "Increased cost based on keyword modifiers.",
+  },
+
   eachTurn: {
     title: "Each turn",
     body: "Fires when you end the turn with this hazard still in hand.",
+  },
+  onDraw: {
+    title: "When draw",
+    body: "Fires when the hazard is drawn.",
   },
   onDiscard: {
     title: "If discarded",
