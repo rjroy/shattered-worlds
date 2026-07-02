@@ -36,6 +36,7 @@ const WORLD_THREAT_BY_WORLD_ID: Record<string, CardTemplateId> = {
   "city-of-sleeping-giants": "The Giant Turns In Sleep",
   "eden-prime": "Paradise Runs",
   "new-derelict": "The Order Arrives",
+  "transit-authority": "Entity Detected",
 };
 
 export function worldThreatByWorldId(worldId: string): string {

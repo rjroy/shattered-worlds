@@ -105,7 +105,7 @@ describe("completeness attribution integrity", () => {
       // Mirrors completeness.ts's buildAllWorlds smoke check: every registered
       // world must build with the default starter and produce a terminal-or-capped
       // outcome under the eval policy.
-      expect(worldDataRegistry.length).toBe(11);
+      expect(worldDataRegistry.length).toBe(12);
       for (const bundle of worldDataRegistry) {
         const agg = aggregateWorld(bundle.id, 2, 1, 999);
         expect(agg.games).toBe(2);

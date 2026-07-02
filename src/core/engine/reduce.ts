@@ -6,7 +6,7 @@ import { startTurn, spendEnergy } from "./energy";
 import { IllegalActionError } from "../model/errors";
 import { mintCard } from "../model/cards";
 import { createActBoonOffer } from "./actBoon";
-import { effectivePlayerCard } from "./effectiveCards";
+import { effectivePlayerCard, effectiveWorldCardCost } from "./effectiveCards";
 
 // ---------------------------------------------------------------------------
 // Result type
@@ -18,8 +18,8 @@ function hasPendingActBoonChoice(state: GameState, act: number): boolean {
   return state.pendingBoonChoices.some((choice) => choice.source === "act" && choice.act === act);
 }
 
-function applyActBoonCascades(catalog: CardCatalog, result: ReduceResult): ReduceResult {
-  const events = result.events;
+function applyCascadeEffects(catalog: CardCatalog, original: ReduceResult): ReduceResult {
+  const events = original.events;
 
   const eventReducer = (curr: ReduceResult, event: GameEvent): ReduceResult => {
     switch (event.type) {
@@ -28,8 +28,11 @@ function applyActBoonCascades(catalog: CardCatalog, result: ReduceResult): Reduc
         if (card === null || card?.kind !== "world") return curr;
         if (card.onDraw.kind === "None") return curr;
         const effectResult = applyEffect(catalog, curr.state, card.onDraw, undefined, card.id);
+        if (effectResult.events.length == 0) {
+          return { state: effectResult.state, events };
+        }
         events.push(...effectResult.events);
-        return { state: effectResult.state, events };
+        return effectResult.events.reduce(eventReducer, { state: effectResult.state, events });
       }
       case "ActAdvanced": {
         const actBoon = curr.state.runModifiers.actBoon;
@@ -40,12 +43,40 @@ function applyActBoonCascades(catalog: CardCatalog, result: ReduceResult): Reduc
         events.push(offer.event);
         return eventReducer({ state: offer.state, events }, offer.event);
       }
+      case "KeywordRemoved": {
+        let current = curr.state;
+
+        // Get all cards that are now clear after the removed keyword.
+        const cleared: WorldCard[] = curr.state.hand.filter((c) => {
+          if (!event.ids.includes(c.id)) return false;
+          if (c.kind !== "world") return false;
+          const currProgress = current.progress[c.id] ?? 0;
+          return currProgress >= effectiveWorldCardCost(c, curr.state);
+        }) as WorldCard[];
+
+        if (cleared.length == 0) return curr;
+
+        // For each cleared card resolve the hazard.
+        const newEvents: GameEvent[] = [];
+        for (const c of cleared) {
+          current = { ...current, hand: current.hand.filter((handCard) => handCard.id !== c.id) };
+
+          const rewardResult = applyEffect(catalog, current, c.onCleared, undefined, c.id);
+          current = rewardResult.state;
+          newEvents.push(...rewardResult.events);
+          newEvents.push({ type: "HazardResolved", hazardId: c.id, templateId: c.templateId });
+        }
+
+        // return the new state
+        events.push(...newEvents);
+        return newEvents.reduce(eventReducer, { state: current, events });
+      }
     }
 
     return curr;
   };
 
-  return result.events.reduce(eventReducer, result);
+  return original.events.reduce(eventReducer, original);
 }
 
 // ---------------------------------------------------------------------------
@@ -246,7 +277,7 @@ function handleEndTurn(catalog: CardCatalog, state: GameState): ReduceResult {
   const turnStartResult = startTurn(afterPassive);
   events.push(...turnStartResult.events);
 
-  const cascadeResult = applyActBoonCascades(catalog, {
+  const cascadeResult = applyCascadeEffects(catalog, {
     state: turnStartResult.state,
     events,
   });
@@ -439,5 +470,5 @@ export function reduce(catalog: CardCatalog, state: GameState, action: Action): 
       break;
   }
 
-  return applyActBoonCascades(catalog, result);
+  return applyCascadeEffects(catalog, result);
 }

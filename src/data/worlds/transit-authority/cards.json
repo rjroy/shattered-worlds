@@ -1,0 +1,33 @@
+{
+  "worldId": "transit-authority",
+  "deckComposition": {
+    "acts": [
+      {
+        "cards": [
+          { "templateId": "Service Change", "count": 3 },
+          { "templateId": "Platform Reassignment", "count": 3 },
+          { "templateId": "Ticket Invalidated", "count": 1 },
+          { "templateId": "Reissue Credentials", "count": 3 }
+        ]
+      },
+      {
+        "cards": [
+          { "templateId": "Ticket Invalidated", "count": 2 },
+          { "templateId": "Train Arrives From Nowhere", "count": 3 },
+          { "templateId": "Do Not Board Unknown Trains", "count": 2 },
+          { "templateId": "All Departures Suspended", "count": 1 },
+          { "templateId": "Reissue Credentials", "count": 2 }
+        ]
+      },
+      {
+        "cards": [
+          { "templateId": "All Departures Suspended", "count": 2 },
+          { "templateId": "Train Arrives From Nowhere", "count": 2 },
+          { "templateId": "Do Not Board Unknown Trains", "count": 1 },
+          { "templateId": "Entity Detected", "count": 3 },
+          { "templateId": "The Walker", "count": 1 }
+        ]
+      }
+    ]
+  }
+}
