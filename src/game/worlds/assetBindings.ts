@@ -206,6 +206,7 @@ import orchardMusicUrl from "../assets/audio/the-ember-orchard-music.mp3?url";
 import tidalMusicUrl from "../assets/audio/the-tidal-archive-music.mp3?url";
 import giantsMusicUrl from "../assets/audio/city-of-sleeping-giants-music.mp3?url";
 import edenPrimeMusicUrl from "../assets/audio/eden-prime-music.mp3?url";
+import newDerelictMusicUrl from "../assets/audio/new-derelict-music.mp3?url";
 
 // ---------------------------------------------------------------------------
 // Exports
@@ -406,5 +407,5 @@ export const worldMusicManifest: Record<string, WorldMusicAsset> = {
   "the-ember-orchard": { key: "music-the-ember-orchard", url: orchardMusicUrl },
   "city-of-sleeping-giants": { key: "music-city-of-sleeping-giants", url: giantsMusicUrl },
   "eden-prime": { key: "music-eden-prime", url: edenPrimeMusicUrl },
-  "new-derelict": { key: "music-eden-prime", url: edenPrimeMusicUrl },
+  "new-derelict": { key: "music-eden-prime", url: newDerelictMusicUrl },
 };
