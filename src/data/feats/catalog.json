@@ -264,6 +264,27 @@
     "reward": { "items": [{ "type": "memoryFragments", "amount": 80 }] }
   },
   {
+    "id": "first-transit-authority",
+    "name": "First Ticket",
+    "description": "Win your first run of the Transit Authority.",
+    "conditions": [{ "statId": "world.transit-authority.wins", "operator": "gte", "value": 1 }],
+    "reward": { "items": [{ "type": "memoryFragments", "amount": 20 }] }
+  },
+  {
+    "id": "transit-authority-tier-2",
+    "name": "Pass Holder",
+    "description": "Win the Transit Authority 5 or more times.",
+    "conditions": [{ "statId": "world.transit-authority.wins", "operator": "gte", "value": 5 }],
+    "reward": { "items": [{ "type": "memoryFragments", "amount": 40 }] }
+  },
+  {
+    "id": "transit-authority-tier-3",
+    "name": "Transit Officer",
+    "description": "Win the Transit Authority 10 or more times.",
+    "conditions": [{ "statId": "world.transit-authority.wins", "operator": "gte", "value": 10 }],
+    "reward": { "items": [{ "type": "memoryFragments", "amount": 80 }] }
+  },
+  {
     "id": "swift-clear",
     "name": "Swift Clear",
     "description": "Win a run in fewer than 10 turns.",
