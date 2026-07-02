@@ -25,11 +25,19 @@ import type { RngState, WorldLostCause } from "../core/model/types";
 import type { CardCatalog, WorldData } from "../core/model/catalog";
 import { buildWorld } from "../data/worldManifest";
 import { worldDataRegistry } from "../data/worlds/registry";
+import { buildRunModifiers, UNLOCK_CATALOG } from "../data/unlocks/catalog";
 import { DEFAULT_EVAL_WEIGHTS, type EvalWeights } from "./eval";
 import { evalPolicyFactory } from "./evalPolicy";
 import { playOut } from "./playOut";
 
 const MAX_ACTIONS_PER_WORLD = 1000;
+const RECOVERY_UNLOCK_IDS = [
+  "first-sprint-free", // Burst of Speed
+  "second-explore-push", // Determined Explorer
+  "extra-hp", // Tough Hide
+  "keyword-bonus", // Sharpened Instincts
+] as const;
+const RECOVERY_RUN_MODIFIERS = buildRunModifiers(RECOVERY_UNLOCK_IDS, UNLOCK_CATALOG);
 
 // ---------------------------------------------------------------------------
 // Parameters
@@ -108,6 +116,7 @@ export interface WorldAggregate {
   wins: number;
   losses: number;
   capped: number;
+  recoveryRuns: number;
   totalTurns: number;
   lossByCause: Map<string, number>;
   lossByAct: Map<number, number>;
@@ -121,6 +130,7 @@ function newAggregate(id: string, totalActs: number): WorldAggregate {
     wins: 0,
     losses: 0,
     capped: 0,
+    recoveryRuns: 0,
     totalTurns: 0,
     lossByCause: new Map(),
     lossByAct: new Map(),
@@ -185,8 +195,11 @@ export function runCompleteness(
     const agg = newAggregate(world.id, world.worldData.deckComposition.acts.length);
 
     for (let seed = 1; seed <= params.N; seed++) {
+      const useRecoveryUnlocks = agg.losses + agg.capped >= params.N / 2;
+      if (useRecoveryUnlocks) agg.recoveryRuns++;
       const outcome = playOut(world.catalog, world.worldData, seed, policy, agentRng, {
         maxActions: MAX_ACTIONS_PER_WORLD,
+        ...(useRecoveryUnlocks ? { runModifiers: RECOVERY_RUN_MODIFIERS } : {}),
       });
       agentRng = outcome.finalAgentRng;
 
@@ -263,6 +276,7 @@ function formatWorldBlock(agg: WorldAggregate, threshold: number): string {
   lines.push(`  Wins:    ${agg.wins}  (${pct(agg.wins, agg.games)})`);
   lines.push(`  Losses:  ${agg.losses}`);
   lines.push(`  Capped:  ${agg.capped}`);
+  lines.push(`  Recovery runs: ${agg.recoveryRuns}`);
   lines.push(
     `  Avg turns survived: ${(agg.games > 0 ? agg.totalTurns / agg.games : 0).toFixed(1)}`,
   );
