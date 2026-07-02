@@ -17,7 +17,7 @@ import {
 } from "../../core/index";
 import { CARD_FX_BASE, effectiveVolume } from "../audio/audioVolume";
 import type { FrameStyle, VisualTheme } from "./themes/theme";
-import { compileEffect, type IconId } from "../../core/view/effectGlyphs";
+import { compileEffect, EffectLine, EffectToken, type IconId } from "../../core/view/effectGlyphs";
 import { ENERGY_COST_TOOLTIP, PROGRESS_RING_TOOLTIP } from "../../core/view/effectTooltips";
 import { addEffectLines } from "./effectLineView";
 import { rarityStyle, rarityTierShift } from "./rarity";
@@ -521,19 +521,23 @@ export class CardView extends Phaser.GameObjects.Container {
         currY += height + effectLineSpacing;
       }
 
-      const modifierLines = [...new Set(keywordNames(worldCard))].flatMap((name) => {
+      const modifierLines: EffectLine[] = [...new Set(keywordNames(worldCard))].flatMap((name) => {
         const modifier = KEYWORD_COST_MODIFIERS[name];
         if (modifier === undefined) return [];
-        return [
-          {
-            tokens: [
-              {
-                kind: "text" as const,
-                text: `${name}: +${modifier.costPerOther} cost per other ${name} card in hand`,
-              },
-            ],
-          },
-        ];
+
+        const tokens: EffectToken[] = [];
+        switch (modifier.kind) {
+          case "ClearCostPerKeywordCount":
+            tokens.push({ kind: "text" as const, text: `+${modifier.costPer} / other ${name}` });
+            break;
+          case "ClearCostPerOtherKeyword":
+            tokens.push({ kind: "text" as const, text: `+${modifier.costPer} / total ${name}` });
+            break;
+          case "ClearCostPerSelfKeyword":
+            tokens.push({ kind: "text" as const, text: `+${modifier.costPer} / self ${name}` });
+            break;
+        }
+        return [{ tokens: tokens }];
       });
       const modifierBlock = addEffectLines(scene, modifierLines, {
         maxWidth: CARD_W - 18,
@@ -541,6 +545,7 @@ export class CardView extends Phaser.GameObjects.Container {
         fontSize: 12,
         background: { color: 0x000000, alpha: 0.8 },
         warnLabel: card.name,
+        leadIcon: "progress",
       });
       if (modifierBlock.height === 0) {
         modifierBlock.container.destroy();

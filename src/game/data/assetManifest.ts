@@ -71,6 +71,7 @@ import unlockWorldTheTidalArchiveUrl from "../assets/unlocks/world-the-tidal-arc
 import unlockWorldTheEmberOrchardUrl from "../assets/unlocks/world-the-ember-orchard.webp";
 import unlockWorldCityOfSleepingGiantsUrl from "../assets/unlocks/world-city-of-sleeping-giants.webp";
 import unlockWorldEdenPrimeUrl from "../assets/unlocks/world-eden-prime.webp";
+import unlockWorldNewDerelictUrl from "../assets/unlocks/world-new-derelict.webp";
 import vignetteUrl from "../assets/vignette.png";
 import worldSelectBgUrl from "../assets/world-select.webp";
 import screenChronicleUrl from "../assets/screens/shattered-chronicle.webp";
@@ -162,6 +163,7 @@ export const assetManifest: Record<string, string> = {
   "unlock/world-the-ember-orchard": unlockWorldTheEmberOrchardUrl,
   "unlock/world-city-of-sleeping-giants": unlockWorldCityOfSleepingGiantsUrl,
   "unlock/world-eden-prime": unlockWorldEdenPrimeUrl,
+  "unlock/world-new-derelict": unlockWorldNewDerelictUrl,
   "world-select-bg": worldSelectBgUrl,
   vignette: vignetteUrl,
   "screen-chronicle": screenChronicleUrl,

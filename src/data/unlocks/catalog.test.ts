@@ -235,6 +235,7 @@ describe("Destiny budget helpers", () => {
   it("allows activation that fits, blocks over-budget and already-active ids", () => {
     const extraHp = UNLOCK_CATALOG.find((def) => def.id === "extra-hp")!;
     const starter = UNLOCK_CATALOG.find((def) => def.id === "starter-footballer")!;
+    const actReward = UNLOCK_CATALOG.find((def) => def.id === "act-reward")!;
 
     expect(
       canActivate(
@@ -245,11 +246,18 @@ describe("Destiny budget helpers", () => {
     ).toBe(true);
     expect(
       canActivate(
-        starter,
+        actReward,
         { activated: ["keyword-bonus", "min-energy"] } as unknown as UnlocksProfile,
         UNLOCK_CATALOG,
       ),
     ).toBe(false);
+    expect(
+      canActivate(
+        starter,
+        { activated: ["keyword-bonus", "min-energy"] } as unknown as UnlocksProfile,
+        UNLOCK_CATALOG,
+      ),
+    ).toBe(true);
     expect(
       canActivate(
         extraHp,

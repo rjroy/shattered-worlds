@@ -104,7 +104,7 @@ describe("createUnlocksStore", () => {
     expect(richStore.purchase("extra-hp")).toBe("already-owned");
   });
 
-  it("leaves a purchase inactive when it would exceed the active budget", () => {
+  it("auto-activates purchases while their current weights fit the active budget", () => {
     const storage = memoryStorage({
       [UNLOCKS_PROFILE_STORAGE_KEY]: JSON.stringify({
         version: 1,
@@ -119,7 +119,7 @@ describe("createUnlocksStore", () => {
     expect(store.getProfile()).toEqual({
       version: 1,
       purchased: ["starter-footballer", "min-energy", "min-light"],
-      activated: ["starter-footballer", "min-energy"],
+      activated: ["starter-footballer", "min-energy", "min-light"],
     });
   });
 
@@ -182,19 +182,33 @@ describe("createUnlocksStore", () => {
     const storage = memoryStorage({
       [UNLOCKS_PROFILE_STORAGE_KEY]: JSON.stringify({
         version: 1,
-        purchased: ["extra-hp", "extra-brace", "starter-footballer", "act-reward"],
-        activated: ["starter-footballer", "extra-hp"],
+        purchased: [
+          "extra-hp",
+          "extra-brace",
+          "starter-footballer",
+          "min-energy",
+          "act-reward",
+        ],
+        activated: ["starter-footballer", "extra-hp", "min-energy"],
       }),
     });
     const store = createUnlocksStore(storage, richFeats);
 
     expect(store.setActive("missing", true)).toBe("not-owned");
     expect(store.setActive("act-reward", true)).toBe("over-budget");
-    expect(store.getProfile().activated).toEqual(["starter-footballer", "extra-hp"]);
+    expect(store.getProfile().activated).toEqual([
+      "starter-footballer",
+      "extra-hp",
+      "min-energy",
+    ]);
 
     expect(store.setActive("extra-hp", true)).toBe("ok");
     expect(store.setActive("extra-hp", true)).toBe("ok");
-    expect(store.getProfile().activated).toEqual(["starter-footballer", "extra-hp"]);
+    expect(store.getProfile().activated).toEqual([
+      "starter-footballer",
+      "extra-hp",
+      "min-energy",
+    ]);
   });
 
   it("deactivates idempotently and persists", () => {

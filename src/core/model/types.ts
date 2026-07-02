@@ -23,10 +23,10 @@ export type KeywordName =
 // Bare keywords carry no value.
 export type Keyword = { name: KeywordName; value?: number };
 
-export type PersistentModifier = {
-  kind: "ClearCostPerKeyword";
-  costPerOther: number;
-};
+export type PersistentModifier =
+  | { kind: "ClearCostPerKeywordCount"; costPer: number }
+  | { kind: "ClearCostPerOtherKeyword"; costPer: number }
+  | { kind: "ClearCostPerSelfKeyword"; costPer: number };
 
 export type Dest = "playerDiscard" | "playerDrawTop" | "worldDraw" | "worldDrawTop";
 

@@ -30,7 +30,7 @@ import type {
   WorldCard,
 } from "../model/types";
 import {
-  appliedKeywordValue,
+  keywordValue,
   PERSISTENT_KEYWORDS,
   tickAppliedKeywords,
   withAppliedKeyword,
@@ -187,7 +187,7 @@ export class KeywordGateHandler extends EffectHandler<KeywordGateEffect> {
   override apply(ctx: EffectContext, effect: KeywordGateEffect): EffectResult {
     const { state } = ctx;
     // NOTE: zone = "hand" is the only legal value right now.
-    const total = state.hand.reduce((sum, c) => sum + appliedKeywordValue(c, effect.keyword), 0);
+    const total = state.hand.reduce((sum, c) => sum + keywordValue(c, effect.keyword), 0);
     if (total < effect.min) return { state, events: [] };
 
     if (state.keywordGuard > 0) {

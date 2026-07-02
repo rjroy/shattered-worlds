@@ -5,7 +5,7 @@ import type {
   PlayerCardModifierTarget,
 } from "../../data/unlocks/types";
 import type { Card, CardEffect, GameState, Keyword, PlayerCard, WorldCard } from "../model/types";
-import { hasKeyword, keywordNames, KEYWORD_COST_MODIFIERS } from "../model/keywords";
+import { hasKeyword, keywordNames, keywordValue, KEYWORD_COST_MODIFIERS } from "../model/keywords";
 
 export function effectiveWorldCardCost(card: WorldCard, state: GameState): number {
   // Dedupe: keywordNames concatenates authored + applied lists without
@@ -17,8 +17,26 @@ export function effectiveWorldCardCost(card: WorldCard, state: GameState): numbe
     const modifier = KEYWORD_COST_MODIFIERS[name];
     if (modifier === undefined) continue;
 
-    const matchingCards = state.hand.filter((candidate) => hasKeyword(candidate, name)).length;
-    extraCost += Math.max(0, matchingCards - 1) * modifier.costPerOther;
+    switch (modifier.kind) {
+      case "ClearCostPerKeywordCount": {
+        const matchingCount = state.hand
+          .filter((c) => c.id !== card.id)
+          .reduce((sum, c) => sum + (hasKeyword(c, name) ? 1 : 0), 0);
+        extraCost += Math.max(0, matchingCount) * modifier.costPer;
+        break;
+      }
+      case "ClearCostPerOtherKeyword": {
+        const matchingValue = state.hand
+          .filter((c) => c.id !== card.id)
+          .reduce((sum, c) => sum + keywordValue(c, name), 0);
+        extraCost += Math.max(0, matchingValue) * modifier.costPer;
+        break;
+      }
+      case "ClearCostPerSelfKeyword": {
+        extraCost += keywordValue(card, name) * modifier.costPer;
+        break;
+      }
+    }
   }
 
   return card.cost + extraCost;

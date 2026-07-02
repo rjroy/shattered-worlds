@@ -24,7 +24,8 @@ export const KEYWORD_NAMES: readonly KeywordName[] = [
 export const PERSISTENT_KEYWORDS: ReadonlySet<KeywordName> = new Set(["Lockdown"]);
 
 export const KEYWORD_COST_MODIFIERS: Partial<Record<KeywordName, PersistentModifier>> = {
-  Lockdown: { kind: "ClearCostPerKeyword", costPerOther: 1 },
+  Lockdown: { kind: "ClearCostPerSelfKeyword", costPer: 1 },
+  Alarm: { kind: "ClearCostPerKeywordCount", costPer: 1 },
 };
 
 function isKeywordName(s: string): s is KeywordName {
@@ -77,6 +78,18 @@ export function hasKeyword(card: Card, name: KeywordName): boolean {
   return (card.appliedKeywords ?? []).some((k) => k.name === name);
 }
 
+/**
+ * Returns the value of the named keyword on this card, combining both authored
+ * and transient applied keywords. If no such keyword exists, returns 0.
+ */
+export function keywordValue(card: Card, name: KeywordName): number {
+  const keywordEntry = card.keywords.find((k) => k.name === name);
+  const keywordValue = keywordEntry === undefined ? 0 : Math.max(keywordEntry.value ?? 1, 1);
+  const appliedEntry = (card.appliedKeywords ?? []).find((k) => k.name === name);
+  const appliedValue = appliedEntry === undefined ? 0 : Math.max(appliedEntry.value ?? 1, 1);
+  return keywordValue + appliedValue;
+}
+
 // ---------------------------------------------------------------------------
 // Applied (transient) keyword helpers — pure and generic over PlayerCard /
 // WorldCard. They mirror the `frozen` lifecycle (refresh-don't-shorten on
@@ -121,7 +134,7 @@ export function withoutAppliedKeyword<C extends Card>(card: C, name: KeywordName
 /** The lifetime of the card's applied keyword `name`, or 0 when absent. */
 export function appliedKeywordValue(card: Card, name: KeywordName): number {
   const entry = (card.appliedKeywords ?? []).find((k) => k.name === name);
-  return entry?.value ?? 0;
+  return entry === undefined ? 0 : Math.max(entry.value ?? 1, 1);
 }
 
 /**
