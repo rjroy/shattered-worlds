@@ -6,7 +6,7 @@ import { startTurn, spendEnergy } from "./energy";
 import { IllegalActionError } from "../model/errors";
 import { mintCard } from "../model/cards";
 import { createActBoonOffer } from "./actBoon";
-import { effectivePlayerCard } from "./effectiveCards";
+import { effectivePlayerCard, effectiveWorldCardCost } from "./effectiveCards";
 
 // ---------------------------------------------------------------------------
 // Result type
@@ -39,6 +39,31 @@ function applyActBoonCascades(catalog: CardCatalog, result: ReduceResult): Reduc
         if (offer.event === null) return { state: offer.state, events };
         events.push(offer.event);
         return eventReducer({ state: offer.state, events }, offer.event);
+      }
+      case "KeywordRemoved": {
+        let current = curr.state;
+        const events: GameEvent[] = [];
+
+        // Get all cards that are now clear after the removed keyword.
+        const cleared: WorldCard[] = curr.state.hand.filter((c) => {
+          if (!event.ids.includes(c.id)) return false;
+          if (c.kind !== "world") return false;
+          const currProgress = current.progress[c.id] ?? 0;
+          return currProgress < effectiveWorldCardCost(c, curr.state);
+        }) as WorldCard[];
+
+        // For each cleared card resolve the hazard.
+        for (const c of cleared) {
+          current = { ...current, hand: current.hand.filter((handCard) => handCard.id !== c.id) };
+
+          const rewardResult = applyEffect(catalog, current, c.onCleared, undefined, c.id);
+          current = rewardResult.state;
+          events.push(...rewardResult.events);
+          events.push({ type: "HazardResolved", hazardId: c.id, templateId: c.templateId });
+        }
+
+        // return the new state
+        return { state: current, events };
       }
     }
 
