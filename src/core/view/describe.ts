@@ -134,6 +134,7 @@ function dealProgressOf(
     case "ReturnPlayerDiscardToTop":
     case "RecallPlayerDiscard":
     case "ApplyKeyword":
+    case "ResourceGate":
     case "KeywordGate":
     case "ProgressGate":
     case "RemoveKeyword":

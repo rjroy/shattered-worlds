@@ -9,6 +9,8 @@ export type CardId = string;
 // 'Zombie' | 'Find Baseball Bat' | 'The Walker' | 'Door'
 export type CardTemplateId = string;
 
+export type ResourceName = "HP" | "Light" | "Heat" | "Brace" | "KeywordGuard";
+
 export type KeywordName =
   | "Obstructed"
   | "Creature"
@@ -142,7 +144,8 @@ export type CardEffect =
   // (see appliedKeywords / tickAppliedKeywords). Targets:
   //   "hand"               — every card currently in hand
   //   "self"               — the world card whose hook is firing (ctx.selfId)
-  //   "firstWorldCardInHand" — the world card in hand with the smallest mint id
+  //   "firstWorldCardInHand" — the first world card in hand without this applied
+  //                            keyword, falling back to the first world card
   //   "randomWorldCardInHand" — a random world card in hand
   //   "nextWorldCard"      — deferred: stamps the next world card pulled into
   //                          hand (queued via pendingKeywordNextWorldCard, applied
@@ -153,11 +156,24 @@ export type CardEffect =
       value: number;
       target: "hand" | "nextWorldCard" | "self" | "firstWorldCardInHand" | "randomWorldCardInHand";
     }
+  | {
+      kind: "ResourceGate";
+      resource: ResourceName;
+      op: "lte" | "gte";
+      value: number;
+      then: CardEffect;
+    }
   // Fires `then` only when at least `min` cards in `zone` carry `keyword`
   // (authored OR applied). An available keywordGuard charge absorbs the trigger:
   // the charge is spent and `then` is suppressed (the greed disruption is
   // defused). Below `min` it is a silent no-op.
-  | { kind: "KeywordGate"; keyword: KeywordName; min: number; zone: "hand"; then: CardEffect }
+  | {
+      kind: "KeywordGate";
+      keyword: KeywordName;
+      min: number;
+      zone: "hand" | "self";
+      then: CardEffect;
+    }
   // Fires `then` only when progressDealtThisTurn >= min. A greed signal that
   // reads the per-turn progress meter; it never consumes keywordGuard.
   | { kind: "ProgressGate"; min: number; then: CardEffect }
@@ -459,6 +475,12 @@ export type GameEvent = (
       templateIds: readonly CardTemplateId[];
       keyword: KeywordName;
       value: number;
+    }
+  | {
+      type: "KeywordReduced";
+      ids: readonly CardId[];
+      templateIds: readonly CardTemplateId[];
+      keyword: KeywordName;
     }
   | {
       type: "KeywordRemoved";

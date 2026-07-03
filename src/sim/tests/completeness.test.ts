@@ -9,6 +9,7 @@ import { randomPolicy } from "../policy";
 import { playOut } from "../playOut";
 import {
   buildAllWorlds,
+  formatHumanReport,
   formatReport,
   parseParams,
   runCompleteness,
@@ -270,6 +271,20 @@ describe("world filtering (selectWorlds / parseParams worldId)", () => {
     expect(params.worldId).toBeUndefined();
     expect(params.N).toBe(100);
     expect(params.K).toBe(5);
+    expect(params.outputFormat).toBe("json");
+  });
+
+  test("parseParams accepts human and explicit JSON output flags without shifting positional args", () => {
+    process.argv = ["bun", "completeness.ts", "5", "--human", "2", "the-tidal-archive"];
+    let params = parseParams();
+    expect(params.outputFormat).toBe("human");
+    expect(params.N).toBe(5);
+    expect(params.K).toBe(2);
+    expect(params.worldId).toBe("the-tidal-archive");
+
+    process.argv = ["bun", "completeness.ts", "--format=json", "5", "2"];
+    params = parseParams();
+    expect(params.outputFormat).toBe("json");
   });
 
   test("parseParams throws immediately on a typo'd world id instead of silently defaulting N", () => {
@@ -337,7 +352,7 @@ describe("formatted report shape (step 5)", () => {
       recovery: cohort,
     };
 
-    const report = formatReport(reportParamsFor(0.02), [agg]);
+    const report = formatHumanReport(reportParamsFor(0.02), [agg]);
 
     // Zero losses: the lost-turn median/p90 have nothing to summarize.
     expect(report).toContain("Turns survived (lost): median=(none) p90=(none)");
@@ -419,7 +434,7 @@ describe("formatted report shape (step 5)", () => {
       recovery,
     };
 
-    const report = formatReport(reportParamsFor(0.02), [agg]);
+    const report = formatHumanReport(reportParamsFor(0.02), [agg]);
 
     // Baseline: flagged, with hp/act-1 dominant and the epistemic caveat —
     // and each of those markers appears EXACTLY once (baseline only).

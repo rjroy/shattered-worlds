@@ -7,7 +7,7 @@ export const CITY_OF_SLEEPING_GIANTS_DISPLAY: WorldDisplayData = {
     "Vein-roads and bone anchors allowed the giants to sleep. Then the Walker crossed, and they " +
     "began to wake. It movement starts in the fingers; then districts are reclaimed en masse. " +
     "The movement returns heavier each time until the giant turns fully.",
-  difficulty: 2,
+  difficulty: 3,
   cycle: 3,
   backgroundKey: "city-of-sleeping-giants-bg",
 };

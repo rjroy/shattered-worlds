@@ -36,7 +36,7 @@ import {
   withAppliedKeyword,
   withoutAppliedKeyword,
 } from "../model/keywords";
-import type { EffectLine } from "../view/effectGlyphs";
+import type { EffectLine, EffectToken } from "../view/effectGlyphs";
 import type { PreviewEventSummary, PreviewFormatContext } from "../view/previewFormat";
 import type { CompileContext, EffectContext, EffectResult } from "./EffectContext";
 import { EffectHandler } from "./EffectHandler";
@@ -44,6 +44,7 @@ import { icon, main, text, value } from "./tokens";
 import { nextInt } from "../engine/rng";
 
 type ApplyKeywordEffect = Extract<CardEffect, { kind: "ApplyKeyword" }>;
+type ResourceGateEffect = Extract<CardEffect, { kind: "ResourceGate" }>;
 type KeywordGateEffect = Extract<CardEffect, { kind: "KeywordGate" }>;
 type ProgressGateEffect = Extract<CardEffect, { kind: "ProgressGate" }>;
 type RemoveKeywordEffect = Extract<CardEffect, { kind: "RemoveKeyword" }>;
@@ -147,13 +148,19 @@ export class ApplyKeywordHandler extends EffectHandler<ApplyKeywordEffect> {
       case "firstWorldCardInHand": {
         const worldCards = state.hand.filter((c): c is WorldCard => c.kind === "world");
         if (worldCards.length === 0) return { state, events: [] };
-        // Mint ids are String(nextId); compare numerically. A string compare
-        // inverts at id >= 10 ("10" < "2"), so it would pick the wrong card on
-        // any board past 9 minted cards — a latent determinism bug.
-        const first = worldCards.reduce((lowest, candidate) =>
-          parseInt(candidate.id, 10) < parseInt(lowest.id, 10) ? candidate : lowest,
-        );
-        return applyToHandIds(state, [first.id], kw);
+        const noExisting = worldCards.filter((c): c is WorldCard => {
+          return c.appliedKeywords === undefined
+            ? true
+            : undefined === c.appliedKeywords.find((akw) => akw.name === kw.name);
+        });
+        if (noExisting.length > 0 && noExisting[0] !== undefined) {
+          return applyToHandIds(state, [noExisting[0].id], kw);
+        }
+        if (worldCards[0] !== undefined) {
+          return applyToHandIds(state, [worldCards[0].id], kw);
+        }
+        // Should be unreachable.
+        return { state, events: [] };
       }
       case "randomWorldCardInHand": {
         const worldCards = state.hand.filter((c): c is WorldCard => c.kind === "world");
@@ -183,11 +190,83 @@ export class ApplyKeywordHandler extends EffectHandler<ApplyKeywordEffect> {
   }
 }
 
+export class ResourceGateHandler extends EffectHandler<ResourceGateEffect> {
+  override apply(ctx: EffectContext, effect: ResourceGateEffect): EffectResult {
+    const { state } = ctx;
+    const total = (() => {
+      switch (effect.resource) {
+        case "Light":
+          return ctx.state.light;
+        case "Heat":
+          return ctx.state.heat;
+        case "HP":
+          return ctx.state.hp;
+        case "Brace":
+          return ctx.state.braceCharges;
+        case "KeywordGuard":
+          return ctx.state.keywordGuard;
+      }
+    })();
+
+    switch (effect.op) {
+      case "lte":
+        if (total > effect.value) return { state, events: [] };
+        // continue because total <= effect.value
+        break;
+      case "gte":
+        if (total < effect.value) return { state, events: [] };
+        // continue because total >= effect.value
+        break;
+    }
+
+    return ctx.apply(ctx, effect.then);
+  }
+
+  override describe(effect: ResourceGateEffect): string[] {
+    return [
+      `If ${effect.resource} ${effect.op === "lte" ? "<=" : ">="} ${effect.value}, trigger a disruption`,
+    ];
+  }
+
+  override compile(effect: ResourceGateEffect, ctx: CompileContext): EffectLine[] {
+    const resourceToken: EffectToken = (() => {
+      switch (effect.resource) {
+        case "HP":
+          return icon("hp");
+        case "Light":
+          return icon("light");
+        case "Heat":
+          return icon("heat");
+        case "Brace":
+          return icon("brace");
+        case "KeywordGuard":
+          return text("Guard");
+      }
+    })();
+    return [
+      main([
+        resourceToken,
+        text(`${effect.op === "lte" ? "<=" : ">="} ${effect.value}`),
+        text("→"),
+      ]),
+      ...ctx.compile(effect.then, { ...ctx, compactSequences: true }),
+    ];
+  }
+}
+
 export class KeywordGateHandler extends EffectHandler<KeywordGateEffect> {
   override apply(ctx: EffectContext, effect: KeywordGateEffect): EffectResult {
     const { state } = ctx;
-    // NOTE: zone = "hand" is the only legal value right now.
-    const total = state.hand.reduce((sum, c) => sum + keywordValue(c, effect.keyword), 0);
+    const total = (() => {
+      switch (effect.zone) {
+        case "hand":
+          return state.hand.reduce((sum, c) => sum + keywordValue(c, effect.keyword), 0);
+        case "self":
+          return state.hand
+            .filter((c) => c.id === ctx.selfId)
+            .reduce((sum, c) => sum + keywordValue(c, effect.keyword), 0);
+      }
+    })();
     if (total < effect.min) return { state, events: [] };
 
     if (state.keywordGuard > 0) {
@@ -296,6 +375,7 @@ export class RemoveKeywordHandler extends EffectHandler<RemoveKeywordEffect> {
  */
 export function tickAppliedKeywordsAtTurnStart(state: GameState): EffectResult {
   const expiries = new Map<KeywordName, { ids: CardId[]; templateIds: CardTemplateId[] }>();
+  const reduced = new Map<KeywordName, { ids: CardId[]; templateIds: CardTemplateId[] }>();
   // True once any card actually carried an applied keyword. When no card does
   // (every non-Eden turn) the original state is returned untouched, keeping the
   // event stream and state byte-identical to the pre-slice engine.
@@ -308,6 +388,12 @@ export function tickAppliedKeywordsAtTurnStart(state: GameState): EffectResult {
     const next = tickAppliedKeywords(card);
     const remaining = next.appliedKeywords ?? [];
     for (const kw of applied) {
+      if (!PERSISTENT_KEYWORDS.has(kw.name)) {
+        const bucket = reduced.get(kw.name) ?? { ids: [], templateIds: [] };
+        bucket.ids.push(card.id);
+        bucket.templateIds.push(card.templateId);
+        reduced.set(kw.name, bucket);
+      }
       if (!remaining.some((k) => k.name === kw.name)) {
         const bucket = expiries.get(kw.name) ?? { ids: [], templateIds: [] };
         bucket.ids.push(card.id);
@@ -323,6 +409,9 @@ export function tickAppliedKeywordsAtTurnStart(state: GameState): EffectResult {
   // Decremented (but not yet expired) lifetimes still update the hand; events
   // fire only for keywords that hit zero this tick.
   const events: GameEvent[] = [];
+  for (const [keyword, { ids, templateIds }] of reduced) {
+    events.push({ type: "KeywordReduced", ids, templateIds, keyword });
+  }
   for (const [keyword, { ids, templateIds }] of expiries) {
     events.push({ type: "KeywordRemoved", ids, templateIds, keyword });
   }

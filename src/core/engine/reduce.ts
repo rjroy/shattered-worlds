@@ -48,6 +48,7 @@ function applyCascadeEffects(catalog: CardCatalog, original: ReduceResult): Redu
           offer.event,
         );
       }
+      case "KeywordReduced":
       case "KeywordRemoved": {
         let current = curr.state;
 

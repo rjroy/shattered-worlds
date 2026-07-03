@@ -22,7 +22,7 @@ export const KEYWORD_NAMES: readonly KeywordName[] = [
   "Reroute",
 ];
 
-export const PERSISTENT_KEYWORDS: ReadonlySet<KeywordName> = new Set(["Lockdown"]);
+export const PERSISTENT_KEYWORDS: ReadonlySet<KeywordName> = new Set(["Lockdown", "Reroute"]);
 
 export const KEYWORD_COST_MODIFIERS: Partial<Record<KeywordName, PersistentModifier>> = {
   Lockdown: { kind: "ClearCostPerSelfKeyword", costPer: 1 },

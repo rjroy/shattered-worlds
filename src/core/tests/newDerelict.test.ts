@@ -80,6 +80,7 @@ describe("New Derelict world data", () => {
         kind: "Sequence",
         steps: [
           { kind: "ReturnPlayerDiscardToTop", min: 0, max: 1 },
+          { kind: "Draw", player: 1 },
           { kind: "Brace", amount: 1 },
         ],
       });

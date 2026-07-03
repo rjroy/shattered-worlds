@@ -118,8 +118,7 @@ export function logEvent(event: GameEvent): void {
       );
       break;
     default: {
-      const unhandled: never = event;
-      throw new Error(`logEvent: unhandled event type ${(unhandled as GameEvent).type}`);
+      throw new Error(`logEvent: unhandled event type ${event.type}`);
     }
   }
 }
