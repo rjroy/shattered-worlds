@@ -7,9 +7,8 @@
  * two independent runs from the SAME seed reach deepEqual final state with an
  * identical event sequence:
  *
- *   1. Hazard recall from discard — discarding `Chained Books Rising` fires its
- *      `onDiscarded: RecallPlayerDiscard latest`, pulling the most-recent player
- *      discard back to the top of the draw pile.
+ *   1. Hazard recall at end of turn — `The Same Footprint` recalls `Panic`
+ *      from the player discard pile with its `panicFirst` policy.
  *   2. Player chooser top-deck — playing `Mark the Shelf` with a chosen
  *      `recallIds` returns a specific discard to the top of the draw pile.
  *   3. Passive recall after hand discard — `EndTurn` discards the unretained
@@ -36,7 +35,6 @@ interface SegmentRun {
   events: GameEvent[];
   /** Card id chosen via Mark the Shelf, captured so assertions can find it. */
   markedId: string;
-  hazardId: string;
 }
 
 /**
@@ -52,9 +50,9 @@ function runSegment(seed: number): SegmentRun {
   // threads both forward so every minted id is deterministic for this seed.
   const { state: base } = createWorld(catalog, worldData, seed);
 
-  const [hazard, s1] = mintCard(catalog, base, "Chained Books Rising");
+  const [hazard, s1] = mintCard(catalog, base, "The Same Footprint");
   const [markShelf, s2] = mintCard(catalog, s1, "Mark the Shelf");
-  const [discardA, s3] = mintCard(catalog, s2, "Sprint"); // sits in discard, recalled by hazard
+  const [discardA, s3] = mintCard(catalog, s2, "Panic"); // sits in discard, recalled by hazard
   const [discardB, s4] = mintCard(catalog, s3, "Explore"); // sits in discard, chosen by Mark the Shelf
   const [handFiller, s5] = mintCard(catalog, s4, "Sprint"); // unretained; feeds the passive at end turn
 
@@ -64,11 +62,9 @@ function runSegment(seed: number): SegmentRun {
   const discardBCard = discardB as PlayerCard;
   const fillerCard = handFiller as PlayerCard;
 
-  // Hand holds the hazard to discard, Mark the Shelf to play, and a filler that
+  // Hand holds the hazard through end of turn, Mark the Shelf to play, and a filler that
   // will be discarded at end of turn so the passive has something to recall.
-  // playerDiscard is seeded with two known recall targets; latest = discardB
-  // (head), so the hazard's "latest" recall pulls discardB, after which
-  // discardA is the new latest for the passive to act on.
+  // playerDiscard is seeded with a chooser target and Panic for the hazard.
   const start: GameState = {
     ...s5,
     hand: [hazardCard, markCard, fillerCard],
@@ -82,27 +78,21 @@ function runSegment(seed: number): SegmentRun {
     status: "playing",
   };
 
-  // 1. Discard the hazard → onDiscarded RecallPlayerDiscard latest (hazard recall).
-  const r1 = reduce(catalog, start, { type: "DiscardHazard", cardId: hazardCard.id });
-
-  // 2. Play Mark the Shelf choosing a specific discard to top-deck.
-  //    After step 1 the chosen discard must still be in the pile; pick whatever
-  //    legal recall target the gate reports so the action is always valid.
-  const recallTargetId = pickRecallTarget(r1.state, markCard.id);
-  const r2 = reduce(catalog, r1.state, {
+  // 1. Play Mark the Shelf choosing a specific discard to top-deck.
+  const recallTargetId = pickRecallTarget(start);
+  const r1 = reduce(catalog, start, {
     type: "PlayCard",
     cardId: markCard.id,
     recallIds: [recallTargetId],
   });
 
-  // 3. EndTurn → discard unretained hand → Tidal Memory passive recall → refill.
-  const r3 = reduce(catalog, r2.state, { type: "EndTurn" });
+  // 2. EndTurn → hazard recall → hand discard → Tidal Memory recall → refill.
+  const r2 = reduce(catalog, r1.state, { type: "EndTurn" });
 
   return {
-    state: r3.state,
-    events: [...r1.events, ...r2.events, ...r3.events],
+    state: r2.state,
+    events: [...r1.events, ...r2.events],
     markedId: recallTargetId,
-    hazardId: hazardCard.id,
   };
 }
 
@@ -111,7 +101,7 @@ function runSegment(seed: number): SegmentRun {
  * pile, deterministically (head of the pile). Throws if none exist so the test
  * fails loudly rather than dispatching an illegal action.
  */
-function pickRecallTarget(state: GameState, _markCardId: string): string {
+function pickRecallTarget(state: GameState): string {
   const target = state.playerDiscard[0];
   if (target === undefined) {
     throw new Error("Tidal replay segment expected a non-empty discard for Mark the Shelf");
@@ -134,11 +124,14 @@ describe("Tidal Archive seeded replay segment (REQ-TIDAL-58)", () => {
 
     const sources = recalls.map((e) => e.source);
     // Hazard onDiscarded (latest), player chooser (playerSelected), passive (latest).
-    expect(sources).toContain("playerSelected");
-    expect(sources.filter((s) => s === "latest").length).toBe(2);
+    expect(sources.filter((s) => s === "latest").length).toBe(1);
+    expect(sources.filter((s) => s === "random").length).toBe(0);
+    expect(sources.filter((s) => s === "lowestCost").length).toBe(0);
+    expect(sources.filter((s) => s === "highestCost").length).toBe(0);
+    expect(sources.filter((s) => s === "panicFirst").length).toBe(1);
+    expect(sources.filter((s) => s === "playerSelected").length).toBe(1);
 
     // The hazard discard itself happened, and a card was played.
-    expect(eventTypes).toContain("HazardDiscarded");
     expect(eventTypes).toContain("CardPlayed");
 
     // The chosen card landed on top of the draw pile via the chooser, then was

@@ -19,9 +19,10 @@ function hasPendingActBoonChoice(state: GameState, act: number): boolean {
 }
 
 function applyCascadeEffects(catalog: CardCatalog, original: ReduceResult): ReduceResult {
-  const events = original.events;
+  const eventsToProcess = [...original.events];
 
   const eventReducer = (curr: ReduceResult, event: GameEvent): ReduceResult => {
+    // events to return without changing the original list.
     switch (event.type) {
       case "HazardAdded": {
         const card = curr.state.hand.find((c) => c.id === event.id);
@@ -29,19 +30,23 @@ function applyCascadeEffects(catalog: CardCatalog, original: ReduceResult): Redu
         if (card.onDraw.kind === "None") return curr;
         const effectResult = applyEffect(catalog, curr.state, card.onDraw, undefined, card.id);
         if (effectResult.events.length == 0) {
-          return { state: effectResult.state, events };
+          return { state: effectResult.state, events: curr.events };
         }
-        events.push(...effectResult.events);
-        return effectResult.events.reduce(eventReducer, { state: effectResult.state, events });
+        return effectResult.events.reduce(eventReducer, {
+          state: effectResult.state,
+          events: [...curr.events, ...effectResult.events],
+        });
       }
       case "ActAdvanced": {
         const actBoon = curr.state.runModifiers.actBoon;
         if (actBoon === null) return curr;
         if (hasPendingActBoonChoice(curr.state, event.act)) return curr;
         const offer = createActBoonOffer(catalog, curr.state, actBoon, event.act);
-        if (offer.event === null) return { state: offer.state, events };
-        events.push(offer.event);
-        return eventReducer({ state: offer.state, events }, offer.event);
+        if (offer.event === null) return { state: offer.state, events: curr.events };
+        return eventReducer(
+          { state: offer.state, events: [...curr.events, offer.event] },
+          offer.event,
+        );
       }
       case "KeywordRemoved": {
         let current = curr.state;
@@ -68,15 +73,17 @@ function applyCascadeEffects(catalog: CardCatalog, original: ReduceResult): Redu
         }
 
         // return the new state
-        events.push(...newEvents);
-        return newEvents.reduce(eventReducer, { state: current, events });
+        return newEvents.reduce(eventReducer, {
+          state: current,
+          events: [...curr.events, ...newEvents],
+        });
       }
     }
 
     return curr;
   };
 
-  return original.events.reduce(eventReducer, original);
+  return eventsToProcess.reduce(eventReducer, { state: original.state, events: original.events });
 }
 
 // ---------------------------------------------------------------------------
@@ -211,13 +218,14 @@ function handleDiscardHazard(
 // ---------------------------------------------------------------------------
 
 function handleEndTurn(catalog: CardCatalog, state: GameState): ReduceResult {
-  const events: GameEvent[] = [{ type: "TurnEnded" }];
+  let events: GameEvent[] = [{ type: "TurnEnded" }];
 
   // Fire onEndOfTurn for each world card in hand. The loop iterates a snapshot
   // of the world cards captured at loop entry (state.hand.filter(...)), so a
   // card spawned during the loop (e.g. AddWorldCardToDeck) is NOT re-processed
   // this turn — this is what prevents a same-turn transform chain.
   let current = state;
+
   for (const card of state.hand.filter((c): c is WorldCard => c.kind === "world")) {
     // Pass card.id as selfId so self-referential hooks (DestroySelf) know which
     // card fired them.
@@ -279,8 +287,10 @@ function handleEndTurn(catalog: CardCatalog, state: GameState): ReduceResult {
 
   const cascadeResult = applyCascadeEffects(catalog, {
     state: turnStartResult.state,
-    events,
+    events: events,
   });
+  events = cascadeResult.events;
+
   const afterRefill = cascadeResult.state;
 
   if (afterRefill.pendingBoonChoices.length > 0) {
@@ -469,6 +479,5 @@ export function reduce(catalog: CardCatalog, state: GameState, action: Action): 
       result = handleChooseBoon(catalog, state, action);
       break;
   }
-
   return applyCascadeEffects(catalog, result);
 }

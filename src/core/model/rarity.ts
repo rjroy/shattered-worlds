@@ -30,3 +30,9 @@ export const RARITY_WEIGHTS: Record<RarityTier, number> = {
   // NOTE: Signature is a special weight that is intended to always be present.
   signature: 160,
 };
+
+export function compareRarity(lhs: RarityTier, rhs: RarityTier): number {
+  const lhsIndex = RARITY_ORDER.findIndex((tier) => tier === lhs);
+  const rhsIndex = RARITY_ORDER.findIndex((tier) => tier === rhs);
+  return lhsIndex - rhsIndex;
+}

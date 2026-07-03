@@ -164,7 +164,22 @@ describe("buildRunModifiers", () => {
       target: { kind: "template", templateId: "Panic" },
       condition: { kind: "always" },
       patches: [
-        { kind: "appendEffect", effect: { kind: "DealProgressAll", base: 2 } },
+        {
+          kind: "replaceEffect",
+          effect: {
+            kind: "Sequence",
+            steps: [
+              {
+                kind: "Modal",
+                branches: [
+                  { kind: "DealProgressAll", base: 2 },
+                  { kind: "ReturnWorldCards", min: 1, max: 12 },
+                ],
+              },
+              { kind: "Draw", world: 1 },
+            ],
+          },
+        },
         { kind: "setExhaust", exhaust: true },
       ],
     });

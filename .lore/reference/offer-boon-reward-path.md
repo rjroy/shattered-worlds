@@ -4,7 +4,7 @@ date: 2026-06-25
 status: current
 tags: [offer-boon, boons, reward-choice, world-clear, core-effects]
 fg-type: architecture
-fg-sources: [.lore/work/plans/offer-boon-rewards.md, .lore/work/notes/offer-boon-rewards.md]
+fg-sources: [.lore/work/plans/offer-boon-rewards.md, .lore/work/notes/offer-boon-rewards.md, .lore/work/brainstorm/offer-boon-world-clear-rewards.md]
 fg-status: current
 fg-evidence:
   code:
@@ -38,5 +38,11 @@ A generic boon-offer helper accepts a source, set id, template pool, offered cou
 ## Authoring Rule
 
 Boon sets are registered once and referenced by set id. World-card `onCleared` hooks may use `OfferBoon` for cache-style rewards where player agency is better than dumping several fixed cards into the deck.
+
+Early authoring guidance from the design brainstorm still applies: don't replace every `GainCard` clear reward at once. Good first targets are multi-card reward caches, expensive/rare hazards whose payoff should feel like a discovery, and act-pacing reward cards. Avoid common low-cost hazards, partial-clear effects, and end-of-turn effects, where a modal interruption reads as friction rather than a moment.
+
+## History: queueing was initially rejected, then adopted
+
+The original design brainstorm's stated concern was `DealProgressAll` sweeping multiple world cards with `OfferBoon` hooks in one effect, creating two pending choices at once. Its initial recommendation was conservative: allow only one pending boon choice at a time, fail closed or skip a second offer, and avoid authoring `OfferBoon` on cards likely to be cleared in bulk — reasoning that a full choice queue "adds complexity to reducer blocking rules, event streams, UI, tests, and simulations" that a first implementation should avoid. The shipped implementation superseded that caution directly: pending boon choices are a queue, and multiple offers append and resolve FIFO through `ChooseBoon` rather than being dropped or blocked.
 
 Recursive effect description and availability dispatch resolve the effect registry lazily at method-call time. This avoids the `registry -> composite -> describe/available -> registry` initialization cycle in the current effect system.

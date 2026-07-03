@@ -6,7 +6,7 @@ export const THE_EMBER_ORCHARD_DISPLAY: WorldDisplayData = {
   story:
     "Rows of star-fruit stored warmth until the Walker came, making the orchard count itself " +
     "wrong. The heat is real, but every dormant star is an egg hatching in the dark below.",
-  difficulty: 4,
+  difficulty: 5,
   cycle: 3,
   backgroundKey: "the-ember-orchard-bg",
 };

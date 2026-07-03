@@ -1,10 +1,10 @@
 ---
 title: Tidal Archive World
-date: 2026-06-25
+date: 2026-07-02
 status: current
 tags: [world-design, the-tidal-archive, discard-recall, passive-effects, boons]
 fg-type: concept
-fg-sources: [.lore/work/plans/the-tidal-archive.md, .lore/work/notes/the-tidal-archive.md]
+fg-sources: [.lore/work/plans/the-tidal-archive.md, .lore/work/notes/the-tidal-archive.md, .lore/work/specs/the-tidal-archive.md]
 fg-status: current
 fg-evidence:
   code:
@@ -34,6 +34,6 @@ Adding a new discard-recall target spec affects the runtime action gate, the ren
 
 ## Resolved Authoring Decisions
 
-Memory Trawler uses a random player discard recall effect instead of a player-choice target. Structural force hazards use `ForceDestroy` where the fiction is collapse or snatch rather than HP damage.
+`Chained Books Rising` (a creature-snatch hazard, matching bird-building's snatch pattern — it does not carry a literal `Creature` keyword) uses an automatic `RecallPlayerDiscard` policy (`lowestCost`) instead of a player-choice target, paired with `ForceDestroy` on the same `onEndOfTurn` hook so the creature snatches a card from hand rather than dealing HP damage; its `onCleared` grants `Anchor the Memory`, whose `Brace` charge exists to absorb that snatch. `The Same Footprint` (the act-3 signature threat) uses the `panicFirst` recall policy, which recalls `Panic` first and falls back to `latest`. No shipped Tidal card uses the `random` recall policy.
 
 Bridge to Yesterday uses top-deck recurrence rather than `ReturnWorldCards` on a clear hook, because automatic hooks cannot supply selected return ids. Drowned Index uses an `OfferBoon` reward choice over the Tidal kit instead of granting multiple fixed cards.

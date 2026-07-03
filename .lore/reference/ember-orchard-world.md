@@ -4,7 +4,7 @@ date: 2026-06-25
 status: current
 tags: [world-design, the-ember-orchard, incubation, delayed-pressure, boons]
 fg-type: concept
-fg-sources: [.lore/work/plans/the-ember-orchard.md, .lore/work/notes/the-ember-orchard.md]
+fg-sources: [.lore/work/plans/the-ember-orchard.md, .lore/work/notes/the-ember-orchard.md, .lore/work/specs/the-ember-orchard.md]
 fg-status: current
 fg-evidence:
   code:

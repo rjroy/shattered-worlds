@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { afterEach, describe, expect, test } from "bun:test";
 import { createRng } from "../../core/engine/rng";
 import type { RngState, WorldLostCause } from "../../core/model/types";
 import { buildWorld } from "../../data/worldManifest";
@@ -10,7 +10,9 @@ import { playOut } from "../playOut";
 import {
   buildAllWorlds,
   formatReport,
+  parseParams,
   runCompleteness,
+  selectWorlds,
   type BuiltWorld,
   type CohortAggregate,
   type CompletenessParams,
@@ -218,6 +220,65 @@ describe("completeness attribution integrity", () => {
 });
 
 // ---------------------------------------------------------------------------
+// World filtering for `bun run sim:complete <worldId>` (CLI single-world runs).
+// `selectWorlds` is the pure filter; `parseParams` additionally has to pull a
+// world id out of `process.argv` without disturbing N/K/agentSeed/threshold's
+// positions, so its argv-parsing behavior is exercised directly.
+// ---------------------------------------------------------------------------
+
+describe("world filtering (selectWorlds / parseParams worldId)", () => {
+  test("selectWorlds passes every world through when no worldId is given", () => {
+    const worlds = buildAllWorlds();
+    expect(selectWorlds(worlds, undefined)).toBe(worlds);
+  });
+
+  test("selectWorlds narrows to the single matching world", () => {
+    const worlds = buildAllWorlds();
+    const selected = selectWorlds(worlds, "the-tidal-archive");
+    expect(selected.map((w) => w.id)).toEqual(["the-tidal-archive"]);
+  });
+
+  test("selectWorlds throws on an unknown id, naming the known worlds", () => {
+    const worlds = buildAllWorlds();
+    expect(() => selectWorlds(worlds, "not-a-real-world")).toThrow(/Unknown world id/);
+    expect(() => selectWorlds(worlds, "not-a-real-world")).toThrow(/the-tidal-archive/);
+  });
+
+  // `parseParams` reads `process.argv` directly, so these mutate and restore it.
+  const originalArgv = process.argv;
+  afterEach(() => {
+    process.argv = originalArgv;
+  });
+
+  test("parseParams picks up a world id positioned anywhere among the numeric args", () => {
+    process.argv = ["bun", "completeness.ts", "the-tidal-archive", "5", "2"];
+    let params = parseParams();
+    expect(params.worldId).toBe("the-tidal-archive");
+    expect(params.N).toBe(5);
+    expect(params.K).toBe(2);
+
+    process.argv = ["bun", "completeness.ts", "5", "2", "the-tidal-archive"];
+    params = parseParams();
+    expect(params.worldId).toBe("the-tidal-archive");
+    expect(params.N).toBe(5);
+    expect(params.K).toBe(2);
+  });
+
+  test("parseParams leaves worldId undefined and N/K at their defaults when no id is given", () => {
+    process.argv = ["bun", "completeness.ts"];
+    const params = parseParams();
+    expect(params.worldId).toBeUndefined();
+    expect(params.N).toBe(100);
+    expect(params.K).toBe(5);
+  });
+
+  test("parseParams throws immediately on a typo'd world id instead of silently defaulting N", () => {
+    process.argv = ["bun", "completeness.ts", "the-tidel-archive", "2", "1"];
+    expect(() => parseParams()).toThrow(/Unknown world id "the-tidel-archive"/);
+  });
+});
+
+// ---------------------------------------------------------------------------
 // Formatted report shape (step 5 of the completeness-agent-performance-stats
 // plan). These build synthetic `WorldAggregate`s directly rather than driving
 // real play-outs, so the `(none)`/flag/caveat/diff-line edge cases are exact
@@ -283,6 +344,8 @@ describe("formatted report shape (step 5)", () => {
     // act 2/2 (index 1) is never reached, so its conditional win|reached
     // conversion has a zero denominator and must render (none), not 0% or NaN.
     expect(report).toContain("act 2/2: reached=0 (0.0%)  win|reached=(none)");
+    expect(report).toContain("[FLAGGED] win-rate 100.0% (too easy)");
+    expect(report).toContain("Flagged worlds: 1/1");
   });
 
   test("baseline-only [FLAGGED]/dominant-cause/caveat; recovery gets the descriptive win-rate-diff line instead", () => {

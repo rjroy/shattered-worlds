@@ -4,7 +4,7 @@ date: 2026-06-25
 status: current
 tags: [feats, type-contracts, validation]
 fg-type: lesson
-fg-sources: [.lore/work/notes/simplify-feat-definitions.md]
+fg-sources: [.lore/work/notes/simplify-feat-definitions.md, .lore/work/brainstorm/feat-definitions.md]
 fg-status: current
 fg-evidence:
   code:
@@ -33,3 +33,11 @@ Former gaps around boolean predicate values, feat descriptions, and explicit unl
 ## Validation Rule
 
 Passing runtime tests are not enough for this area. Any feat-definition change should also check that the exported types, catalog JSON, and evaluator tests still agree on every authored feat condition and reward variant.
+
+## Design rationale
+
+`statId` is a flat string, not a typed enum, and is namespaced by dot-notation prefix rather than a separate condition-type field per scope: a bare `finalHp` or `outcome` reads against the just-completed `RunRecord`, `witness.<ThreatName>.<field>` reads cross-run witness data (e.g. `witness.Zombie.resolvedCount`), and `lifetime.<field>` or `world.<worldId>.<field>` reads cumulative `LifetimeStats` (shipped as `lifetime.wins`, `world.fog-beach-party.wins`, etc. — the brainstorm's original proposal used `lifetime.byWorld.<worldId>.<field>`; the shipped catalog flattened per-world stats to a top-level `world.` prefix instead). This keeps one condition shape for all three scopes instead of three condition types.
+
+`operator` carries a separate `is` alongside the numeric comparisons (`gte`/`lte`/`gt`/`lt`/`eq`) specifically for categorical and boolean stats (`outcome is won`, `witness.Zombie.diedTo is true`). The reasoning: forcing a boolean through `eq 1`/`eq 0` leaks representation detail into every feat author's head. A `neq` operator was considered and deliberately left out — anything it would express reads fine as the complementary numeric/boolean check (`healingReceived lte 0` instead of `healingReceived neq 0`).
+
+`RewardItem` is a discriminated union (`memoryFragments` | `unlock`) wrapped in `FeatReward.items`, rather than named optional fields (`{ memoryFragments, unlock? }`). The union was chosen specifically so a future third reward kind is an additive union member, not a structural change to every existing feat — code that doesn't understand a new item type can skip it safely. Feat conditions are also a flat list, implicitly AND'd; OR logic is deliberately not supported in a single feat definition — an OR case is authored as two separate feats instead.

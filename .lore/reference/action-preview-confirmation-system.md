@@ -4,7 +4,7 @@ date: 2026-06-25
 status: current
 tags: [action-preview, confirmation, ux, settings, core-runtime]
 fg-type: architecture
-fg-sources: [.lore/work/plans/action-impact-preview-and-confirmation.md, .lore/work/notes/action-impact-preview-and-confirmation.md]
+fg-sources: [.lore/work/plans/action-impact-preview-and-confirmation.md, .lore/work/notes/action-impact-preview-and-confirmation.md, .lore/work/brainstorm/action-impact-preview-and-confirmation.md, .lore/work/specs/action-impact-preview-and-confirmation.md]
 fg-status: current
 fg-evidence:
   code:
@@ -43,6 +43,6 @@ The remaining intentional exception is concealed hooks that add cards to the wor
 
 The unified preview system replaces the older targeted `previewPlay` path. It powers selected-card target hover, idle world-card hover, end-turn hover, and confirmation modals. Detailed hover text is controlled by user settings.
 
-Confirmation is controlled by a versioned settings store with modes for always confirming, confirming risky actions only, or disabling confirmation. The same store is intentionally broad enough to host future settings.
+Confirmation is controlled by a versioned settings store with modes for always confirming, confirming risky actions only, or disabling confirmation. This supersedes the originating brainstorm's candidate shape of two independent booleans (`confirmRiskyActions`, `detailedPreviews`) with a single three-mode confirmation setting instead. The same store is intentionally broad enough to host future settings.
 
 Confirmation owns top-most modal behavior in the table scene. It blocks help/settings toggles while open, cancels on ESC before other overlays, clears selected previews/connectors on cancel, and hides during terminal or shutdown cleanup.

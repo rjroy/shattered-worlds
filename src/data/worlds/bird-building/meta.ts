@@ -5,7 +5,7 @@ export const BIRD_BUILDING_DISPLAY: WorldDisplayData = {
   tagline: "You were going to quit anyway.",
   story:
     "The office is eerily quiet. The hum of the fluorescent lights is punctuated by the occasional thud and fluttering sound from the ceiling. A girder sized claw pierces through the side of the building as it is lifted into the air.",
-  difficulty: 1,
+  difficulty: 2,
   cycle: 2,
   backgroundKey: "bird-building-bg",
 };

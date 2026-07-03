@@ -5,7 +5,7 @@ date: 2026-06-10
 status: current
 tags: theme, world, authoring, rules, the-walker, deck, visual-theme, reference
 fg-type: architecture
-fg-sources: .lore/work/specs/overgrown-mall.html, .lore/work/specs/fog-beach-party.html, .lore/work/brainstorm/shard-response-archetypes.html, src/game/assets/themes/README.md, src/game/assets/themes/zombie-big-box/insets/README.md, src/game/assets/themes/highway-volcano/insets/README.md, src/game/assets/themes/bird-building/insets/README.md, src/game/assets/themes/overgrown-mall/insets/README.md, src/game/assets/themes/the-tidal-archive/insets/README.md, src/game/assets/themes/the-ember-orchard/insets/README.md, src/game/assets/themes/city-of-sleeping-giants/insets/README.md
+fg-sources: .lore/work/specs/overgrown-mall.md, .lore/work/specs/fog-beach-party.md, .lore/work/brainstorm/shard-response-archetypes.html, .lore/work/brainstorm/theme-mechanical-differentiation.md, src/game/assets/themes/README.md, src/game/assets/themes/zombie-big-box/insets/README.md, src/game/assets/themes/highway-volcano/insets/README.md, src/game/assets/themes/bird-building/insets/README.md, src/game/assets/themes/overgrown-mall/insets/README.md, src/game/assets/themes/the-tidal-archive/insets/README.md, src/game/assets/themes/the-ember-orchard/insets/README.md, src/game/assets/themes/city-of-sleeping-giants/insets/README.md
 related: .lore/reference/visual-direction.md, .lore/reference/vision.md
 fg-evidence:
   code:
@@ -95,6 +95,8 @@ Map the world's fiction onto these roles.
 | `transit-authority` | reroute | Leads with forced reassignment across both decks: hazards pin forced connections to the top of the player deck and top-deck world hazards, both tagged with a transient `Reroute` keyword that taxes clear cost until stripped by route-control rewards; distinct from Tidal's `displace` recall and Giants' `stir` recurrence |
 
 This is a living registry — each new world adds an entry. The verb captures the *signature* mechanical identity of that world; no two worlds should feel interchangeable.
+
+**Cheap lever before reaching for a new effect:** the shared starter deck already keys several cards' bonuses off a keyword (`Baseball Bat` off `Creature`, `Sprint` off `Slow`, `Explore`/`Listen` off `Obstructed`). Biasing a world's hazards toward one of those keywords makes the same shared deck play differently per world for the cost of editing keyword arrays in data — see [[keyword-bias-differentiation]].
 
 **No mechanic is exclusive; identity is.** There are no off-limits effects or keywords. Any world may use any entry in the effect/keyword vocabulary as a supporting tool. What must stay distinct is each world's *signature* — the main mechanic it is built around. The "leads with"/"signature of" columns elsewhere in this doc record which world a mechanic is the *identity* of; they are not a permission gate. The only constraint is: **do not build a new world's main identity on a mechanic that is already another world's signature.** (A separate, purely mechanical coupling can still make some effects poor fits — see the signature-effects note below — but that is engineering, not ownership.)
 

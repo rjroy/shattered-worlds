@@ -1,12 +1,7 @@
 import { describe, expect, it } from "bun:test";
 import { previewAction } from "../view/actionPreview";
 import { FORTUNE_BOON_POOLS } from "../../data/worldManifest";
-import {
-  catalog,
-  makePlayerCard,
-  makeState,
-  makeWorldCard,
-} from "./testFixture";
+import { catalog, makePlayerCard, makeState, makeWorldCard } from "./testFixture";
 import type { CardEffect, GameEvent, GameState } from "../model/types";
 
 /**
@@ -81,7 +76,10 @@ describe("observability conformance (fail-closed)", () => {
     expect(destroyed?.randomized).toBe(true);
     // Name-free: generic count copy, never the rng-chosen victim.
     expect(text).toContain("Destroy 1 player card");
-    expectNoNames(text, loot.map((c) => c.name));
+    expectNoNames(
+      text,
+      loot.map((c) => c.name),
+    );
   });
 
   it("freeze-at-random: CardsFrozen is randomized and never names the frozen cards", () => {
@@ -269,12 +267,10 @@ describe("observability conformance (fail-closed)", () => {
     const { preview: p, text } = preview(state, { type: "EndTurn" });
 
     const worldDrawn = p.events.find(
-      (e): e is Extract<GameEvent, { type: "CardsDrawn" }> =>
-        e.type === "CardsDrawn" && e.bHazard,
+      (e): e is Extract<GameEvent, { type: "CardsDrawn" }> => e.type === "CardsDrawn" && e.bHazard,
     );
     const playerDrawn = p.events.find(
-      (e): e is Extract<GameEvent, { type: "CardsDrawn" }> =>
-        e.type === "CardsDrawn" && !e.bHazard,
+      (e): e is Extract<GameEvent, { type: "CardsDrawn" }> => e.type === "CardsDrawn" && !e.bHazard,
     );
 
     expect(worldDrawn?.revealedFromHidden).toBe(true);

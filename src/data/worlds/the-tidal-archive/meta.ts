@@ -7,7 +7,7 @@ export const THE_TIDAL_ARCHIVE_DISPLAY: WorldDisplayData = {
     "Calm turquoise waters and gold-lit stacks kept every memory filed by place, until the " +
     "Walker crossed it and broke the index. Buildings now drift from their histories, roads bend " +
     "back into yesterday.",
-  difficulty: 3,
+  difficulty: 1,
   cycle: 3,
   backgroundKey: "the-tidal-archive-bg",
 };
