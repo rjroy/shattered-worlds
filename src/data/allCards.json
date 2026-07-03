@@ -125,7 +125,7 @@
       "effect": {
         "kind": "Sequence",
         "steps": [
-          { "kind": "Draw", "player": 2 },
+          { "kind": "Draw", "player": 3 },
           { "kind": "GainEnergy", "amount": 1 },
           { "kind": "AddWorldCardToDeck", "template": "Vein-Road Surge", "bTop": true }
         ]
@@ -167,7 +167,7 @@
     },
     "Fingerquake Ward": {
       "kind": "world",
-      "name": "Fingerquake Ward",
+      "name": "Ward Fingerquake",
       "rarity": "rare",
       "insetKey": "giants-inset-fingerquake-ward",
       "cost": 3,
@@ -176,7 +176,7 @@
       "onCleared": { "kind": "GainCard", "template": "Brace The Ward" },
       "onDiscarded": { "kind": "ForceDestroy", "amount": 1 },
       "onPartialClear": { "kind": "AddWorldCardToDeck", "template": "Minor Tremor", "bTop": true },
-      "onDraw": { "kind": "None" },
+      "onDraw": { "kind": "Damage", "amount": 1 },
       "onEndOfTurn": {
         "kind": "Sequence",
         "steps": [
@@ -2023,7 +2023,7 @@
       "effect": {
         "kind": "Sequence",
         "steps": [
-          { "kind": "ExileTopWorldCards", "amount": 1 },
+          { "kind": "ExileTopWorldCards", "amount": 2 },
           { "kind": "Draw", "player": 1 }
         ]
       }
@@ -2038,7 +2038,7 @@
         "kind": "Sequence",
         "steps": [
           { "kind": "DealProgress", "base": 2, "bonus": { "tag": "Slow", "amount": 2 } },
-          { "kind": "Brace", "amount": 1 }
+          { "kind": "Brace", "amount": 2 }
         ]
       }
     },
@@ -2079,14 +2079,14 @@
     "Contour Map": {
       "kind": "player",
       "name": "Contour Map",
-      "rarity": "rare",
+      "rarity": "legendary",
       "insetKey": "giants-inset-contour-map",
       "energyCost": 0,
       "exhaust": true,
       "effect": {
         "kind": "DealProgressAll",
         "base": 2,
-        "bonus": { "tag": "Obstructed", "amount": 2 }
+        "bonus": { "tag": "Obstructed", "amount": 3 }
       }
     },
     "Mark the Shelf": {
