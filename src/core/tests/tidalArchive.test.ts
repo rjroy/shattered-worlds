@@ -137,7 +137,7 @@ describe("The Tidal Archive — review-correction hooks drive the reducer (REQ-T
     expect(events.some((e) => e.type === "DamageDealt")).toBe(false);
 
     // A Brace charge absorbs the snatch end-to-end: no card is destroyed.
-    const braced = { ...afterHook, braceCharges: 1 };
+    const braced = { ...afterHook, braceCharges: afterHook.pendingForceDestroy };
     const resolved = resolveForceDestroy(braced);
     expect(resolved.events.some((e) => e.type === "BraceConsumed")).toBe(true);
     expect(resolved.events.some((e) => e.type === "CardDestroyed")).toBe(false);
