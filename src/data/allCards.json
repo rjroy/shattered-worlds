@@ -383,7 +383,13 @@
       "cost": 2,
       "keywords": ["Concealed:1", "Obstructed"],
       "discardable": true,
-      "onDiscarded": { "kind": "None" },
+      "onDiscarded": {
+        "kind": "ResourceGate",
+        "resource": "Light",
+        "op": "lte",
+        "value": 0,
+        "then": { "kind": "Damage", "amount": 1 }
+      },
       "onCleared": { "kind": "None" },
       "onPartialClear": { "kind": "None" },
       "onDraw": { "kind": "None" },
@@ -397,7 +403,13 @@
       "cost": 2,
       "keywords": ["Concealed:1", "Obstructed"],
       "discardable": true,
-      "onDiscarded": { "kind": "None" },
+      "onDiscarded": {
+        "kind": "ResourceGate",
+        "resource": "Light",
+        "op": "lte",
+        "value": 0,
+        "then": { "kind": "Damage", "amount": 1 }
+      },
       "onCleared": {
         "kind": "GainRandomCard",
         "setId": "pool-lights-lv1",
@@ -405,7 +417,13 @@
       },
       "onPartialClear": { "kind": "None" },
       "onDraw": { "kind": "None" },
-      "onEndOfTurn": { "kind": "None" }
+      "onEndOfTurn": {
+        "kind": "ResourceGate",
+        "resource": "Light",
+        "op": "lte",
+        "value": 0,
+        "then": { "kind": "Damage", "amount": 1 }
+      }
     },
     "The Bonfire": {
       "kind": "world",
@@ -415,7 +433,13 @@
       "cost": 4,
       "keywords": ["Obstructed"],
       "discardable": true,
-      "onDiscarded": { "kind": "None" },
+      "onDiscarded": {
+        "kind": "ResourceGate",
+        "resource": "Light",
+        "op": "lte",
+        "value": 0,
+        "then": { "kind": "Damage", "amount": 1 }
+      },
       "onCleared": {
         "kind": "Sequence",
         "steps": [
@@ -437,14 +461,38 @@
       "name": "Something in the Mist",
       "rarity": "signature",
       "insetKey": "fog-inset-something-in-the-mist",
-      "cost": 3,
+      "cost": 4,
       "keywords": ["Concealed:3", "Creature", "Obstructed"],
       "discardable": true,
-      "onDiscarded": { "kind": "Damage", "amount": 2 },
+      "onDiscarded": {
+        "kind": "Sequence",
+        "steps": [
+          { "kind": "Damage", "amount": 2 },
+          {
+            "kind": "ResourceGate",
+            "resource": "Light",
+            "op": "lte",
+            "value": 3,
+            "then": { "kind": "Damage", "amount": 1 }
+          }
+        ]
+      },
       "onCleared": { "kind": "None" },
       "onPartialClear": { "kind": "Damage", "amount": 1 },
       "onDraw": { "kind": "None" },
-      "onEndOfTurn": { "kind": "Damage", "amount": 2 }
+      "onEndOfTurn": {
+        "kind": "Sequence",
+        "steps": [
+          { "kind": "Damage", "amount": 2 },
+          {
+            "kind": "ResourceGate",
+            "resource": "Light",
+            "op": "lte",
+            "value": 3,
+            "then": { "kind": "Damage", "amount": 2 }
+          }
+        ]
+      }
     },
     "The Tide Coming In": {
       "kind": "world",
@@ -454,11 +502,35 @@
       "cost": 3,
       "keywords": ["Concealed:3", "Obstructed"],
       "discardable": true,
-      "onDiscarded": { "kind": "Damage", "amount": 2 },
+      "onDiscarded": {
+        "kind": "Sequence",
+        "steps": [
+          { "kind": "Damage", "amount": 1 },
+          {
+            "kind": "ResourceGate",
+            "resource": "Light",
+            "op": "lte",
+            "value": 3,
+            "then": { "kind": "Damage", "amount": 1 }
+          }
+        ]
+      },
       "onCleared": { "kind": "None" },
       "onPartialClear": { "kind": "None" },
       "onDraw": { "kind": "None" },
-      "onEndOfTurn": { "kind": "Damage", "amount": 2 }
+      "onEndOfTurn": {
+        "kind": "Sequence",
+        "steps": [
+          { "kind": "Damage", "amount": 2 },
+          {
+            "kind": "ResourceGate",
+            "resource": "Light",
+            "op": "lte",
+            "value": 3,
+            "then": { "kind": "Damage", "amount": 1 }
+          }
+        ]
+      }
     },
     "Whiteout": {
       "kind": "world",
@@ -468,7 +540,12 @@
       "cost": 4,
       "keywords": ["Concealed:5", "Obstructed"],
       "discardable": true,
-      "onDiscarded": { "kind": "Damage", "amount": 2 },
+      "onDiscarded": {
+        "kind": "DamageScaled",
+        "base": 0,
+        "per": { "kind": "KeywordInHand", "keyword": "Concealed" },
+        "amount": 1
+      },
       "onCleared": { "kind": "None" },
       "onPartialClear": { "kind": "None" },
       "onDraw": { "kind": "None" },

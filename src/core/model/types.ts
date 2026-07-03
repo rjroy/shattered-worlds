@@ -9,6 +9,8 @@ export type CardId = string;
 // 'Zombie' | 'Find Baseball Bat' | 'The Walker' | 'Door'
 export type CardTemplateId = string;
 
+export type ResourceName = "HP" | "Light" | "Heat" | "Brace" | "KeywordGuard";
+
 export type KeywordName =
   | "Obstructed"
   | "Creature"
@@ -153,11 +155,24 @@ export type CardEffect =
       value: number;
       target: "hand" | "nextWorldCard" | "self" | "firstWorldCardInHand" | "randomWorldCardInHand";
     }
+  | {
+      kind: "ResourceGate";
+      resource: ResourceName;
+      op: "lte" | "gte";
+      value: number;
+      then: CardEffect;
+    }
   // Fires `then` only when at least `min` cards in `zone` carry `keyword`
   // (authored OR applied). An available keywordGuard charge absorbs the trigger:
   // the charge is spent and `then` is suppressed (the greed disruption is
   // defused). Below `min` it is a silent no-op.
-  | { kind: "KeywordGate"; keyword: KeywordName; min: number; zone: "hand"; then: CardEffect }
+  | {
+      kind: "KeywordGate";
+      keyword: KeywordName;
+      min: number;
+      zone: "hand" | "self";
+      then: CardEffect;
+    }
   // Fires `then` only when progressDealtThisTurn >= min. A greed signal that
   // reads the per-turn progress meter; it never consumes keywordGuard.
   | { kind: "ProgressGate"; min: number; then: CardEffect }

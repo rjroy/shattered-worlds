@@ -31,6 +31,7 @@ import {
 } from "./resources";
 import {
   ApplyKeywordHandler,
+  ResourceGateHandler,
   KeywordGateHandler,
   ProgressGateHandler,
   RemoveKeywordHandler,
@@ -80,6 +81,7 @@ export const EFFECTS: {
   SurviveWorld: new SurviveWorldHandler(),
   None: new NoneHandler(),
   ApplyKeyword: new ApplyKeywordHandler(),
+  ResourceGate: new ResourceGateHandler(),
   KeywordGate: new KeywordGateHandler(),
   ProgressGate: new ProgressGateHandler(),
   RemoveKeyword: new RemoveKeywordHandler(),

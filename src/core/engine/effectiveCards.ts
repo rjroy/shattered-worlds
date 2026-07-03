@@ -318,6 +318,8 @@ function cloneEffect(effect: CardEffect): CardEffect {
       return { ...effect };
     // Gates carry a nested `then` effect — deep-clone it so the clone shares no
     // mutable child with the original.
+    case "ResourceGate":
+      return { ...effect, then: cloneEffect(effect.then) };
     case "KeywordGate":
       return { ...effect, then: cloneEffect(effect.then) };
     case "ProgressGate":
