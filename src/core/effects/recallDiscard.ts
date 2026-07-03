@@ -26,6 +26,7 @@ import { nextFloat } from "../engine/rng";
 import type { CompileContext, ConnectorStyle, EffectContext, EffectResult } from "./EffectContext";
 import { EffectHandler } from "./EffectHandler";
 import { icon, main, rangeText, rider, text, value } from "./tokens";
+import { compareRarity } from "../model/rarity";
 
 type ReturnPlayerDiscardToTopEffect = Extract<CardEffect, { kind: "ReturnPlayerDiscardToTop" }>;
 type RecallPlayerDiscardEffect = Extract<CardEffect, { kind: "RecallPlayerDiscard" }>;
@@ -119,20 +120,36 @@ function resolveAutoRecall(
       return { ids: candidates.slice(0, count).map((c) => c.id), rng: state.rng };
 
     case "lowestCost": {
-      const sorted = [...candidates].sort((a, b) => a.energyCost - b.energyCost);
+      const sorted = [...candidates].sort((a, b) => {
+        // low before high
+        const costDelta = a.energyCost - b.energyCost;
+        if (costDelta !== 0) return costDelta;
+        // common before rare
+        return compareRarity(a.rarity, b.rarity);
+      });
       return { ids: sorted.slice(0, count).map((c) => c.id), rng: state.rng };
     }
 
     case "highestCost": {
-      const sorted = [...candidates].sort((a, b) => b.energyCost - a.energyCost);
+      const sorted = [...candidates].sort((a, b) => {
+        // high before low
+        const costDelta = b.energyCost - a.energyCost;
+        if (costDelta !== 0) return costDelta;
+        // rare before common
+        return compareRarity(b.rarity, a.rarity);
+      });
       return { ids: sorted.slice(0, count).map((c) => c.id), rng: state.rng };
     }
 
     case "panicFirst": {
-      const panic = candidates.find((c) => c.templateId === "Panic");
-      const ordered =
-        panic !== undefined ? [panic, ...candidates.filter((c) => c !== panic)] : candidates;
-      return { ids: ordered.slice(0, count).map((c) => c.id), rng: state.rng };
+      const sorted = [...candidates].sort((a, b) => {
+        if (a.templateId === b.templateId) return 0;
+        if (a.templateId === "Panic") return -1;
+        if (b.templateId === "Panic") return +1;
+        // common before rare
+        return compareRarity(a.rarity, b.rarity);
+      });
+      return { ids: sorted.slice(0, count).map((c) => c.id), rng: state.rng };
     }
 
     case "random": {
