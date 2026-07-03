@@ -1134,7 +1134,7 @@
       "rarity": "common",
       "insetKey": "eden-inset-tread-softly",
       "energyCost": 1,
-      "effect": { "kind": "DealProgress", "base": 2, "bonus": { "tag": "Slow", "amount": 1 } }
+      "effect": { "kind": "DealProgress", "base": 2, "bonus": { "tag": "Slow", "amount": 2 } }
     },
     "Fruit Offered Too Quickly": {
       "kind": "world",
@@ -1237,7 +1237,7 @@
       "onPartialClear": {
         "kind": "KeywordGate",
         "keyword": "Alarm",
-        "min": 2,
+        "min": 3,
         "zone": "hand",
         "then": {
           "kind": "AddWorldCardToDeck",

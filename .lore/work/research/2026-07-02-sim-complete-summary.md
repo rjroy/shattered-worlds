@@ -762,14 +762,8 @@ Two things worth flagging beyond the raw tiers:
 - whiteout-parking-garage - 3 star
 - the-tidal-archive - 1 star
 - fog-beach-party - 1 star
-
-## Minor Tweaks
-- city-of-sleeping-giants - 2 star
-  - The player cards feel off
-
-## May Need a Better Win Condition
+- city-of-sleeping-giants - 3 star
 - eden-prime - 5 star
-  - This might be well balanced, not sure yet.
 
 ## Needs Playtesting
 - new-derelict - 3 star
