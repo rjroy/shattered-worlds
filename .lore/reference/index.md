@@ -11,14 +11,18 @@ Reference wiki for durable project knowledge extracted from lore artifacts.
 
 ## decision
 
+- [Destiny Blessing Catalog — Unique Unlocks Under a Weighted Point Budget](destiny-blessing-catalog-design.md) - unique-only unlocks activated within a weighted Destiny budget; starter decks are exclusivity-gated at weight 0, not budget-gated.
 - [Game Engine Choice: TypeScript Core with Phaser Renderer](game-engine-choice.md) - TypeScript owns rules and Phaser owns rendering so game logic stays testable.
 - [Self Describing Card Faces](self-describing-card-faces.md) - Card faces should carry enough rules text to be playable without external lookup.
 - [World Access Unlocks](world-access-unlocks.md) - world access is purchased ownership, not an activated run modifier.
-- [Sim Completeness Performance Stats Plan](sim-completeness-performance-stats-plan.md) - planned paired-cohort telemetry to explain how the honest sim agent performed, not just whether it won.
+- [Sim Completeness Performance Stats Plan](sim-completeness-performance-stats-plan.md) - implemented paired-cohort telemetry explaining how the honest sim agent performed, not just whether it won.
 
 ## lesson
 
+- [A Hidden-State Audit Must Follow Two Axes, Not Just RNG Call Sites](rng-audit-two-axes-lesson.md) - a deterministic read of a hidden zone (no rng roll) can still leak; audit rng consumers and hidden-zone readers separately.
+- [Aggregating Per-Run Ratios Needs a Deliberate Formula Choice](sim-report-ratio-aggregation-lesson.md) - median-of-per-run-ratio and sum-over-sum both look like "an average rate" but mean different things.
 - [Deckbuilder Design Principles](deckbuilder-design-principles.md) - deck-building decisions must expose agency, synergy, deck thickness, and risk.
+- [Don't Fake RNG Inside a Pure Reducer — Determinize at the Boundary Instead](pure-reducer-determinization-lesson.md) - skipping or placeholdering a roll inside the reducer is unsound; reshuffle hidden state at the boundary and keep the reducer pure.
 - [Effect System Extension Pattern](effect-system-extension-pattern.md) - new effects require union, handler, description, playability, data, tests, and renderer checks.
 - [Feat Definition Type Contract](feat-definition-type-contract.md) - feat exported types are the live contract for authored conditions and rewards.
 - [Readable Targeting Feedback](player-feedback-readable-targeting.md) - targeting feedback should preview consequences before the player commits.
@@ -36,9 +40,14 @@ Reference wiki for durable project knowledge extracted from lore artifacts.
 - [Energy Turn Resource](energy-turn-resource.md) - energy is a per-turn spend resource reset by core turn flow.
 - [Feat Evaluation and Memory Fragment Economy](feat-evaluation-memory-fragments.md) - runtime feat evaluation derives Memory Fragment balance from earned feats.
 - [Fortune Act Boon Rewards](fortune-act-boon-rewards.md) - Fortune offers one exhaust boon choice after real act advancement.
+- [Observability Boundary — One Hidden-State Model, Two Consumers](observability-boundary-shared-model.md) - preview masks hidden state to "unknown", the sim agent determinizes it into a plausible sample; both derive from one `hiddenZones` model.
 - [OfferBoon Reward Path](offer-boon-reward-path.md) - generic boon choices share the Fortune reward path for world-clear rewards.
 - [Persistent Keyword Cost Modifiers](persistent-keyword-cost-modifiers.md) - world-card clear-cost taxes are declared once per keyword in a global registry, not per template.
+- [Randomness/Hidden-Reveal Event Stamps (randomized, revealedFromHidden)](event-randomness-hidden-reveal-stamps.md) - `GameEvent` stamps at the emit site so the preview can mask any stochastic or hidden-zone-reading event by one rule instead of per-effect pattern matching.
 - [Rarity and Weighted Reward Pools](rarity-and-weighted-reward-pools.md) - rarity lives on templates and weighted selection reads tiers from legal candidates.
+- [Shared EvalAxes Measurement Between Agent Scoring and Telemetry](sim-eval-axes-shared-measurement.md) - one pure axis-measurement function feeds both agent scoring and posthoc telemetry so formulas can't drift apart.
+- [Sim playOut Per-Run Agent Performance Telemetry](sim-agent-performance-telemetry.md) - per-run action, energy, no-progress, and posthoc pressure telemetry captured during headless play-outs.
+- [Sim Statistics Helpers (src/sim/statistics.ts)](sim-statistics-helpers.md) - the project's first reusable percentile/Wilson-interval module; display-only, never gates the completeness flag.
 - [Targeting and Selection Grammar](targeting-and-selection-grammar.md) - target specs define the grammar shared by availability, selection UI, and simulation.
 - [Shattered Worlds - Theme Authoring Rules](theme-authoring.md) - world themes define visual verbs, palettes, asset keys, and authoring caveats.
 - [Unified Card Catalog Plan](unified-card-catalog-plan.md) - card data is unified through catalog assembly instead of scattered constants.
