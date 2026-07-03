@@ -344,6 +344,8 @@ describe("formatted report shape (step 5)", () => {
     // act 2/2 (index 1) is never reached, so its conditional win|reached
     // conversion has a zero denominator and must render (none), not 0% or NaN.
     expect(report).toContain("act 2/2: reached=0 (0.0%)  win|reached=(none)");
+    expect(report).toContain("[FLAGGED] win-rate 100.0% (too easy)");
+    expect(report).toContain("Flagged worlds: 1/1");
   });
 
   test("baseline-only [FLAGGED]/dominant-cause/caveat; recovery gets the descriptive win-rate-diff line instead", () => {

@@ -18,9 +18,11 @@
  * opportunity-normalized rates), median per-run minimum resource pressure
  * (posthoc ground truth, never the agent's perceived view), and the
  * distribution of losses by cause and by act. Worlds whose BASELINE win-rate
- * is at or below `threshold` are FLAGGED, with the dominant loss cause/act and
- * an epistemic caveat surfaced so the flag points at the knob to turn; recovery
- * is diagnostic-only text and never carries a flag of its own.
+ * is at or below `threshold`, or exactly 100%, are FLAGGED. Low-win-rate flags
+ * surface the dominant loss cause/act and an epistemic caveat so the flag
+ * points at the knob to turn; perfect-win-rate flags identify worlds that are
+ * too easy. Recovery is diagnostic-only text and never carries a flag of its
+ * own.
  *
  * Honesty and reproducibility (REQ-SCC-16): the whole run is ONE continuous
  * agent rng stream, now spanning `2 x N` play-outs per world instead of `N`. A
@@ -458,6 +460,12 @@ function winRateOf(cohort: CohortAggregate): number {
   return cohort.games > 0 ? cohort.wins / cohort.games : 0;
 }
 
+/** Baselines that are effectively unwinnable or perfectly won are both incomplete. */
+function isFlagged(cohort: CohortAggregate, threshold: number): boolean {
+  const winRate = winRateOf(cohort);
+  return winRate <= threshold || (cohort.games > 0 && winRate === 1);
+}
+
 /** The dominant (highest-count) entry of a map, or undefined when empty. */
 function dominant<K>(map: Map<K, number>): [K, number] | undefined {
   let best: [K, number] | undefined;
@@ -668,7 +676,12 @@ function formatCohortBlock(
   lines.push(`  Loss by act:   ${formatActMap(cohort.lossByAct, totalActs)}`);
 
   if (opts.isBaseline) {
-    if (winRateOf(cohort) <= opts.threshold) {
+    if (isFlagged(cohort, opts.threshold)) {
+      const winRate = winRateOf(cohort);
+      if (winRate === 1) {
+        lines.push("  [FLAGGED] win-rate 100.0% (too easy)");
+        return lines;
+      }
       lines.push(
         `  [FLAGGED] win-rate ${pct(cohort.wins, cohort.games)} <= ${(opts.threshold * 100).toFixed(1)}%`,
       );
@@ -728,7 +741,7 @@ export function formatReport(params: CompletenessParams, aggregates: WorldAggreg
     blocks.push(formatWorldBlock(agg, params.threshold));
     blocks.push("");
   }
-  const flagged = aggregates.filter((a) => winRateOf(a.baseline) <= params.threshold);
+  const flagged = aggregates.filter((a) => isFlagged(a.baseline, params.threshold));
   blocks.push(`Flagged worlds: ${flagged.length}/${aggregates.length}`);
   return blocks.join("\n");
 }
