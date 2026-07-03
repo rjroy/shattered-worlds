@@ -17,8 +17,8 @@ Read [README.md](README.md) for the pitch, current status, live build, and the s
 | Add a world or wire world assets | [CONTRIBUTING.md](CONTRIBUTING.md) § Adding a world | Required world bundle files, registry, asset bindings, and conformance tests |
 | Change cards, starters, boons, unlocks, or feats | `src/data/` and `.lore/reference/index.md` | Authored data is centralized; the field guide links the relevant contracts |
 | Touch run orchestration, persistence, Chronicle, feats, or Destiny | `src/game/runtime/` and `.lore/reference/index.md` | Runtime owns local profiles, rewards, unlock application, import/export, and run history |
-| Make a call that trades one project value against another | `.lore/reference/vision.md` | North star, anti-goals, and which way to lean when principles collide |
-| Add or change a world's look | `.lore/reference/visual-direction.md`, `.lore/reference/theme-authoring.md`, `src/game/assets/themes/README.md` | Visual identity rules, theme authoring, and asset-generation constraints |
+| Make a call that trades one project value against another | `.lore/reference/direction/vision.md` | North star, anti-goals, and which way to lean when principles collide |
+| Add or change a world's look | `.lore/reference/direction/visual-direction.md`, `.lore/reference/worlds/authoring/theme-authoring.md`, `src/game/assets/themes/README.md` | Visual identity rules, theme authoring, and asset-generation constraints |
 | Check balance or autoplay behavior | `src/sim/` and `bun run sim` | Headless policy runner for fast loop and balance checks |
 
 Most lore docs are Markdown now, with some older HTML artifacts still present. Use `.lore/reference/index.md` as the durable knowledge index.

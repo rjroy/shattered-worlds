@@ -6,7 +6,7 @@ status: current
 tags: theme, world, authoring, rules, the-walker, deck, visual-theme, reference
 fg-type: architecture
 fg-sources: .lore/work/specs/overgrown-mall.md, .lore/work/specs/fog-beach-party.md, .lore/work/brainstorm/shard-response-archetypes.html, .lore/work/brainstorm/theme-mechanical-differentiation.md, src/game/assets/themes/README.md, src/game/assets/themes/zombie-big-box/insets/README.md, src/game/assets/themes/highway-volcano/insets/README.md, src/game/assets/themes/bird-building/insets/README.md, src/game/assets/themes/overgrown-mall/insets/README.md, src/game/assets/themes/the-tidal-archive/insets/README.md, src/game/assets/themes/the-ember-orchard/insets/README.md, src/game/assets/themes/city-of-sleeping-giants/insets/README.md
-related: .lore/reference/visual-direction.md, .lore/reference/vision.md
+related: .lore/reference/direction/visual-direction.md, .lore/reference/direction/vision.md
 fg-evidence:
   code:
     - src/core/model/types.ts

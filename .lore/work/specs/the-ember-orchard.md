@@ -4,7 +4,7 @@ date: 2026-06-19
 status: draft
 tags: [world-design, the-ember-orchard, incubation, delayed-threat, deck-pressure]
 modules: [world-data, themes, game-view]
-related: [.lore/reference/theme-authoring.md, src/game/assets/themes/the-ember-orchard/CATACLYSM.md]
+related: [.lore/reference/worlds/authoring/theme-authoring.md, src/game/assets/themes/the-ember-orchard/CATACLYSM.md]
 req-prefix: EMBER
 ---
 
@@ -232,7 +232,7 @@ Counts are tuning values; act roles and the fixed Walker closer are not.
 
 <div id="REQ-EMBER-44"></div>
 
-**REQ-EMBER-44:** `.lore/reference/theme-authoring.md` must be updated when this world is implemented: add Ember Orchard to the signature verb table and document that `the-ember-orchard` owns incubation-as-delayed-known-cost as its exclusive reward space.
+**REQ-EMBER-44:** `.lore/reference/worlds/authoring/theme-authoring.md` must be updated when this world is implemented: add Ember Orchard to the signature verb table and document that `the-ember-orchard` owns incubation-as-delayed-known-cost as its exclusive reward space.
 
 <div id="REQ-EMBER-45"></div>
 

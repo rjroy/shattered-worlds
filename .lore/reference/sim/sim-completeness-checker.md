@@ -26,7 +26,7 @@ fg-evidence:
 
 This is the foundational document for the sim's per-world solvability instrument. It turns the headless sim (`src/sim/`, `bun run sim`) from a fast-loop smoke check into a report generator: a stronger-than-random, survival-oriented **honest agent** plays every registered world across many seeds, and the resulting report says which worlds the agent could not survive, and *why*. [Sim Completeness Performance Stats Plan](sim-completeness-performance-stats-plan.md), [Shared EvalAxes Measurement](sim-eval-axes-shared-measurement.md), [Sim playOut Per-Run Agent Performance Telemetry](sim-agent-performance-telemetry.md), [Sim Statistics Helpers](sim-statistics-helpers.md), and [Aggregating Per-Run Ratios](sim-report-ratio-aggregation-lesson.md) are all later extensions layered on top of the system this page describes.
 
-This checker builds on the **observability-boundary** seam (`determinize(state, agentRng)` producing a player-honest snapshot, and the `Policy` type used by `run.ts`) — see [Observability Boundary Shared Model](observability-boundary-shared-model.md). Before this work, the only policy was `randomPolicy` (random play plus a few hard-coded objective grabs by card name), too weak to serve as solvability signal.
+This checker builds on the **observability-boundary** seam (`determinize(state, agentRng)` producing a player-honest snapshot, and the `Policy` type used by `run.ts`) — see [Observability Boundary Shared Model](../engine/randomness-and-hidden-state/observability-boundary-shared-model.md). Before this work, the only policy was `randomPolicy` (random play plus a few hard-coded objective grabs by card name), too weak to serve as solvability signal.
 
 ## Where win/loss actually happen
 

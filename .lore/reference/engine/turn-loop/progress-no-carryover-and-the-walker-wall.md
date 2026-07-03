@@ -21,7 +21,7 @@ Progress dealt to a Hazard is not a stored pool; it exists only as that Hazard's
 
 ## The Walker is deliberately not guaranteed beatable
 
-The clearest consequence ships in the first world (Zombie Big-Box): The Walker costs 10 Progress, and the starter deck is not expected to be able to resolve it in one turn. That is an accepted design outcome, not a bug or a softlock — the game's first real "boss" is meant to read as a wall on the starting loadout, and that wall is what motivates wanting more tools later (meta-progression, see [Destiny Progression](destiny-progression.md)).
+The clearest consequence ships in the first world (Zombie Big-Box): The Walker costs 10 Progress, and the starter deck is not expected to be able to resolve it in one turn. That is an accepted design outcome, not a bug or a softlock — the game's first real "boss" is meant to read as a wall on the starting loadout, and that wall is what motivates wanting more tools later (meta-progression, see [Destiny Progression](../../progression/destiny-and-unlocks/destiny-progression.md)).
 
 ## The forced-Door win path exists so the wall doesn't block winning
 

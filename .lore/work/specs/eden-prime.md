@@ -4,7 +4,7 @@ date: 2026-06-29
 status: draft
 tags: [world-design, eden-prime, startle, alarm, applied-keywords, keyword-gate, progress-gate, deck-pressure, core-engine, art-direction]
 modules: [world-data, themes, game-view, core-engine]
-related: [.lore/reference/theme-authoring.md, .lore/reference/visual-direction.md, src/game/assets/themes/README.md, src/game/assets/themes/eden-prime/CATACLYSM.md, .lore/work/specs/the-ember-orchard.md, .lore/work/specs/city-of-sleeping-giants.md]
+related: [.lore/reference/worlds/authoring/theme-authoring.md, .lore/reference/direction/visual-direction.md, src/game/assets/themes/README.md, src/game/assets/themes/eden-prime/CATACLYSM.md, .lore/work/specs/the-ember-orchard.md, .lore/work/specs/city-of-sleeping-giants.md]
 req-prefix: EDEN
 ---
 
@@ -171,7 +171,7 @@ The following numbers are initial tuning. Costs, counts, and exact values may ch
 
 <div id="REQ-EDEN-22"></div>
 
-**REQ-EDEN-22:** No effect is off-limits to Eden Prime, but its reward cards must not build their *main identity* on a mechanic that is another world's signature (see "No mechanic is exclusive; identity is" in `.lore/reference/theme-authoring.md`). The startle/greed-tax identity must not read as Light, the Heat/freeze suite, `DealProgressScaled` (overgrown-mall), `Concealed`/`Spore`, or the Tidal discard recalls (`ReturnPlayerDiscardToTop`/`RecallPlayerDiscard`). Incidental use of a shared effect as a supporting tool is permitted as long as it is not the card's identity. Note the genuine couplings still make some of these poor fits regardless of intent: authoring a `Concealed` hazard would require a `GainLight` source (pulling in the Fog identity), and the Heat/freeze/thaw suite is a unit.
+**REQ-EDEN-22:** No effect is off-limits to Eden Prime, but its reward cards must not build their *main identity* on a mechanic that is another world's signature (see "No mechanic is exclusive; identity is" in `.lore/reference/worlds/authoring/theme-authoring.md`). The startle/greed-tax identity must not read as Light, the Heat/freeze suite, `DealProgressScaled` (overgrown-mall), `Concealed`/`Spore`, or the Tidal discard recalls (`ReturnPlayerDiscardToTop`/`RecallPlayerDiscard`). Incidental use of a shared effect as a supporting tool is permitted as long as it is not the card's identity. Note the genuine couplings still make some of these poor fits regardless of intent: authoring a `Concealed` hazard would require a `GainLight` source (pulling in the Fog identity), and the Heat/freeze/thaw suite is a unit.
 
 ## World Card Recipe
 
@@ -257,7 +257,7 @@ Counts are tuning values; act roles and the fixed Walker closer are not.
 
 <div id="REQ-EDEN-40"></div>
 
-**REQ-EDEN-40:** Card insets must make the startle identity legible and follow `.lore/reference/theme-authoring.md` W2a-W2d. Author them as square `600x600` thumbnail-first event illustrations with one large foreground subject, a bold silhouette readable at `100x100`, a simplified darker Eden background, and only one or two environmental cues. Hazard insets should show gifts that are about to turn (low fruit, curious swarm, gentle herd, flowers facing the wrong sun, a bird mid-cry). Reward insets should show restraint and measured reach (a careful hand, stillness, walking in shade, hushing the valley). The palette should stay gentle paradise green/gold with violet-white second-sun wrongness used sparingly as the startle accent; avoid busy botany, tiny insects/debris, generic fantasy monsters, gore, neon poison green, readable text, logos, or crowded props. Insets should distinguish a card's calm face from its alarmed reading where the art allows.
+**REQ-EDEN-40:** Card insets must make the startle identity legible and follow `.lore/reference/worlds/authoring/theme-authoring.md` W2a-W2d. Author them as square `600x600` thumbnail-first event illustrations with one large foreground subject, a bold silhouette readable at `100x100`, a simplified darker Eden background, and only one or two environmental cues. Hazard insets should show gifts that are about to turn (low fruit, curious swarm, gentle herd, flowers facing the wrong sun, a bird mid-cry). Reward insets should show restraint and measured reach (a careful hand, stillness, walking in shade, hushing the valley). The palette should stay gentle paradise green/gold with violet-white second-sun wrongness used sparingly as the startle accent; avoid busy botany, tiny insects/debris, generic fantasy monsters, gore, neon poison green, readable text, logos, or crowded props. Insets should distinguish a card's calm face from its alarmed reading where the art allows.
 
 ## Display And Help
 
@@ -273,7 +273,7 @@ Counts are tuning values; act roles and the fixed Walker closer are not.
 
 <div id="REQ-EDEN-43"></div>
 
-**REQ-EDEN-43:** `.lore/reference/theme-authoring.md` must be updated when this world is implemented: add Eden Prime to the signature verb table (verb `startle`, reward implication "greed raises Alarm; restraint/valve cards spend it"), add `Alarm` to the keyword vocabulary (C2) noting it is the first transient keyword, document the apply-keyword and keyword-gate effects in the effect vocabulary (C1) as general primitives Eden Prime introduced, and note Eden Prime owns the greed-tax startle reward space.
+**REQ-EDEN-43:** `.lore/reference/worlds/authoring/theme-authoring.md` must be updated when this world is implemented: add Eden Prime to the signature verb table (verb `startle`, reward implication "greed raises Alarm; restraint/valve cards spend it"), add `Alarm` to the keyword vocabulary (C2) noting it is the first transient keyword, document the apply-keyword and keyword-gate effects in the effect vocabulary (C1) as general primitives Eden Prime introduced, and note Eden Prime owns the greed-tax startle reward space.
 
 <div id="REQ-EDEN-44"></div>
 
