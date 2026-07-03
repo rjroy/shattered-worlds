@@ -134,8 +134,12 @@ describe("Tidal Archive seeded replay segment (REQ-TIDAL-58)", () => {
 
     const sources = recalls.map((e) => e.source);
     // Hazard onDiscarded (latest), player chooser (playerSelected), passive (latest).
-    expect(sources).toContain("playerSelected");
-    expect(sources.filter((s) => s === "latest").length).toBe(2);
+    expect(sources.filter((s) => s === "latest").length).toBe(1);
+    expect(sources.filter((s) => s === "random").length).toBe(0);
+    expect(sources.filter((s) => s === "lowestCost").length).toBe(0);
+    expect(sources.filter((s) => s === "highestCost").length).toBe(0);
+    expect(sources.filter((s) => s === "panicFirst").length).toBe(1);
+    expect(sources.filter((s) => s === "playerSelected").length).toBe(1);
 
     // The hazard discard itself happened, and a card was played.
     expect(eventTypes).toContain("HazardDiscarded");

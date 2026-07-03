@@ -1279,8 +1279,14 @@
       "onDiscarded": { "kind": "None" },
       "onCleared": { "kind": "None" },
       "onPartialClear": { "kind": "None" },
-      "onDraw": { "kind": "None" },
-      "onEndOfTurn": { "kind": "RecallPlayerDiscard", "policy": "highestCost" }
+      "onDraw": { "kind": "DiscardThenDraw", "player": 1 },
+      "onEndOfTurn": {
+        "kind": "Sequence",
+        "steps": [
+          { "kind": "DiscardThenDraw", "player": 0 },
+          { "kind": "RecallPlayerDiscard", "policy": "highestCost" }
+        ]
+      }
     },
     "Archivist Choice": {
       "kind": "player",
@@ -1324,8 +1330,8 @@
       "cost": 3,
       "keywords": ["Obstructed"],
       "discardable": true,
-      "onDiscarded": { "kind": "Damage", "amount": 1 },
-      "onCleared": { "kind": "None" },
+      "onDiscarded": { "kind": "Damage", "amount": 2 },
+      "onCleared": { "kind": "AddWorldCardToDeck", "template": "Wandering Stacks", "bTop": true },
       "onPartialClear": { "kind": "None" },
       "onDraw": { "kind": "None" },
       "onEndOfTurn": { "kind": "AddThreatToWorldDeck" }
@@ -1338,7 +1344,7 @@
       "cost": 3,
       "keywords": [],
       "discardable": true,
-      "onDiscarded": { "kind": "Damage", "amount": 2 },
+      "onDiscarded": { "kind": "Damage", "amount": 3 },
       "onCleared": { "kind": "AddWorldCardToDeck", "template": "Misfiled Century", "bTop": true },
       "onPartialClear": { "kind": "None" },
       "onDraw": { "kind": "None" },
@@ -1365,21 +1371,15 @@
       "rarity": "rare",
       "cost": 4,
       "keywords": [],
-      "discardable": true,
-      "onDiscarded": {
-        "kind": "Sequence",
-        "steps": [
-          { "kind": "RecallPlayerDiscard", "policy": "panicFirst" },
-          { "kind": "GainCard", "template": "Panic" }
-        ]
-      },
+      "discardable": false,
+      "onDiscarded": { "kind": "None" },
       "onCleared": { "kind": "GainCard", "template": "Anchor the Memory" },
-      "onPartialClear": { "kind": "None" },
+      "onPartialClear": { "kind": "AddPlayerCardToTop", "template": "Panic" },
       "onDraw": { "kind": "None" },
       "onEndOfTurn": {
         "kind": "Sequence",
         "steps": [
-          { "kind": "ForceDestroy", "amount": 1 },
+          { "kind": "ForceDestroy", "amount": 2 },
           { "kind": "RecallPlayerDiscard", "policy": "lowestCost" }
         ]
       }
@@ -2068,13 +2068,14 @@
       "kind": "player",
       "name": "Shelf Map",
       "insetKey": "tidal-inset-shelf-map",
-      "rarity": "signature",
-      "energyCost": 0,
+      "rarity": "legendary",
+      "energyCost": 1,
       "exhaust": true,
       "effect": {
         "kind": "Sequence",
         "steps": [
-          { "kind": "DealProgress", "base": 1 },
+          { "kind": "DealProgress", "base": 4 },
+          { "kind": "GainCard", "template": "Archivist Choice" },
           { "kind": "ReturnPlayerDiscardToTop", "min": 0, "max": 1 },
           { "kind": "Draw", "player": 1 }
         ]
