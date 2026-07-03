@@ -19,7 +19,9 @@ function hasPendingActBoonChoice(state: GameState, act: number): boolean {
 }
 
 function applyCascadeEffects(catalog: CardCatalog, original: ReduceResult): ReduceResult {
-  const events = original.events;
+  const eventsToProcess = [...original.events];
+  // events to return without changing the original list.
+  const events = [...original.events];
 
   const eventReducer = (curr: ReduceResult, event: GameEvent): ReduceResult => {
     switch (event.type) {
@@ -76,7 +78,7 @@ function applyCascadeEffects(catalog: CardCatalog, original: ReduceResult): Redu
     return curr;
   };
 
-  return original.events.reduce(eventReducer, original);
+  return eventsToProcess.reduce(eventReducer, original);
 }
 
 // ---------------------------------------------------------------------------
