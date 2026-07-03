@@ -2552,7 +2552,7 @@
       "insetKey": "transit-inset-service-change",
       "cost": 1,
       "keywords": [],
-      "discardable": true,
+      "discardable": false,
       "onDiscarded": { "kind": "None" },
       "onCleared": { "kind": "None" },
       "onPartialClear": { "kind": "None" },

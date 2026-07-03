@@ -1,6 +1,11 @@
 #!/bin/bash
 
-bun run sim:complete -- "$@" > sim-results.json
+# if tmp dir is missing create
+if [ ! -d "tmp" ]; then
+    mkdir tmp
+fi
+
+bun run sim:complete -- "$@" > tmp/sim-results.json
 
 echo "ID  | Base Wins  | Recovery Wins  | Flagged"
 echo "--- | ---------- | -------------- | --------"
@@ -13,4 +18,4 @@ jq -r '
       "\((.recovery.wins / .recovery.games * 100) | round)%",
       .flagged
     ] | join(" | ")
-  ' sim-results.json
+  ' tmp/sim-results.json
