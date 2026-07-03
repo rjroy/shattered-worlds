@@ -4,7 +4,7 @@ date: 2026-06-17
 status: draft
 tags: [world-design, whiteout-parking-garage, freeze, heat, frozen-cards, core-effect]
 modules: [core-engine, world-data, game-view, themes]
-related: [.lore/work/brainstorm/new-world-concepts.md, .lore/reference/theme-authoring.md, src/game/assets/themes/whiteout-parking-garage/CATACLYSM.md]
+related: [.lore/work/brainstorm/new-world-concepts.md, .lore/reference/worlds/authoring/theme-authoring.md, src/game/assets/themes/whiteout-parking-garage/CATACLYSM.md]
 req-prefix: WHITEOUT
 ---
 
@@ -331,7 +331,7 @@ This intentionally mirrors `extra-light` and `extra-brace` without adding a heat
 
 <div id="REQ-WHITEOUT-51"></div>
 
-**REQ-WHITEOUT-51:** `.lore/reference/theme-authoring.md` must be amended with Whiteout's signature row: `whiteout-parking-garage` uses `freeze` as threat verb and `heat economy` as response archetype. The effect vocabulary must add `GainHeat`, `FreezeCards`, `ThawCards`, and `BurnForHeat` when those effects ship.
+**REQ-WHITEOUT-51:** `.lore/reference/worlds/authoring/theme-authoring.md` must be amended with Whiteout's signature row: `whiteout-parking-garage` uses `freeze` as threat verb and `heat economy` as response archetype. The effect vocabulary must add `GainHeat`, `FreezeCards`, `ThawCards`, and `BurnForHeat` when those effects ship.
 
 <div id="REQ-WHITEOUT-52"></div>
 

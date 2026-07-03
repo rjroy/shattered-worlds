@@ -4,7 +4,7 @@
 - **Status:** draft
 - **Tags:** world-design, fog-beach-party, conceal, reveal, light, numeric-keywords, core-effect
 - **Modules:** core-engine, world-data, game-view, themes
-- **Related:** [fog-beach-party-world.md](../brainstorm/fog-beach-party-world.md), [overgrown-mall.html](overgrown-mall.html), [shard-response-archetypes.html](../brainstorm/shard-response-archetypes.html), [new-world-concepts.md](../brainstorm/new-world-concepts.md), [theme-authoring.md](../../reference/theme-authoring.md), [visual-direction.html](../../reference/visual-direction.html)
+- **Related:** [fog-beach-party-world.md](../brainstorm/fog-beach-party-world.md), [overgrown-mall.html](overgrown-mall.html), [shard-response-archetypes.html](../brainstorm/shard-response-archetypes.html), [new-world-concepts.md](../brainstorm/new-world-concepts.md), [theme-authoring.md](../../reference/worlds/authoring/theme-authoring.md), [visual-direction.html](../../reference/visual-direction.html)
 - **Req prefix:** FOG
 
 > Fog Beach Party · fifth world · one combined spec: numeric-keyword engine slice + the conceal world
@@ -190,7 +190,7 @@ The contrast is the joy of the party against the meanness of the Mist (the brigh
 
 #### REQ-FOG-35 — Theme-authoring doc amended in the same spec
 
-`.lore/reference/theme-authoring.md` updates (Mall rule REQ-MALL-24, amend-with not after): C1 effect vocabulary adds `GainLight`; C2 keyword list adds `Concealed` and documents the **numeric-keyword `"Name:N"` authoring convention** (a keyword may carry an optional value, matched by name); the SV1 archetype table gains the Fog row — *fog-beach-party · reveal & endure · light economy (`GainLight` kit) exclusive to this world; concealment = no-target + hidden-details over true data*. Existing stale marks (if any remain) are cleared in the same edit.
+`.lore/reference/worlds/authoring/theme-authoring.md` updates (Mall rule REQ-MALL-24, amend-with not after): C1 effect vocabulary adds `GainLight`; C2 keyword list adds `Concealed` and documents the **numeric-keyword `"Name:N"` authoring convention** (a keyword may carry an optional value, matched by name); the SV1 archetype table gains the Fog row — *fog-beach-party · reveal & endure · light economy (`GainLight` kit) exclusive to this world; concealment = no-target + hidden-details over true data*. Existing stale marks (if any remain) are cleared in the same edit.
 
 ## 8 · Tests (REQ-FOG-36 … 38)
 

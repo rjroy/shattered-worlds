@@ -4,7 +4,7 @@ date: 2026-06-19
 status: draft
 tags: [world-design, city-of-sleeping-giants, stirring, recurrence, deck-pressure]
 modules: [world-data, themes, game-view]
-related: [.lore/reference/theme-authoring.md, src/game/assets/themes/city-of-sleeping-giants/CATACLYSM.md]
+related: [.lore/reference/worlds/authoring/theme-authoring.md, src/game/assets/themes/city-of-sleeping-giants/CATACLYSM.md]
 req-prefix: GIANTS
 ---
 
@@ -228,7 +228,7 @@ Counts are tuning values; act roles and the fixed Walker closer are not.
 
 <div id="REQ-GIANTS-43"></div>
 
-**REQ-GIANTS-43:** `.lore/reference/theme-authoring.md` must be updated when this world is implemented: add City of Sleeping Giants to the signature verb table and document that `city-of-sleeping-giants` owns Stirring as recurrence/escalation from unresolved or exploited body movement.
+**REQ-GIANTS-43:** `.lore/reference/worlds/authoring/theme-authoring.md` must be updated when this world is implemented: add City of Sleeping Giants to the signature verb table and document that `city-of-sleeping-giants` owns Stirring as recurrence/escalation from unresolved or exploited body movement.
 
 <div id="REQ-GIANTS-44"></div>
 

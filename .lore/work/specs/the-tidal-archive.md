@@ -4,7 +4,7 @@ date: 2026-06-19
 status: implemented
 tags: [world-design, the-tidal-archive, displacement, discard-memory, deck-control, core-effect]
 modules: [core-engine, world-data, game-view, themes]
-related: [.lore/reference/theme-authoring.md, src/game/assets/themes/the-tidal-archive/CATACLYSM.md]
+related: [.lore/reference/worlds/authoring/theme-authoring.md, src/game/assets/themes/the-tidal-archive/CATACLYSM.md]
 req-prefix: TIDAL
 ---
 
@@ -274,7 +274,7 @@ Counts are tuning values; act roles and the fixed Walker closer are not.
 
 <div id="REQ-TIDAL-50"></div>
 
-**REQ-TIDAL-50:** `.lore/reference/theme-authoring.md` must be updated when this world is implemented: add Tidal to the signature verb table, add the new recall effects to the current effect vocabulary, and document that `the-tidal-archive` owns discard/deck-order recall as its exclusive reward space.
+**REQ-TIDAL-50:** `.lore/reference/worlds/authoring/theme-authoring.md` must be updated when this world is implemented: add Tidal to the signature verb table, add the new recall effects to the current effect vocabulary, and document that `the-tidal-archive` owns discard/deck-order recall as its exclusive reward space.
 
 <div id="REQ-TIDAL-51"></div>
 

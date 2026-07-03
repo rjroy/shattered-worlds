@@ -4,7 +4,7 @@ date: 2026-06-29
 status: draft
 tags: [world-design, transit-authority, reroute, forced-movement, deck-pressure, art-direction]
 modules: [world-data, themes, game-view]
-related: [.lore/reference/theme-authoring.md, .lore/reference/visual-direction.md, src/game/assets/themes/README.md, src/game/assets/themes/transit-authority/CATACLYSM.md, .lore/work/specs/city-of-sleeping-giants.md]
+related: [.lore/reference/worlds/authoring/theme-authoring.md, .lore/reference/direction/visual-direction.md, src/game/assets/themes/README.md, src/game/assets/themes/transit-authority/CATACLYSM.md, .lore/work/specs/city-of-sleeping-giants.md]
 req-prefix: TRANSIT
 ---
 
@@ -208,7 +208,7 @@ Counts are tuning values; act roles and the fixed Walker closer are not.
 
 <div id="REQ-TRANSIT-38"></div>
 
-**REQ-TRANSIT-38:** Card insets must make Reroute legible and follow `.lore/reference/theme-authoring.md` W2a-W2d. Author them as square `600x600` thumbnail-first event illustrations with one large foreground subject, a bold silhouette readable at `100x100`, a simplified darker terminal background, and only one or two environmental cues. Hazard insets should show flipping boards, reassigned platforms, invalidated tickets, unscheduled trains, DO NOT BOARD warnings, suspended departures, and the ENTITY DETECTED quarantine. Reward insets should show valid credentials, express transfers, board-reading, deliberate boarding, and right-of-way override. The palette should stay sodium-amber/iron/cream with quarantine crimson and violet warning bands as the reroute accent; avoid clean readable UI text, logo-like signage, busy crowd detail, generic train crashes, monster trains, gore, or tiny schedule clutter competing with the subject.
+**REQ-TRANSIT-38:** Card insets must make Reroute legible and follow `.lore/reference/worlds/authoring/theme-authoring.md` W2a-W2d. Author them as square `600x600` thumbnail-first event illustrations with one large foreground subject, a bold silhouette readable at `100x100`, a simplified darker terminal background, and only one or two environmental cues. Hazard insets should show flipping boards, reassigned platforms, invalidated tickets, unscheduled trains, DO NOT BOARD warnings, suspended departures, and the ENTITY DETECTED quarantine. Reward insets should show valid credentials, express transfers, board-reading, deliberate boarding, and right-of-way override. The palette should stay sodium-amber/iron/cream with quarantine crimson and violet warning bands as the reroute accent; avoid clean readable UI text, logo-like signage, busy crowd detail, generic train crashes, monster trains, gore, or tiny schedule clutter competing with the subject.
 
 ## Display And Help
 
@@ -224,7 +224,7 @@ Counts are tuning values; act roles and the fixed Walker closer are not.
 
 <div id="REQ-TRANSIT-41"></div>
 
-**REQ-TRANSIT-41:** `.lore/reference/theme-authoring.md` must be updated when this world is implemented: add Transit Authority to the signature verb table and document that `transit-authority` owns Reroute as forced reassignment of the next card across both decks (forced top-deck connections, forced transfers, top-decked recurrence), distinct from Tidal's `displace` recall and Giants' `stir` recurrence.
+**REQ-TRANSIT-41:** `.lore/reference/worlds/authoring/theme-authoring.md` must be updated when this world is implemented: add Transit Authority to the signature verb table and document that `transit-authority` owns Reroute as forced reassignment of the next card across both decks (forced top-deck connections, forced transfers, top-decked recurrence), distinct from Tidal's `displace` recall and Giants' `stir` recurrence.
 
 <div id="REQ-TRANSIT-42"></div>
 

@@ -4,7 +4,7 @@ date: 2026-06-25
 status: draft
 tags: [unlocks, art-direction, icons, starter-decks, worlds]
 modules: [unlocks, game-assets]
-related: [.lore/reference/visual-direction.html, .lore/work/design/unlock-catalog.md]
+related: [.lore/reference/direction/visual-direction.md, .lore/work/design/unlock-catalog.md]
 fg-evidence:
   code:
     - src/data/unlocks/catalog.json
@@ -23,7 +23,7 @@ Unlock icons use three related but distinct visual languages:
 2. **Starter unlocks** are memory dossier icons: a retrieved identity, habit, or role crystallized into a deck. They should feel like gaining access to a remembered way of surviving, not like opening a location.
 3. **General unlocks** are relic icons: close-up objects, body cues, or symbolic tools charged with gold light. They should feel like small permanent advantages pulled out of memory.
 
-All three stay inside the project-wide look from `.lore/reference/visual-direction.html`: ink-and-ash linework, distressed surfaces, desaturated dark material, and scarce saturated glow used as intrusion, memory, or access energy.
+All three stay inside the project-wide look from `.lore/reference/direction/visual-direction.md`: ink-and-ash linework, distressed surfaces, desaturated dark material, and scarce saturated glow used as intrusion, memory, or access energy.
 
 ## Current asset read
 

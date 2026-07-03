@@ -46,7 +46,7 @@ Five effect primitives shipped alongside `Alarm`, all general-purpose and reused
 - **`RemoveKeyword { keyword, target, amount }`** — clears a keyword from up to `amount` cards in a zone.
 - **`GainKeywordGuard { amount }`** — grants `GameState.keywordGuard` charges (parallel to `braceCharges`), consumed inside `KeywordGate`: when a gate would pass threshold and a guard charge is available, the charge is spent and the inner effect is suppressed instead of firing. This is a distinct absorption path from `Brace`, which only absorbs `ForceDestroy`.
 
-Alarm's own lifecycle: applied at value 2, decays by one at each turn-start tick (mirroring `frozen`), removed at zero. This makes `Alarm` the first **transient** applied keyword — decay is what later distinguishes it from New Derelict's persistent `Lockdown` (see [Persistent Keyword Cost Modifiers](persistent-keyword-cost-modifiers.md)).
+Alarm's own lifecycle: applied at value 2, decays by one at each turn-start tick (mirroring `frozen`), removed at zero. This makes `Alarm` the first **transient** applied keyword — decay is what later distinguishes it from New Derelict's persistent `Lockdown` (see [Persistent Keyword Cost Modifiers](../../engine/effects-and-keywords/persistent-keyword-cost-modifiers.md)).
 
 All five primitives are structural no-ops in any world that never authors `ApplyKeyword`: no card ever bears the keyword, every `KeywordGate` evaluates `count == 0 < min`, and `progressDealtThisTurn`/`keywordGuard` are written but unread. State and event streams for other worlds are unaffected.
 
@@ -58,4 +58,4 @@ The world is deliberately not soft-locking: restraint (declining gifts, not over
 
 ## Downstream reuse
 
-New Derelict's `Lockdown` and Transit Authority's `Reroute` both reuse the `ApplyKeyword`/`RemoveKeyword`/`KeywordGate` primitives and the `appliedKeywords` field this slice introduced, adding no new `ApplyKeyword` targets of their own. See [New Derelict World](new-derelict-world.md), [Transit Authority World](transit-authority-world.md), and [Persistent Keyword Cost Modifiers](persistent-keyword-cost-modifiers.md) for how the persistence/decay and cost-modifier axes were generalized further on top of this base.
+New Derelict's `Lockdown` and Transit Authority's `Reroute` both reuse the `ApplyKeyword`/`RemoveKeyword`/`KeywordGate` primitives and the `appliedKeywords` field this slice introduced, adding no new `ApplyKeyword` targets of their own. See [New Derelict World](new-derelict-world.md), [Transit Authority World](transit-authority-world.md), and [Persistent Keyword Cost Modifiers](../../engine/effects-and-keywords/persistent-keyword-cost-modifiers.md) for how the persistence/decay and cost-modifier axes were generalized further on top of this base.

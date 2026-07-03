@@ -7,7 +7,7 @@ tags: visual, art-direction, the-walker, intrusion, reference
 fg-type: concept
 fg-sources: .lore/work/specs/visual-identity.html, .lore/work/retros/visual-identity-rollout.html
 fg-status: current
-related: .lore/reference/vision.md
+related: .lore/reference/direction/vision.md
 fg-evidence:
   code:
     - src/game/view/backdrop.ts

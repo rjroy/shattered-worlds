@@ -25,7 +25,7 @@ being swapped or crossed out, quarantine stamps and tape, chained gates,
 credential tickets, and route-map lines bending toward a single point.
 
 **Composition is unchanged from every other world's insets and takes
-precedence over the rendering-style choice (W2b, `.lore/reference/theme-authoring.md`).**
+precedence over the rendering-style choice (W2b, `.lore/reference/worlds/authoring/theme-authoring.md`).**
 "Anime" pulls toward multi-figure action panels, speed lines, and busy
 screen-tone clutter — none of that is wanted here. Every inset must be a
 single-subject, bold-silhouette key visual: one large foreground subject, a

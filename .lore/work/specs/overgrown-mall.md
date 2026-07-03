@@ -4,7 +4,7 @@
 - **Status:** draft
 - **Tags:** world-design, overgrown-mall, infest, spore, deal-progress-scaled, player-keywords, core-effect
 - **Modules:** core-engine, world-data, game-view, themes
-- **Related:** [overgrown-mall-world.html](../brainstorm/overgrown-mall-world.html), [shard-response-archetypes.html](../brainstorm/shard-response-archetypes.html), [shard-response-archetypes.html](../plans/shard-response-archetypes.html), [theme-authoring.md](../../reference/theme-authoring.md), [visual-direction.html](../../reference/visual-direction.html)
+- **Related:** [overgrown-mall-world.html](../brainstorm/overgrown-mall-world.html), [shard-response-archetypes.html](../brainstorm/shard-response-archetypes.html), [shard-response-archetypes.html](../plans/shard-response-archetypes.html), [theme-authoring.md](../../reference/worlds/authoring/theme-authoring.md), [visual-direction.html](../../reference/visual-direction.html)
 - **Req prefix:** MALL
 
 > Overgrown Mall · fourth world · spec covers full identity, no phasing
@@ -144,7 +144,7 @@ Spore cards are visually identifiable in hand (keyword visible per REQ-MALL-2's 
 
 #### REQ-MALL-24 — Theme-authoring doc amended with the proposal, not after
 
-`.lore/reference/theme-authoring.md` updates: C1 effect vocabulary adds `DealProgressScaled` (and clears the stale "not yet available" marks on `Brace`/`DealProgressAll`/`ExileTopWorldCards`, which shipped); C2 keyword list adds `Spore` and documents keywords on player templates; SV1 table gains the Mall row — verbatim: *overgrown-mall · prune & profit · self-pruning no-op Spore; Bloom scales per Spore in hand; `DealProgressScaled` exclusive to this world*. Also swap the transposed bird/volcano rows per REQ-MALL-25 in the same edit.
+`.lore/reference/worlds/authoring/theme-authoring.md` updates: C1 effect vocabulary adds `DealProgressScaled` (and clears the stale "not yet available" marks on `Brace`/`DealProgressAll`/`ExileTopWorldCards`, which shipped); C2 keyword list adds `Spore` and documents keywords on player templates; SV1 table gains the Mall row — verbatim: *overgrown-mall · prune & profit · self-pruning no-op Spore; Bloom scales per Spore in hand; `DealProgressScaled` exclusive to this world*. Also swap the transposed bird/volcano rows per REQ-MALL-25 in the same edit.
 
 #### REQ-MALL-25 — Fix the transposed SV1 rows
 

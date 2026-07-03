@@ -4,7 +4,7 @@ date: 2026-06-29
 status: draft
 tags: [world-design, new-derelict, isolate, lockdown, persistent-modifier, effective-cost, deck-pressure, core-engine, art-direction]
 modules: [world-data, themes, game-view, core-engine]
-related: [.lore/reference/theme-authoring.md, .lore/reference/visual-direction.md, src/game/assets/themes/README.md, src/game/assets/themes/new-derelict/CATACLYSM.md, .lore/work/specs/eden-prime.md, .lore/work/specs/effective-card-modifiers.md, .lore/work/specs/city-of-sleeping-giants.md]
+related: [.lore/reference/worlds/authoring/theme-authoring.md, .lore/reference/direction/visual-direction.md, src/game/assets/themes/README.md, src/game/assets/themes/new-derelict/CATACLYSM.md, .lore/work/specs/eden-prime.md, .lore/work/specs/effective-card-modifiers.md, .lore/work/specs/city-of-sleeping-giants.md]
 req-prefix: DERELICT
 ---
 
@@ -227,7 +227,7 @@ Counts are tuning values; act roles and the fixed Walker closer are not.
 
 <div id="REQ-DERELICT-40"></div>
 
-**REQ-DERELICT-40:** Card insets must make the isolate identity legible and follow `.lore/reference/theme-authoring.md` W2a-W2d. Author them as square `600x600` thumbnail-first event illustrations with one large foreground subject, a bold silhouette readable at `100x100`, a simplified darker starship background, and only one or two environmental cues. Hazard insets should show sealing in progress (a closing bulkhead, a gravity-flickered workstation, a misfiled status terminal, a corridor folding into a lifeboat, an announcement that never finishes). Reward insets should show access being restored or spread (an override badge, an emergency-route shortcut, a manual release lever, a checklist being followed). The palette should stay white-steel/teal/cyan with emergency red-amber and rare violet-white Walker wayfinding as the Lockdown accent; avoid busy console noise, legible UI copy, generic spaceship wreckage, explosions, combat scenes, logos, or crowded tiny props. Where the art allows, an inset should distinguish a card's open face from its sealed reading.
+**REQ-DERELICT-40:** Card insets must make the isolate identity legible and follow `.lore/reference/worlds/authoring/theme-authoring.md` W2a-W2d. Author them as square `600x600` thumbnail-first event illustrations with one large foreground subject, a bold silhouette readable at `100x100`, a simplified darker starship background, and only one or two environmental cues. Hazard insets should show sealing in progress (a closing bulkhead, a gravity-flickered workstation, a misfiled status terminal, a corridor folding into a lifeboat, an announcement that never finishes). Reward insets should show access being restored or spread (an override badge, an emergency-route shortcut, a manual release lever, a checklist being followed). The palette should stay white-steel/teal/cyan with emergency red-amber and rare violet-white Walker wayfinding as the Lockdown accent; avoid busy console noise, legible UI copy, generic spaceship wreckage, explosions, combat scenes, logos, or crowded tiny props. Where the art allows, an inset should distinguish a card's open face from its sealed reading.
 
 ## Display And Help
 
@@ -243,7 +243,7 @@ Counts are tuning values; act roles and the fixed Walker closer are not.
 
 <div id="REQ-DERELICT-43"></div>
 
-**REQ-DERELICT-43:** `.lore/reference/theme-authoring.md` must be updated when this world is implemented: add New Derelict to the signature verb table (verb `isolate`, reward implication "shortcuts spread Lockdown; release/valve cards strip it; sealed cards cost more to clear per other sealed card"), add `Lockdown` to the keyword vocabulary (C2) noting it is the first **persistent** runtime-applied keyword (contrast Eden Prime's transient `Alarm`), document the **persistent effective-cost modifier** as a new general world-card hook in the effect/card-fields section (C1/C3), note that it reuses Eden Prime's `ApplyKeyword` / `RemoveKeyword` / `KeywordGate`, and note New Derelict owns the `isolate` access-cost space.
+**REQ-DERELICT-43:** `.lore/reference/worlds/authoring/theme-authoring.md` must be updated when this world is implemented: add New Derelict to the signature verb table (verb `isolate`, reward implication "shortcuts spread Lockdown; release/valve cards strip it; sealed cards cost more to clear per other sealed card"), add `Lockdown` to the keyword vocabulary (C2) noting it is the first **persistent** runtime-applied keyword (contrast Eden Prime's transient `Alarm`), document the **persistent effective-cost modifier** as a new general world-card hook in the effect/card-fields section (C1/C3), note that it reuses Eden Prime's `ApplyKeyword` / `RemoveKeyword` / `KeywordGate`, and note New Derelict owns the `isolate` access-cost space.
 
 <div id="REQ-DERELICT-44"></div>
 

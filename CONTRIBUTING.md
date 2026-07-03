@@ -94,9 +94,9 @@ bun run sim
 
 ## Key design decisions
 
-**Why Phaser?** The architecture supports the kind of maximalist juice (Balatro-style card effects, screen shake, escalating particle work) that DOM-based approaches make painful. Phaser gives full control over the render loop without fighting the browser. The research doc lives in `.lore/reference/game-engine-choice.md`.
+**Why Phaser?** The architecture supports the kind of maximalist juice (Balatro-style card effects, screen shake, escalating particle work) that DOM-based approaches make painful. Phaser gives full control over the render loop without fighting the browser. The research doc lives in `.lore/reference/direction/game-engine-choice.md`.
 
-**Why a pure-core/renderer split?** The core is exhaustively unit-testable and runnable headless for balance sims. Simulation speed and animation speed are decoupled by design. The architecture document is at `.lore/reference/core-render-split.md`.
+**Why a pure-core/renderer split?** The core is exhaustively unit-testable and runnable headless for balance sims. Simulation speed and animation speed are decoupled by design. The architecture document is at `.lore/reference/engine/contracts/core-render-split.md`.
 
 **Why seeded RNG?** Same seed + same actions yields the same run, byte for byte. This is what makes "randomness is owned, never imposed" enforceable — every outcome is reproducible and traceable.
 
@@ -104,8 +104,8 @@ bun run sim
 
 Design documents, specs, research, retros, and reference pages live in `.lore/`. Most are Markdown, with some older HTML artifacts. Vite serves the folder at `/lore/` during development and copies it to `dist/lore/` during production builds. Key documents:
 
-- `.lore/reference/vision.md` — project north star, principles, anti-goals
-- `.lore/reference/core-render-split.md` — the core/renderer split in detail
+- `.lore/reference/direction/vision.md` — project north star, principles, anti-goals
+- `.lore/reference/engine/contracts/core-render-split.md` — the core/renderer split in detail
 - `.lore/work/specs/poc-core-loop.html` — POC scope and requirements
 
 ## Branch and PR workflow
