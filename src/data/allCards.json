@@ -1186,7 +1186,7 @@
               "kind": "ApplyKeyword",
               "keyword": "Alarm",
               "value": 2,
-              "target": "firstWorldCardInHand"
+              "target": "randomWorldCardInHand"
             }
           }
         ]
@@ -1274,7 +1274,7 @@
         "kind": "ApplyKeyword",
         "keyword": "Alarm",
         "value": 1,
-        "target": "randomWorldCardInHand"
+        "target": "firstWorldCardInHand"
       },
       "onEndOfTurn": {
         "kind": "ProgressGate",
@@ -1329,7 +1329,7 @@
         "kind": "ApplyKeyword",
         "keyword": "Alarm",
         "value": 1,
-        "target": "randomWorldCardInHand"
+        "target": "firstWorldCardInHand"
       },
       "onEndOfTurn": {
         "kind": "Sequence",
@@ -2295,7 +2295,7 @@
       "effect": {
         "kind": "Sequence",
         "steps": [
-          { "kind": "Draw", "player": 1 },
+          { "kind": "Draw", "player": 2 },
           { "kind": "GainEnergy", "amount": 1 },
           { "kind": "ApplyKeyword", "keyword": "Lockdown", "value": 1, "target": "nextWorldCard" }
         ]
@@ -2320,7 +2320,7 @@
       "name": "Manual Release",
       "rarity": "uncommon",
       "insetKey": "derelict-inset-manual-release",
-      "energyCost": 1,
+      "energyCost": 0,
       "exhaust": true,
       "effect": { "kind": "RemoveKeyword", "keyword": "Lockdown", "target": "hand", "amount": 3 }
     },
@@ -2334,6 +2334,7 @@
         "kind": "Sequence",
         "steps": [
           { "kind": "ReturnPlayerDiscardToTop", "min": 0, "max": 1 },
+          { "kind": "Draw", "player": 1 },
           { "kind": "Brace", "amount": 1 }
         ]
       }
@@ -2366,7 +2367,13 @@
       "cost": 1,
       "keywords": [],
       "discardable": true,
-      "onDiscarded": { "kind": "AddPlayerCardToTop", "template": "Panic" },
+      "onDiscarded": {
+        "kind": "Sequence",
+        "steps": [
+          { "kind": "AddPlayerCardToTop", "template": "Panic" },
+          { "kind": "AddPlayerCardToTop", "template": "Panic" }
+        ]
+      },
       "onCleared": { "kind": "None" },
       "onPartialClear": { "kind": "None" },
       "onDraw": { "kind": "None" },
@@ -2391,7 +2398,7 @@
       "name": "Administrative Misfile",
       "rarity": "rare",
       "insetKey": "derelict-inset-administrative-misfile",
-      "cost": 3,
+      "cost": 4,
       "keywords": ["Obstructed"],
       "discardable": false,
       "onDiscarded": { "kind": "None" },
@@ -2402,7 +2409,7 @@
         "kind": "ApplyKeyword",
         "keyword": "Lockdown",
         "value": 1,
-        "target": "firstWorldCardInHand"
+        "target": "randomWorldCardInHand"
       }
     },
     "Corridor Becomes Lifeboat": {
@@ -2410,10 +2417,16 @@
       "name": "Corridor Becomes Lifeboat",
       "rarity": "uncommon",
       "insetKey": "derelict-inset-corridor-becomes-lifeboat",
-      "cost": 4,
+      "cost": 5,
       "keywords": ["Slow"],
       "discardable": true,
-      "onDiscarded": { "kind": "AddPlayerCardToTop", "template": "Panic" },
+      "onDiscarded": {
+        "kind": "Sequence",
+        "steps": [
+          { "kind": "AddPlayerCardToTop", "template": "Panic" },
+          { "kind": "AddPlayerCardToTop", "template": "Panic" }
+        ]
+      },
       "onCleared": { "kind": "None" },
       "onPartialClear": {
         "kind": "KeywordGate",

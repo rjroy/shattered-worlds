@@ -148,13 +148,19 @@ export class ApplyKeywordHandler extends EffectHandler<ApplyKeywordEffect> {
       case "firstWorldCardInHand": {
         const worldCards = state.hand.filter((c): c is WorldCard => c.kind === "world");
         if (worldCards.length === 0) return { state, events: [] };
-        // Mint ids are String(nextId); compare numerically. A string compare
-        // inverts at id >= 10 ("10" < "2"), so it would pick the wrong card on
-        // any board past 9 minted cards — a latent determinism bug.
-        const first = worldCards.reduce((lowest, candidate) =>
-          parseInt(candidate.id, 10) < parseInt(lowest.id, 10) ? candidate : lowest,
-        );
-        return applyToHandIds(state, [first.id], kw);
+        const noExisting = worldCards.filter((c): c is WorldCard => {
+          return c.appliedKeywords === undefined
+            ? true
+            : undefined === c.appliedKeywords.find((akw) => akw.name === kw.name);
+        });
+        if (noExisting.length > 0 && noExisting[0] !== undefined) {
+          return applyToHandIds(state, [noExisting[0].id], kw);
+        }
+        if (worldCards[0] !== undefined) {
+          return applyToHandIds(state, [worldCards[0].id], kw);
+        }
+        // Should be unreachable.
+        return { state, events: [] };
       }
       case "randomWorldCardInHand": {
         const worldCards = state.hand.filter((c): c is WorldCard => c.kind === "world");
