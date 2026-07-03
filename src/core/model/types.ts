@@ -144,7 +144,8 @@ export type CardEffect =
   // (see appliedKeywords / tickAppliedKeywords). Targets:
   //   "hand"               — every card currently in hand
   //   "self"               — the world card whose hook is firing (ctx.selfId)
-  //   "firstWorldCardInHand" — the world card in hand with the smallest mint id
+  //   "firstWorldCardInHand" — the first world card in hand without this applied
+  //                            keyword, falling back to the first world card
   //   "randomWorldCardInHand" — a random world card in hand
   //   "nextWorldCard"      — deferred: stamps the next world card pulled into
   //                          hand (queued via pendingKeywordNextWorldCard, applied

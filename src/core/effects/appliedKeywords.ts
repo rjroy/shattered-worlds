@@ -388,7 +388,7 @@ export function tickAppliedKeywordsAtTurnStart(state: GameState): EffectResult {
     const next = tickAppliedKeywords(card);
     const remaining = next.appliedKeywords ?? [];
     for (const kw of applied) {
-      if (PERSISTENT_KEYWORDS.has(kw.name)) {
+      if (!PERSISTENT_KEYWORDS.has(kw.name)) {
         const bucket = reduced.get(kw.name) ?? { ids: [], templateIds: [] };
         bucket.ids.push(card.id);
         bucket.templateIds.push(card.templateId);
@@ -409,7 +409,7 @@ export function tickAppliedKeywordsAtTurnStart(state: GameState): EffectResult {
   // Decremented (but not yet expired) lifetimes still update the hand; events
   // fire only for keywords that hit zero this tick.
   const events: GameEvent[] = [];
-  for (const [keyword, { ids, templateIds }] of expiries) {
+  for (const [keyword, { ids, templateIds }] of reduced) {
     events.push({ type: "KeywordReduced", ids, templateIds, keyword });
   }
   for (const [keyword, { ids, templateIds }] of expiries) {

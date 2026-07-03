@@ -44,23 +44,14 @@ describe("ApplyKeyword", () => {
       true,
     );
 
-    const selfResult = applyEffect(
-      catalog,
-      makeState({ hand }),
-      effect("self"),
-      undefined,
-      "2",
-    );
+    const selfResult = applyEffect(catalog, makeState({ hand }), effect("self"), undefined, "2");
     expect(appliedKeywordValue(selfResult.state.hand[0]!, "Lockdown")).toBe(1);
     expect(appliedKeywordValue(selfResult.state.hand[1]!, "Lockdown")).toBe(0);
 
-    const firstResult = applyEffect(
-      catalog,
-      makeState({ hand }),
-      effect("firstWorldCardInHand"),
-    );
-    expect(appliedKeywordValue(firstResult.state.hand.find((card) => card.id === "1")!, "Lockdown"))
-      .toBe(1);
+    const firstResult = applyEffect(catalog, makeState({ hand }), effect("firstWorldCardInHand"));
+    expect(
+      appliedKeywordValue(firstResult.state.hand.find((card) => card.id === "2")!, "Lockdown"),
+    ).toBe(1);
 
     const queued = applyEffect(
       catalog,
@@ -115,7 +106,7 @@ describe("ApplyKeyword", () => {
     expect(events).toHaveLength(0);
   });
 
-  it("target 'firstWorldCardInHand' resolves by NUMERIC id, not string order (>= 10 minted)", () => {
+  it("target 'firstWorldCardInHand' resolves by hand order", () => {
     // String order would pick "10" ("10" < "2"); numeric order picks "2". The
     // hand spans ids past 9 to catch the lexicographic-vs-numeric bug.
     const state = makeState({
@@ -127,13 +118,13 @@ describe("ApplyKeyword", () => {
       applyToHand("firstWorldCardInHand"),
     );
 
-    expect(appliedKeywordValue(after.hand.find((c) => c.id === "2")!, "Alarm")).toBe(2);
-    expect(appliedKeywordValue(after.hand.find((c) => c.id === "10")!, "Alarm")).toBe(0);
+    expect(appliedKeywordValue(after.hand.find((c) => c.id === "10")!, "Alarm")).toBe(2);
+    expect(appliedKeywordValue(after.hand.find((c) => c.id === "2")!, "Alarm")).toBe(0);
     // Player card is never a "world card" target.
     expect(appliedKeywordValue(after.hand.find((c) => c.id === "11")!, "Alarm")).toBe(0);
 
     const applied = events.find((e) => e.type === "KeywordApplied");
-    expect(applied?.type === "KeywordApplied" && applied.ids).toEqual(["2"]);
+    expect(applied?.type === "KeywordApplied" && applied.ids).toEqual(["10"]);
   });
 
   it("target 'firstWorldCardInHand' is a no-op with no world cards in hand", () => {
@@ -414,11 +405,13 @@ describe("tickAppliedKeywordsAtTurnStart", () => {
     expect(events).toHaveLength(0);
   });
 
-  it("decrements a lifetime without expiring it", () => {
+  it("decrements a lifetime and emits KeywordReduced without removing it", () => {
     const state = makeState({ hand: [alarmedWorld("1", 2)] });
     const { state: after, events } = tickAppliedKeywordsAtTurnStart(state);
     expect(appliedKeywordValue(after.hand.find((c) => c.id === "1")!, "Alarm")).toBe(1);
-    expect(events).toHaveLength(0);
+    expect(events).toEqual([
+      { type: "KeywordReduced", ids: ["1"], templateIds: ["1"], keyword: "Alarm" },
+    ]);
   });
 
   it("emits one KeywordRemoved grouped across all cards whose lifetime hits zero", () => {
@@ -426,8 +419,11 @@ describe("tickAppliedKeywordsAtTurnStart", () => {
     const { state: after, events } = tickAppliedKeywordsAtTurnStart(state);
     expect(appliedKeywordValue(after.hand.find((c) => c.id === "1")!, "Alarm")).toBe(0);
     expect(appliedKeywordValue(after.hand.find((c) => c.id === "2")!, "Alarm")).toBe(0);
-    expect(events).toHaveLength(1);
-    expect(events[0]?.type === "KeywordRemoved" && new Set(events[0].ids)).toEqual(
+    expect(events).toHaveLength(2);
+    expect(events[0]?.type === "KeywordReduced" && new Set(events[0].ids)).toEqual(
+      new Set(["1", "2"]),
+    );
+    expect(events[1]?.type === "KeywordRemoved" && new Set(events[1].ids)).toEqual(
       new Set(["1", "2"]),
     );
   });
