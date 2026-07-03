@@ -21,14 +21,14 @@
  * is at or below `threshold`, or exactly 100%, are FLAGGED. Low-win-rate flags
  * surface the dominant loss cause/act and an epistemic caveat so the flag
  * points at the knob to turn; perfect-win-rate flags identify worlds that are
- * too easy. Recovery is diagnostic-only text and never carries a flag of its
+ * too easy. Recovery is diagnostic-only data and never carries a flag of its
  * own.
  *
  * Honesty and reproducibility (REQ-SCC-16): the whole run is ONE continuous
  * agent rng stream, now spanning `2 x N` play-outs per world instead of `N`. A
  * single agentRng is seeded from the agent seed and threaded forward — baseline
  * into recovery, recovery into the next seed's baseline, and onward across
- * worlds — via `Outcome.finalAgentRng`. The report is pure, seed-derived text:
+ * worlds — via `Outcome.finalAgentRng`. The report is pure, seed-derived JSON:
  * NO timestamps, elapsed times, or other system-derived values appear in the
  * output.
  *
@@ -723,27 +723,38 @@ function formatWorldBlock(agg: WorldAggregate, threshold: number): string {
 }
 
 export function formatReport(params: CompletenessParams, aggregates: WorldAggregate[]): string {
-  const blocks: string[] = [];
-  blocks.push("Completeness report");
-  blocks.push(
-    `  N=${params.N}  K=${params.K}  agentSeed=${params.agentSeed}  threshold=${(params.threshold * 100).toFixed(1)}%`,
-  );
-  if (params.worldId !== undefined) {
-    blocks.push(`  World filter: ${params.worldId}`);
-  }
-  blocks.push(`  Eval weights: ${params.weightsOverridden ? "custom (SIM_WEIGHTS)" : "default"}`);
-  blocks.push(
-    `  Play-outs per world: ${2 * params.N} (2 x N: one baseline + one recovery play-out per seed)`,
-  );
-  blocks.push(`  Recovery unlock configuration: ${RECOVERY_UNLOCK_IDS.join(", ")}`);
-  blocks.push("");
-  for (const agg of aggregates) {
-    blocks.push(formatWorldBlock(agg, params.threshold));
-    blocks.push("");
-  }
   const flagged = aggregates.filter((a) => isFlagged(a.baseline, params.threshold));
-  blocks.push(`Flagged worlds: ${flagged.length}/${aggregates.length}`);
-  return blocks.join("\n");
+  const report = {
+    format: "shattered-worlds-completeness",
+    version: 1,
+    params: {
+      N: params.N,
+      K: params.K,
+      agentSeed: params.agentSeed,
+      threshold: params.threshold,
+      weights: params.weights,
+      weightsOverridden: params.weightsOverridden,
+      ...(params.worldId !== undefined ? { worldId: params.worldId } : {}),
+    },
+    playOutsPerWorld: 2 * params.N,
+    recoveryUnlockIds: [...RECOVERY_UNLOCK_IDS],
+    worlds: aggregates.map((aggregate) => ({
+      ...aggregate,
+      flagged: isFlagged(aggregate.baseline, params.threshold),
+    })),
+    summary: {
+      flaggedWorldIds: flagged.map((aggregate) => aggregate.id),
+      flaggedWorlds: flagged.length,
+      totalWorlds: aggregates.length,
+    },
+  };
+
+  return JSON.stringify(
+    report,
+    (_key, value: unknown) =>
+      value instanceof Map ? Object.fromEntries(value.entries()) : value,
+    2,
+  );
 }
 
 // ---------------------------------------------------------------------------
