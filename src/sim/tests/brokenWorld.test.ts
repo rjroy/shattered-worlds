@@ -11,7 +11,10 @@ import {
   formatReport,
   runCompleteness,
   type BuiltWorld,
+  type CohortAggregate,
   type CompletenessParams,
+  type PerRunObservation,
+  type WorldAggregate,
 } from "../completeness";
 
 // ---------------------------------------------------------------------------
@@ -125,6 +128,35 @@ describe("completeness detects an unwinnable world (REQ-SCC-14)", () => {
     return best?.[0];
   }
 
+  /**
+   * A minimal but internally-coherent synthetic "won" observation: invented
+   * numbers (not from a real play-out), but they satisfy the same per-run
+   * invariants `checkCounterInvariants`/`checkDispositionInvariants`
+   * (completeness.test.ts) hold every REAL cohort to — actionCounts sums to
+   * totalActions, positiveUnusedEndTurns <= actionCounts.EndTurn, and
+   * totalUnusedEnergy >= positiveUnusedEndTurns.
+   */
+  function syntheticWinObservation(turns: number): PerRunObservation {
+    return {
+      disposition: "won",
+      turns,
+      actReached: 0,
+      totalActions: 10,
+      actionCounts: { PlayCard: 5, DiscardHazard: 0, EndTurn: 5, ChooseBoon: 0 },
+      positiveUnusedEndTurns: 2,
+      totalUnusedEnergy: 6,
+      noProgressEndTurns: 0,
+      posthocPressure: {
+        minHp: 8,
+        minPlayerSupply: 3,
+        minPredictedPlayerRoom: 2,
+        minRunwayRemaining: 4,
+        minEnergy: 1,
+      },
+      // No lossCause/actAtLoss: this observation never lost.
+    };
+  }
+
   test("a single broken-world play-out loses to hp in act 1 (direct playOut)", () => {
     // Item 2 of the validation: run the eval agent over the world via playOut.
     const policy = evalPolicyFactory(brokenCatalog, DEFAULT_EVAL_WEIGHTS, K);
@@ -143,17 +175,19 @@ describe("completeness detects an unwinnable world (REQ-SCC-14)", () => {
     const [agg] = runCompleteness(params(), [brokenBuilt]);
     if (agg === undefined) throw new Error("runCompleteness returned no aggregate");
 
-    // Genuinely unwinnable: not one seed survives.
-    expect(agg.wins).toBe(0);
-    expect(agg.wins / agg.games).toBeLessThanOrEqual(THRESHOLD);
+    // Genuinely unwinnable: not one seed survives. Checked on the baseline
+    // cohort: REQ-SCC-14's flag detection is defined in terms of baseline (see
+    // the spec amendment); recovery is a diagnostic-only cohort.
+    expect(agg.baseline.wins).toBe(0);
+    expect(agg.baseline.wins / agg.baseline.games).toBeLessThanOrEqual(THRESHOLD);
 
     // Every game is a real loss (no caps): the agent always reaches a terminal.
-    expect(agg.losses).toBe(N);
-    expect(agg.capped).toBe(0);
+    expect(agg.baseline.losses).toBe(N);
+    expect(agg.baseline.capped).toBe(0);
 
     // Heavy-damage world => HP dominates the cause, and death lands in act 1.
-    expect(dominantKey(agg.lossByCause)).toBe("hp");
-    expect(dominantKey(agg.lossByAct)).toBe(0);
+    expect(dominantKey(agg.baseline.lossByCause)).toBe("hp");
+    expect(dominantKey(agg.baseline.lossByAct)).toBe(0);
 
     // Exercise the REAL report/flag path (not a replica): the formatted report
     // flags the world and surfaces hp as the dominant cause.
@@ -161,6 +195,70 @@ describe("completeness detects an unwinnable world (REQ-SCC-14)", () => {
     expect(report).toContain("[FLAGGED]");
     expect(report).toContain("Dominant cause: hp");
     expect(report).toContain("Flagged worlds: 1/1");
+
+    // Step 5: recovery is diagnostic-only and must never carry its own flag or
+    // caveat, even on a world this broken (RECOVERY_RUN_MODIFIERS cannot
+    // rescue a world with no SurviveWorld exit at all). Both markers must
+    // appear exactly once each, in the baseline section only.
+    expect((report.match(/\[FLAGGED\]/g) ?? []).length).toBe(1);
+    expect((report.match(/Caveat: a win-rate is a SAMPLE/g) ?? []).length).toBe(1);
+
+    // Step 6: recovery's own outcome on THIS world is also 0 wins — the fixed
+    // recovery unlocks (extra hp, a free/discounted push, a keyword bonus)
+    // never add a SurviveWorld exit, and the crusher hazards fire every turn
+    // regardless of starter/unlock configuration — so recovery cannot rescue
+    // an unwinnable world it structurally has no escape from.
+    expect(agg.recovery.wins).toBe(0);
+
+    // Text-level (not just count-based) confirmation that the recovery
+    // section specifically carries no [FLAGGED] marker of its own.
+    const recoverySection = report.slice(report.indexOf("-- Recovery"));
+    expect(recoverySection).not.toContain("[FLAGGED]");
+  });
+
+  test("Flagged worlds is wired to baseline only: a synthetic recovery win cannot rescue the flag", () => {
+    // The real recovery cohort for this world also loses every game (asserted
+    // above), which on its own doesn't prove independence from baseline --
+    // recovery could coincidentally be flag-free just because it also failed.
+    // Swap in a synthetic recovery cohort with wins comfortably above
+    // threshold and confirm the "Flagged worlds" summary line and per-cohort
+    // [FLAGGED] gating are unaffected: they must be wired to baseline alone,
+    // never to "whatever recovery happened to do here" (spec amendment: recovery
+    // is diagnostic and can never rescue or mask a baseline flag).
+    const [agg] = runCompleteness(params(), [brokenBuilt]);
+    if (agg === undefined) throw new Error("runCompleteness returned no aggregate");
+
+    // Genuinely independent synthetic cohort (not a spread-and-partial-override
+    // of the real all-loss recovery data): every field below is internally
+    // consistent with "4 wins, 0 losses, 0 capped" on its own terms, so this
+    // fixture would also survive completeness.test.ts's own counter/disposition
+    // invariant checks if run against it.
+    const rescuedRuns: PerRunObservation[] = [
+      syntheticWinObservation(4),
+      syntheticWinObservation(5),
+      syntheticWinObservation(6),
+      syntheticWinObservation(3),
+    ];
+    const rescuedRecovery: CohortAggregate = {
+      games: 4,
+      wins: 4,
+      losses: 0,
+      capped: 0,
+      totalTurns: rescuedRuns.reduce((sum, run) => sum + run.turns, 0),
+      runs: rescuedRuns,
+      lossByCause: new Map(),
+      lossByAct: new Map(),
+      reachedActCounts: new Map([[0, 4]]),
+      reachedActWinCounts: new Map([[0, 4]]),
+    };
+    const rescuedAgg: WorldAggregate = { ...agg, recovery: rescuedRecovery };
+
+    const report = formatReport(params(), [rescuedAgg]);
+    expect(report).toContain("Flagged worlds: 1/1");
+    expect((report.match(/\[FLAGGED\]/g) ?? []).length).toBe(1);
+
+    const recoverySection = report.slice(report.indexOf("-- Recovery"));
+    expect(recoverySection).not.toContain("[FLAGGED]");
   });
 
   test(
@@ -172,8 +270,9 @@ describe("completeness detects an unwinnable world (REQ-SCC-14)", () => {
       if (agg === undefined) throw new Error("runCompleteness returned no aggregate");
 
       // The fixture world is winnable, so the same threshold must NOT flag it.
-      expect(agg.wins).toBeGreaterThan(0);
-      expect(agg.wins / agg.games).toBeGreaterThan(THRESHOLD);
+      // Checked on the baseline cohort, per the same REQ-SCC-14 reasoning above.
+      expect(agg.baseline.wins).toBeGreaterThan(0);
+      expect(agg.baseline.wins / agg.baseline.games).toBeGreaterThan(THRESHOLD);
 
       const report = formatReport(params(), [agg]);
       expect(report).not.toContain("[FLAGGED]");

@@ -150,6 +150,19 @@ function saturate(amount: number, scale: number): number {
 }
 
 /**
+ * World cards still in play: the world draw pile, the unshuffled `acts`, and the
+ * world cards currently in hand. Shared by `measureEvalAxes` (surfaced as
+ * `worldCardsRemaining`) and `forwardProgress` so both read one definition and
+ * cannot drift. Recurrence that returns a card to the deck raises this count.
+ */
+function countWorldCardsRemaining(state: GameState): number {
+  let count = state.worldDraw.length;
+  for (const act of state.acts) count += act.length;
+  for (const card of state.hand) if (card.kind === "world") count++;
+  return count;
+}
+
+/**
  * Whether an effect tree resolves to a given effect `kind`, recursing through
  * the only composite effects (Modal branches and Sequence steps). This is how
  * the escape signal is found without ever naming a card: a `SurviveWorld` leaf
@@ -162,81 +175,159 @@ function effectContainsKind(effect: CardEffect, kind: CardEffect["kind"]): boole
   return false;
 }
 
-/** Axis 1 — HP headroom. Death is `hp <= 0`. */
-function hpMargin(view: GameState, w: EvalWeights): number {
-  return saturate(view.hp, w.hpComfort);
+/**
+ * Every raw and normalized quantity {@link evaluate} needs, plus the extras
+ * telemetry wants (REQ-SCC "completeness agent performance stats" plan step
+ * 2). `evaluate` and any future posthoc telemetry both read these fields
+ * instead of recomputing the underlying formulas, so the two can never drift
+ * apart. Pure function of `GameState`: works identically whether the caller
+ * passes the honest determinized view or committed ground truth — it is the
+ * caller's choice of `state` that decides which one it measures, this module
+ * has no opinion. Nothing here reads card names or exposes anything not
+ * already derivable from `GameState`.
+ */
+export interface EvalAxes {
+  /** Axis 1 — current HP. Death is `hp <= 0`. */
+  hp: number;
+  /** Saturated margin on `hp` (0 at the brink, approaching 1 when comfortable). */
+  hpMargin: number;
+
+  /**
+   * Axis 2 — free hand slots for player cards predicted at the next refill,
+   * after world cards (which persist), net frozen player cards (frozen minus
+   * heat-thaw relief), and the refill's forced world draw take their slots.
+   */
+  predictedPlayerRoom: number;
+  /** Saturated margin on `predictedPlayerRoom`. */
+  playerRoomMargin: number;
+  /**
+   * Axis 2 — player cards left to draw: the player draw pile, the player
+   * discard, and the unfrozen player cards in hand that recycle to discard.
+   */
+  playerSupply: number;
+  /** Saturated margin on `playerSupply`. */
+  playerSupplyMargin: number;
+  /**
+   * Combined player-card-availability margin: `min(playerRoomMargin,
+   * playerSupplyMargin)`. A turn start with zero player cards drawn is an
+   * instant "noPlayerCards" loss (reduce.ts); both room and supply must hold
+   * to avoid it, so the worse of the two governs.
+   */
+  playerAvailabilityMargin: number;
+
+  /**
+   * Axis 4 — total cards left across the player draw, player discard, world
+   * draw, and act piles. The "exhausted"/"worldLivelock" losses fire when all
+   * of these are empty.
+   */
+  runwayRemaining: number;
+  /** Saturated margin on `runwayRemaining`. */
+  runwayMargin: number;
+
+  /** Axis 6 — live per-turn energy budget. */
+  energy: number;
+  /** Saturated margin on `energy`. */
+  energyMargin: number;
+
+  /** Axis 5 — escape signal, in [0, 1]. See `escapeProximity` below. */
+  escapeProximity: number;
+
+  /**
+   * World cards remaining across `worldDraw`, the unshuffled `acts`, and the
+   * hand — `forwardProgress`'s raw input (its own transformed 0..1 value is
+   * not carried here; callers that want it can call `forwardProgress`
+   * directly). Recurrence that returns a card to the deck raises this count
+   * back up, same as it does for `forwardProgress`.
+   */
+  worldCardsRemaining: number;
 }
 
 /**
- * Axis 2 — player-card availability vs hand-flood pressure.
- *
- * A turn start with zero player cards drawn is an instant "noPlayerCards" loss
- * (reduce.ts). Two structural conditions feed it, and either at zero is fatal:
- *   - room: free hand slots for player cards at the next refill, after world
- *     cards (which persist), frozen player cards (which persist), and the
- *     refill's forced world draw take their slots.
- *   - supply: player cards left to draw — the player draw pile, the player
- *     discard, and the unfrozen player cards in hand that recycle to discard.
- *
- * Frozen pressure (axis 3) is folded in here, not given its own min-term:
- * frozen player cards occupy slots, less whatever the stored heat can thaw.
+ * Computes every axis in {@link EvalAxes} from `state` in one pass, so
+ * `evaluate`'s scoring and any posthoc telemetry share one definition of each
+ * quantity and cannot drift apart. See the per-field docs above for what each
+ * value means and which loss condition it tracks.
  */
-function playerAvailabilityMargin(view: GameState, w: EvalWeights): number {
-  const worldInHand = view.hand.filter((c) => c.kind === "world").length;
-  const frozenPlayer = view.hand.filter((c) => c.kind === "player" && (c.frozen ?? 0) > 0).length;
-  const unfrozenPlayerInHand = view.hand.filter(
+export function measureEvalAxes(state: GameState, w: EvalWeights): EvalAxes {
+  const hp = state.hp;
+  const hpMargin = saturate(hp, w.hpComfort);
+
+  // --- player-card availability (axis 2) vs hand-flood pressure ---
+  const worldInHand = state.hand.filter((c) => c.kind === "world").length;
+  const frozenPlayer = state.hand.filter(
+    (c) => c.kind === "player" && (c.frozen ?? 0) > 0,
+  ).length;
+  const unfrozenPlayerInHand = state.hand.filter(
     (c) => c.kind === "player" && (c.frozen ?? 0) <= 0,
   ).length;
 
   // Frozen relief: heat can thaw some frozen cards back into usable slots.
-  const netFrozen = Math.max(0, frozenPlayer - view.heat * w.heatThawEfficiency);
+  // Frozen pressure is folded into the player-availability axis rather than
+  // given its own min-term: frozen player cards occupy slots, less whatever
+  // the stored heat can thaw.
+  const netFrozen = Math.max(0, frozenPlayer - state.heat * w.heatThawEfficiency);
 
   // The refill forces a world draw (min 1 while world cards remain), pushing
   // more world cards into the hand and squeezing player-card room further.
   // Mirror refillHand (core/engine/draw.ts): the forced draw is capped by the
   // free hand room AND by the world cards that actually remain, so a nearly
   // exhausted world deck does not over-count occupied slots (and the
-  // worldRemaining clamp also collapses the draw to 0 when no world cards exist).
-  const worldRemaining =
-    view.worldDraw.length + view.acts.reduce((sum, act) => sum + act.length, 0);
-  const refillRoom = Math.max(0, effectiveHandSize(view) - worldInHand);
+  // worldRemainingForRefill clamp also collapses the draw to 0 when no world
+  // cards exist). This local count excludes hand contents (already tracked via
+  // worldInHand) and is distinct from `worldCardsRemaining` below, which does
+  // include the hand.
+  const worldRemainingForRefill =
+    state.worldDraw.length + state.acts.reduce((sum, act) => sum + act.length, 0);
+  const refillRoom = Math.max(0, effectiveHandSize(state) - worldInHand);
   const forcedWorldDraw = Math.min(
     Math.max(1, WORLD_CONSTS.startWorldCards - worldInHand),
     refillRoom,
-    worldRemaining,
+    worldRemainingForRefill,
   );
 
   const occupiedSlots = worldInHand + netFrozen + forcedWorldDraw;
-  const predictedPlayerRoom = effectiveHandSize(view) - occupiedSlots;
+  const predictedPlayerRoom = effectiveHandSize(state) - occupiedSlots;
 
   const playerSupply =
-    view.playerDraw.filter((c) => c.kind === "player").length +
-    view.playerDiscard.filter((c) => c.kind === "player").length +
+    state.playerDraw.filter((c) => c.kind === "player").length +
+    state.playerDiscard.filter((c) => c.kind === "player").length +
     unfrozenPlayerInHand;
 
-  const roomMargin = saturate(predictedPlayerRoom, w.playerRoomComfort);
-  const supplyMargin = saturate(playerSupply, w.playerSupplyComfort);
+  const playerRoomMargin = saturate(predictedPlayerRoom, w.playerRoomComfort);
+  const playerSupplyMargin = saturate(playerSupply, w.playerSupplyComfort);
   // Both must hold to draw a player card next turn, so the worse one governs.
-  return Math.min(roomMargin, supplyMargin);
-}
+  const playerAvailabilityMargin = Math.min(playerRoomMargin, playerSupplyMargin);
 
-/**
- * Axis 4 — deck/world-exhaustion proximity. The "exhausted"/"worldLivelock"
- * losses fire when the draw, discard, world, and act piles are all empty. The
- * margin tracks how much runway (total cards across those piles) is left.
- */
-function runwayMargin(view: GameState, w: EvalWeights): number {
-  const remaining =
-    view.playerDraw.length +
-    view.playerDiscard.length +
-    view.worldDraw.length +
-    view.acts.reduce((sum, act) => sum + act.length, 0);
-  return saturate(remaining, w.runwayComfort);
-}
+  // --- deck/world-exhaustion proximity (axis 4) ---
+  const runwayRemaining =
+    state.playerDraw.length +
+    state.playerDiscard.length +
+    state.worldDraw.length +
+    state.acts.reduce((sum, act) => sum + act.length, 0);
+  const runwayMargin = saturate(runwayRemaining, w.runwayComfort);
 
-/** Axis 6 — energy-aware. Reads the live per-turn play budget; never a constant. */
-function energyMargin(view: GameState, w: EvalWeights): number {
-  return saturate(view.energy, w.energyComfort);
+  // --- energy (axis 6) ---
+  const energy = state.energy;
+  const energyMargin = saturate(energy, w.energyComfort);
+
+  // --- world cards remaining: forwardProgress's raw input, hand included ---
+  const worldCardsRemaining = countWorldCardsRemaining(state);
+
+  return {
+    hp,
+    hpMargin,
+    predictedPlayerRoom,
+    playerRoomMargin,
+    playerSupply,
+    playerSupplyMargin,
+    playerAvailabilityMargin,
+    runwayRemaining,
+    runwayMargin,
+    energy,
+    energyMargin,
+    escapeProximity: escapeProximity(state),
+    worldCardsRemaining,
+  };
 }
 
 /**
@@ -309,10 +400,7 @@ const WORLD_CONSUME_SCALE = 8;
  * the world even before any `SurviveWorld` door is reachable.
  */
 function forwardProgress(view: GameState): number {
-  let worldRemaining = view.worldDraw.length;
-  for (const act of view.acts) worldRemaining += act.length;
-  for (const card of view.hand) if (card.kind === "world") worldRemaining++;
-
+  const worldRemaining = countWorldCardsRemaining(view);
   return WORLD_CONSUME_SCALE / (worldRemaining + WORLD_CONSUME_SCALE);
 }
 
@@ -325,13 +413,13 @@ export function evaluate(view: GameState, weights: EvalWeights): number {
   if (view.status === "won") return weights.wonScore;
   if (view.status === "lost") return 0;
 
-  const mHp = hpMargin(view, weights);
-  const mPlayer = playerAvailabilityMargin(view, weights);
-  const mRunway = runwayMargin(view, weights);
-  const mEnergy = energyMargin(view, weights);
+  // Single shared measurement: telemetry that later calls `measureEvalAxes`
+  // directly on committed state reads the exact same axis definitions used
+  // for scoring here, so the two can never drift apart.
+  const axes = measureEvalAxes(view, weights);
 
   // Worst death-floor axis dominates so the agent triages the nearest failure.
-  const worst = Math.min(mHp, mPlayer, mRunway);
+  const worst = Math.min(axes.hpMargin, axes.playerAvailabilityMargin, axes.runwayMargin);
 
   // Tie-break: a weighted AVERAGE of the axis margins, normalized by the axis
   // weight sum so it stays in [0, 1] and contributes at most `spreadWeight`. It
@@ -343,19 +431,21 @@ export function evaluate(view: GameState, weights: EvalWeights): number {
     weights.exhaustionAxisWeight +
     weights.energyAxisWeight;
   const weightedMargins =
-    weights.hpAxisWeight * mHp +
-    weights.playerAvailAxisWeight * mPlayer +
-    weights.exhaustionAxisWeight * mRunway +
-    weights.energyAxisWeight * mEnergy;
+    weights.hpAxisWeight * axes.hpMargin +
+    weights.playerAvailAxisWeight * axes.playerAvailabilityMargin +
+    weights.exhaustionAxisWeight * axes.runwayMargin +
+    weights.energyAxisWeight * axes.energyMargin;
   const spread = axisWeightSum > 0 ? weightedMargins / axisWeightSum : 0;
 
-  const escape = weights.escapeWeight * escapeProximity(view);
+  const escape = weights.escapeWeight * axes.escapeProximity;
 
   // Plateau-breaking gradient (REQ-SCC-7): a push toward advancing the world,
   // additive like escape and never folded into the survival min. DISABLED by
   // default (progressWeight 0) because verification showed it is net-harmful;
   // see the progressWeight default comment. The math stays wired so a future
-  // redesign can re-enable it with a single weight change.
+  // redesign can re-enable it with a single weight change. `forwardProgress`
+  // is intentionally not part of `EvalAxes` (only its raw input,
+  // `worldCardsRemaining`, is) since its transformed value is scoring-only.
   const progress = weights.progressWeight * forwardProgress(view);
 
   return weights.worstAxisWeight * worst + weights.spreadWeight * spread + escape + progress;

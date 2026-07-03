@@ -2,10 +2,11 @@ import { createWorld } from "../core/engine/world";
 import { reduce } from "../core/engine/reduce";
 import { nextFloat, rngFromSeed } from "../core/engine/rng";
 import type { CardCatalog, WorldData } from "../core/model/catalog";
-import type { RngState, WorldLostCause } from "../core/model/types";
+import type { Action, RngState, WorldLostCause } from "../core/model/types";
 import type { RunModifiers } from "../data/unlocks/types";
 import { checkIdAccounting } from "./accounting";
 import { determinize } from "./determinize";
+import { DEFAULT_EVAL_WEIGHTS, measureEvalAxes, type EvalWeights } from "./eval";
 import type { Policy } from "./policy";
 
 // ---------------------------------------------------------------------------
@@ -30,6 +31,33 @@ export interface PlayOutOptions {
   maxActions: number;
   /** Optional unlock-derived modifiers applied when constructing the run. */
   runModifiers?: RunModifiers;
+  /**
+   * Weights for the posthoc ground-truth pressure telemetry (see
+   * {@link GroundTruthPressure}). Defaults to `DEFAULT_EVAL_WEIGHTS` so
+   * existing callers (e.g. `run.ts`'s random-policy loop, which never scores
+   * with these weights) keep compiling and behave exactly as before —
+   * these weights only shape a diagnostic, never the agent's decision.
+   */
+  weights?: EvalWeights;
+}
+
+/** Per-`Action["type"]` counts, kept in sync with the `Action` union by construction. */
+export type ActionCounts = Record<Action["type"], number>;
+
+/**
+ * Per-run MINIMUM of posthoc ground-truth pressure axes (see `measureEvalAxes`
+ * in `./eval`), sampled from the REAL committed `state` — never the agent's
+ * determinized `view` — immediately before every decision and once more after
+ * the loop terminates. These are outcome diagnostics only: they must never be
+ * confused with what the honest agent perceived (that's always `view`), and
+ * they are never fed back into the agent's decision.
+ */
+export interface GroundTruthPressure {
+  minHp: number;
+  minPlayerSupply: number;
+  minPredictedPlayerRoom: number;
+  minRunwayRemaining: number;
+  minEnergy: number;
 }
 
 /**
@@ -54,6 +82,39 @@ export interface Outcome {
   /** True when the action cap was hit without reaching a terminal state. */
   capped: boolean;
   finalAgentRng: RngState;
+
+  /** Total actions taken (== the sum of `actionCounts`). */
+  totalActions: number;
+  /** Actions taken, broken out by `Action["type"]`. */
+  actionCounts: ActionCounts;
+
+  /**
+   * `EndTurn`s where the committed state still had energy left unspent.
+   * Raw count only: `positiveUnusedEndTurns <= actionCounts.EndTurn`. The
+   * report-aggregation phase divides by `EndTurn` counts to get a rate; that
+   * ratio is deliberately not computed here.
+   */
+  positiveUnusedEndTurns: number;
+  /**
+   * Sum of unused energy (the committed state's `energy` immediately before
+   * each `EndTurn` was applied) across every `EndTurn` in the run. Raw total
+   * only, same reasoning as `positiveUnusedEndTurns`.
+   */
+  totalUnusedEnergy: number;
+
+  /**
+   * Count of `EndTurn`s (excluding the very first, which only establishes the
+   * baseline) whose world-cards-remaining count did not decrease since the
+   * previous `EndTurn` — see `GroundTruthPressure`'s sibling, `EvalAxes.
+   * worldCardsRemaining`. An increase (e.g. recurrence) also counts as no
+   * progress. `actionCounts.EndTurn - 1` (when `EndTurn` count >= 2) is the
+   * comparable-turn denominator for a later no-progress RATE; no separate
+   * field is stored for it since it is fully derivable from `actionCounts`.
+   */
+  noProgressEndTurns: number;
+
+  /** See {@link GroundTruthPressure}. */
+  posthocPressure: GroundTruthPressure;
 }
 
 /**
@@ -84,8 +145,46 @@ export function playOut(
   let lossCause: WorldLostCause | undefined;
   let actAtLoss: number | undefined;
 
+  const weights = opts.weights ?? DEFAULT_EVAL_WEIGHTS;
+  const actionCounts: ActionCounts = { PlayCard: 0, DiscardHazard: 0, EndTurn: 0, ChooseBoon: 0 };
+  let positiveUnusedEndTurns = 0;
+  let totalUnusedEnergy = 0;
+  let noProgressEndTurns = 0;
+  // World-cards-remaining count as of the previous EndTurn's decision point;
+  // undefined until the first EndTurn happens, since it has nothing to
+  // compare against and is excluded from no-progress counting.
+  let worldCardsAtPreviousEndTurn: number | undefined;
+  let minHp = Infinity;
+  let minPlayerSupply = Infinity;
+  let minPredictedPlayerRoom = Infinity;
+  let minRunwayRemaining = Infinity;
+  let minEnergy = Infinity;
+
+  const sampleGroundTruthPressure = (axes: {
+    hp: number;
+    playerSupply: number;
+    predictedPlayerRoom: number;
+    runwayRemaining: number;
+    energy: number;
+  }): void => {
+    if (axes.hp < minHp) minHp = axes.hp;
+    if (axes.playerSupply < minPlayerSupply) minPlayerSupply = axes.playerSupply;
+    if (axes.predictedPlayerRoom < minPredictedPlayerRoom) {
+      minPredictedPlayerRoom = axes.predictedPlayerRoom;
+    }
+    if (axes.runwayRemaining < minRunwayRemaining) minRunwayRemaining = axes.runwayRemaining;
+    if (axes.energy < minEnergy) minEnergy = axes.energy;
+  };
+
   while (state.status === "playing" && actions < opts.maxActions) {
     checkIdAccounting(state);
+
+    // Posthoc ground-truth pressure sample: read from the REAL committed
+    // `state`, before the agent ever sees a (determinized) view of it. This is
+    // an outcome diagnostic only — it never feeds back into `view` or `policy`
+    // below, and must never be read as what the honest agent perceived.
+    const groundTruthAxes = measureEvalAxes(state, weights);
+    sampleGroundTruthPressure(groundTruthAxes);
 
     // Decide on a determinized, player-honest snapshot; apply to the REAL
     // state. determinize advances the threaded agent rng (its reshuffles), and
@@ -101,6 +200,29 @@ export function playOut(
     rng = rngAfterPolicy;
 
     const action = policy(view, policyRng);
+
+    if (action.type === "EndTurn") {
+      // Unused energy: `state.energy` is the committed, pre-`reduce` energy
+      // for the turn the agent is about to end, so it is exactly what went
+      // unspent this turn.
+      if (state.energy > 0) positiveUnusedEndTurns++;
+      totalUnusedEnergy += state.energy;
+
+      // No progress: the world-cards-remaining count (reusing `measureEvalAxes`
+      // rather than recounting) did not shrink since the previous EndTurn. An
+      // increase (e.g. recurrence) counts as no progress too; only a strict
+      // decrease counts as progress. The first EndTurn only sets the baseline.
+      if (
+        worldCardsAtPreviousEndTurn !== undefined &&
+        groundTruthAxes.worldCardsRemaining >= worldCardsAtPreviousEndTurn
+      ) {
+        noProgressEndTurns++;
+      }
+      worldCardsAtPreviousEndTurn = groundTruthAxes.worldCardsRemaining;
+    }
+
+    actionCounts[action.type]++;
+
     const result = reduce(catalog, state, action);
     state = result.state;
 
@@ -120,9 +242,15 @@ export function playOut(
 
   checkIdAccounting(state);
 
+  // Final posthoc ground-truth pressure sample, taken once more after the
+  // loop terminates (win, loss, or cap) — same reasoning as the in-loop
+  // sample above: real committed state, never the agent's view.
+  sampleGroundTruthPressure(measureEvalAxes(state, weights));
+
+  // A still-"playing" status at loop exit means the action cap was hit; "won"
+  // and "lost" carry through unchanged. (state.status is "playing" | "won" | "lost".)
   const capped = state.status === "playing";
-  const status: PlayOutStatus =
-    state.status === "won" ? "won" : state.status === "lost" ? "lost" : "capped";
+  const status: PlayOutStatus = state.status === "playing" ? "capped" : state.status;
 
   // Build optional fields conditionally: exactOptionalPropertyTypes forbids
   // assigning an explicit `undefined` to an optional property.
@@ -132,6 +260,18 @@ export function playOut(
     actReached,
     capped,
     finalAgentRng: rng,
+    totalActions: actions,
+    actionCounts,
+    positiveUnusedEndTurns,
+    totalUnusedEnergy,
+    noProgressEndTurns,
+    posthocPressure: {
+      minHp,
+      minPlayerSupply,
+      minPredictedPlayerRoom,
+      minRunwayRemaining,
+      minEnergy,
+    },
     ...(lossCause !== undefined ? { lossCause } : {}),
     ...(actAtLoss !== undefined ? { actAtLoss } : {}),
   };

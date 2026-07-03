@@ -2,17 +2,33 @@
  * Completeness runner: per-world survivability under the honest eval agent.
  *
  * For every registered world it builds the world (default starter, no unlocks),
- * runs N seeds under the eval-driven policy, and reports survival statistics:
- * win-rate, average turns survived, and the distribution of losses by cause and
- * by act. Worlds the agent essentially cannot survive (win-rate <= threshold)
- * are FLAGGED, with the dominant loss cause/act surfaced so the flag points at
- * the knob to turn.
+ * then for each of N seeds runs TWO fixed configurations back to back: a
+ * baseline play-out (default starter, no unlocks) and a recovery play-out (the
+ * same seed, with `RECOVERY_RUN_MODIFIERS` applied). This is a fixed paired
+ * cohort design (see the "Implementation amendment: fixed paired recovery
+ * cohort" section of the governing spec): every seed gets both configurations,
+ * in the same order, every time — there is no outcome-dependent branching.
+ * Baseline is the sole source of the completeness result and the `[FLAGGED]`
+ * determination (REQ-SCC-10); recovery is a diagnostic-only comparison that
+ * can never rescue or mask a baseline flag.
+ *
+ * Each world's `WorldAggregate` reports, per cohort: win-rate with a 95%
+ * Wilson interval, average turns survived, median/p90 turns by disposition, a
+ * progress funnel over acts, action/resource efficiency (medians and
+ * opportunity-normalized rates), median per-run minimum resource pressure
+ * (posthoc ground truth, never the agent's perceived view), and the
+ * distribution of losses by cause and by act. Worlds whose BASELINE win-rate
+ * is at or below `threshold` are FLAGGED, with the dominant loss cause/act and
+ * an epistemic caveat surfaced so the flag points at the knob to turn; recovery
+ * is diagnostic-only text and never carries a flag of its own.
  *
  * Honesty and reproducibility (REQ-SCC-16): the whole run is ONE continuous
- * agent rng stream. A single agentRng is seeded from the agent seed and threaded
- * forward across every seed AND every world via `Outcome.finalAgentRng`. The
- * report is pure, seed-derived text: NO timestamps, elapsed times, or other
- * system-derived values appear in the output.
+ * agent rng stream, now spanning `2 x N` play-outs per world instead of `N`. A
+ * single agentRng is seeded from the agent seed and threaded forward — baseline
+ * into recovery, recovery into the next seed's baseline, and onward across
+ * worlds — via `Outcome.finalAgentRng`. The report is pure, seed-derived text:
+ * NO timestamps, elapsed times, or other system-derived values appear in the
+ * output.
  *
  * Sample, not proof (REQ-SCC-15): a win-rate is a sample under one agent at one
  * skill level, not a proof of (un)solvability. A near-0% flag means "this agent
@@ -28,7 +44,14 @@ import { worldDataRegistry } from "../data/worlds/registry";
 import { buildRunModifiers, UNLOCK_CATALOG } from "../data/unlocks/catalog";
 import { DEFAULT_EVAL_WEIGHTS, type EvalWeights } from "./eval";
 import { evalPolicyFactory } from "./evalPolicy";
-import { playOut } from "./playOut";
+import {
+  playOut,
+  type ActionCounts,
+  type GroundTruthPressure,
+  type Outcome,
+  type PlayOutStatus,
+} from "./playOut";
+import { median, p90, wilsonInterval } from "./statistics";
 
 const MAX_ACTIONS_PER_WORLD = 1000;
 const RECOVERY_UNLOCK_IDS = [
@@ -62,18 +85,28 @@ export interface CompletenessParams {
   weightsOverridden: boolean;
 }
 
-function resolveInt(argv: string | undefined, env: string | undefined, fallback: number): number {
+/**
+ * Resolve a numeric parameter from `argv`, then `env`, then `fallback`, parsing
+ * with `parse` (int vs float). An absent source or a NaN parse both fall back.
+ */
+function resolveNumber(
+  argv: string | undefined,
+  env: string | undefined,
+  fallback: number,
+  parse: (raw: string) => number,
+): number {
   const raw = argv ?? env;
   if (raw === undefined) return fallback;
-  const parsed = parseInt(raw, 10);
+  const parsed = parse(raw);
   return Number.isNaN(parsed) ? fallback : parsed;
 }
 
+function resolveInt(argv: string | undefined, env: string | undefined, fallback: number): number {
+  return resolveNumber(argv, env, fallback, (raw) => parseInt(raw, 10));
+}
+
 function resolveFloat(argv: string | undefined, env: string | undefined, fallback: number): number {
-  const raw = argv ?? env;
-  if (raw === undefined) return fallback;
-  const parsed = parseFloat(raw);
-  return Number.isNaN(parsed) ? fallback : parsed;
+  return resolveNumber(argv, env, fallback, parseFloat);
 }
 
 export function parseParams(): CompletenessParams {
@@ -105,35 +138,72 @@ export function parseParams(): CompletenessParams {
 // additionally increments exactly one cause bucket and one act bucket. This is
 // what guarantees the attribution invariants: wins + losses + capped == games,
 // sum(lossByCause) == losses, and sum(lossByAct) == losses.
+//
+// A `CohortAggregate` holds one configuration's (baseline or recovery) tallies
+// AND the raw per-run observations (`runs`) that later report-formatting code
+// (step 5) needs for percentiles, Wilson intervals, and the progress funnel.
+// `reachedActCounts`/`reachedActWinCounts` are PER-ACT counts of games/wins
+// whose `actReached` equals that exact act index — not yet the cumulative
+// ">= a" funnel. Building the monotonic ">= a" sums from these is report-time
+// (step 5) work; aggregation only has to make the per-act counts exhaustive.
 // ---------------------------------------------------------------------------
 
 const UNKNOWN_ACT = -1; // bucket key for a loss with no recorded act index
 
-export interface WorldAggregate {
-  id: string;
-  totalActs: number;
+/** One play-out's disposition and raw telemetry, as needed by report formatting. */
+export interface PerRunObservation {
+  disposition: PlayOutStatus;
+  turns: number;
+  actReached: number;
+  totalActions: number;
+  actionCounts: ActionCounts;
+  positiveUnusedEndTurns: number;
+  totalUnusedEnergy: number;
+  noProgressEndTurns: number;
+  posthocPressure: GroundTruthPressure;
+  lossCause?: WorldLostCause;
+  actAtLoss?: number;
+}
+
+/** Tallies and raw per-run observations for one fixed configuration (baseline or recovery). */
+export interface CohortAggregate {
   games: number;
   wins: number;
   losses: number;
   capped: number;
-  recoveryRuns: number;
+  /** Sum of `turns` across ALL runs, incl. capped (REQ-SCC-11's avg-turns metric). */
   totalTurns: number;
+  /** One entry per game, in seed order: the raw data step 5 percentiles/rates over. */
+  runs: PerRunObservation[];
   lossByCause: Map<string, number>;
   lossByAct: Map<number, number>;
+  /** Count of games whose `actReached` equals this act index (0-based, per-act, not cumulative). */
+  reachedActCounts: Map<number, number>;
+  /** Count of WINS whose `actReached` equals this act index (0-based, per-act, not cumulative). */
+  reachedActWinCounts: Map<number, number>;
 }
 
-function newAggregate(id: string, totalActs: number): WorldAggregate {
+export interface WorldAggregate {
+  id: string;
+  totalActs: number;
+  /** Default starter, no unlocks. Sole source of the completeness result and `[FLAGGED]`. */
+  baseline: CohortAggregate;
+  /** Same seeds, `RECOVERY_RUN_MODIFIERS` applied. Diagnostic only; never flags. */
+  recovery: CohortAggregate;
+}
+
+function newCohortAggregate(): CohortAggregate {
   return {
-    id,
-    totalActs,
     games: 0,
     wins: 0,
     losses: 0,
     capped: 0,
-    recoveryRuns: 0,
     totalTurns: 0,
+    runs: [],
     lossByCause: new Map(),
     lossByAct: new Map(),
+    reachedActCounts: new Map(),
+    reachedActWinCounts: new Map(),
   };
 }
 
@@ -144,6 +214,45 @@ function bump<K>(map: Map<K, number>, key: K): void {
 /** A loss with no cause attached buckets as "unknown" so totals still reconcile. */
 function causeKey(cause: WorldLostCause | undefined): string {
   return cause ?? "unknown";
+}
+
+/**
+ * Fold one play-out's `Outcome` into its cohort: append the raw observation,
+ * bump the disposition bucket, and (for losses) bump the cause/act maps. Every
+ * game bumps `reachedActCounts` exactly once, and every win also bumps
+ * `reachedActWinCounts` exactly once, which is what keeps the "act reach is
+ * monotonic" and "every win is captured" invariants true by construction.
+ */
+function recordOutcome(cohort: CohortAggregate, outcome: Outcome): void {
+  cohort.games++;
+  cohort.totalTurns += outcome.turns;
+
+  cohort.runs.push({
+    disposition: outcome.status,
+    turns: outcome.turns,
+    actReached: outcome.actReached,
+    totalActions: outcome.totalActions,
+    actionCounts: outcome.actionCounts,
+    positiveUnusedEndTurns: outcome.positiveUnusedEndTurns,
+    totalUnusedEnergy: outcome.totalUnusedEnergy,
+    noProgressEndTurns: outcome.noProgressEndTurns,
+    posthocPressure: outcome.posthocPressure,
+    ...(outcome.lossCause !== undefined ? { lossCause: outcome.lossCause } : {}),
+    ...(outcome.actAtLoss !== undefined ? { actAtLoss: outcome.actAtLoss } : {}),
+  });
+
+  bump(cohort.reachedActCounts, outcome.actReached);
+
+  if (outcome.status === "won") {
+    cohort.wins++;
+    bump(cohort.reachedActWinCounts, outcome.actReached);
+  } else if (outcome.status === "lost") {
+    cohort.losses++;
+    bump(cohort.lossByCause, causeKey(outcome.lossCause));
+    bump(cohort.lossByAct, outcome.actAtLoss ?? UNKNOWN_ACT);
+  } else {
+    cohort.capped++;
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -180,8 +289,11 @@ export function buildAllWorlds(): BuiltWorld[] {
 
 /**
  * Run all worlds and return their aggregates, threading one continuous agent rng
- * stream across every seed and every world. The rng entering each play-out is
- * the rng leaving the previous one (REQ-SCC-16).
+ * stream across every seed AND every play-out (baseline, then recovery, for
+ * every seed) AND every world. The rng entering each play-out is the rng
+ * leaving the previous one (REQ-SCC-16). This is a fixed paired cohort: both
+ * configurations always run, in the same order, for every seed — there is no
+ * outcome-dependent branching (see the spec amendment).
  */
 export function runCompleteness(
   params: CompletenessParams,
@@ -192,31 +304,32 @@ export function runCompleteness(
 
   for (const world of worlds) {
     const policy = evalPolicyFactory(world.catalog, params.weights, params.K);
-    const agg = newAggregate(world.id, world.worldData.deckComposition.acts.length);
+    const baseline = newCohortAggregate();
+    const recovery = newCohortAggregate();
 
     for (let seed = 1; seed <= params.N; seed++) {
-      const useRecoveryUnlocks = agg.losses + agg.capped >= params.N / 2;
-      if (useRecoveryUnlocks) agg.recoveryRuns++;
-      const outcome = playOut(world.catalog, world.worldData, seed, policy, agentRng, {
+      const baselineOutcome = playOut(world.catalog, world.worldData, seed, policy, agentRng, {
         maxActions: MAX_ACTIONS_PER_WORLD,
-        ...(useRecoveryUnlocks ? { runModifiers: RECOVERY_RUN_MODIFIERS } : {}),
+        weights: params.weights,
       });
-      agentRng = outcome.finalAgentRng;
+      agentRng = baselineOutcome.finalAgentRng;
+      recordOutcome(baseline, baselineOutcome);
 
-      agg.games++;
-      agg.totalTurns += outcome.turns;
-      if (outcome.status === "won") {
-        agg.wins++;
-      } else if (outcome.status === "lost") {
-        agg.losses++;
-        bump(agg.lossByCause, causeKey(outcome.lossCause));
-        bump(agg.lossByAct, outcome.actAtLoss ?? UNKNOWN_ACT);
-      } else {
-        agg.capped++;
-      }
+      const recoveryOutcome = playOut(world.catalog, world.worldData, seed, policy, agentRng, {
+        maxActions: MAX_ACTIONS_PER_WORLD,
+        runModifiers: RECOVERY_RUN_MODIFIERS,
+        weights: params.weights,
+      });
+      agentRng = recoveryOutcome.finalAgentRng;
+      recordOutcome(recovery, recoveryOutcome);
     }
 
-    aggregates.push(agg);
+    aggregates.push({
+      id: world.id,
+      totalActs: world.worldData.deckComposition.acts.length,
+      baseline,
+      recovery,
+    });
   }
 
   return aggregates;
@@ -224,11 +337,32 @@ export function runCompleteness(
 
 // ---------------------------------------------------------------------------
 // Report formatting (seed-derived text only)
+//
+// Each world block reports the baseline cohort, then the recovery cohort, in
+// that fixed order (see the plan's "Report shape" section). Both cohorts get
+// the same disposition/funnel/efficiency/pressure/loss-attribution sections;
+// only the recovery cohort adds the descriptive win-rate-difference line, and
+// only the BASELINE cohort can carry `[FLAGGED]`, the dominant cause/act, and
+// the epistemic caveat — recovery is diagnostic-only and must never rescue or
+// mask a baseline flag (REQ-SCC-10, preserved unchanged: the flag still
+// compares the raw point estimate `wins/games <= threshold`; the Wilson
+// interval is a DISPLAY-ONLY uncertainty band beside it).
 // ---------------------------------------------------------------------------
 
 function pct(numerator: number, denominator: number): string {
   if (denominator === 0) return "0.0%";
   return `${((numerator / denominator) * 100).toFixed(1)}%`;
+}
+
+/** Like `pct`, but a zero denominator is an empty bucket, not a real 0%. */
+function pctOrNone(numerator: number, denominator: number): string {
+  if (denominator === 0) return "(none)";
+  return pct(numerator, denominator);
+}
+
+/** Renders a possibly-absent statistic (e.g. median of an empty bucket). */
+function fmtOrNone(value: number | undefined, digits = 1): string {
+  return value === undefined ? "(none)" : value.toFixed(digits);
 }
 
 function actLabel(actIndex: number, totalActs: number): string {
@@ -253,6 +387,16 @@ function formatActMap(map: Map<number, number>, totalActs: number): string {
     .join(", ");
 }
 
+/**
+ * Point-estimate win-rate for the `[FLAGGED]` threshold check (REQ-SCC-10),
+ * `0` when the cohort has no games. The per-world flag and the summary count
+ * both go through this so their FLAGGED determination cannot drift apart. This
+ * is the raw point estimate; the Wilson interval is a display-only band beside it.
+ */
+function winRateOf(cohort: CohortAggregate): number {
+  return cohort.games > 0 ? cohort.wins / cohort.games : 0;
+}
+
 /** The dominant (highest-count) entry of a map, or undefined when empty. */
 function dominant<K>(map: Map<K, number>): [K, number] | undefined {
   let best: [K, number] | undefined;
@@ -268,38 +412,239 @@ const CAVEAT_LINES = [
   '    survive it", to be confirmed by a future clairvoyant check.',
 ];
 
-function formatWorldBlock(agg: WorldAggregate, threshold: number): string {
-  const lines: string[] = [];
-  const winRate = agg.games > 0 ? agg.wins / agg.games : 0;
-  lines.push(`World: ${agg.id}  (${agg.totalActs} acts)`);
-  lines.push(`  Games:   ${agg.games}`);
-  lines.push(`  Wins:    ${agg.wins}  (${pct(agg.wins, agg.games)})`);
-  lines.push(`  Losses:  ${agg.losses}`);
-  lines.push(`  Capped:  ${agg.capped}`);
-  lines.push(`  Recovery runs: ${agg.recoveryRuns}`);
-  lines.push(
-    `  Avg turns survived: ${(agg.games > 0 ? agg.totalTurns / agg.games : 0).toFixed(1)}`,
-  );
-  lines.push(`  Loss by cause: ${formatCauseMap(agg.lossByCause)}`);
-  lines.push(`  Loss by act:   ${formatActMap(agg.lossByAct, agg.totalActs)}`);
+/** Deterministic display order for `ActionCounts`, independent of object key order. */
+const ACTION_KIND_ORDER: (keyof ActionCounts)[] = [
+  "PlayCard",
+  "DiscardHazard",
+  "EndTurn",
+  "ChooseBoon",
+];
 
-  if (winRate <= threshold) {
+/** Deterministic display order and labels for `GroundTruthPressure`'s five axes. */
+const PRESSURE_AXES: { key: keyof GroundTruthPressure; label: string }[] = [
+  { key: "minHp", label: "HP" },
+  { key: "minPlayerSupply", label: "player supply" },
+  { key: "minPredictedPlayerRoom", label: "predicted refill room" },
+  { key: "minRunwayRemaining", label: "runway" },
+  { key: "minEnergy", label: "energy" },
+];
+
+/** `runs` filtered to one disposition, projected to `turns` (bullet 1). */
+function turnsFor(runs: PerRunObservation[], disposition: PlayOutStatus): number[] {
+  return runs.filter((r) => r.disposition === disposition).map((r) => r.turns);
+}
+
+/**
+ * Bullet 1 (and the shared half of bullet 2): games, wins with a 95% Wilson
+ * interval beside the point estimate, losses, capped, average turns survived
+ * across every disposition (REQ-SCC-11's existing metric, unchanged), and
+ * median/p90 turns split by win/loss disposition. Capped runs are excluded
+ * from the win/loss turn split — there is no "capped" bucket in that split, by
+ * the plan's own wording — and an empty bucket (e.g. zero losses) renders
+ * `(none)` rather than a fabricated number.
+ */
+function formatDistributionLines(cohort: CohortAggregate): string[] {
+  const wilson = wilsonInterval(cohort.wins, cohort.games);
+  const wilsonText =
+    wilson === undefined
+      ? "(none)"
+      : `[${(wilson.lower * 100).toFixed(1)}%, ${(wilson.upper * 100).toFixed(1)}%]`;
+  const wonTurns = turnsFor(cohort.runs, "won");
+  const lostTurns = turnsFor(cohort.runs, "lost");
+  const avgTurns = cohort.games > 0 ? cohort.totalTurns / cohort.games : undefined;
+
+  return [
+    `  Games:   ${cohort.games}`,
+    `  Wins:    ${cohort.wins}  (${pctOrNone(cohort.wins, cohort.games)})  95% Wilson: ${wilsonText}`,
+    `  Losses:  ${cohort.losses}`,
+    `  Capped:  ${cohort.capped}`,
+    `  Avg turns survived (all dispositions): ${fmtOrNone(avgTurns)}`,
+    `  Turns survived (won):  median=${fmtOrNone(median(wonTurns))} p90=${fmtOrNone(p90(wonTurns))}`,
+    `  Turns survived (lost): median=${fmtOrNone(median(lostTurns))} p90=${fmtOrNone(p90(lostTurns))}`,
+  ];
+}
+
+/**
+ * Bullet 2's other half: the recovery-minus-baseline win-rate difference, in
+ * percentage points. Explicitly labeled descriptive, not causal — only the
+ * world seed is paired between cohorts; the continuous agent rng stream is
+ * not. Renders `(none)` rather than `NaN` when either cohort has zero games.
+ */
+function formatWinRateDiffLine(baseline: CohortAggregate, recovery: CohortAggregate): string {
+  if (baseline.games === 0 || recovery.games === 0) {
+    return "  Win-rate diff vs baseline (descriptive, not causal): (none)";
+  }
+  const diffPct = (recovery.wins / recovery.games - baseline.wins / baseline.games) * 100;
+  const sign = diffPct >= 0 ? "+" : "";
+  return `  Win-rate diff vs baseline (descriptive, not causal): ${sign}${diffPct.toFixed(1)} pp`;
+}
+
+/** Sum of `map`'s values at keys `>= act` — the monotonic ">= a" funnel sum. */
+function reachedAtOrAbove(map: Map<number, number>, act: number): number {
+  let total = 0;
+  for (const [key, count] of map.entries()) {
+    if (key >= act) total += count;
+  }
+  return total;
+}
+
+/**
+ * Bullet 3: for each act (0-based internally, 1-based to the reader via
+ * `actLabel`), the count and percentage of ALL games reaching that act or
+ * later (wins, losses, and caps all participate in the reach denominator —
+ * that is why this sums `reachedActCounts`, not just `reachedActWinCounts`),
+ * plus the conditional conversion `wins that reached >= act / games that
+ * reached >= act`. An unreached act renders `(none)` conversion.
+ */
+function formatFunnelLines(cohort: CohortAggregate, totalActs: number): string[] {
+  const lines = ["  Progress funnel:"];
+  for (let act = 0; act < totalActs; act++) {
+    const reached = reachedAtOrAbove(cohort.reachedActCounts, act);
+    const reachedWins = reachedAtOrAbove(cohort.reachedActWinCounts, act);
+    const conversion = reached === 0 ? "(none)" : pct(reachedWins, reached);
     lines.push(
-      `  [FLAGGED] win-rate ${pct(agg.wins, agg.games)} <= ${(threshold * 100).toFixed(1)}%`,
+      `    ${actLabel(act, totalActs)}: reached=${reached} (${pctOrNone(reached, cohort.games)})  win|reached=${conversion}`,
     );
-    const domCause = dominant(agg.lossByCause);
-    const domAct = dominant(agg.lossByAct);
-    if (domCause !== undefined) {
-      lines.push(`    Dominant cause: ${domCause[0]} (${domCause[1]}/${agg.losses} losses)`);
-    }
-    if (domAct !== undefined) {
-      lines.push(
-        `    Dominant act:   ${actLabel(domAct[0], agg.totalActs)} (${domAct[1]}/${agg.losses} losses)`,
-      );
-    }
-    lines.push(...CAVEAT_LINES);
+  }
+  return lines;
+}
+
+/**
+ * Bullet 4: efficiency and action-shape diagnostics. Medians are nearest-rank
+ * over per-run derived values; the no-progress and positive-unused-energy
+ * rates are cohort-level AGGREGATE ratios (sum over all runs, then divide),
+ * not medians of per-run ratios — see the plan's exact wording for why these
+ * two are aggregate rather than per-run-then-median. Every zero-opportunity
+ * denominator (no run with a completed turn, no comparable EndTurn) renders
+ * `(none)`.
+ */
+function formatEfficiencyLines(cohort: CohortAggregate): string[] {
+  const totalActionsAll = cohort.runs.map((r) => r.totalActions);
+  const runsWithEndTurn = cohort.runs.filter((r) => r.actionCounts.EndTurn > 0);
+  const actionsPerTurn = runsWithEndTurn.map((r) => r.totalActions / r.actionCounts.EndTurn);
+  const unusedEnergyPerTurn = runsWithEndTurn.map(
+    (r) => r.totalUnusedEnergy / r.actionCounts.EndTurn,
+  );
+
+  let noProgressSum = 0;
+  let comparableEndTurnsSum = 0;
+  let positiveUnusedSum = 0;
+  let endTurnsSum = 0;
+  const actionKindTotals: ActionCounts = {
+    PlayCard: 0,
+    DiscardHazard: 0,
+    EndTurn: 0,
+    ChooseBoon: 0,
+  };
+
+  for (const run of cohort.runs) {
+    noProgressSum += run.noProgressEndTurns;
+    comparableEndTurnsSum += Math.max(0, run.actionCounts.EndTurn - 1);
+    positiveUnusedSum += run.positiveUnusedEndTurns;
+    endTurnsSum += run.actionCounts.EndTurn;
+    for (const kind of ACTION_KIND_ORDER) actionKindTotals[kind] += run.actionCounts[kind];
   }
 
+  const actionKindText = ACTION_KIND_ORDER.map((kind) => `${kind}=${actionKindTotals[kind]}`).join(
+    ", ",
+  );
+
+  return [
+    "  Efficiency:",
+    `    Median total actions: ${fmtOrNone(median(totalActionsAll))}`,
+    `    Median actions/completed turn: ${fmtOrNone(median(actionsPerTurn))}`,
+    `    No-progress rate (per comparable EndTurn): ${pctOrNone(noProgressSum, comparableEndTurnsSum)}`,
+    `    Positive-unused-energy EndTurn rate: ${pctOrNone(positiveUnusedSum, endTurnsSum)}`,
+    `    Median unused energy/EndTurn: ${fmtOrNone(median(unusedEnergyPerTurn))}`,
+    `    Action-kind counts: ${actionKindText}`,
+  ];
+}
+
+/**
+ * Bullet 5: median per-run minimum of each posthoc ground-truth pressure
+ * axis, across ALL runs regardless of disposition. These are outcome
+ * diagnostics sampled from committed state (see `GroundTruthPressure`), never
+ * a claim about what the honest agent perceived.
+ */
+function formatPressureLines(cohort: CohortAggregate): string[] {
+  const lines = ["  Pressure (median per-run minimum, posthoc ground truth):"];
+  for (const axis of PRESSURE_AXES) {
+    const values = cohort.runs.map((r) => r.posthocPressure[axis.key]);
+    lines.push(`    ${axis.label}: ${fmtOrNone(median(values))}`);
+  }
+  return lines;
+}
+
+interface CohortBlockOptions {
+  /** Only the baseline cohort can carry `[FLAGGED]`/dominant/caveat. */
+  isBaseline: boolean;
+  threshold: number;
+  /** Present on the recovery cohort only, to render the win-rate-diff line. */
+  baselineForDiff?: CohortAggregate;
+}
+
+/**
+ * Formats one cohort's full section (bullets 1/2/3/4/5/6, as they apply) in
+ * the plan's fixed order: distribution, funnel, efficiency, pressure, then
+ * loss attribution. `[FLAGGED]`/dominant cause+act/caveat are gated on
+ * `isBaseline` — recovery never gets them, per the spec amendment.
+ */
+function formatCohortBlock(
+  label: string,
+  cohort: CohortAggregate,
+  totalActs: number,
+  opts: CohortBlockOptions,
+): string[] {
+  const lines: string[] = [`  -- ${label} --`];
+  lines.push(...formatDistributionLines(cohort));
+  if (opts.baselineForDiff !== undefined) {
+    lines.push(formatWinRateDiffLine(opts.baselineForDiff, cohort));
+  }
+  lines.push(...formatFunnelLines(cohort, totalActs));
+  lines.push(...formatEfficiencyLines(cohort));
+  lines.push(...formatPressureLines(cohort));
+  lines.push(`  Loss by cause: ${formatCauseMap(cohort.lossByCause)}`);
+  lines.push(`  Loss by act:   ${formatActMap(cohort.lossByAct, totalActs)}`);
+
+  if (opts.isBaseline) {
+    if (winRateOf(cohort) <= opts.threshold) {
+      lines.push(
+        `  [FLAGGED] win-rate ${pct(cohort.wins, cohort.games)} <= ${(opts.threshold * 100).toFixed(1)}%`,
+      );
+      const domCause = dominant(cohort.lossByCause);
+      const domAct = dominant(cohort.lossByAct);
+      if (domCause !== undefined) {
+        lines.push(`    Dominant cause: ${domCause[0]} (${domCause[1]}/${cohort.losses} losses)`);
+      }
+      if (domAct !== undefined) {
+        lines.push(
+          `    Dominant act:   ${actLabel(domAct[0], totalActs)} (${domAct[1]}/${cohort.losses} losses)`,
+        );
+      }
+      lines.push(...CAVEAT_LINES);
+    }
+  }
+
+  return lines;
+}
+
+function formatWorldBlock(agg: WorldAggregate, threshold: number): string {
+  const lines: string[] = [`World: ${agg.id}  (${agg.totalActs} acts)`, ""];
+  lines.push(
+    ...formatCohortBlock("Baseline (default starter, no unlocks)", agg.baseline, agg.totalActs, {
+      isBaseline: true,
+      threshold,
+    }),
+  );
+  lines.push("");
+  lines.push(
+    ...formatCohortBlock(
+      `Recovery (unlocks: ${RECOVERY_UNLOCK_IDS.join(", ")})`,
+      agg.recovery,
+      agg.totalActs,
+      { isBaseline: false, threshold, baselineForDiff: agg.baseline },
+    ),
+  );
   return lines.join("\n");
 }
 
@@ -310,14 +655,16 @@ export function formatReport(params: CompletenessParams, aggregates: WorldAggreg
     `  N=${params.N}  K=${params.K}  agentSeed=${params.agentSeed}  threshold=${(params.threshold * 100).toFixed(1)}%`,
   );
   blocks.push(`  Eval weights: ${params.weightsOverridden ? "custom (SIM_WEIGHTS)" : "default"}`);
+  blocks.push(
+    `  Play-outs per world: ${2 * params.N} (2 x N: one baseline + one recovery play-out per seed)`,
+  );
+  blocks.push(`  Recovery unlock configuration: ${RECOVERY_UNLOCK_IDS.join(", ")}`);
   blocks.push("");
   for (const agg of aggregates) {
     blocks.push(formatWorldBlock(agg, params.threshold));
     blocks.push("");
   }
-  const flagged = aggregates.filter(
-    (a) => (a.games > 0 ? a.wins / a.games : 0) <= params.threshold,
-  );
+  const flagged = aggregates.filter((a) => winRateOf(a.baseline) <= params.threshold);
   blocks.push(`Flagged worlds: ${flagged.length}/${aggregates.length}`);
   return blocks.join("\n");
 }

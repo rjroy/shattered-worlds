@@ -1,7 +1,7 @@
 ---
 title: "Implementation plan: completeness agent performance stats"
 date: 2026-07-01
-status: draft
+status: executed
 tags: [plan, sim, completeness, agent, telemetry, statistics]
 modules: [sim]
 related: [.lore/work/specs/sim-completeness-checker.md, .lore/work/brainstorm/sim-completeness-checker.md]
@@ -32,7 +32,7 @@ This extends the implemented [sim completeness checker](../specs/sim-completenes
 
 Each world block will contain:
 
-1. A baseline cohort: games, wins with 95% Wilson interval, losses, caps, median/p90 win turns, and median/p90 loss turns.
+1. A baseline cohort: games, wins with 95% Wilson interval, losses, caps, average turns survived across all runs including capped games (retains REQ-SCC-11's existing metric), and median/p90 turns split by win/loss disposition.
 2. A recovery cohort with the same fields, plus the descriptive win-rate difference.
 3. A progress funnel per cohort: number and percentage of all games reaching each act, plus conditional conversion `wins that reached act / all games that reached act`. Wins, losses, and caps all participate in reach denominators; an unreached act renders `(none)` conversion.
 4. Efficiency per cohort: median total actions, median actions per completed turn, no-progress rate per comparable `EndTurn`, positive-unused-energy `EndTurn` rate, median unused energy per `EndTurn`, and action-kind counts. Zero-opportunity rates render `(none)`.
@@ -48,10 +48,11 @@ The baseline cohort is the completeness result used by `Flagged worlds`. Recover
 **File:** `.lore/work/specs/sim-completeness-checker.md`
 
 - Add an implementation amendment documenting the fixed paired recovery cohort, why it replaces the statistically confounded adaptive trigger, and that baseline/no-unlock remains the sole REQ-SCC-10 completeness result and flag source.
+- Amend the spec's **Scope** section, which currently lists "sweeps across starter decks and Destiny unlocks/run modifiers" as out of scope for future specs. State explicitly that this plan's fixed recovery cohort is a bounded exception: one specific, named unlock configuration run as a permanent diagnostic comparison against the baseline, not the general unlock-sweep excluded by Scope. The base-difficulty-floor measurement (default starter, no unlocks) remains the sole completeness result; the exception does not reopen sweeps across starter decks or arbitrary unlock combinations.
 - Document the `2 × N` default play-out contract and the runtime consequence under REQ-SCC-18. Recovery remains a diagnostic comparison, not an agent ladder, general unlock sweep, CI gate, or proof of causal uplift.
 - Link this plan from the spec frontmatter.
 
-**Validation gate:** the amended spec and plan use the same baseline/recovery, RNG-stream, flagging, and runtime semantics before production code changes begin.
+**Validation gate:** the amended spec and plan use the same baseline/recovery, RNG-stream, flagging, and runtime semantics before production code changes begin, and the Scope section no longer contradicts the recovery cohort this plan adds.
 
 ### 2. Extract structured pressure measurements from the eval model
 
@@ -96,6 +97,7 @@ The baseline cohort is the completeness result used by `Flagged worlds`. Recover
 
 - Implement nearest-rank median/p90 helpers with documented empty and singleton behavior.
 - Implement a pure 95% Wilson interval helper for `n > 0` and clamp endpoints to `[0, 1]`; `n === 0` renders `(none)` rather than a numeric interval.
+- Compute average turns survived across all runs (wins, losses, and caps) per cohort, retaining REQ-SCC-11's existing metric alongside the new win/loss percentiles.
 - Format cohort disposition/distribution, progress funnel, efficiency, pressure, and loss-attribution sections in stable cohort/action/act order.
 - Compute the recovery-minus-baseline win-rate difference in percentage points and label it descriptive.
 - Derive opportunity-normalized efficiency rates from raw counters: no-progress/comparable-end-turns, positive-unused/end-turns, and unused-energy/end-turn samples. Define zero-denominator output as `(none)`.
@@ -119,8 +121,8 @@ The baseline cohort is the completeness result used by `Flagged worlds`. Recover
 
 ### 7. Validate runtime, boundaries, and the full project
 
-- Run the focused sim tests, then `rtk npm test`, `rtk npm run typecheck`, `rtk npm run lint`, and `rtk npm run build` (or the repository's equivalent Bun scripts through RTK).
-- Run `rtk npm run sim:complete` with reduced parameters as a report-shape smoke test.
+- Run the focused sim tests, then `bun run test`, `bun run typecheck`, `bun run lint`, and `bun run build`.
+- Run `bun run sim:complete` with reduced parameters as a report-shape smoke test.
 - Measure the default `N=100`, `K=5` run outside report output and compare it with REQ-SCC-18's approximate 60-second target. Timing is validation evidence only and must never enter the deterministic report.
 - Treat exceeding the local-iteration target as a review blocker. A cohort selector may be planned separately, but this implementation must not invent an unreviewed CLI/env API or restore adaptive cohort selection.
 - Review the diff for sim-only scope, no timestamps/system-derived report data, no card-name steering, no changes to agent RNG consumption within either play-out, and no accidental clairvoyant state access.

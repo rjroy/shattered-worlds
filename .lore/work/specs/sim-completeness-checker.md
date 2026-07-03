@@ -4,7 +4,7 @@ date: 2026-06-27
 status: implemented
 tags: [sim, completeness, agent, evaluation-function, determinize, survival-horror, balance]
 modules: [sim, core, data]
-related: [.lore/work/brainstorm/sim-completeness-checker.md, .lore/work/plans/sim-completeness-checker.md, .lore/work/notes/sim-completeness-checker.md, .lore/work/plans/observability-boundary.md, .lore/work/design/observability-boundary.md]
+related: [.lore/work/brainstorm/sim-completeness-checker.md, .lore/work/plans/sim-completeness-checker.md, .lore/work/notes/sim-completeness-checker.md, .lore/work/plans/observability-boundary.md, .lore/work/design/observability-boundary.md, .lore/work/plans/completeness-agent-performance-stats.md]
 req-prefix: SCC
 ---
 
@@ -35,6 +35,13 @@ completeness **report**, run against all registered worlds.
   layer on later.
 - Sweeps across **starter decks** and **Destiny unlocks/run modifiers**. This
   spec measures the base-difficulty floor: the default starter and no unlocks.
+  **Bounded exception (implementation amendment below):** the
+  `completeness-agent-performance-stats` plan adds one fixed, permanent
+  **recovery cohort** — a single named unlock configuration run alongside
+  baseline as a diagnostic comparison. This is not a reopening of the
+  unlock-sweep exclusion: it is one specific configuration, not a sweep across
+  starter decks or arbitrary unlock combinations, and it never produces a
+  second completeness result (see amendment).
 - **Full-run reachability** (chaining worlds). The unit here is one world.
 
 ## Background: how win/loss actually work in core
@@ -149,7 +156,8 @@ is not mistaken for a code bug.
 ### Per-world completeness report
 
 #### REQ-SCC-10 — Runs every registered world
-The checker iterates `worldDataRegistry` (all 9 bundles), building each world via
+The checker iterates `worldDataRegistry` (all registered bundles — 12 as of this
+amendment; the count grows as worlds are added), building each world via
 `buildWorld(worldId)` with the default starter and no unlocks, and runs N seeds
 per world (N configurable). It does not run against only the test fixture.
 
@@ -206,9 +214,17 @@ Phaser dependency enters `src/core` or `src/sim`.
 #### REQ-SCC-18 — Runnable and reasonably fast
 The checker is runnable from a documented command (extend `bun run sim` or add a
 sibling). For default parameters (target N = 100 seeds, K = 5 samples per
-decision, across all 9 worlds) the full run completes in under ~60s on a typical
-dev machine; the number is adjustable once measured, but the bar is "fast enough
-for local/iterative use." N and K are tunable down for quick passes and up for
+decision, across all registered worlds — 12 as of this amendment — with every
+seed run as a fixed baseline+recovery pair per the paired-cohort design below,
+i.e. 2 × N play-outs per world) the full run completes in under ~70s on a
+typical dev machine. This was measured directly (not extrapolated) at 67.7s
+real wall-clock time under exactly that scope (N=100, K=5, 12 worlds, 2×N
+play-outs); ~70s is that measurement rounded up slightly for margin. The
+revision from the prior ~60s figure reflects two changes since it was set: the
+registered-world count grew from 9 to 12, and every seed now runs two
+play-outs (baseline + recovery) instead of one. The number is adjustable once
+measured again under a larger scope, but the bar remains "fast enough for
+local/iterative use." N and K are tunable down for quick passes and up for
 confidence. Accounting invariants (`checkIdAccounting`) continue to hold every
 step.
 
@@ -216,7 +232,7 @@ step.
 
 How the AI confirms this is done. Each item is runnable or observable.
 
-1. **Report shape.** Running the checker emits, for **all 9** registered worlds, a
+1. **Report shape.** Running the checker emits, for **all** registered worlds, a
    per-world block with games/wins/losses/win-rate, survival depth, and
    per-cause + per-act loss attribution. (REQ-SCC-10, 11, 12, 13)
 2. **Attribution integrity.** For each world, summed cause-attributions equal
@@ -271,6 +287,63 @@ How the AI confirms this is done. Each item is runnable or observable.
     during a full run. (REQ-SCC-17, 18)
 12. **Epistemic framing present.** The report text includes the
     sample-not-proof caveat for any flagged world. (REQ-SCC-15)
+
+## Implementation amendment: fixed paired recovery cohort
+
+*Added 2026-07-02, tracking the
+[completeness-agent-performance-stats plan](../plans/completeness-agent-performance-stats.md)
+(diagnostic extension, not a rewrite of this spec).*
+
+The checker already ships a recovery mechanism (`RECOVERY_RUN_MODIFIERS`,
+`src/sim/completeness.ts`), but this spec never documented it. This amendment
+closes that gap and replaces the mechanism's trigger with a fixed design.
+
+**Fixed pairing, not adaptive triggering.** The implementation previously
+activated recovery unlocks **adaptively**: `useRecoveryUnlocks = agg.losses +
+agg.capped >= params.N / 2`, evaluated per-seed as running losses/caps
+accumulated across the world's seed loop. The plan replaces this with a
+**fixed paired cohort**: for every world seed, run **baseline first, then
+recovery, always**, regardless of outcome. Both play-outs for a seed thread
+one continuous `agentRng` stream, and that stream continues across seeds and
+worlds exactly as today (REQ-SCC-16) — baseline and recovery are simply two
+consecutive draws from the same deterministic stream rather than two
+alternate branches of it.
+
+**Why the adaptive trigger is being replaced.** The adaptive design confounds
+two different things: *which configuration is active* (baseline vs. recovery
+unlocks) and *whether earlier seeds in the same run had already accumulated
+losses/caps*. Because the trigger condition depends on the run's own outcome
+history, a difference observed between "recovery-triggered" and
+"non-recovery" seeds cannot be attributed to the recovery unlocks — it may
+simply reflect that recovery only ever turned on once things were already
+going badly. A fixed pairing removes this confound: every seed gets both
+configurations, in the same order, so any baseline-vs-recovery difference is
+attributable to the configuration alone.
+
+**Baseline remains the sole completeness result.** REQ-SCC-10's completeness
+result, and the sole source of the `[FLAGGED]` determination, is the
+**baseline cohort** (default starter, no unlocks) — unchanged from today.
+Recovery is a **diagnostic-only** cohort reported alongside baseline; it must
+never rescue or mask a baseline flag, and it introduces no second flagging
+path.
+
+**Runtime: `2 × N` play-outs per world.** With fixed pairing, every world now
+runs baseline **and** recovery for each of the `N` seeds, i.e. `2 × N`
+play-outs per audit instead of `N`. This is a runtime consequence, not a
+change to REQ-SCC-18's ~60s target itself — the plan's validation step
+(step 7) must re-measure the default `N=100, K=5` run against that target
+rather than assume it still holds at double the play-out count. Recovery
+stays strictly a **diagnostic comparison**: it is not an agent ladder, not a
+general unlock sweep, not a CI gate, and not a claim of causal uplift (only
+world seeds are paired; the continuous agent RNG samples differ between the
+two play-outs of a pair).
+
+**Re-measurement complete.** The validation step 7 re-measurement called for
+above has been performed: the default `N=100, K=5`, all-12-worlds, `2×N`
+play-outs run measured **67.7s** real wall-clock time on the dev machine used
+for measurement. REQ-SCC-18's target has been revised accordingly to ~70s
+(see above); this closes the loop this amendment opened, though further scope
+growth (more worlds, larger N/K) will likely require re-measuring again.
 
 ## Open questions for the plan
 
