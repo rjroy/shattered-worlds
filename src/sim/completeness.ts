@@ -65,15 +65,23 @@ const RECOVERY_RUN_MODIFIERS = buildRunModifiers(RECOVERY_UNLOCK_IDS, UNLOCK_CAT
 // ---------------------------------------------------------------------------
 // Parameters
 //
-// Each parameter resolves in this order: positional argv, then env var, then a
-// documented default. Targets for a full audit are N=100, K=5 (REQ-SCC-18);
-// both tune down for a quick run (e.g. `bun run sim:complete 3 2`).
+// Each numeric parameter resolves in this order: positional argv, then env
+// var, then a documented default. Targets for a full audit are N=100, K=5
+// (REQ-SCC-18); both tune down for a quick run (e.g. `bun run sim:complete 3
+// 2`).
 //
 //   argv[2] / SIM_N         seeds per world           default 100
 //   argv[3] / SIM_K         determinizations/candidate default 5
 //   argv[4] / SIM_SEED      agent rng seed            default 12345
 //   argv[5] / SIM_THRESHOLD flag win-rate <= this     default 0.02 (2%)
 //   SIM_WEIGHTS (env only)  JSON object merged onto DEFAULT_EVAL_WEIGHTS
+//
+// A world id may additionally appear ANYWHERE among the positional args (or
+// via SIM_WORLD) to restrict the run to that one world, e.g.
+// `bun run sim:complete the-tidal-archive` or `bun run sim:complete
+// the-tidal-archive 20 3`. It is pulled out before the remaining positional
+// args are assigned to N/K/agentSeed/threshold in order, so its position
+// doesn't shift the others.
 // ---------------------------------------------------------------------------
 
 export interface CompletenessParams {
@@ -83,6 +91,8 @@ export interface CompletenessParams {
   threshold: number;
   weights: EvalWeights;
   weightsOverridden: boolean;
+  /** Restrict the run to this one registered world id, or all worlds when absent. */
+  worldId?: string;
 }
 
 /**
@@ -109,6 +119,40 @@ function resolveFloat(argv: string | undefined, env: string | undefined, fallbac
   return resolveNumber(argv, env, fallback, parseFloat);
 }
 
+/**
+ * Pulls a registered world id out of the positional args, wherever it
+ * appears, so it doesn't shift N/K/agentSeed/threshold's positions. Falls
+ * back to `SIM_WORLD` when no positional arg is present.
+ *
+ * Any non-numeric positional arg is assumed to be a world-id attempt and
+ * validated immediately: a typo (e.g. `sim:complete the-tidel-archive`) must
+ * fail loudly here, NOT fall through to `resolveInt`'s NaN-defaults-to-100
+ * fallback, which would silently run a full audit across every world instead
+ * of the one the caller meant to target.
+ */
+function resolveWorldId(positional: string[]): { worldId: string | undefined; rest: string[] } {
+  const knownIds = new Set(worldDataRegistry.map((bundle) => bundle.id));
+  let worldId: string | undefined;
+  const rest: string[] = [];
+  for (const arg of positional) {
+    if (!Number.isNaN(Number(arg))) {
+      rest.push(arg);
+      continue;
+    }
+    if (worldId !== undefined) {
+      throw new Error(
+        `sim:complete accepts at most one world id argument; got both "${worldId}" and "${arg}".`,
+      );
+    }
+    if (!knownIds.has(arg)) {
+      const known = [...knownIds].sort().join(", ");
+      throw new Error(`Unknown world id "${arg}" for sim:complete. Known worlds: ${known}`);
+    }
+    worldId = arg;
+  }
+  return { worldId: worldId ?? process.env.SIM_WORLD, rest };
+}
+
 export function parseParams(): CompletenessParams {
   const env = process.env;
   const weightsRaw = env.SIM_WEIGHTS;
@@ -121,14 +165,31 @@ export function parseParams(): CompletenessParams {
     weights = { ...DEFAULT_EVAL_WEIGHTS, ...parsed };
     weightsOverridden = true;
   }
+  const { worldId, rest } = resolveWorldId(process.argv.slice(2));
   return {
-    N: resolveInt(process.argv[2], env.SIM_N, 100),
-    K: resolveInt(process.argv[3], env.SIM_K, 5),
-    agentSeed: resolveInt(process.argv[4], env.SIM_SEED, 12345),
-    threshold: resolveFloat(process.argv[5], env.SIM_THRESHOLD, 0.02),
+    N: resolveInt(rest[0], env.SIM_N, 100),
+    K: resolveInt(rest[1], env.SIM_K, 5),
+    agentSeed: resolveInt(rest[2], env.SIM_SEED, 12345),
+    threshold: resolveFloat(rest[3], env.SIM_THRESHOLD, 0.02),
     weights,
     weightsOverridden,
+    ...(worldId !== undefined ? { worldId } : {}),
   };
+}
+
+/**
+ * Restricts `worlds` to `worldId` when given (all worlds pass through
+ * unchanged otherwise). Throws with the list of valid ids on an unknown id
+ * rather than silently running everything or nothing.
+ */
+export function selectWorlds(worlds: BuiltWorld[], worldId: string | undefined): BuiltWorld[] {
+  if (worldId === undefined) return worlds;
+  const selected = worlds.filter((world) => world.id === worldId);
+  if (selected.length === 0) {
+    const known = worlds.map((world) => world.id).join(", ");
+    throw new Error(`Unknown world id "${worldId}" for sim:complete. Known worlds: ${known}`);
+  }
+  return selected;
 }
 
 // ---------------------------------------------------------------------------
@@ -654,6 +715,9 @@ export function formatReport(params: CompletenessParams, aggregates: WorldAggreg
   blocks.push(
     `  N=${params.N}  K=${params.K}  agentSeed=${params.agentSeed}  threshold=${(params.threshold * 100).toFixed(1)}%`,
   );
+  if (params.worldId !== undefined) {
+    blocks.push(`  World filter: ${params.worldId}`);
+  }
   blocks.push(`  Eval weights: ${params.weightsOverridden ? "custom (SIM_WEIGHTS)" : "default"}`);
   blocks.push(
     `  Play-outs per world: ${2 * params.N} (2 x N: one baseline + one recovery play-out per seed)`,
@@ -680,6 +744,7 @@ export function formatReport(params: CompletenessParams, aggregates: WorldAggreg
 if (import.meta.main) {
   const params = parseParams();
   const worlds = buildAllWorlds();
-  const aggregates = runCompleteness(params, worlds);
+  const selected = selectWorlds(worlds, params.worldId);
+  const aggregates = runCompleteness(params, selected);
   console.log(formatReport(params, aggregates));
 }
