@@ -4,7 +4,7 @@ date: 2026-07-02
 status: current
 tags: [world-design, overgrown-mall, spore, prune, bloom, deal-progress-scaled]
 fg-type: concept
-fg-sources: [.lore/work/specs/overgrown-mall.html, .lore/work/brainstorm/overgrown-mall-world.html, .lore/work/plans/overgrown-mall.html]
+fg-sources: [.lore/work/specs/overgrown-mall.md, .lore/work/brainstorm/overgrown-mall-world.html, .lore/work/plans/overgrown-mall.html]
 fg-status: current
 fg-evidence:
   code:

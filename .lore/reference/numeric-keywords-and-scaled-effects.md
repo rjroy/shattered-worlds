@@ -4,7 +4,7 @@ date: 2026-07-02
 status: current
 tags: [keywords, core-engine, counter-spec, fog-beach-party, overgrown-mall, engine-generalization]
 fg-type: architecture
-fg-sources: [.lore/work/specs/fog-beach-party.html, .lore/work/specs/overgrown-mall.html]
+fg-sources: [.lore/work/specs/fog-beach-party.md, .lore/work/specs/overgrown-mall.md]
 fg-status: current
 fg-evidence:
   code:
