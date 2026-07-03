@@ -1280,7 +1280,7 @@
       "onCleared": { "kind": "None" },
       "onPartialClear": { "kind": "None" },
       "onDraw": { "kind": "None" },
-      "onEndOfTurn": { "kind": "RecallPlayerDiscard", "policy": "latest" }
+      "onEndOfTurn": { "kind": "RecallPlayerDiscard", "policy": "highestCost" }
     },
     "Archivist Choice": {
       "kind": "player",
@@ -1366,7 +1366,13 @@
       "cost": 4,
       "keywords": ["Creature"],
       "discardable": true,
-      "onDiscarded": { "kind": "RecallPlayerDiscard", "policy": "latest" },
+      "onDiscarded": {
+        "kind": "Sequence",
+        "steps": [
+          { "kind": "RecallPlayerDiscard", "policy": "panicFirst" },
+          { "kind": "GainCard", "template": "Panic" }
+        ]
+      },
       "onCleared": { "kind": "GainCard", "template": "Anchor the Memory" },
       "onPartialClear": { "kind": "None" },
       "onDraw": { "kind": "None" },
