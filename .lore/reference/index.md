@@ -1,6 +1,6 @@
 ---
 title: Field Guide Index
-date: 2026-06-25
+date: 2026-07-02
 status: current
 tags: [field-guide, index, reference, shattered-worlds]
 ---
@@ -16,6 +16,9 @@ Reference wiki for durable project knowledge extracted from lore artifacts.
 - [Self Describing Card Faces](self-describing-card-faces.md) - Card faces should carry enough rules text to be playable without external lookup.
 - [World Access Unlocks](world-access-unlocks.md) - world access is purchased ownership, not an activated run modifier.
 - [Sim Completeness Performance Stats Plan](sim-completeness-performance-stats-plan.md) - implemented paired-cohort telemetry explaining how the honest sim agent performed, not just whether it won.
+- [Meta-Progression Approaches Rejected on Purpose](meta-progression-rejected-approaches.md) - banked gold, play-count mastery, prestige resets, and permanent stat tracks were considered and cut; recorded so they aren't re-litigated.
+- ["ChronicleScene as the Proto-Destiny Surface"](chronicle-scene-decision.md) - one dedicated stats scene framed as Destiny's memory from day one, built to grow into the meta-progression hub rather than be replaced by it.
+- [Story Detail Lives in World-Select; Help Is a Phaser Overlay](story-detail-and-help-screen-decisions.md) - story is a short mood paragraph on the world-select card; help is a full-canvas Phaser overlay because its trigger is mid-run.
 
 ## lesson
 
@@ -29,6 +32,11 @@ Reference wiki for durable project knowledge extracted from lore artifacts.
 - [World Launch Checklist Gaps](world-launch-checklist-gaps.md) - music-key reuse and missing unlock gates silently ship a world wrong unless checked explicitly.
 - [World Registry Template Reference Walker](world-registry-template-reference-walker.md) - the template-reference conformance walker must cover every hook and gate branch or it silently misses references.
 - [Image-Gen Prompt Engineering Gotchas](image-gen-prompt-engineering-gotchas.md) - describing objects as text-bearing hallucinates glyphs; confinement imagery with human figures hits content moderation.
+- [A Card's Value Depends on Which World Carries It](cross-world-card-context-value.md) - a hand-thinning reward can be mediocre in its home world and premium once carried into a prune-and-profit world.
+- [Generalize an Engine Primitive Only When a Second Customer Needs It](generalize-on-second-customer-lesson.md) - a numeric-valued keyword and a versioned-storage helper both waited for a second concrete consumer before generalizing.
+- [World Select Uses Full-Window Paging, Not the Decided Shift-by-One Carousel](world-select-carousel-paging.md) - the shipped carousel implements the exact page-flip-by-3 shape a 2026-06-11 brainstorm explicitly rejected; undocumented decision drift.
+- ["localStorage Durability Risk and the Migrate-Don't-Discard Policy"](save-durability-and-migration-lesson.md) - client storage can be silently evicted; export/import is the adopted backstop and schema bumps must migrate, never discard.
+- [Choosing Where Text-Heavy Content Lives in a Fixed Phaser Canvas](phaser-text-heavy-overlay-tradeoffs-lesson.md) - the right container for full-screen text depends on when it's read, not what it contains; mid-run triggers favor staying in-canvas.
 
 ## architecture
 
@@ -53,6 +61,8 @@ Reference wiki for durable project knowledge extracted from lore artifacts.
 - [Unified Card Catalog Plan](unified-card-catalog-plan.md) - card data is unified through catalog assembly instead of scattered constants.
 - [Unlock System Runtime Ownership](unlock-system-runtime-ownership.md) - the runtime assembles worlds with purchased and activated unlock state.
 - [World Deck Loop](world-deck-loop.md) - the world deck creates pressure through draw, hazard resolution, progress, and refill loops.
+- [Witness Knowledge — Per-Threat History Feeding Feats, Not Player-Facing Reveals](witness-knowledge-system.md) - per-threat encounter/resolve/death tallies feed feat conditions; the sketched player-facing reveal UI never shipped.
+- [Run Stats Persistence Architecture](run-stats-persistence-architecture.md) - versioned lifetime stats, a run-history ring buffer, active-duration tracking, and export/import all hang off `RunEnded`.
 
 ## concept
 
@@ -67,3 +77,8 @@ Reference wiki for durable project knowledge extracted from lore artifacts.
 - [Tidal Archive World](tidal-archive-world.md) - displace-themed world pressure makes discard and deck order part of play.
 - [Transit Authority World](transit-authority-world.md) - reroute-themed world pressure force-tops both decks and taxes cost with a transient Reroute keyword.
 - [Whiteout Parking Garage World](whiteout-parking-garage-world.md) - cold-survival world pressure revolves around heat, frozen cards, and thawing.
+- [Place and Disaster Must Argue With Each Other](place-disaster-contrast-theme-rule.md) - a world's fiction should pair a place with a disaster that argues with it, not one that agrees; the free filter for pitching new worlds.
+- [Keyword Density Bias Differentiates the Shared Starter Deck for Free](keyword-bias-differentiation.md) - biasing which keyword a world's hazards carry changes which shared starter card is the correct answer there, at zero code cost.
+- [Per-World Intensity Weights Remain an Open Idea, Not Yet Built](per-world-intensity-weights-open-idea.md) - twice-proposed, still-global juice weights; a recorded open idea rather than a decision.
+- [Unlock Design Pattern — Ask a New Question](unlock-design-pattern-new-questions.md) - a good unlock should ask the player a new question during the run, not just make an old answer bigger; six Slay-the-Spire-derived categories sketched for future Blessings.
+- ["The Endworlds Trilogy (Worlds 13-15): Destination or Denial"](endworlds-trilogy-concept.md) - unimplemented narrative concept reframing the Walker's journey as fleeing grief, resolved by a Refusal/Acknowledgment split ending.

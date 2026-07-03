@@ -8,7 +8,7 @@ export const EDEN_PRIME_DISPLAY: WorldDisplayData = {
     "Walker gave the valley a violet second sun, and paradise learned fear from the player's " +
     "own hand.",
   difficulty: 5,
-  cycle: 5,
+  cycle: 4,
   backgroundKey: "eden-prime-bg",
 };
 

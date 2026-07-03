@@ -4,7 +4,7 @@ date: 2026-07-02
 status: current
 tags: [meta-progression, unlocks, destiny, balance, catalog]
 fg-type: decision
-fg-sources: [.lore/work/design/unlock-catalog.md]
+fg-sources: [.lore/work/design/unlock-catalog.md, .lore/work/brainstorm/unlock-system.md]
 fg-status: current
 fg-evidence:
   code:
@@ -44,3 +44,12 @@ The original catalog defined six categories of unlock, each still present in the
 ## Divergence from the original weight rationale
 
 The original catalog design gave starter-deck overrides weight 3, reasoning that choosing a character identity is the highest-level build decision and should consume most of the budget. The shipped catalog instead gives every `starterDeckOverride` entry `destinyWeight: 0` — a starter deck choice is exclusivity-gated (only one active at a time) rather than budget-gated. World-access unlocks (`worldUnlock`) are a separate, later addition with their own weight-0, purchase-only semantics; see [[world-access-unlocks]].
+
+## Alternatives considered for god-mode prevention
+
+Before landing on the weighted budget, the design brainstorm considered two other gates:
+
+- **Flat slot limit** ("bring 3 Blessings per run"). Rejected: easy to communicate, but with unlocks of unequal power the choice degenerates into "always pick the 3 obviously-best ones" rather than a real trade-off.
+- **Category caps** ("1 offensive, 1 defensive, 1 utility per run"). Rejected: requires categorizing every unlock, adds ongoing design overhead as the catalog grows, and reads as arbitrary to players who don't share the designer's taxonomy.
+
+The weighted budget won because it expresses relative power directly in data (no need to argue two unlocks are "equivalent"), generates a real trade-off between many cheap picks and one expensive one, and is extensible without a redesign — a feat could grant "+1 to your Destiny budget for this world" without touching the unlock catalog itself. A related rejected idea: scaling the fragment cost of a stacked purchase (first "+1 HP" costs 5, second costs 15). This was ruled out by the unique-unlocks-only rule above, which removed the need for stack-cost curves entirely.

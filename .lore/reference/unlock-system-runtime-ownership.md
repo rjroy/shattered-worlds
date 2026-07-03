@@ -4,7 +4,7 @@ date: 2026-06-25
 status: current
 tags: [unlocks, destiny, run-modifiers, runtime, meta-progression]
 fg-type: architecture
-fg-sources: [.lore/work/plans/unlock-system.md, .lore/work/notes/unlock-system.md]
+fg-sources: [.lore/work/plans/unlock-system.md, .lore/work/notes/unlock-system.md, .lore/work/brainstorm/unlock-system.md]
 fg-status: current
 fg-evidence:
   code:
@@ -39,3 +39,13 @@ Production `startSession(worldId, seed, options)` assembles from manifests and u
 ## Destiny UI
 
 Destiny is the between-run purchase and loadout screen. It displays spendable Fragments, active weight against the Destiny budget, purchase state, and activation toggles. Purchases auto-activate when they fit.
+
+## UX model considered
+
+The design brainstorm weighed three shapes for where unlocks live before settling on purchase-then-activate:
+
+- **Always-on** (purchase = permanent effect, no per-run choice). Rejected as the sole model: simple and narratively clean, but the power floor only rises over time and every run converges toward feeling the same once a player owns enough Blessings.
+- **Per-world gating** (an unlock is tied to clearing a specific world's feat, contextual rather than cross-world). Rejected as the primary model: interesting as a supplement, but it breaks the "Destiny grows across all worlds" narrative and limits cross-world power expression.
+- **Purchase + per-run activation** (Hades/Mirror model: buy permanently, then choose a subset to bring within the Destiny budget each run). Chosen: gives a replay decision every run and a natural god-mode gate via the budget.
+
+The activation layer was deliberately sequenced as a second step, not built alongside the shop. The brainstorm's stated risk: building a "pick N from your unlocks" screen while the player owns only 1–2 Blessings makes the choice trivial and the extra screen pure friction. The MVP path was always-on (every purchased unlock active) first, with the activation screen added once the catalog had roughly 6+ unlocks to make the choice meaningful — which matches the shipped Destiny scene's toggle-based activation.

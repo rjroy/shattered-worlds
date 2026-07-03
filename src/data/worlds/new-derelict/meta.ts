@@ -7,8 +7,8 @@ export const NEW_DERELICT_DISPLAY: WorldDisplayData = {
     "New Derelict is intact, pressurized, and crowded with living crew. After the Walker " +
     "passes, its safety systems decide the disaster has already happened and seal the ship " +
     "around everyone still working inside.",
-  difficulty: 4,
-  cycle: 6,
+  difficulty: 3,
+  cycle: 4,
   backgroundKey: "new-derelict-bg",
 };
 

@@ -1,11 +1,10 @@
-# Energy Turn Resource
-
-<!--
-date: 2026-06-15
+---
+title: Energy Turn Resource
+date: 2026-07-02
 status: current
-tags: energy, player-resource, turn-economy, cost, core-state
+tags: [energy, player-resource, turn-economy, cost, core-state]
 fg-type: architecture
-fg-sources: .lore/work/specs/player-energy-resource.html, .lore/work/plans/player-energy-resource.html, .lore/work/notes/player-energy-resource.html
+fg-sources: [.lore/work/specs/player-energy-resource.html, .lore/work/plans/player-energy-resource.html, .lore/work/notes/player-energy-resource.html, .lore/work/brainstorm/theme-mechanical-differentiation.md]
 fg-status: current
 fg-evidence:
   code:
@@ -19,9 +18,13 @@ fg-evidence:
   symbols:
     - energy
     - energyCost
--->
+---
+
+# Energy Turn Resource
 
 Energy is a per-turn player resource stored on `GameState`. It gates player-card playability without changing world-card hazard cost. The two costs are separate concepts: hazard cost is cleared by Progress; energy cost is paid by the player to play certain cards.
+
+This resolves an open question from an early differentiation brainstorm (`theme-mechanical-differentiation.md`, 2026-06-07), which flagged "no energy/mana exists" as the single biggest fork in how much differentiation work would be needed: without a spendable budget, hazard `cost` is purely a progress threshold, not a budget, and a whole class of "you can't clear everything, choose" decisions was unavailable. Energy shipped afterward, closing that fork in favor of the richer design space.
 
 ## Lifecycle
 

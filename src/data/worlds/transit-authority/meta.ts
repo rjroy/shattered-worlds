@@ -2,7 +2,8 @@ import type { WorldDisplayData, WorldHelpData } from "../types";
 
 export const TRANSIT_AUTHORITY_DISPLAY: WorldDisplayData = {
   name: "The Transit Authority",
-  tagline: "The most competent transit system in the multiverse meets one passenger it cannot route.",
+  tagline:
+    "The most competent transit system in the multiverse meets one passenger it cannot route.",
   story:
     "The Transit Authority is a glass-roofed terminal that routes any contradiction, provided it " +
     "has a platform, a fare, and an arrival time. Then the Walker arrives as a passenger category " +
@@ -10,7 +11,7 @@ export const TRANSIT_AUTHORITY_DISPLAY: WorldDisplayData = {
     "Departure boards flip to SERVICE SUSPENDED and ENTITY DETECTED as the terminal quarantines " +
     "every realm from every other realm.",
   difficulty: 4,
-  cycle: 7,
+  cycle: 4,
   backgroundKey: "transit-authority-bg",
 };
 

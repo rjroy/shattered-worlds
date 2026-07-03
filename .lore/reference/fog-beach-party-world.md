@@ -5,7 +5,7 @@ date: 2026-06-15
 status: current
 tags: world-design, fog-beach-party, conceal, light, numeric-keywords, gain-light
 fg-type: concept
-fg-sources: .lore/work/specs/fog-beach-party.html
+fg-sources: [.lore/work/specs/fog-beach-party.html, .lore/work/brainstorm/fog-beach-party-world.md]
 fg-status: current
 fg-evidence:
   code:
