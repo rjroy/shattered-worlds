@@ -760,6 +760,7 @@ Two things worth flagging beyond the raw tiers:
 - the-ember-orchard - 5 star
 - overgrown-mall - 4 star
 - whiteout-parking-garage - 3 star
+- the-tidal-archive - 1 star
 
 ## Minor Tweaks
 - city-of-sleeping-giants - 2 star
@@ -769,8 +770,6 @@ Two things worth flagging beyond the raw tiers:
 - fog-beach-party - 1 star
   - The hazard's aren't threatening enough
   - They have concealment, but no teeth
-- the-tidal-archive - 1 star
-  - The primary problem is that the "recall" effect isn't threatening, its just weird.
 
 ## May Need a Better Win Condition
 - eden-prime - 5 star
