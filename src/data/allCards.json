@@ -301,7 +301,7 @@
       "rarity": "common",
       "insetKey": "fog-inset-flashlight",
       "exhaust": true,
-      "effect": { "kind": "GainLight", "amount": 2 }
+      "effect": { "kind": "GainLight", "amount": 1 }
     },
     "Flare Gun": {
       "kind": "player",
@@ -314,7 +314,7 @@
         "kind": "Modal",
         "branches": [
           { "kind": "DealProgress", "base": 2, "bonus": { "tag": "Obstructed", "amount": 2 } },
-          { "kind": "GainLight", "amount": 6 }
+          { "kind": "GainLight", "amount": 4 }
         ]
       }
     },
@@ -329,7 +329,7 @@
         "kind": "Sequence",
         "steps": [
           { "kind": "DealProgressAll", "base": 1 },
-          { "kind": "GainLight", "amount": 4 }
+          { "kind": "GainLight", "amount": 3 }
         ]
       }
     },
@@ -352,7 +352,7 @@
       "insetKey": "fog-inset-flashlight",
       "rarity": "uncommon",
       "exhaust": true,
-      "effect": { "kind": "GainLight", "amount": 4 }
+      "effect": { "kind": "GainLight", "amount": 3 }
     },
     "Cooler Snacks": {
       "kind": "player",
@@ -444,8 +444,7 @@
         "kind": "Sequence",
         "steps": [
           { "kind": "GainRandomCard", "setId": "pool-lights-lv2", "setName": "Bonfire Stash" },
-          { "kind": "GainRandomCard", "setId": "pool-lights-lv2", "setName": "Bonfire Stash" },
-          { "kind": "GainLight", "amount": 2 }
+          { "kind": "GainRandomCard", "setId": "pool-lights-lv2", "setName": "Bonfire Stash" }
         ]
       },
       "onPartialClear": { "kind": "None" },

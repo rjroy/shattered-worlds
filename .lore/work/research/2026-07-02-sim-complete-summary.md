@@ -761,20 +761,16 @@ Two things worth flagging beyond the raw tiers:
 - overgrown-mall - 4 star
 - whiteout-parking-garage - 3 star
 - the-tidal-archive - 1 star
+- fog-beach-party - 1 star
 
 ## Minor Tweaks
 - city-of-sleeping-giants - 2 star
   - The player cards feel off
-
-## May Need a Better Lose Condition
-- fog-beach-party - 1 star
-  - The hazard's aren't threatening enough
-  - They have concealment, but no teeth
 
 ## May Need a Better Win Condition
 - eden-prime - 5 star
   - This might be well balanced, not sure yet.
 
 ## Needs Playtesting
-- new-derelict - 
+- new-derelict - 3 star
 - transit-authority - 4 star
