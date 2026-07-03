@@ -253,19 +253,34 @@
   },
   {
     "id": "panic-response",
-    "name": "Panic Response",
-    "description": "Panic also deals 2 progress to every world card in hand after its current effect and now exhaust.",
+    "name": "Fight or Flight",
+    "description": "Panic can either deal 2 progress to every world card in hand or return return any number of world cards to the deck, but still draws a world card and now exhausts.",
     "cost": 35,
     "destinyWeight": 2,
     "effect": {
       "type": "playerCardModifier",
       "modifier": {
         "id": "panic-response",
-        "displayName": "Panic Response",
+        "displayName": "Fight or Flight",
         "target": { "kind": "template", "templateId": "Panic" },
         "condition": { "kind": "always" },
         "patches": [
-          { "kind": "appendEffect", "effect": { "kind": "DealProgressAll", "base": 2 } },
+          {
+            "kind": "replaceEffect",
+            "effect": {
+              "kind": "Sequence",
+              "steps": [
+                {
+                  "kind": "Modal",
+                  "branches": [
+                    { "kind": "DealProgressAll", "base": 2 },
+                    { "kind": "ReturnWorldCards", "min": 1, "max": 12 }
+                  ]
+                },
+                { "kind": "Draw", "world": 1 }
+              ]
+            }
+          },
           { "kind": "setExhaust", "exhaust": true }
         ]
       }
