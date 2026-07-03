@@ -6,6 +6,12 @@ tags: [phaser, ui, dom-overlay, scrolling, screens, lesson]
 fg-type: lesson
 fg-sources: [.lore/work/brainstorm/story-detail-and-help-screens.md, .lore/work/specs/help-screen.html]
 fg-status: current
+fg-evidence:
+  code:
+    - src/game/view/HelpOverlayView.ts
+    - src/game/view/screenBackdrop.ts
+  symbols:
+    - HelpOverlayView
 ---
 
 # Choosing Where Text-Heavy Content Lives in a Fixed Phaser Canvas

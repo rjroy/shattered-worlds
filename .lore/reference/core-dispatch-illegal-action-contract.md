@@ -18,7 +18,9 @@ fg-evidence:
 
 `dispatch(action) → { state, events }` (see [Core Render Split](core-render-split.md)) is a contract for **legal actions only**. When an action is illegal, the core throws a typed error carrying the offending action and the current state, instead of returning a normal `{ state, events }` result with a failure event mixed into the log. There is one error contract for every action, not a per-action bespoke failure mode.
 
-This was decided in the original proof-of-concept (`PlayCard` with a card id not currently in hand throws) and carried forward unchanged into the first real game slice, which explicitly cites it as "the POC error contract, unchanged." The world-deck slice's illegal cases are broader — an unknown card id, a `DealProgress` card with no Hazard in hand to target, a `Modal` choice out of range, `Panic` played without exactly one world card in hand, `DiscardHazard` on a non-discardable card (the Door), naming a player-card id where a world-card target is required, or any gameplay action dispatched once the run has already reached `won`/`lost` — but all of them throw `IllegalActionError` (`src/core/model/errors.ts`), the same mechanism.
+This was decided in the original proof-of-concept (`PlayCard` with a card id not currently in hand throws) and carried forward unchanged into the first real game slice, which explicitly cites it as "the POC error contract, unchanged." The world-deck slice's illegal cases are broader — an unknown card id, a `DealProgress` card with no Hazard in hand to target, a `Modal` choice out of range, `Panic` played with no world card in hand, `DiscardHazard` on a non-discardable card (the Door), naming a player-card id where a world-card target is required, or any gameplay action dispatched once the run has already reached `won`/`lost` — but all of them throw `IllegalActionError` (`src/core/model/errors.ts`), the same mechanism.
+
+`Panic`'s `ReturnWorldCards` effect actually accepts 1 to 4 world cards (`min: 1, max: 4`); zero in hand is the illegal case, not "not exactly one."
 
 ## Why this shape
 

@@ -10,7 +10,7 @@ fg-evidence:
   code:
     - src/game/runtime/runStats.ts
     - src/core/model/types.ts
-    - src/core/effects/heal.ts
+    - src/core/effects/resources.ts
   symbols:
     - RunRecord
     - HealReceived

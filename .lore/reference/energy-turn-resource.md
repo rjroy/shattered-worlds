@@ -28,7 +28,7 @@ This resolves an open question from an early differentiation brainstorm (`theme-
 
 ## Lifecycle
 
-Energy initializes to 0 when a world is created, then the shared start-turn step grants +1 before the opening hand and before every later refill. Unspent energy carries across turns with no cap. Act transitions do not reset energy; a new world does.
+Energy initializes to `runModifiers.extraStartEnergy` when a world is created — `0` by default, but Destiny Blessing unlocks can raise it (`src/data/unlocks/catalog.ts`) — then the shared start-turn step grants +1 before the opening hand and before every later refill. Unspent energy carries across turns with no cap. Act transitions do not reset energy; a new world does.
 
 ## Playability
 

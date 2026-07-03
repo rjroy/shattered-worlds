@@ -6,6 +6,16 @@ tags: [unlocks, meta-progression, design-pattern, gameplay-identity]
 fg-type: concept
 fg-sources: [.lore/work/brainstorm/unlocks-changing-gameplay.md]
 fg-status: current
+fg-evidence:
+  code:
+    - src/data/unlocks/catalog.ts
+    - src/data/unlocks/catalog.json
+    - src/core/engine/effectiveCards.ts
+  tests:
+    - src/data/unlocks/catalog.test.ts
+  symbols:
+    - DESTINY_BUDGET
+    - PlayerCardModifier
 ---
 
 # Unlock Design Pattern — Ask a New Question

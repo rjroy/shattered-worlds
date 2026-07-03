@@ -6,6 +6,15 @@ tags: [engine-design, refactoring, keywords, persistence, sequencing]
 fg-type: lesson
 fg-sources: [.lore/work/brainstorm/fog-beach-party-world.md, .lore/work/brainstorm/stats-persistence-and-player-views.md]
 fg-status: current
+fg-evidence:
+  code:
+    - src/core/model/types.ts
+    - src/game/runtime/runStats.ts
+  tests:
+    - src/game/runtime/runStats.test.ts
+  symbols:
+    - Keyword
+    - KeywordName
 ---
 
 # Generalize an Engine Primitive Only When a Second Customer Needs It

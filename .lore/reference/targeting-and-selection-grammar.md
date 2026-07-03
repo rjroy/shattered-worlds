@@ -16,7 +16,7 @@ fg-evidence:
     - src/game/tests/selection.test.ts
     - src/game/tests/highlight.test.ts
   symbols:
-    - AvailableAction
+    - AvailableActions
     - SelectionState
 ---
 

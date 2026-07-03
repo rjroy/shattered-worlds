@@ -39,7 +39,7 @@ A session that never reaches a gameplay-terminal state (the player exits the wor
 
 ## Multi-Consumer Boundary
 
-`gameplayRuntime.ts` is the composition root — the one place outside any scene where the stream is created and subscribers are attached, so consumers that outlive one world session (run stats, witness knowledge, feats) can subscribe once and observe every session a player starts. As of this writing three subscribers attach in a fixed, meaningful order:
+`gameplayRuntime.ts` is the composition root — the one place outside any scene where the stream is created and subscribers are attached, so consumers that outlive one world session (run stats, witness knowledge, feats) can subscribe once and observe every session a player starts. As of this writing three consumer subscribers attach in a fixed, meaningful order (a fourth, internal subscriber prunes `openSessions` on `RunEnded` and carries no ordering constraint):
 
 ```
 stream.subscribe(runStats.subscriber)        // 1st — folds the run into lifetime stats

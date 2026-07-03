@@ -5,6 +5,12 @@ status: draft
 tags: [unlocks, art-direction, icons, starter-decks, worlds]
 modules: [unlocks, game-assets]
 related: [.lore/reference/visual-direction.html, .lore/work/design/unlock-catalog.md]
+fg-evidence:
+  code:
+    - src/data/unlocks/catalog.json
+    - src/game/assets/unlocks
+  symbols:
+    - UnlockDefinition
 ---
 
 # Unlock art style
