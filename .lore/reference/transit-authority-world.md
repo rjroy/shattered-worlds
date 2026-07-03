@@ -4,7 +4,7 @@ date: 2026-07-02
 status: current
 tags: [world-design, transit-authority, reroute, forced-movement, deck-pressure, anime-inset-style]
 fg-type: concept
-fg-sources: [.lore/work/plans/transit-authority.md, .lore/work/notes/transit-authority.md]
+fg-sources: [.lore/work/plans/transit-authority.md, .lore/work/notes/transit-authority.md, .lore/work/specs/transit-authority.md]
 fg-status: current
 fg-evidence:
   code:

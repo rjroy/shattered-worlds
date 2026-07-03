@@ -4,7 +4,7 @@ date: 2026-07-02
 status: current
 tags: [chronicle, destiny, stats-ui, run-summary, decision]
 fg-type: decision
-fg-sources: [.lore/work/brainstorm/stats-persistence-and-player-views.md]
+fg-sources: [.lore/work/brainstorm/stats-persistence-and-player-views.md, .lore/work/specs/stats-persistence-and-player-views.html]
 fg-status: current
 fg-evidence:
   code:

@@ -4,7 +4,7 @@ date: 2026-07-02
 status: current
 tags: [ui, world-select, help-overlay, story, screens, decision]
 fg-type: decision
-fg-sources: [.lore/work/brainstorm/story-detail-and-help-screens.md]
+fg-sources: [.lore/work/brainstorm/story-detail-and-help-screens.md, .lore/work/specs/world-select.html, .lore/work/specs/help-screen.html]
 fg-status: current
 fg-evidence:
   code:
@@ -27,6 +27,6 @@ Story detail is **not** a separate screen. Each world's select card shows a shor
 
 ## Help: Phaser Overlay, Not DOM or a Separate Page
 
-Help is a full-canvas Phaser overlay (`HelpOverlayView`, depth 1000), the same layering pattern already used for win/loss screens, triggered by a `?` control. Content structure is base rules, then a keyword glossary, then a per-world "in this world" section of `WorldMechanicNote`s (title + detail) drawn from `worldHelpManifest`. This keeps help in-canvas and themed automatically by the world's `VisualTheme`, at the cost of hand-built scrolling/paging rather than DOM-native text flow — an explicit tradeoff, not an oversight; see [[phaser-text-heavy-overlay-tradeoffs-lesson]] for the reasoning across all the options considered (DOM overlay, stacked scene, separate web page, embedding content on-demand) and why Phaser-overlay won for this specific mid-run trigger.
+Help is a full-canvas Phaser overlay (`HelpOverlayView`, depth 1000), the same layering pattern already used for win/loss (`RunSummaryView`) and the settings overlay, triggered by a `?` control and dismissed by its own close control or Escape. This keeps help in-canvas and themed automatically by the world's `VisualTheme`, at the cost of hand-built layout/paging rather than DOM-native text flow — an explicit tradeoff, not an oversight; see [[phaser-text-heavy-overlay-tradeoffs-lesson]] for the reasoning across all the options considered (DOM overlay, stacked scene, separate web page, embedding content on-demand) and why Phaser-overlay won for this specific mid-run trigger.
 
-The glossary was expected to start small (5-8 core terms) and grow per world as worlds ship; the brainstorm's explicit revisit trigger is "reconsider if it grows past roughly 15 entries," since a scrolling Phaser text list becomes as much implementation effort as a DOM overlay well before that point.
+The `help-screen.html` spec (2026-06-08) proposed a single fixed 3-section panel (Base Rules, Keywords, In This World) sized to fit the 900×600 canvas with no scrolling. The shipped `HelpOverlayView` outgrew that shape: it is a 5-tab paged reference (Turn, Hazards, Tools, Icons, World), with per-page content built largely from icon tooltips (`EFFECT_ICON_TOOLTIPS`) and callouts rather than a static keyword-definition table. The one part of the spec's data contract that did survive unchanged is the per-world seam: `WorldHelpData.mechanics: readonly WorldMechanicNote[]` (title + detail), now sourced per-world from each world bundle's `help` field (`src/data/worlds/<world>/meta.ts`) and assembled into `worldHelpManifest` via `derive(worldDataRegistry, (b) => b.help)`, consumed by the overlay's "World" tab. A completeness test (`src/core/tests/worldHelpManifest.test.ts`) still guards that every registered world has at least one mechanic note — the spec's original "no game left without a help entry" concern (REQ-HELP-12) held even as the surrounding layout changed. bird-building and highway-volcano, placeholder-only when the spec was written, now ship real per-world mechanic notes rather than the deferred placeholder text the spec anticipated.

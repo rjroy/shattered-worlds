@@ -1,11 +1,10 @@
-# Targeting and Selection Grammar
-
-<!--
+---
+title: Targeting and Selection Grammar
 date: 2026-06-15
 status: current
-tags: targeting, selection, available-actions, renderer, ux, legality
+tags: [targeting, selection, available-actions, renderer, ux, legality]
 fg-type: architecture
-fg-sources: .lore/work/design/targeting-interaction.html, .lore/work/plans/generalize-selection-targeting.html, .lore/work/specs/player-feedback-selection-and-progress.html
+fg-sources: [.lore/work/design/targeting-interaction.html, .lore/work/plans/generalize-selection-targeting.html, .lore/work/specs/player-feedback-selection-and-progress.html, .lore/work/specs/world-deck-slice.html]
 fg-status: current
 fg-evidence:
   code:
@@ -19,7 +18,9 @@ fg-evidence:
   symbols:
     - AvailableAction
     - SelectionState
--->
+---
+
+# Targeting and Selection Grammar
 
 Selection is renderer-only transient state. The core never sees half-built interactions such as "card selected, target pending." It receives only complete actions. Legality, however, comes from the core through a pure available-actions read model, so renderer highlights and reducer validation share the same source of truth.
 

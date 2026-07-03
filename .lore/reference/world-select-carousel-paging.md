@@ -4,7 +4,7 @@ date: 2026-07-02
 status: current
 tags: [world-select, ui, carousel, paging, decision-drift]
 fg-type: lesson
-fg-sources: [.lore/work/brainstorm/new-world-concepts.md]
+fg-sources: [.lore/work/brainstorm/new-world-concepts.md, .lore/work/specs/world-select.html]
 fg-status: current
 fg-evidence:
   code:
@@ -23,7 +23,7 @@ fg-evidence:
 
 # World Select Uses Full-Window Paging, Not the Decided Shift-by-One Carousel
 
-World Select outgrew a single row once a fourth world (Overgrown Mall) was approved: at `WORLD_SELECT_LAYOUT` card width and gap, four or more cards no longer fit the canvas. The 2026-06-11 brainstorm (`.lore/work/brainstorm/new-world-concepts.md`) recorded an explicit decision for how to handle this: a **shift-by-one carousel**, where arrows tween the row one card at a time and edge cards peek at partial opacity — and explicitly rejected two alternatives, **page-flip-by-3** (calling it out by name as producing "orphan pages") and shrinking the cards.
+World Select shipped originally as a fixed three-card row (`.lore/work/specs/world-select.html`; see [[world-select-scene-and-display-manifest]] for that original scene architecture). It outgrew that single row once a fourth world (Overgrown Mall) was approved: at `WORLD_SELECT_LAYOUT` card width and gap, four or more cards no longer fit the canvas. The 2026-06-11 brainstorm (`.lore/work/brainstorm/new-world-concepts.md`) recorded an explicit decision for how to handle this: a **shift-by-one carousel**, where arrows tween the row one card at a time and edge cards peek at partial opacity — and explicitly rejected two alternatives, **page-flip-by-3** (calling it out by name as producing "orphan pages") and shrinking the cards.
 
 ## What Actually Shipped
 

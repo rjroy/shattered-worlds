@@ -4,7 +4,7 @@ date: 2026-07-02
 status: current
 tags: [witness, meta-progression, feats, telemetry, destiny]
 fg-type: architecture
-fg-sources: [.lore/work/brainstorm/shattered-worlds-meta-progression.md]
+fg-sources: [.lore/work/brainstorm/shattered-worlds-meta-progression.md, .lore/work/specs/extended-run-telemetry.md]
 fg-status: current
 fg-evidence:
   code:
@@ -33,4 +33,4 @@ This data feeds the feat system directly: `witness.<ThreatName>.<field>` is a fi
 
 The brainstorm's specific *player-facing* payoffs — face-up capstone rules after a first death, a forecast pip after repeat encounters, a dedicated Codex journal page per threat — are not implemented. What exists today is the tracking layer and its use as a feat-gating input, not a witness-specific UI surface. If those sketched features are revisited, the data they'd need (`encounterCount`, `resolvedCount`, `diedTo`) already exists in `WitnessProfile`.
 
-Related: [[destiny-progression]], [[feat-definition-type-contract]], [[feat-evaluation-memory-fragments]]
+Related: [[destiny-progression]], [[feat-definition-type-contract]], [[feat-evaluation-memory-fragments]], [[extended-run-telemetry-fields]]

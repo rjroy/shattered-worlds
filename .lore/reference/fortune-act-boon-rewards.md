@@ -4,7 +4,7 @@ date: 2026-06-25
 status: current
 tags: [fortune, act-rewards, boons, unlocks, temporary-cards]
 fg-type: architecture
-fg-sources: [.lore/work/plans/fortune-boon-cards.md, .lore/work/notes/fortune-boon-cards.md]
+fg-sources: [.lore/work/specs/fortune-boon-cards.md, .lore/work/plans/fortune-boon-cards.md, .lore/work/notes/fortune-boon-cards.md]
 fg-status: current
 fg-evidence:
   code:

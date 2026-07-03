@@ -4,7 +4,7 @@ date: 2026-07-02
 status: current
 tags: [persistence, localstorage, durability, migration, save-policy, lesson]
 fg-type: lesson
-fg-sources: [.lore/work/brainstorm/stats-persistence-and-player-views.md]
+fg-sources: [.lore/work/brainstorm/stats-persistence-and-player-views.md, .lore/work/specs/stats-persistence-and-player-views.html]
 fg-status: current
 fg-evidence:
   code:

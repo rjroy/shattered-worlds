@@ -4,7 +4,7 @@ date: 2026-06-25
 status: current
 tags: [rarity, weighted-draw, rewards, boons, gain-random-card]
 fg-type: architecture
-fg-sources: [.lore/work/plans/rarity-system.md, .lore/work/notes/rarity-system.md, .lore/work/brainstorm/rarity-system.md]
+fg-sources: [.lore/work/plans/rarity-system.md, .lore/work/notes/rarity-system.md, .lore/work/brainstorm/rarity-system.md, .lore/work/specs/rarity-system.md]
 fg-status: current
 fg-evidence:
   code:

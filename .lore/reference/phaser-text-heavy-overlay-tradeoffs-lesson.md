@@ -4,7 +4,7 @@ date: 2026-07-02
 status: current
 tags: [phaser, ui, dom-overlay, scrolling, screens, lesson]
 fg-type: lesson
-fg-sources: [.lore/work/brainstorm/story-detail-and-help-screens.md]
+fg-sources: [.lore/work/brainstorm/story-detail-and-help-screens.md, .lore/work/specs/help-screen.html]
 fg-status: current
 ---
 

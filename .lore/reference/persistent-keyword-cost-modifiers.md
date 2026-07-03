@@ -4,7 +4,7 @@ date: 2026-07-02
 status: current
 tags: [keywords, cost-modifiers, world-cards, lockdown, reroute, alarm, core-engine]
 fg-type: architecture
-fg-sources: [.lore/work/plans/keyword-cost-modifiers.md, .lore/work/notes/keyword-cost-modifiers.md, .lore/work/plans/new-derelict.md, .lore/work/notes/new-derelict.md, .lore/work/plans/transit-authority.md, .lore/work/notes/transit-authority.md]
+fg-sources: [.lore/work/plans/keyword-cost-modifiers.md, .lore/work/notes/keyword-cost-modifiers.md, .lore/work/plans/new-derelict.md, .lore/work/notes/new-derelict.md, .lore/work/plans/transit-authority.md, .lore/work/notes/transit-authority.md, .lore/work/specs/new-derelict.md, .lore/work/specs/transit-authority.md]
 fg-status: current
 fg-evidence:
   code:

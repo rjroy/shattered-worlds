@@ -4,7 +4,7 @@ date: 2026-06-25
 status: current
 tags: [world-design, city-of-sleeping-giants, stir, recurrence, force-destroy]
 fg-type: concept
-fg-sources: [.lore/work/plans/city-of-sleeping-giants.md, .lore/work/notes/city-of-sleeping-giants.md]
+fg-sources: [.lore/work/plans/city-of-sleeping-giants.md, .lore/work/notes/city-of-sleeping-giants.md, .lore/work/specs/city-of-sleeping-giants.md]
 fg-status: current
 fg-evidence:
   code:

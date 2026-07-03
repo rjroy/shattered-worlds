@@ -4,7 +4,7 @@ date: 2026-07-02
 status: current
 tags: [world-design, new-derelict, isolate, lockdown, persistent-modifier, deck-pressure]
 fg-type: concept
-fg-sources: [.lore/work/plans/new-derelict.md, .lore/work/notes/new-derelict.md]
+fg-sources: [.lore/work/plans/new-derelict.md, .lore/work/notes/new-derelict.md, .lore/work/specs/new-derelict.md]
 fg-status: current
 fg-evidence:
   code:

@@ -4,7 +4,7 @@ date: 2026-07-02
 status: current
 tags: [meta-progression, unlocks, destiny, balance, catalog]
 fg-type: decision
-fg-sources: [.lore/work/design/unlock-catalog.md, .lore/work/brainstorm/unlock-system.md]
+fg-sources: [.lore/work/design/unlock-catalog.md, .lore/work/brainstorm/unlock-system.md, .lore/work/specs/unlock-system.md]
 fg-status: current
 fg-evidence:
   code:

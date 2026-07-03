@@ -4,7 +4,7 @@ date: 2026-06-25
 status: current
 tags: [action-preview, confirmation, ux, settings, core-runtime]
 fg-type: architecture
-fg-sources: [.lore/work/plans/action-impact-preview-and-confirmation.md, .lore/work/notes/action-impact-preview-and-confirmation.md, .lore/work/brainstorm/action-impact-preview-and-confirmation.md]
+fg-sources: [.lore/work/plans/action-impact-preview-and-confirmation.md, .lore/work/notes/action-impact-preview-and-confirmation.md, .lore/work/brainstorm/action-impact-preview-and-confirmation.md, .lore/work/specs/action-impact-preview-and-confirmation.md]
 fg-status: current
 fg-evidence:
   code:

@@ -4,7 +4,7 @@ date: 2026-06-25
 status: current
 tags: [unlocks, destiny, run-modifiers, runtime, meta-progression]
 fg-type: architecture
-fg-sources: [.lore/work/plans/unlock-system.md, .lore/work/notes/unlock-system.md, .lore/work/brainstorm/unlock-system.md]
+fg-sources: [.lore/work/plans/unlock-system.md, .lore/work/notes/unlock-system.md, .lore/work/brainstorm/unlock-system.md, .lore/work/specs/unlock-system.md]
 fg-status: current
 fg-evidence:
   code:
@@ -39,6 +39,8 @@ Production `startSession(worldId, seed, options)` assembles from manifests and u
 ## Destiny UI
 
 Destiny is the between-run purchase and loadout screen. It displays spendable Fragments, active weight against the Destiny budget, purchase state, and activation toggles. Purchases auto-activate when they fit.
+
+See [[run-modifiers-engine-hooks]] for the specific core-engine call sites (`effectiveHandSize`, `decayLight`, `gainEnergy`, `dealProgress`) that read the assembled `RunModifiers` bag.
 
 ## UX model considered
 

@@ -4,7 +4,7 @@ date: 2026-07-02
 status: current
 tags: [sim, completeness-checker, telemetry, statistics, agent-diagnostics, plan, implemented]
 fg-type: decision
-fg-sources: [.lore/work/plans/completeness-agent-performance-stats.md, .lore/work/notes/completeness-agent-performance-stats.md]
+fg-sources: [.lore/work/plans/completeness-agent-performance-stats.md, .lore/work/notes/completeness-agent-performance-stats.md, .lore/work/specs/sim-completeness-checker.md]
 fg-status: current
 fg-evidence:
   code:
@@ -21,7 +21,7 @@ fg-evidence:
 
 # Sim Completeness Performance Stats Plan
 
-An implemented (as of 2026-07-02) extension to the sim completeness checker, aimed at explaining *how* the honest eval agent performed on a world, not only whether it won. The base completeness checker's honesty, determinism, sample-not-proof framing, loss attribution, and report-only behavior are preserved; this work adds statistical shape and diagnostic depth on top. See [Shared EvalAxes Measurement](sim-eval-axes-shared-measurement.md), [Sim playOut Per-Run Agent Performance Telemetry](sim-agent-performance-telemetry.md), and [Sim Statistics Helpers](sim-statistics-helpers.md) for the pieces this decision produced.
+An implemented (as of 2026-07-02) extension to the sim completeness checker, aimed at explaining *how* the honest eval agent performed on a world, not only whether it won. The base completeness checker's honesty, determinism, sample-not-proof framing, loss attribution, and report-only behavior are preserved; this work adds statistical shape and diagnostic depth on top. See [Sim Per-World Completeness Checker](sim-completeness-checker.md) for the governing base system, and [Shared EvalAxes Measurement](sim-eval-axes-shared-measurement.md), [Sim playOut Per-Run Agent Performance Telemetry](sim-agent-performance-telemetry.md), and [Sim Statistics Helpers](sim-statistics-helpers.md) for the pieces this decision produced.
 
 ## Key scope decisions
 

@@ -1,9 +1,8 @@
-# Fog Beach Party World
-
-<!--
+---
+title: Fog Beach Party World
 date: 2026-06-15
 status: current
-tags: world-design, fog-beach-party, conceal, light, numeric-keywords, gain-light
+tags: [world-design, fog-beach-party, conceal, light, numeric-keywords, gain-light]
 fg-type: concept
 fg-sources: [.lore/work/specs/fog-beach-party.html, .lore/work/brainstorm/fog-beach-party-world.md]
 fg-status: current
@@ -19,7 +18,9 @@ fg-evidence:
   symbols:
     - Concealed
     - GainLight
--->
+---
+
+# Fog Beach Party World
 
 Fog Beach Party's threat verb is **conceal**: hazards can be present and harmful while their identity is hidden. The response archetype is **reveal and endure**. Light is the weapon, but blind discard and sweep effects prevent hard lock.
 
@@ -34,3 +35,5 @@ Keywords support numeric values such as `Concealed:3`. The world has a global `l
 ## World Shape
 
 The Bonfire is visible and grants the light kit, solving the need-reveal-to-get-reveal problem. Abandoned Cooler provides harmless concealed noise so spending Light remains a decision. Whiteout uses a generalized keyword counter instead of bespoke fog logic.
+
+Related: [[numeric-keywords-and-scaled-effects]] (the `Keyword`/`CounterSpec` engine slice this world introduced), [[whiteout-parking-garage-world]] (heat economy, deliberately shares no mechanic with Light).

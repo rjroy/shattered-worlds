@@ -4,7 +4,7 @@ date: 2026-07-02
 status: current
 tags: [intensity, juice, feedback, world-design, open-idea]
 fg-type: concept
-fg-sources: [.lore/work/brainstorm/theme-mechanical-differentiation.md, .lore/work/brainstorm/shard-response-archetypes.md]
+fg-sources: [.lore/work/brainstorm/theme-mechanical-differentiation.md, .lore/work/brainstorm/shard-response-archetypes.md, .lore/work/specs/world-deck-slice.html]
 fg-status: current
 fg-evidence:
   code:

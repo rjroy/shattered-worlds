@@ -1,11 +1,10 @@
-# Self Describing Card Faces
-
-<!--
+---
+title: Self Describing Card Faces
 date: 2026-06-15
 status: current
-tags: card-text, renderer, description, ux, modal, preview
+tags: [card-text, renderer, description, ux, modal, preview]
 fg-type: decision
-fg-sources: .lore/work/retros/self-describing-card-faces.html, .lore/work/plans/world-deck-slice.html
+fg-sources: [.lore/work/retros/self-describing-card-faces.html, .lore/work/plans/world-deck-slice.html, .lore/work/specs/world-deck-slice.html]
 fg-status: current
 fg-evidence:
   code:
@@ -18,7 +17,9 @@ fg-evidence:
   symbols:
     - describeEffect
     - resolveBranchLabels
--->
+---
+
+# Self Describing Card Faces
 
 The renderer chose bigger, self-describing card faces over hiding rules in a hover panel. Cards should explain their behavior directly on the face, including modal branches, sequence steps, penalties, rewards, and target previews.
 

@@ -4,7 +4,7 @@ date: 2026-06-25
 status: current
 tags: [effective-cards, unlocks, run-modifiers, card-system, read-model]
 fg-type: architecture
-fg-sources: [.lore/work/plans/effective-card-modifiers.md, .lore/work/notes/effective-card-modifiers.md, .lore/work/brainstorm/unlocks-modifying-card-templates.md]
+fg-sources: [.lore/work/specs/effective-card-modifiers.md, .lore/work/plans/effective-card-modifiers.md, .lore/work/notes/effective-card-modifiers.md, .lore/work/brainstorm/unlocks-modifying-card-templates.md]
 fg-status: current
 fg-evidence:
   code:

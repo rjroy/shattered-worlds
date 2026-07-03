@@ -18,7 +18,10 @@ Reference wiki for durable project knowledge extracted from lore artifacts.
 - [Sim Completeness Performance Stats Plan](sim-completeness-performance-stats-plan.md) - implemented paired-cohort telemetry explaining how the honest sim agent performed, not just whether it won.
 - [Meta-Progression Approaches Rejected on Purpose](meta-progression-rejected-approaches.md) - banked gold, play-count mastery, prestige resets, and permanent stat tracks were considered and cut; recorded so they aren't re-litigated.
 - ["ChronicleScene as the Proto-Destiny Surface"](chronicle-scene-decision.md) - one dedicated stats scene framed as Destiny's memory from day one, built to grow into the meta-progression hub rather than be replaced by it.
-- [Story Detail Lives in World-Select; Help Is a Phaser Overlay](story-detail-and-help-screen-decisions.md) - story is a short mood paragraph on the world-select card; help is a full-canvas Phaser overlay because its trigger is mid-run.
+- [Story Detail Lives in World-Select; Help Is a Phaser Overlay](story-detail-and-help-screen-decisions.md) - story is a short mood paragraph on the world-select card; help is a 5-tab Phaser overlay because its trigger is mid-run.
+- [Core Dispatch Rejects Illegal Actions by Throwing, Never by Event](core-dispatch-illegal-action-contract.md) - illegal actions throw a typed `IllegalActionError` instead of surfacing as a game event.
+- [Progress Never Carries Between Turns, and The Walker Is Meant to Be a Wall](progress-no-carryover-and-the-walker-wall.md) - per-turn Progress resets to zero; The Walker is an intentionally unbeatable starter-deck hazard, a meta-progression hook rather than a bug.
+- [Run Summary Shows on Every Terminal Outcome; World-Select Badges Are Live Data](run-summary-and-world-select-badges.md) - the summary view now covers abandon-then-recap too, and world-select badges read live stats rather than authored content.
 
 ## lesson
 
@@ -42,7 +45,7 @@ Reference wiki for durable project knowledge extracted from lore artifacts.
 
 - [Action Preview and Confirmation System](action-preview-confirmation-system.md) - pure reducer previews feed hover text and confirmation while masking concealed provenance.
 - [Audio Volume Settings](audio-volume-settings.md) - music and SFX volumes are separate persisted settings applied through the runtime.
-- [Card Data and World Scoped Templates](card-data-and-world-scoped-templates.md) - world card templates live in authored data and are assembled into catalogs by world.
+- [Card Data and World Scoped Templates](card-data-and-world-scoped-templates.md) - card templates are unified in one `allCards.json` catalog; per-world JSON now carries only `worldId` and deck composition.
 - [Core Render Split](core-render-split.md) - core game state is renderer-free and Phaser consumes read models and events.
 - [Effective Card Modifiers Read Model](effective-card-modifiers-read-model.md) - run modifiers derive effective card snapshots without mutating durable cards.
 - [Energy Turn Resource](energy-turn-resource.md) - energy is a per-turn spend resource reset by core turn flow.
@@ -63,6 +66,14 @@ Reference wiki for durable project knowledge extracted from lore artifacts.
 - [World Deck Loop](world-deck-loop.md) - the world deck creates pressure through draw, hazard resolution, progress, and refill loops.
 - [Witness Knowledge — Per-Threat History Feeding Feats, Not Player-Facing Reveals](witness-knowledge-system.md) - per-threat encounter/resolve/death tallies feed feat conditions; the sketched player-facing reveal UI never shipped.
 - [Run Stats Persistence Architecture](run-stats-persistence-architecture.md) - versioned lifetime stats, a run-history ring buffer, active-duration tracking, and export/import all hang off `RunEnded`.
+- [Full-Screen Overlay Input Blocking via Phaser's topOnly Default](full-screen-overlay-input-blocking-pattern.md) - a shared depth-1000 plus interactive background-rect convention blocks input to whatever sits underneath a full-canvas overlay.
+- [Gameplay Event Stream — Run Lifecycle Envelopes and the Multi-Consumer Boundary](gameplay-event-stream-architecture.md) - `RunStarted`/`GameplayBatch`/`RunEnded` envelopes and the fixed subscriber order (runStats -> witnessStore -> featEvaluator) that keeps the composition root correct.
+- [WorldSelectScene Replaces BootScene's Random World Assignment](world-select-scene-and-display-manifest.md) - a dedicated scene and `worldDisplayManifest` replace hand-picking a random world at boot.
+- [RunRecord's finalHp/finalResources/healingReceived Fields and Their Source Events](extended-run-telemetry-fields.md) - `HealReceived` and `HazardAdded` events feed extended per-run telemetry beyond the original stats plan.
+- [RunModifiers — the Four Engine Hooks Unlocks Actually Touch](run-modifiers-engine-hooks.md) - hand size, energy floor, light decay, and progress-per-keyword are the only core-engine seams unlock modifiers reach.
+- [Numeric Keywords And Keyword-Scaled Effects](numeric-keywords-and-scaled-effects.md) - the `KeywordName`/`Keyword` type split and `CounterSpec.KeywordInHand` scaling primitive shared by Fog's Whiteout and Mall's Bloom.
+- [Oversized Hand Row Windowing](oversized-hand-layout.md) - fixed-size row windowing with independent per-row offsets keeps an overflowing hand navigable without resizing cards.
+- [Sim Per-World Completeness Checker](sim-completeness-checker.md) - the foundational honest-agent, min-of-margins evaluation architecture that later performance-stats work builds on.
 
 ## concept
 
@@ -82,3 +93,4 @@ Reference wiki for durable project knowledge extracted from lore artifacts.
 - [Per-World Intensity Weights Remain an Open Idea, Not Yet Built](per-world-intensity-weights-open-idea.md) - twice-proposed, still-global juice weights; a recorded open idea rather than a decision.
 - [Unlock Design Pattern — Ask a New Question](unlock-design-pattern-new-questions.md) - a good unlock should ask the player a new question during the run, not just make an old answer bigger; six Slay-the-Spire-derived categories sketched for future Blessings.
 - ["The Endworlds Trilogy (Worlds 13-15): Destination or Denial"](endworlds-trilogy-concept.md) - unimplemented narrative concept reframing the Walker's journey as fleeing grief, resolved by a Refusal/Acknowledgment split ending.
+- [Eden Prime World](eden-prime-world.md) - startle-themed world pressure introduces Alarm; the first world to require a reusable core-engine keyword-application slice.

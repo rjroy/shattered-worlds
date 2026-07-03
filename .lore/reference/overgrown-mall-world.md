@@ -1,11 +1,10 @@
-# Overgrown Mall World
-
-<!--
+---
+title: Overgrown Mall World
 date: 2026-07-02
 status: current
-tags: world-design, overgrown-mall, spore, prune, bloom, deal-progress-scaled
+tags: [world-design, overgrown-mall, spore, prune, bloom, deal-progress-scaled]
 fg-type: concept
-fg-sources: .lore/work/specs/overgrown-mall.html, .lore/work/brainstorm/overgrown-mall-world.html, .lore/work/plans/overgrown-mall.html
+fg-sources: [.lore/work/specs/overgrown-mall.html, .lore/work/brainstorm/overgrown-mall-world.html, .lore/work/plans/overgrown-mall.html]
 fg-status: current
 fg-evidence:
   code:
@@ -22,7 +21,9 @@ fg-evidence:
     - Spore
     - DealProgressScaled
     - DamageScaled
--->
+---
+
+# Overgrown Mall World
 
 Overgrown Mall's threat verb is **infest**: world cards inject Spore cards into the player deck. The player response archetype is **prune and profit**, with a symbiosis line for players who choose to keep Spores and scale with them.
 
@@ -33,3 +34,5 @@ Spore is a player card with `energyCost: 1`, `exhaust: true`, and the `Spore` ke
 ## World Shape
 
 Acts escalate by delivery mechanism: avoidance pollution first, timed pollution next, then guaranteed next-turn Spore draws. The visual identity must distinguish this retail interior from Zombie Big Box by leaning into overgrowth-green intrusion, broken skylights, and civilization being reclaimed.
+
+Related: [[numeric-keywords-and-scaled-effects]] (the `DealProgressScaled`/`CounterSpec.KeywordInHand` mechanism `Bloom` is built on), [[cross-world-card-context-value]] (why `Regroup`, a mediocre zombie-big-box reward, becomes premium here).

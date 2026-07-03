@@ -4,7 +4,7 @@ date: 2026-06-25
 status: current
 tags: [feats, memory-fragments, meta-progression, run-summary, runtime]
 fg-type: architecture
-fg-sources: [.lore/work/plans/feat-definitions.md, .lore/work/notes/feat-definitions.md]
+fg-sources: [.lore/work/plans/feat-definitions.md, .lore/work/notes/feat-definitions.md, .lore/work/specs/feat-definitions.md]
 fg-status: current
 fg-evidence:
   code:
