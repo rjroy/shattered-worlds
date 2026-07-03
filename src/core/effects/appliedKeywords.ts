@@ -369,6 +369,7 @@ export class RemoveKeywordHandler extends EffectHandler<RemoveKeywordEffect> {
  */
 export function tickAppliedKeywordsAtTurnStart(state: GameState): EffectResult {
   const expiries = new Map<KeywordName, { ids: CardId[]; templateIds: CardTemplateId[] }>();
+  const reduced = new Map<KeywordName, { ids: CardId[]; templateIds: CardTemplateId[] }>();
   // True once any card actually carried an applied keyword. When no card does
   // (every non-Eden turn) the original state is returned untouched, keeping the
   // event stream and state byte-identical to the pre-slice engine.
@@ -381,6 +382,12 @@ export function tickAppliedKeywordsAtTurnStart(state: GameState): EffectResult {
     const next = tickAppliedKeywords(card);
     const remaining = next.appliedKeywords ?? [];
     for (const kw of applied) {
+      if (PERSISTENT_KEYWORDS.has(kw.name)) {
+        const bucket = reduced.get(kw.name) ?? { ids: [], templateIds: [] };
+        bucket.ids.push(card.id);
+        bucket.templateIds.push(card.templateId);
+        reduced.set(kw.name, bucket);
+      }
       if (!remaining.some((k) => k.name === kw.name)) {
         const bucket = expiries.get(kw.name) ?? { ids: [], templateIds: [] };
         bucket.ids.push(card.id);
@@ -396,6 +403,9 @@ export function tickAppliedKeywordsAtTurnStart(state: GameState): EffectResult {
   // Decremented (but not yet expired) lifetimes still update the hand; events
   // fire only for keywords that hit zero this tick.
   const events: GameEvent[] = [];
+  for (const [keyword, { ids, templateIds }] of expiries) {
+    events.push({ type: "KeywordReduced", ids, templateIds, keyword });
+  }
   for (const [keyword, { ids, templateIds }] of expiries) {
     events.push({ type: "KeywordRemoved", ids, templateIds, keyword });
   }

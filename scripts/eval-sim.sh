@@ -1,6 +1,6 @@
 #!/bin/bash
 
-bun run src/sim/completeness.ts > sim-results.json
+bun run sim:complete -- "$@" > sim-results.json
 
 echo "ID  | Base Wins  | Recovery Wins  | Flagged"
 echo "--- | ---------- | -------------- | --------"
@@ -12,5 +12,5 @@ jq -r '
       "\((.baseline.wins / .baseline.games * 100) | round)%",
       "\((.recovery.wins / .recovery.games * 100) | round)%",
       .flagged
-    ] | @tsv
+    ] | join(" | ")
   ' sim-results.json

@@ -476,6 +476,12 @@ export type GameEvent = (
       value: number;
     }
   | {
+      type: "KeywordReduced";
+      ids: readonly CardId[];
+      templateIds: readonly CardTemplateId[];
+      keyword: KeywordName;
+    }
+  | {
       type: "KeywordRemoved";
       ids: readonly CardId[];
       templateIds: readonly CardTemplateId[];
