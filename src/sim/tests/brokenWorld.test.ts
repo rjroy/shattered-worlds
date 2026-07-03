@@ -8,7 +8,7 @@ import { DEFAULT_EVAL_WEIGHTS } from "../eval";
 import { evalPolicyFactory } from "../evalPolicy";
 import { playOut } from "../playOut";
 import {
-  formatReport,
+  formatHumanReport,
   runCompleteness,
   type BuiltWorld,
   type CohortAggregate,
@@ -191,7 +191,7 @@ describe("completeness detects an unwinnable world (REQ-SCC-14)", () => {
 
     // Exercise the REAL report/flag path (not a replica): the formatted report
     // flags the world and surfaces hp as the dominant cause.
-    const report = formatReport(params(), [agg]);
+    const report = formatHumanReport(params(), [agg]);
     expect(report).toContain("[FLAGGED]");
     expect(report).toContain("Dominant cause: hp");
     expect(report).toContain("Flagged worlds: 1/1");
@@ -253,7 +253,7 @@ describe("completeness detects an unwinnable world (REQ-SCC-14)", () => {
     };
     const rescuedAgg: WorldAggregate = { ...agg, recovery: rescuedRecovery };
 
-    const report = formatReport(params(), [rescuedAgg]);
+    const report = formatHumanReport(params(), [rescuedAgg]);
     expect(report).toContain("Flagged worlds: 1/1");
     expect((report.match(/\[FLAGGED\]/g) ?? []).length).toBe(1);
 
@@ -274,7 +274,7 @@ describe("completeness detects an unwinnable world (REQ-SCC-14)", () => {
       expect(agg.baseline.wins).toBeGreaterThan(0);
       expect(agg.baseline.wins / agg.baseline.games).toBeGreaterThan(THRESHOLD);
 
-      const report = formatReport(params(), [agg]);
+    const report = formatHumanReport(params(), [agg]);
       expect(report).not.toContain("[FLAGGED]");
       expect(report).toContain("Flagged worlds: 0/1");
     },
