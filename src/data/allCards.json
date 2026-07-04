@@ -3071,6 +3071,7 @@
     "The Ledger Never Closes": {
       "kind": "world",
       "name": "The Ledger Never Closes",
+      "insetKey": "answers-inset-the-ledger-never-closes",
       "rarity": "uncommon",
       "cost": 4,
       "keywords": [],
@@ -3090,6 +3091,7 @@
     "A Broker Who Owes Nothing": {
       "kind": "world",
       "name": "A Broker Who Owes Nothing",
+      "insetKey": "answers-inset-a-broker-who-owes-nothing",
       "rarity": "common",
       "cost": 3,
       "keywords": ["Obstructed"],
@@ -3103,6 +3105,7 @@
     "What Would You Give Up": {
       "kind": "world",
       "name": "What Would You Give Up",
+      "insetKey": "answers-inset-what-would-you-give-up",
       "rarity": "uncommon",
       "cost": 3,
       "keywords": [],
@@ -3122,6 +3125,7 @@
     "The Archive Has a Price": {
       "kind": "world",
       "name": "The Archive Has a Price",
+      "insetKey": "answers-inset-the-archive-has-a-price",
       "rarity": "common",
       "cost": 2,
       "keywords": ["Obstructed"],
@@ -3135,6 +3139,7 @@
     "A Deal Too Easy": {
       "kind": "world",
       "name": "A Deal Too Easy",
+      "insetKey": "answers-inset-a-deal-too-easy",
       "rarity": "common",
       "cost": 2,
       "keywords": [],
@@ -3148,6 +3153,7 @@
     "A Reading of the Ledger": {
       "kind": "world",
       "name": "A Reading of the Ledger",
+      "insetKey": "answers-inset-a-reading-of-the-ledger",
       "rarity": "uncommon",
       "cost": 2,
       "keywords": [],
@@ -3167,6 +3173,7 @@
     "A Fracture Opens": {
       "kind": "world",
       "name": "A Fracture Opens",
+      "insetKey": "answers-inset-a-fracture-opens",
       "rarity": "common",
       "cost": 3,
       "keywords": [],
@@ -3186,6 +3193,7 @@
     "Another Fracture": {
       "kind": "world",
       "name": "Another Fracture",
+      "insetKey": "answers-inset-another-fracture",
       "rarity": "uncommon",
       "cost": 4,
       "keywords": [],
@@ -3199,6 +3207,7 @@
     "The Point of No Return": {
       "kind": "world",
       "name": "The Point of No Return",
+      "insetKey": "answers-inset-the-point-of-no-return",
       "rarity": "uncommon",
       "cost": 3,
       "keywords": [],
@@ -3212,6 +3221,7 @@
     "The Weight Doesn't Lift": {
       "kind": "world",
       "name": "The Weight Doesn't Lift",
+      "insetKey": "answers-inset-the-weight-doesnt-lift",
       "rarity": "uncommon",
       "cost": 4,
       "keywords": [],
@@ -3231,6 +3241,7 @@
     "It Won't Go Away": {
       "kind": "world",
       "name": "It Won't Go Away",
+      "insetKey": "answers-inset-it-wont-go-away",
       "rarity": "common",
       "cost": 2,
       "keywords": [],
@@ -3250,6 +3261,7 @@
     "It Calcified": {
       "kind": "world",
       "name": "It Calcified",
+      "insetKey": "answers-inset-it-calcified",
       "rarity": "rare",
       "cost": 5,
       "keywords": ["Depression:2"],
@@ -3263,6 +3275,7 @@
     "A Reason to Keep Moving": {
       "kind": "world",
       "name": "A Reason to Keep Moving",
+      "insetKey": "answers-inset-a-reason-to-keep-moving",
       "rarity": "common",
       "cost": 3,
       "keywords": ["Obstructed"],
@@ -3276,6 +3289,7 @@
     "Just Keep Walking": {
       "kind": "world",
       "name": "Just Keep Walking",
+      "insetKey": "answers-inset-just-keep-walking",
       "rarity": "common",
       "cost": 2,
       "keywords": [],
@@ -3289,6 +3303,7 @@
     "Call In The Favor": {
       "kind": "player",
       "name": "Call In The Favor",
+      "insetKey": "answers-inset-call-in-the-favor",
       "rarity": "common",
       "energyCost": 1,
       "effect": {
@@ -3302,6 +3317,7 @@
     "A Page From the Ledger": {
       "kind": "player",
       "name": "A Page From the Ledger",
+      "insetKey": "answers-inset-a-page-from-the-ledger",
       "rarity": "common",
       "energyCost": 1,
       "effect": { "kind": "DealProgress", "base": 1 }
@@ -3309,6 +3325,7 @@
     "Ask For More Time": {
       "kind": "player",
       "name": "Ask For More Time",
+      "insetKey": "answers-inset-ask-for-more-time",
       "rarity": "common",
       "energyCost": 1,
       "effect": { "kind": "Heal", "amount": 2 }
@@ -3316,6 +3333,7 @@
     "Take What's Owed": {
       "kind": "player",
       "name": "Take What's Owed",
+      "insetKey": "answers-inset-take-whats-owed",
       "rarity": "common",
       "energyCost": 1,
       "effect": { "kind": "DealProgress", "base": 3 }
@@ -3323,6 +3341,7 @@
     "Let It Sit": {
       "kind": "player",
       "name": "Let It Sit",
+      "insetKey": "answers-inset-let-it-sit",
       "rarity": "common",
       "energyCost": 1,
       "effect": {
@@ -3336,6 +3355,7 @@
     "Keep Walking": {
       "kind": "player",
       "name": "Keep Walking",
+      "insetKey": "answers-inset-keep-walking",
       "rarity": "common",
       "energyCost": 1,
       "effect": { "kind": "Brace", "amount": 1 }
@@ -3343,6 +3363,7 @@
     "Let It Go": {
       "kind": "player",
       "name": "Let It Go",
+      "insetKey": "answers-inset-let-it-go",
       "rarity": "uncommon",
       "energyCost": 1,
       "effect": { "kind": "DiscardThenDraw", "player": 1 }
