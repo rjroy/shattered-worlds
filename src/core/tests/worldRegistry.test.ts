@@ -89,4 +89,22 @@ describe.each([...worldDataRegistry])('world registry: "$id"', (bundle) => {
     const missing = allReferencedTemplates(catalog).filter((id) => catalog[id] === undefined)
     expect(missing).toEqual([])
   })
+
+  // Card templates are JSON, cast through `unknown` on load (see
+  // worldManifest.ts), so TypeScript's required-field checking on
+  // WorldCardTemplate never actually runs against authored data. This is the
+  // one place that catches a template shipped without all five hooks.
+  it('every world card template defines all five hooks explicitly', () => {
+    const { catalog } = buildWorld(bundle.id)
+    const offenders: string[] = []
+    for (const [templateId, template] of Object.entries(catalog)) {
+      if (template.kind !== 'world') continue
+      if (template.onDiscarded === undefined) offenders.push(`${templateId}.onDiscarded`)
+      if (template.onCleared === undefined) offenders.push(`${templateId}.onCleared`)
+      if (template.onPartialClear === undefined) offenders.push(`${templateId}.onPartialClear`)
+      if (template.onDraw === undefined) offenders.push(`${templateId}.onDraw`)
+      if (template.onEndOfTurn === undefined) offenders.push(`${templateId}.onEndOfTurn`)
+    }
+    expect(offenders).toEqual([])
+  })
 })

@@ -51,6 +51,9 @@ import transitRealityUrl from "../assets/themes/transit-authority/transit-author
 import transitOverlayUrl from "../assets/themes/transit-authority/intrusion-overlay.webp";
 import transitCardfrontUrl from "../assets/themes/transit-authority/transit-authority-cardfront.webp";
 
+import questionsRealityUrl from "../assets/themes/questions/questions-reality.webp";
+import questionsOverlayUrl from "../assets/themes/questions/intrusion-overlay.webp";
+
 // ---------------------------------------------------------------------------
 // World inset imports
 // ---------------------------------------------------------------------------
@@ -423,6 +426,9 @@ export const worldAssetUrls: Record<string, string> = {
   "transit-inset-check-the-board": transitInsetCheckTheBoardUrl,
   "transit-inset-board-anyway": transitInsetBoardAnywayUrl,
   "transit-inset-right-of-way": transitInsetRightOfWayUrl,
+  // questions
+  "questions-bg": questionsRealityUrl,
+  "questions-overlay": questionsOverlayUrl,
 };
 
 export interface WorldMusicAsset {
