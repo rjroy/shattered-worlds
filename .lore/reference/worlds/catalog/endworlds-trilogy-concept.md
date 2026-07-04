@@ -10,17 +10,19 @@ fg-status: current
 
 # The Endworlds Trilogy (Worlds 13-15): Destination or Denial
 
+**Outdated:** this page describes an earlier concept (Refusal/Acknowledgment keywords, the Feat/Fragment-spending Bargain battle, the two-path ending) that was superseded by the 2026-07-03 brainstorm and the ratified specs for `questions.md`, `answers.md`, and `the-beginning.md`. Only the world names below have been updated to match; the mechanics described in this doc are no longer current. Rewriting this page is tracked as a shipping blocker under `REQ-W13-26`.
+
 This is a brainstormed narrative concept for the run's final three worlds, not yet specced or implemented. It reframes the entire game's premise: the Walker is not fleeing an apocalypse, the Walker is fleeing the death of someone they love, and every broken world crossed so far has been a way to avoid being present for that loss. "Apocalypse" is the excuse; grief is the plot. This sits alongside — and narratively completes — the shared Walker/Door mechanical pattern described in [[theme-authoring]], which establishes that the Walker is never the enemy and never re-themed per world; this concept keeps that rule and gives the throughline its payoff instead of contradicting it (the antagonist in the closing worlds is Death, not the Walker).
 
-## World 13: The Quiet Before Noise
+## World 13: Questions
 
 The first world where nothing attacks at first — silence, not collapse. Mechanically, world cards start balanced between constructive and destructive effects, and the balance tips based on how the player plays: aggressive, must-overcome-everything play accrues a `Refusal` keyword; defensive, discard-forward play accrues an `Acknowledgment` keyword. By Act 3 whichever keyword dominates changes what happens on clearing an otherwise-identical encounter.
 
-## World 14: The Bargain
+## World 14: Answers
 
 Opens normally for three turns, then cracks open completely: every Door the Walker has opened across all prior worlds becomes visible at once, suspended in the distance. Cards here are brutally efficient but each play costs Memory Fragments or Feats — the player's permanent, dozens-of-runs meta-progression is spent to fight this battle, literally trading built-up Destiny for power in the moment.
 
-## World 15: One Door, Two Paths
+## World 15: The Beginning
 
 No boss fight. The world splits based on which keyword, Refusal or Acknowledgment, accumulated more across Worlds 13 and 14:
 

@@ -1,5 +1,5 @@
 ---
-title: The Quiet Before Noise (World 13 — Denial and Anger)
+title: Questions (World 13 — Denial and Anger)
 date: 2026-07-03
 status: draft
 tags: [world, walker-narrative, grief-arc, denial, anger, destiny-entity, keyword-cost-modifiers, compound]
@@ -14,7 +14,7 @@ related:
 req-prefix: W13
 ---
 
-# The Quiet Before Noise world
+# Questions world
 
 The Walker arrives somewhere ordinary gone quiet — a hospital corridor, a kitchen with a chair pulled up to an empty seat — and for the first time in the run, nothing attacks. The world's wrongness is absence, not assault. This is the first of three end-worlds closing out the game's 15-world arc, and the first to name what every prior world's flight was actually running from: losing a parent. Its signature verb is **compound** — the cost of confronting anything here climbs the longer it goes avoided or raged against, carried by two new applied keywords (`Denial`, `Anger`) and a new in-fiction hazard entity, `Destiny`, whose expense is a direct readout of how much grief the player is still carrying.
 
@@ -31,7 +31,7 @@ The Walker arrives somewhere ordinary gone quiet — a hospital corridor, a kitc
 
 <div id="REQ-W13-1"></div>
 
-**REQ-W13-1:** `worldId` is `the-quiet-before-noise`, identical kebab-case across the JSON `worldId`, world bundle id/meta, `VisualTheme.worldId`, registry entry, and asset bindings (RULE 0).
+**REQ-W13-1:** `worldId` is `questions`, identical kebab-case across the JSON `worldId`, world bundle id/meta, `VisualTheme.worldId`, registry entry, and asset bindings (RULE 0).
 
 <div id="REQ-W13-2"></div>
 
@@ -60,7 +60,7 @@ The Walker arrives somewhere ordinary gone quiet — a hospital corridor, a kitc
 
 <div id="REQ-W13-7"></div>
 
-**REQ-W13-7:** Signature player verb: **compound**. Add a row to the theme-authoring.md signature-verb table: `the-quiet-before-noise | compound | Denial/Anger keywords tax cost the longer grief goes unaddressed; Destiny's cost is a direct readout of accumulated Denial+Anger`. Distinct from all 12 existing verbs and reserved ahead of Worlds 14/15, which need their own.
+**REQ-W13-7:** Signature player verb: **compound**. Add a row to the theme-authoring.md signature-verb table: `questions | compound | Denial/Anger keywords tax cost the longer grief goes unaddressed; Destiny's cost is a direct readout of accumulated Denial+Anger`. Distinct from all 12 existing verbs and reserved ahead of Worlds 14/15, which need their own.
 
 Denial's shape reuses `isolate`'s self-tax pattern and Anger's reuses `startle`'s ambient-tax pattern (both permitted as supporting tools per "no mechanic is exclusive; identity is"). What makes `compound` its own identity, not a reskinned isolate-plus-startle, is that both shapes land on the *same* entity (`Destiny`) simultaneously and stack rather than acting independently — the signature experience is watching one specific cost climb from two directions at once as two different emotional responses pile up, not either tax mechanic alone.
 
@@ -152,7 +152,7 @@ This is a deliberate narrative change from both brainstorm docs' framing, not ju
 
 <div id="REQ-W13-25"></div>
 
-**REQ-W13-25:** Add `the-quiet-before-noise` as a new row in the theme-authoring.md signature-verb table (REQ-W13-7). Document `Denial`/`Anger` as **C2 prose**, not a Signature Effects table row — checked directly against `theme-authoring.md`: `Lockdown` and `Reroute` are documented as prose within C2 ("The current keyword vocabulary is..."), not as rows in the Signature Effects table (that table lists `CardEffect` kinds only, e.g. `DealProgressScaled`, `GainLight`, the `ApplyKeyword`/`KeywordGate`/etc. primitive family). This corrects the original version of this requirement, which stated the wrong document structure.
+**REQ-W13-25:** Add `questions` as a new row in the theme-authoring.md signature-verb table (REQ-W13-7). Document `Denial`/`Anger` as **C2 prose**, not a Signature Effects table row — checked directly against `theme-authoring.md`: `Lockdown` and `Reroute` are documented as prose within C2 ("The current keyword vocabulary is..."), not as rows in the Signature Effects table (that table lists `CardEffect` kinds only, e.g. `DealProgressScaled`, `GainLight`, the `ApplyKeyword`/`KeywordGate`/etc. primitive family). This corrects the original version of this requirement, which stated the wrong document structure.
 
 <div id="REQ-W13-26"></div>
 
@@ -162,7 +162,7 @@ This is a deliberate narrative change from both brainstorm docs' framing, not ju
 
 <div id="REQ-W13-27"></div>
 
-**REQ-W13-27:** `worldRegistry.test.ts`-style conformance: `selectTheme("the-quiet-before-noise")` resolves the theme, `buildWorld` assembles without error, no duplicate template ids, and every world card defines all five hooks (`onDiscarded`, `onCleared`, `onPartialClear`, `onEndOfTurn`, `onDraw`).
+**REQ-W13-27:** `worldRegistry.test.ts`-style conformance: `selectTheme("questions")` resolves the theme, `buildWorld` assembles without error, no duplicate template ids, and every world card defines all five hooks (`onDiscarded`, `onCleared`, `onPartialClear`, `onEndOfTurn`, `onDraw`).
 
 <div id="REQ-W13-28"></div>
 
@@ -181,7 +181,7 @@ This is a deliberate narrative change from both brainstorm docs' framing, not ju
 
 ## Open Questions
 
-- Final worldId/title (`the-quiet-before-noise`) is a recommendation carried over from the original brainstorm's working title ("The Quiet Before Noise"), not yet confirmed.
+- Final worldId/title (`questions`) is a recommendation, renamed from the original brainstorm's working title ("The Quiet Before Noise") during spec review; not yet confirmed.
 - Signature verb `compound` is a recommendation, not yet confirmed — it also needs to not collide with whatever verbs Worlds 14 and 15 end up with.
 - Exact `costPer` values, `Destiny`'s authored `Denial` value (`Denial:2` is a placeholder), and final deck-composition counts are unauthored — this spec fixes shape and mechanism, not tuning.
 - Whether `Denial`/`Anger` should render distinctly in the UI (separate icon/color per keyword) is unaddressed and may need a `game/` view-layer follow-up spec.

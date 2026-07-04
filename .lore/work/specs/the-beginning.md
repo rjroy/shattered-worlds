@@ -1,5 +1,5 @@
 ---
-title: The Vigil (World 15 — Acceptance, the finale)
+title: The Beginning (World 15 — Acceptance, the finale)
 date: 2026-07-03
 status: draft
 tags: [world, walker-narrative, grief-arc, acceptance, destiny-entity, keyword-cost-modifiers, unburden, finale]
@@ -8,16 +8,16 @@ related:
   - .lore/work/brainstorm/endworlds-destination.md
   - .lore/work/brainstorm/world-15-grief-mechanics.md
   - .lore/reference/worlds/authoring/theme-authoring.md
-  - .lore/work/specs/the-quiet-before-noise.md
-  - .lore/work/specs/the-bargain.md
+  - .lore/work/specs/questions.md
+  - .lore/work/specs/answers.md
 req-prefix: W15
 ---
 
-# The Vigil world
+# The Beginning world
 
 The Walker arrives one last time, and everything from Worlds 13 and 14 is here at once — Denial, Anger, Bargaining, Depression, all reprised, all still taxing. But this world's actual subject isn't another world to survive. It's a decision about how long to keep fighting before sitting down. Its signature verb is **unburden** — every prior world's mechanical weight is still being carried in Act I/II, and Act III is the one place in the whole game where a keyword makes something *cheaper* instead of costlier. `Destiny` continues as the trouble, authored with a cost high enough to be nigh-impossible without real, repeated engagement — not avoidance, not more fighting, just staying with it.
 
-**Scope of this spec:** narrative shape and mechanism — the keyword reprise, the `Acceptance` cost-discount slice, and card *roles* — not concrete final card templates, exact numbers, or deck counts. Matches the scope discipline `the-quiet-before-noise.md` and `the-bargain.md` both used.
+**Scope of this spec:** narrative shape and mechanism — the keyword reprise, the `Acceptance` cost-discount slice, and card *roles* — not concrete final card templates, exact numbers, or deck counts. Matches the scope discipline `questions.md` and `answers.md` both used.
 
 ## Ratified decisions (2026-07-03)
 
@@ -31,7 +31,7 @@ The Walker arrives one last time, and everything from Worlds 13 and 14 is here a
 
 <div id="REQ-W15-1"></div>
 
-**REQ-W15-1:** `worldId` is `the-vigil`, identical kebab-case across the JSON `worldId`, world bundle id/meta, `VisualTheme.worldId`, registry entry, and asset bindings (RULE 0). Verified clear of collision against `src/data/worlds/registry.ts` and `.lore/work/specs/` at spec time.
+**REQ-W15-1:** `worldId` is `the-beginning`, identical kebab-case across the JSON `worldId`, world bundle id/meta, `VisualTheme.worldId`, registry entry, and asset bindings (RULE 0). Verified clear of collision against `src/data/worlds/registry.ts` and `.lore/work/specs/` at spec time.
 
 <div id="REQ-W15-2"></div>
 
@@ -57,7 +57,7 @@ The Walker arrives one last time, and everything from Worlds 13 and 14 is here a
 
 <div id="REQ-W15-7"></div>
 
-**REQ-W15-7:** Signature player verb: **unburden**. Add a row to the theme-authoring.md signature-verb table: `the-vigil | unburden | Reprises Worlds 13/14's four grief keywords (all cost-increasing), then introduces Acceptance — the only cost-decreasing keyword in the game`. Distinct from World 13's `compound` (accumulation) and World 14's `concede` (giving something up under pressure) — `unburden` is specifically about release, the inverse motion of both. It is not a reskin of any existing verb: no other world's signature mechanic makes anything cheaper.
+**REQ-W15-7:** Signature player verb: **unburden**. Add a row to the theme-authoring.md signature-verb table: `the-beginning | unburden | Reprises Worlds 13/14's four grief keywords (all cost-increasing), then introduces Acceptance — the only cost-decreasing keyword in the game`. Distinct from World 13's `compound` (accumulation) and World 14's `concede` (giving something up under pressure) — `unburden` is specifically about release, the inverse motion of both. It is not a reskin of any existing verb: no other world's signature mechanic makes anything cheaper.
 
 ## The Reprise and Acceptance Mechanic (pure data — no core-engine change)
 
@@ -159,7 +159,7 @@ This is deterministic and guaranteed to land on `Destiny` specifically, never on
 
 <div id="REQ-W15-26"></div>
 
-**REQ-W15-26:** Add `the-vigil` as a new row in the theme-authoring.md signature-verb table (REQ-W15-7). Document `Acceptance` as C2 prose (not a Signature Effects table row — see the correction made to both `REQ-W13-25` and `REQ-W14-25`), explicitly noting it as the first cost-*decreasing* `KEYWORD_COST_MODIFIERS` entry in the game.
+**REQ-W15-26:** Add `the-beginning` as a new row in the theme-authoring.md signature-verb table (REQ-W15-7). Document `Acceptance` as C2 prose (not a Signature Effects table row — see the correction made to both `REQ-W13-25` and `REQ-W14-25`), explicitly noting it as the first cost-*decreasing* `KEYWORD_COST_MODIFIERS` entry in the game.
 
 <div id="REQ-W15-27"></div>
 
@@ -169,7 +169,7 @@ This is deterministic and guaranteed to land on `Destiny` specifically, never on
 
 <div id="REQ-W15-28"></div>
 
-**REQ-W15-28:** `worldRegistry.test.ts`-style conformance: `selectTheme("the-vigil")` resolves the theme, `buildWorld` assembles without error, no duplicate template ids (in particular: no card in this world reuses `The Walker`'s template id for the companion figure — REQ-W15-6), every world card defines all five hooks.
+**REQ-W15-28:** `worldRegistry.test.ts`-style conformance: `selectTheme("the-beginning")` resolves the theme, `buildWorld` assembles without error, no duplicate template ids (in particular: no card in this world reuses `The Walker`'s template id for the companion figure — REQ-W15-6), every world card defines all five hooks.
 
 <div id="REQ-W15-29"></div>
 
@@ -190,7 +190,7 @@ This is deterministic and guaranteed to land on `Destiny` specifically, never on
 
 ## Open Questions
 
-- Final worldId/title (`the-vigil`) and signature verb (`unburden`) are recommendations, not yet confirmed.
+- Final worldId/title (`the-beginning`, renamed from the original "The Vigil") and signature verb (`unburden`) are recommendations, not yet confirmed.
 - `Destiny`'s placeholder base cost (`50`), `Acceptance`'s applied `value` (`45`), and `costPer` (`-1`) are unauthored guesses that happen to net a clean `5` remaining after one engagement — real tuning (including whether a single-engagement swing this dramatic feels right versus something more gradual, which would need a different mechanism than the one specced here) needs a real numbers-and-feel pass, not just the shape of the idea.
 - `GainKeywordGuard` pre-loading from earned Blessings/Feats (REQ-W15-17) needs a concrete mapping (which unlocks grant how many charges) before it's buildable.
 - Whether `Destiny` needs its own distinct visual tell versus `Door`'s (REQ-W15-24) is unresolved.

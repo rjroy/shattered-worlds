@@ -1,5 +1,5 @@
 ---
-title: The Bargain (World 14 — Bargaining and Depression)
+title: Answers (World 14 — Bargaining and Depression)
 date: 2026-07-03
 status: draft
 tags: [world, walker-narrative, grief-arc, bargaining, depression, destiny-entity, keyword-cost-modifiers, concede]
@@ -8,15 +8,15 @@ related:
   - .lore/work/brainstorm/endworlds-destination.md
   - .lore/work/brainstorm/world-14-grief-mechanics.md
   - .lore/reference/worlds/authoring/theme-authoring.md
-  - .lore/work/specs/the-quiet-before-noise.md
+  - .lore/work/specs/questions.md
 req-prefix: W14
 ---
 
-# The Bargain world
+# Answers world
 
 The Walker learns what the Destiny actually is here — not by being told, but by finding the ledgers, the libraries on death, the Door. This is the second of three end-worlds, and where Bargaining (the search for another way out) gives way to Depression (the resigned choice that there isn't one). Its signature verb is **concede** — every act is some flavor of giving something up, whether it's spent chasing a deal or given up on chasing anything at all. Two new applied keywords, `Bargaining` and `Depression`, carry the weight, and `Destiny` continues its role from World 13 as the trouble — the same themed hazard entity, not the shared `Walker`/`Door` templates.
 
-**Scope of this spec:** narrative shape and mechanism — the keyword/cost-modifier slice, the Destiny hazard's continuity from World 13, and card *roles* — not concrete final card templates, exact numbers, or deck counts. Those are an explicit authoring pass to follow (see Open Questions), matching how `the-quiet-before-noise.md` scoped World 13.
+**Scope of this spec:** narrative shape and mechanism — the keyword/cost-modifier slice, the Destiny hazard's continuity from World 13, and card *roles* — not concrete final card templates, exact numbers, or deck counts. Those are an explicit authoring pass to follow (see Open Questions), matching how `questions.md` scoped World 13.
 
 ## Ratified decisions (2026-07-03)
 
@@ -28,7 +28,7 @@ The Walker learns what the Destiny actually is here — not by being told, but b
 
 <div id="REQ-W14-1"></div>
 
-**REQ-W14-1:** `worldId` is `the-bargain`, identical kebab-case across the JSON `worldId`, world bundle id/meta, `VisualTheme.worldId`, registry entry, and asset bindings (RULE 0). Verified clear of collision against `src/data/worlds/registry.ts` and `.lore/work/specs/` at spec time.
+**REQ-W14-1:** `worldId` is `answers`, identical kebab-case across the JSON `worldId`, world bundle id/meta, `VisualTheme.worldId`, registry entry, and asset bindings (RULE 0). Verified clear of collision against `src/data/worlds/registry.ts` and `.lore/work/specs/` at spec time.
 
 <div id="REQ-W14-2"></div>
 
@@ -51,11 +51,11 @@ This world's three-beat narrative spine is deliberately **not** 1:1 with its thr
 
 <div id="REQ-W14-5"></div>
 
-**REQ-W14-5:** `Destiny` continues here exactly as introduced in World 13 (`the-quiet-before-noise.md` REQ-W13-6) — same themed, world-local hazard entity, not a shared template, not a new code-level type. No new naming decision needed; this world just continues using it. Glimpsed via lore in Act I, it becomes the thing carried onward by Act III (see REQ-W14-12/13).
+**REQ-W14-5:** `Destiny` continues here exactly as introduced in World 13 (`questions.md` REQ-W13-6) — same themed, world-local hazard entity, not a shared template, not a new code-level type. No new naming decision needed; this world just continues using it. Glimpsed via lore in Act I, it becomes the thing carried onward by Act III (see REQ-W14-12/13).
 
 <div id="REQ-W14-6"></div>
 
-**REQ-W14-6:** Signature player verb: **concede**. Add a row to the theme-authoring.md signature-verb table: `the-bargain | concede | Bargaining and Depression keywords tax cost from two different directions — spending elsewhere (Bargaining) and settling into one thing (Depression) — every act gives something up`. Distinct from World 13's `compound` and all 12 existing verbs.
+**REQ-W14-6:** Signature player verb: **concede**. Add a row to the theme-authoring.md signature-verb table: `answers | concede | Bargaining and Depression keywords tax cost from two different directions — spending elsewhere (Bargaining) and settling into one thing (Depression) — every act gives something up`. Distinct from World 13's `compound` and all 12 existing verbs.
 
 `Bargaining`'s tax shape (see REQ-W14-9) reuses the *value-summed-across-other-cards* modifier kind, which no shipped keyword currently uses — this is new ground, not a reskin of an owned mechanic. `Depression`'s shape reuses `Denial`'s self-tax pattern from World 13 (also `Lockdown`/`Reroute`'s shape) — permitted as a supporting-tool reuse, and deliberately *not* differentiated from Denial mechanically, because the brainstorm's open question ("does Depression compete with Bargaining, or does it settle instead") is resolved here as: Depression doesn't compete for anything, it just sits on the one card it's attached to and weighs on it. Reusing the plainest, least showy shape is the point.
 
@@ -155,7 +155,7 @@ This world's three-beat narrative spine is deliberately **not** 1:1 with its thr
 
 <div id="REQ-W14-25"></div>
 
-**REQ-W14-25:** Add `the-bargain` as a new row in the theme-authoring.md signature-verb table (REQ-W14-6), immediately following whatever row World 13's `compound` lands as. Document `Bargaining`/`Depression` as **C2 prose**, not a Signature Effects table row — checked directly against `theme-authoring.md`: `Lockdown` and `Reroute` are documented as prose within C2 ("The current keyword vocabulary is..."), not as rows in the Signature Effects table (that table only lists `CardEffect` kinds, e.g. `DealProgressScaled`, `GainLight`, the `ApplyKeyword`/`KeywordGate`/etc. primitive family). World 13's `REQ-W13-25` stated this incorrectly as a table entry; both this spec and World 13's are corrected to match the actual document structure. Call out `Bargaining` explicitly as the first real-world user of `ClearCostPerOtherKeyword`.
+**REQ-W14-25:** Add `answers` as a new row in the theme-authoring.md signature-verb table (REQ-W14-6), immediately following whatever row World 13's `compound` lands as. Document `Bargaining`/`Depression` as **C2 prose**, not a Signature Effects table row — checked directly against `theme-authoring.md`: `Lockdown` and `Reroute` are documented as prose within C2 ("The current keyword vocabulary is..."), not as rows in the Signature Effects table (that table only lists `CardEffect` kinds, e.g. `DealProgressScaled`, `GainLight`, the `ApplyKeyword`/`KeywordGate`/etc. primitive family). World 13's `REQ-W13-25` stated this incorrectly as a table entry; both this spec and World 13's are corrected to match the actual document structure. Call out `Bargaining` explicitly as the first real-world user of `ClearCostPerOtherKeyword`.
 
 <div id="REQ-W14-26"></div>
 
@@ -165,7 +165,7 @@ This world's three-beat narrative spine is deliberately **not** 1:1 with its thr
 
 <div id="REQ-W14-27"></div>
 
-**REQ-W14-27:** `worldRegistry.test.ts`-style conformance: `selectTheme("the-bargain")` resolves the theme, `buildWorld` assembles without error, no duplicate template ids, every world card defines all five hooks.
+**REQ-W14-27:** `worldRegistry.test.ts`-style conformance: `selectTheme("answers")` resolves the theme, `buildWorld` assembles without error, no duplicate template ids, every world card defines all five hooks.
 
 <div id="REQ-W14-28"></div>
 
@@ -193,7 +193,7 @@ This is a deliberate narrative resolution, not a silent one: `world-14-grief-mec
 
 ## Open Questions
 
-- Final worldId/title (`the-bargain`) is a recommendation carried over from the original (superseded) brainstorm's title for this world, not yet confirmed.
+- Final worldId/title (`answers`) is a recommendation, renamed from the original (superseded) brainstorm's title for this world ("The Bargain"); not yet confirmed.
 - Signature verb `concede` is a recommendation, not yet confirmed — needs to also not collide with whatever World 15 ends up needing.
 - Exact `costPer` values, `Destiny`'s authored `Depression` value (`Depression:2` is a placeholder), and final deck-composition counts are unauthored — this spec fixes shape and mechanism, not tuning.
 - Whether `Bargaining`'s "the carrier pays nothing, everyone else pays" asymmetry (REQ-W14-10) reads clearly to a player without an explicit UI callout — flagged, not resolved; may need a `game/` view-layer follow-up.
