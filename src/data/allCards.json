@@ -2944,7 +2944,12 @@
         "keyword": "Anger",
         "min": 2,
         "zone": "hand",
-        "then": { "kind": "ApplyKeyword", "keyword": "Anger", "value": 1, "target": "randomWorldCardInHand" }
+        "then": {
+          "kind": "ApplyKeyword",
+          "keyword": "Anger",
+          "value": 1,
+          "target": "randomWorldCardInHand"
+        }
       }
     },
     "Nobody Warned You": {
@@ -2988,17 +2993,23 @@
     },
     "Destiny": {
       "kind": "world",
-      "name": "Destiny",
+      "name": "The Destiny",
       "insetKey": "questions-inset-destiny",
       "rarity": "signature",
-      "cost": 6,
-      "keywords": ["Denial:2"],
+      "cost": 15,
+      "keywords": [],
       "discardable": true,
       "onDiscarded": { "kind": "None" },
-      "onCleared": { "kind": "ExileTopWorldCards", "amount": 3 },
+      "onCleared": { "kind": "SurviveWorld" },
       "onPartialClear": { "kind": "None" },
       "onDraw": { "kind": "None" },
-      "onEndOfTurn": { "kind": "None" }
+      "onEndOfTurn": {
+        "kind": "Sequence",
+        "steps": [
+          { "kind": "Damage", "amount": 2 },
+          { "kind": "ExileTopWorldCards", "amount": 1 }
+        ]
+      }
     },
     "Ask The Question": {
       "kind": "player",

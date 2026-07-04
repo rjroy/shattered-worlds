@@ -37,6 +37,7 @@ const WORLD_THREAT_BY_WORLD_ID: Record<string, CardTemplateId> = {
   "eden-prime": "Paradise Runs",
   "new-derelict": "The Order Arrives",
   "transit-authority": "Entity Detected",
+  questions: "Destiny",
 };
 
 export function worldThreatByWorldId(worldId: string): string {
