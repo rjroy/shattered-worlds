@@ -62,12 +62,13 @@ export function isUserSettings(value: unknown): value is UserSettings {
   if (typeof value !== "object" || value === null) return false;
   const s = value as Record<string, unknown>;
   return (
-    s.version === 2 &&
+    s.version === 3 &&
     isConfirmationMode(s.confirmationMode) &&
     typeof s.detailedHoverPreviews === "boolean" &&
     typeof s.musicVolume === "number" &&
     typeof s.fxVolume === "number" &&
-    typeof s.masterMute === "boolean"
+    typeof s.masterMute === "boolean" &&
+    Array.isArray(s.cardtext)
   );
 }
 
@@ -87,9 +88,9 @@ export function loadUserSettings(
 
     const parsed: unknown = JSON.parse(raw);
 
-    // Try v2 validation first, then fall back to v1 migration.
+    // Try v3 validation first, then fall back to v2/v1 migration.
     if (isUserSettings(parsed)) {
-      // v2 — re-project known fields, clamping volume ranges.
+      // v3 — re-project known fields, clamping volume ranges.
       return clampV3(parsed);
     }
 

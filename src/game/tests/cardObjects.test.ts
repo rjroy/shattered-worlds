@@ -1086,12 +1086,13 @@ interface SelectionHarnessScene {
 // Default to "off" so existing tests exercise the direct-dispatch path on
 // selection completion. Phase 9 confirmation tests set the mode they need.
 const DEFAULT_HARNESS_SETTINGS: UserSettings = {
-  version: 2,
+  version: 3,
   confirmationMode: "off",
   detailedHoverPreviews: true,
   musicVolume: 1.0,
   fxVolume: 0.5,
   masterMute: false,
+  cardtext: ["player", "world"],
 };
 
 function makeSelectionHarness(
@@ -1480,12 +1481,13 @@ describe("TableScene selected effective card snapshots", () => {
       light: 0, // 0 < 3 → the concealed hazard stays hidden
     });
     const { scene } = makeSelectionHarness(state, {
-      version: 2,
+      version: 3,
       confirmationMode: "always",
       detailedHoverPreviews: false,
       musicVolume: 1.0,
       fxVolume: 0.5,
       masterMute: false,
+      cardtext: ["player", "world"],
     });
 
     scene.onCardClick(survey.id);
@@ -2626,12 +2628,20 @@ function renderCard(card: Card): RenderedCard {
 
 /**
  * The effect-block containers CardView adopted, in creation (stacking) order.
- * The REAL Container.add stamped `parentContainer` on them; token-row
- * containers live one level deeper (added by the fake block container) and a
- * dropped `None` block is never adopted at all, so neither matches.
+ * CardView nests all text/effect content under a private `textContainer` (the
+ * hide-card-text toggle target), so the REAL Container.add only stamps
+ * `parentContainer` on that wrapper, not on the blocks it adopts via its own
+ * (fake) `.add`. Blocks are found one level deeper: the container-typed
+ * children of that wrapper. Token-row containers live deeper still (added by
+ * the fake block container) and a dropped `None` block is never adopted at
+ * all, so neither matches.
  */
 function effectBlocks(rendered: RenderedCard): FakeContainer[] {
-  return rendered.containers.filter((c) => c.parentContainer === rendered.view);
+  const textContainer = rendered.containers.find((c) => c.parentContainer === rendered.view);
+  if (textContainer === undefined) return [];
+  return textContainer.children.filter((child): child is FakeContainer =>
+    rendered.containers.includes(child as FakeContainer),
+  );
 }
 
 /** Token rows of one effect block, in stacking order. */
@@ -3415,12 +3425,13 @@ describe("TableScene idle world-card and End Turn previews", () => {
 
 function settings(mode: UserSettings["confirmationMode"]): UserSettings {
   return {
-    version: 2,
+    version: 3,
     confirmationMode: mode,
     detailedHoverPreviews: true,
     musicVolume: 1.0,
     fxVolume: 0.5,
     masterMute: false,
+    cardtext: ["player", "world"],
   };
 }
 

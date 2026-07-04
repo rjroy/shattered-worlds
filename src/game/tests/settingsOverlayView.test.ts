@@ -112,12 +112,13 @@ function makeFakeStore(initial?: Partial<UserSettings>): UserSettingsStore & {
   updates: Partial<Omit<UserSettings, "version">>[];
 } {
   let settings: UserSettings = {
-    version: 2,
+    version: 3,
     confirmationMode: "always",
     detailedHoverPreviews: true,
     musicVolume: 1.0,
     fxVolume: 0.5,
     masterMute: false,
+    cardtext: ["player", "world"],
     ...initial,
   };
   const updates: Partial<Omit<UserSettings, "version">>[] = [];
@@ -155,25 +156,27 @@ function makeView(store: UserSettingsStore): {
     scene?: unknown;
     build(s: unknown, st: unknown): void;
     confirmationSegments: unknown[];
+    cardtextSegments: unknown[];
     hoverSegments: unknown[];
     muteSegments: unknown[];
     musicSlider: unknown;
     fxSlider: unknown;
-    onAudioChange: (() => void) | undefined;
+    onChange: ((bAudio?: boolean) => void) | undefined;
   };
   Object.defineProperty(raw, "scene", { value: scene, writable: false, configurable: true });
   // The class-field initializers (segment arrays) only run via `new`; seed them
   // so build() can push into them.
   raw.confirmationSegments = [];
+  raw.cardtextSegments = [];
   raw.hoverSegments = [];
   raw.muteSegments = [];
   raw.musicSlider = { setValue: () => {} };
   raw.fxSlider = { setValue: () => {} };
   raw._visible = false;
 
-  // Track onAudioChange invocations so handler tests can assert they fire.
+  // Track onChange invocations so handler tests can assert they fire.
   const onAudioChangeCalls: string[] = [];
-  raw.onAudioChange = () => {
+  raw.onChange = () => {
     onAudioChangeCalls.push("called");
   };
 

@@ -18,12 +18,13 @@ function settings(
   overrides: Partial<Pick<UserSettings, 'musicVolume' | 'fxVolume' | 'masterMute'>> = {},
 ): UserSettings {
   return {
-    version: 2,
+    version: 3,
     confirmationMode: 'always',
     detailedHoverPreviews: true,
     musicVolume: 1.0,
     fxVolume: 0.5,
     masterMute: false,
+    cardtext: ['player', 'world'],
     ...overrides,
   }
 }

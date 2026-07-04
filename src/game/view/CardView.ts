@@ -193,6 +193,7 @@ export class CardView extends Phaser.GameObjects.Container {
   private targetGlow?: Phaser.GameObjects.Graphics;
   private emphasized = false;
   private textContainer: Phaser.GameObjects.Container;
+  private textVisible: boolean = true;
 
   // Concealment (world cards only). `concealDepth` is the card's Concealed:N
   // value (0 = never concealable). `revealObjects` is the identity face shown
@@ -715,7 +716,18 @@ export class CardView extends Phaser.GameObjects.Container {
   }
 
   setTextVisible(bVisible: boolean): void {
-    this.textContainer.setVisible(bVisible);
+    this.textVisible = bVisible;
+    const currVisible = this.textContainer.visible;
+    const currAlpha = this.textContainer.alpha;
+    const expectedAlpha = bVisible ? 1 : 0;
+    if (currAlpha !== expectedAlpha || currVisible !== bVisible) {
+      this.scene.tweens.add({
+        targets: this.textContainer,
+        duration: 300,
+        alpha: { from: currAlpha, to: expectedAlpha },
+        ease: "Sine.easeINOut",
+      });
+    }
   }
 
   /** Make this hovered legal target the loudest card on the board. */
