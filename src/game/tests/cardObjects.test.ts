@@ -309,7 +309,7 @@ function makeDrawAllHarness(state: GameState): {
     },
   };
   scene.actionConfirmation = { isOpen: false };
-  scene.tweens = { killTweensOf(): void {} };
+  scene.tweens = { killTweensOf(): void {}, add(): void {} };
   scene.currentLegalTargetIds = () => new Set<string>();
   const realLayoutRow = (
     scene as unknown as {
