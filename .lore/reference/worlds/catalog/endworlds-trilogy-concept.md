@@ -24,11 +24,10 @@ Each world is one stage of grief, expressed as its own applied-keyword cost-tax 
 
 ## `Destiny`: the continuous hazard entity
 
-`Destiny` is a themed world-card hazard entity, introduced in World 13, continued in World 14, and given new behavior in World 15. It is not a shared template like `The Walker` or `Door` — each world authors its own `Destiny` card independently in that world's own data — but it is the same narrative through-line across all three worlds: the thing the Walker's flight was always ultimately about.
+`Destiny` is a themed world-card hazard entity, introduced in World 13 and continued in Worlds 14 and 15. Unlike the original conception below, it is in fact a single shared template like `The Walker` or `Door` — reused unmodified across all three worlds rather than authored independently per world (see the addendum below for why) — but it is still the same narrative through-line across all three worlds: the thing the Walker's flight was always ultimately about.
 
-- In `questions`, clearing `Destiny` fires `ExileTopWorldCards` — a costly, destructive, optional confrontation, not a win condition. `SurviveWorld` stays exclusively on the standard `Door` chain.
-- In `answers`, clearing `Destiny` does nothing (`{ "kind": "None" }`) — deliberately no reward. Clearing it here doesn't feel like a win; it just marks that the Walker picked it up and kept walking. `SurviveWorld` again stays exclusively on the `Door` chain.
-- In `the-beginning`, `Destiny` gains a second path to `SurviveWorld`, firing it directly from its own `onCleared` — independent of, and alongside, the standard `Door` chain, which remains completely untouched and equally available. This is the only world in the trilogy where clearing `Destiny` can end the run: an earned alternate route to survival for a player who repeatedly, directly engages with it, not a replacement for the ordinary escape every world already offers.
+- Currently, clearing `Destiny` fires `SurviveWorld` directly from its `onCleared` (see `src/data/allCards.json`'s `Destiny` entry), in both `questions` and `answers` since they share the one template. `SurviveWorld` also remains available via the standard `Door` chain in both worlds, so clearing `Destiny` is an earned alternate route to survival, not the only one.
+- `the-beginning` (not yet planned) is expected to reuse the same shared template and inherit whatever `onCleared` it carries at that time, per the addendum below, rather than authoring its own independent behavior.
 
 **Naming note:** `Destiny`, the world-card entity described here, is unrelated to the existing `DestinyScene` (a Phaser scene reached from the locked-world branch of world selection) and to the Destiny Progression meta-progression system. The name is a deliberate pun — the trilogy's premise is literally "the Walker is fleeing the Destiny" — not a naming collision to fix. See [[theme-authoring]]'s signature-verb table note for the full disambiguation.
 
@@ -41,3 +40,9 @@ An earlier brainstorm explored a two-path ending — a `Refusal`/`Acknowledgment
 ## Relationship to the world-authoring pattern
 
 This trilogy is additive to, not a departure from, the standard world contract: three-act decks, the fixed `The Walker` → `Door` → `SurviveWorld` closer, and the "no mechanic is exclusive, identity is" rule from [[theme-authoring]] all hold unchanged. What each world adds is its own pair (or, in World 15's case, quintet) of applied keywords and cost-tax modifiers, plus the continuing `Destiny` entity — mechanism precedent set by Eden Prime, New Derelict, and Transit Authority, aimed here at a sustained three-world narrative payoff instead of a single world's identity.
+
+## Addendum (2026-07-04): `Destiny` is a reused template, not three independent ones
+
+`answers`' (World 14) implementation plan settled a question this document's "continuous hazard entity" section above leaves open: because `allCards.json` enforces global template-id uniqueness, `answers` cannot author its own second `Destiny` card template. It instead reuses `questions`' existing `Destiny` template unmodified in its own Act 3 deck composition — **one shared card-template entity across the trilogy, not three per-world reskins.** `World 15` (`the-beginning`, not yet planned) will hit the same id collision and is expected to resolve it the same way when it's planned.
+
+This addendum records the reuse decision itself; the "continuous hazard entity" section above has since been corrected in place to match it. See `.lore/work/plans/answers.md`'s header note for the plan-level mechanical description of the shared template's behavior.

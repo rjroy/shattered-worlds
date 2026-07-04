@@ -3067,6 +3067,285 @@
           { "kind": "Heal", "amount": 2 }
         ]
       }
+    },
+    "The Ledger Never Closes": {
+      "kind": "world",
+      "name": "The Ledger Never Closes",
+      "rarity": "uncommon",
+      "cost": 4,
+      "keywords": [],
+      "discardable": true,
+      "onDiscarded": { "kind": "None" },
+      "onCleared": { "kind": "None" },
+      "onPartialClear": { "kind": "None" },
+      "onDraw": { "kind": "ApplyKeyword", "keyword": "Bargaining", "value": 2, "target": "self" },
+      "onEndOfTurn": {
+        "kind": "KeywordGate",
+        "keyword": "Bargaining",
+        "min": 2,
+        "zone": "hand",
+        "then": { "kind": "ForceDestroy", "amount": 1 }
+      }
+    },
+    "A Broker Who Owes Nothing": {
+      "kind": "world",
+      "name": "A Broker Who Owes Nothing",
+      "rarity": "common",
+      "cost": 3,
+      "keywords": ["Obstructed"],
+      "discardable": true,
+      "onDiscarded": { "kind": "None" },
+      "onCleared": { "kind": "GainCard", "template": "Call In The Favor" },
+      "onPartialClear": { "kind": "None" },
+      "onDraw": { "kind": "ApplyKeyword", "keyword": "Bargaining", "value": 1, "target": "self" },
+      "onEndOfTurn": { "kind": "None" }
+    },
+    "What Would You Give Up": {
+      "kind": "world",
+      "name": "What Would You Give Up",
+      "rarity": "uncommon",
+      "cost": 3,
+      "keywords": [],
+      "discardable": true,
+      "onDiscarded": { "kind": "None" },
+      "onCleared": {
+        "kind": "Modal",
+        "branches": [
+          { "kind": "DestroyCardInHand", "min": 1, "max": 1 },
+          { "kind": "Damage", "amount": 2 }
+        ]
+      },
+      "onPartialClear": { "kind": "None" },
+      "onDraw": { "kind": "None" },
+      "onEndOfTurn": { "kind": "None" }
+    },
+    "The Archive Has a Price": {
+      "kind": "world",
+      "name": "The Archive Has a Price",
+      "rarity": "common",
+      "cost": 2,
+      "keywords": ["Obstructed"],
+      "discardable": true,
+      "onDiscarded": { "kind": "None" },
+      "onCleared": { "kind": "AddPlayerCardToTop", "template": "A Page From the Ledger" },
+      "onPartialClear": { "kind": "None" },
+      "onDraw": { "kind": "None" },
+      "onEndOfTurn": { "kind": "None" }
+    },
+    "A Deal Too Easy": {
+      "kind": "world",
+      "name": "A Deal Too Easy",
+      "rarity": "common",
+      "cost": 2,
+      "keywords": [],
+      "discardable": true,
+      "onDiscarded": { "kind": "None" },
+      "onCleared": { "kind": "AddThreatToWorldDeck" },
+      "onPartialClear": { "kind": "None" },
+      "onDraw": { "kind": "None" },
+      "onEndOfTurn": { "kind": "None" }
+    },
+    "A Reading of the Ledger": {
+      "kind": "world",
+      "name": "A Reading of the Ledger",
+      "rarity": "uncommon",
+      "cost": 2,
+      "keywords": [],
+      "discardable": true,
+      "onDiscarded": { "kind": "None" },
+      "onCleared": {
+        "kind": "OfferBoon",
+        "setId": "pool-ledger-reading",
+        "setName": "A Reading of the Ledger",
+        "offeredCount": 2,
+        "chooseCount": 1
+      },
+      "onPartialClear": { "kind": "None" },
+      "onDraw": { "kind": "None" },
+      "onEndOfTurn": { "kind": "None" }
+    },
+    "A Fracture Opens": {
+      "kind": "world",
+      "name": "A Fracture Opens",
+      "rarity": "common",
+      "cost": 3,
+      "keywords": [],
+      "discardable": true,
+      "onDiscarded": { "kind": "None" },
+      "onCleared": { "kind": "None" },
+      "onPartialClear": { "kind": "None" },
+      "onDraw": { "kind": "None" },
+      "onEndOfTurn": {
+        "kind": "Sequence",
+        "steps": [
+          { "kind": "AddWorldCardToDeck", "template": "Another Fracture", "bTop": true },
+          { "kind": "DestroySelf" }
+        ]
+      }
+    },
+    "Another Fracture": {
+      "kind": "world",
+      "name": "Another Fracture",
+      "rarity": "uncommon",
+      "cost": 4,
+      "keywords": [],
+      "discardable": true,
+      "onDiscarded": { "kind": "None" },
+      "onCleared": { "kind": "None" },
+      "onPartialClear": { "kind": "None" },
+      "onDraw": { "kind": "None" },
+      "onEndOfTurn": { "kind": "ForceDestroy", "amount": 1 }
+    },
+    "The Point of No Return": {
+      "kind": "world",
+      "name": "The Point of No Return",
+      "rarity": "uncommon",
+      "cost": 3,
+      "keywords": [],
+      "discardable": true,
+      "onDiscarded": { "kind": "None" },
+      "onCleared": { "kind": "ExileTopWorldCards", "amount": 2 },
+      "onPartialClear": { "kind": "None" },
+      "onDraw": { "kind": "None" },
+      "onEndOfTurn": { "kind": "None" }
+    },
+    "The Weight Doesn't Lift": {
+      "kind": "world",
+      "name": "The Weight Doesn't Lift",
+      "rarity": "uncommon",
+      "cost": 4,
+      "keywords": [],
+      "discardable": true,
+      "onDiscarded": { "kind": "None" },
+      "onCleared": { "kind": "GainCard", "template": "Let It Go" },
+      "onPartialClear": { "kind": "None" },
+      "onDraw": { "kind": "ApplyKeyword", "keyword": "Depression", "value": 1, "target": "self" },
+      "onEndOfTurn": {
+        "kind": "KeywordGate",
+        "keyword": "Depression",
+        "min": 2,
+        "zone": "hand",
+        "then": { "kind": "ForceDestroy", "amount": 1 }
+      }
+    },
+    "It Won't Go Away": {
+      "kind": "world",
+      "name": "It Won't Go Away",
+      "rarity": "common",
+      "cost": 2,
+      "keywords": [],
+      "discardable": true,
+      "onDiscarded": { "kind": "None" },
+      "onCleared": { "kind": "None" },
+      "onPartialClear": { "kind": "None" },
+      "onDraw": { "kind": "None" },
+      "onEndOfTurn": {
+        "kind": "Sequence",
+        "steps": [
+          { "kind": "AddWorldCardToDeck", "template": "It Calcified", "bTop": true },
+          { "kind": "DestroySelf" }
+        ]
+      }
+    },
+    "It Calcified": {
+      "kind": "world",
+      "name": "It Calcified",
+      "rarity": "rare",
+      "cost": 5,
+      "keywords": ["Depression:2"],
+      "discardable": false,
+      "onDiscarded": { "kind": "None" },
+      "onCleared": { "kind": "None" },
+      "onPartialClear": { "kind": "None" },
+      "onDraw": { "kind": "None" },
+      "onEndOfTurn": { "kind": "ForceDestroy", "amount": 1 }
+    },
+    "A Reason to Keep Moving": {
+      "kind": "world",
+      "name": "A Reason to Keep Moving",
+      "rarity": "common",
+      "cost": 3,
+      "keywords": ["Obstructed"],
+      "discardable": true,
+      "onDiscarded": { "kind": "None" },
+      "onCleared": { "kind": "GainCard", "template": "Let It Sit" },
+      "onPartialClear": { "kind": "None" },
+      "onDraw": { "kind": "ApplyKeyword", "keyword": "Depression", "value": 1, "target": "self" },
+      "onEndOfTurn": { "kind": "None" }
+    },
+    "Just Keep Walking": {
+      "kind": "world",
+      "name": "Just Keep Walking",
+      "rarity": "common",
+      "cost": 2,
+      "keywords": [],
+      "discardable": true,
+      "onDiscarded": { "kind": "None" },
+      "onCleared": { "kind": "GainCard", "template": "Keep Walking" },
+      "onPartialClear": { "kind": "None" },
+      "onDraw": { "kind": "None" },
+      "onEndOfTurn": { "kind": "None" }
+    },
+    "Call In The Favor": {
+      "kind": "player",
+      "name": "Call In The Favor",
+      "rarity": "common",
+      "energyCost": 1,
+      "effect": {
+        "kind": "Sequence",
+        "steps": [
+          { "kind": "DealProgress", "base": 2 },
+          { "kind": "RemoveKeyword", "keyword": "Bargaining", "target": "hand", "amount": 2 }
+        ]
+      }
+    },
+    "A Page From the Ledger": {
+      "kind": "player",
+      "name": "A Page From the Ledger",
+      "rarity": "common",
+      "energyCost": 1,
+      "effect": { "kind": "DealProgress", "base": 1 }
+    },
+    "Ask For More Time": {
+      "kind": "player",
+      "name": "Ask For More Time",
+      "rarity": "common",
+      "energyCost": 1,
+      "effect": { "kind": "Heal", "amount": 2 }
+    },
+    "Take What's Owed": {
+      "kind": "player",
+      "name": "Take What's Owed",
+      "rarity": "common",
+      "energyCost": 1,
+      "effect": { "kind": "DealProgress", "base": 3 }
+    },
+    "Let It Sit": {
+      "kind": "player",
+      "name": "Let It Sit",
+      "rarity": "common",
+      "energyCost": 1,
+      "effect": {
+        "kind": "Sequence",
+        "steps": [
+          { "kind": "DealProgress", "base": 2 },
+          { "kind": "RemoveKeyword", "keyword": "Depression", "target": "hand", "amount": 2 }
+        ]
+      }
+    },
+    "Keep Walking": {
+      "kind": "player",
+      "name": "Keep Walking",
+      "rarity": "common",
+      "energyCost": 1,
+      "effect": { "kind": "Brace", "amount": 1 }
+    },
+    "Let It Go": {
+      "kind": "player",
+      "name": "Let It Go",
+      "rarity": "uncommon",
+      "energyCost": 1,
+      "effect": { "kind": "DiscardThenDraw", "player": 1 }
     }
   }
 }

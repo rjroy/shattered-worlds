@@ -1,0 +1,35 @@
+{
+  "worldId": "answers",
+  "deckComposition": {
+    "acts": [
+      {
+        "cards": [
+          { "templateId": "The Ledger Never Closes", "count": 2 },
+          { "templateId": "A Broker Who Owes Nothing", "count": 1 },
+          { "templateId": "What Would You Give Up", "count": 2 },
+          { "templateId": "The Archive Has a Price", "count": 1 },
+          { "templateId": "A Deal Too Easy", "count": 1 },
+          { "templateId": "A Reading of the Ledger", "count": 1 }
+        ]
+      },
+      {
+        "cards": [
+          { "templateId": "A Fracture Opens", "count": 2 },
+          { "templateId": "Another Fracture", "count": 2 },
+          { "templateId": "The Point of No Return", "count": 2 }
+        ]
+      },
+      {
+        "cards": [
+          { "templateId": "The Weight Doesn't Lift", "count": 2 },
+          { "templateId": "It Won't Go Away", "count": 1 },
+          { "templateId": "It Calcified", "count": 1 },
+          { "templateId": "A Reason to Keep Moving", "count": 2 },
+          { "templateId": "Just Keep Walking", "count": 1 },
+          { "templateId": "Destiny", "count": 1 },
+          { "templateId": "The Walker", "count": 1 }
+        ]
+      }
+    ]
+  }
+}

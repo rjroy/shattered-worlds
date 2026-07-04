@@ -180,6 +180,12 @@ describe("compileEffect", () => {
     expect(compileEffect({ kind: "AddThreatToWorldDeck" }, "zombie-big-box")).toStrictEqual([
       line([i("addCard"), v("Zombie", "penalty")]),
     ]);
+    // Regression: "answers" maps to the "Destiny" template id, whose authored
+    // display name is "The Destiny" — compile() must resolve the catalog name,
+    // not surface the raw template id.
+    expect(compileEffect({ kind: "AddThreatToWorldDeck" }, "answers")).toStrictEqual([
+      line([i("addCard"), v("The Destiny", "penalty")]),
+    ]);
     expect(compileEffect({ kind: "SurviveWorld" }, "zombie-big-box")).toStrictEqual([
       line([i("survive"), t("SURVIVE!")]),
     ]);

@@ -109,6 +109,25 @@ describe("persistent applied keywords", () => {
 
     expect(tickAppliedKeywords(card).appliedKeywords).toBeUndefined();
   });
+
+  // World 14 (answers) Slice 1 — Bargaining/Depression must decay at turn
+  // start like Alarm/Denial/Anger (REQ-W14-8), not persist like Lockdown/Reroute.
+  it("does not treat Bargaining or Depression as persistent", () => {
+    expect(PERSISTENT_KEYWORDS.has("Bargaining")).toBe(false);
+    expect(PERSISTENT_KEYWORDS.has("Depression")).toBe(false);
+  });
+
+  it("decays applied Bargaining and Depression like Alarm", () => {
+    const card = {
+      ...worldWith([]),
+      appliedKeywords: [
+        { name: "Bargaining" as const, value: 1 },
+        { name: "Depression" as const, value: 1 },
+      ],
+    };
+
+    expect(tickAppliedKeywords(card).appliedKeywords).toBeUndefined();
+  });
 });
 
 // ---------------------------------------------------------------------------

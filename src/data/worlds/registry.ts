@@ -11,6 +11,7 @@ import { EDEN_PRIME_BUNDLE } from "./eden-prime/index";
 import { NEW_DERELICT_BUNDLE } from "./new-derelict/index";
 import { TRANSIT_AUTHORITY_BUNDLE } from "./transit-authority/index";
 import { QUESTIONS_BUNDLE } from "./questions/index";
+import { ANSWERS_BUNDLE } from "./answers/index";
 import type { WorldDataBundle } from "./types";
 
 export const worldDataRegistry: readonly WorldDataBundle[] = [
@@ -27,4 +28,5 @@ export const worldDataRegistry: readonly WorldDataBundle[] = [
   NEW_DERELICT_BUNDLE,
   TRANSIT_AUTHORITY_BUNDLE,
   QUESTIONS_BUNDLE,
+  ANSWERS_BUNDLE,
 ];

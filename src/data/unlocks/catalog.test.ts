@@ -67,6 +67,16 @@ describe("UNLOCK_CATALOG", () => {
       effect: { type: "worldUnlock", worldId: "whiteout-parking-garage" },
     });
   });
+
+  it("defines Answers as a world access unlock", () => {
+    expect(UNLOCK_CATALOG.find((def) => def.id === "world-answers")).toMatchObject({
+      id: "world-answers",
+      name: "Answers",
+      cost: 25,
+      destinyWeight: 0,
+      effect: { type: "worldUnlock", worldId: "answers" },
+    });
+  });
 });
 
 describe("computeUnlockSpend", () => {
@@ -223,6 +233,14 @@ describe("isWorldUnlocked", () => {
     expect(isWorldUnlocked("whiteout-parking-garage", unlocks(["unknown"]), UNLOCK_CATALOG)).toBe(
       false,
     );
+  });
+
+  it("returns false for answers until world-answers has been purchased", () => {
+    expect(isWorldUnlocked("answers", unlocks([]), UNLOCK_CATALOG)).toBe(false);
+  });
+
+  it("returns true for answers once world-answers has been purchased", () => {
+    expect(isWorldUnlocked("answers", unlocks(["world-answers"]), UNLOCK_CATALOG)).toBe(true);
   });
 });
 

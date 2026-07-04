@@ -55,6 +55,13 @@ import questionsRealityUrl from "../assets/themes/questions/questions-reality.we
 import questionsOverlayUrl from "../assets/themes/questions/intrusion-overlay.webp";
 import questionsCardfrontUrl from "../assets/themes/questions/questions-cardfront.webp";
 
+// answers has reality/overlay art (generated alongside questions' full set),
+// but no cardfront and no card insets yet — see theme.ts's comment and the
+// implementation report for this gap. Do not invent cardfront/inset imports;
+// wire only what exists on disk.
+import answersRealityUrl from "../assets/themes/answers/answers-reality.webp";
+import answersOverlayUrl from "../assets/themes/answers/intrusion-overlay.webp";
+
 // ---------------------------------------------------------------------------
 // World inset imports
 // ---------------------------------------------------------------------------
@@ -461,6 +468,10 @@ export const worldAssetUrls: Record<string, string> = {
   "questions-inset-let-it-out": questionsInsetLetItOutUrl,
   "questions-inset-why": questionsInsetWhyUrl,
   "questions-inset-sit-with-it-a-while": questionsInsetSitWithItAWhileUrl,
+  // answers — reality/overlay only; no cardfront or insets exist yet (flagged
+  // gap, see implementation report).
+  "answers-bg": answersRealityUrl,
+  "answers-overlay": answersOverlayUrl,
 };
 
 export interface WorldMusicAsset {
