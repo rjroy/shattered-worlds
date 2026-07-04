@@ -11,6 +11,7 @@ related:
   - .lore/work/specs/eden-prime.md
   - .lore/work/specs/new-derelict.md
   - .lore/work/specs/transit-authority.md
+  - .lore/work/brainstorm/player-support-message.md
 req-prefix: W13
 ---
 
@@ -158,6 +159,26 @@ This is a deliberate narrative change from both brainstorm docs' framing, not ju
 
 **REQ-W13-26:** `.lore/reference/worlds/catalog/endworlds-trilogy-concept.md` currently describes the superseded Refusal/Acknowledgment ending fork, stale relative to the 2026-07-03 brainstorm decision. Updating it is a hard blocker on this world shipping (not merely this spec's implementation) — add it as a checklist item to whatever plan executes this spec, since nothing in Tests/AI Validation below would otherwise catch a stale reference doc.
 
+## Player Support Notice
+
+This is a trilogy-level UI concern, defined once here since all three grief-arc worlds trigger the same shared scaffolding; `answers.md` and `the-beginning.md` reference this section rather than re-specifying it (same pattern as REQ-W13-26).
+
+<div id="REQ-W13-30"></div>
+
+**REQ-W13-30:** The first time a player selects any of Worlds 13/14/15 (`questions`, `answers`, `the-beginning`) for play, a one-time interstitial scene is shown before the world's `Table` scene launches, presenting the player support copy from `.lore/work/brainstorm/player-support-message.md` verbatim: the headline, body naming grief/death/losing-a-parent directly, the findahelpline.com link, the 988 US/Canada links, and the emergency-services line. This resolves the brainstorm's open placement question as a dedicated interstitial, not a world-select-card link or a passive help-overlay entry — chosen specifically because it guarantees every player encounters the notice at least once rather than requiring them to discover and tap an optional affordance first.
+
+<div id="REQ-W13-31"></div>
+
+**REQ-W13-31:** "First time" is tracked per save profile, not per world and not per run: a single boolean flag (e.g. `hasSeenGriefSupportNotice`) persisted in the runtime profile store (`src/game/runtime/`), set once the interstitial is dismissed, regardless of which of the three worlds triggered it first. Selecting a second or third of these worlds afterward — in any order the unlock system permits — skips straight to `Table` like every other world; the notice is not re-shown per-world or per-run.
+
+<div id="REQ-W13-32"></div>
+
+**REQ-W13-32:** Mechanically: `WorldSelectScene`'s card `pointerdown` handler (currently a direct `this.scene.launch("Table", { worldId, seed })` for every world) branches only for these three `worldId`s — if the profile flag is unset, launch a new interstitial scene instead, passing `worldId`/`seed` through; that scene renders the copy plus a single acknowledgment control ("Continue"), and on dismissal sets the flag via the runtime store and then itself launches `Table`. This is new, additive scaffolding sitting between world-select and gameplay — it does not repurpose or modify `HelpOverlayView`, `SettingsOverlayView`, or the existing per-card help/settings buttons, and no other world's card-click path changes.
+
+<div id="REQ-W13-33"></div>
+
+**REQ-W13-33:** The interstitial's external links (findahelpline.com, 988lifeline.org, 988.ca) must open in the system's external browser, not in-game. This is the first outbound link in the codebase — a repo-wide grep for `window.open`/`http`/`mailto:` under `src/` currently returns nothing — so its opening mechanism is new ground requiring its own test coverage, not an assumption that an existing pattern already covers it.
+
 ## Tests And Validation
 
 <div id="REQ-W13-27"></div>
@@ -178,6 +199,7 @@ This is a deliberate narrative change from both brainstorm docs' framing, not ju
 3. Verify via a unit test (not just manual read) that a hand containing an `Anger`-keyword card raises `effectiveWorldCardCost` on an unrelated, non-Anger-carrying card in the same hand — this is the behavior that makes Anger's tax "indiscriminate" per REQ-W13-10, and it's easy to implement wrong (e.g. accidentally scoped like `ClearCostPerOtherKeyword` instead of the intended all-cards `ClearCostPerKeywordCount`).
 4. Verify that `Destiny`'s effective cost, with both a self-authored `Denial:2` and a separate `Anger`-carrying card elsewhere in hand, equals `baseCost + 2*costPer(Denial) + count*costPer(Anger)` — both modifiers must stack, neither should override the other.
 5. Confirm no engine change touched `The Walker`/`Door`/`SurviveWorld` wiring (REQ-W13-2/3) — the shared starter templates should be byte-identical before and after.
+6. Verify the one-time grief-support interstitial (REQ-W13-30..33): on a fresh profile, selecting any of Worlds 13/14/15 for the first time shows the interstitial before `Table` launches; dismissing it persists the profile flag; selecting a second of the three worlds afterward skips straight to `Table`; and the interstitial's external links open via the system browser rather than in-game navigation.
 
 ## Open Questions
 
@@ -185,3 +207,5 @@ This is a deliberate narrative change from both brainstorm docs' framing, not ju
 - Signature verb `compound` is a recommendation, not yet confirmed — it also needs to not collide with whatever verbs Worlds 14 and 15 end up with.
 - Exact `costPer` values, `Destiny`'s authored `Denial` value (`Denial:2` is a placeholder), and final deck-composition counts are unauthored — this spec fixes shape and mechanism, not tuning.
 - Whether `Denial`/`Anger` should render distinctly in the UI (separate icon/color per keyword) is unaddressed and may need a `game/` view-layer follow-up spec.
+- Whether a dismissed support notice (REQ-W13-30..33) needs a persistent "view again" affordance elsewhere (e.g. settings) is unresolved — once-per-profile means a player who dismisses it quickly has no obvious way to find it again later.
+- Whether the interstitial auto-advances after a delay or requires an explicit tap on "Continue" is unspecified; REQ-W13-32 assumes an explicit acknowledgment control but doesn't rule out also allowing a timeout.

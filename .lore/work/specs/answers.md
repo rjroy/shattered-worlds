@@ -9,6 +9,7 @@ related:
   - .lore/work/brainstorm/world-14-grief-mechanics.md
   - .lore/reference/worlds/authoring/theme-authoring.md
   - .lore/work/specs/questions.md
+  - .lore/work/brainstorm/player-support-message.md
 req-prefix: W14
 ---
 
@@ -160,6 +161,12 @@ This world's three-beat narrative spine is deliberately **not** 1:1 with its thr
 <div id="REQ-W14-26"></div>
 
 **REQ-W14-26:** The `endworlds-trilogy-concept.md` staleness fix is a shared trilogy-level blocker already tracked under `REQ-W13-26` — not duplicated here, but this world's implementation shares that same blocking dependency.
+
+## Player Support Notice
+
+<div id="REQ-W14-27a"></div>
+
+**REQ-W14-27a:** The one-time grief-support interstitial is a shared trilogy-level concern, fully specified once under `REQ-W13-30..33` in `questions.md` — not duplicated here. This world's implementation shares that same scaffolding: `answers` is one of the three `worldId`s (`questions`, `answers`, `the-beginning`) that can trigger the interstitial's first showing, and selecting this world after either of the other two has already triggered it must skip straight to `Table` per `REQ-W13-31`. No separate `answers`-specific interstitial content or logic is authored here.
 
 ## Tests And Validation
 

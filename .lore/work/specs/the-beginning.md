@@ -10,6 +10,7 @@ related:
   - .lore/reference/worlds/authoring/theme-authoring.md
   - .lore/work/specs/questions.md
   - .lore/work/specs/answers.md
+  - .lore/work/brainstorm/player-support-message.md
 req-prefix: W15
 ---
 
@@ -164,6 +165,12 @@ This is deterministic and guaranteed to land on `Destiny` specifically, never on
 <div id="REQ-W15-27"></div>
 
 **REQ-W15-27:** The `endworlds-trilogy-concept.md` staleness fix is the same shared trilogy-level blocker tracked under `REQ-W13-26` — this is the third and final world depending on it.
+
+## Player Support Notice
+
+<div id="REQ-W15-27a"></div>
+
+**REQ-W15-27a:** The one-time grief-support interstitial is a shared trilogy-level concern, fully specified once under `REQ-W13-30..33` in `questions.md` — not duplicated here. `the-beginning` is the third of the three `worldId`s that can trigger the interstitial's first showing; if either `questions` or `answers` was entered first, selecting this world must skip straight to `Table` per `REQ-W13-31`. This is the third and final world sharing that same scaffolding, matching REQ-W15-27's precedent for the trilogy-concept-doc blocker.
 
 ## Tests And Validation
 
