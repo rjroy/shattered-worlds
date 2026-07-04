@@ -2820,6 +2820,7 @@
     "Waiting Room Silence": {
       "kind": "world",
       "name": "Waiting Room Silence",
+      "insetKey": "questions-inset-waiting-room-silence",
       "rarity": "common",
       "cost": 2,
       "keywords": ["Obstructed"],
@@ -2833,6 +2834,7 @@
     "I'm Outta Here": {
       "kind": "world",
       "name": "I'm Outta Here",
+      "insetKey": "questions-inset-im-outta-here",
       "rarity": "common",
       "cost": 1,
       "keywords": [],
@@ -2846,6 +2848,7 @@
     "The Monitor Keeps Beeping": {
       "kind": "world",
       "name": "The Monitor Keeps Beeping",
+      "insetKey": "questions-inset-the-monitor-keeps-beeping",
       "rarity": "uncommon",
       "cost": 4,
       "keywords": [],
@@ -2859,6 +2862,7 @@
     "Everyone Says It's Nothing": {
       "kind": "world",
       "name": "Everyone Says It's Nothing",
+      "insetKey": "questions-inset-everyone-says-its-nothing",
       "rarity": "uncommon",
       "cost": 4,
       "keywords": [],
@@ -2878,6 +2882,7 @@
     "The Test Results Sit Unopened": {
       "kind": "world",
       "name": "The Test Results Sit Unopened",
+      "insetKey": "questions-inset-the-test-results-sit-unopened",
       "rarity": "common",
       "cost": 3,
       "keywords": ["Obstructed"],
@@ -2891,6 +2896,7 @@
     "She Says She's Fine": {
       "kind": "world",
       "name": "She Says She's Fine",
+      "insetKey": "questions-inset-she-says-shes-fine",
       "rarity": "common",
       "cost": 2,
       "keywords": [],
@@ -2910,6 +2916,7 @@
     "He Isn't Coming Back": {
       "kind": "world",
       "name": "He Isn't Coming Back",
+      "insetKey": "questions-inset-he-isnt-coming-back",
       "rarity": "rare",
       "cost": 5,
       "keywords": ["Denial:2"],
@@ -2923,6 +2930,7 @@
     "It Isn't Fair": {
       "kind": "world",
       "name": "It Isn't Fair",
+      "insetKey": "questions-inset-it-isnt-fair",
       "rarity": "uncommon",
       "cost": 4,
       "keywords": [],
@@ -2942,6 +2950,7 @@
     "Nobody Warned You": {
       "kind": "world",
       "name": "Nobody Warned You",
+      "insetKey": "questions-inset-nobody-warned-you",
       "rarity": "common",
       "cost": 3,
       "keywords": ["Obstructed"],
@@ -2955,6 +2964,7 @@
     "The Question That Has No Answer": {
       "kind": "world",
       "name": "The Question That Has No Answer",
+      "insetKey": "questions-inset-the-question-that-has-no-answer",
       "rarity": "signature",
       "cost": 6,
       "keywords": [],
@@ -2979,6 +2989,7 @@
     "Destiny": {
       "kind": "world",
       "name": "Destiny",
+      "insetKey": "questions-inset-destiny",
       "rarity": "signature",
       "cost": 6,
       "keywords": ["Denial:2"],
@@ -2992,6 +3003,7 @@
     "Ask The Question": {
       "kind": "player",
       "name": "Ask The Question",
+      "insetKey": "questions-inset-ask-the-question",
       "rarity": "common",
       "energyCost": 1,
       "effect": {
@@ -3005,6 +3017,7 @@
     "Let It Out": {
       "kind": "player",
       "name": "Let It Out",
+      "insetKey": "questions-inset-let-it-out",
       "rarity": "common",
       "energyCost": 1,
       "effect": {
@@ -3018,6 +3031,7 @@
     "Why": {
       "kind": "player",
       "name": "Why",
+      "insetKey": "questions-inset-why",
       "rarity": "rare",
       "energyCost": 2,
       "exhaust": true,
@@ -3032,6 +3046,7 @@
     "Sit With It a While": {
       "kind": "player",
       "name": "Sit With It a While",
+      "insetKey": "questions-inset-sit-with-it-a-while",
       "rarity": "common",
       "energyCost": 1,
       "effect": {

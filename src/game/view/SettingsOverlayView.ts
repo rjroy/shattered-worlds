@@ -3,7 +3,12 @@ import { textStyle, TEXT } from "./presentation";
 import { CANVAS_W, CANVAS_H } from "./layout";
 import { FONTS } from "./fonts";
 import { addScreenBackdrop } from "./screenBackdrop";
-import type { ConfirmationMode, UserSettings, UserSettingsStore } from "../runtime/userSettings";
+import type {
+  ConfirmationMode,
+  CardTextFlag,
+  UserSettings,
+  UserSettingsStore,
+} from "../runtime/userSettings";
 import { VolumeSlider } from "./VolumeSlider";
 
 // ---------------------------------------------------------------------------
@@ -20,6 +25,16 @@ const CONFIRMATION_OPTIONS: readonly ConfirmationOption[] = [
   { value: "always", label: "Always" },
   { value: "risk-only", label: "Risk only" },
   { value: "off", label: "Off" },
+];
+
+interface CardTextOption {
+  readonly value: CardTextFlag;
+  readonly label: string;
+}
+
+const CARDTEXT_OPTIONS: readonly CardTextOption[] = [
+  { value: "world", label: "World" },
+  { value: "player", label: "Player" },
 ];
 
 interface ToggleOption {
@@ -75,19 +90,24 @@ export class SettingsOverlayView extends Phaser.GameObjects.Container {
   // constructor — an ES6 class constructor cannot be re-applied with .call().
   private settings!: UserSettingsStore;
   private readonly confirmationSegments: Segment<ConfirmationMode>[] = [];
+  private readonly cardtextSegments: Segment<CardTextFlag>[] = [];
   private readonly hoverSegments: Segment<boolean>[] = [];
   private readonly muteSegments: Segment<boolean>[] = [];
   private musicSlider!: VolumeSlider;
   private fxSlider!: VolumeSlider;
   /** Live-reapply hook called by volume/mute handlers (wired by step 6). */
-  private onAudioChange: (() => void) | undefined;
+  private onChange: ((bAudio?: boolean) => void) | undefined;
 
-  constructor(scene: Phaser.Scene, settings: UserSettingsStore, onAudioChange?: () => void) {
+  constructor(
+    scene: Phaser.Scene,
+    settings: UserSettingsStore,
+    onChange?: (bAudio?: boolean) => void,
+  ) {
     super(scene, CANVAS_W / 2, CANVAS_H / 2);
     scene.add.existing(this);
     this.setDepth(1000);
     this.setVisible(false);
-    this.onAudioChange = onAudioChange;
+    this.onChange = onChange;
     this.build(scene, settings);
   }
 
@@ -123,11 +143,12 @@ export class SettingsOverlayView extends Phaser.GameObjects.Container {
       fontStyle: "bold",
     });
 
-    this.buildConfirmationControl(-260, -205);
-    this.buildHoverControl(-260, -95);
-    this.buildMusicSlider(-260, 25);
-    this.buildFxSlider(-260, 65);
-    this.buildMuteControl(-260, 100);
+    this.buildConfirmationControl(-260, -230);
+    this.buildHoverControl(-260, -130);
+    this.buildMusicSlider(-260, -10);
+    this.buildFxSlider(-260, 35);
+    this.buildMuteControl(10, -30);
+    this.buildCardTextControl(-260, 60);
     this.buildCloseButton();
 
     // Reflect persisted state on construction so the overlay is correct even if
@@ -159,12 +180,25 @@ export class SettingsOverlayView extends Phaser.GameObjects.Container {
   /** Persist a new confirmation mode and re-render the highlight. */
   selectConfirmationMode(mode: ConfirmationMode): void {
     this.settings.update({ confirmationMode: mode });
+    this.onChange?.(false);
+    this.refreshFromStore();
+  }
+
+  toggleCardtextFlag(mode: CardTextFlag): void {
+    const currentState = this.settings.get().cardtext;
+    if (currentState.includes(mode)) {
+      this.settings.update({ cardtext: currentState.filter((e) => e !== mode) });
+    } else {
+      this.settings.update({ cardtext: [...currentState, mode] });
+    }
+    this.onChange?.(false);
     this.refreshFromStore();
   }
 
   /** Persist the detailed-hover toggle and re-render the highlight. */
   setDetailedHoverPreviews(enabled: boolean): void {
     this.settings.update({ detailedHoverPreviews: enabled });
+    this.onChange?.(false);
     this.refreshFromStore();
   }
 
@@ -173,7 +207,7 @@ export class SettingsOverlayView extends Phaser.GameObjects.Container {
     const clamped = Math.max(0, Math.min(1, value));
     this.settings.update({ musicVolume: clamped });
     this.refreshFromStore();
-    this.onAudioChange?.();
+    this.onChange?.(true);
   }
 
   /** Persist FX volume and re-apply. */
@@ -181,14 +215,14 @@ export class SettingsOverlayView extends Phaser.GameObjects.Container {
     const clamped = Math.max(0, Math.min(1, value));
     this.settings.update({ fxVolume: clamped });
     this.refreshFromStore();
-    this.onAudioChange?.();
+    this.onChange?.(true);
   }
 
   /** Persist master mute toggle and re-apply. */
   setMasterMute(muted: boolean): void {
     this.settings.update({ masterMute: muted });
     this.refreshFromStore();
-    this.onAudioChange?.();
+    this.onChange?.(true);
   }
 
   // -------------------------------------------------------------------------
@@ -232,6 +266,27 @@ export class SettingsOverlayView extends Phaser.GameObjects.Container {
     });
 
     this.addText(x, y + 70, "Show full effect details when hovering a target.", {
+      fontSize: "12px",
+      color: TEXT.textMuted,
+    });
+  }
+
+  private buildCardTextControl(x: number, y: number): void {
+    this.addText(x, y, "Card Text", {
+      fontSize: "14px",
+      color: TEXT.textKeyword,
+      fontStyle: "bold",
+    });
+
+    CARDTEXT_OPTIONS.forEach((opt, i) => {
+      const segX = x + 6 + i * (SEGMENT_W + SEGMENT_GAP) + SEGMENT_W / 2;
+      const segment = this.addSegment(segX, y + 44, opt.value, opt.label, () =>
+        this.toggleCardtextFlag(opt.value),
+      );
+      this.cardtextSegments.push(segment);
+    });
+
+    this.addText(x, y + 70, "Show card text always. Otherwise it's hidden until hovering.", {
       fontSize: "12px",
       color: TEXT.textMuted,
     });
@@ -368,6 +423,7 @@ export class SettingsOverlayView extends Phaser.GameObjects.Container {
   private refreshFromStore(): void {
     const current: UserSettings = this.settings.get();
     this.applyHighlight(this.confirmationSegments, current.confirmationMode);
+    this.applyHighlightFlag(this.cardtextSegments, current.cardtext);
     this.applyHighlight(this.hoverSegments, current.detailedHoverPreviews);
     this.musicSlider.setValue(current.musicVolume);
     this.fxSlider.setValue(current.fxVolume);
@@ -377,6 +433,19 @@ export class SettingsOverlayView extends Phaser.GameObjects.Container {
   private applyHighlight<T>(segments: Segment<T>[], selected: T): void {
     for (const segment of segments) {
       const isSelected = segment.value === selected;
+      segment.bg.setFillStyle(isSelected ? SELECTED_FILL : UNSELECTED_FILL, isSelected ? 1 : 0.95);
+      segment.bg.setStrokeStyle(
+        1,
+        isSelected ? SELECTED_STROKE : UNSELECTED_STROKE,
+        isSelected ? 1 : 0.85,
+      );
+      segment.label.setColor(isSelected ? TEXT.textLight : TEXT.textMuted);
+    }
+  }
+
+  private applyHighlightFlag<T>(segments: Segment<T>[], selected: T[]): void {
+    for (const segment of segments) {
+      const isSelected = selected.includes(segment.value);
       segment.bg.setFillStyle(isSelected ? SELECTED_FILL : UNSELECTED_FILL, isSelected ? 1 : 0.95);
       segment.bg.setStrokeStyle(
         1,
