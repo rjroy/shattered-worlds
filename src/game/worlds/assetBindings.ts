@@ -55,6 +55,13 @@ import questionsRealityUrl from "../assets/themes/questions/questions-reality.we
 import questionsOverlayUrl from "../assets/themes/questions/intrusion-overlay.webp";
 import questionsCardfrontUrl from "../assets/themes/questions/questions-cardfront.webp";
 
+// answers has reality/overlay art (generated alongside questions' full set)
+// and now has its full inset set (see the insets/README.md art-gen pass), but
+// still has no cardfront — see theme.ts's comment. Do not invent a cardfront
+// import; wire only what exists on disk.
+import answersRealityUrl from "../assets/themes/answers/answers-reality.webp";
+import answersOverlayUrl from "../assets/themes/answers/intrusion-overlay.webp";
+
 // ---------------------------------------------------------------------------
 // World inset imports
 // ---------------------------------------------------------------------------
@@ -227,6 +234,28 @@ import questionsInsetAskTheQuestionUrl from "../assets/themes/questions/insets/i
 import questionsInsetLetItOutUrl from "../assets/themes/questions/insets/inset-let-it-out.webp";
 import questionsInsetWhyUrl from "../assets/themes/questions/insets/inset-why.webp";
 import questionsInsetSitWithItAWhileUrl from "../assets/themes/questions/insets/inset-sit-with-it-a-while.webp";
+
+import answersInsetTheLedgerNeverClosesUrl from "../assets/themes/answers/insets/inset-the-ledger-never-closes.webp";
+import answersInsetABrokerWhoOwesNothingUrl from "../assets/themes/answers/insets/inset-a-broker-who-owes-nothing.webp";
+import answersInsetWhatWouldYouGiveUpUrl from "../assets/themes/answers/insets/inset-what-would-you-give-up.webp";
+import answersInsetTheArchiveHasAPriceUrl from "../assets/themes/answers/insets/inset-the-archive-has-a-price.webp";
+import answersInsetADealTooEasyUrl from "../assets/themes/answers/insets/inset-a-deal-too-easy.webp";
+import answersInsetAReadingOfTheLedgerUrl from "../assets/themes/answers/insets/inset-a-reading-of-the-ledger.webp";
+import answersInsetAFractureOpensUrl from "../assets/themes/answers/insets/inset-a-fracture-opens.webp";
+import answersInsetAnotherFractureUrl from "../assets/themes/answers/insets/inset-another-fracture.webp";
+import answersInsetThePointOfNoReturnUrl from "../assets/themes/answers/insets/inset-the-point-of-no-return.webp";
+import answersInsetTheWeightDoesntLiftUrl from "../assets/themes/answers/insets/inset-the-weight-doesnt-lift.webp";
+import answersInsetItWontGoAwayUrl from "../assets/themes/answers/insets/inset-it-wont-go-away.webp";
+import answersInsetItCalcifiedUrl from "../assets/themes/answers/insets/inset-it-calcified.webp";
+import answersInsetAReasonToKeepMovingUrl from "../assets/themes/answers/insets/inset-a-reason-to-keep-moving.webp";
+import answersInsetJustKeepWalkingUrl from "../assets/themes/answers/insets/inset-just-keep-walking.webp";
+import answersInsetCallInTheFavorUrl from "../assets/themes/answers/insets/inset-call-in-the-favor.webp";
+import answersInsetAPageFromTheLedgerUrl from "../assets/themes/answers/insets/inset-a-page-from-the-ledger.webp";
+import answersInsetAskForMoreTimeUrl from "../assets/themes/answers/insets/inset-ask-for-more-time.webp";
+import answersInsetTakeWhatsOwedUrl from "../assets/themes/answers/insets/inset-take-whats-owed.webp";
+import answersInsetLetItSitUrl from "../assets/themes/answers/insets/inset-let-it-sit.webp";
+import answersInsetKeepWalkingUrl from "../assets/themes/answers/insets/inset-keep-walking.webp";
+import answersInsetLetItGoUrl from "../assets/themes/answers/insets/inset-let-it-go.webp";
 
 // ---------------------------------------------------------------------------
 // World music imports
@@ -461,6 +490,30 @@ export const worldAssetUrls: Record<string, string> = {
   "questions-inset-let-it-out": questionsInsetLetItOutUrl,
   "questions-inset-why": questionsInsetWhyUrl,
   "questions-inset-sit-with-it-a-while": questionsInsetSitWithItAWhileUrl,
+  "answers-inset-the-ledger-never-closes": answersInsetTheLedgerNeverClosesUrl,
+  "answers-inset-a-broker-who-owes-nothing": answersInsetABrokerWhoOwesNothingUrl,
+  "answers-inset-what-would-you-give-up": answersInsetWhatWouldYouGiveUpUrl,
+  "answers-inset-the-archive-has-a-price": answersInsetTheArchiveHasAPriceUrl,
+  "answers-inset-a-deal-too-easy": answersInsetADealTooEasyUrl,
+  "answers-inset-a-reading-of-the-ledger": answersInsetAReadingOfTheLedgerUrl,
+  "answers-inset-a-fracture-opens": answersInsetAFractureOpensUrl,
+  "answers-inset-another-fracture": answersInsetAnotherFractureUrl,
+  "answers-inset-the-point-of-no-return": answersInsetThePointOfNoReturnUrl,
+  "answers-inset-the-weight-doesnt-lift": answersInsetTheWeightDoesntLiftUrl,
+  "answers-inset-it-wont-go-away": answersInsetItWontGoAwayUrl,
+  "answers-inset-it-calcified": answersInsetItCalcifiedUrl,
+  "answers-inset-a-reason-to-keep-moving": answersInsetAReasonToKeepMovingUrl,
+  "answers-inset-just-keep-walking": answersInsetJustKeepWalkingUrl,
+  "answers-inset-call-in-the-favor": answersInsetCallInTheFavorUrl,
+  "answers-inset-a-page-from-the-ledger": answersInsetAPageFromTheLedgerUrl,
+  "answers-inset-ask-for-more-time": answersInsetAskForMoreTimeUrl,
+  "answers-inset-take-whats-owed": answersInsetTakeWhatsOwedUrl,
+  "answers-inset-let-it-sit": answersInsetLetItSitUrl,
+  "answers-inset-keep-walking": answersInsetKeepWalkingUrl,
+  "answers-inset-let-it-go": answersInsetLetItGoUrl,
+  // answers — reality/overlay and now its full inset set; still no cardfront.
+  "answers-bg": answersRealityUrl,
+  "answers-overlay": answersOverlayUrl,
 };
 
 export interface WorldMusicAsset {

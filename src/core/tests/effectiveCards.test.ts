@@ -409,3 +409,95 @@ describe("effectiveWorldCardCost — Denial/Anger (World 13 Slice 1)", () => {
     expect(effectiveWorldCardCost(denied, state)).toBe(expected);
   });
 });
+
+// ---------------------------------------------------------------------------
+// World 14 (answers) Slice 1 — Bargaining/Depression are ClearCostPerOtherKeyword
+// / ClearCostPerSelfKeyword's next users. Bargaining is that modifier kind's
+// first real registration in the codebase (see keywords.ts), so these tests
+// confirm its value-summing, self-excluding, floor-at-0 behavior directly
+// rather than assuming it from the spec text.
+// ---------------------------------------------------------------------------
+
+describe("effectiveWorldCardCost — Bargaining/Depression (World 14 Slice 1)", () => {
+  it("ClearCostPerSelfKeyword taxes a Depression-authored card by its own value", () => {
+    const depressed = makeWorldCard({
+      id: "depressed",
+      cost: 3,
+      keywords: [{ name: "Depression", value: 2 }],
+    });
+    expect(effectiveWorldCardCost(depressed, makeState({ hand: [depressed] }))).toBe(5);
+  });
+
+  it("ClearCostPerOtherKeyword sums Bargaining's value across other cards, not their count", () => {
+    // One other card carrying Bargaining:3 ...
+    const priced1 = makeWorldCard({ id: "priced1", cost: 2, keywords: [] });
+    const singleBearer = makeWorldCard({
+      id: "single-bearer",
+      cost: 2,
+      keywords: [{ name: "Bargaining", value: 3 }],
+    });
+    const stateSingle = makeState({ hand: [priced1, singleBearer] });
+
+    // ... and three other cards each carrying Bargaining:1 must produce the
+    // same tax (3 * costPer), proving value-summing rather than a count-based
+    // tax like ClearCostPerKeywordCount.
+    const priced2 = makeWorldCard({ id: "priced2", cost: 2, keywords: [] });
+    const bearerA = makeWorldCard({
+      id: "bearer-a",
+      cost: 2,
+      keywords: [{ name: "Bargaining", value: 1 }],
+    });
+    const bearerB = makeWorldCard({
+      id: "bearer-b",
+      cost: 2,
+      keywords: [{ name: "Bargaining", value: 1 }],
+    });
+    const bearerC = makeWorldCard({
+      id: "bearer-c",
+      cost: 2,
+      keywords: [{ name: "Bargaining", value: 1 }],
+    });
+    const stateTriple = makeState({ hand: [priced2, bearerA, bearerB, bearerC] });
+
+    expect(effectiveWorldCardCost(priced1, stateSingle)).toBe(priced1.cost + 3);
+    expect(effectiveWorldCardCost(priced2, stateTriple)).toBe(priced2.cost + 3);
+  });
+
+  it("does not tax the Bargaining-carrier for its own value, while taxing every other card", () => {
+    const bearer = makeWorldCard({
+      id: "bearer",
+      cost: 2,
+      keywords: [{ name: "Bargaining", value: 3 }],
+    });
+    const unrelated = makeWorldCard({ id: "unrelated", cost: 2, keywords: [] });
+    const state = makeState({ hand: [bearer, unrelated] });
+
+    // The carrier itself sees no ClearCostPerOtherKeyword contribution from
+    // its own Bargaining value (extraWorldCardCost excludes the priced card).
+    expect(effectiveWorldCardCost(bearer, state)).toBe(bearer.cost);
+    // Every other card in hand is taxed by the full summed value.
+    expect(effectiveWorldCardCost(unrelated, state)).toBe(unrelated.cost + 3);
+  });
+
+  it("stacks Depression (self) and Bargaining (other cards) on the same card", () => {
+    const depressed = makeWorldCard({
+      id: "depressed",
+      cost: 3,
+      keywords: [{ name: "Depression", value: 2 }],
+    });
+    const bargainer = makeWorldCard({
+      id: "bargainer",
+      cost: 2,
+      keywords: [{ name: "Bargaining", value: 3 }],
+    });
+    const state = makeState({ hand: [depressed, bargainer] });
+
+    const depressionCostPer = 1;
+    const bargainingCostPer = 1;
+    const bargainingSumOnOtherCards = 3; // only `bargainer` carries Bargaining
+    const expected =
+      depressed.cost + 2 * depressionCostPer + bargainingCostPer * bargainingSumOnOtherCards;
+
+    expect(effectiveWorldCardCost(depressed, state)).toBe(expected);
+  });
+});

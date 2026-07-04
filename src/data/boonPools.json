@@ -62,5 +62,6 @@
     "Check the Board",
     "Board Anyway",
     "Right of Way"
-  ]
+  ],
+  "pool-ledger-reading": ["Ask For More Time", "Take What's Owed"]
 }

@@ -22,6 +22,8 @@ export const KEYWORD_NAMES: readonly KeywordName[] = [
   "Reroute",
   "Denial",
   "Anger",
+  "Bargaining",
+  "Depression",
 ];
 
 export const PERSISTENT_KEYWORDS: ReadonlySet<KeywordName> = new Set(["Lockdown", "Reroute"]);
@@ -32,6 +34,8 @@ export const KEYWORD_COST_MODIFIERS: Partial<Record<KeywordName, PersistentModif
   Reroute: { kind: "ClearCostPerSelfKeyword", costPer: 1 },
   Denial: { kind: "ClearCostPerSelfKeyword", costPer: 1 },
   Anger: { kind: "ClearCostPerKeywordCount", costPer: 1 },
+  Bargaining: { kind: "ClearCostPerOtherKeyword", costPer: 1 },
+  Depression: { kind: "ClearCostPerSelfKeyword", costPer: 1 },
 };
 
 function isKeywordName(s: string): s is KeywordName {

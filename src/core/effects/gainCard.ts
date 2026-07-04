@@ -14,6 +14,7 @@ import { shuffle } from "../engine/rng";
 import { filterLegalPlayerCandidates, weightedDraw } from "../engine/weightedDraw";
 import type { CompileContext, EffectContext, EffectResult } from "./EffectContext";
 import { EffectHandler } from "./EffectHandler";
+import { CARD_CATALOG } from "../../data/worldManifest";
 import { resolvePool } from "./pools";
 import { icon, main, rider, text, value } from "./tokens";
 
@@ -37,6 +38,8 @@ const WORLD_THREAT_BY_WORLD_ID: Record<string, CardTemplateId> = {
   "eden-prime": "Paradise Runs",
   "new-derelict": "The Order Arrives",
   "transit-authority": "Entity Detected",
+  questions: "Destiny",
+  answers: "Destiny",
 };
 
 export function worldThreatByWorldId(worldId: string): string {
@@ -45,6 +48,19 @@ export function worldThreatByWorldId(worldId: string): string {
 
 export function worldThreatTemplateByWorldId(worldId: string): CardTemplateId | undefined {
   return WORLD_THREAT_BY_WORLD_ID[worldId];
+}
+
+/**
+ * Resolves a template id to its authored display `name` (e.g. "Destiny" ->
+ * "The Destiny"). `compile()` runs before any card is minted, so it has no
+ * `Card` instance to read `.name` off of (that's what the runtime preview
+ * path in `actionPreview.ts` does via `cardName()`); it falls back to the
+ * static, whole-game catalog the same way `pools.ts` resolves `setId`s that
+ * aren't threaded through `CompileContext` either. Falls back to the raw id
+ * so an unknown/renamed template still renders something instead of nothing.
+ */
+function catalogDisplayName(templateId: CardTemplateId): string {
+  return CARD_CATALOG[templateId]?.name ?? templateId;
 }
 
 /**
@@ -254,6 +270,8 @@ export class AddThreatToWorldDeckHandler extends GainCardLikeHandler<AddThreatTo
   }
 
   override compile(_effect: AddThreatToWorldDeckEffect, ctx: CompileContext): EffectLine[] {
-    return [main([icon("addCard"), value(worldThreatByWorldId(ctx.worldId), "penalty")])];
+    const templateId = worldThreatTemplateByWorldId(ctx.worldId);
+    const displayName = templateId !== undefined ? catalogDisplayName(templateId) : "<Unknown>";
+    return [main([icon("addCard"), value(displayName, "penalty")])];
   }
 }
