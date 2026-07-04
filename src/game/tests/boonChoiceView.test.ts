@@ -1,26 +1,11 @@
-import { afterAll, describe, expect, it, mock } from "bun:test";
+import { describe, expect, it } from "bun:test";
 import { BoonChoiceView } from "../view/BoonChoiceView";
 import { selectTheme } from "../view/themes/themeManifest";
 import { rarityStyle } from "../view/rarity";
 import { CardView, RARITY_STROKE_WIDTH } from "../view/CardView";
 import { DEFAULT_RUN_MODIFIERS } from "../../data/unlocks/types";
 import type { Action, CardTemplate, GameState } from "../../core/index";
-
-// TableScene only needs the audio manifest at runtime. Mock that boundary so
-// this headless view suite does not ask Bun to parse Vite-managed media assets.
-mock.module("../data/audioManifest", () => ({
-  mainThemeMusic: { key: "music-main-theme", url: "/assets/audio/main-theme.mp3" },
-  worldMusicManifest: {},
-}));
-const { TableScene } = await import("../scenes/TableScene");
-
-// mock.module patches Bun's global module registry for the rest of the test
-// process, not just this file. Undo it once this file's tests are done so
-// later files importing ../data/audioManifest (directly or transitively) see
-// the real worldMusicManifest instead of this file's empty stub.
-afterAll(() => {
-  mock.restore();
-});
+import { TableScene } from "../scenes/TableScene";
 
 interface FakeGameObject {
   readonly kind: string;
