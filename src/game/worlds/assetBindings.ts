@@ -53,6 +53,7 @@ import transitCardfrontUrl from "../assets/themes/transit-authority/transit-auth
 
 import questionsRealityUrl from "../assets/themes/questions/questions-reality.webp";
 import questionsOverlayUrl from "../assets/themes/questions/intrusion-overlay.webp";
+import questionsCardfrontUrl from "../assets/themes/questions/questions-cardfront.webp";
 
 // ---------------------------------------------------------------------------
 // World inset imports
@@ -444,6 +445,7 @@ export const worldAssetUrls: Record<string, string> = {
   // questions
   "questions-bg": questionsRealityUrl,
   "questions-overlay": questionsOverlayUrl,
+  "questions-cardfront": questionsCardfrontUrl,
   "questions-inset-waiting-room-silence": questionsInsetWaitingRoomSilenceUrl,
   "questions-inset-im-outta-here": questionsInsetImOuttaHereUrl,
   "questions-inset-the-monitor-keeps-beeping": questionsInsetTheMonitorKeepsBeepingUrl,

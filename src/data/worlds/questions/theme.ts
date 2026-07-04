@@ -33,4 +33,5 @@ export const QUESTIONS_THEME: VisualTheme = {
     realityKey: "questions-bg",
     intrusionKey: "questions-overlay",
   },
+  worldCardfrontKey: "questions-cardfront",
 };

@@ -209,7 +209,7 @@
     "id": "world-questions",
     "name": "Questions",
     "description": "Opens Questions in World Select.",
-    "cost": 15,
+    "cost": 20,
     "destinyWeight": 0,
     "effect": { "type": "worldUnlock", "worldId": "questions" }
   },
