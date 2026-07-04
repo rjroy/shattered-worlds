@@ -192,6 +192,8 @@ export class CardView extends Phaser.GameObjects.Container {
   private costText?: Phaser.GameObjects.Text;
   private targetGlow?: Phaser.GameObjects.Graphics;
   private emphasized = false;
+  private textContainer: Phaser.GameObjects.Container;
+  private textVisible: boolean = true;
 
   // Concealment (world cards only). `concealDepth` is the card's Concealed:N
   // value (0 = never concealable). `revealObjects` is the identity face shown
@@ -308,12 +310,15 @@ export class CardView extends Phaser.GameObjects.Container {
       originY: 0,
     });
 
+    this.textContainer = scene.add.container(0, 0);
+    this.add(this.textContainer);
+
     if (card.kind === "player") {
       // Keywords — same 9px line the world face uses, at the same offset, so a
       // Spore card is identifiable in hand (REQ-MALL-21).
       const hasKeywords = card.keywords.length > 0;
       if (hasKeywords) {
-        addCardText(scene, this, 0, -CARD_H / 2 + 23, formatKeywords(card.keywords), {
+        addCardText(scene, this.textContainer, 0, -CARD_H / 2 + 23, formatKeywords(card.keywords), {
           fontFamily: FONTS.body,
           fontSize: "10px",
           color: TEXT.textKeyword,
@@ -334,7 +339,7 @@ export class CardView extends Phaser.GameObjects.Container {
         warnLabel: card.name,
       });
       effectBlock.container.setPosition(0, -CARD_H / 2 + (hasKeywords ? 36 : 28));
-      this.add(effectBlock.container);
+      this.textContainer.add(effectBlock.container);
 
       // Energy cost badge: only for cards with energyCost > 0.
       if (card.energyCost > 0) {
@@ -356,7 +361,7 @@ export class CardView extends Phaser.GameObjects.Container {
       // come through compileEffect.
       if (card.exhaust === true) {
         if (card.canDestroy) {
-          addCardText(scene, this, 0, CARD_H / 2 - 8, "Exhaust", {
+          addCardText(scene, this.textContainer, 0, CARD_H / 2 - 8, "Exhaust", {
             fontFamily: FONTS.body,
             fontSize: "10px",
             color: TEXT.textKeyword,
@@ -366,7 +371,7 @@ export class CardView extends Phaser.GameObjects.Container {
           });
         } else {
           // If you cannot destroy normally, then exhaust is the only option
-          addCardText(scene, this, 0, CARD_H / 2 - 8, "Exhaust Only", {
+          addCardText(scene, this.textContainer, 0, CARD_H / 2 - 8, "Exhaust Only", {
             fontFamily: FONTS.body,
             fontSize: "9px",
             color: TEXT.textReward,
@@ -446,7 +451,7 @@ export class CardView extends Phaser.GameObjects.Container {
       if (worldCard.keywords.length > 0) {
         for (const line of addCardText(
           scene,
-          this,
+          this.textContainer,
           0,
           -CARD_H / 2 + 23,
           formatKeywords(worldCard.keywords),
@@ -514,7 +519,7 @@ export class CardView extends Phaser.GameObjects.Container {
           continue;
         }
         container.setPosition(0, currY);
-        this.add(container);
+        this.textContainer.add(container);
         reveal.push(container);
         currY += height + effectLineSpacing;
       }
@@ -556,7 +561,7 @@ export class CardView extends Phaser.GameObjects.Container {
         modifierBlock.container.destroy();
       } else {
         modifierBlock.container.setPosition(0, currY);
-        this.add(modifierBlock.container);
+        this.textContainer.add(modifierBlock.container);
         reveal.push(modifierBlock.container);
         currY += modifierBlock.height + effectLineSpacing;
       }
@@ -564,7 +569,7 @@ export class CardView extends Phaser.GameObjects.Container {
       // Discard indicator.
       if (worldCard.discardable) {
         const discardY = Math.min(currY, CARD_H / 2 - 22);
-        for (const line of addCardText(scene, this, 0, discardY, "click to discard", {
+        for (const line of addCardText(scene, this.textContainer, 0, discardY, "click to discard", {
           fontFamily: FONTS.body,
           fontSize: "9px",
           color: TEXT.textDiscard,
@@ -592,7 +597,7 @@ export class CardView extends Phaser.GameObjects.Container {
 
     const appliedKeywordLabel = formatAppliedKeywords(card);
     if (appliedKeywordLabel !== undefined) {
-      addCardText(scene, this, 0, CARD_H / 2 - 35, appliedKeywordLabel, {
+      addCardText(scene, this.textContainer, 0, CARD_H / 2 - 35, appliedKeywordLabel, {
         fontFamily: FONTS.body,
         fontSize: "10px",
         color: "#fff2b8",
@@ -708,6 +713,21 @@ export class CardView extends Phaser.GameObjects.Container {
     const color =
       cost > baseCost ? TEXT.textPenalty : cost < baseCost ? TEXT.textReward : TEXT.textCost;
     this.costText.setColor(color);
+  }
+
+  setTextVisible(bVisible: boolean): void {
+    this.textVisible = bVisible;
+    const currVisible = this.textContainer.visible;
+    const currAlpha = this.textContainer.alpha;
+    const expectedAlpha = bVisible ? 1 : 0;
+    if (currAlpha !== expectedAlpha || currVisible !== bVisible) {
+      this.scene.tweens.add({
+        targets: this.textContainer,
+        duration: 300,
+        alpha: { from: currAlpha, to: expectedAlpha },
+        ease: "Sine.easeINOut",
+      });
+    }
   }
 
   /** Make this hovered legal target the loudest card on the board. */

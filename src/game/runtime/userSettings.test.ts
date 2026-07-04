@@ -41,12 +41,13 @@ function makeThrowingStorage(): RunStatsStorage {
 }
 
 const DEFAULTS: UserSettings = {
-  version: 2,
+  version: 3,
   confirmationMode: 'always',
   detailedHoverPreviews: true,
   musicVolume: 1.0,
   fxVolume: 0.5,
   masterMute: false,
+  cardtext: ['player', 'world'],
 }
 
 // ---------------------------------------------------------------------------
@@ -71,9 +72,11 @@ describe('userSettings', () => {
     const store = createUserSettingsStore(undefined)
     expect(store.get()).toEqual(DEFAULTS)
 
-    expect(() => store.set({ version: 2, confirmationMode: 'off', detailedHoverPreviews: false, musicVolume: 1.0, fxVolume: 0.5, masterMute: false })).not.toThrow()
+    expect(() =>
+      store.set({ version: 3, confirmationMode: 'off', detailedHoverPreviews: false, musicVolume: 1.0, fxVolume: 0.5, masterMute: false, cardtext: [] }),
+    ).not.toThrow()
     // In-memory copy still updates even though nothing persisted.
-    expect(store.get()).toEqual({ version: 2, confirmationMode: 'off', detailedHoverPreviews: false, musicVolume: 1.0, fxVolume: 0.5, masterMute: false })
+    expect(store.get()).toEqual({ version: 3, confirmationMode: 'off', detailedHoverPreviews: false, musicVolume: 1.0, fxVolume: 0.5, masterMute: false, cardtext: [] })
 
     expect(() => store.update({ confirmationMode: 'risk-only' })).not.toThrow()
     expect(store.get().confirmationMode).toBe('risk-only')
@@ -89,7 +92,7 @@ describe('userSettings', () => {
     expect(store.get()).toEqual(DEFAULTS)
 
     // save swallows the setItem throw; in-memory copy is still retained
-    const next: UserSettings = { version: 2, confirmationMode: 'off', detailedHoverPreviews: false, musicVolume: 1.0, fxVolume: 0.5, masterMute: false }
+    const next: UserSettings = { version: 3, confirmationMode: 'off', detailedHoverPreviews: false, musicVolume: 1.0, fxVolume: 0.5, masterMute: false, cardtext: [] }
     expect(() => store.set(next)).not.toThrow()
     expect(store.get()).toEqual(next)
   })
@@ -114,7 +117,7 @@ describe('userSettings', () => {
     const storage = makeStorage()
     storage.setItem(
       USER_SETTINGS_STORAGE_KEY,
-      JSON.stringify({ version: 2, confirmationMode: 'bogus', detailedHoverPreviews: true, musicVolume: 1.0, fxVolume: 0.5, masterMute: false }),
+      JSON.stringify({ version: 3, confirmationMode: 'bogus', detailedHoverPreviews: true, musicVolume: 1.0, fxVolume: 0.5, masterMute: false, cardtext: [] }),
     )
 
     expect(loadUserSettings(storage)).toEqual(DEFAULTS)
@@ -122,7 +125,7 @@ describe('userSettings', () => {
 
   it('returns defaults when a known field is missing', () => {
     const storage = makeStorage()
-    storage.setItem(USER_SETTINGS_STORAGE_KEY, JSON.stringify({ version: 2, confirmationMode: 'off', detailedHoverPreviews: true }))
+    storage.setItem(USER_SETTINGS_STORAGE_KEY, JSON.stringify({ version: 3, confirmationMode: 'off', detailedHoverPreviews: true }))
 
     expect(loadUserSettings(storage)).toEqual(DEFAULTS)
   })
@@ -131,7 +134,7 @@ describe('userSettings', () => {
     const storage = makeStorage()
     storage.setItem(
       USER_SETTINGS_STORAGE_KEY,
-      JSON.stringify({ version: 2, confirmationMode: 'off', detailedHoverPreviews: 'yes', musicVolume: 1.0, fxVolume: 0.5, masterMute: false }),
+      JSON.stringify({ version: 3, confirmationMode: 'off', detailedHoverPreviews: 'yes', musicVolume: 1.0, fxVolume: 0.5, masterMute: false, cardtext: [] }),
     )
 
     expect(loadUserSettings(storage)).toEqual(DEFAULTS)
@@ -141,7 +144,7 @@ describe('userSettings', () => {
     const storage = makeStorage()
     storage.setItem(
       USER_SETTINGS_STORAGE_KEY,
-      JSON.stringify({ version: 99, confirmationMode: 'off', detailedHoverPreviews: false, musicVolume: 1.0, fxVolume: 0.5, masterMute: false }),
+      JSON.stringify({ version: 99, confirmationMode: 'off', detailedHoverPreviews: false, musicVolume: 1.0, fxVolume: 0.5, masterMute: false, cardtext: [] }),
     )
 
     expect(loadUserSettings(storage)).toEqual(DEFAULTS)
@@ -155,7 +158,7 @@ describe('userSettings', () => {
     const storage = makeStorage()
     const store = createUserSettingsStore(storage)
 
-    const next: UserSettings = { version: 2, confirmationMode: 'risk-only', detailedHoverPreviews: false, musicVolume: 1.0, fxVolume: 0.5, masterMute: false }
+    const next: UserSettings = { version: 3, confirmationMode: 'risk-only', detailedHoverPreviews: false, musicVolume: 1.0, fxVolume: 0.5, masterMute: false, cardtext: ['world'] }
     store.set(next)
 
     expect(storage.getItem(USER_SETTINGS_STORAGE_KEY)).not.toBeNull()
@@ -170,10 +173,26 @@ describe('userSettings', () => {
 
     store.update({ confirmationMode: 'off' })
 
-    expect(store.get()).toEqual({ version: 2, confirmationMode: 'off', detailedHoverPreviews: true, musicVolume: 1.0, fxVolume: 0.5, masterMute: false })
+    expect(store.get()).toEqual({ version: 3, confirmationMode: 'off', detailedHoverPreviews: true, musicVolume: 1.0, fxVolume: 0.5, masterMute: false, cardtext: ['player', 'world'] })
 
     const reloaded = createUserSettingsStore(storage)
-    expect(reloaded.get()).toEqual({ version: 2, confirmationMode: 'off', detailedHoverPreviews: true, musicVolume: 1.0, fxVolume: 0.5, masterMute: false })
+    expect(reloaded.get()).toEqual({ version: 3, confirmationMode: 'off', detailedHoverPreviews: true, musicVolume: 1.0, fxVolume: 0.5, masterMute: false, cardtext: ['player', 'world'] })
+  })
+
+  // ---------------------------------------------------------------------------
+  // Regression: a freshly-saved payload must survive a reload unchanged
+  // ---------------------------------------------------------------------------
+
+  it('round-trips a freshly saved settings object without resetting to defaults', () => {
+    const storage = makeStorage()
+    const store = createUserSettingsStore(storage)
+
+    store.set({ version: 3, confirmationMode: 'off', detailedHoverPreviews: false, musicVolume: 0.3, fxVolume: 0.7, masterMute: true, cardtext: ['world'] })
+
+    // Simulate a page reload: a brand-new store reading the same storage
+    // must see the settings that were just saved, not fall back to defaults.
+    const reloaded = createUserSettingsStore(storage)
+    expect(reloaded.get()).toEqual({ version: 3, confirmationMode: 'off', detailedHoverPreviews: false, musicVolume: 0.3, fxVolume: 0.7, masterMute: true, cardtext: ['world'] })
   })
 
   // ---------------------------------------------------------------------------
@@ -185,19 +204,20 @@ describe('userSettings', () => {
     storage.setItem(
       USER_SETTINGS_STORAGE_KEY,
       JSON.stringify({
-        version: 2,
+        version: 3,
         confirmationMode: 'off',
         detailedHoverPreviews: false,
         musicVolume: 1.0,
         fxVolume: 0.5,
         masterMute: false,
+        cardtext: [],
         futureAudioVolume: 0.5,
       }),
     )
 
     const loaded = loadUserSettings(storage)
     // Known fields honored, not discarded to defaults...
-    expect(loaded).toEqual({ version: 2, confirmationMode: 'off', detailedHoverPreviews: false, musicVolume: 1.0, fxVolume: 0.5, masterMute: false })
+    expect(loaded).toEqual({ version: 3, confirmationMode: 'off', detailedHoverPreviews: false, musicVolume: 1.0, fxVolume: 0.5, masterMute: false, cardtext: [] })
     // ...and the unknown key is not carried into the typed object.
     expect('futureAudioVolume' in loaded).toBe(false)
   })
@@ -207,17 +227,21 @@ describe('userSettings', () => {
   // ---------------------------------------------------------------------------
 
   it('accepts a well-formed settings object', () => {
-    expect(isUserSettings({ version: 2, confirmationMode: 'always', detailedHoverPreviews: true, musicVolume: 1.0, fxVolume: 0.5, masterMute: false })).toBe(true)
+    expect(isUserSettings({ version: 3, confirmationMode: 'always', detailedHoverPreviews: true, musicVolume: 1.0, fxVolume: 0.5, masterMute: false, cardtext: [] })).toBe(true)
   })
 
   it('accepts a settings object with extra unknown keys', () => {
     expect(
-      isUserSettings({ version: 2, confirmationMode: 'off', detailedHoverPreviews: false, musicVolume: 1.0, fxVolume: 0.5, masterMute: false, extra: 1 }),
+      isUserSettings({ version: 3, confirmationMode: 'off', detailedHoverPreviews: false, musicVolume: 1.0, fxVolume: 0.5, masterMute: false, cardtext: [], extra: 1 }),
     ).toBe(true)
   })
 
+  it('rejects a v2 payload missing cardtext', () => {
+    expect(isUserSettings({ version: 3, confirmationMode: 'off', detailedHoverPreviews: false, musicVolume: 1.0, fxVolume: 0.5, masterMute: false })).toBe(false)
+  })
+
   // ---------------------------------------------------------------------------
-  // v1 → v2 migration
+  // v1 → v3 migration
   // ---------------------------------------------------------------------------
 
   it('migrates a v1 payload preserving confirmationMode and detailedHoverPreviews', () => {
@@ -229,16 +253,17 @@ describe('userSettings', () => {
 
     const loaded = loadUserSettings(storage)
     expect(loaded).toEqual({
-      version: 2,
+      version: 3,
       confirmationMode: 'risk-only',
       detailedHoverPreviews: false,
       musicVolume: 1.0,
       fxVolume: 0.5,
       masterMute: false,
+      cardtext: ['world', 'player'],
     })
   })
 
-  it('still persists a migrated v2 after migration so next load is native v2', () => {
+  it('still persists a migrated v1 after migration so next load is native v3', () => {
     const storage = makeStorage()
     storage.setItem(
       USER_SETTINGS_STORAGE_KEY,
@@ -247,19 +272,79 @@ describe('userSettings', () => {
 
     // First load — triggers migration
     const storeA = createUserSettingsStore(storage)
-    expect(storeA.get().version).toBe(2)
+    expect(storeA.get().version).toBe(3)
     expect(storeA.get().confirmationMode).toBe('off')
 
     // Reload from same storage — no longer needs migration path
     const storeB = createUserSettingsStore(storage)
     expect(storeB.get()).toEqual({
-      version: 2,
+      version: 3,
       confirmationMode: 'off',
       detailedHoverPreviews: true,
       musicVolume: 1.0,
       fxVolume: 0.5,
       masterMute: false,
+      cardtext: ['world', 'player'],
     })
+  })
+
+  // ---------------------------------------------------------------------------
+  // v2 → v3 migration
+  // ---------------------------------------------------------------------------
+
+  it('migrates a v2 payload preserving all v2 fields and adding default cardtext', () => {
+    const storage = makeStorage()
+    storage.setItem(
+      USER_SETTINGS_STORAGE_KEY,
+      JSON.stringify({ version: 2, confirmationMode: 'risk-only', detailedHoverPreviews: false, musicVolume: 0.4, fxVolume: 0.6, masterMute: true }),
+    )
+
+    const loaded = loadUserSettings(storage)
+    expect(loaded).toEqual({
+      version: 3,
+      confirmationMode: 'risk-only',
+      detailedHoverPreviews: false,
+      musicVolume: 0.4,
+      fxVolume: 0.6,
+      masterMute: true,
+      cardtext: ['world', 'player'],
+    })
+  })
+
+  it('still persists a migrated v2 after migration so next load is native v3', () => {
+    const storage = makeStorage()
+    storage.setItem(
+      USER_SETTINGS_STORAGE_KEY,
+      JSON.stringify({ version: 2, confirmationMode: 'off', detailedHoverPreviews: true, musicVolume: 1.0, fxVolume: 0.5, masterMute: false }),
+    )
+
+    const storeA = createUserSettingsStore(storage)
+    expect(storeA.get().version).toBe(3)
+
+    const storeB = createUserSettingsStore(storage)
+    expect(storeB.get()).toEqual({
+      version: 3,
+      confirmationMode: 'off',
+      detailedHoverPreviews: true,
+      musicVolume: 1.0,
+      fxVolume: 0.5,
+      masterMute: false,
+      cardtext: ['world', 'player'],
+    })
+  })
+
+  // ---------------------------------------------------------------------------
+  // cardtext filtering
+  // ---------------------------------------------------------------------------
+
+  it('filters unknown cardtext entries and drops non-array cardtext to empty', () => {
+    const storage = makeStorage()
+    storage.setItem(
+      USER_SETTINGS_STORAGE_KEY,
+      JSON.stringify({ version: 3, confirmationMode: 'always', detailedHoverPreviews: true, musicVolume: 1.0, fxVolume: 0.5, masterMute: false, cardtext: ['world', 'bogus', 'player'] }),
+    )
+
+    expect(loadUserSettings(storage).cardtext).toEqual(['world', 'player'])
   })
 
   // ---------------------------------------------------------------------------
@@ -270,7 +355,7 @@ describe('userSettings', () => {
     const storage = makeStorage()
     storage.setItem(
       USER_SETTINGS_STORAGE_KEY,
-      JSON.stringify({ version: 2, confirmationMode: 'always', detailedHoverPreviews: true, musicVolume: -5, fxVolume: 0.5, masterMute: false }),
+      JSON.stringify({ version: 3, confirmationMode: 'always', detailedHoverPreviews: true, musicVolume: -5, fxVolume: 0.5, masterMute: false, cardtext: [] }),
     )
 
     const loaded = loadUserSettings(storage)
@@ -281,7 +366,7 @@ describe('userSettings', () => {
     const storage = makeStorage()
     storage.setItem(
       USER_SETTINGS_STORAGE_KEY,
-      JSON.stringify({ version: 2, confirmationMode: 'always', detailedHoverPreviews: true, musicVolume: 1.0, fxVolume: 99, masterMute: false }),
+      JSON.stringify({ version: 3, confirmationMode: 'always', detailedHoverPreviews: true, musicVolume: 1.0, fxVolume: 99, masterMute: false, cardtext: [] }),
     )
 
     const loaded = loadUserSettings(storage)
@@ -292,7 +377,7 @@ describe('userSettings', () => {
     const storage = makeStorage()
     storage.setItem(
       USER_SETTINGS_STORAGE_KEY,
-      JSON.stringify({ version: 2, confirmationMode: 'always', detailedHoverPreviews: true, musicVolume: null, fxVolume: 0.5, masterMute: false }),
+      JSON.stringify({ version: 3, confirmationMode: 'always', detailedHoverPreviews: true, musicVolume: null, fxVolume: 0.5, masterMute: false, cardtext: [] }),
     )
 
     const loaded = loadUserSettings(storage)
@@ -303,7 +388,7 @@ describe('userSettings', () => {
     const storage = makeStorage()
     storage.setItem(
       USER_SETTINGS_STORAGE_KEY,
-      JSON.stringify({ version: 2, confirmationMode: 'always', detailedHoverPreviews: true, musicVolume: 1.0, fxVolume: null, masterMute: false }),
+      JSON.stringify({ version: 3, confirmationMode: 'always', detailedHoverPreviews: true, musicVolume: 1.0, fxVolume: null, masterMute: false, cardtext: [] }),
     )
 
     const loaded = loadUserSettings(storage)

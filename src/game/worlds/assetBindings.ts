@@ -51,6 +51,10 @@ import transitRealityUrl from "../assets/themes/transit-authority/transit-author
 import transitOverlayUrl from "../assets/themes/transit-authority/intrusion-overlay.webp";
 import transitCardfrontUrl from "../assets/themes/transit-authority/transit-authority-cardfront.webp";
 
+import questionsRealityUrl from "../assets/themes/questions/questions-reality.webp";
+import questionsOverlayUrl from "../assets/themes/questions/intrusion-overlay.webp";
+import questionsCardfrontUrl from "../assets/themes/questions/questions-cardfront.webp";
+
 // ---------------------------------------------------------------------------
 // World inset imports
 // ---------------------------------------------------------------------------
@@ -208,6 +212,21 @@ import transitInsetExpressTransferUrl from "../assets/themes/transit-authority/i
 import transitInsetCheckTheBoardUrl from "../assets/themes/transit-authority/insets/inset-check-the-board.webp";
 import transitInsetBoardAnywayUrl from "../assets/themes/transit-authority/insets/inset-board-anyway.webp";
 import transitInsetRightOfWayUrl from "../assets/themes/transit-authority/insets/inset-right-of-way.webp";
+import questionsInsetWaitingRoomSilenceUrl from "../assets/themes/questions/insets/inset-waiting-room-silence.webp";
+import questionsInsetImOuttaHereUrl from "../assets/themes/questions/insets/inset-im-outta-here.webp";
+import questionsInsetTheMonitorKeepsBeepingUrl from "../assets/themes/questions/insets/inset-the-monitor-keeps-beeping.webp";
+import questionsInsetEveryoneSaysItsNothingUrl from "../assets/themes/questions/insets/inset-everyone-says-its-nothing.webp";
+import questionsInsetTheTestResultsSitUnopenedUrl from "../assets/themes/questions/insets/inset-the-test-results-sit-unopened.webp";
+import questionsInsetSheSaysShesFineUrl from "../assets/themes/questions/insets/inset-she-says-shes-fine.webp";
+import questionsInsetHeIsntComingBackUrl from "../assets/themes/questions/insets/inset-he-isnt-coming-back.webp";
+import questionsInsetItIsntFairUrl from "../assets/themes/questions/insets/inset-it-isnt-fair.webp";
+import questionsInsetNobodyWarnedYouUrl from "../assets/themes/questions/insets/inset-nobody-warned-you.webp";
+import questionsInsetTheQuestionThatHasNoAnswerUrl from "../assets/themes/questions/insets/inset-the-question-that-has-no-answer.webp";
+import questionsInsetDestinyUrl from "../assets/themes/questions/insets/inset-destiny.webp";
+import questionsInsetAskTheQuestionUrl from "../assets/themes/questions/insets/inset-ask-the-question.webp";
+import questionsInsetLetItOutUrl from "../assets/themes/questions/insets/inset-let-it-out.webp";
+import questionsInsetWhyUrl from "../assets/themes/questions/insets/inset-why.webp";
+import questionsInsetSitWithItAWhileUrl from "../assets/themes/questions/insets/inset-sit-with-it-a-while.webp";
 
 // ---------------------------------------------------------------------------
 // World music imports
@@ -423,6 +442,25 @@ export const worldAssetUrls: Record<string, string> = {
   "transit-inset-check-the-board": transitInsetCheckTheBoardUrl,
   "transit-inset-board-anyway": transitInsetBoardAnywayUrl,
   "transit-inset-right-of-way": transitInsetRightOfWayUrl,
+  // questions
+  "questions-bg": questionsRealityUrl,
+  "questions-overlay": questionsOverlayUrl,
+  "questions-cardfront": questionsCardfrontUrl,
+  "questions-inset-waiting-room-silence": questionsInsetWaitingRoomSilenceUrl,
+  "questions-inset-im-outta-here": questionsInsetImOuttaHereUrl,
+  "questions-inset-the-monitor-keeps-beeping": questionsInsetTheMonitorKeepsBeepingUrl,
+  "questions-inset-everyone-says-its-nothing": questionsInsetEveryoneSaysItsNothingUrl,
+  "questions-inset-the-test-results-sit-unopened": questionsInsetTheTestResultsSitUnopenedUrl,
+  "questions-inset-she-says-shes-fine": questionsInsetSheSaysShesFineUrl,
+  "questions-inset-he-isnt-coming-back": questionsInsetHeIsntComingBackUrl,
+  "questions-inset-it-isnt-fair": questionsInsetItIsntFairUrl,
+  "questions-inset-nobody-warned-you": questionsInsetNobodyWarnedYouUrl,
+  "questions-inset-the-question-that-has-no-answer": questionsInsetTheQuestionThatHasNoAnswerUrl,
+  "questions-inset-destiny": questionsInsetDestinyUrl,
+  "questions-inset-ask-the-question": questionsInsetAskTheQuestionUrl,
+  "questions-inset-let-it-out": questionsInsetLetItOutUrl,
+  "questions-inset-why": questionsInsetWhyUrl,
+  "questions-inset-sit-with-it-a-while": questionsInsetSitWithItAWhileUrl,
 };
 
 export interface WorldMusicAsset {

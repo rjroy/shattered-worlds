@@ -206,6 +206,14 @@
     "effect": { "type": "worldUnlock", "worldId": "transit-authority" }
   },
   {
+    "id": "world-questions",
+    "name": "Questions",
+    "description": "Opens Questions in World Select.",
+    "cost": 20,
+    "destinyWeight": 0,
+    "effect": { "type": "worldUnlock", "worldId": "questions" }
+  },
+  {
     "id": "first-sprint-free",
     "name": "Burst of Speed",
     "description": "The first Sprint you play each turn costs 0 energy, but isn't as effective.",

@@ -345,9 +345,13 @@ export class TableScene extends Phaser.Scene {
     this.runSummary = new RunSummaryView(this);
 
     this.helpOverlay = new HelpOverlayView(this, this.worldId_, this.game_.state.totalActs);
-    this.settingsOverlay = new SettingsOverlayView(this, this.runtime_.userSettings, () =>
-      this.reapplyMusicVolume(),
-    );
+    this.settingsOverlay = new SettingsOverlayView(this, this.runtime_.userSettings, (bAudio) => {
+      if (bAudio) {
+        this.reapplyMusicVolume();
+      } else {
+        this.updateAllCardtext();
+      }
+    });
     this.actionConfirmation = new ActionConfirmationView(this);
 
     const questionStyle = textStyle({
@@ -727,6 +731,8 @@ export class TableScene extends Phaser.Scene {
       container.setCardPosition(x, y);
       if (isPlayer) container.setRotation((i - rotationOffset) * radians);
 
+      this.updateCardtext(container, this.hoveredCardId == card.id);
+
       // Re-apply mutable visual state every cycle, reused or freshly created.
       this.applyHighlight(container, card, playableIds, discardableIds, legalTargetIds);
 
@@ -967,6 +973,7 @@ export class TableScene extends Phaser.Scene {
       // No hover preview behind an open confirmation modal.
       if (this.actionConfirmation.isOpen) return;
       this.hoveredCardId = id;
+      this.updateCardtext(container, true);
       this.showTargetPreview(id);
       if (this.sel.phase === "idle") {
         if (card.kind === "world") {
@@ -985,6 +992,7 @@ export class TableScene extends Phaser.Scene {
       });
     });
     container.on("pointerout", (pointer: Phaser.Input.Pointer) => {
+      this.updateCardtext(container, false);
       // Interactive children (effect icons/tooltips) can become the top hit
       // target while the cursor is still visually over the card; keep the
       // card lifted then, or the icon shrinks out from under the cursor.
@@ -1568,6 +1576,20 @@ export class TableScene extends Phaser.Scene {
     }
 
     return stepEffect;
+  }
+
+  private updateAllCardtext(): void {
+    for (const [id, container] of this.cardObjects) {
+      this.updateCardtext(container, this.hoveredCardId == id);
+    }
+  }
+
+  private updateCardtext(cardView: CardView, hovering: boolean): void {
+    const setting = this.runtime_.userSettings.get().cardtext;
+    const card = this.game_.state.hand.find((c) => c.id === cardView.cardId);
+    const flag = card?.kind == "player" ? setting.includes("player") : setting.includes("world");
+    const shouldShow = flag || hovering;
+    cardView.setTextVisible(shouldShow);
   }
 
   // Hover preview for a legal targeting candidate: simulates picking it to

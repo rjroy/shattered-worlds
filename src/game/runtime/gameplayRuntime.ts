@@ -17,6 +17,7 @@ import { createStatsTransfer, type StatsTransfer } from "./statsTransfer";
 import { createFeatsStore, type FeatsStore } from "./featsProfile";
 import { createUnlocksStore, type UnlocksStore } from "./unlocksProfile";
 import { createUserSettingsStore, type UserSettingsStore } from "./userSettings";
+import { createGriefSupportStore, type GriefSupportStore } from "./griefSupportProfile";
 import { createWitnessCollector, type WitnessStore } from "./witnessProfile";
 import { createFeatEvaluator, type FeatEvaluator } from "./featEvaluator";
 import { FEAT_CATALOG } from "../../data/feats/catalog";
@@ -51,6 +52,7 @@ export interface GameplayRuntime {
   readonly featsStore: FeatsStore;
   readonly unlocksStore: UnlocksStore;
   readonly userSettings: UserSettingsStore;
+  readonly griefSupportStore: GriefSupportStore;
   readonly featEvaluator: FeatEvaluator;
   /** Runtime-wide observation: receives items from every session, correlated by sessionId. */
   subscribe(subscriber: RunStreamSubscriber): () => void;
@@ -85,6 +87,7 @@ export function createGameplayRuntime(options: GameplayRuntimeOptions = {}): Gam
   const featsStore = createFeatsStore(options.storage);
   const unlocksStore = createUnlocksStore(options.storage, featsStore);
   const userSettings = createUserSettingsStore(options.storage);
+  const griefSupportStore = createGriefSupportStore(options.storage);
   const featEvaluator = createFeatEvaluator(
     FEAT_CATALOG,
     featsStore,
@@ -117,6 +120,7 @@ export function createGameplayRuntime(options: GameplayRuntimeOptions = {}): Gam
     featsStore,
     unlocksStore,
     userSettings,
+    griefSupportStore,
     featEvaluator,
 
     subscribe(subscriber) {

@@ -1,4 +1,4 @@
-import { describe, expect, it, mock } from "bun:test";
+import { afterAll, describe, expect, it, mock } from "bun:test";
 import { BoonChoiceView } from "../view/BoonChoiceView";
 import { selectTheme } from "../view/themes/themeManifest";
 import { rarityStyle } from "../view/rarity";
@@ -13,6 +13,14 @@ mock.module("../data/audioManifest", () => ({
   worldMusicManifest: {},
 }));
 const { TableScene } = await import("../scenes/TableScene");
+
+// mock.module patches Bun's global module registry for the rest of the test
+// process, not just this file. Undo it once this file's tests are done so
+// later files importing ../data/audioManifest (directly or transitively) see
+// the real worldMusicManifest instead of this file's empty stub.
+afterAll(() => {
+  mock.restore();
+});
 
 interface FakeGameObject {
   readonly kind: string;

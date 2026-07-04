@@ -347,3 +347,65 @@ describe("effectiveWorldCardCost", () => {
     expect(effectiveWorldCardCost(noModifier, state)).toBe(3);
   });
 });
+
+// ---------------------------------------------------------------------------
+// World 13 (questions) Slice 1 — Denial/Anger reuse the existing
+// ClearCostPerSelfKeyword / ClearCostPerKeywordCount modifier kinds. These
+// tests confirm KEYWORD_COST_MODIFIERS' generic consumption in
+// extraWorldCardCost/effectiveWorldCardCost needs no code change per keyword.
+// ---------------------------------------------------------------------------
+
+describe("effectiveWorldCardCost — Denial/Anger (World 13 Slice 1)", () => {
+  it("ClearCostPerSelfKeyword taxes a Denial-authored card by its own value", () => {
+    const denied = makeWorldCard({
+      id: "denied",
+      cost: 3,
+      keywords: [{ name: "Denial", value: 2 }],
+    });
+    expect(effectiveWorldCardCost(denied, makeState({ hand: [denied] }))).toBe(5);
+  });
+
+  it("ClearCostPerKeywordCount taxes a second, keyword-free card in the same hand", () => {
+    // angry carries Anger; plain carries neither Anger nor Denial. The trap:
+    // an implementation that only taxed "other Anger cards" (excluding the
+    // Anger-carrier itself) would still pass a test that only checked the
+    // Anger-carrier's own cost. Targeting `plain` proves the modifier counts
+    // Anger across the whole hand, not just cards that already carry it.
+    const angry = makeWorldCard({
+      id: "angry",
+      cost: 2,
+      keywords: [{ name: "Anger" }],
+    });
+    const plain = makeWorldCard({
+      id: "plain",
+      cost: 2,
+      keywords: [],
+    });
+    const state = makeState({ hand: [angry, plain] });
+
+    expect(effectiveWorldCardCost(plain, state)).toBe(plain.cost + 1);
+    // The Anger-carrier itself is also taxed once (count includes self).
+    expect(effectiveWorldCardCost(angry, state)).toBe(angry.cost + 1);
+  });
+
+  it("stacks Denial (self) and Anger (hand count) on the same card", () => {
+    const denied = makeWorldCard({
+      id: "denied",
+      cost: 3,
+      keywords: [{ name: "Denial", value: 2 }],
+    });
+    const angry = makeWorldCard({
+      id: "angry",
+      cost: 2,
+      keywords: [{ name: "Anger" }],
+    });
+    const state = makeState({ hand: [denied, angry] });
+
+    const denialCostPer = 1;
+    const angerCostPer = 1;
+    const angerCount = 1; // only `angry` carries Anger in this hand
+    const expected = denied.cost + 2 * denialCostPer + angerCount * angerCostPer;
+
+    expect(effectiveWorldCardCost(denied, state)).toBe(expected);
+  });
+});

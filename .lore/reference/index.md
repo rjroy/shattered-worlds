@@ -71,7 +71,7 @@ World concepts, world-design rules, and the authoring/shipping pipeline.
 - [Eden Prime World](worlds/catalog/eden-prime-world.md) - startle-themed world pressure introduces Alarm; the first world to require a reusable core-engine keyword-application slice.
 - [New Derelict World](worlds/catalog/new-derelict-world.md) - isolate-themed world pressure seals hand cards with the first persistent (non-decaying) keyword, Lockdown.
 - [Transit Authority World](worlds/catalog/transit-authority-world.md) - reroute-themed world pressure force-tops both decks and taxes cost with a transient Reroute keyword.
-- ["The Endworlds Trilogy (Worlds 13-15): Destination or Denial"](worlds/catalog/endworlds-trilogy-concept.md) - unimplemented narrative concept reframing the Walker's journey as fleeing grief, resolved by a Refusal/Acknowledgment split ending.
+- ["The Endworlds Trilogy (Worlds 13-15): Destination or Denial"](worlds/catalog/endworlds-trilogy-concept.md) - ratified narrative concept reframing the Walker's journey as fleeing grief, staged as Denial/Anger, Bargaining/Depression, and Acceptance across Worlds 13-15, with a single convergent ending.
 
 ### design
 

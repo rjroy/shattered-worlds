@@ -6,6 +6,7 @@ import {
   isConcealed,
   keywordNames,
   parseKeyword,
+  PERSISTENT_KEYWORDS,
   tickAppliedKeywords,
 } from "../model/keywords";
 
@@ -88,6 +89,25 @@ describe("persistent applied keywords", () => {
     expect(tickAppliedKeywords(card).appliedKeywords).toEqual([
       { name: "Lockdown", value: 1 },
     ]);
+  });
+
+  // World 13 (questions) Slice 1 — Denial/Anger must decay at turn start like
+  // Alarm (REQ-W13-9), not persist across turns like Lockdown/Reroute.
+  it("does not treat Denial or Anger as persistent", () => {
+    expect(PERSISTENT_KEYWORDS.has("Denial")).toBe(false);
+    expect(PERSISTENT_KEYWORDS.has("Anger")).toBe(false);
+  });
+
+  it("decays applied Denial and Anger like Alarm", () => {
+    const card = {
+      ...worldWith([]),
+      appliedKeywords: [
+        { name: "Denial" as const, value: 1 },
+        { name: "Anger" as const, value: 1 },
+      ],
+    };
+
+    expect(tickAppliedKeywords(card).appliedKeywords).toBeUndefined();
   });
 });
 
