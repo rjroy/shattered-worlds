@@ -5,6 +5,7 @@ import { WorldSelectScene } from "./scenes/WorldSelectScene";
 import { TableScene } from "./scenes/TableScene";
 import { ChronicleScene } from "./scenes/ChronicleScene";
 import { DestinyScene } from "./scenes/DestinyScene";
+import { GriefSupportScene } from "./scenes/GriefSupportScene";
 import { CANVAS_W, CANVAS_H } from "./view/layout";
 import { TEXT } from "./view/presentation";
 import { installDebugErrorOverlay } from "./debugErrorOverlay";
@@ -61,6 +62,7 @@ const game = new Phaser.Game({
       gameplayRuntime.runStats,
       gameplayRuntime.unlocksStore,
       gameplayRuntime.userSettings,
+      gameplayRuntime.griefSupportStore,
     ),
     new ChronicleScene(
       gameplayRuntime.runStats,
@@ -70,6 +72,7 @@ const game = new Phaser.Game({
       gameplayRuntime.userSettings,
     ),
     new DestinyScene(gameplayRuntime.featsStore, gameplayRuntime.unlocksStore, gameplayRuntime.userSettings),
+    new GriefSupportScene(gameplayRuntime.griefSupportStore),
     new TableScene(gameplayRuntime),
   ],
 });

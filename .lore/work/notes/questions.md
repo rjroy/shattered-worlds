@@ -1,7 +1,7 @@
 ---
 title: "Implementation notes: questions (World 13)"
 date: 2026-07-04
-status: in_progress
+status: complete
 tags: [world, walker-narrative, grief-arc, denial, anger, destiny-entity, keyword-cost-modifiers, compound, notes]
 modules: [core-effects, data-worlds, game-runtime, game-scenes]
 source: .lore/work/plans/questions.md
@@ -20,8 +20,8 @@ related:
 - [x] Phase 1: Slice 1 — Core-engine keyword slice (Steps 1-4) — **done**
 - [x] Phase 2: Slice 2 — World content authoring (Steps 5a-7) — **done**
 - [x] Phase 3: Slice 3 — World bundle wiring (Steps 8-13) — **done**
-- [ ] Phase 4: Slice 4 — Grief-support interstitial (Steps 14-19)
-- [ ] Phase 5: Slice 5 — Documentation and final validation (Steps 20-22)
+- [x] Phase 4: Slice 4 — Grief-support interstitial (Steps 14-19) — **done**
+- [x] Phase 5: Slice 5 — Documentation and final validation (Steps 20-22) — **done**
 
 ## Log
 
@@ -76,3 +76,45 @@ Larger slice than planned — surfaced two real gaps and one unrelated pre-exist
 **Unrelated pre-existing bug found and fixed (approved by user).** While chasing an unexpected 12-test failure pattern, independently confirmed (via `git stash`/clean-checkout re-run, not just trusting the first report) that `src/game/tests/boonChoiceView.test.ts` has called `mock.module(".../audioManifest", ...)` since commit `7b01707` (2026-07-01, predates this session) with no cleanup — Bun's `mock.module` leaks into whatever test file runs next in the same process, causing `worldAssetBindings.test.ts`'s musicKey checks to intermittently fail depending on file execution order. Confirmed present on a clean pre-session checkout too (1472 pass/12 fail there), so not caused by "questions" work. User chose to fix it now: added `afterAll(() => mock.restore())` to `boonChoiceView.test.ts`. Verified across 4 consecutive full-suite runs, all clean.
 
 **Current full-suite state:** 1515 pass / 3 skip / 0 fail, consistent across repeated runs. Lint/typecheck/build all clean.
+
+**Independent test verification and code review** both came back with zero findings across all base-slice items and all approved additions (palette distinctness from whiteout-parking-garage confirmed via direct hex/HSL comparison, help text confirmed free of grief-stage language via grep, `boonChoiceView.test.ts` fix confirmed correctly scoped, unlock icon confirmed to match `unlock-art-style.md`'s brief).
+
+**Process note (unrelated to plan content):** discovered mid-slice that a background implementation agent had run `git commit` unprompted, bundling Slices 1-3 into commit `40c8a11` ("Phase 3 of \"questions\" world done") without ever being asked to. Flagged to the user immediately; user chose to leave the (local-only, unpushed) commit in place and continue. Saved a standing feedback memory instructing future agent dispatches to explicitly forbid git commit/push unless the orchestrating session was itself asked.
+
+### Phase 4: Slice 4 — Grief-support interstitial (2026-07-04)
+
+Shared trilogy-level scaffolding (gates `questions`/`answers`/`the-beginning`), built once here since `questions` is first.
+
+- `src/game/runtime/griefSupportProfile.ts` — versioned store (`{version:1, hasSeenGriefSupportNotice:boolean}`, key `shattered-worlds/grief-notice/v1`), modeled on `userSettings.ts`'s plain get/set/update shape (no event-stream subscription — deliberately simpler than `witnessProfile.ts`, which was the wrong template for this since it doesn't need to react to gameplay events).
+- `src/game/view/externalLink.ts` — standalone `openExternalLink(url)` wrapping `window.open(url, "_blank", "noopener,noreferrer")`, independently unit-tested (REQ-W13-33).
+- `src/game/scenes/griefSupportGate.ts` — pure `shouldShowGriefSupport(worldId, hasSeenGriefSupportNotice)` + `GRIEF_SUPPORT_WORLD_IDS = ["questions","answers","the-beginning"]`, extracted so the gating decision is testable without booting a scene.
+- `src/game/scenes/GriefSupportScene.ts` — new scene (key `"GriefSupport"`), renders the verbatim copy from `player-support-message.md` as Phaser text/rectangle objects (confirmed zero DOM-overlay usage anywhere else in this codebase — `HelpOverlayView`/`DestinyScene` are both pure Phaser GameObjects, so this deliberately deviates from the plan's literal "DOM overlay element" phrasing in favor of the established convention; the plan's actual intent — a small, independently-testable link function — is preserved). On Continue: persists the flag, `scene.launch("Table", {worldId, seed})`, then `scene.stop()` on itself.
+- Threaded `griefSupportStore` through `gameplayRuntime.ts`'s composition root (no stream subscription, confirmed).
+- `WorldSelectScene.ts`'s world-card `pointerdown` handler's final `scene.launch` call now branches on `shouldShowGriefSupport` — confirmed narrowly scoped (16-line diff), `HelpOverlayView`/`SettingsOverlayView`/every other handler untouched (REQ-W13-32).
+- Registered in `main.ts`.
+
+**Findings from independent test + review passes, both fixed:**
+1. Crisis-line copy drift from the ratified `player-support-message.md` text — punctuation (`:` instead of `.`), missing parentheses around "(U.S. · Canada)", and lost bold emphasis on "988". Both independent passes converged on this same finding. Fixed by rebuilding the line from 8 positioned Phaser Text segments matching the source string exactly.
+2. Missing double-click guard on the Continue button (unlike `WorldSelectScene`'s `bg.disableInteractive()` pattern before its own scene transition) — could double-enqueue `scene.launch("Table", ...)` on a fast double-click. Fixed by disabling the button's interactivity as the first action in `onContinue()`.
+
+Both fixes verified: 3 consecutive clean full-suite runs after the fix, plus a genuine browser screenshot of the rendered crisis line confirming correct spacing, bolding, and parenthesization — not just string-concatenation logic checked on paper.
+
+**Manual browser verification (Step 22 partial, done early):** fresh profile → select Questions → interstitial shows verbatim copy → Continue → flag persists → Table loads → abandon → reselect Questions → skips straight to Table. Clicked the "U.S." 988 link and confirmed it opens `988lifeline.org/get-help/` in a genuine new browser tab (`noopener,noreferrer`), not in-canvas. "Canada"/findahelpline.com links share the identical code path, not independently clicked. `answers`/`the-beginning` gating covered by `griefSupportGate.test.ts` only, since those worlds don't exist yet.
+
+**Current full-suite state:** 1535 pass / 3 skip / 0 fail, consistent across 6+ repeated runs across this slice's fixes.
+
+### Phase 5: Slice 5 — Documentation and final validation (2026-07-04)
+
+- `theme-authoring.md`: added the `questions | compound | ...` signature-verb row and extended the C2 keyword-vocabulary prose to describe `Denial`/`Anger` (both transient, correct `KEYWORD_COST_MODIFIERS` kinds). Added a clearly-labeled callout stating `Destiny` (the card) is unrelated to `DestinyScene`/Destiny Progression — this satisfies REQ-W13-6, and is the sole place in the codebase carrying that disambiguation (per the user's earlier decision in Slice 2). One formatting nit found by review (missing backticks around `Denial`/`Anger`/`Destiny` in the new table row, breaking from every other row's convention) — fixed.
+- `endworlds-trilogy-concept.md`: rewritten from scratch to describe the ratified linear grief-arc (Denial/Anger → Bargaining/Depression → Acceptance, no forking), `Destiny`'s continuity and per-world `onCleared` differences, and the single convergent Acceptance ending — the old `Refusal`/`Acknowledgment` fork and `Attachment` meta-stat are named exactly once, clearly framed as dropped history. `index.md`'s one-line pointer updated to match. Independent review confirmed accuracy against all three ratified specs' "Ratified decisions" sections.
+- **Step 22 final validation gate — all green:** 3 consecutive full-suite runs (1535 pass / 3 skip / 0 fail, no flakiness); lint/typecheck/build clean; the two REQ-W13-29.3/29.4 unit tests (Anger taxes an unrelated hand card; Denial+Anger stacking math) confirmed present and passing; `The Walker`/`Door`/`Summon Door`/`SurviveWorld` confirmed byte-identical against the pre-session baseline commit (`b89faba`); `buildWorld("questions")` confirmed producing 7/8/8 cards; full skip-audit (3 total `it.skip` sites in the whole suite) confirmed all are known/documented/unrelated-or-approved gaps, nothing new or unexplained.
+
+## Final status: complete
+
+All five slices implemented, tested, and reviewed (each with at least one independent test-verification pass and one independent code-review pass, per the /implement workflow). Two approved user decisions extended scope beyond the base plan (a `world-questions` unlock-catalog entry, and generating the unlock icon while deferring the music track via a documented skip). One unrelated pre-existing test-flakiness bug was found and fixed with user sign-off. One process incident (an agent committing without authorization) was caught, disclosed, and the user chose to leave the local commit in place.
+
+**Follow-ups explicitly deferred, not silently dropped:**
+- No music track exists for `questions` yet (`PENDING_MUSIC_TRACK` skip in `worldAssetBindings.test.ts` documents this).
+- No cardfront/card-inset art exists yet for this world's 15 templates (matches prior precedent of shipping worlds without inset art before art lands).
+- Whether `Denial`/`Anger` need distinct UI rendering, and whether the grief-support notice needs a "view again" affordance, remain open per the original spec — not addressed, not blocking.
+- World-unlock cost/weight (`cost: 15, destinyWeight: 0`) for `world-questions` is a placeholder mirroring existing convention, not balance-tuned — revisit once `answers`/`the-beginning` exist and trilogy-wide unlock sequencing can be considered together.

@@ -15,6 +15,8 @@ import { HelpOverlayView } from "../view/HelpOverlayView";
 import { SettingsOverlayView } from "../view/SettingsOverlayView";
 import { canPageLeft, canPageRight, pageLeft, pageRight } from "./worldSelectPaging";
 import { UserSettingsStore } from "../runtime/userSettings";
+import type { GriefSupportStore } from "../runtime/griefSupportProfile";
+import { shouldShowGriefSupport } from "./griefSupportGate";
 
 // Common return type for the world card background, which may be either an image or a simple colored rectangle
 type WorldCardBackground = Phaser.GameObjects.Image | Phaser.GameObjects.Rectangle;
@@ -42,6 +44,7 @@ export class WorldSelectScene extends Phaser.Scene {
   private readonly runStats: RunStatsReader | undefined;
   private readonly unlocksStore: UnlocksStore | undefined;
   private readonly userSettings: UserSettingsStore | undefined;
+  private readonly griefSupportStore: GriefSupportStore | undefined;
   private loadingLabel?: Phaser.GameObjects.Text;
   private progressTween: Phaser.Tweens.Tween | undefined = undefined;
   private bFirstLoad: boolean = true;
@@ -50,11 +53,13 @@ export class WorldSelectScene extends Phaser.Scene {
     runStats?: RunStatsReader,
     unlocksStore?: UnlocksStore,
     userSettings?: UserSettingsStore,
+    griefSupportStore?: GriefSupportStore,
   ) {
     super({ key: "WorldSelect" });
     this.runStats = runStats;
     this.unlocksStore = unlocksStore;
     this.userSettings = userSettings;
+    this.griefSupportStore = griefSupportStore;
   }
 
   preload(): void {
@@ -897,7 +902,16 @@ export class WorldSelectScene extends Phaser.Scene {
       bg.disableInteractive();
       this.disableCarouselInteractions();
       const seed = Math.floor(Math.random() * 2 ** 32);
-      this.scene.launch("Table", { worldId, seed });
+      // The grief-support notice is a one-time, trilogy-level acknowledgment
+      // (REQ-W13-30..33), not a per-world gate: once seen for any of the
+      // three, every one of them skips straight to Table.
+      const hasSeenGriefSupportNotice =
+        this.griefSupportStore?.get().hasSeenGriefSupportNotice ?? true;
+      if (shouldShowGriefSupport(worldId, hasSeenGriefSupportNotice)) {
+        this.scene.launch("GriefSupport", { worldId, seed });
+      } else {
+        this.scene.launch("Table", { worldId, seed });
+      }
     });
     return { container, background: bg };
   }

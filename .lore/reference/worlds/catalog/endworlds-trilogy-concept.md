@@ -1,42 +1,43 @@
 ---
 title: "The Endworlds Trilogy (Worlds 13-15): Destination or Denial"
-date: 2026-07-02
+date: 2026-07-04
 status: current
-tags: [world-design, narrative, walker, endgame, meta-progression, brainstorm]
+tags: [world-design, narrative, walker, endgame, grief-arc, denial, anger, bargaining, depression, acceptance, destiny-entity]
 fg-type: concept
-fg-sources: [.lore/work/brainstorm/endworlds-destination.md]
+fg-sources: [.lore/work/specs/questions.md, .lore/work/specs/answers.md, .lore/work/specs/the-beginning.md, .lore/work/brainstorm/endworlds-destination.md]
 fg-status: current
 ---
 
 # The Endworlds Trilogy (Worlds 13-15): Destination or Denial
 
-**Outdated:** this page describes an earlier concept (Refusal/Acknowledgment keywords, the Feat/Fragment-spending Bargain battle, the two-path ending) that was superseded by the 2026-07-03 brainstorm and the ratified specs for `questions.md`, `answers.md`, and `the-beginning.md`. Only the world names below have been updated to match; the mechanics described in this doc are no longer current. Rewriting this page is tracked as a shipping blocker under `REQ-W13-26`.
+This describes the ratified narrative and mechanical concept for the run's final three worlds — `questions` (World 13), `answers` (World 14), and `the-beginning` (World 15) — as fixed by their specs (`.lore/work/specs/questions.md`, `answers.md`, `the-beginning.md`, all dated 2026-07-03). It reframes the entire game's premise: the Walker is not fleeing an apocalypse, the Walker is fleeing the death of a parent, and every broken world crossed so far has been a way to avoid being present for that loss. "Apocalypse" is the excuse; grief is the plot.
 
-This is a brainstormed narrative concept for the run's final three worlds, not yet specced or implemented. It reframes the entire game's premise: the Walker is not fleeing an apocalypse, the Walker is fleeing the death of someone they love, and every broken world crossed so far has been a way to avoid being present for that loss. "Apocalypse" is the excuse; grief is the plot. This sits alongside — and narratively completes — the shared Walker/Door mechanical pattern described in [[theme-authoring]], which establishes that the Walker is never the enemy and never re-themed per world; this concept keeps that rule and gives the throughline its payoff instead of contradicting it (the antagonist in the closing worlds is Death, not the Walker).
+This sits alongside — and narratively completes — the shared Walker/Door mechanical pattern described in [[theme-authoring]], which establishes that the Walker is never the enemy and is never re-themed per world. The trilogy keeps that rule and gives the throughline its payoff instead of contradicting it: the antagonist across these three closing worlds is Death, or grief itself, not the Walker. `The Walker`, `Summon Door`, and `Door` remain the same unmodified shared templates in all three worlds, ending Act 3 exactly as every other world does.
 
-## World 13: Questions
+## The grief-arc stages
 
-The first world where nothing attacks at first — silence, not collapse. Mechanically, world cards start balanced between constructive and destructive effects, and the balance tips based on how the player plays: aggressive, must-overcome-everything play accrues a `Refusal` keyword; defensive, discard-forward play accrues an `Acknowledgment` keyword. By Act 3 whichever keyword dominates changes what happens on clearing an otherwise-identical encounter.
+Each world is one stage of grief, expressed as its own applied-keyword cost-tax mechanic layered on top of Eden Prime's `ApplyKeyword`/`KeywordGate`/`RemoveKeyword` primitives and the generalized keyword-cost-modifier registry those primitives enabled. No stage forks or branches into another; the three worlds run in a straight line, and each carries its predecessor's weight forward rather than resolving it.
 
-## World 14: Answers
+- **World 13 — `questions` — Denial and Anger.** Signature verb **compound**. Two new transient applied keywords, `Denial` and `Anger`, tax cost from two different shapes: `Denial` taxes only the card carrying it, scaled by its own value; `Anger` taxes every card in hand, including itself, by a flat amount per Anger-carrying card present. Both land on `Destiny` (see below) at once and stack, so its cost is a direct, compounding readout of both keywords together rather than whichever is momentarily larger.
+- **World 14 — `answers` — Bargaining and Depression.** Signature verb **concede**. Two more transient applied keywords, `Bargaining` and `Depression`. `Bargaining` taxes every *other* card in hand by the summed value of `Bargaining` carried elsewhere, never taxing the card that carries it — the thing being actively negotiated stays cheap on its own terms, while everything else gets harder to deal with. `Depression` taxes only the card carrying it, the same plain self-tax shape `Denial` uses in World 13. Every act in this world gives something up, whether spent chasing a deal or given up on chasing anything at all.
+- **World 15 — `the-beginning` — Acceptance.** Signature verb **unburden**. Acts I and II reprise all four prior keywords (`Denial`, `Anger`, `Bargaining`, `Depression`) at once, still taxing. Act III introduces a single new keyword, `Acceptance`, using the same self-tax shape as `Denial`/`Depression` but with its sign flipped — the only keyword in the game that makes a card's clear cost cheaper rather than costlier. Repeated, direct engagement with `Destiny` refreshes `Acceptance`; disengaging lets it decay away like any other transient keyword. This is the one place in the whole trilogy — and the whole game — where release, not accumulation, is the mechanic.
 
-Opens normally for three turns, then cracks open completely: every Door the Walker has opened across all prior worlds becomes visible at once, suspended in the distance. Cards here are brutally efficient but each play costs Memory Fragments or Feats — the player's permanent, dozens-of-runs meta-progression is spent to fight this battle, literally trading built-up Destiny for power in the moment.
+## `Destiny`: the continuous hazard entity
 
-## World 15: The Beginning
+`Destiny` is a themed world-card hazard entity, introduced in World 13, continued in World 14, and given new behavior in World 15. It is not a shared template like `The Walker` or `Door` — each world authors its own `Destiny` card independently in that world's own data — but it is the same narrative through-line across all three worlds: the thing the Walker's flight was always ultimately about.
 
-No boss fight. The world splits based on which keyword, Refusal or Acknowledgment, accumulated more across Worlds 13 and 14:
+- In `questions`, clearing `Destiny` fires `ExileTopWorldCards` — a costly, destructive, optional confrontation, not a win condition. `SurviveWorld` stays exclusively on the standard `Door` chain.
+- In `answers`, clearing `Destiny` does nothing (`{ "kind": "None" }`) — deliberately no reward. Clearing it here doesn't feel like a win; it just marks that the Walker picked it up and kept walking. `SurviveWorld` again stays exclusively on the `Door` chain.
+- In `the-beginning`, `Destiny` gains a second path to `SurviveWorld`, firing it directly from its own `onCleared` — independent of, and alongside, the standard `Door` chain, which remains completely untouched and equally available. This is the only world in the trilogy where clearing `Destiny` can end the run: an earned alternate route to survival for a player who repeatedly, directly engages with it, not a replacement for the ordinary escape every world already offers.
 
-- **Refusal path:** the Door opens onto a war zone where Death has taken form (given shape by the refusal itself). The fight uses only whatever Feats and Unlocks survived World 14's bargain — every move costs something irreplaceable. The "winning" ending has Death step back, but the price is becoming the very thing the Walker fled: a force that breaks worlds chasing something impossible.
-- **Acknowledgment path:** the Door opens not onto another world but onto the dying loved one's actual room — the first scene rendered without any apocalypse palette. Cards become gestures instead of strategies, each one an action she would understand. The run ends by being present, not by winning a fight.
+**Naming note:** `Destiny`, the world-card entity described here, is unrelated to the existing `DestinyScene` (a Phaser scene reached from the locked-world branch of world selection) and to the Destiny Progression meta-progression system. The name is a deliberate pun — the trilogy's premise is literally "the Walker is fleeing the Destiny" — not a naming collision to fix. See [[theme-authoring]]'s signature-verb table note for the full disambiguation.
 
-Both endings are framed as equally valid emotional responses to loss (fight vs. surrender); the design intent is that neither is marked as the "correct" ending.
+## The single convergent ending
 
-## New Meta-Stat: Attachment
+World 15 ends in exactly one way: reach the `Door` (as in every other world) or repeatedly engage `Destiny` until `Acceptance` discounts it low enough to clear, and either path fires the same `SurviveWorld`. There is no branch and no second ending path beyond these two routes to the same terminal state.
 
-An invisible stat tracked across all fifteen worlds, independent of and prior to the Refusal/Acknowledgment split: it climbs on aggressive, risk-taking, card-hoarding play and drops on conservative, discard-forward play. World 13 retroactively reveals what the player's play style meant emotionally across every prior run — this is the mechanism that seeds Refusal vs. Acknowledgment before the player is ever told the stat exists.
+An earlier brainstorm explored a two-path ending — a `Refusal`/`Acknowledgment` keyword fork across Worlds 13-14 deciding between a "fight Death" ending and a "be present" ending, backed by an invisible `Attachment` meta-stat and a Feat/Memory-Fragment-spending Bargain battle in World 14. All of that was dropped at the trilogy's ratification and does not appear in any of the three specs, not even in reduced form: there is no `Refusal`/`Acknowledgment` keyword, no `Attachment` stat, and no meta-progression spend gating World 14. The current design commits to one convergent ending rather than two branching ones.
 
-## Design Tension (deliberately unresolved)
+## Relationship to the world-authoring pattern
 
-The central open question the brainstorm poses rather than answers: does accepting Death honor the Walker's original purpose (sparing the loved one further pain), or does it negate the entire run just completed? Both readings are treated as legitimate, because both map to real grief responses (fight vs. acceptance) rather than one being the "true" ending.
-
-This concept has no core-engine or content implementation yet; the mechanics described (`Refusal`/`Acknowledgment` keywords, the `Attachment` meta-stat, the World-14 Feat/Fragment-spending battle) are sketches for a future spec, not shipped systems. See [[destiny-progression]] for how the existing meta-progression layer (Feats, Memory Fragments, unlocks) this concept proposes to spend already works.
+This trilogy is additive to, not a departure from, the standard world contract: three-act decks, the fixed `The Walker` → `Door` → `SurviveWorld` closer, and the "no mechanic is exclusive, identity is" rule from [[theme-authoring]] all hold unchanged. What each world adds is its own pair (or, in World 15's case, quintet) of applied keywords and cost-tax modifiers, plus the continuing `Destiny` entity — mechanism precedent set by Eden Prime, New Derelict, and Transit Authority, aimed here at a sustained three-world narrative payoff instead of a single world's identity.
