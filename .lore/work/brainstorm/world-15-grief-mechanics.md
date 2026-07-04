@@ -2,7 +2,7 @@
 title: World 15 grief mechanics (Acceptance)
 date: 2026-07-03
 status: open
-tags: [walker-narrative, grief-arc, world-15, applied-keywords, no-new-effects, acceptance-ending]
+tags: [walker-narrative, grief-arc, world-15, applied-keywords, no-new-effects, keyword-cost-modifiers, acceptance-ending, destiny-entity]
 modules: [core-effects]
 related:
   - .lore/work/brainstorm/endworlds-destination.md
@@ -12,38 +12,42 @@ related:
 
 # World 15 grief mechanics (Acceptance)
 
-Focused brainstorm on mechanizing World 15's three acts (Denial+Anger reprised / Bargaining+Depression reprised / Acceptance) using only the effect kinds that already exist in `src/core/effects/registry.ts`, continuing the same constraint as Worlds 13 and 14: no new effect kinds, new keywords via `ApplyKeyword`/`KeywordGate`/`RemoveKeyword` are fine.
+Revised after checking against `.lore/reference/worlds/authoring/theme-authoring.md`. Two changes from the original draft:
 
-The hard constraint carried in from `endworlds-destination.md`: the Refusal fork was explicitly dropped. World 15 converges on a single Acceptance ending — "hard if you fight, easy if you accept, and you're not even the one fighting" has to be true mechanically here, not just asserted narratively.
+1. Dropped the Freeze/Thaw-as-continuity-thread idea (coupled to `whiteout-parking-garage`) — kept only as optional flavor, not spine, matching Worlds 13 and 14.
+2. Resolved the direct conflict between "win condition is NOT the Door" and D1 ("Act 3 always ends with `The Walker` → `Door` → `SurviveWorld`"). Resolution: World 15 keeps all three — `The Walker`, `Door`, and `Destiny` — present and unmodified as templates, but flips which one is trouble and which one is the survive condition.
+
+## Keywords and closer
+
+World 15 reprises all four keywords from Worlds 13 and 14 — `Denial`, `Anger`, `Bargaining`, `Depression` — all still cost-*increasing* via `KEYWORD_COST_MODIFIERS`. It adds a fifth, `Acceptance`, the only cost-*decreasing* keyword in the game. This is the direct mechanism for "hard if you fight it, easy if you accept" — not a `ResourceGate` punishment layered on top, just the existing keyword-cost-modifier registry doing the work it already does, pointed the opposite direction for once.
+
+`Door` and `Walker` stay completely standard here — same authoring, same behavior, no special-casing, exactly as in every other world. No tax is targeted at Door; the ordinary escape every world already has is still sitting there, untouched, if the player never engages with Acceptance at all. `Destiny` is the only thing that changes: it's authored with a base cost high enough to be nigh-impossible to clear without substantial `Acceptance` stacked. Its cost drops via `KEYWORD_COST_MODIFIERS` as Acceptance accumulates, and only once it's actually reachable does its `onCleared` (which fires `SurviveWorld` directly — a legitimate use of the same generic effect, not reserved to Door) become a viable path. Destiny is an earned alternate ending, not a replacement for Door and not something Door's difficulty needs to account for. Nothing about the shared `Door`/`Walker` templates is redefined (N1 stays intact), and nothing about their authoring changes at all.
 
 ## Act I — Denial + Anger, reprised
 
-- Fast-forward version of both worlds' toolkits at once: `Numb`/`Denial`/`Anger` keywords all stacking via `ApplyKeyword` in the same act, `KeywordGate` thresholds hit sooner than the first time through — less patience, same shapes.
-- "Requiring unlocks earned earlier in the run" maps onto `GainKeywordGuard`: pre-load guard charges from actually-earned Destiny Blessings/Feats rather than generating them in-act. A run that skipped certain unlocks hits every `KeywordGate` trigger unguarded — the compression punishes an undercooked Destiny, a real and checkable design lever rather than flavor text.
-- `ForceDestroy` stacking faster with less `Brace` available than World 13 had — Anger's chaos compressed into less room to breathe.
+- Both keywords reappear, saturating faster than their home worlds did — less patience, same shapes, same cost tax.
+- "Requiring unlocks earned earlier in the run" maps onto `GainKeywordGuard`: pre-load guard charges from actually-earned Destiny Blessings/Feats. A run that skipped unlocks hits every `KeywordGate` trigger — and pays every keyword's cost tax — unguarded.
+- `ForceDestroy` stacking faster with less `Brace` available than World 13 had.
 
 ## Act II — Bargaining + Depression, reprised
 
-- Same toolkit as World 14 (`Modal` bargains, `DiscardThenDraw` cycling, `GainHeat` toll) but with the numbers turned down across the board — not a new mechanic, the same shapes at lower stakes. The player already knows this dance; the tempo drop is the content.
-- `ResourceGate` checks stay calm here — nothing ambushes low HP/Heat the way Act I's aggression does. Sluggish, not threatening.
+- Same pair, same cost tax, turned down in intensity — lower `AddThreatToWorldDeck` stakes, gentler `Modal` bargains, slower `DiscardThenDraw` cycling. The player already knows this dance; the tempo drop is the content.
+- `ResourceGate` checks stay calm here — nothing ambushes low HP the way Act I's aggression does.
 
 ## Act III — Acceptance
 
-The act worth being most deliberate about, since the win condition is not the Door — it's a different version of the Walker dealing with the world's cards, and the player's job is just to be there for him.
-
-- Reflavor rather than invent: `Heal`/`GainEnergy`/`GainLight`/`Brace` already just touch the player's own HP/energy/light/brace. Recast that here as caretaking the other Walker, not self-preservation — no new effect, just a narrative reskin of what "your resources" represent.
-- `DealProgress` (player picks a hazard, deals effort toward clearing it) reflavors as "helping him focus on this threat" rather than the player striking it directly — mechanically identical, framed as support instead of combat.
-- The "hard if you fight it" half: import Act I's aggressive toolkit (`DealProgressAll` spam, `ForceDestroy` chaining) into Act III and let `ResourceGate` punish it specifically here — the exact moves that worked in Act I backfire in Act III. Fighting harder makes it mechanically worse, not just tonally wrong.
-- The release: `RemoveKeyword` clearing `Numb`/`Denial`/`Anger` one at a time, each card shedding one thing carried forward from Worlds 13 and 14. Once all three are gone, a `KeywordGate` on a new `Acceptance` keyword flips — but positively, gating `SurviveWorld` as the payoff instead of a disruption. Same mechanism every other world uses to punish, inverted once, on purpose, at the very end.
-- Closing beat: `ThawCards` on whatever's still frozen, right before `SurviveWorld` fires. The last play of the game is letting go of the last thing being held onto.
+- `RemoveKeyword` clears `Denial`/`Anger`/`Bargaining`/`Depression` one at a time — each card sheds one thing carried forward from the earlier worlds, and each removal lifts that keyword's cost tax.
+- `ApplyKeyword` stamps `Acceptance` as those clear, and `Acceptance`'s cost-reduction (via `KEYWORD_COST_MODIFIERS`) makes the remaining hand cheaper to play the more of it accumulates — mechanically, letting go makes everything easier, not just narratively.
+- Reflavor `Heal`/`GainEnergy`/`GainLight`/`Brace` as caretaking the other Walker rather than self-preservation; `DealProgress` reflavors as helping him focus on a threat rather than the player striking it directly.
+- `Door` sits in hand too, completely standard, same cost it would be in any other world — the ordinary flight instinct is still available and untouched if the player never accepts anything.
+- `Destiny`'s base cost is authored high enough to be nigh-impossible without meaningful `Acceptance` stacked; it clears cheaper the more `Acceptance` has accumulated, and its `onCleared` is the one that fires `SurviveWorld` when it does.
 
 ## Imagery
 
-- Act I: saturated, fast, everything from Worlds 13/14 crammed into flashes.
-- Act II: muted grey-blue, no threat music.
-- Act III: color returns as warmth rather than intensity. The other Walker renders as a distinct, less-corrupted figure actually fighting the world's cards, while the player's plays manifest as small gestures around him — a hand on a shoulder, held light — rather than attacks.
+- Act I saturated, fast. Act II muted grey-blue, no threat music. Act III color returns as warmth. The other Walker renders as a distinct, less-corrupted figure fighting the world's cards, while the player's plays manifest as small gestures around him.
 
 ## Open threads
 
-- Whether the "same `KeywordGate` mechanism, inverted once at the very end" idea for Acceptance reads clearly in play or is too subtle to land without extra signposting — flagged for reaction, not decided.
-- Whether pre-loading `GainKeywordGuard` from earned Blessings/Feats needs a concrete mapping (which unlocks grant how many charges) before this is buildable, or stays conceptual for now.
+- Whether `Destiny`'s `SurviveWorld` card needs a specific narrative beat (what clearing it looks like on screen) so the player understands it's the intended ending, given `Door` sits right next to it looking exactly like it always has.
+- Roughly how high "nigh-impossible" needs to be authored as an actual number, and how much `Acceptance` a realistic Act III run can accumulate by the time Destiny is in hand — needs a pass with real numbers, not just the shape of the idea.
+- Whether `GainKeywordGuard` pre-loading from earned Blessings/Feats needs a concrete mapping before this is buildable, or stays conceptual for now.

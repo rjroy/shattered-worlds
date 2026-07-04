@@ -2,7 +2,7 @@
 title: World 14 grief mechanics (Bargaining and Depression)
 date: 2026-07-03
 status: open
-tags: [walker-narrative, grief-arc, world-14, applied-keywords, no-new-effects]
+tags: [walker-narrative, grief-arc, world-14, applied-keywords, no-new-effects, keyword-cost-modifiers, destiny-entity]
 modules: [core-effects]
 related:
   - .lore/work/brainstorm/endworlds-destination.md
@@ -11,32 +11,37 @@ related:
 
 # World 14 grief mechanics (Bargaining and Depression)
 
-Focused brainstorm on mechanizing World 14's three acts (Bargaining / The Door / Depression) using only the effect kinds that already exist in `src/core/effects/registry.ts`, continuing the same constraint as World 13: no new effect kinds, new keywords via `ApplyKeyword`/`KeywordGate`/`RemoveKeyword` are fine.
+Revised after checking against `.lore/reference/worlds/authoring/theme-authoring.md`. Dropped the Heat-toll-through-the-Door idea (it doubled down on `whiteout-parking-garage`'s coupled Freeze/Heat suite) and dropped `ReturnPlayerDiscardToTop`/`RecallPlayerDiscard` as the baggage mechanic (that suite is `the-tidal-archive`'s signature). Neither is needed as a load-bearing mechanic here.
+
+## Keywords and closer
+
+World 14 also keeps the standard contract intact: Act 3 ends with `The Walker` → `Door` → `SurviveWorld`, unmodified.
+
+Two new competing keywords, both cost-increasing via `KEYWORD_COST_MODIFIERS`: `Bargaining` (Act I) and `Depression` (Act III). Same shape as World 13's Denial/Anger pair — they stack rather than replace each other, and a hand carrying both is expensive.
+
+`Destiny` continues here as the "trouble" hazard, same role as World 13: glimpsed in Act I as lore (the "libraries on death"), and carried forward into Act III as the thing the Walker takes with him. Its cost still scales off whichever grief-keyword (Bargaining/Depression) currently dominates hand.
 
 ## Act I — Bargaining, the search for a solution
 
-Bargaining is trading — giving something up for a shot at a different outcome.
-
 - `Modal` as the actual bargain: a card that branches — pay in one currency or another (e.g., destroy a hand card *or* take a Heat hit) — makes "what would you give up" a real choice instead of flavor text.
-- `AddThreatToWorldDeck` as the bargain's hidden cost: the deal looks clean now, but it seeds a future hazard into the world deck that surfaces later in the act — the price isn't visible until it comes due.
-- `AddPlayerCardToTop` for "glimpses of libraries on death": a lore/Destiny-flavored card queued to appear on the very next draw, as if something found in the archive is about to matter. Reads as research paying off in real time rather than as a cutscene.
-- `OfferBoon` reflavored as a "reading" — consulting the ledger of the dead, offered as a genuine choice between two Destiny-adjacent boons, not a trap.
+- `AddThreatToWorldDeck` as the bargain's hidden cost: the deal looks clean now, but seeds a future hazard that surfaces later in the act.
+- `AddPlayerCardToTop` for "glimpses of libraries on death": a Destiny-lore card queued to appear on the very next draw.
+- `Bargaining` keyword applied via `ApplyKeyword`, taxed via `KEYWORD_COST_MODIFIERS`.
 
 ## Act II — The Door, cost of travel
 
-- `GainHeat` with a negative amount as the toll: crossing costs warmth, tying directly back into World 13's Heat/Thaw economy — the Door makes it harder to thaw out of the numbness that world left behind. Real mechanical continuity between 13 and 14, not just narrative.
-- `AddWorldCardToDeck` as the visible cost: each Door card adds a lingering hazard to the world deck — literalizes "eleven violet fractures hanging suspended" from `endworlds-destination.md` as an actual growing stack of unresolved things, not just backdrop art.
-- `ExileTopWorldCards` as the point of no return: once through, some number of futures at the top of the world deck are gone permanently — no going back to what would have happened if you'd stayed.
-- `ReturnPlayerDiscardToTop`/`RecallPlayerDiscard` as baggage: what was already spent to get here doesn't stay behind, it gets pulled back into hand — the Door doesn't let anything, including yourself, go cleanly.
+- The Door itself stays untouched here — shared template, D1's fixed closer still applies at the end of Act 3, and this act is before that. What "the Door" means narratively in this act is the *concept* the Walker is learning about, not the mechanical closer card yet.
+- `AddWorldCardToDeck` as the visible cost of what's being learned: each card adds a lingering hazard to the world deck — literalizes "eleven violet fractures hanging suspended" from `endworlds-destination.md`.
+- `ExileTopWorldCards` foreshadows the point of no return that Act III commits to.
 
 ## Act III — Depression, the only choice that makes sense
 
-- `DamageScaled` off the existing `FrozenPlayerCards` counter (already in `resolveCounter`) — the more numbness still carried from World 13, the worse this act hits. Direct continuity, no new counter needed.
-- `Brace` reframed as endurance rather than defense — not fighting for a win, just absorbing what's coming because that's what's left to do.
+- `Depression` keyword stacks alongside whatever `Bargaining` residue remains — both taxing cost, competing for priority.
 - `DiscardThenDraw` as "let go and keep moving" — not resolving anything, just cycling, matching "the best you can do is not die."
-- `SurviveWorld` as the act's actual clear condition, deliberately anticlimactic — the compile text is already just `"SURVIVE!"` in the engine's own vocabulary, no fanfare needed.
+- `Brace` reframed as endurance rather than defense — not fighting for a win, just absorbing what's coming.
+- `Destiny`'s card here represents what's actually carried onward — its `onCleared` doesn't reward the player conventionally, it just marks that the Walker picked it up. `SurviveWorld` still comes from the standard `Door` closer, unchanged.
 
 ## Open threads
 
-- Whatever "carrying the Destiny away" resolves to must feed into World 15's single Acceptance ending, not imply a second track. This act sets up the convergence; it should not create a competing fork the way the old Refusal path did.
-- Whether the Heat-toll-through-the-Door and the Frozen-counter-into-Act-III threads are the right continuity with World 13, or too cute — flagged for reaction, not yet decided.
+- Whether Bargaining/Depression need the same "competing, not sequential" stacking as World 13's pair, or whether Depression should fully eclipse Bargaining by Act III instead (matching how depression as a stage tends to settle rather than compete).
+- Concrete `Destiny` card template for this world — what "carrying it" actually looks like as a hand/keyword state that then shows up in World 15.

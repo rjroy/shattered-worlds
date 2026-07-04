@@ -2,45 +2,44 @@
 title: World 13 grief mechanics (Denial and Anger)
 date: 2026-07-03
 status: open
-tags: [walker-narrative, grief-arc, world-13, applied-keywords, no-new-effects]
+tags: [walker-narrative, grief-arc, world-13, applied-keywords, no-new-effects, keyword-cost-modifiers, destiny-entity]
 modules: [core-effects]
 related: [.lore/work/brainstorm/endworlds-destination.md]
 ---
 
 # World 13 grief mechanics (Denial and Anger)
 
-Focused brainstorm on mechanizing World 13's three acts (Loss / Denial / Anger) using only the effect kinds that already exist in `src/core/effects/registry.ts`. New keywords are fine — stamped via `ApplyKeyword`, checked via `KeywordGate`/`ResourceGate`, cleared via `RemoveKeyword` — but no new effect kinds.
+Revised after checking against `.lore/reference/worlds/authoring/theme-authoring.md`. The original draft leaned on `FreezeCards`/`GainHeat`/`ThawCards` as the central mechanic, but that suite is `whiteout-parking-garage`'s signature (coupled, not just an effect — see the theme-authoring doc's Signature Effects table). Dropped as the spine, kept only as optional minor flavor (a card or two), not the through-line.
 
-## Grounding corrections from reading the engine
+## Keywords and closer
 
-- Progress is the player's own effort to clear a hazard, not a countdown against them. `dealProgress` accumulates toward a hazard's cost; short of it, `onPartialClear` fires, at or over it, `onCleared` fires and the hazard leaves hand. There is no ticking-clock-antagonist in the engine as it stands — that was a wrong assumption from before reading the code.
-- `FreezeCards`/`ThawCards` freeze and unfreeze *player* cards in hand; thawing costs Heat. This is the existing lever for "can't act with your own tools."
-- `ReturnWorldCards` shuffles a hazard back into the world deck instead of resolving it — it doesn't vanish, it comes back later. This is Denial as a mechanic, already built, no invention needed.
-- `ForceDestroy` queues a random destruction landing at a future turn start, absorbable only by `Brace` charges — non-negotiable loss on a delay if no Brace is available.
-- `DealProgressAll` hits every hazard in hand at once (indiscriminate). `ExileTopWorldCards` removes cards from the world deck before they ever reach hand — erasure of the future, not the present.
-- `ApplyKeyword` / `KeywordGate` / `ResourceGate` / `RemoveKeyword` / `GainKeywordGuard` is the sanctioned slot for new keywords (Alarm was the first, per Eden Prime). New keyword names are data, not new effect kinds.
+World 13 keeps the standard contract: Act 3 ends with the shared `The Walker` → `Door` → `SurviveWorld` chain, unmodified (D1). Nothing about that closer changes.
+
+The world introduces two new applied keywords that compete for the same hand real estate: `Denial` (Act II) and `Anger` (Act III). Both are registered as cost-*increasing* modifiers in `KEYWORD_COST_MODIFIERS` — carrying either one taxes a card, and since both stack rather than replace each other, a hand thick with grief is a hand that's expensive to play. By Act III both keywords are live simultaneously, and the player is choosing which cost to pay down first.
+
+`Destiny` is introduced here as an in-fiction hazard, not a shared template — its own themed world card, appearing in Act III, playing the "trouble" role. Its clear cost scales with whichever of Denial/Anger currently has more total value in hand (`DealProgressScaled` off a `KeywordInHand` counter), so Destiny gets more expensive the deeper into either stage the player already is.
 
 ## Act I — Loss, fear, helplessness
 
-- Player hand opens with cards already `FreezeCards`-frozen — can't act with your own tools.
-- `GainHeat` trickles in slowly; `ThawCards` costs Heat, so thawing is earned, not free.
+- A card or two using `FreezeCards`/`ThawCards` for a specific numb moment — not the act's spine, just a beat.
 - A `ForceDestroy` queued early with no `Brace` available yet — something lands later, guaranteed, no way to stop it.
-- A `Numb` keyword (via `ApplyKeyword`) stacks in hand; `KeywordGate` at a threshold could release a `GainHeat` burst — numbness cracking into feeling.
+- Cards here are otherwise unkeyworded — Denial and Anger haven't shown up yet; this act is the wound before either defense kicks in.
 
 ## Act II — Denial
 
 - A hazard whose own effect is `ReturnWorldCards` — reject it, it goes back into the deck, it comes back later.
-- A `Denial` keyword accumulates via `ApplyKeyword`. `GainKeywordGuard` lets the player absorb the first `KeywordGate` trigger (denial holds for a while) — but it runs out.
-- `DealProgressScaled` off a `KeywordInHand` counter (existing `CounterSpec`) could make holding Denial cards paradoxically easier to clear in the short term — leaning into it works, until it doesn't.
+- `Denial` keyword applied via `ApplyKeyword`, taxing cost through `KEYWORD_COST_MODIFIERS`. `GainKeywordGuard` lets the player absorb the first `KeywordGate` trigger once denial accumulates — but it runs out.
+- `DealProgressScaled` off the `KeywordInHand` counter for `Denial` could make holding onto Denial cards paradoxically easier to clear in the short term — leaning into it works, until it doesn't.
 
 ## Act III — Anger / Destiny's first appearance
 
+- `Anger` keyword stacks alongside whatever `Denial` is still in hand — both taxing cost now, competing for which gets paid down first.
 - `DealProgressAll` as the indiscriminate "Why" swing — hits every hazard in hand, no aim.
-- Destiny's card uses `ExileTopWorldCards` — cutting off future moments entirely and permanently. This is what Destruction actually costs.
-- An `Anger` keyword saturates hand via `ApplyKeyword`, gated by `KeywordGate`, unlocking access to the big `DealProgressAll`/`ExileTopWorldCards` payoff. Anger earns you the tool, and costs a `ForceDestroy` on yourself as the price of using it.
+- `Destiny`'s card uses `ExileTopWorldCards` — cutting off future moments entirely and permanently, its own cost scaling off whichever of Denial/Anger is winning. This is what Destruction actually costs, and it costs more the deeper into grief the player already is.
+- `KeywordGate` on combined Denial+Anger saturation unlocks the big `DealProgressAll`/`ExileTopWorldCards` payoff — earning the tool costs a `ForceDestroy` on yourself as the price of using it.
 
 ## Open threads
 
-- Whether "Denial comes back via `ReturnWorldCards`" needs a dedicated hazard template or is just a property any Act II hazard can carry.
-- Whether `Numb` needs to be a real new applied keyword or whether `FreezeCards`/`ThawCards` alone already carries the Act I feel without inventing keyword data.
-- The Attachment stat from `endworlds-destination.md` doesn't have a job anymore since the Refusal fork was cut. Could tie into how much `Numb`/`Denial`/`Anger` keyword saturation a given run generates, but not decided.
+- Whether Denial and Anger need to visually/mechanically read as "competing" (e.g., a card that can only carry one) or whether simple co-stacking cost tax is enough to sell the tension.
+- Exactly what `Destiny`'s Act III card looks like beyond "hazard whose cost scales with grief-keyword saturation" — needs a concrete template.
+- The Attachment stat from `endworlds-destination.md` still doesn't have a job since the Refusal fork was cut — could track total Denial+Anger keyword-turns generated per run, but not decided.
