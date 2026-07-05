@@ -300,6 +300,8 @@ import giantsMusicUrl from "../assets/audio/city-of-sleeping-giants-music.mp3?ur
 import edenPrimeMusicUrl from "../assets/audio/eden-prime-music.mp3?url";
 import newDerelictMusicUrl from "../assets/audio/new-derelict-music.mp3?url";
 import transitAuthorityMusicUrl from "../assets/audio/transit-authority-music.mp3?url";
+import questionsMusicUrl from "../assets/audio/questions-music.mp3?url";
+import answersMusicUrl from "../assets/audio/answers-music.mp3?url";
 
 // ---------------------------------------------------------------------------
 // Exports
@@ -548,7 +550,8 @@ export const worldAssetUrls: Record<string, string> = {
   "the-beginning-inset-its-fine-actually": theBeginningInsetItsFineActuallyUrl,
   "the-beginning-inset-somebody-else-will-handle-it": theBeginningInsetSomebodyElseWillHandleItUrl,
   "the-beginning-inset-a-story-youve-told-yourself": theBeginningInsetAStoryYouveToldYourselfUrl,
-  "the-beginning-inset-somebody-should-be-mad-about-this": theBeginningInsetSomebodyShouldBeMadAboutThisUrl,
+  "the-beginning-inset-somebody-should-be-mad-about-this":
+    theBeginningInsetSomebodyShouldBeMadAboutThisUrl,
   "the-beginning-inset-every-excuse-sounds-thinner": theBeginningInsetEveryExcuseSoundsThinnerUrl,
   "the-beginning-inset-one-more-excuse": theBeginningInsetOneMoreExcuseUrl,
   "the-beginning-inset-a-smaller-ask": theBeginningInsetASmallerAskUrl,
@@ -556,7 +559,8 @@ export const worldAssetUrls: Record<string, string> = {
   "the-beginning-inset-terms-you-already-know": theBeginningInsetTermsYouAlreadyKnowUrl,
   "the-beginning-inset-the-same-tired-weight": theBeginningInsetTheSameTiredWeightUrl,
   "the-beginning-inset-hes-still-fighting": theBeginningInsetHesStillFightingUrl,
-  "the-beginning-inset-the-weight-youre-still-carrying": theBeginningInsetTheWeightYoureStillCarryingUrl,
+  "the-beginning-inset-the-weight-youre-still-carrying":
+    theBeginningInsetTheWeightYoureStillCarryingUrl,
   "the-beginning-inset-say-it-out-loud": theBeginningInsetSayItOutLoudUrl,
   "the-beginning-inset-put-it-down": theBeginningInsetPutItDownUrl,
   "the-beginning-inset-close-the-book-on-it": theBeginningInsetCloseTheBookOnItUrl,
@@ -585,4 +589,6 @@ export const worldMusicManifest: Record<string, WorldMusicAsset> = {
   "eden-prime": { key: "music-eden-prime", url: edenPrimeMusicUrl },
   "new-derelict": { key: "music-new-derelict", url: newDerelictMusicUrl },
   "transit-authority": { key: "music-transit-authority", url: transitAuthorityMusicUrl },
+  questions: { key: "music-questions", url: questionsMusicUrl },
+  answers: { key: "music-answers", url: answersMusicUrl },
 };
