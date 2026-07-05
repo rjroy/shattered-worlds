@@ -101,6 +101,7 @@ export function logEvent(event: GameEvent): void {
         `${baseString} ids: ${event.ids.join(", ")} templates: ${event.templateIds.join(", ")} keyword: ${event.keyword} value: ${event.value}`,
       );
       break;
+    case "KeywordReduced":
     case "KeywordRemoved":
       console.log(
         `${baseString} ids: ${event.ids.join(", ")} templates: ${event.templateIds.join(", ")} keyword: ${event.keyword}`,
@@ -118,7 +119,7 @@ export function logEvent(event: GameEvent): void {
       );
       break;
     default: {
-      throw new Error(`logEvent: unhandled event type ${event.type}`);
+      throw new Error(`logEvent: unhandled event type ${(event as unknown as GameEvent).type}`);
     }
   }
 }
