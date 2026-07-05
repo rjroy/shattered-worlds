@@ -1,6 +1,6 @@
-import { createGame } from '../../core/index'
-import type { Action, ActionPreview, CardCatalog, GameCore, WorldData } from '../../core/index'
-import type { RunModifiers } from '../../data/unlocks/types'
+import { createGame } from "../../core/index";
+import type { Action, ActionPreview, CardCatalog, GameCore, WorldData } from "../../core/index";
+import type { RunModifiers } from "../../data/unlocks/types";
 
 import {
   createGameplayBatch,
@@ -15,64 +15,64 @@ import {
   type SessionId,
   type SetupModifier,
   type SubscriberFailureHandler,
-} from './gameplayEventStream'
+} from "./gameplayEventStream";
 
 export interface GameplaySession extends GameCore {
-  readonly sessionId: SessionId
+  readonly sessionId: SessionId;
   /** Session-scoped observation: delivers only this session's stream items. */
-  subscribe(subscriber: RunStreamSubscriber): () => void
+  subscribe(subscriber: RunStreamSubscriber): () => void;
   /**
    * Closes the run with outcome 'abandoned' if no terminal outcome was
    * reached. No-op once the run has ended; call on scene shutdown so every
    * session closes its stream exactly once.
    */
-  abandon(): void
+  abandon(): void;
 }
 
 export interface GameplaySessionOptions {
-  readonly appliedModifiers?: readonly SetupModifier[]
-  readonly runModifiers?: RunModifiers
+  readonly appliedModifiers?: readonly SetupModifier[];
+  readonly runModifiers?: RunModifiers;
   /** Stamps every stream item this session emits. Defaults to Date.now. */
-  readonly clock?: Clock | undefined
-  readonly makeSessionId?: () => SessionId
+  readonly clock?: Clock | undefined;
+  readonly makeSessionId?: () => SessionId;
   /**
    * Failure handling for the session's privately created stream. Ignored when
    * `stream` is provided: a shared stream keeps the handler it was created
    * with at the composition root.
    */
-  readonly onSubscriberFailure?: SubscriberFailureHandler
+  readonly onSubscriberFailure?: SubscriberFailureHandler;
   /** Shared long-lived stream to emit into (see createGameplayRuntime). */
-  readonly stream?: GameplayEventStream
-  readonly subscribers?: readonly RunStreamSubscriber[]
+  readonly stream?: GameplayEventStream;
+  readonly subscribers?: readonly RunStreamSubscriber[];
 }
 
 function defaultMakeSessionId(): SessionId {
-  if (typeof globalThis.crypto?.randomUUID === 'function') {
-    return globalThis.crypto.randomUUID()
+  if (typeof globalThis.crypto?.randomUUID === "function") {
+    return globalThis.crypto.randomUUID();
   }
 
-  const randomValues = globalThis.crypto?.getRandomValues?.bind(globalThis.crypto)
+  const randomValues = globalThis.crypto?.getRandomValues?.bind(globalThis.crypto);
   if (randomValues !== undefined) {
-    const bytes = randomValues(new Uint8Array(16))
-    bytes[6] = (bytes[6]! & 0x0f) | 0x40
-    bytes[8] = (bytes[8]! & 0x3f) | 0x80
-    const hex = [...bytes].map((byte) => byte.toString(16).padStart(2, '0')).join('')
-    return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`
+    const bytes = randomValues(new Uint8Array(16));
+    bytes[6] = (bytes[6]! & 0x0f) | 0x40;
+    bytes[8] = (bytes[8]! & 0x3f) | 0x80;
+    const hex = [...bytes].map((byte) => byte.toString(16).padStart(2, "0")).join("");
+    return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
   }
 
-  return `session-${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`
+  return `session-${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
 }
 
-function isTerminalOutcome(status: GameCore['state']['status']): status is RunTerminalOutcome {
-  return status === 'won' || status === 'lost'
+function isTerminalOutcome(status: GameCore["state"]["status"]): status is RunTerminalOutcome {
+  return status === "won" || status === "lost";
 }
 
 function onlySession(sessionId: SessionId, subscriber: RunStreamSubscriber): RunStreamSubscriber {
   return (item) => {
     if (item.sessionId === sessionId) {
-      return subscriber(item)
+      return subscriber(item);
     }
-  }
+  };
 }
 
 export function createGameplaySession(
@@ -81,44 +81,52 @@ export function createGameplaySession(
   seed: number,
   options: GameplaySessionOptions = {},
 ): GameplaySession {
-  const stream = options.stream ?? createGameplayEventStream(options.onSubscriberFailure)
-  const sessionId = (options.makeSessionId ?? defaultMakeSessionId)()
-  const clock = options.clock ?? (() => Date.now())
-  const core = createGame(catalog, world, seed, options.runModifiers)
+  const stream = options.stream ?? createGameplayEventStream(options.onSubscriberFailure);
+  const sessionId = (options.makeSessionId ?? defaultMakeSessionId)();
+  const clock = options.clock ?? (() => Date.now());
+  const core = createGame(catalog, world, seed, options.runModifiers);
 
   // Session-scoped subscriptions are released when the run closes: after
   // RunEnded this session emits nothing more, and a shared stream must not
   // accumulate dead filters across runs.
-  const sessionUnsubscribes: (() => void)[] = []
-  let runEnded = false
+  const sessionUnsubscribes: (() => void)[] = [];
+  let runEnded = false;
 
   function subscribeForSession(subscriber: RunStreamSubscriber): () => void {
-    const releaseFromStream = stream.subscribe(onlySession(sessionId, subscriber))
+    const releaseFromStream = stream.subscribe(onlySession(sessionId, subscriber));
     const unsubscribe = () => {
-      releaseFromStream()
+      releaseFromStream();
 
-      const index = sessionUnsubscribes.indexOf(unsubscribe)
+      const index = sessionUnsubscribes.indexOf(unsubscribe);
       if (index >= 0) {
-        sessionUnsubscribes.splice(index, 1)
+        sessionUnsubscribes.splice(index, 1);
       }
-    }
+    };
 
-    sessionUnsubscribes.push(unsubscribe)
-    return unsubscribe
+    sessionUnsubscribes.push(unsubscribe);
+    return unsubscribe;
   }
 
   function closeRun(outcome: RunOutcome, finalActIndex: number): void {
-    runEnded = true
-    stream.emit(createRunEnded({ sessionId, outcome, finalActIndex, timestamp: clock(), finalState: core.state }))
+    runEnded = true;
+    stream.emit(
+      createRunEnded({
+        sessionId,
+        outcome,
+        finalActIndex,
+        timestamp: clock(),
+        finalState: core.state,
+      }),
+    );
 
     // Each unsubscribe removes itself from the list; iterate over a copy.
     for (const unsubscribe of [...sessionUnsubscribes]) {
-      unsubscribe()
+      unsubscribe();
     }
   }
 
   for (const subscriber of options.subscribers ?? []) {
-    subscribeForSession(subscriber)
+    subscribeForSession(subscriber);
   }
 
   stream.emit(
@@ -131,64 +139,61 @@ export function createGameplaySession(
       initialEvents: core.openingEvents,
       initialState: core.state,
     }),
-  )
+  );
 
   return {
     sessionId,
 
     get state() {
-      return core.state
+      return core.state;
     },
 
     get openingEvents() {
-      return core.openingEvents
+      return core.openingEvents;
     },
 
     dispatch(action: Action) {
-      // After abandon the core may still be 'playing'; refusing here keeps the
-      // close-exactly-once invariant (no batches after RunEnded, no second
-      // outcome). Post-win/loss dispatch already throws inside the core.
       if (runEnded) {
-        throw new Error(`[gameplaySession] dispatch after run closed (session ${sessionId})`)
+        return { state: core.state, events: [] };
       }
 
-      const resolution = core.dispatch(action)
+      const resolution = core.dispatch(action);
 
-      stream.emit(createGameplayBatch(sessionId, action, resolution, clock()))
+      stream.emit(createGameplayBatch(sessionId, action, resolution, clock()));
 
       if (!runEnded && isTerminalOutcome(resolution.state.status)) {
-        closeRun(resolution.state.status, resolution.state.actIndex)
+        closeRun(resolution.state.status, resolution.state.actIndex);
       }
 
-      return resolution
+      return resolution;
     },
 
     abandon() {
-      if (runEnded) return
-      closeRun('abandoned', core.state.actIndex)
+      if (runEnded) return;
+      closeRun("abandoned", core.state.actIndex);
     },
 
     availableActions() {
-      return core.availableActions()
+      return core.availableActions();
     },
 
     intensity() {
-      return core.intensity()
+      return core.intensity();
     },
 
     // Pure read: delegates straight to the core. Emits nothing and never closes
     // the run, so it is safe to call even after the run has ended.
     preview(action: Action): ActionPreview {
-      return core.preview(action)
+      return core.preview(action);
     },
 
     template(templateId) {
-      return core.template(templateId)
+      return core.template(templateId);
     },
 
     subscribe(subscriber) {
-      if (runEnded) return () => {}
-      return subscribeForSession(subscriber)
+      if (runEnded) return () => {};
+      return subscribeForSession(subscriber);
     },
-  }
+  };
 }

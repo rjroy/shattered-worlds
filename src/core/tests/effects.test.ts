@@ -1327,6 +1327,7 @@ describe("OfferBoon", () => {
       "Steady Nerve",
       "Power Tool",
       "Rejuvenation",
+      "Loaded Shotgun",
     ]) {
       const template = illegalCatalog[templateId];
       if (template === undefined || template.kind !== "player") {
@@ -1364,6 +1365,7 @@ describe("OfferBoon", () => {
   it("preserves an existing queue when the referenced set has no legal options", () => {
     const illegalCatalog: CardCatalog = { ...catalog };
     for (const templateId of [
+      "Loaded Shotgun",
       "Lucky Break",
       "Second Wind",
       "Found Tool",
@@ -1462,6 +1464,7 @@ describe("GainRandomCard", () => {
   it("fails closed when the pool resolves but has no legal player candidates", () => {
     const illegalCatalog: CardCatalog = { ...catalog };
     for (const templateId of [
+      "Loaded Shotgun",
       "Lucky Break",
       "Second Wind",
       "Found Tool",

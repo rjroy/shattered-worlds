@@ -57,12 +57,16 @@ import { median, p90, wilsonInterval } from "./statistics";
 
 const MAX_ACTIONS_PER_WORLD = 1000;
 const RECOVERY_UNLOCK_IDS = [
-  "first-sprint-free", // Burst of Speed
-  "second-explore-push", // Determined Explorer
-  "extra-hp", // Tough Hide
-  "keyword-bonus", // Sharpened Instincts
+  [
+    "first-sprint-free", // Burst of Speed
+    "second-explore-push", // Determined Explorer
+    "extra-hp", // Tough Hide
+    "keyword-bonus", // Sharpened Instincts
+  ],
 ] as const;
-const RECOVERY_RUN_MODIFIERS = buildRunModifiers(RECOVERY_UNLOCK_IDS, UNLOCK_CATALOG);
+const RECOVERY_RUN_MODIFIERS = RECOVERY_UNLOCK_IDS.map((ids) =>
+  buildRunModifiers(ids, UNLOCK_CATALOG),
+);
 
 // ---------------------------------------------------------------------------
 // Parameters
@@ -107,7 +111,10 @@ function parseOutputFormat(raw: string | undefined): OutputFormat {
   throw new Error(`Unknown completeness output format "${raw}". Expected "json" or "human".`);
 }
 
-function resolveOutputFormat(argv: string[], env: string | undefined): {
+function resolveOutputFormat(
+  argv: string[],
+  env: string | undefined,
+): {
   outputFormat: OutputFormat;
   positional: string[];
 } {
@@ -131,7 +138,9 @@ function resolveOutputFormat(argv: string[], env: string | undefined): {
 
     if (requested !== undefined) {
       if (cliFormat !== undefined && cliFormat !== requested) {
-        throw new Error(`Conflicting completeness output formats: "${cliFormat}" and "${requested}".`);
+        throw new Error(
+          `Conflicting completeness output formats: "${cliFormat}" and "${requested}".`,
+        );
       }
       cliFormat = requested;
     }
@@ -297,7 +306,7 @@ export interface WorldAggregate {
   /** Default starter, no unlocks. Sole source of the completeness result and `[FLAGGED]`. */
   baseline: CohortAggregate;
   /** Same seeds, `RECOVERY_RUN_MODIFIERS` applied. Diagnostic only; never flags. */
-  recovery: CohortAggregate;
+  recoveries: CohortAggregate[];
 }
 
 function newCohortAggregate(): CohortAggregate {
@@ -413,7 +422,7 @@ export function runCompleteness(
   for (const world of worlds) {
     const policy = evalPolicyFactory(world.catalog, params.weights, params.K);
     const baseline = newCohortAggregate();
-    const recovery = newCohortAggregate();
+    const recoveries = RECOVERY_RUN_MODIFIERS.map((_) => newCohortAggregate());
 
     for (let seed = 1; seed <= params.N; seed++) {
       const baselineOutcome = playOut(world.catalog, world.worldData, seed, policy, agentRng, {
@@ -423,20 +432,24 @@ export function runCompleteness(
       agentRng = baselineOutcome.finalAgentRng;
       recordOutcome(baseline, baselineOutcome);
 
-      const recoveryOutcome = playOut(world.catalog, world.worldData, seed, policy, agentRng, {
-        maxActions: MAX_ACTIONS_PER_WORLD,
-        runModifiers: RECOVERY_RUN_MODIFIERS,
-        weights: params.weights,
+      RECOVERY_RUN_MODIFIERS.forEach((recoveryModifiers, index) => {
+        if (recoveries[index] !== undefined) {
+          const outcome = playOut(world.catalog, world.worldData, seed, policy, agentRng, {
+            maxActions: MAX_ACTIONS_PER_WORLD,
+            runModifiers: recoveryModifiers,
+            weights: params.weights,
+          });
+          agentRng = outcome.finalAgentRng;
+          recordOutcome(recoveries[index], outcome);
+        }
       });
-      agentRng = recoveryOutcome.finalAgentRng;
-      recordOutcome(recovery, recoveryOutcome);
     }
 
     aggregates.push({
       id: world.id,
       totalActs: world.worldData.deckComposition.acts.length,
       baseline,
-      recovery,
+      recoveries,
     });
   }
 
@@ -757,12 +770,18 @@ function formatWorldBlock(agg: WorldAggregate, threshold: number): string {
   );
   lines.push("");
   lines.push(
-    ...formatCohortBlock(
-      `Recovery (unlocks: ${RECOVERY_UNLOCK_IDS.join(", ")})`,
-      agg.recovery,
-      agg.totalActs,
-      { isBaseline: false, threshold, baselineForDiff: agg.baseline },
-    ),
+    ...agg.recoveries
+      .flatMap((recovery, index) => {
+        const unlocks = RECOVERY_UNLOCK_IDS[index];
+        if (unlocks === undefined) return undefined;
+        return formatCohortBlock(
+          `Recovery (unlocks: ${unlocks.join(", ")})`,
+          recovery,
+          agg.totalActs,
+          { isBaseline: false, threshold, baselineForDiff: agg.baseline },
+        );
+      })
+      .filter((line) => line !== undefined),
   );
   return lines.join("\n");
 }
@@ -821,8 +840,7 @@ export function formatJsonReport(params: CompletenessParams, aggregates: WorldAg
 
   return JSON.stringify(
     report,
-    (_key, value: unknown) =>
-      value instanceof Map ? Object.fromEntries(value.entries()) : value,
+    (_key, value: unknown) => (value instanceof Map ? Object.fromEntries(value.entries()) : value),
     2,
   );
 }

@@ -1,5 +1,6 @@
 {
   "pool-fortune": [
+    "Loaded Shotgun",
     "Lucky Break",
     "Second Wind",
     "Rejuvenation",
@@ -9,6 +10,7 @@
     "Steady Nerve"
   ],
   "pool-heard-noise": [
+    "Loaded Shotgun",
     "Sprint",
     "Regroup",
     "React to Noise",
@@ -18,6 +20,7 @@
     "Plan"
   ],
   "pool-heaters": [
+    "Loaded Shotgun",
     "Hand Warmers",
     "Ice Scraper",
     "Burn The Manual",
@@ -26,6 +29,7 @@
     "Burn The Manual"
   ],
   "pool-archive-lesson": [
+    "Loaded Shotgun",
     "Mark the Shelf",
     "Cross-Reference",
     "Waterproof Notes",
@@ -33,6 +37,7 @@
     "Shelf Map"
   ],
   "pool-eden-grove": [
+    "Loaded Shotgun",
     "Take the Fruit",
     "Gentle Approach",
     "Stillness Lesson",
@@ -40,22 +45,30 @@
     "Hush the Valley"
   ],
   "pool-derelict-override": [
+    "Loaded Shotgun",
     "Emergency Route",
     "Override Badge",
     "Manual Release",
     "Follow the Checklist"
   ],
   "pool-ember-cellar": [
+    "Loaded Shotgun",
     "Leave One",
     "Star-Pruner",
     "Constellation Shears",
     "Keep Vigil",
     "Bank the Heat"
   ],
-  "pool-survey-results": ["Quiet Survey", "Brace The Ward", "Bone Pin", "Contour Map"],
-  "pool-lights-lv1": ["Barricade", "Half-Dead Spotlight", "Cooler Snacks", "Loaded Shotgun"],
-  "pool-lights-lv2": ["Flashlight", "Flare Gun", "Bonfire", "Searchlight"],
-  "pool-garden-tools": ["Pruning Shears", "Machete", "Weed Killer", "Bloom"],
+  "pool-survey-results": [
+    "Loaded Shotgun",
+    "Quiet Survey",
+    "Brace The Ward",
+    "Bone Pin",
+    "Contour Map"
+  ],
+  "pool-lights-lv1": ["Loaded Shotgun", "Barricade", "Half-Dead Spotlight", "Cooler Snacks"],
+  "pool-lights-lv2": ["Loaded Shotgun", "Flashlight", "Flare Gun", "Bonfire", "Searchlight"],
+  "pool-garden-tools": ["Loaded Shotgun", "Pruning Shears", "Machete", "Weed Killer", "Bloom"],
   "pool-reissued-credentials": [
     "Temporary Credentials",
     "Express Transfer",

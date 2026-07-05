@@ -371,7 +371,11 @@
       "effect": {
         "kind": "DealProgressAll",
         "base": 2,
-        "bonus": { "tag": "Obstructed", "amount": 2 }
+        "bonus": [
+          { "tag": "Obstructed", "amount": 2 },
+          { "tag": "Creature", "amount": 2 },
+          { "tag": "Slow", "amount": 2 }
+        ]
       },
       "fx": [{ "kind": "Play", "key": "shotgun-fx" }]
     },
@@ -1065,7 +1069,7 @@
       "effect": {
         "kind": "Sequence",
         "steps": [
-          { "kind": "Draw", "player": 2 },
+          { "kind": "Draw", "player": 3 },
           { "kind": "ApplyKeyword", "keyword": "Alarm", "value": 2, "target": "nextWorldCard" }
         ]
       }
@@ -1073,14 +1077,14 @@
     "Gentle Approach": {
       "kind": "player",
       "name": "Gentle Approach",
-      "rarity": "common",
+      "rarity": "uncommon",
       "insetKey": "eden-inset-gentle-approach",
       "energyCost": 1,
       "effect": {
         "kind": "Sequence",
         "steps": [
           { "kind": "DealProgress", "base": 3 },
-          { "kind": "RemoveKeyword", "keyword": "Alarm", "target": "hand", "amount": 1 }
+          { "kind": "RemoveKeyword", "keyword": "Alarm", "target": "hand", "amount": 2 }
         ]
       }
     },
@@ -1095,19 +1099,23 @@
         "kind": "Sequence",
         "steps": [
           { "kind": "GainKeywordGuard", "amount": 1 },
-          { "kind": "Heal", "amount": 1 }
+          { "kind": "DealProgressAll", "base": 0, "bonus": { "tag": "Slow", "amount": 3 } },
+          { "kind": "RemoveKeyword", "keyword": "Alarm", "target": "hand", "amount": 1 },
+          { "kind": "Heal", "amount": 2 }
         ]
       }
     },
     "Follow the Shade": {
       "kind": "player",
       "name": "Follow the Shade",
-      "rarity": "uncommon",
+      "rarity": "rare",
       "insetKey": "eden-inset-follow-the-shade",
-      "energyCost": 1,
+      "energyCost": 0,
+      "exhaust": true,
       "effect": {
         "kind": "Sequence",
         "steps": [
+          { "kind": "AddPlayerCardToTop", "template": "Tread Softly" },
           { "kind": "AddPlayerCardToTop", "template": "Tread Softly" },
           { "kind": "Heal", "amount": 2 }
         ]
@@ -1118,12 +1126,12 @@
       "name": "Hush the Valley",
       "rarity": "rare",
       "insetKey": "eden-inset-hush-the-valley",
-      "energyCost": 2,
+      "energyCost": 1,
       "exhaust": true,
       "effect": {
         "kind": "Sequence",
         "steps": [
-          { "kind": "DealProgressAll", "base": 1 },
+          { "kind": "DealProgressAll", "base": 1, "bonus": { "tag": "Slow", "amount": 3 } },
           { "kind": "RemoveKeyword", "keyword": "Alarm", "target": "hand", "amount": 3 }
         ]
       }
@@ -1131,10 +1139,17 @@
     "Tread Softly": {
       "kind": "player",
       "name": "Tread Softly",
-      "rarity": "common",
+      "rarity": "rare",
       "insetKey": "eden-inset-tread-softly",
       "energyCost": 1,
-      "effect": { "kind": "DealProgress", "base": 2, "bonus": { "tag": "Slow", "amount": 2 } }
+      "effect": {
+        "kind": "Sequence",
+        "steps": [
+          { "kind": "DealProgress", "base": 2 },
+          { "kind": "DealProgressAll", "base": 0, "bonus": { "tag": "Slow", "amount": 3 } },
+          { "kind": "RemoveKeyword", "keyword": "Alarm", "target": "hand", "amount": 2 }
+        ]
+      }
     },
     "Fruit Offered Too Quickly": {
       "kind": "world",
@@ -1201,14 +1216,8 @@
       "keywords": ["Creature"],
       "discardable": false,
       "onDiscarded": { "kind": "None" },
-      "onCleared": { "kind": "None" },
-      "onPartialClear": {
-        "kind": "KeywordGate",
-        "keyword": "Alarm",
-        "min": 2,
-        "zone": "hand",
-        "then": { "kind": "Draw", "player": 1, "world": 1 }
-      },
+      "onCleared": { "kind": "Draw", "player": 1, "world": 0 },
+      "onPartialClear": { "kind": "Draw", "player": 1, "world": 1 },
       "onDraw": {
         "kind": "KeywordGate",
         "keyword": "Alarm",
@@ -1290,7 +1299,11 @@
       "cost": 6,
       "keywords": ["Obstructed"],
       "discardable": true,
-      "onDiscarded": { "kind": "None" },
+      "onDiscarded": {
+        "kind": "GainRandomCard",
+        "setId": "pool-eden-grove",
+        "setName": "The Quiet Grove"
+      },
       "onCleared": {
         "kind": "OfferBoon",
         "setId": "pool-eden-grove",

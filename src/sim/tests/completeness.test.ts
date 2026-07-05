@@ -139,13 +139,13 @@ describe("completeness attribution integrity", () => {
       // bookkeeping invariants must hold for recovery too: it is a diagnostic
       // cohort, not an exempt one.
       checkDispositionInvariants(agg.baseline, N);
-      checkDispositionInvariants(agg.recovery, N);
+      agg.recoveries.forEach((recovery) => checkDispositionInvariants(recovery, N));
     });
 
     test(`${worldId}: action counts, funnel counts, and per-run energy invariants reconcile for both cohorts`, () => {
       const agg = aggregateWorld(worldId, N, K, AGENT_SEED);
       checkCounterInvariants(agg.baseline);
-      checkCounterInvariants(agg.recovery);
+      agg.recoveries.forEach(checkCounterInvariants);
     });
   }
 
@@ -212,8 +212,10 @@ describe("completeness attribution integrity", () => {
         // runCompleteness always runs both cohorts per seed (see completeness.ts),
         // so this adds no extra play-outs beyond what the baseline check above
         // already exercised — it just asserts on data already computed.
-        expect(agg.recovery.games).toBe(2);
-        expect(agg.recovery.wins + agg.recovery.losses + agg.recovery.capped).toBe(2);
+        for (const recovery of agg.recoveries) {
+          expect(recovery.games).toBe(2);
+          expect(recovery.wins + recovery.losses + recovery.capped).toBe(2);
+        }
       }
     },
     { timeout: 3000 },
@@ -349,7 +351,7 @@ describe("formatted report shape (step 5)", () => {
       id: "synthetic-none-cases",
       totalActs: 2,
       baseline: cohort,
-      recovery: cohort,
+      recoveries: [cohort],
     };
 
     const report = formatHumanReport(reportParamsFor(0.02), [agg]);
@@ -415,23 +417,25 @@ describe("formatted report shape (step 5)", () => {
       reachedActWinCounts: new Map(),
     };
     // Recovery: 2/4 wins — comfortably above threshold, must never flag itself.
-    const recovery: CohortAggregate = {
-      games: 4,
-      wins: 2,
-      losses: 2,
-      capped: 0,
-      totalTurns: 26,
-      runs: [wonRun, wonRun, lostRun("hp"), lostRun("hp")],
-      lossByCause: new Map([["hp", 2]]),
-      lossByAct: new Map([[0, 2]]),
-      reachedActCounts: new Map([[0, 4]]),
-      reachedActWinCounts: new Map([[0, 2]]),
-    };
+    const recoveries: CohortAggregate[] = [
+      {
+        games: 4,
+        wins: 2,
+        losses: 2,
+        capped: 0,
+        totalTurns: 26,
+        runs: [wonRun, wonRun, lostRun("hp"), lostRun("hp")],
+        lossByCause: new Map([["hp", 2]]),
+        lossByAct: new Map([[0, 2]]),
+        reachedActCounts: new Map([[0, 4]]),
+        reachedActWinCounts: new Map([[0, 2]]),
+      },
+    ];
     const agg: WorldAggregate = {
       id: "synthetic-flag-placement",
       totalActs: 1,
       baseline,
-      recovery,
+      recoveries,
     };
 
     const report = formatHumanReport(reportParamsFor(0.02), [agg]);

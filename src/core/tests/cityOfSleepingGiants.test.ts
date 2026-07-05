@@ -266,7 +266,7 @@ describe("City of Sleeping Giants — stirring effects drive the reducer (REQ-GI
 
     // Every offered template is drawn from the four-card pool-survey-results pool.
     const pool = new Set<string>(FORTUNE_BOON_POOLS["pool-survey-results"]);
-    expect(pool.size).toBe(4);
+    expect(pool.size).toBe(5);
     expect(pool.has("Follow The Vein")).toBe(false);
     for (const offered of pending.offeredTemplateIds) {
       expect(pool.has(offered)).toBe(true);

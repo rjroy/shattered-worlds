@@ -334,6 +334,13 @@ function cloneEffect(effect: CardEffect): CardEffect {
 }
 
 function cloneDealProgress(effect: Extract<CardEffect, { kind: "DealProgress" }>): CardEffect {
+  if (Array.isArray(effect.bonus)) {
+    return {
+      kind: "DealProgress",
+      base: effect.base,
+      bonus: effect.bonus.map((kb) => ({ ...kb })),
+    };
+  }
   const bonus = effect.bonus === undefined ? undefined : { ...effect.bonus };
   return bonus === undefined
     ? { kind: "DealProgress", base: effect.base }
@@ -343,6 +350,13 @@ function cloneDealProgress(effect: Extract<CardEffect, { kind: "DealProgress" }>
 function cloneDealProgressAll(
   effect: Extract<CardEffect, { kind: "DealProgressAll" }>,
 ): CardEffect {
+  if (Array.isArray(effect.bonus)) {
+    return {
+      kind: "DealProgressAll",
+      base: effect.base,
+      bonus: effect.bonus.map((kb) => ({ ...kb })),
+    };
+  }
   const bonus = effect.bonus === undefined ? undefined : { ...effect.bonus };
   return bonus === undefined
     ? { kind: "DealProgressAll", base: effect.base }
