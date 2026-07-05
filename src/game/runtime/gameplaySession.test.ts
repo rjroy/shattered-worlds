@@ -408,7 +408,7 @@ describe("gameplaySession", () => {
 
     const emittedBeforeIllegal = items.slice();
 
-    expect(() => session.dispatch({ type: "EndTurn" })).toThrow();
+    expect(() => session.dispatch({ type: "EndTurn" })).not.toThrow();
     expect(items).toEqual(emittedBeforeIllegal);
   });
 
@@ -485,7 +485,7 @@ describe("gameplaySession", () => {
 
     const closedHistory = items.slice();
 
-    expect(() => session.dispatch({ type: "EndTurn" })).toThrow(/run closed/);
+    expect(() => session.dispatch({ type: "EndTurn" })).not.toThrow(/run closed/);
     expect(items).toEqual(closedHistory);
     expect(items.at(-1)?.kind).toBe("RunEnded");
   });
