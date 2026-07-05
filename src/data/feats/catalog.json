@@ -617,5 +617,110 @@
     "description": "Win 50 runs across any world.",
     "conditions": [{ "statId": "lifetime.wins", "operator": "gte", "value": 50 }],
     "reward": { "items": [{ "type": "memoryFragments", "amount": 50 }] }
+  },
+  {
+    "id": "first-contractor",
+    "name": "Builder's Instinct",
+    "description": "Win your first run with the Contractor's starter deck.",
+    "conditions": [{ "statId": "starter.contractor.wins", "operator": "gte", "value": 1 }],
+    "reward": { "items": [{ "type": "memoryFragments", "amount": 5 }] }
+  },
+  {
+    "id": "contractor-tier-2",
+    "name": "Journeyman Builder",
+    "description": "Win 5 runs with the Contractor's starter deck.",
+    "conditions": [{ "statId": "starter.contractor.wins", "operator": "gte", "value": 5 }],
+    "reward": { "items": [{ "type": "memoryFragments", "amount": 10 }] }
+  },
+  {
+    "id": "contractor-tier-3",
+    "name": "Master Contractor",
+    "description": "Win 10 runs with the Contractor's starter deck.",
+    "conditions": [{ "statId": "starter.contractor.wins", "operator": "gte", "value": 10 }],
+    "reward": { "items": [{ "type": "memoryFragments", "amount": 20 }] }
+  },
+  {
+    "id": "first-footballer",
+    "name": "Athlete's Instinct",
+    "description": "Win your first run with the Footballer's starter deck.",
+    "conditions": [{ "statId": "starter.footballer.wins", "operator": "gte", "value": 1 }],
+    "reward": { "items": [{ "type": "memoryFragments", "amount": 5 }] }
+  },
+  {
+    "id": "footballer-tier-2",
+    "name": "Varsity Athlete",
+    "description": "Win 5 runs with the Footballer's starter deck.",
+    "conditions": [{ "statId": "starter.footballer.wins", "operator": "gte", "value": 5 }],
+    "reward": { "items": [{ "type": "memoryFragments", "amount": 10 }] }
+  },
+  {
+    "id": "footballer-tier-3",
+    "name": "Hall of Fame",
+    "description": "Win 10 runs with the Footballer's starter deck.",
+    "conditions": [{ "statId": "starter.footballer.wins", "operator": "gte", "value": 10 }],
+    "reward": { "items": [{ "type": "memoryFragments", "amount": 20 }] }
+  },
+  {
+    "id": "first-harvester",
+    "name": "First Picking",
+    "description": "Win your first run with the Harvester's starter deck.",
+    "conditions": [{ "statId": "starter.harvester.wins", "operator": "gte", "value": 1 }],
+    "reward": { "items": [{ "type": "memoryFragments", "amount": 15 }] }
+  },
+  {
+    "id": "harvester-tier-2",
+    "name": "Orchard Regular",
+    "description": "Win 5 runs with the Harvester's starter deck.",
+    "conditions": [{ "statId": "starter.harvester.wins", "operator": "gte", "value": 5 }],
+    "reward": { "items": [{ "type": "memoryFragments", "amount": 30 }] }
+  },
+  {
+    "id": "harvester-tier-3",
+    "name": "Orchard Keeper",
+    "description": "Win 10 runs with the Harvester's starter deck.",
+    "conditions": [{ "statId": "starter.harvester.wins", "operator": "gte", "value": 10 }],
+    "reward": { "items": [{ "type": "memoryFragments", "amount": 60 }] }
+  },
+  {
+    "id": "first-archivist",
+    "name": "First Index",
+    "description": "Win your first run with the Archivist's starter deck.",
+    "conditions": [{ "statId": "starter.archivist.wins", "operator": "gte", "value": 1 }],
+    "reward": { "items": [{ "type": "memoryFragments", "amount": 15 }] }
+  },
+  {
+    "id": "archivist-tier-2",
+    "name": "Dedicated Archivist",
+    "description": "Win 5 runs with the Archivist's starter deck.",
+    "conditions": [{ "statId": "starter.archivist.wins", "operator": "gte", "value": 5 }],
+    "reward": { "items": [{ "type": "memoryFragments", "amount": 30 }] }
+  },
+  {
+    "id": "archivist-tier-3",
+    "name": "Master Archivist",
+    "description": "Win 10 runs with the Archivist's starter deck.",
+    "conditions": [{ "statId": "starter.archivist.wins", "operator": "gte", "value": 10 }],
+    "reward": { "items": [{ "type": "memoryFragments", "amount": 60 }] }
+  },
+  {
+    "id": "first-surveyor",
+    "name": "First Survey",
+    "description": "Win your first run with the Surveyor's starter deck.",
+    "conditions": [{ "statId": "starter.surveyor.wins", "operator": "gte", "value": 1 }],
+    "reward": { "items": [{ "type": "memoryFragments", "amount": 15 }] }
+  },
+  {
+    "id": "surveyor-tier-2",
+    "name": "Field Surveyor",
+    "description": "Win 5 runs with the Surveyor's starter deck.",
+    "conditions": [{ "statId": "starter.surveyor.wins", "operator": "gte", "value": 5 }],
+    "reward": { "items": [{ "type": "memoryFragments", "amount": 30 }] }
+  },
+  {
+    "id": "surveyor-tier-3",
+    "name": "Chief Surveyor",
+    "description": "Win 10 runs with the Surveyor's starter deck.",
+    "conditions": [{ "statId": "starter.surveyor.wins", "operator": "gte", "value": 10 }],
+    "reward": { "items": [{ "type": "memoryFragments", "amount": 60 }] }
   }
 ]

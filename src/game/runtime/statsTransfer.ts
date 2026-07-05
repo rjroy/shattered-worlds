@@ -122,7 +122,7 @@ export function createStatsTransfer(options: StatsTransferOptions): StatsTransfe
     applyImport(inspected) {
       const lifetime = isLifetimeStatsV1(inspected.payload.lifetime)
         ? migrateLifetimeV1toV2(inspected.payload.lifetime)
-        : inspected.payload.lifetime
+        : { ...inspected.payload.lifetime, byStarter: inspected.payload.lifetime.byStarter ?? {} }
       const history = inspected.payload.history ?? emptyHistory()
 
       options.runStats.replaceAll(lifetime, history)

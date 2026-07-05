@@ -4,6 +4,7 @@ import allCardsJson from "../allCards.json";
 import { FEAT_CATALOG, computeFragmentBalance } from "./catalog";
 import type { FeatDefinition } from "./types";
 import type { FeatsProfile } from "../../game/runtime/featsProfile";
+import { STARTER_DECK_IDS } from "../worldManifest";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -38,6 +39,20 @@ describe("FEAT_CATALOG", () => {
 
         const templateId = condition.statId.slice("witness.".length, -".resolvedCount".length);
         expect(Object.hasOwn(allCardsJson.cardTemplates, templateId)).toBe(true);
+      }
+    }
+  });
+
+  it("starter dot-path feat conditions reference real starter deck ids", () => {
+    for (const feat of FEAT_CATALOG) {
+      for (const condition of feat.conditions) {
+        if (typeof condition.statId !== "string" || !condition.statId.startsWith("starter.")) {
+          continue;
+        }
+
+        const rest = condition.statId.slice("starter.".length);
+        const starterId = rest.slice(0, rest.indexOf("."));
+        expect(STARTER_DECK_IDS).toContain(starterId);
       }
     }
   });

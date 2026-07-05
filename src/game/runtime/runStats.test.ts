@@ -182,6 +182,7 @@ describe("runStats collector", () => {
       createRunStarted({
         sessionId: "seen",
         worldId: "w",
+        starterId: "starter",
         seed: 1,
         appliedModifiers: [],
         timestamp: 1_000,
@@ -247,6 +248,7 @@ describe("runStats collector", () => {
       createRunStarted({
         sessionId: "stored-run",
         worldId: "w",
+        starterId: "starter",
         seed: 1,
         appliedModifiers: [],
         timestamp: 1_000,
@@ -477,6 +479,7 @@ describe("runStats collector", () => {
       createRunStarted({
         sessionId: "after-migration",
         worldId: "legacy",
+        starterId: "starter",
         seed: 12,
         appliedModifiers: [],
         timestamp: 3_000,
@@ -505,6 +508,7 @@ describe("runStats collector", () => {
       createRunStarted({
         sessionId: "skewed",
         worldId: "w",
+        starterId: "starter",
         seed: 1,
         appliedModifiers: [],
         timestamp: 5_000,
@@ -547,6 +551,7 @@ describe("runStats collector", () => {
       createRunStarted({
         sessionId: "visible-run",
         worldId: "w",
+        starterId: "starter",
         seed: 1,
         appliedModifiers: [],
         timestamp: 1_000,
@@ -591,6 +596,7 @@ describe("runStats collector", () => {
       createRunStarted({
         sessionId: "hidden-run",
         worldId: "w",
+        starterId: "starter",
         seed: 1,
         appliedModifiers: [],
         timestamp: 1_000,
@@ -631,6 +637,7 @@ describe("runStats collector", () => {
       createRunStarted({
         sessionId: "skewed-visible",
         worldId: "w",
+        starterId: "starter",
         seed: 1,
         appliedModifiers: [],
         timestamp: 5_000,
@@ -711,6 +718,7 @@ describe("runStats collector", () => {
       createRunStarted({
         sessionId: "a",
         worldId: "world-a",
+        starterId: "starter",
         seed: 1,
         appliedModifiers: [],
         timestamp: 1_000,
@@ -722,6 +730,7 @@ describe("runStats collector", () => {
       createRunStarted({
         sessionId: "b",
         worldId: "world-b",
+        starterId: "starter",
         seed: 2,
         appliedModifiers: [{ kind: "hard-mode" }],
         timestamp: 2_000,
@@ -794,6 +803,7 @@ describe("runStats collector", () => {
         createRunStarted({
           sessionId,
           worldId: "record-world",
+          starterId: "starter",
           seed: 1,
           appliedModifiers: [],
           timestamp: 1_000,
@@ -868,6 +878,114 @@ describe("runStats collector", () => {
     expect(collector.lastRunRecords()).toEqual({});
   });
 
+  it("folds runs into byStarter, keyed by the run's starter deck", () => {
+    const collector = createRunStatsCollector();
+    const state = createGameplaySession(catalog, worldData, 42).state;
+
+    function finishRun(sessionId: string, starterId: string, outcome: "won" | "lost"): void {
+      collector.subscriber(
+        createRunStarted({
+          sessionId,
+          worldId: "w",
+          starterId,
+          seed: 1,
+          appliedModifiers: [],
+          timestamp: 1_000,
+          initialEvents: [],
+          initialState: state,
+        }),
+      );
+      collector.subscriber(
+        createRunEnded({ sessionId, outcome, finalActIndex: 0, timestamp: 2_000, finalState: state }),
+      );
+    }
+
+    finishRun("contractor-win", "contractor", "won");
+    finishRun("contractor-loss", "contractor", "lost");
+    finishRun("default-win", "starter", "won");
+
+    expect(collector.lifetime().byStarter).toEqual({
+      contractor: { runs: 2, wins: 1, losses: 1, abandoned: 0 },
+      starter: { runs: 1, wins: 1, losses: 0, abandoned: 0 },
+    });
+  });
+
+  it("defaults byStarter to the base deck when RunRecord has no starterId (legacy shape)", () => {
+    const collector = createRunStatsCollector();
+    const state = createGameplaySession(catalog, worldData, 42).state;
+
+    // Constructing RunEnded/RunStarted through createRunStarted always sets starterId now,
+    // so this simulates a pre-migration RunRecord folding directly.
+    collector.subscriber(
+      createRunStarted({
+        sessionId: "legacy-shape",
+        worldId: "w",
+        starterId: "starter",
+        seed: 1,
+        appliedModifiers: [],
+        timestamp: 1_000,
+        initialEvents: [],
+        initialState: state,
+      }),
+    );
+    collector.subscriber(
+      createRunEnded({
+        sessionId: "legacy-shape",
+        outcome: "won",
+        finalActIndex: 0,
+        timestamp: 2_000,
+        finalState: state,
+      }),
+    );
+
+    expect(collector.lifetime().byStarter["starter"]).toEqual({
+      runs: 1,
+      wins: 1,
+      losses: 0,
+      abandoned: 0,
+    });
+  });
+
+  it("loads a stored v2 payload that predates byStarter without discarding it", () => {
+    const storage = createMemoryStorage({
+      [RUN_STATS_STORAGE_KEY]: JSON.stringify({
+        version: 2,
+        runs: 3,
+        wins: 2,
+        losses: 1,
+        abandoned: 0,
+        turns: 10,
+        cardsPlayed: 5,
+        progressDealt: 20,
+        damageTaken: 3,
+        hazardsResolved: 1,
+        hazardsDiscarded: 0,
+        cardsDiscarded: 0,
+        durationMs: 5_000,
+        byWorld: { w: { runs: 3, wins: 2, losses: 1, abandoned: 0 } },
+        // no byStarter key — simulates a save persisted before this field existed
+      }),
+    });
+
+    const collector = createRunStatsCollector({ storage });
+
+    expect(collector.lifetime().runs).toBe(3);
+    expect(collector.lifetime().byStarter).toEqual({});
+
+    // Folding a new run must not throw now that byStarter starts empty.
+    const session = createGameplaySession(catalog, worldData, 42, {
+      makeSessionId: () => "after-legacy-load",
+      starterId: "contractor",
+      subscribers: [collector.subscriber],
+    });
+    session.dispatch({ type: "EndTurn" });
+    session.abandon();
+
+    expect(collector.lifetime().byStarter).toEqual({
+      contractor: { runs: 1, wins: 0, losses: 0, abandoned: 1 },
+    });
+  });
+
   it("returns lifetime copies that cannot mutate collector state", () => {
     const collector = createRunStatsCollector();
     const copy = collector.lifetime() as { runs: number };
@@ -884,6 +1002,7 @@ describe("runStats collector", () => {
       createRunStarted({
         sessionId: "heal-run",
         worldId: "w",
+        starterId: "starter",
         seed: 1,
         appliedModifiers: [],
         timestamp: 1_000,
@@ -926,6 +1045,7 @@ describe("runStats collector", () => {
       createRunStarted({
         sessionId: "hp-run",
         worldId: "w",
+        starterId: "starter",
         seed: 1,
         appliedModifiers: [],
         timestamp: 1_000,
@@ -984,6 +1104,7 @@ describe("runStats collector", () => {
       createRunStarted({
         sessionId: "opening-heal",
         worldId: "w",
+        starterId: "starter",
         seed: 1,
         appliedModifiers: [],
         timestamp: 1_000,

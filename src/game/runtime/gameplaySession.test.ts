@@ -114,6 +114,7 @@ describe("gameplaySession", () => {
     const started = requireRunStarted(items[0]);
     expect(started.sessionId).toBe("session-42");
     expect(started.worldId).toBe(worldData.worldId);
+    expect(started.starterId).toBe("starter");
     expect(started.seed).toBe(42);
     expect(started.appliedModifiers).toEqual([{ kind: "hard-mode" }]);
     expect(started.timestamp).toBe(1_000);
@@ -122,6 +123,24 @@ describe("gameplaySession", () => {
 
     session.subscribe((item) => items.push(item));
     expect(items).toHaveLength(1);
+  });
+
+  it("stamps RunStarted with the given starterId, defaulting to \"starter\"", () => {
+    const items: RunStreamItem[] = [];
+
+    createGameplaySession(catalog, worldData, 42, {
+      makeSessionId: () => "session-starter-override",
+      starterId: "contractor",
+      subscribers: [(item) => items.push(item)],
+    });
+    expect(requireRunStarted(items[0]).starterId).toBe("contractor");
+
+    items.length = 0;
+    createGameplaySession(catalog, worldData, 42, {
+      makeSessionId: () => "session-starter-default",
+      subscribers: [(item) => items.push(item)],
+    });
+    expect(requireRunStarted(items[0]).starterId).toBe("starter");
   });
 
   it("creates a default session id when crypto.randomUUID is unavailable", () => {

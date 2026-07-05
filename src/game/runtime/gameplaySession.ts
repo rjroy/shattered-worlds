@@ -32,6 +32,8 @@ export interface GameplaySession extends GameCore {
 export interface GameplaySessionOptions {
   readonly appliedModifiers?: readonly SetupModifier[];
   readonly runModifiers?: RunModifiers;
+  /** Starter deck used to build this run's world. Defaults to "starter". */
+  readonly starterId?: string;
   /** Stamps every stream item this session emits. Defaults to Date.now. */
   readonly clock?: Clock | undefined;
   readonly makeSessionId?: () => SessionId;
@@ -133,6 +135,7 @@ export function createGameplaySession(
     createRunStarted({
       sessionId,
       worldId: core.state.worldId,
+      starterId: options.starterId ?? "starter",
       seed,
       appliedModifiers: options.appliedModifiers ?? [],
       timestamp: clock(),

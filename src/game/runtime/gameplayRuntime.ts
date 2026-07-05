@@ -130,15 +130,15 @@ export function createGameplayRuntime(options: GameplayRuntimeOptions = {}): Gam
     startSession(worldId, seed, sessionOptions = {}) {
       const { world: injectedWorld, ...forwardOptions } = sessionOptions;
       const activeProfile = unlocksStore.getProfile();
-      const assembled =
-        injectedWorld ??
-        buildWorld(worldId, resolveStarterDeckId(activeProfile, UNLOCK_CATALOG) ?? "starter");
+      const starterId = resolveStarterDeckId(activeProfile, UNLOCK_CATALOG) ?? "starter";
+      const assembled = injectedWorld ?? buildWorld(worldId, starterId);
       const runModifiers = buildRunModifiers(activeProfile.activated, UNLOCK_CATALOG);
       const appliedModifiers = activeProfile.activated.map((id) => ({ kind: "unlock", id }));
       const session = createGameplaySession(assembled.catalog, assembled.worldData, seed, {
         ...forwardOptions,
         runModifiers,
         appliedModifiers,
+        starterId,
         stream,
         clock: options.clock,
       });

@@ -44,6 +44,8 @@ const RESOLVE_STARTER_DECKS: Record<string, readonly StarterEntry[]> = {
   surveyor: (surveyorJson as unknown as { starterDeck: readonly StarterEntry[] }).starterDeck,
 };
 
+export const STARTER_DECK_IDS: readonly string[] = Object.keys(RESOLVE_STARTER_DECKS);
+
 // ---------------------------------------------------------------------------
 // Boon pools for fortune cards
 // ---------------------------------------------------------------------------

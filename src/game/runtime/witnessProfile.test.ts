@@ -81,6 +81,7 @@ describe("createWitnessCollector", () => {
       createRunStarted({
         sessionId: "run-7",
         worldId: "test-world",
+        starterId: "starter",
         seed: 1,
         appliedModifiers: [],
         timestamp: 1_000,
@@ -149,6 +150,7 @@ describe("createWitnessCollector", () => {
       createRunStarted({
         sessionId: "run-8",
         worldId: "test-world",
+        starterId: "starter",
         seed: 2,
         appliedModifiers: [],
         timestamp: 2_000,
@@ -261,6 +263,7 @@ describe("createWitnessCollector", () => {
       createRunStarted({
         sessionId: "run-a",
         worldId: "test-world",
+        starterId: "starter",
         seed: 10,
         appliedModifiers: [],
         timestamp: 100,
@@ -284,6 +287,7 @@ describe("createWitnessCollector", () => {
       createRunStarted({
         sessionId: "run-b",
         worldId: "test-world",
+        starterId: "starter",
         seed: 11,
         appliedModifiers: [],
         timestamp: 300,

@@ -42,6 +42,7 @@ function recordLostRun(
     createRunStarted({
       sessionId,
       worldId: "transfer-world",
+      starterId: "starter",
       seed: 1,
       appliedModifiers: [],
       timestamp: 1_000,
@@ -190,6 +191,7 @@ describe("statsTransfer", () => {
       createRunStarted({
         sessionId: "x",
         worldId: "w",
+        starterId: "starter",
         seed: 1,
         appliedModifiers: [],
         timestamp: 0,
@@ -231,6 +233,7 @@ describe("statsTransfer", () => {
       createRunStarted({
         sessionId: "local",
         worldId: "w",
+        starterId: "starter",
         seed: 1,
         appliedModifiers: [],
         timestamp: 0,

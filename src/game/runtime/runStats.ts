@@ -27,6 +27,8 @@ export interface RunStatsStorage {
 export interface RunRecord {
   readonly sessionId: SessionId
   readonly worldId: string
+  /** Starter deck used for this run. Absent on records persisted before this field existed. */
+  readonly starterId?: string
   readonly seed: number
   /** Setup that produced this result, copied from RunStarted (e.g. future meta-progression modifiers). */
   readonly appliedModifiers: readonly SetupModifier[]
@@ -81,6 +83,7 @@ export interface LifetimeStats {
    */
   readonly durationMs: number
   readonly byWorld: Readonly<Record<string, WorldStats>>
+  readonly byStarter: Readonly<Record<string, WorldStats>>
   readonly lastRun?: RunRecord
 }
 
@@ -143,6 +146,7 @@ export interface LifetimeStatsV1 {
 
 type RunAccumulator = {
   worldId: string
+  starterId: string
   seed: number
   appliedModifiers: readonly SetupModifier[]
   startedAt: number
@@ -211,6 +215,7 @@ function emptyLifetime(): LifetimeStats {
     cardsDiscarded: 0,
     durationMs: 0,
     byWorld: {},
+    byStarter: {},
   }
 }
 
@@ -265,6 +270,7 @@ export function isRunRecord(value: unknown): value is RunRecord {
 
   // Optional fields: absent is OK; present must be the right type.
   if (
+    (run.starterId !== undefined && typeof run.starterId !== 'string') ||
     !isOptionalFiniteNumber(run.finalHp) ||
     !isOptionalFiniteNumber(run.healingReceived) ||
     !isOptionalFiniteNumber(run.cardsFrozen) ||
@@ -312,6 +318,10 @@ export function isLifetimeStatsV2(value: unknown): value is LifetimeStats {
     typeof stats.byWorld === 'object' &&
     stats.byWorld !== null &&
     Object.values(stats.byWorld).every(isWorldStats) &&
+    (stats.byStarter === undefined ||
+      (typeof stats.byStarter === 'object' &&
+        stats.byStarter !== null &&
+        Object.values(stats.byStarter).every(isWorldStats))) &&
     (stats.lastRun === undefined || isRunRecord(stats.lastRun))
   )
 }
@@ -343,6 +353,7 @@ export function migrateLifetimeV1toV2(stats: LifetimeStatsV1): LifetimeStats {
   return {
     ...statsWithoutLastRun,
     version: 2,
+    byStarter: {},
     byWorld: Object.fromEntries(
       Object.entries(stats.byWorld).map(([worldId, world]) => [
         worldId,
@@ -376,7 +387,12 @@ function loadLifetime(storage: RunStatsStorage | undefined, key: string): Loaded
     const raw = storage.getItem(key)
     if (raw !== null) {
       const parsed = parseStoredLifetime(raw, key)
-      if (isLifetimeStatsV2(parsed)) return { lifetime: parsed, removeLegacyAfterPersist: false }
+      if (isLifetimeStatsV2(parsed)) {
+        return {
+          lifetime: { ...parsed, byStarter: parsed.byStarter ?? {} },
+          removeLegacyAfterPersist: false,
+        }
+      }
 
       console.warn('[runStats] discarding stored stats with unknown shape or version', { key })
       return { lifetime: emptyLifetime(), removeLegacyAfterPersist: false }
@@ -475,6 +491,7 @@ function finalizeRun(accumulator: RunAccumulator, ended: RunEnded): RunRecord {
   return {
     sessionId: ended.sessionId,
     worldId: accumulator.worldId,
+    starterId: accumulator.starterId,
     seed: accumulator.seed,
     appliedModifiers: accumulator.appliedModifiers,
     outcome: ended.outcome,
@@ -507,6 +524,8 @@ function finalizeRun(accumulator: RunAccumulator, ended: RunEnded): RunRecord {
 
 function foldIntoLifetime(lifetime: LifetimeStats, run: RunRecord): { lifetime: LifetimeStats; newRecords: RunRecordRecords } {
   const world = lifetime.byWorld[run.worldId] ?? { runs: 0, wins: 0, losses: 0, abandoned: 0 }
+  const starterId = run.starterId ?? 'starter'
+  const starter = lifetime.byStarter[starterId] ?? { runs: 0, wins: 0, losses: 0, abandoned: 0 }
   const completed = run.outcome === 'won' || run.outcome === 'lost'
   const fewestTurnsWin =
     run.outcome === 'won' && (world.fewestTurnsWin === undefined || run.turns < world.fewestTurnsWin)
@@ -545,6 +564,15 @@ function foldIntoLifetime(lifetime: LifetimeStats, run: RunRecord): { lifetime: 
           ...(mostProgressInRun || world.mostProgressInRun !== undefined
             ? { mostProgressInRun: mostProgressInRun ? run.progressDealt : world.mostProgressInRun }
             : {}),
+        },
+      },
+      byStarter: {
+        ...lifetime.byStarter,
+        [starterId]: {
+          runs: starter.runs + 1,
+          wins: starter.wins + (run.outcome === 'won' ? 1 : 0),
+          losses: starter.losses + (run.outcome === 'lost' ? 1 : 0),
+          abandoned: starter.abandoned + (run.outcome === 'abandoned' ? 1 : 0),
         },
       },
       lastRun: run,
@@ -588,6 +616,7 @@ export function createRunStatsCollector(options: RunStatsCollectorOptions = {}):
   function onRunStarted(item: RunStarted): void {
     const accumulator: RunAccumulator = {
       worldId: item.worldId,
+      starterId: item.starterId,
       seed: item.seed,
       appliedModifiers: item.appliedModifiers,
       startedAt: item.timestamp,
