@@ -92,7 +92,7 @@ describe("The Beginning world data", () => {
 
 // This plan's central mechanic (see the-beginning.md's deviation section):
 // every grief-release reward card strips its keyword from a hand card AND, in
-// the same effect Sequence, applies Acceptance:15 to Destiny by name via the
+// the same effect Sequence, applies Acceptance:2 to Destiny by name via the
 // preferWorldCardByTemplateId ApplyKeyword target — a no-op if Destiny isn't
 // in hand, deterministic and never leaking onto any other card (e.g. Door).
 describe("The Beginning isolate effects — RemoveKeyword + Acceptance-onto-Destiny", () => {
@@ -104,7 +104,7 @@ describe("The Beginning isolate effects — RemoveKeyword + Acceptance-onto-Dest
   ];
 
   it.each(cases)(
-    "%s removes %s from its carrier and applies Acceptance:15 to Destiny",
+    "%s removes %s from its carrier and applies Acceptance:2 to Destiny",
     (reward, keyword, carrierTemplateId) => {
       const { catalog, worldData } = buildWorld(WORLD_ID);
       const { state: base } = createWorld(catalog, worldData, 1, DEFAULT_RUN_MODIFIERS);
@@ -132,11 +132,11 @@ describe("The Beginning isolate effects — RemoveKeyword + Acceptance-onto-Dest
 
       // The grief keyword is gone from its carrier...
       expect(appliedKeywordValue(carrierAfter, keyword)).toBe(0);
-      // ...and Destiny picked up Acceptance:15, exactly zeroing its
+      // ...and Destiny picked up Acceptance:2, exactly zeroing its
       // unmodified cost of 15 on first contact (the design doc's chosen
       // value — see the-beginning-card-design.md).
-      expect(appliedKeywordValue(destinyAfter, "Acceptance")).toBe(15);
-      expect(effectiveWorldCardCost(destinyAfter, result.state)).toBe(0);
+      expect(appliedKeywordValue(destinyAfter, "Acceptance")).toBe(2);
+      expect(effectiveWorldCardCost(destinyAfter, result.state)).toBe(13);
     },
   );
 
