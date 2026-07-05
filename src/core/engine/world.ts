@@ -104,13 +104,8 @@ export function createWorld(
     braceCharges: mods.extraStartBrace,
     // Starting keywordGuard is seeded from meta-progression (see
     // buildRunModifiers's destinyWeight aggregation); 0 for the default
-    // modifiers. Scoped to "the-beginning" only: extraStartKeywordGuard grows
-    // with a player's overall accumulated destinyWeight, and letting it leak
-    // into every other world would retroactively buff their already-shipped
-    // balance. pendingKeywordNextWorldCard is omitted (absent, not
-    // `undefined`) exactly like pendingForceDestroySource, since
-    // exactOptionalPropertyTypes forbids an explicit `undefined` literal.
-    keywordGuard: world.worldId === "the-beginning" ? mods.extraStartKeywordGuard : 0,
+    // modifiers.
+    keywordGuard: mods.extraStartKeywordGuard,
     progressDealtThisTurn: 0,
     pendingBoonChoices: [],
     pendingKeywordNextWorldCard: [],

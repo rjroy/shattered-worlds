@@ -7,7 +7,8 @@ import { WORLD_CONSTS } from "./world";
  * are starting points — adjust them as playtesting reveals what drives tension.
  */
 export function intensity(state: GameState): number {
-  const actFraction = Math.min(1, state.actIndex / state.totalActs);
+  const actPeak = Math.max(0, Math.min(1, (state.actIndex + 1) / state.totalActs));
+  const actMin = Math.max(0, Math.min(1, state.actIndex / state.totalActs));
 
   // Clamp so heal-above-max (hp > 10) or death (hp = 0) stay in range.
   const rawHpFraction = 1 - state.hp / WORLD_CONSTS.startHp;
@@ -16,5 +17,5 @@ export function intensity(state: GameState): number {
   const worldsInHand = state.hand.filter((c) => c.kind === "world").length;
   const heldHazardFraction = Math.min(1, worldsInHand / WORLD_CONSTS.baseHandSize);
 
-  return Math.min(1, 0.75 * actFraction + 0.9 * hpFraction + 0.9 * heldHazardFraction);
+  return Math.max(actMin, Math.min(actPeak, 0.9 * hpFraction + 0.9 * heldHazardFraction));
 }
