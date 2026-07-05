@@ -150,7 +150,7 @@ describe("buildRunModifiers", () => {
       offeredCount: 3,
       chooseCount: 1,
     });
-    expect(mods.actBoon?.poolTemplateIds).toHaveLength(7);
+    expect(mods.actBoon?.poolTemplateIds).toHaveLength(8);
   });
 
   it("appends active card-modifier unlock effects to run modifiers", () => {

@@ -75,20 +75,22 @@ describe("New Derelict world data", () => {
 
   it("authors the authorized discard-recall substitutions and boon pool", () => {
     const { catalog } = buildWorld(WORLD_ID);
-    expect(catalog["Follow the Checklist"]?.kind === "player" && catalog["Follow the Checklist"].effect)
-      .toEqual({
-        kind: "Sequence",
-        steps: [
-          { kind: "ReturnPlayerDiscardToTop", min: 0, max: 1 },
-          { kind: "Draw", player: 1 },
-          { kind: "Brace", amount: 1 },
-        ],
-      });
+    expect(
+      catalog["Follow the Checklist"]?.kind === "player" && catalog["Follow the Checklist"].effect,
+    ).toEqual({
+      kind: "Sequence",
+      steps: [
+        { kind: "ReturnPlayerDiscardToTop", min: 0, max: 1 },
+        { kind: "Draw", player: 1 },
+        { kind: "Brace", amount: 1 },
+      ],
+    });
     expect(worldTemplate("Gravity Priority Shift").onPartialClear).toEqual({
       kind: "RecallPlayerDiscard",
       policy: "highestCost",
     });
     expect(FORTUNE_BOON_POOLS["pool-derelict-override"]).toEqual([
+      "Loaded Shotgun",
       "Emergency Route",
       "Override Badge",
       "Manual Release",
@@ -103,7 +105,13 @@ describe("New Derelict isolate effects", () => {
     const { state: base } = createWorld(catalog, worldData, 1, DEFAULT_RUN_MODIFIERS);
     const card = base.worldDraw.find((candidate) => candidate.templateId === "Bulkhead 7-C Seals")!;
     const state: GameState = { ...base, hand: [card], worldDraw: [] };
-    const result = applyEffect(catalog, state, worldTemplate("Bulkhead 7-C Seals").onEndOfTurn, undefined, card.id);
+    const result = applyEffect(
+      catalog,
+      state,
+      worldTemplate("Bulkhead 7-C Seals").onEndOfTurn,
+      undefined,
+      card.id,
+    );
     expect(appliedKeywordValue(result.state.hand[0]!, "Lockdown")).toBe(1);
     expect(result.state.worldDraw[0]?.templateId).toBe("Gravity Priority Shift");
   });
@@ -180,10 +188,18 @@ describe("New Derelict isolate effects", () => {
     const first = state.worldDraw[0]!;
     const second = { ...state.worldDraw[1]!, id: "999" };
     const staged = { ...state, hand: [second, first] };
-    const sealed = applyEffect(catalog, staged, worldTemplate("Administrative Misfile").onEndOfTurn);
-    expect(appliedKeywordValue(sealed.state.hand.find((card) => card.id === first.id)!, "Lockdown")).toBe(1);
+    const sealed = applyEffect(
+      catalog,
+      staged,
+      worldTemplate("Administrative Misfile").onEndOfTurn,
+    );
+    expect(
+      appliedKeywordValue(sealed.state.hand.find((card) => card.id === first.id)!, "Lockdown"),
+    ).toBe(1);
     const granted = applyEffect(catalog, staged, worldTemplate("Administrative Misfile").onCleared);
-    expect(granted.state.playerDiscard.some((card) => card.templateId === "Override Badge")).toBe(true);
+    expect(granted.state.playerDiscard.some((card) => card.templateId === "Override Badge")).toBe(
+      true,
+    );
   });
 
   it("Systems Panel offers the override pool", () => {
@@ -229,8 +245,14 @@ describe("New Derelict isolate effects", () => {
     const { catalog, worldData } = buildWorld(WORLD_ID);
     const { state } = createWorld(catalog, worldData, 6, DEFAULT_RUN_MODIFIERS);
     const hazard = locked(state.worldDraw[0]!);
-    const result = applyEffect(catalog, { ...state, hand: [hazard] }, worldTemplate("The Order Arrives").onEndOfTurn);
-    expect(result.events).toContainEqual(expect.objectContaining({ type: "DamageDealt", amount: 3 }));
+    const result = applyEffect(
+      catalog,
+      { ...state, hand: [hazard] },
+      worldTemplate("The Order Arrives").onEndOfTurn,
+    );
+    expect(result.events).toContainEqual(
+      expect.objectContaining({ type: "DamageDealt", amount: 3 }),
+    );
     expect(result.state.worldDraw[0]?.templateId).toBe("The Order Arrives");
   });
 });
@@ -252,7 +274,9 @@ describe("New Derelict seeded policy lines", () => {
       prompt = cleared.state;
       promptProgress += card.cost;
       expect(cleared.events.some((event) => event.type === "HazardResolved")).toBe(true);
-      expect(prompt.hand.filter((held) => appliedKeywordValue(held, "Lockdown") > 0)).toHaveLength(0);
+      expect(prompt.hand.filter((held) => appliedKeywordValue(held, "Lockdown") > 0)).toHaveLength(
+        0,
+      );
     }
     expect(promptProgress).toBe(6);
 
@@ -296,13 +320,16 @@ describe("New Derelict seeded policy lines", () => {
       bulkheadB.id,
     ).state;
     const lockedCards = clustered.hand.filter(
-      (card): card is WorldCard => card.kind === "world" && appliedKeywordValue(card, "Lockdown") > 0,
+      (card): card is WorldCard =>
+        card.kind === "world" && appliedKeywordValue(card, "Lockdown") > 0,
     );
     expect(lockedCards).toHaveLength(3);
     expect(effectiveWorldCardCost(lockedCards[1]!, clustered)).toBe(lockedCards[1]!.cost + 1);
 
     const released = applyEffect(catalog, clustered, release.effect);
-    expect(released.state.hand.every((card) => appliedKeywordValue(card, "Lockdown") === 0)).toBe(true);
+    expect(released.state.hand.every((card) => appliedKeywordValue(card, "Lockdown") === 0)).toBe(
+      true,
+    );
     const reopened = released.state.hand.find(
       (card): card is WorldCard => card.kind === "world" && card.id === lockedCards[1]!.id,
     )!;
