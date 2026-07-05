@@ -1,4 +1,4 @@
-import type { CounterSpec, KeywordName } from "../model/types";
+import type { CounterSpec, KeywordBonus } from "../model/types";
 import type { EffectLine, EffectToken, IconId, ValueEmphasis } from "../view/effectGlyphs";
 
 export function icon(id: IconId): EffectToken {
@@ -21,10 +21,7 @@ export function rider(tokens: EffectToken[]): EffectLine {
   return { tokens, role: "rider" };
 }
 
-export function bonusRider(
-  bonus: { tag: KeywordName; amount: number },
-  emphasis?: ValueEmphasis,
-): EffectLine {
+export function bonusRider(bonus: KeywordBonus, emphasis?: ValueEmphasis): EffectLine {
   return rider([value(`+${bonus.amount}`, emphasis), text("vs"), text(bonus.tag)]);
 }
 

@@ -49,6 +49,8 @@ function applyCascadeEffects(catalog: CardCatalog, original: ReduceResult): Redu
           offer.event,
         );
       }
+
+      case "ProgressDealt":
       case "KeywordApplied":
       case "KeywordReduced":
       case "KeywordRemoved": {

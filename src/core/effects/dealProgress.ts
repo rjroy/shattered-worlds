@@ -115,15 +115,15 @@ export function dealProgress(
   const hazard = state.hand.find((c): c is WorldCard => c.kind === "world" && c.id === hazardId);
   if (hazard === undefined) return { state, events: [] };
 
-  const getBonus = (hazard: WorldCard, bonus: KeywordBonus) => {
-    return hasKeyword(hazard, bonus.tag) ? bonus.amount + state.runModifiers.keywordDamageBonus : 0;
+  const getBonus = (hazard: WorldCard, kb: KeywordBonus | undefined) => {
+    return kb !== undefined && hasKeyword(hazard, kb.tag)
+      ? kb.amount + state.runModifiers.keywordDamageBonus
+      : 0;
   };
 
   const bonusAmount = Array.isArray(bonus)
     ? bonus.reduce((sum, kb) => getBonus(hazard, kb), 0)
-    : bonus !== undefined
-      ? getBonus(hazard, bonus)
-      : 0;
+    : getBonus(hazard, bonus);
   const amount = base + bonusAmount;
 
   const newProgress = {
@@ -208,23 +208,26 @@ export class DealProgressHandler extends HazardTargetingHandler<DealProgressEffe
   }
 
   override describe(effect: DealProgressEffect): string[] {
-    const toString = (bonus: KeywordBonus) => `(+${bonus.amount} vs ${bonus.tag})`;
+    const toString = (bonus: KeywordBonus | undefined) =>
+      bonus !== undefined ? `\n(+${bonus.amount} vs ${bonus.tag})` : "";
     const bonus = Array.isArray(effect.bonus)
-      ? "\n" + effect.bonus.map(toString).join("\n")
-      : effect.bonus
-        ? "\n" + toString(effect.bonus)
-        : "";
+      ? effect.bonus.map(toString).join("")
+      : toString(effect.bonus);
     return [`Add ${effect.base} Progress${bonus}`];
   }
 
   override compile(effect: DealProgressEffect, _ctx: CompileContext): EffectLine[] {
     const lines = [main([text("+"), value(`${effect.base}`, "progress"), icon("progress")])];
-    if (effect.bonus) {
-      if (Array.isArray(effect.bonus)) {
-        effect.bonus.forEach((kb) => lines.push(bonusRider(kb, "progress")));
-      } else {
-        lines.push(bonusRider(effect.bonus, "progress"));
+    // dump json of effect
+    console.log(`TEST: ${JSON.stringify(effect)}`);
+    if (Array.isArray(effect.bonus)) {
+      for (const kb of effect.bonus) {
+        console.log(`Adding a bonus: ${kb.tag}`);
+        lines.push(bonusRider(kb, "progress"));
       }
+    } else if (effect.bonus !== undefined) {
+      console.log(`Adding the bonus: ${effect.bonus.tag}`);
+      lines.push(bonusRider(effect.bonus, "progress"));
     }
     return lines;
   }
@@ -271,7 +274,6 @@ export class DealProgressHandler extends HazardTargetingHandler<DealProgressEffe
 // ---------------------------------------------------------------------------
 // DealProgressScaled — hazard-targeting, amount scales with a counter
 // ---------------------------------------------------------------------------
-
 /**
  * `DealProgressScaled`: deal `base + amount * counter` progress to one chosen
  * hazard. Pure inherit of the hazard base — `structuralSpec`, `isPlayable`, and
@@ -327,14 +329,12 @@ export class DealProgressAllHandler extends EffectHandler<DealProgressAllEffect>
   }
 
   override describe(effect: DealProgressAllEffect): string[] {
-    const getBonus = (bonus: KeywordBonus) => {
-      return bonus ? `(+${bonus.amount} vs ${bonus.tag})` : "";
+    const getBonus = (kb: KeywordBonus | undefined) => {
+      return kb ? `\n(+${kb.amount} vs ${kb.tag})` : "";
     };
     const bonus = Array.isArray(effect.bonus)
-      ? "\n" + effect.bonus.map(getBonus).join("\n")
-      : effect.bonus
-        ? "\n" + getBonus(effect.bonus)
-        : "";
+      ? effect.bonus.map(getBonus).join("")
+      : getBonus(effect.bonus);
     return [`${effect.base} Progress to every hazard${bonus}`];
   }
 
@@ -343,9 +343,11 @@ export class DealProgressAllHandler extends EffectHandler<DealProgressAllEffect>
       main([text("+"), value(`${effect.base}`, "progress"), text("all"), icon("progressAll")]),
     ];
     if (Array.isArray(effect.bonus)) {
-      effect.bonus.forEach((kb) => {
-        lines.push(bonusRider(kb, "progress"));
-      });
+      for (const kb of effect.bonus) {
+        if (kb !== undefined) {
+          lines.push(bonusRider(kb, "progress"));
+        }
+      }
     } else if (effect.bonus) {
       lines.push(bonusRider(effect.bonus, "progress"));
     }
