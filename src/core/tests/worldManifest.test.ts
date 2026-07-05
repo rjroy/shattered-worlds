@@ -181,7 +181,7 @@ describe.each(worldIds)('world "%s"', (worldId) => {
     expect(acts).toHaveLength(3);
     const finalAct = acts[acts.length - 1]!;
     const lastCard = finalAct.cards[finalAct.cards.length - 1]!;
-    const expectedFinale = worldId === "the-beginning" ? "The Walker - No Door" : "The Walker";
+    const expectedFinale = worldId === "the-beginning" ? "Grief" : "The Walker";
     expect(lastCard.templateId).toBe(expectedFinale);
   });
 

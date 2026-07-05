@@ -2519,20 +2519,32 @@
       "onDraw": { "kind": "None" },
       "onEndOfTurn": { "kind": "None" }
     },
-    "The Walker - No Door": {
+    "Grief": {
       "kind": "world",
       "name": "The Walker",
       "insetKey": "inset-walker",
-      "cost": 10,
+      "cost": 1,
       "rarity": "legendary",
       "keywords": [],
-      "discardable": true,
+      "discardable": false,
       "canExile": false,
       "onDiscarded": { "kind": "None" },
-      "onCleared": { "kind": "None" },
       "onPartialClear": { "kind": "None" },
       "onDraw": { "kind": "None" },
-      "onEndOfTurn": { "kind": "None" }
+      "onCleared": {
+        "kind": "ApplyKeyword",
+        "keyword": "Acceptance",
+        "value": 5,
+        "target": "preferWorldCardByTemplateId",
+        "templateId": "Destiny"
+      },
+      "onEndOfTurn": {
+        "kind": "ApplyKeyword",
+        "keyword": "Acceptance",
+        "value": 1,
+        "target": "preferWorldCardByTemplateId",
+        "templateId": "Destiny"
+      }
     },
     "Summon Door": {
       "kind": "player",
@@ -3006,6 +3018,62 @@
         ]
       }
     },
+    "Anguish": {
+      "kind": "world",
+      "name": "Anguish",
+      "insetKey": "questions-inset-destiny",
+      "rarity": "signature",
+      "cost": 2,
+      "keywords": [],
+      "discardable": true,
+      "onDiscarded": { "kind": "Damage", "amount": 1 },
+      "onCleared": { "kind": "None" },
+      "onPartialClear": { "kind": "None" },
+      "onDraw": { "kind": "None" },
+      "onEndOfTurn": { "kind": "None" }
+    },
+    "Sadness": {
+      "kind": "world",
+      "name": "Sadness",
+      "insetKey": "questions-inset-destiny",
+      "rarity": "signature",
+      "cost": 2,
+      "keywords": [],
+      "discardable": true,
+      "onDiscarded": { "kind": "ForceDestroy", "amount": 1 },
+      "onCleared": { "kind": "None" },
+      "onPartialClear": { "kind": "None" },
+      "onDraw": { "kind": "None" },
+      "onEndOfTurn": { "kind": "None" }
+    },
+    "Numbness": {
+      "kind": "world",
+      "name": "Numbness",
+      "insetKey": "questions-inset-destiny",
+      "rarity": "signature",
+      "cost": 2,
+      "keywords": [],
+      "discardable": true,
+      "onDiscarded": { "kind": "FreezeCards", "amount": 1, "duration": 1 },
+      "onCleared": { "kind": "None" },
+      "onPartialClear": { "kind": "None" },
+      "onDraw": { "kind": "None" },
+      "onEndOfTurn": { "kind": "None" }
+    },
+    "Desperation": {
+      "kind": "world",
+      "name": "Desperation",
+      "insetKey": "questions-inset-destiny",
+      "rarity": "signature",
+      "cost": 2,
+      "keywords": [],
+      "discardable": true,
+      "onDiscarded": { "kind": "DiscardThenDraw", "player": 1 },
+      "onCleared": { "kind": "None" },
+      "onPartialClear": { "kind": "None" },
+      "onDraw": { "kind": "None" },
+      "onEndOfTurn": { "kind": "None" }
+    },
     "Destiny": {
       "kind": "world",
       "name": "The Destiny",
@@ -3014,9 +3082,18 @@
       "cost": 15,
       "keywords": [],
       "discardable": true,
-      "onDiscarded": { "kind": "None" },
+      "onDiscarded": { "kind": "Damage", "amount": 1 },
       "onCleared": { "kind": "SurviveWorld" },
-      "onPartialClear": { "kind": "None" },
+      "onPartialClear": {
+        "kind": "Random",
+        "description": "Manifest Grief",
+        "set": [
+          { "kind": "AddWorldCardToDeck", "template": "Anguish", "bTop": true },
+          { "kind": "AddWorldCardToDeck", "template": "Sadness", "bTop": true },
+          { "kind": "AddWorldCardToDeck", "template": "Numbness", "bTop": true },
+          { "kind": "AddWorldCardToDeck", "template": "Desperation", "bTop": true }
+        ]
+      },
       "onDraw": { "kind": "None" },
       "onEndOfTurn": {
         "kind": "Sequence",

@@ -2,7 +2,7 @@
 import type { CardEffect } from "../model/types";
 import type { EffectHandler } from "./EffectHandler";
 import type { ConnectorStyle } from "./EffectContext";
-import { ModalHandler, SequenceHandler } from "./composite";
+import { ModalHandler, RandomHandler, SequenceHandler } from "./composite";
 import { OfferBoonHandler } from "./boonChoice";
 import {
   DealProgressHandler,
@@ -50,6 +50,7 @@ export const EFFECTS: {
 } = {
   Modal: new ModalHandler(),
   Sequence: new SequenceHandler(),
+  Random: new RandomHandler(),
   DealProgress: new DealProgressHandler(),
   DealProgressScaled: new DealProgressScaledHandler(),
   DealProgressAll: new DealProgressAllHandler(),

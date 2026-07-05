@@ -276,6 +276,8 @@ function cloneEffect(effect: CardEffect): CardEffect {
       return { kind: "Modal", branches: effect.branches.map(cloneEffect) };
     case "Sequence":
       return { kind: "Sequence", steps: effect.steps.map(cloneEffect) };
+    case "Random":
+      return { kind: "Random", description: effect.description, set: effect.set.map(cloneEffect) };
     case "Damage":
       return { ...effect };
     case "DamageScaled":

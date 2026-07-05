@@ -84,6 +84,7 @@ export type CardEffect =
   | { kind: "AddThreatToWorldDeck" }
   | { kind: "Modal"; branches: readonly CardEffect[] }
   | { kind: "Sequence"; steps: readonly CardEffect[] }
+  | { kind: "Random"; set: readonly CardEffect[]; description: string }
   | { kind: "Damage"; amount: number }
   | { kind: "DamageScaled"; base: number; per: CounterSpec; amount: number }
   // Raises the player's global Light level. No target; mirrors GainEnergy/Heal.

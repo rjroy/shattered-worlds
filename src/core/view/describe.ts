@@ -105,6 +105,7 @@ function dealProgressOf(
       return null;
     }
     // Non-progress effects: nothing to preview as Progress math.
+    case "Random":
     case "DealProgressScaled":
     case "Draw":
     case "Heal":

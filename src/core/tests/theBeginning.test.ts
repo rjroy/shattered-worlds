@@ -66,7 +66,7 @@ describe("The Beginning world data", () => {
     expect(worldThreatTemplateByWorldId(WORLD_ID)).toBe("Destiny");
     expect(worldData.deckComposition.acts).toHaveLength(3);
     expect(worldData.deckComposition.acts.at(-1)?.cards.at(-1)).toEqual({
-      templateId: "The Walker - No Door",
+      templateId: "Grief",
       count: 1,
     });
 
@@ -76,7 +76,7 @@ describe("The Beginning world data", () => {
     // but this asserts the intent directly rather than relying on that as a
     // side effect).
     expect(WORLD_CARDS as readonly string[]).not.toContain("The Walker");
-    expect(catalog["The Walker - No Door"]?.name).toBe("The Walker");
+    expect(catalog["Grief"]?.name).toBe("Grief");
   });
 
   it("defines all five hooks and valid keywords on each world card", () => {
