@@ -268,4 +268,33 @@ describe("gameplayRuntime composition root", () => {
       appliedModifiers: [],
     });
   });
+
+  it("stamps RunStarted with the resolved starterDeckOverride, defaulting to \"starter\"", () => {
+    const storage = createMemoryStorage();
+    storage.setItem(
+      "shattered-worlds/unlocks/v1",
+      JSON.stringify({
+        version: 1,
+        purchased: ["starter-contractor"],
+        activated: ["starter-contractor"],
+      }),
+    );
+    const runtime = createGameplayRuntime({ storage });
+    const observed: RunStreamItem[] = [];
+    runtime.subscribe((item) => observed.push(item));
+
+    startTestSession(runtime, 42);
+
+    expect(observed[0]).toMatchObject({ kind: "RunStarted", starterId: "contractor" });
+  });
+
+  it("defaults RunStarted.starterId to \"starter\" with no starterDeckOverride activated", () => {
+    const runtime = createGameplayRuntime({ storage: createMemoryStorage() });
+    const observed: RunStreamItem[] = [];
+    runtime.subscribe((item) => observed.push(item));
+
+    startTestSession(runtime, 42);
+
+    expect(observed[0]).toMatchObject({ kind: "RunStarted", starterId: "starter" });
+  });
 });

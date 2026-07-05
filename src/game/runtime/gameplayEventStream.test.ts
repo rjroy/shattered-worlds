@@ -32,6 +32,7 @@ describe("gameplayEventStream contract", () => {
     const item = createRunStarted({
       sessionId: "session-1",
       worldId: "zombie-big-box",
+      starterId: "starter",
       seed: 42,
       appliedModifiers: [{ kind: "bonus-card", templateId: "Listen" }, { kind: "hard-mode" }],
       timestamp: 1_000,
@@ -152,6 +153,7 @@ describe("gameplayEventStream contract", () => {
     const item = createRunStarted({
       sessionId: "session-clone",
       worldId: "zombie-big-box",
+      starterId: "starter",
       seed: 5,
       appliedModifiers: modifiers,
       timestamp: 1_000,
@@ -217,6 +219,7 @@ describe("gameplayEventStream contract", () => {
       createRunStarted({
         sessionId: "session-7",
         worldId: state.worldId,
+        starterId: "starter",
         seed: 7,
         appliedModifiers: [],
         timestamp: 1_000,
@@ -252,6 +255,7 @@ describe("gameplayEventStream contract", () => {
       createRunStarted({
         sessionId: "session-7",
         worldId: state.worldId,
+        starterId: "starter",
         seed: 7,
         appliedModifiers: [{ kind: "hard-mode" }],
         timestamp: 1_000,

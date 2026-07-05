@@ -40,6 +40,7 @@ function makeCtx(overrides?: Partial<RunRecord>, witness?: WitnessProfile): Eval
     cardsDiscarded: 0,
     durationMs: 0,
     byWorld: {},
+    byStarter: {},
   };
 
   return { run, lifetime, witness: witness ?? { version: 1, threats: {} } };

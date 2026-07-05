@@ -25,6 +25,7 @@ export interface RunStarted {
   readonly kind: 'RunStarted'
   readonly sessionId: SessionId
   readonly worldId: GameState['worldId']
+  readonly starterId: string
   readonly seed: number
   readonly appliedModifiers: readonly SetupModifier[]
   /** Epoch ms from the session's {@link Clock}. */

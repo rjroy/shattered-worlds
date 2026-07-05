@@ -285,6 +285,69 @@
     "reward": { "items": [{ "type": "memoryFragments", "amount": 80 }] }
   },
   {
+    "id": "first-questions",
+    "name": "First Diagnosis",
+    "description": "Win your first run of Questions.",
+    "conditions": [{ "statId": "world.questions.wins", "operator": "gte", "value": 1 }],
+    "reward": { "items": [{ "type": "memoryFragments", "amount": 25 }] }
+  },
+  {
+    "id": "questions-tier-2",
+    "name": "Frequent Patient",
+    "description": "Win Questions 5 or more times.",
+    "conditions": [{ "statId": "world.questions.wins", "operator": "gte", "value": 5 }],
+    "reward": { "items": [{ "type": "memoryFragments", "amount": 50 }] }
+  },
+  {
+    "id": "questions-tier-3",
+    "name": "Chronic Case",
+    "description": "Win Questions 10 or more times.",
+    "conditions": [{ "statId": "world.questions.wins", "operator": "gte", "value": 10 }],
+    "reward": { "items": [{ "type": "memoryFragments", "amount": 100 }] }
+  },
+  {
+    "id": "first-answers",
+    "name": "First Bargain",
+    "description": "Win your first run of Answers.",
+    "conditions": [{ "statId": "world.answers.wins", "operator": "gte", "value": 1 }],
+    "reward": { "items": [{ "type": "memoryFragments", "amount": 25 }] }
+  },
+  {
+    "id": "answers-tier-2",
+    "name": "Repeat Customer",
+    "description": "Win Answers 5 or more times.",
+    "conditions": [{ "statId": "world.answers.wins", "operator": "gte", "value": 5 }],
+    "reward": { "items": [{ "type": "memoryFragments", "amount": 50 }] }
+  },
+  {
+    "id": "answers-tier-3",
+    "name": "Best Rate in Town",
+    "description": "Win Answers 10 or more times.",
+    "conditions": [{ "statId": "world.answers.wins", "operator": "gte", "value": 10 }],
+    "reward": { "items": [{ "type": "memoryFragments", "amount": 100 }] }
+  },
+  {
+    "id": "first-the-beginning",
+    "name": "First Breath",
+    "description": "Win your first run of The Beginning.",
+    "conditions": [{ "statId": "world.the-beginning.wins", "operator": "gte", "value": 1 }],
+    "reward": { "items": [{ "type": "memoryFragments", "amount": 25 }] }
+  },
+  {
+    "id": "the-beginning-tier-2",
+    "name": "Steady Ground",
+    "description": "Win The Beginning 5 or more times.",
+    "conditions": [{ "statId": "world.the-beginning.wins", "operator": "gte", "value": 5 }],
+    "reward": { "items": [{ "type": "memoryFragments", "amount": 50 }] }
+  },
+  {
+    "id": "the-beginning-tier-3",
+    "name": "Whole Again",
+    "description": "Win The Beginning 10 or more times.",
+    "conditions": [{ "statId": "world.the-beginning.wins", "operator": "gte", "value": 10 }],
+    "reward": { "items": [{ "type": "memoryFragments", "amount": 100 }] }
+  },
+  {
     "id": "swift-clear",
     "name": "Swift Clear",
     "description": "Win a run in fewer than 10 turns.",
@@ -491,6 +554,15 @@
     "reward": { "items": [{ "type": "memoryFragments", "amount": 60 }] }
   },
   {
+    "id": "transit-slayer",
+    "name": "Manifest Denied",
+    "description": "Resolve 25 encounters with Entity Detected hazards across all runs.",
+    "conditions": [
+      { "statId": "witness.Entity Detected.resolvedCount", "operator": "gte", "value": 25 }
+    ],
+    "reward": { "items": [{ "type": "memoryFragments", "amount": 60 }] }
+  },
+  {
     "id": "lost-in-the-void",
     "name": "Lost in the Void",
     "description": "Complete 10 runs across any world.",
@@ -545,5 +617,110 @@
     "description": "Win 50 runs across any world.",
     "conditions": [{ "statId": "lifetime.wins", "operator": "gte", "value": 50 }],
     "reward": { "items": [{ "type": "memoryFragments", "amount": 50 }] }
+  },
+  {
+    "id": "first-contractor",
+    "name": "Builder's Instinct",
+    "description": "Win your first run with the Contractor's starter deck.",
+    "conditions": [{ "statId": "starter.contractor.wins", "operator": "gte", "value": 1 }],
+    "reward": { "items": [{ "type": "memoryFragments", "amount": 5 }] }
+  },
+  {
+    "id": "contractor-tier-2",
+    "name": "Journeyman Builder",
+    "description": "Win 5 runs with the Contractor's starter deck.",
+    "conditions": [{ "statId": "starter.contractor.wins", "operator": "gte", "value": 5 }],
+    "reward": { "items": [{ "type": "memoryFragments", "amount": 10 }] }
+  },
+  {
+    "id": "contractor-tier-3",
+    "name": "Master Contractor",
+    "description": "Win 10 runs with the Contractor's starter deck.",
+    "conditions": [{ "statId": "starter.contractor.wins", "operator": "gte", "value": 10 }],
+    "reward": { "items": [{ "type": "memoryFragments", "amount": 20 }] }
+  },
+  {
+    "id": "first-footballer",
+    "name": "Athlete's Instinct",
+    "description": "Win your first run with the Footballer's starter deck.",
+    "conditions": [{ "statId": "starter.footballer.wins", "operator": "gte", "value": 1 }],
+    "reward": { "items": [{ "type": "memoryFragments", "amount": 5 }] }
+  },
+  {
+    "id": "footballer-tier-2",
+    "name": "Varsity Athlete",
+    "description": "Win 5 runs with the Footballer's starter deck.",
+    "conditions": [{ "statId": "starter.footballer.wins", "operator": "gte", "value": 5 }],
+    "reward": { "items": [{ "type": "memoryFragments", "amount": 10 }] }
+  },
+  {
+    "id": "footballer-tier-3",
+    "name": "Hall of Fame",
+    "description": "Win 10 runs with the Footballer's starter deck.",
+    "conditions": [{ "statId": "starter.footballer.wins", "operator": "gte", "value": 10 }],
+    "reward": { "items": [{ "type": "memoryFragments", "amount": 20 }] }
+  },
+  {
+    "id": "first-harvester",
+    "name": "First Picking",
+    "description": "Win your first run with the Harvester's starter deck.",
+    "conditions": [{ "statId": "starter.harvester.wins", "operator": "gte", "value": 1 }],
+    "reward": { "items": [{ "type": "memoryFragments", "amount": 15 }] }
+  },
+  {
+    "id": "harvester-tier-2",
+    "name": "Orchard Regular",
+    "description": "Win 5 runs with the Harvester's starter deck.",
+    "conditions": [{ "statId": "starter.harvester.wins", "operator": "gte", "value": 5 }],
+    "reward": { "items": [{ "type": "memoryFragments", "amount": 30 }] }
+  },
+  {
+    "id": "harvester-tier-3",
+    "name": "Orchard Keeper",
+    "description": "Win 10 runs with the Harvester's starter deck.",
+    "conditions": [{ "statId": "starter.harvester.wins", "operator": "gte", "value": 10 }],
+    "reward": { "items": [{ "type": "memoryFragments", "amount": 60 }] }
+  },
+  {
+    "id": "first-archivist",
+    "name": "First Index",
+    "description": "Win your first run with the Archivist's starter deck.",
+    "conditions": [{ "statId": "starter.archivist.wins", "operator": "gte", "value": 1 }],
+    "reward": { "items": [{ "type": "memoryFragments", "amount": 15 }] }
+  },
+  {
+    "id": "archivist-tier-2",
+    "name": "Dedicated Archivist",
+    "description": "Win 5 runs with the Archivist's starter deck.",
+    "conditions": [{ "statId": "starter.archivist.wins", "operator": "gte", "value": 5 }],
+    "reward": { "items": [{ "type": "memoryFragments", "amount": 30 }] }
+  },
+  {
+    "id": "archivist-tier-3",
+    "name": "Master Archivist",
+    "description": "Win 10 runs with the Archivist's starter deck.",
+    "conditions": [{ "statId": "starter.archivist.wins", "operator": "gte", "value": 10 }],
+    "reward": { "items": [{ "type": "memoryFragments", "amount": 60 }] }
+  },
+  {
+    "id": "first-surveyor",
+    "name": "First Survey",
+    "description": "Win your first run with the Surveyor's starter deck.",
+    "conditions": [{ "statId": "starter.surveyor.wins", "operator": "gte", "value": 1 }],
+    "reward": { "items": [{ "type": "memoryFragments", "amount": 15 }] }
+  },
+  {
+    "id": "surveyor-tier-2",
+    "name": "Field Surveyor",
+    "description": "Win 5 runs with the Surveyor's starter deck.",
+    "conditions": [{ "statId": "starter.surveyor.wins", "operator": "gte", "value": 5 }],
+    "reward": { "items": [{ "type": "memoryFragments", "amount": 30 }] }
+  },
+  {
+    "id": "surveyor-tier-3",
+    "name": "Chief Surveyor",
+    "description": "Win 10 runs with the Surveyor's starter deck.",
+    "conditions": [{ "statId": "starter.surveyor.wins", "operator": "gte", "value": 10 }],
+    "reward": { "items": [{ "type": "memoryFragments", "amount": 60 }] }
   }
 ]

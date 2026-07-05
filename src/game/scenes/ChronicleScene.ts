@@ -2,7 +2,7 @@ import Phaser from "phaser";
 
 import { startMainTheme } from "../audio/menuMusic";
 import type { UserSettingsStore } from "../runtime/userSettings";
-import { worldManifest } from "../../data/worldManifest";
+import { worldManifest, STARTER_DECK_IDS } from "../../data/worldManifest";
 import { worldDisplayManifest } from "../../data/worldDisplayManifest";
 import { FEAT_CATALOG, computeFragmentBalance } from "../../data/feats/catalog";
 import type { RunStatsReader } from "../runtime/runStats";
@@ -60,6 +60,7 @@ export class ChronicleScene extends Phaser.Scene {
   private statsContent?: Phaser.GameObjects.Container;
   private featsContent?: Phaser.GameObjects.Container;
   private recordsContent?: Phaser.GameObjects.Container;
+  private startersContent?: Phaser.GameObjects.Container;
   private messageText?: Phaser.GameObjects.Text;
   private confirmOverlay?: Phaser.GameObjects.Container;
   private fileInput?: HTMLInputElement;
@@ -151,12 +152,14 @@ export class ChronicleScene extends Phaser.Scene {
     this.renderStats();
     this.renderFeats();
     this.renderRecords();
+    this.renderStarters();
 
     this.switchTab(this.statsContent);
 
     this.createButton(280, 42, "Stats", () => this.switchTab(this.statsContent));
     this.createButton(380, 42, "Feats", () => this.switchTab(this.featsContent));
     this.createButton(480, 42, "Records", () => this.switchTab(this.recordsContent));
+    this.createButton(580, 42, "Starters", () => this.switchTab(this.startersContent));
   }
 
   private switchTab(tabContent?: Phaser.GameObjects.Container): void {
@@ -168,6 +171,9 @@ export class ChronicleScene extends Phaser.Scene {
     }
     if (this.recordsContent !== undefined) {
       this.recordsContent.setVisible(this.recordsContent == tabContent);
+    }
+    if (this.startersContent !== undefined) {
+      this.startersContent.setVisible(this.startersContent == tabContent);
     }
   }
 
@@ -706,6 +712,42 @@ export class ChronicleScene extends Phaser.Scene {
     }
   }
 
+  private renderStarters(): void {
+    this.startersContent?.destroy(true);
+    this.startersContent = this.add.container(0, 0);
+
+    const lifetime = this.runStats?.lifetime();
+
+    this.addPanel(this.startersContent, 44, 82, 812, 442);
+    this.addText(this.startersContent, 64, 100, "Starter Decks", 18, "#d6b15c", true);
+    this.addText(this.startersContent, 64, 132, "Deck", 12, TEXT.textMuted, true);
+    this.addText(this.startersContent, 340, 132, "Attempts", 12, TEXT.textMuted, true);
+    this.addText(this.startersContent, 430, 132, "Wins", 12, TEXT.textMuted, true);
+    this.addText(this.startersContent, 505, 132, "Losses", 12, TEXT.textMuted, true);
+    this.addText(this.startersContent, 590, 132, "Abandons", 12, TEXT.textMuted, true);
+
+    STARTER_DECK_IDS.forEach((starterId, index) => {
+      if (this.startersContent === undefined) return;
+      const y = 164 + index * 32;
+      const stats = lifetime?.byStarter[starterId];
+      const name = starterId.charAt(0).toUpperCase() + starterId.slice(1);
+
+      this.addPanel(this.startersContent, 56, y - 1, 770, 32, 0x5e2f29);
+      this.addText(this.startersContent, 64, y, name, 13, TEXT.textLight);
+      this.addText(this.startersContent, 340, y, (stats?.runs ?? 0).toString(), 13, TEXT.textLight);
+      this.addText(this.startersContent, 430, y, (stats?.wins ?? 0).toString(), 13, TEXT.textLight);
+      this.addText(this.startersContent, 505, y, (stats?.losses ?? 0).toString(), 13, TEXT.textLight);
+      this.addText(
+        this.startersContent,
+        590,
+        y,
+        (stats?.abandoned ?? 0).toString(),
+        13,
+        TEXT.textLight,
+      );
+    });
+  }
+
   private runCheckRecords(): RunCheckRecord[] {
     const lastRun = this.runStats?.lifetime().lastRun;
     if (lastRun === undefined) return [];
@@ -1140,6 +1182,7 @@ export class ChronicleScene extends Phaser.Scene {
         this.renderStats();
         this.renderFeats();
         this.renderRecords();
+        this.renderStarters();
       }),
     ]);
   }

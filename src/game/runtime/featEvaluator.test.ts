@@ -58,6 +58,7 @@ function makeCtx(overrides?: Partial<RunRecord>): EvaluationContext {
     cardsDiscarded: 0,
     durationMs: 0,
     byWorld: {},
+    byStarter: {},
   };
 
   const witness: WitnessProfile = { version: 1, threats: {} };
@@ -202,6 +203,30 @@ describe("evaluateCondition — world dot-path, missing world entry", () => {
 });
 
 // ---------------------------------------------------------------------------
+// evaluateCondition — starter dot-path (mirrors the world.* namespace)
+// ---------------------------------------------------------------------------
+
+describe("evaluateCondition — starter dot-path", () => {
+  it("returns true when byStarter satisfies gte for the given starter id", () => {
+    const condition: FeatCondition = { statId: "starter.contractor.wins", operator: "gte", value: 5 };
+    const ctx = makeCtx();
+    const ctxWithStarter: EvaluationContext = {
+      ...ctx,
+      lifetime: {
+        ...ctx.lifetime,
+        byStarter: { contractor: { runs: 5, wins: 5, losses: 0, abandoned: 0 } },
+      },
+    };
+    expect(evaluateCondition(condition, ctxWithStarter)).toBe(true);
+  });
+
+  it("returns false when byStarter has no entry for the given starter id", () => {
+    const condition: FeatCondition = { statId: "starter.contractor.wins", operator: "gte", value: 1 };
+    expect(evaluateCondition(condition, makeCtx())).toBe(false);
+  });
+});
+
+// ---------------------------------------------------------------------------
 // createFeatEvaluator subscriber — integration tests
 // ---------------------------------------------------------------------------
 
@@ -246,6 +271,7 @@ describe("createFeatEvaluator — Validation #11: first-survivor earned on won r
     const startItem = createRunStarted({
       sessionId: "run-11",
       worldId: "zombie-big-box",
+      starterId: "starter",
       seed: 1,
       appliedModifiers: [],
       timestamp: 1000,
@@ -293,6 +319,7 @@ describe("createFeatEvaluator — Validation #12: first-survivor not duplicated"
     const start1 = createRunStarted({
       sessionId: "run-12a",
       worldId: "zombie-big-box",
+      starterId: "starter",
       seed: 1,
       appliedModifiers: [],
       timestamp: 1000,
@@ -318,6 +345,7 @@ describe("createFeatEvaluator — Validation #12: first-survivor not duplicated"
     const start2 = createRunStarted({
       sessionId: "run-12b",
       worldId: "zombie-big-box",
+      starterId: "starter",
       seed: 2,
       appliedModifiers: [],
       timestamp: 3000,
@@ -364,6 +392,7 @@ describe("createFeatEvaluator — Validation #13: abandoned run skipped", () => 
     const startItem = createRunStarted({
       sessionId: "run-13",
       worldId: "zombie-big-box",
+      starterId: "starter",
       seed: 1,
       appliedModifiers: [],
       timestamp: 1000,
@@ -411,6 +440,7 @@ describe("createFeatEvaluator — Validation #20: no-healing feat", () => {
     const start1 = createRunStarted({
       sessionId: "run-20a",
       worldId: "zombie-big-box",
+      starterId: "starter",
       seed: 1,
       appliedModifiers: [],
       timestamp: 1000,
@@ -438,6 +468,7 @@ describe("createFeatEvaluator — Validation #20: no-healing feat", () => {
     const start2 = createRunStarted({
       sessionId: "run-20b",
       worldId: "zombie-big-box",
+      starterId: "starter",
       seed: 2,
       appliedModifiers: [],
       timestamp: 3000,
@@ -486,6 +517,7 @@ describe("createFeatEvaluator — Validation #21: century-push on loss", () => {
     const startItem = createRunStarted({
       sessionId: "run-21",
       worldId: "zombie-big-box",
+      starterId: "starter",
       seed: 1,
       appliedModifiers: [],
       timestamp: 1000,
@@ -572,6 +604,7 @@ describe("createFeatEvaluator — Validation #22: veteran cross-run via stub rea
       cardsDiscarded: 0,
       durationMs: 10000,
       byWorld: {},
+      byStarter: {},
       lastRun: stubLastRun,
     };
 
@@ -593,6 +626,7 @@ describe("createFeatEvaluator — Validation #22: veteran cross-run via stub rea
     const startItem = createRunStarted({
       sessionId: "run-22",
       worldId: "zombie-big-box",
+      starterId: "starter",
       seed: 1,
       appliedModifiers: [],
       timestamp: 1000,
@@ -646,6 +680,7 @@ describe("createFeatEvaluator — Validation #23: light-keeper world-scoped", ()
     const startItem = createRunStarted({
       sessionId: "run-23a",
       worldId: "fog-beach-party",
+      starterId: "starter",
       seed: 1,
       appliedModifiers: [],
       timestamp: 1000,
@@ -686,6 +721,7 @@ describe("createFeatEvaluator — Validation #23: light-keeper world-scoped", ()
     const startItem = createRunStarted({
       sessionId: "run-23b",
       worldId: "zombie-big-box",
+      starterId: "starter",
       seed: 1,
       appliedModifiers: [],
       timestamp: 1000,

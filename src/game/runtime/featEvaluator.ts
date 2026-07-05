@@ -57,6 +57,17 @@ function resolveStat(statId: string, ctx: EvaluationContext): unknown {
     return (worldEntry as unknown as Record<string, unknown>)[field];
   }
 
+  if (statId.startsWith("starter.")) {
+    const rest = statId.slice("starter.".length);
+    const dotIndex = rest.indexOf(".");
+    if (dotIndex === -1) return undefined;
+    const starterId = rest.slice(0, dotIndex);
+    const field = rest.slice(dotIndex + 1);
+    const starterEntry = ctx.lifetime.byStarter[starterId];
+    if (starterEntry === undefined) return undefined;
+    return (starterEntry as unknown as Record<string, unknown>)[field];
+  }
+
   if (statId.startsWith("witness.")) {
     const rest = statId.slice("witness.".length);
     const dotIndex = rest.indexOf(".");
