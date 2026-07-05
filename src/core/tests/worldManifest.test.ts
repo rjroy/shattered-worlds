@@ -175,13 +175,14 @@ describe.each(worldIds)('world "%s"', (worldId) => {
     expect(worldData.starterDeck.length).toBeGreaterThan(0);
   });
 
-  it("runs three acts and ends the last act on The Walker", () => {
+  it("runs three acts and ends the last act on a Walker finale", () => {
     const { worldData } = buildWorld(worldId);
     const acts = worldData.deckComposition.acts;
     expect(acts).toHaveLength(3);
     const finalAct = acts[acts.length - 1]!;
     const lastCard = finalAct.cards[finalAct.cards.length - 1]!;
-    expect(lastCard.templateId).toBe("The Walker");
+    const expectedFinale = worldId === "the-beginning" ? "The Walker - No Door" : "The Walker";
+    expect(lastCard.templateId).toBe(expectedFinale);
   });
 
   it("every card-effect template reference resolves in the catalog", () => {

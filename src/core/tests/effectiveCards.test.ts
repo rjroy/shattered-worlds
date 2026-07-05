@@ -544,29 +544,20 @@ describe("effectiveWorldCardCost — Acceptance (World 15 Slice 1)", () => {
     expect(effectiveWorldCardCost(accepted, makeState({ hand: [accepted] }))).toBe(10);
   });
 
-  it("decays by 1/turn when unrefreshed, and refresh-to-max (not stacking) on reapplication", () => {
-    // Mirrors keywords.test.ts's "decays applied Denial and Anger like Alarm"
-    // shape, but exercised through effectiveWorldCardCost so the decayed
-    // lifetime is confirmed to actually move the cost, not just the raw
-    // appliedKeywords bookkeeping.
+  it("persists across turns and stacks on reapplication", () => {
     const base = makeWorldCard({ id: "destiny", cost: 15 });
     const accepted = withAppliedKeyword(base, { name: "Acceptance", value: 3 });
     expect(effectiveWorldCardCost(accepted, makeState({ hand: [accepted] }))).toBe(12);
 
     const afterOneTick = tickAppliedKeywords(accepted);
-    expect(effectiveWorldCardCost(afterOneTick, makeState({ hand: [afterOneTick] }))).toBe(13);
+    expect(effectiveWorldCardCost(afterOneTick, makeState({ hand: [afterOneTick] }))).toBe(12);
 
-    // Reapplying at a lower value than the current (decayed) lifetime does not
-    // shorten it — it stays at the larger of the two (max(2, 1) = 2), so the
-    // cost is unchanged rather than further discounted to 15 - 1 = 14.
     const reappliedLower = withAppliedKeyword(afterOneTick, { name: "Acceptance", value: 1 });
-    expect(effectiveWorldCardCost(reappliedLower, makeState({ hand: [reappliedLower] }))).toBe(13);
+    expect(effectiveWorldCardCost(reappliedLower, makeState({ hand: [reappliedLower] }))).toBe(11);
 
-    // Reapplying at a higher value refreshes up to that new max (max(2, 5) = 5)
-    // rather than stacking to 2 + 5 = 7, which would over-discount to 8.
     const reappliedHigher = withAppliedKeyword(afterOneTick, { name: "Acceptance", value: 5 });
     expect(effectiveWorldCardCost(reappliedHigher, makeState({ hand: [reappliedHigher] }))).toBe(
-      10,
+      7,
     );
   });
 });

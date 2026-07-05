@@ -72,7 +72,7 @@ describe("UNLOCK_CATALOG", () => {
     expect(UNLOCK_CATALOG.find((def) => def.id === "world-answers")).toMatchObject({
       id: "world-answers",
       name: "Answers",
-      cost: 25,
+      cost: 20,
       destinyWeight: 0,
       effect: { type: "worldUnlock", worldId: "answers" },
     });
