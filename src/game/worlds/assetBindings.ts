@@ -302,6 +302,7 @@ import newDerelictMusicUrl from "../assets/audio/new-derelict-music.mp3?url";
 import transitAuthorityMusicUrl from "../assets/audio/transit-authority-music.mp3?url";
 import questionsMusicUrl from "../assets/audio/questions-music.mp3?url";
 import answersMusicUrl from "../assets/audio/answers-music.mp3?url";
+import theBeginningMusicUrl from "../assets/audio/the-beginning-music.mp3?url";
 
 // ---------------------------------------------------------------------------
 // Exports
@@ -591,4 +592,5 @@ export const worldMusicManifest: Record<string, WorldMusicAsset> = {
   "transit-authority": { key: "music-transit-authority", url: transitAuthorityMusicUrl },
   questions: { key: "music-questions", url: questionsMusicUrl },
   answers: { key: "music-answers", url: answersMusicUrl },
+  "the-beginning": { key: "music-the-beginning", url: theBeginningMusicUrl },
 };
