@@ -50,6 +50,7 @@ import { evalPolicyFactory } from "./evalPolicy";
 import {
   playOut,
   type ActionCounts,
+  type ForfeitOptions,
   type GroundTruthPressure,
   type Outcome,
   type PlayOutStatus,
@@ -57,6 +58,8 @@ import {
 import { median, p90, wilsonInterval } from "./statistics";
 
 const DEFAULT_MAX_ACTIONS_PER_WORLD = 300;
+const DEFAULT_FORFEIT_NO_PROGRESS_TURNS = 10;
+const DEFAULT_FORFEIT_MAX_ACTIONS_PER_TURN = 40;
 const RECOVERY_UNLOCK_IDS = [
   [
     "first-sprint-free", // Burst of Speed
@@ -92,6 +95,15 @@ const RECOVERY_RUN_MODIFIERS = RECOVERY_UNLOCK_IDS.map((ids) =>
 //                           at the cap is classified `capped`. default 300.
 //                           Lower it when stall-prone worlds make a full audit
 //                           crawl; capped runs cost the full cap in decisions.
+//   SIM_FORFEIT_TURNS (env only) forfeit after this many CONSECUTIVE
+//                           no-progress EndTurns (default 10); 0 or negative
+//                           disables forfeiting entirely. A forfeited run stops
+//                           consulting the agent and plays out with EndTurn,
+//                           so a hopeless stall costs ~nothing instead of the
+//                           full action cap in eval rollouts.
+//   SIM_FORFEIT_ACTIONS (env only) forfeit when one turn runs this many
+//                           actions without an EndTurn (default 40): the
+//                           degenerate in-turn-loop guard.
 //   SIM_WEIGHTS (env only)  JSON object merged onto DEFAULT_EVAL_WEIGHTS
 //
 // A world id may additionally appear ANYWHERE among the positional args (or
@@ -111,6 +123,8 @@ export interface CompletenessParams {
   weightsOverridden: boolean;
   /** Action cap per play-out (SIM_MAX_ACTIONS); `runCompleteness` defaults it to 300. */
   maxActionsPerWorld?: number;
+  /** Hopeless-state give-up thresholds (SIM_FORFEIT_*); absent = forfeiting disabled. */
+  forfeit?: ForfeitOptions;
   /** Restrict the run to this one registered world id, or all worlds when absent. */
   worldId?: string;
   /** CLI output format. JSON is the default for machine-readable reports. */
@@ -221,6 +235,31 @@ function resolveWorldId(positional: string[]): { worldId: string | undefined; re
   return { worldId: worldId ?? process.env.SIM_WORLD, rest };
 }
 
+/**
+ * Forfeit thresholds from the SIM_FORFEIT_* env vars, defaulting to on
+ * (10 no-progress turns / 40 actions per turn). `SIM_FORFEIT_TURNS=0` (or
+ * negative) turns forfeiting off by omitting the param entirely, so playOut
+ * never sees a trip-immediately threshold.
+ */
+function buildForfeitParam(env: NodeJS.ProcessEnv): { forfeit?: ForfeitOptions } {
+  const noProgressTurns = resolveInt(
+    undefined,
+    env.SIM_FORFEIT_TURNS,
+    DEFAULT_FORFEIT_NO_PROGRESS_TURNS,
+  );
+  if (noProgressTurns <= 0) return {};
+  return {
+    forfeit: {
+      noProgressTurns,
+      maxActionsPerTurn: resolveInt(
+        undefined,
+        env.SIM_FORFEIT_ACTIONS,
+        DEFAULT_FORFEIT_MAX_ACTIONS_PER_TURN,
+      ),
+    },
+  };
+}
+
 export function parseParams(): CompletenessParams {
   const env = process.env;
   const weightsRaw = env.SIM_WEIGHTS;
@@ -245,6 +284,7 @@ export function parseParams(): CompletenessParams {
     maxActionsPerWorld: resolveInt(undefined, env.SIM_MAX_ACTIONS, DEFAULT_MAX_ACTIONS_PER_WORLD),
     outputFormat,
     ...(worldId !== undefined ? { worldId } : {}),
+    ...buildForfeitParam(env),
   };
 }
 
@@ -285,6 +325,8 @@ const UNKNOWN_ACT = -1; // bucket key for a loss with no recorded act index
 /** One play-out's disposition and raw telemetry, as needed by report formatting. */
 export interface PerRunObservation {
   disposition: PlayOutStatus;
+  /** True when the run tripped a forfeit threshold and was played out with EndTurn. */
+  forfeited: boolean;
   turns: number;
   actReached: number;
   totalActions: number;
@@ -303,6 +345,12 @@ export interface CohortAggregate {
   wins: number;
   losses: number;
   capped: number;
+  /**
+   * Runs that tripped a forfeit threshold (see `ForfeitOptions`). NOT a fourth
+   * disposition — a forfeited run still lands in wins/losses/capped (almost
+   * always losses), so `wins + losses + capped == games` is untouched.
+   */
+  forfeits: number;
   /** Sum of `turns` across ALL runs, incl. capped (REQ-SCC-11's avg-turns metric). */
   totalTurns: number;
   /** One entry per game, in seed order: the raw data step 5 percentiles/rates over. */
@@ -330,6 +378,7 @@ function newCohortAggregate(): CohortAggregate {
     wins: 0,
     losses: 0,
     capped: 0,
+    forfeits: 0,
     totalTurns: 0,
     runs: [],
     lossByCause: new Map(),
@@ -358,9 +407,11 @@ function causeKey(cause: WorldLostCause | undefined): string {
 function recordOutcome(cohort: CohortAggregate, outcome: Outcome): void {
   cohort.games++;
   cohort.totalTurns += outcome.turns;
+  if (outcome.forfeited) cohort.forfeits++;
 
   cohort.runs.push({
     disposition: outcome.status,
+    forfeited: outcome.forfeited,
     turns: outcome.turns,
     actReached: outcome.actReached,
     totalActions: outcome.totalActions,
@@ -450,6 +501,7 @@ export function runCompleteness(
       const baselineOutcome = playOut(world.catalog, world.worldData, seed, policy, agentRng, {
         maxActions,
         weights: params.weights,
+        ...(params.forfeit !== undefined ? { forfeit: params.forfeit } : {}),
       });
       agentRng = baselineOutcome.finalAgentRng;
       recordOutcome(baseline, baselineOutcome);
@@ -459,6 +511,7 @@ export function runCompleteness(
           maxActions,
           runModifiers: modifiers,
           weights: params.weights,
+          ...(params.forfeit !== undefined ? { forfeit: params.forfeit } : {}),
         });
         agentRng = outcome.finalAgentRng;
         recordOutcome(cohort, outcome);
@@ -605,6 +658,7 @@ function formatDistributionLines(cohort: CohortAggregate): string[] {
     `  Wins:    ${cohort.wins}  (${pctOrNone(cohort.wins, cohort.games)})  95% Wilson: ${wilsonText}`,
     `  Losses:  ${cohort.losses}`,
     `  Capped:  ${cohort.capped}`,
+    `  Forfeits: ${cohort.forfeits}  (hopeless-state give-ups, already counted in the buckets above)`,
     `  Avg turns survived (all dispositions): ${fmtOrNone(avgTurns)}`,
     `  Turns survived (won):  median=${fmtOrNone(median(wonTurns))} p90=${fmtOrNone(p90(wonTurns))}`,
     `  Turns survived (lost): median=${fmtOrNone(median(lostTurns))} p90=${fmtOrNone(p90(lostTurns))}`,
@@ -821,6 +875,11 @@ export function formatHumanReport(
   for (const [index, unlockIds] of RECOVERY_UNLOCK_IDS.entries()) {
     blocks.push(`  Recovery unlock set ${index + 1}: ${unlockIds.join(", ")}`);
   }
+  blocks.push(
+    params.forfeit === undefined
+      ? "  Forfeit: disabled"
+      : `  Forfeit: after ${params.forfeit.noProgressTurns} consecutive no-progress turns or ${params.forfeit.maxActionsPerTurn} actions in one turn`,
+  );
   blocks.push("");
   for (const agg of aggregates) {
     blocks.push(formatWorldBlock(agg, params.threshold));
@@ -844,6 +903,7 @@ export function formatJsonReport(params: CompletenessParams, aggregates: WorldAg
       weights: params.weights,
       weightsOverridden: params.weightsOverridden,
       maxActionsPerWorld: params.maxActionsPerWorld ?? DEFAULT_MAX_ACTIONS_PER_WORLD,
+      forfeit: params.forfeit ?? null,
       ...(params.worldId !== undefined ? { worldId: params.worldId } : {}),
     },
     playOutsPerWorld: PLAY_OUTS_PER_SEED * params.N,

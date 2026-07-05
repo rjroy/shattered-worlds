@@ -320,6 +320,7 @@ describe("formatted report shape (step 5)", () => {
   test("zero losses and an unreached act both render '(none)'", () => {
     const wonRun: PerRunObservation = {
       disposition: "won",
+      forfeited: false,
       turns: 12,
       actReached: 0, // never advances to act index 1 (act 2/2)
       totalActions: 24,
@@ -340,6 +341,7 @@ describe("formatted report shape (step 5)", () => {
       wins: 1,
       losses: 0,
       capped: 0,
+      forfeits: 0,
       totalTurns: 12,
       runs: [wonRun],
       lossByCause: new Map(),
@@ -368,6 +370,7 @@ describe("formatted report shape (step 5)", () => {
   test("baseline-only [FLAGGED]/dominant-cause/caveat; recovery gets the descriptive win-rate-diff line instead", () => {
     const lostRun = (cause: WorldLostCause): PerRunObservation => ({
       disposition: "lost",
+      forfeited: false,
       turns: 5,
       actReached: 0,
       totalActions: 10,
@@ -387,6 +390,7 @@ describe("formatted report shape (step 5)", () => {
     });
     const wonRun: PerRunObservation = {
       disposition: "won",
+      forfeited: false,
       turns: 8,
       actReached: 0,
       totalActions: 16,
@@ -409,6 +413,7 @@ describe("formatted report shape (step 5)", () => {
       wins: 0,
       losses: 4,
       capped: 0,
+      forfeits: 0,
       totalTurns: 20,
       runs: [lostRun("hp"), lostRun("hp"), lostRun("hp"), lostRun("hp")],
       lossByCause: new Map([["hp", 4]]),
@@ -423,6 +428,7 @@ describe("formatted report shape (step 5)", () => {
         wins: 2,
         losses: 2,
         capped: 0,
+        forfeits: 0,
         totalTurns: 26,
         runs: [wonRun, wonRun, lostRun("hp"), lostRun("hp")],
         lossByCause: new Map([["hp", 2]]),

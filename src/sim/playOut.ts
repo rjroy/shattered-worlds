@@ -26,9 +26,37 @@ import type { Policy } from "./policy";
  */
 export type PlayOutStatus = "won" | "lost" | "capped";
 
+/**
+ * Hopeless-state give-up thresholds. Both conditions are runner-level cutoffs
+ * over the REAL committed state — like `maxActions`, they never feed back into
+ * the agent's view or decisions. Once either trips, the runner stops consulting
+ * the policy entirely and plays the run out with `EndTurn` (answering any
+ * pending boon with its first option), which reaches a REAL terminal (usually a
+ * loss) at zero rollout cost instead of burning `candidates x K` evaluations
+ * per action until the cap.
+ */
+export interface ForfeitOptions {
+  /**
+   * Give up after this many CONSECUTIVE EndTurns with no strict decrease in
+   * world-cards-remaining (the same measure as `noProgressEndTurns`). This is
+   * the stall signature: a hand flooded with world cards or a deck that
+   * recurrence keeps refilled both show up here, because either way nothing is
+   * ever cleared.
+   */
+  noProgressTurns: number;
+  /**
+   * Give up when a single turn runs this many actions without an EndTurn — a
+   * degenerate in-turn loop, typically an agent dodging an EndTurn it scores
+   * as lethal.
+   */
+  maxActionsPerTurn: number;
+}
+
 export interface PlayOutOptions {
   /** Hard cap on actions before the play-out is declared `capped`. */
   maxActions: number;
+  /** Hopeless-state give-up thresholds; absent = never forfeit (old behavior). */
+  forfeit?: ForfeitOptions;
   /** Optional unlock-derived modifiers applied when constructing the run. */
   runModifiers?: RunModifiers;
   /**
@@ -81,6 +109,15 @@ export interface Outcome {
   actAtLoss?: number;
   /** True when the action cap was hit without reaching a terminal state. */
   capped: boolean;
+  /**
+   * True when a {@link ForfeitOptions} threshold tripped and the rest of the
+   * run was played out with EndTurn. The terminal is still REAL (the world
+   * actually finished the run), so `status` keeps its usual meaning; this flag
+   * marks that the agent stopped deciding partway through. Post-forfeit
+   * EndTurns are excluded from the efficiency counters below (they are not
+   * agent decisions) but still count toward `turns` and `actionCounts`.
+   */
+  forfeited: boolean;
   finalAgentRng: RngState;
 
   /** Total actions taken (== the sum of `actionCounts`). */
@@ -154,6 +191,11 @@ export function playOut(
   // undefined until the first EndTurn happens, since it has nothing to
   // compare against and is excluded from no-progress counting.
   let worldCardsAtPreviousEndTurn: number | undefined;
+  // Forfeit tracking (see ForfeitOptions): consecutive no-progress EndTurns
+  // and actions taken since the last EndTurn, both over agent decisions only.
+  let forfeited = false;
+  let consecutiveNoProgressEndTurns = 0;
+  let actionsThisTurn = 0;
   let minHp = Infinity;
   let minPlayerSupply = Infinity;
   let minPredictedPlayerRoom = Infinity;
@@ -186,39 +228,65 @@ export function playOut(
     const groundTruthAxes = measureEvalAxes(state, weights);
     sampleGroundTruthPressure(groundTruthAxes);
 
-    // Decide on a determinized, player-honest snapshot; apply to the REAL
-    // state. determinize advances the threaded agent rng (its reshuffles), and
-    // we carry the returned state forward so no two decisions repeat.
-    const [view, rngAfterDet] = determinize(state, rng);
+    // Forfeit check (runner-level, on the REAL state's history — never the
+    // agent's view): once a hopeless-state threshold trips, it latches for the
+    // rest of the run.
+    if (!forfeited && opts.forfeit !== undefined) {
+      forfeited =
+        consecutiveNoProgressEndTurns >= opts.forfeit.noProgressTurns ||
+        actionsThisTurn >= opts.forfeit.maxActionsPerTurn;
+    }
 
-    // Bridge the pure RngState the runner threads to the `() => number` closure
-    // the policy wants: pull one value, expand it into a stateful sfc32 closure,
-    // and thread the post-pull rng state forward. The closure's own advances
-    // during a single decision stay local; only the threaded rng persists.
-    const [seedValue, rngAfterPolicy] = nextFloat(rngAfterDet);
-    const policyRng = rngFromSeed(Math.floor(seedValue * 0x100000000));
-    rng = rngAfterPolicy;
+    let action: Action;
+    if (forfeited) {
+      // Give-up play-out: no determinize, no policy, no agent rng consumed —
+      // this is what makes a forfeited run cheap. A pending boon choice must
+      // still be answered (EndTurn is illegal there); take the first offered
+      // option, which is deterministic. offeredTemplateIds is non-empty
+      // whenever a choice is pending; the `!` covers the indexed-access type.
+      const pendingBoon = state.pendingBoonChoices[0];
+      action =
+        pendingBoon !== undefined
+          ? { type: "ChooseBoon", templateId: pendingBoon.offeredTemplateIds[0]! }
+          : { type: "EndTurn" };
+    } else {
+      // Decide on a determinized, player-honest snapshot; apply to the REAL
+      // state. determinize advances the threaded agent rng (its reshuffles), and
+      // we carry the returned state forward so no two decisions repeat.
+      const [view, rngAfterDet] = determinize(state, rng);
 
-    const action = policy(view, policyRng);
+      // Bridge the pure RngState the runner threads to the `() => number` closure
+      // the policy wants: pull one value, expand it into a stateful sfc32 closure,
+      // and thread the post-pull rng state forward. The closure's own advances
+      // during a single decision stay local; only the threaded rng persists.
+      const [seedValue, rngAfterPolicy] = nextFloat(rngAfterDet);
+      const policyRng = rngFromSeed(Math.floor(seedValue * 0x100000000));
+      rng = rngAfterPolicy;
 
-    if (action.type === "EndTurn") {
-      // Unused energy: `state.energy` is the committed, pre-`reduce` energy
-      // for the turn the agent is about to end, so it is exactly what went
-      // unspent this turn.
-      if (state.energy > 0) positiveUnusedEndTurns++;
-      totalUnusedEnergy += state.energy;
+      action = policy(view, policyRng);
 
-      // No progress: the world-cards-remaining count (reusing `measureEvalAxes`
-      // rather than recounting) did not shrink since the previous EndTurn. An
-      // increase (e.g. recurrence) counts as no progress too; only a strict
-      // decrease counts as progress. The first EndTurn only sets the baseline.
-      if (
-        worldCardsAtPreviousEndTurn !== undefined &&
-        groundTruthAxes.worldCardsRemaining >= worldCardsAtPreviousEndTurn
-      ) {
-        noProgressEndTurns++;
+      if (action.type === "EndTurn") {
+        // Unused energy: `state.energy` is the committed, pre-`reduce` energy
+        // for the turn the agent is about to end, so it is exactly what went
+        // unspent this turn.
+        if (state.energy > 0) positiveUnusedEndTurns++;
+        totalUnusedEnergy += state.energy;
+
+        // No progress: the world-cards-remaining count (reusing `measureEvalAxes`
+        // rather than recounting) did not shrink since the previous EndTurn. An
+        // increase (e.g. recurrence) counts as no progress too; only a strict
+        // decrease counts as progress. The first EndTurn only sets the baseline.
+        if (
+          worldCardsAtPreviousEndTurn !== undefined &&
+          groundTruthAxes.worldCardsRemaining >= worldCardsAtPreviousEndTurn
+        ) {
+          noProgressEndTurns++;
+          consecutiveNoProgressEndTurns++;
+        } else {
+          consecutiveNoProgressEndTurns = 0;
+        }
+        worldCardsAtPreviousEndTurn = groundTruthAxes.worldCardsRemaining;
       }
-      worldCardsAtPreviousEndTurn = groundTruthAxes.worldCardsRemaining;
     }
 
     actionCounts[action.type]++;
@@ -236,7 +304,12 @@ export function playOut(
     }
 
     if (state.actIndex > actReached) actReached = state.actIndex;
-    if (action.type === "EndTurn") turns++;
+    if (action.type === "EndTurn") {
+      turns++;
+      actionsThisTurn = 0;
+    } else {
+      actionsThisTurn++;
+    }
     actions++;
   }
 
@@ -259,6 +332,7 @@ export function playOut(
     turns,
     actReached,
     capped,
+    forfeited,
     finalAgentRng: rng,
     totalActions: actions,
     actionCounts,

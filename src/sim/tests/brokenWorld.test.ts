@@ -139,6 +139,7 @@ describe("completeness detects an unwinnable world (REQ-SCC-14)", () => {
   function syntheticWinObservation(turns: number): PerRunObservation {
     return {
       disposition: "won",
+      forfeited: false,
       turns,
       actReached: 0,
       totalActions: 10,
@@ -244,6 +245,7 @@ describe("completeness detects an unwinnable world (REQ-SCC-14)", () => {
       wins: 4,
       losses: 0,
       capped: 0,
+      forfeits: 0,
       totalTurns: rescuedRuns.reduce((sum, run) => sum + run.turns, 0),
       runs: rescuedRuns,
       lossByCause: new Map(),
