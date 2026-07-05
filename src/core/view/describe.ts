@@ -10,6 +10,7 @@
 import type { CardEffect, GameState, PlayerCard, WorldCard } from "../../core/index";
 import { concealOf, hasKeyword, isConcealed } from "../model/keywords";
 import { EFFECTS } from "../effects/registry";
+import { KeywordBonus } from "../model/types";
 
 // ---------------------------------------------------------------------------
 // Effects
@@ -68,9 +69,14 @@ export function previewPlay(
   const deal = dealProgressOf(card.effect, branchIndex);
   if (deal === null) return null;
 
-  const bonus =
-    deal.bonus !== undefined && hasKeyword(target, deal.bonus.tag) ? deal.bonus.amount : 0;
-  const amount = deal.base + bonus;
+  const getBonus = (kb: KeywordBonus) => (hasKeyword(target, kb.tag) ? kb.amount : 0);
+
+  const totalBonus = Array.isArray(deal.bonus)
+    ? deal.bonus.reduce((sum, kb) => sum + getBonus(kb), 0)
+    : deal.bonus !== undefined
+      ? getBonus(deal.bonus)
+      : 0;
+  const amount = deal.base + totalBonus;
   const already = state.progress[target.id] ?? 0;
   const total = already + amount;
 

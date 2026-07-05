@@ -208,7 +208,7 @@ describe("completeness detects an unwinnable world (REQ-SCC-14)", () => {
     // never add a SurviveWorld exit, and the crusher hazards fire every turn
     // regardless of starter/unlock configuration — so recovery cannot rescue
     // an unwinnable world it structurally has no escape from.
-    expect(agg.recovery.wins).toBe(0);
+    expect(agg.recoveries.reduce((sum, recovery) => sum + recovery.wins, 0)).toBe(0);
 
     // Text-level (not just count-based) confirmation that the recovery
     // section specifically carries no [FLAGGED] marker of its own.
@@ -251,7 +251,7 @@ describe("completeness detects an unwinnable world (REQ-SCC-14)", () => {
       reachedActCounts: new Map([[0, 4]]),
       reachedActWinCounts: new Map([[0, 4]]),
     };
-    const rescuedAgg: WorldAggregate = { ...agg, recovery: rescuedRecovery };
+    const rescuedAgg: WorldAggregate = { ...agg, recoveries: [rescuedRecovery] };
 
     const report = formatHumanReport(params(), [rescuedAgg]);
     expect(report).toContain("Flagged worlds: 1/1");
@@ -274,7 +274,7 @@ describe("completeness detects an unwinnable world (REQ-SCC-14)", () => {
       expect(agg.baseline.wins).toBeGreaterThan(0);
       expect(agg.baseline.wins / agg.baseline.games).toBeGreaterThan(THRESHOLD);
 
-    const report = formatHumanReport(params(), [agg]);
+      const report = formatHumanReport(params(), [agg]);
       expect(report).not.toContain("[FLAGGED]");
       expect(report).toContain("Flagged worlds: 0/1");
     },
