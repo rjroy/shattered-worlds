@@ -24,6 +24,7 @@ import { createWorld } from "../../core/engine/world";
 import { reduce } from "../../core/engine/reduce";
 import { createRng, nextFloat, rngFromSeed } from "../../core/engine/rng";
 import type { GameState, RngState } from "../../core/model/types";
+import type { CardCatalog, WorldData } from "../../core/model/catalog";
 import { checkIdAccounting } from "../accounting";
 import { determinize } from "../determinize";
 import { DEFAULT_EVAL_WEIGHTS, measureEvalAxes } from "../eval";
@@ -281,5 +282,130 @@ describe("playOut — posthoc pressure minima under randomPolicy", () => {
     const lastEnergySample = replay.energySamples[replay.energySamples.length - 1]!;
     expect(outcome.posthocPressure.minEnergy).toBe(0);
     expect(lastEnergySample).toBeGreaterThan(outcome.posthocPressure.minEnergy);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Forfeit clause (hopeless-state give-up).
+//
+// The stall world below can neither be won (no SurviveWorld anywhere) nor
+// lost (every hook is None, nothing ever deals damage), and its hazards can't
+// be cleared (cost 99, starter deals no progress), discarded, or exiled — so
+// world-cards-remaining is CONSTANT and every EndTurn after the first is a
+// no-progress turn. Exactly 2 hazards (== startWorldCards): both sit in the
+// opening hand and the world draw stays empty, so the hand never floods and
+// core's own noPlayerCards loss (which a BIGGER immovable act triggers within
+// a few turns) never fires — the stall is genuinely indefinite. Without forfeit, a run burns the whole action cap in
+// policy decisions; with it, the runner must stop consulting the policy at
+// the threshold and spend the rest of the cap on free EndTurns. The policy
+// call count is the observable that proves the rollout cost actually stops.
+// ---------------------------------------------------------------------------
+
+const STALL_FIDGET = "stall-fidget";
+const STALL_HAZARD = "stall-hazard";
+
+const stallCatalog: CardCatalog = {
+  [STALL_FIDGET]: {
+    kind: "player",
+    name: "fidget",
+    effect: { kind: "None" },
+    energyCost: 0,
+  },
+  [STALL_HAZARD]: {
+    kind: "world",
+    name: "immovable",
+    cost: 99,
+    keywords: [],
+    discardable: false,
+    canExile: false,
+    onDiscarded: { kind: "None" },
+    onCleared: { kind: "None" },
+    onEndOfTurn: { kind: "None" },
+    onPartialClear: { kind: "None" },
+    onDraw: { kind: "None" },
+  },
+};
+
+const stallWorld: WorldData = {
+  worldId: "stall-world",
+  starterDeck: [{ templateId: STALL_FIDGET, count: 12 }],
+  deckComposition: {
+    acts: [{ cards: [{ templateId: STALL_HAZARD, count: 2 }] }],
+  },
+};
+
+describe("playOut — forfeit clause", () => {
+  test("forfeits after N consecutive no-progress EndTurns and stops consulting the policy", () => {
+    // alwaysEndTurn timeline on the stall world (world-cards-remaining is
+    // constant): EndTurn 1 sets the baseline; EndTurns 2/3/4 are no-progress
+    // turns 1/2/3; the check before decision 5 sees 3 >= 3 and forfeits.
+    let policyCalls = 0;
+    const countingEndTurn: Policy = () => {
+      policyCalls++;
+      return { type: "EndTurn" };
+    };
+
+    const outcome = playOut(stallCatalog, stallWorld, 1, countingEndTurn, createRng(0), {
+      maxActions: 12,
+      forfeit: { noProgressTurns: 3, maxActionsPerTurn: 40 },
+    });
+
+    expect(outcome.forfeited).toBe(true);
+    expect(policyCalls).toBe(4);
+    // The stall world has no terminal, so the run still caps — but the
+    // post-forfeit actions are free EndTurns, not eval'd decisions.
+    expect(outcome.status).toBe("capped");
+    expect(outcome.turns).toBe(12);
+    expect(outcome.actionCounts.EndTurn).toBe(12);
+
+    // Efficiency counters cover agent DECISIONS only: exactly the 4 policy
+    // EndTurns (energy 1+2+3+4 unspent; no-progress turns 2-4), with the 8
+    // post-forfeit EndTurns excluded.
+    expect(outcome.positiveUnusedEndTurns).toBe(4);
+    expect(outcome.totalUnusedEnergy).toBe(1 + 2 + 3 + 4);
+    expect(outcome.noProgressEndTurns).toBe(3);
+  });
+
+  test("without the forfeit option the same run consults the policy for every action", () => {
+    let policyCalls = 0;
+    const countingEndTurn: Policy = () => {
+      policyCalls++;
+      return { type: "EndTurn" };
+    };
+
+    const outcome = playOut(stallCatalog, stallWorld, 1, countingEndTurn, createRng(0), {
+      maxActions: 12,
+    });
+
+    expect(outcome.forfeited).toBe(false);
+    expect(policyCalls).toBe(12);
+    expect(outcome.status).toBe("capped");
+    expect(outcome.noProgressEndTurns).toBe(11);
+  });
+
+  test("forfeits on a degenerate in-turn loop via maxActionsPerTurn", () => {
+    // Plays a fidget whenever one is in hand and never ends the turn on its
+    // own — the shape of an agent dodging an EndTurn it scores as lethal.
+    let policyCalls = 0;
+    const playFidgets: Policy = (view) => {
+      policyCalls++;
+      const fidget = view.hand.find((card) => card.kind === "player");
+      return fidget !== undefined
+        ? { type: "PlayCard", cardId: fidget.id }
+        : { type: "EndTurn" };
+    };
+
+    const outcome = playOut(stallCatalog, stallWorld, 1, playFidgets, createRng(0), {
+      maxActions: 12,
+      forfeit: { noProgressTurns: 50, maxActionsPerTurn: 2 },
+    });
+
+    // Decisions 1 and 2 play fidgets; the check before decision 3 sees 2
+    // actions this turn >= 2 and forfeits.
+    expect(outcome.forfeited).toBe(true);
+    expect(policyCalls).toBe(2);
+    expect(outcome.actionCounts.PlayCard).toBe(2);
+    expect(outcome.actionCounts.EndTurn).toBe(10);
+    expect(outcome.status).toBe("capped");
   });
 });

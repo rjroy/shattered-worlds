@@ -1,11 +1,15 @@
 import { describe, expect, test } from 'bun:test'
-import type { GameState } from '../../core/model/types'
+import type { Action, GameState } from '../../core/model/types'
+import type { CardCatalog, WorldData } from '../../core/model/catalog'
 import { createWorld } from '../../core/engine/world'
 import { reduce } from '../../core/engine/reduce'
 import { createRng, nextFloat, rngFromSeed } from '../../core/engine/rng'
 import { checkIdAccounting } from '../accounting'
 import { determinize } from '../determinize'
-import { pickAction, randomPolicy, catalog, worldData, type Policy } from '../policy'
+import { DEFAULT_EVAL_WEIGHTS } from '../eval'
+import { evalPolicyFactory } from '../evalPolicy'
+import { playOut } from '../playOut'
+import { enumerateActions, pickAction, randomPolicy, catalog, worldData, type Policy } from '../policy'
 
 
 // ---------------------------------------------------------------------------
@@ -131,6 +135,97 @@ describe('policy', () => {
     // The action decided on the snapshot applies cleanly to the REAL state.
     expect(() => reduce(catalog, state, action)).not.toThrow()
   })
+
+  // -------------------------------------------------------------------------
+  // Modal nested inside a compound spec.
+  //
+  // Regression: the panic-response unlock rewrites Panic into a Sequence whose
+  // first step is a Modal. checkPlayAction demands `choice` for that step, but
+  // the compound builder used to skip modal steps entirely (assuming modal was
+  // only ever the TOP-LEVEL spec), so every enumerated play of such a card was
+  // an IllegalActionError waiting in reduce. The hand-rolled card below is the
+  // minimal shape of that unlock's Panic.
+  // -------------------------------------------------------------------------
+
+  const NESTED_MODAL_CARD = 'nested-modal-panic'
+  const NESTED_MODAL_HAZARD = 'nested-modal-hazard'
+
+  const nestedModalCatalog: CardCatalog = {
+    [NESTED_MODAL_CARD]: {
+      kind: 'player',
+      name: 'panic (fight or flight)',
+      energyCost: 0,
+      effect: {
+        kind: 'Sequence',
+        steps: [
+          {
+            kind: 'Modal',
+            branches: [
+              { kind: 'DealProgressAll', base: 2 },
+              { kind: 'ReturnWorldCards', min: 1, max: 12 },
+            ],
+          },
+          { kind: 'Draw', world: 1 },
+        ],
+      },
+    },
+    [NESTED_MODAL_HAZARD]: {
+      kind: 'world',
+      name: 'lurker',
+      cost: 6,
+      keywords: [],
+      discardable: true,
+      canExile: true,
+      onDiscarded: { kind: 'None' },
+      onCleared: { kind: 'None' },
+      onEndOfTurn: { kind: 'None' },
+      onPartialClear: { kind: 'None' },
+      onDraw: { kind: 'None' },
+    },
+  }
+
+  const nestedModalWorld: WorldData = {
+    worldId: 'nested-modal-world',
+    starterDeck: [{ templateId: NESTED_MODAL_CARD, count: 10 }],
+    deckComposition: {
+      acts: [{ cards: [{ templateId: NESTED_MODAL_HAZARD, count: 6 }] }],
+    },
+  }
+
+  test('a modal nested in a compound enumerates with `choice` set and reduces cleanly', () => {
+    type PlayCardAction = Extract<Action, { type: 'PlayCard' }>
+    for (let seed = 1; seed <= 25; seed++) {
+      const state = createWorld(nestedModalCatalog, nestedModalWorld, seed).state
+      const rng = rngFromSeed(seed)
+      const actions = enumerateActions(state, rng)
+
+      const plays = actions.filter(
+        (action): action is PlayCardAction => action.type === 'PlayCard',
+      )
+      expect(plays.length).toBeGreaterThan(0)
+      for (const play of plays) {
+        expect(play.choice).toBeDefined()
+      }
+      for (const action of actions) {
+        expect(() => reduce(nestedModalCatalog, state, action)).not.toThrow()
+      }
+    }
+  })
+
+  test('the eval policy plays a nested-modal world out without an illegal action', () => {
+    // Mirrors the sim:complete decision loop (enumerate -> reduce every
+    // candidate against a determinized view -> commit the argmax), which is
+    // exactly where the panic-response recovery configuration used to crash.
+    const policy = evalPolicyFactory(nestedModalCatalog, DEFAULT_EVAL_WEIGHTS, 2)
+    let agentRng = createRng(777)
+    for (let seed = 1; seed <= 5; seed++) {
+      const outcome = playOut(nestedModalCatalog, nestedModalWorld, seed, policy, agentRng, {
+        maxActions: 200,
+      })
+      agentRng = outcome.finalAgentRng
+      expect(['won', 'lost', 'capped']).toContain(outcome.status)
+    }
+  }, { timeout: WORLD_TIMEOUT })
 
   test(`ID accounting holds for ${WORLD_COUNT} worlds`, () => {
     for (let seed = 1; seed <= WORLD_COUNT; seed++) {

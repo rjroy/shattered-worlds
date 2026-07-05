@@ -10,6 +10,8 @@ bun run sim:complete -- "$@" > tmp/sim-results.json
 echo "ID  | Base Wins  | Recovery Wins  | Flagged"
 echo "--- | ---------- | -------------- | --------"
 
+# .recoveries is an array (one cohort per recovery unlock set); render one
+# percentage per set, in declaration order, joined with " / ".
 jq -r '
     .worlds |
     sort_by(.baseline.wins / .baseline.games) |
@@ -17,7 +19,7 @@ jq -r '
     [
       .id,
       "\((.baseline.wins / .baseline.games * 100) | round)%",
-      "\((.recovery.wins / .recovery.games * 100) | round)%",
-      .flagged
+      ([.recoveries[] | "\((.wins / .games * 100) | round)%"] | join(" / ")),
+      (.flagged | tostring)
     ] | join(" | ")
   ' tmp/sim-results.json

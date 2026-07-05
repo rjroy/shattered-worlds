@@ -63,6 +63,10 @@ function buildModalBranch(
   legalTargets: (cardId: CardId, step: number) => readonly CardId[],
   rng: Rng,
 ): PlayCardFields | null {
+  // For a TOP-LEVEL modal, `legalTargets` resolves branch targets at
+  // (cardId, branchIdx). A modal nested inside a compound passes an adapted
+  // callback that resolves at (cardId, stepIdx, branchIdx) instead — see
+  // `pickModalBranch`'s call site in the compound handler.
   const withChoice: PlayCardFields = { ...base, choice: branchIdx };
 
   switch (branchSpec.kind) {
@@ -102,16 +106,64 @@ function buildModalBranch(
 
     case "returnWorld": {
       const targets = legalTargets(cardId, branchIdx);
+      // A min > 0 return with too few targets has no admissible selection:
+      // clamping the count below `min` would emit an illegal short returnIds
+      // (checkPlayAction rejects it), so skip the branch instead.
+      if (targets.length < branchSpec.min) return null;
       const count = Math.min(pickCount(branchSpec.min, branchSpec.max, rng), targets.length);
       return { ...withChoice, returnIds: pickSubset(targets, count, rng) };
     }
 
     case "recallTarget": {
       const targets = legalTargets(cardId, branchIdx);
+      // Same admissibility rule as returnWorld above.
+      if (targets.length < branchSpec.min) return null;
       const count = Math.min(pickCount(branchSpec.min, branchSpec.max, rng), targets.length);
       return { ...withChoice, recallIds: pickSubset(targets, count, rng) };
     }
   }
+}
+
+/**
+ * Walk a modal spec's branches in random order and return the first one with
+ * an admissible selection, or `null` when none has one. `targetsFor` resolves
+ * a branch's legal targets: top-level modals resolve at (cardId, branchIdx),
+ * modals nested inside a compound at (cardId, stepIdx, branchIdx) via an
+ * adapter closure. Both call sites layer their own fallback on a `null`.
+ */
+function pickModalBranch(
+  base: PlayCardFields,
+  cardId: CardId,
+  branches: readonly TargetSpec[],
+  nameById: ReadonlyMap<CardId, string>,
+  targetsFor: (cardId: CardId, branchIdx: number) => readonly CardId[],
+  rng: Rng,
+): PlayCardFields | null {
+  const indices = [...branches.keys()];
+  // Shuffle indices in-place
+  for (let i = indices.length - 1; i > 0; i--) {
+    const j = Math.floor(rng() * (i + 1));
+    const tmp = indices[i]!;
+    indices[i] = indices[j]!;
+    indices[j] = tmp;
+  }
+
+  for (const branchIdx of indices) {
+    const branchSpec = branches[branchIdx]!;
+    const branchAction = buildModalBranch(
+      base,
+      cardId,
+      branchIdx,
+      branchSpec,
+      nameById,
+      targetsFor,
+      rng,
+    );
+    // null means the branch has no admissible selection; try the next one.
+    if (branchAction !== null) return branchAction;
+  }
+
+  return null;
 }
 
 /**
@@ -124,7 +176,7 @@ function buildPlayAction(
   cardId: CardId,
   spec: TargetSpec,
   nameById: ReadonlyMap<CardId, string>,
-  legalTargets: (cardId: CardId, step: number) => readonly CardId[],
+  legalTargets: (cardId: CardId, step: number, choice?: number) => readonly CardId[],
   rng: Rng,
 ): PlayCardFields | null {
   const base: PlayCardFields = { type: "PlayCard", cardId };
@@ -192,37 +244,11 @@ function buildPlayAction(
     }
 
     case "modal": {
-      // Pick a random branch, weighted equally. If a branch needs targets
-      // and none are available, we still build the action — the available
-      // selector guarantees at least one branch is legal, so a random pick
-      // may land on an illegal one. Walk branches in random order to find
-      // one that can be built.
-      const indices = [...spec.branches.keys()];
-      // Shuffle indices in-place
-      for (let i = indices.length - 1; i > 0; i--) {
-        const j = Math.floor(rng() * (i + 1));
-        const tmp = indices[i]!;
-        indices[i] = indices[j]!;
-        indices[j] = tmp;
-      }
-
-      for (const branchIdx of indices) {
-        const branchSpec = spec.branches[branchIdx]!;
-        const branchAction = buildModalBranch(
-          base,
-          cardId,
-          branchIdx,
-          branchSpec,
-          nameById,
-          legalTargets,
-          rng,
-        );
-        // null means the branch has no admissible selection; try the next one.
-        if (branchAction !== null) return branchAction;
-      }
-
+      // Pick a random branch, weighted equally: walk branches in random order
+      // and keep the first with an admissible selection.
+      const action = pickModalBranch(base, cardId, spec.branches, nameById, legalTargets, rng);
       // Fallback: pick first branch (available guarantees at least one is legal)
-      return { ...base, choice: 0 };
+      return action ?? { ...base, choice: 0 };
     }
 
     case "compound": {
@@ -273,8 +299,26 @@ function buildPlayAction(
           const count = Math.min(pickCount(1, stepSpec.amount, rng), targets.length);
           const chosen = pickSubset(targets, count, rng);
           action = { ...action, thawIds: chosen };
+        } else if (stepSpec.kind === "modal") {
+          // A modal nested inside a compound (e.g. a Sequence whose first step
+          // is a Modal, like the panic-response unlock's rewritten Panic).
+          // checkPlayAction demands `choice` for this step, so the top-level
+          // "handled elsewhere" shortcut does not apply here. Branch targets
+          // resolve at (stepIdx, branchIdx); the adapter closure carries the
+          // step. No admissible branch means the whole compound play is
+          // inadmissible — exclude the card rather than emit an illegal action.
+          const withBranch = pickModalBranch(
+            action,
+            cardId,
+            stepSpec.branches,
+            nameById,
+            (id, branchIdx) => legalTargets(id, stepIdx, branchIdx),
+            rng,
+          );
+          if (withBranch === null) return null;
+          action = withBranch;
         }
-        // 'none' / 'modal': no supplementary fields needed or handled at top level
+        // 'none': no supplementary fields needed
       }
 
       return action;
