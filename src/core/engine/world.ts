@@ -13,6 +13,7 @@ export type CreateWorldResult = {
 
 export const WORLD_CONSTS = {
   startHp: 10,
+  expectedDrawSize: 6,
   baseHandSize: 6,
   startWorldCards: 2,
   get startPlayerCards(): number {

@@ -3371,6 +3371,7 @@
     "It's Fine, Actually": {
       "kind": "world",
       "name": "It's Fine, Actually",
+      "insetKey": "the-beginning-inset-its-fine-actually",
       "rarity": "uncommon",
       "cost": 4,
       "keywords": [],
@@ -3390,6 +3391,7 @@
     "Somebody Else Will Handle It": {
       "kind": "world",
       "name": "Somebody Else Will Handle It",
+      "insetKey": "the-beginning-inset-somebody-else-will-handle-it",
       "rarity": "uncommon",
       "cost": 4,
       "keywords": [],
@@ -3414,6 +3416,7 @@
     "A Story You've Told Yourself": {
       "kind": "world",
       "name": "A Story You've Told Yourself",
+      "insetKey": "the-beginning-inset-a-story-youve-told-yourself",
       "rarity": "common",
       "cost": 3,
       "keywords": ["Obstructed"],
@@ -3427,6 +3430,7 @@
     "Somebody Should Be Mad About This": {
       "kind": "world",
       "name": "Somebody Should Be Mad About This",
+      "insetKey": "the-beginning-inset-somebody-should-be-mad-about-this",
       "rarity": "common",
       "cost": 3,
       "keywords": ["Obstructed"],
@@ -3440,6 +3444,7 @@
     "Every Excuse Sounds Thinner": {
       "kind": "world",
       "name": "Every Excuse Sounds Thinner",
+      "insetKey": "the-beginning-inset-every-excuse-sounds-thinner",
       "rarity": "common",
       "cost": 3,
       "keywords": [],
@@ -3453,6 +3458,7 @@
     "One More Excuse": {
       "kind": "world",
       "name": "One More Excuse",
+      "insetKey": "the-beginning-inset-one-more-excuse",
       "rarity": "common",
       "cost": 2,
       "keywords": ["Obstructed"],
@@ -3466,6 +3472,7 @@
     "A Smaller Ask": {
       "kind": "world",
       "name": "A Smaller Ask",
+      "insetKey": "the-beginning-inset-a-smaller-ask",
       "rarity": "uncommon",
       "cost": 4,
       "keywords": [],
@@ -3485,6 +3492,7 @@
     "It's Not So Bad": {
       "kind": "world",
       "name": "It's Not So Bad",
+      "insetKey": "the-beginning-inset-its-not-so-bad",
       "rarity": "uncommon",
       "cost": 4,
       "keywords": [],
@@ -3504,6 +3512,7 @@
     "Terms You Already Know": {
       "kind": "world",
       "name": "Terms You Already Know",
+      "insetKey": "the-beginning-inset-terms-you-already-know",
       "rarity": "common",
       "cost": 3,
       "keywords": ["Obstructed"],
@@ -3517,6 +3526,7 @@
     "The Same Tired Weight": {
       "kind": "world",
       "name": "The Same Tired Weight",
+      "insetKey": "the-beginning-inset-the-same-tired-weight",
       "rarity": "common",
       "cost": 3,
       "keywords": ["Obstructed"],
@@ -3530,6 +3540,7 @@
     "He's Still Fighting": {
       "kind": "world",
       "name": "He's Still Fighting",
+      "insetKey": "the-beginning-inset-hes-still-fighting",
       "rarity": "common",
       "cost": 3,
       "keywords": ["Obstructed"],
@@ -3543,6 +3554,7 @@
     "The Weight You're Still Carrying": {
       "kind": "world",
       "name": "The Weight You're Still Carrying",
+      "insetKey": "the-beginning-inset-the-weight-youre-still-carrying",
       "rarity": "common",
       "cost": 2,
       "keywords": ["Obstructed"],
@@ -3556,6 +3568,7 @@
     "Say It Out Loud": {
       "kind": "player",
       "name": "Say It Out Loud",
+      "insetKey": "the-beginning-inset-say-it-out-loud",
       "rarity": "common",
       "energyCost": 1,
       "effect": {
@@ -3576,6 +3589,7 @@
     "Put It Down": {
       "kind": "player",
       "name": "Put It Down",
+      "insetKey": "the-beginning-inset-put-it-down",
       "rarity": "common",
       "energyCost": 1,
       "effect": {
@@ -3596,6 +3610,7 @@
     "Close the Book On It": {
       "kind": "player",
       "name": "Close the Book On It",
+      "insetKey": "the-beginning-inset-close-the-book-on-it",
       "rarity": "common",
       "energyCost": 1,
       "effect": {
@@ -3616,6 +3631,7 @@
     "Set It Down": {
       "kind": "player",
       "name": "Set It Down",
+      "insetKey": "the-beginning-inset-set-it-down",
       "rarity": "common",
       "energyCost": 1,
       "effect": {
@@ -3636,6 +3652,7 @@
     "Watch Over Him": {
       "kind": "player",
       "name": "Watch Over Him",
+      "insetKey": "the-beginning-inset-watch-over-him",
       "rarity": "common",
       "energyCost": 1,
       "effect": {
@@ -3649,6 +3666,7 @@
     "Help Him Focus": {
       "kind": "player",
       "name": "Help Him Focus",
+      "insetKey": "the-beginning-inset-help-him-focus",
       "rarity": "uncommon",
       "energyCost": 2,
       "effect": { "kind": "DealProgress", "base": 3 }
@@ -3656,6 +3674,7 @@
     "Keep Him Upright": {
       "kind": "player",
       "name": "Keep Him Upright",
+      "insetKey": "the-beginning-inset-keep-him-upright",
       "rarity": "common",
       "energyCost": 1,
       "effect": { "kind": "Brace", "amount": 1 }
