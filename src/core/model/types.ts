@@ -155,7 +155,7 @@ export type CardEffect =
   //   "nextWorldCard"      — deferred: stamps the next world card pulled into
   //                          hand (queued via pendingKeywordNextWorldCard, applied
   //                          in drawWorld), not any card present now.
-  //   "worldCardInHandByTemplateId" — the one world card in hand whose
+  //   "preferWorldCardByTemplateId" — the one world card in hand whose
   //                          templateId matches `templateId` exactly; a no-op
   //                          if no such card is in hand. Never touches any
   //                          other card regardless of hand contents — the
@@ -171,7 +171,7 @@ export type CardEffect =
       kind: "ApplyKeyword";
       keyword: KeywordName;
       value: number;
-      target: "worldCardInHandByTemplateId";
+      target: "preferWorldCardByTemplateId";
       templateId: CardTemplateId;
     }
   | {

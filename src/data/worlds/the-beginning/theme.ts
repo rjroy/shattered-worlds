@@ -37,7 +37,5 @@ export const THE_BEGINNING_THEME: VisualTheme = {
     realityKey: "the-beginning-bg",
     intrusionKey: "the-beginning-overlay",
   },
-  // No cardfront art exists yet for this world (see assetBindings.ts note) —
-  // omitted rather than pointing at a nonexistent key; presentation.ts falls
-  // back to the generic "cardfront" key when this is undefined.
+  worldCardfrontKey: "the-beginning-cardfront",
 };

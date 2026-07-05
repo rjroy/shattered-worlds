@@ -3403,7 +3403,12 @@
         "keyword": "Anger",
         "min": 2,
         "zone": "hand",
-        "then": { "kind": "ApplyKeyword", "keyword": "Anger", "value": 1, "target": "randomWorldCardInHand" }
+        "then": {
+          "kind": "ApplyKeyword",
+          "keyword": "Anger",
+          "value": 1,
+          "target": "randomWorldCardInHand"
+        }
       }
     },
     "A Story You've Told Yourself": {
@@ -3561,8 +3566,8 @@
           {
             "kind": "ApplyKeyword",
             "keyword": "Acceptance",
-            "value": 15,
-            "target": "worldCardInHandByTemplateId",
+            "value": 2,
+            "target": "preferWorldCardByTemplateId",
             "templateId": "Destiny"
           }
         ]
@@ -3581,8 +3586,8 @@
           {
             "kind": "ApplyKeyword",
             "keyword": "Acceptance",
-            "value": 15,
-            "target": "worldCardInHandByTemplateId",
+            "value": 2,
+            "target": "preferWorldCardByTemplateId",
             "templateId": "Destiny"
           }
         ]
@@ -3601,8 +3606,8 @@
           {
             "kind": "ApplyKeyword",
             "keyword": "Acceptance",
-            "value": 15,
-            "target": "worldCardInHandByTemplateId",
+            "value": 2,
+            "target": "preferWorldCardByTemplateId",
             "templateId": "Destiny"
           }
         ]
@@ -3621,8 +3626,8 @@
           {
             "kind": "ApplyKeyword",
             "keyword": "Acceptance",
-            "value": 15,
-            "target": "worldCardInHandByTemplateId",
+            "value": 2,
+            "target": "preferWorldCardByTemplateId",
             "templateId": "Destiny"
           }
         ]

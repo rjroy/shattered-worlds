@@ -62,12 +62,12 @@ import questionsCardfrontUrl from "../assets/themes/questions/questions-cardfron
 import answersRealityUrl from "../assets/themes/answers/answers-reality.webp";
 import answersOverlayUrl from "../assets/themes/answers/intrusion-overlay.webp";
 
-// the-beginning has reality/overlay art pre-staged (confirmed present on
-// disk), but no insets and no cardfront yet — see insets/README.md and
-// theme.ts's comment. Do not invent inset/cardfront imports; wire only what
-// exists on disk.
+// the-beginning has reality/overlay art pre-staged and now has its
+// cardfront (see insets/README.md and theme.ts's comment), but still no
+// insets yet. Do not invent inset imports; wire only what exists on disk.
 import theBeginningRealityUrl from "../assets/themes/the-beginning/the-beginning-reality.webp";
 import theBeginningOverlayUrl from "../assets/themes/the-beginning/intrusion-overlay.webp";
+import theBeginningCardfrontUrl from "../assets/themes/the-beginning/the-beginning-cardfront.webp";
 
 // ---------------------------------------------------------------------------
 // World inset imports
@@ -521,9 +521,10 @@ export const worldAssetUrls: Record<string, string> = {
   // answers — reality/overlay and now its full inset set; still no cardfront.
   "answers-bg": answersRealityUrl,
   "answers-overlay": answersOverlayUrl,
-  // the-beginning — reality/overlay only; no insets or cardfront yet.
+  // the-beginning — reality/overlay and cardfront; no insets yet.
   "the-beginning-bg": theBeginningRealityUrl,
   "the-beginning-overlay": theBeginningOverlayUrl,
+  "the-beginning-cardfront": theBeginningCardfrontUrl,
 };
 
 export interface WorldMusicAsset {
