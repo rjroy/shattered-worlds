@@ -102,10 +102,15 @@ export function createWorld(
     // pendingForceDestroySource is omitted (undefined): no destroy queued yet.
     // exactOptionalPropertyTypes forbids an explicit `undefined` literal here.
     braceCharges: mods.extraStartBrace,
-    // Keyworld guard counters init at 0 everywhere; pendingKeywordNextWorldCard
-    // is omitted (absent, not `undefined`) exactly like pendingForceDestroySource,
-    // since exactOptionalPropertyTypes forbids an explicit `undefined` literal.
-    keywordGuard: 0,
+    // Starting keywordGuard is seeded from meta-progression (see
+    // buildRunModifiers's destinyWeight aggregation); 0 for the default
+    // modifiers. Scoped to "the-beginning" only: extraStartKeywordGuard grows
+    // with a player's overall accumulated destinyWeight, and letting it leak
+    // into every other world would retroactively buff their already-shipped
+    // balance. pendingKeywordNextWorldCard is omitted (absent, not
+    // `undefined`) exactly like pendingForceDestroySource, since
+    // exactOptionalPropertyTypes forbids an explicit `undefined` literal.
+    keywordGuard: world.worldId === "the-beginning" ? mods.extraStartKeywordGuard : 0,
     progressDealtThisTurn: 0,
     pendingBoonChoices: [],
     pendingKeywordNextWorldCard: [],

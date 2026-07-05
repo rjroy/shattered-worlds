@@ -5,6 +5,7 @@ import {
   effectivePlayerCard,
   effectiveWorldCardCost,
 } from "../engine/effectiveCards";
+import { tickAppliedKeywords, withAppliedKeyword } from "../model/keywords";
 import type { GameState, PlayerCard } from "../model/types";
 import { makePlayerCard, makeState, makeWorldCard, mintPlayers } from "./testFixture";
 
@@ -499,5 +500,140 @@ describe("effectiveWorldCardCost — Bargaining/Depression (World 14 Slice 1)", 
       depressed.cost + 2 * depressionCostPer + bargainingCostPer * bargainingSumOnOtherCards;
 
     expect(effectiveWorldCardCost(depressed, state)).toBe(expected);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// World 15 (the-beginning) Slice 1 — Acceptance is KEYWORD_COST_MODIFIERS' first
+// negative-costPer registration (ClearCostPerSelfKeyword, costPer: -1). These
+// tests confirm the existing self-cost-modifier math handles a negative
+// costPer with no special-casing: it can drive effectiveWorldCardCost to zero
+// or below, and it participates in the ordinary applied-keyword lifecycle
+// (immediate full effect on stamp, decay-by-1/turn, refresh-to-max on
+// reapplication) exactly like Alarm/Denial/Bargaining/Depression.
+// ---------------------------------------------------------------------------
+
+describe("effectiveWorldCardCost — Acceptance (World 15 Slice 1)", () => {
+  it("a negative costPer reduces cost and can drive it to zero or below without throwing", () => {
+    // Real Destiny template: cost 15, no authored keywords (src/data/allCards.json).
+    const exactlyZero = makeWorldCard({
+      id: "destiny-a",
+      cost: 15,
+      keywords: [{ name: "Acceptance", value: 15 }],
+    });
+    expect(() =>
+      effectiveWorldCardCost(exactlyZero, makeState({ hand: [exactlyZero] })),
+    ).not.toThrow();
+    expect(effectiveWorldCardCost(exactlyZero, makeState({ hand: [exactlyZero] }))).toBe(0);
+
+    const belowZero = makeWorldCard({
+      id: "destiny-b",
+      cost: 15,
+      keywords: [{ name: "Acceptance", value: 20 }],
+    });
+    expect(() =>
+      effectiveWorldCardCost(belowZero, makeState({ hand: [belowZero] })),
+    ).not.toThrow();
+    expect(effectiveWorldCardCost(belowZero, makeState({ hand: [belowZero] }))).toBe(-5);
+  });
+
+  it("a single application at a given value produces the full discount immediately, not gradually", () => {
+    const base = makeWorldCard({ id: "destiny", cost: 15 });
+    const accepted = withAppliedKeyword(base, { name: "Acceptance", value: 5 });
+
+    // The discount is the full applied value the same instant it's stamped —
+    // there is no ramp-up across turns before it takes effect.
+    expect(effectiveWorldCardCost(accepted, makeState({ hand: [accepted] }))).toBe(10);
+  });
+
+  it("decays by 1/turn when unrefreshed, and refresh-to-max (not stacking) on reapplication", () => {
+    // Mirrors keywords.test.ts's "decays applied Denial and Anger like Alarm"
+    // shape, but exercised through effectiveWorldCardCost so the decayed
+    // lifetime is confirmed to actually move the cost, not just the raw
+    // appliedKeywords bookkeeping.
+    const base = makeWorldCard({ id: "destiny", cost: 15 });
+    const accepted = withAppliedKeyword(base, { name: "Acceptance", value: 3 });
+    expect(effectiveWorldCardCost(accepted, makeState({ hand: [accepted] }))).toBe(12);
+
+    const afterOneTick = tickAppliedKeywords(accepted);
+    expect(effectiveWorldCardCost(afterOneTick, makeState({ hand: [afterOneTick] }))).toBe(13);
+
+    // Reapplying at a lower value than the current (decayed) lifetime does not
+    // shorten it — it stays at the larger of the two (max(2, 1) = 2), so the
+    // cost is unchanged rather than further discounted to 15 - 1 = 14.
+    const reappliedLower = withAppliedKeyword(afterOneTick, { name: "Acceptance", value: 1 });
+    expect(
+      effectiveWorldCardCost(reappliedLower, makeState({ hand: [reappliedLower] })),
+    ).toBe(13);
+
+    // Reapplying at a higher value refreshes up to that new max (max(2, 5) = 5)
+    // rather than stacking to 2 + 5 = 7, which would over-discount to 8.
+    const reappliedHigher = withAppliedKeyword(afterOneTick, { name: "Acceptance", value: 5 });
+    expect(
+      effectiveWorldCardCost(reappliedHigher, makeState({ hand: [reappliedHigher] })),
+    ).toBe(10);
+  });
+});
+
+describe("effectiveWorldCardCost — Door regression (World 15 Slice 1)", () => {
+  // Door (allCards.json): cost 4, keywords: ["Obstructed"] — no cost-modifier
+  // keyword of its own. Acceptance/Denial/Depression are all
+  // ClearCostPerSelfKeyword: extraWorldCardCost only reads the priced card's
+  // OWN keywordValue for these three, so a Door with none of them authored is
+  // provably untouched no matter how much of them other cards in the same
+  // hand carry.
+  //
+  // Anger and Bargaining are NOT included here: they are
+  // ClearCostPerKeywordCount / ClearCostPerOtherKeyword, which by design tax
+  // every OTHER card in the hand (see the World 13/14 describe blocks above,
+  // e.g. "taxes a second, keyword-free card in the same hand") — Door would
+  // be taxed by those too, same as any other card. That is existing,
+  // intentional behavior, not something this slice changes or should mask.
+  it("Door's cost is unaffected by Acceptance, Denial, or Depression present elsewhere in hand", () => {
+    const door = makeWorldCard({
+      id: "door",
+      templateId: "Door",
+      cost: 4,
+      keywords: [{ name: "Obstructed" }],
+    });
+    const accepting = makeWorldCard({
+      id: "accepting",
+      cost: 2,
+      keywords: [{ name: "Acceptance", value: 5 }],
+    });
+    const denying = makeWorldCard({
+      id: "denying",
+      cost: 2,
+      keywords: [{ name: "Denial", value: 3 }],
+    });
+    const depressing = makeWorldCard({
+      id: "depressing",
+      cost: 2,
+      keywords: [{ name: "Depression", value: 4 }],
+    });
+    const state = makeState({ hand: [door, accepting, denying, depressing] });
+
+    expect(effectiveWorldCardCost(door, state)).toBe(4);
+  });
+
+  it("Door's cost is unaffected by an Acceptance keyword targeted at another card via worldCardInHandByTemplateId", () => {
+    // Regression guard for the new ApplyKeyword target (see
+    // appliedKeywords.test.ts): stamping Acceptance onto a Destiny card by
+    // templateId must never touch Door's applied keywords or its cost, even
+    // sitting in the same hand.
+    const door = makeWorldCard({
+      id: "door",
+      templateId: "Door",
+      cost: 4,
+      keywords: [{ name: "Obstructed" }],
+    });
+    const destiny = withAppliedKeyword(
+      makeWorldCard({ id: "destiny", templateId: "Destiny", cost: 15 }),
+      { name: "Acceptance", value: 15 },
+    );
+    const state = makeState({ hand: [door, destiny] });
+
+    expect(effectiveWorldCardCost(door, state)).toBe(4);
+    expect(effectiveWorldCardCost(destiny, state)).toBe(0);
   });
 });

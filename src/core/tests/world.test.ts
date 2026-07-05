@@ -6,6 +6,7 @@ import { createGame } from "../engine/game";
 import type { GameEvent } from "../model/types";
 import type { WorldData } from "../model/catalog";
 import { DEFAULT_RUN_MODIFIERS, type RunModifiers } from "../../data/unlocks/types";
+import { buildRunModifiers, UNLOCK_CATALOG } from "../../data/unlocks/catalog";
 import { catalog, worldData } from "./testFixture";
 
 function mods(overrides: Partial<RunModifiers>): RunModifiers {
@@ -234,6 +235,34 @@ describe("RunModifiers in createWorld", () => {
     const { state } = createWorld(catalog, worldData, 42, mods({ handSizeBonusPerAct: 1 }));
     expect(effectiveHandSize(state)).toBe(WORLD_CONSTS.baseHandSize);
     expect(effectiveHandSize({ ...state, actIndex: 1 })).toBe(7);
+  });
+
+  // World 15 (the-beginning) Slice 1 — keywordGuard is seeded straight from
+  // RunModifiers.extraStartKeywordGuard (see world.ts), so piping
+  // buildRunModifiers' real destinyWeight aggregation through createWorld
+  // confirms the two land together in a built world's initial state, not just
+  // in isolation (catalog.test.ts covers buildRunModifiers alone). This
+  // mechanism is scoped to "the-beginning" only (see world.ts), so this also
+  // confirms every other world keeps keywordGuard: 0 regardless of
+  // extraStartKeywordGuard.
+  it("seeds keywordGuard from buildRunModifiers' destinyWeight aggregation, scoped to the-beginning", () => {
+    const fresh = createWorld(catalog, worldData, 42, buildRunModifiers([], UNLOCK_CATALOG));
+    expect(fresh.state.keywordGuard).toBe(0);
+
+    // extra-hp (weight 1) + extra-energy (weight 1) = 2 -> floor(2 / 2) = 1
+    // charge at WEIGHT_PER_CHARGE = 2.
+    const activatedMods = buildRunModifiers(["extra-hp", "extra-energy"], UNLOCK_CATALOG);
+
+    const theBeginningWorld = { ...worldData, worldId: "the-beginning" };
+    const activated = createWorld(catalog, theBeginningWorld, 42, activatedMods);
+    expect(activated.state.keywordGuard).toBe(1);
+
+    // Same activated unlocks, but a different world: the guard must not leak
+    // in, since it exists to buff "the-beginning" specifically, not every
+    // world a player with that meta-progression happens to play.
+    const otherWorld = { ...worldData, worldId: "questions" };
+    const otherActivated = createWorld(catalog, otherWorld, 42, activatedMods);
+    expect(otherActivated.state.keywordGuard).toBe(0);
   });
 });
 

@@ -75,6 +75,7 @@ import unlockWorldNewDerelictUrl from "../assets/unlocks/world-new-derelict.webp
 import unlockWorldTransitAuthorityUrl from "../assets/unlocks/world-transit-authority.webp";
 import unlockWorldQuestionsUrl from "../assets/unlocks/world-questions.webp";
 import unlockWorldAnswersUrl from "../assets/unlocks/world-answers.webp";
+import unlockWorldTheBeginningUrl from "../assets/unlocks/world-the-beginning.webp";
 import vignetteUrl from "../assets/vignette.png";
 import worldSelectBgUrl from "../assets/world-select.webp";
 import screenChronicleUrl from "../assets/screens/shattered-chronicle.webp";
@@ -170,6 +171,7 @@ export const assetManifest: Record<string, string> = {
   "unlock/world-transit-authority": unlockWorldTransitAuthorityUrl,
   "unlock/world-questions": unlockWorldQuestionsUrl,
   "unlock/world-answers": unlockWorldAnswersUrl,
+  "unlock/world-the-beginning": unlockWorldTheBeginningUrl,
   "world-select-bg": worldSelectBgUrl,
   vignette: vignetteUrl,
   "screen-chronicle": screenChronicleUrl,

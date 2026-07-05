@@ -118,6 +118,10 @@ describe("buildRunModifiers", () => {
   });
 
   it("builds floors, hand-size, and keyword modifiers from active ids only", () => {
+    // Weight: extra-hp(1) + min-energy(2) + hand-size-per-act(2) + keyword-bonus(2)
+    // = 7 -> floor(7 / 2) = 3 charges at WEIGHT_PER_CHARGE = 2 (not this
+    // test's focus, but buildRunModifiers derives it from every activated id
+    // regardless of effect type, so it isn't 0 here).
     expect(
       buildRunModifiers(
         ["extra-hp", "min-energy", "hand-size-per-act", "keyword-bonus"],
@@ -126,6 +130,7 @@ describe("buildRunModifiers", () => {
     ).toEqual({
       ...DEFAULT_RUN_MODIFIERS,
       extraStartHp: 3,
+      extraStartKeywordGuard: 3,
       handSizeBonusPerAct: 1,
       minEnergyPerTurn: 2,
       rarityBonus: 0,
@@ -211,6 +216,46 @@ describe("buildRunModifiers", () => {
     expect(buildRunModifiers(["world-fog-beach-party"], UNLOCK_CATALOG)).toEqual(
       DEFAULT_RUN_MODIFIERS,
     );
+  });
+
+  // World 15 (the-beginning) Slice 1 — extraStartKeywordGuard is a separate
+  // aggregation over summed destinyWeight across ALL activated ids (see the
+  // comment above the totalWeight reduce in buildRunModifiers), not a
+  // per-effect-type switch case. WEIGHT_PER_CHARGE/MAX_GUARD are still
+  // unauthored placeholders (see the comment at their declaration site) —
+  // these tests confirm the arithmetic, not a tuned value.
+  describe("extraStartKeywordGuard", () => {
+    it("is 0 for a fresh profile with nothing activated", () => {
+      expect(buildRunModifiers([], UNLOCK_CATALOG).extraStartKeywordGuard).toBe(0);
+    });
+
+    it("derives a non-zero charge count from summed destinyWeight (WEIGHT_PER_CHARGE = 2)", () => {
+      // extra-hp (weight 1) + extra-energy (weight 1) = 2 -> floor(2 / 2) = 1.
+      expect(
+        buildRunModifiers(["extra-hp", "extra-energy"], UNLOCK_CATALOG).extraStartKeywordGuard,
+      ).toBe(1);
+    });
+
+    it("clamps at MAX_GUARD even when summed weight would derive more charges", () => {
+      // extra-hp + extra-energy + extra-light + extra-heat + extra-brace (1 each)
+      // + hand-size-per-act + keyword-bonus + rarity-bonus (2 each) = 5 + 6 = 11
+      // -> floor(11 / 2) = 5, clamped down to MAX_GUARD = 3.
+      expect(
+        buildRunModifiers(
+          [
+            "extra-hp",
+            "extra-energy",
+            "extra-light",
+            "extra-heat",
+            "extra-brace",
+            "hand-size-per-act",
+            "keyword-bonus",
+            "rarity-bonus",
+          ],
+          UNLOCK_CATALOG,
+        ).extraStartKeywordGuard,
+      ).toBe(3);
+    });
   });
 });
 

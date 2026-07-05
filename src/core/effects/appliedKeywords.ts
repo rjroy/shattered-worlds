@@ -170,6 +170,13 @@ export class ApplyKeywordHandler extends EffectHandler<ApplyKeywordEffect> {
         if (worldCards[index] === undefined) return { state: afterPick, events: [] };
         return applyToHandIds(afterPick, [worldCards[index].id], kw);
       }
+
+      case "worldCardInHandByTemplateId": {
+        const match = state.hand.find(
+          (c): c is WorldCard => c.kind === "world" && c.templateId === effect.templateId,
+        );
+        return match === undefined ? { state, events: [] } : applyToHandIds(state, [match.id], kw);
+      }
     }
   }
 

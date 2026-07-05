@@ -1,0 +1,33 @@
+{
+  "worldId": "the-beginning",
+  "deckComposition": {
+    "acts": [
+      {
+        "cards": [
+          { "templateId": "It's Fine, Actually", "count": 2 },
+          { "templateId": "Somebody Else Will Handle It", "count": 2 },
+          { "templateId": "A Story You've Told Yourself", "count": 1 },
+          { "templateId": "Somebody Should Be Mad About This", "count": 1 },
+          { "templateId": "Every Excuse Sounds Thinner", "count": 1 },
+          { "templateId": "One More Excuse", "count": 1 }
+        ]
+      },
+      {
+        "cards": [
+          { "templateId": "A Smaller Ask", "count": 2 },
+          { "templateId": "It's Not So Bad", "count": 2 },
+          { "templateId": "Terms You Already Know", "count": 1 },
+          { "templateId": "The Same Tired Weight", "count": 1 }
+        ]
+      },
+      {
+        "cards": [
+          { "templateId": "He's Still Fighting", "count": 2 },
+          { "templateId": "The Weight You're Still Carrying", "count": 1 },
+          { "templateId": "Destiny", "count": 1 },
+          { "templateId": "The Walker", "count": 1 }
+        ]
+      }
+    ]
+  }
+}

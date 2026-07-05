@@ -1099,4 +1099,40 @@ describe("previewAction", () => {
     expect(preview.risk).toBe("harmful");
     expect(preview.severity).toBe("danger");
   });
+
+  // World 15 (the-beginning) Slice 1/5 — Acceptance (ClearCostPerSelfKeyword,
+  // costPer: -1) has no floor and can drive effectiveWorldCardCost below zero
+  // (see effectiveCards.test.ts). summarizeEvent's progress-preview string is
+  // the one place that clamps for display (see actionPreview.ts's
+  // `displayCost`); the underlying cost itself must stay unclamped. This
+  // confirms the displayed string never regresses to a negative number even
+  // though the real cost behind it is negative.
+  it("never displays a negative cost in the progress-preview string when Acceptance drives cost below zero", () => {
+    const explore = makePlayerCard({
+      id: "explorer",
+      templateId: "Explore",
+      name: "Explore",
+      effect: { kind: "DealProgress", base: 1 },
+    });
+    const accepted = makeWorldCard({
+      id: "destiny-accepted",
+      templateId: "Destiny",
+      name: "The Destiny",
+      cost: 5,
+      appliedKeywords: [{ name: "Acceptance", value: 10 }],
+    });
+    const state = makeState({ hand: [explore, accepted], energy: 1, progress: {} });
+
+    const preview = previewAction(catalog, state, {
+      type: "PlayCard",
+      cardId: explore.id,
+      targetId: accepted.id,
+    });
+    const text = preview.summaryLines.join("\n");
+
+    // Real effective cost is 5 - 10 = -5; the display must clamp to 0, not
+    // show "(1/-5)".
+    expect(text).not.toContain("-5");
+    expect(text).toContain("Make 1 Progress on The Destiny (0/0)");
+  });
 });

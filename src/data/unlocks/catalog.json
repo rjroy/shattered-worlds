@@ -222,6 +222,14 @@
     "effect": { "type": "worldUnlock", "worldId": "answers" }
   },
   {
+    "id": "world-the-beginning",
+    "name": "The Beginning",
+    "description": "Opens The Beginning in World Select.",
+    "cost": 30,
+    "destinyWeight": 0,
+    "effect": { "type": "worldUnlock", "worldId": "the-beginning" }
+  },
+  {
     "id": "first-sprint-free",
     "name": "Burst of Speed",
     "description": "The first Sprint you play each turn costs 0 energy, but isn't as effective.",

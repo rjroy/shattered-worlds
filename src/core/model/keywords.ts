@@ -24,6 +24,7 @@ export const KEYWORD_NAMES: readonly KeywordName[] = [
   "Anger",
   "Bargaining",
   "Depression",
+  "Acceptance",
 ];
 
 export const PERSISTENT_KEYWORDS: ReadonlySet<KeywordName> = new Set(["Lockdown", "Reroute"]);
@@ -36,6 +37,11 @@ export const KEYWORD_COST_MODIFIERS: Partial<Record<KeywordName, PersistentModif
   Anger: { kind: "ClearCostPerKeywordCount", costPer: 1 },
   Bargaining: { kind: "ClearCostPerOtherKeyword", costPer: 1 },
   Depression: { kind: "ClearCostPerSelfKeyword", costPer: 1 },
+  // The first (and only) cost-decreasing modifier in the registry. Confirmed
+  // in effectiveCards.ts's extraWorldCardCost: ClearCostPerSelfKeyword's
+  // summing has no floor, so a negative costPer can drive a card's effective
+  // cost to zero or below (see actionPreview.ts for the display-only clamp).
+  Acceptance: { kind: "ClearCostPerSelfKeyword", costPer: -1 },
 };
 
 function isKeywordName(s: string): s is KeywordName {
