@@ -7,7 +7,7 @@ import {
 } from "../engine/effectiveCards";
 import { tickAppliedKeywords, withAppliedKeyword } from "../model/keywords";
 import type { GameState, PlayerCard } from "../model/types";
-import { makePlayerCard, makeState, makeWorldCard, mintPlayers } from "./testFixture";
+import { makePlayerCard, makeState, makeWorldCard, mintPlayer, mintPlayers } from "./testFixture";
 
 function stateWithModifiers(
   playerCardModifiers: readonly PlayerCardModifier[],
@@ -312,6 +312,93 @@ describe("effectivePlayerCard", () => {
   });
 });
 
+// ---------------------------------------------------------------------------
+// DealProgress / DealProgressAll — array `bonus` cloning regression.
+//
+// `effectivePlayerCard` always runs `card.effect` through `cloneEffect`
+// (via `clonePlayerCard`), even when no modifier matches. `cloneDealProgress`
+// and `cloneDealProgressAll` used to spread `effect.bonus` unconditionally
+// (`{ ...effect.bonus }`), which on an array produces an array-like plain
+// object ({0: ..., 1: ..., 2: ...}) instead of a real array — silently
+// breaking every `Array.isArray(effect.bonus)` check downstream (apply,
+// describe, compile, structuralSpec, legalTargets). "Loaded Shotgun"
+// (allCards.json) is the only authored card with an array `bonus` today, so
+// it is the regression's real-world trigger.
+// ---------------------------------------------------------------------------
+
+describe("effectivePlayerCard — DealProgress/DealProgressAll array bonus cloning", () => {
+  it("clones Loaded Shotgun's DealProgressAll array bonus as a real, independent array", () => {
+    const state = makeState();
+    const [shotgun] = mintPlayer(state, "Loaded Shotgun");
+    const originalEffect = shotgun.effect;
+    if (originalEffect.kind !== "DealProgressAll") {
+      throw new Error(
+        `Expected Loaded Shotgun to author DealProgressAll, got ${originalEffect.kind}`,
+      );
+    }
+    const originalBonus = originalEffect.bonus;
+    if (!Array.isArray(originalBonus)) {
+      throw new Error("Expected Loaded Shotgun's bonus to be authored as an array");
+    }
+
+    const effective = effectivePlayerCard(shotgun, state);
+
+    if (effective.effect.kind !== "DealProgressAll") {
+      throw new Error(`Expected clone to stay DealProgressAll, got ${effective.effect.kind}`);
+    }
+    expect(Array.isArray(effective.effect.bonus)).toBe(true);
+    expect(effective.effect.bonus).toEqual(originalBonus);
+    expect(effective.effect.bonus).not.toBe(originalBonus);
+    expect(effective.effect).not.toBe(originalEffect);
+
+    // The clone must not share structure with the original: mutating the
+    // clone's bonus array must never leak back into the minted card.
+    (effective.effect.bonus as { tag: string; amount: number }[])[0]!.amount = 999;
+    expect(shotgun.effect).toEqual(originalEffect);
+    expect(originalBonus[0]!.amount).toBe(2);
+  });
+
+  it("clones a DealProgress array bonus as a real, independent array", () => {
+    const card = makePlayerCard({
+      id: "buckshot",
+      templateId: "Buckshot",
+      name: "Buckshot",
+      effect: {
+        kind: "DealProgress",
+        base: 1,
+        bonus: [
+          { tag: "Obstructed", amount: 2 },
+          { tag: "Slow", amount: 1 },
+        ],
+      },
+    });
+    if (card.effect.kind !== "DealProgress") {
+      throw new Error(`Expected fixture to author DealProgress, got ${card.effect.kind}`);
+    }
+    const originalBonus = card.effect.bonus;
+    const state = makeState();
+
+    const effective = effectivePlayerCard(card, state);
+
+    if (effective.effect.kind !== "DealProgress") {
+      throw new Error(`Expected clone to stay DealProgress, got ${effective.effect.kind}`);
+    }
+    expect(Array.isArray(effective.effect.bonus)).toBe(true);
+    expect(effective.effect.bonus).toEqual(originalBonus);
+    expect(effective.effect.bonus).not.toBe(originalBonus);
+
+    (effective.effect.bonus as { tag: string; amount: number }[])[0]!.amount = 999;
+    expect(card.effect).toEqual({
+      kind: "DealProgress",
+      base: 1,
+      bonus: [
+        { tag: "Obstructed", amount: 2 },
+        { tag: "Slow", amount: 1 },
+      ],
+    });
+  });
+});
+
 describe("effectiveWorldCardCost", () => {
   const locked = (id: string) =>
     makeWorldCard({
@@ -556,9 +643,7 @@ describe("effectiveWorldCardCost — Acceptance (World 15 Slice 1)", () => {
     expect(effectiveWorldCardCost(reappliedLower, makeState({ hand: [reappliedLower] }))).toBe(11);
 
     const reappliedHigher = withAppliedKeyword(afterOneTick, { name: "Acceptance", value: 5 });
-    expect(effectiveWorldCardCost(reappliedHigher, makeState({ hand: [reappliedHigher] }))).toBe(
-      7,
-    );
+    expect(effectiveWorldCardCost(reappliedHigher, makeState({ hand: [reappliedHigher] }))).toBe(7);
   });
 });
 
