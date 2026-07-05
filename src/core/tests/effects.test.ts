@@ -122,7 +122,7 @@ describe("dealProgress keyword math", () => {
     state = { ...s1, hand: [zombie] };
 
     // Baseball Bat: base 2, bonus { tag: 'Creature', amount: 3 }
-    const { state: after, events } = dealProgress(catalog, state, zombie.id, 2, {
+    const { state: after, events } = dealProgress(catalog, state, zombie.id, 2, applyEffect, {
       tag: "Creature",
       amount: 3,
     });
@@ -149,11 +149,11 @@ describe("dealProgress keyword math", () => {
     const hiddenWithKeyword: WorldCard = { ...hidden, keywords: [{ name: "Obstructed" }] };
     state = { ...s2, hand: [hiddenWithKeyword, plain] };
 
-    const matching = dealProgress(catalog, state, hiddenWithKeyword.id, 1, {
+    const matching = dealProgress(catalog, state, hiddenWithKeyword.id, 1, applyEffect, {
       tag: "Obstructed",
       amount: 1,
     });
-    const nonMatching = dealProgress(catalog, state, plain.id, 1, {
+    const nonMatching = dealProgress(catalog, state, plain.id, 1, applyEffect, {
       tag: "Obstructed",
       amount: 1,
     });
@@ -178,7 +178,7 @@ describe("dealProgress no keyword bonus", () => {
     state = { ...s1, hand: [ss] };
 
     // Explore: base 1, bonus { tag: 'Hidden', amount: 1 } — Strange Sounds has no keywords
-    const { state: after, events } = dealProgress(catalog, state, ss.id, 1, {
+    const { state: after, events } = dealProgress(catalog, state, ss.id, 1, applyEffect, {
       tag: "Obstructed",
       amount: 1,
     });
@@ -212,7 +212,7 @@ describe("dealProgress auto-resolve at threshold", () => {
     state = { ...s1, hand: [ss], progress: { [ss.id]: 1 } };
 
     // Add 1 more → total = 2 = cost 2
-    const { state: after, events } = dealProgress(catalog, state, ss.id, 1);
+    const { state: after, events } = dealProgress(catalog, state, ss.id, 1, applyEffect);
 
     const progressEvent = events.find((e) => e.type === "ProgressDealt");
     expect(progressEvent).toBeDefined();

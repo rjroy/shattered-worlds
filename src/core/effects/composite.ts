@@ -1,13 +1,15 @@
 /** Composite effect handlers: `Modal` and `Sequence`. */
+import { nextInt } from "../engine/rng";
 import type { CardEffect, CardId, GameState, TargetSpec } from "../model/types";
 import type { EffectLine } from "../view/effectGlyphs";
 import type { CompileContext, EffectContext, EffectResult } from "./EffectContext";
 import { EffectHandler } from "./EffectHandler";
 import { EFFECTS } from "./registry";
-import { main, text } from "./tokens";
+import { main, rider, text, value } from "./tokens";
 
 type ModalEffect = Extract<CardEffect, { kind: "Modal" }>;
 type SequenceEffect = Extract<CardEffect, { kind: "Sequence" }>;
+type RandomEffect = Extract<CardEffect, { kind: "Random" }>;
 
 /**
  * `Modal`: the player picks one branch (`ctx.choice`); that branch's behavior is
@@ -142,6 +144,57 @@ export class SequenceHandler extends EffectHandler<SequenceEffect> {
 
   override legalTargets(
     _effect: SequenceEffect,
+    _selfId: CardId,
+    _state: GameState,
+  ): readonly CardId[] {
+    // Resolved at the step level by available.ts's computeLegalTargets, not here.
+    return [];
+  }
+}
+
+export class RandomHandler extends EffectHandler<RandomEffect> {
+  override apply(ctx: EffectContext, effect: RandomEffect): EffectResult {
+    // Mirrors effects.ts `Sequence`: fold the steps, threading the running state
+    // into each child and concatenating events. Each step sees a ctx carrying
+    // the running `state`; targeting fields and selfId pass through unchanged,
+    // exactly as the current code reuses the same `action`/`selfId` for every
+    // step's recursive applyEffect call.
+    let current = ctx.state;
+    const events: EffectResult["events"] = [];
+
+    const [index, nextRng] = nextInt(ctx.state.rng, effect.set.length - 1);
+    current = { ...current, rng: nextRng };
+    if (effect.set[index] === undefined) return { state: current, events };
+
+    const r = ctx.apply({ ...ctx, state: current }, effect.set[index]);
+    current = r.state;
+    events.push(...r.events);
+
+    return { state: current, events };
+  }
+
+  override describe(effect: RandomEffect): string[] {
+    return ["One of: ", ...effect.set.flatMap((child) => describeChild(child))];
+  }
+
+  override compile(effect: RandomEffect, _ctx: CompileContext): EffectLine[] {
+    return [
+      main([text(`One of `), value(`${effect.set.length}`, "penalty")]),
+      rider([text(effect.description)]),
+    ];
+  }
+
+  override structuralSpec(effect: RandomEffect): TargetSpec {
+    return { kind: "compound", steps: effect.set.map(structuralSpecChild) };
+  }
+
+  override isPlayable(_effect: RandomEffect, _state: GameState, _selfId: CardId): boolean {
+    // Currently this is not playable.
+    return false;
+  }
+
+  override legalTargets(
+    _effect: RandomEffect,
     _selfId: CardId,
     _state: GameState,
   ): readonly CardId[] {

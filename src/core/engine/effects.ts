@@ -10,8 +10,12 @@ import { EFFECTS } from "../effects/registry";
 // `dealProgress` and `resolveCounter` now live in `../effects/dealProgress`
 // (beside the DealProgress handler family). They are re-exported here so the
 // existing `effects.test.ts` imports keep resolving unedited.
-// dealProgress imports `applyEffect` from this module; that import is used only
-// at call time inside its body, so no top-level evaluation cycle forms.
+// dealProgress takes an injected `applyHook` callback rather than importing
+// `applyEffect` from this module — this module imports `registry.ts`, which
+// imports the DealProgress handler classes, so a static import back here would
+// form a `dealProgress.ts -> effects.ts -> registry.ts -> dealProgress.ts`
+// cycle. See dealProgress.ts's file docstring for the TDZ crash that cycle
+// used to cause depending on module load order.
 export { dealProgress, resolveCounter } from "../effects/dealProgress";
 
 // ---------------------------------------------------------------------------

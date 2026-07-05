@@ -66,7 +66,7 @@ describe("The Beginning world data", () => {
     expect(worldThreatTemplateByWorldId(WORLD_ID)).toBe("Destiny");
     expect(worldData.deckComposition.acts).toHaveLength(3);
     expect(worldData.deckComposition.acts.at(-1)?.cards.at(-1)).toEqual({
-      templateId: "The Walker - No Door",
+      templateId: "Grief",
       count: 1,
     });
 
@@ -76,7 +76,7 @@ describe("The Beginning world data", () => {
     // but this asserts the intent directly rather than relying on that as a
     // side effect).
     expect(WORLD_CARDS as readonly string[]).not.toContain("The Walker");
-    expect(catalog["The Walker - No Door"]?.name).toBe("The Walker");
+    expect(catalog["Grief"]?.name).toBe("The Walker");
   });
 
   it("defines all five hooks and valid keywords on each world card", () => {
@@ -187,7 +187,7 @@ describe("The Beginning — Door and Destiny onCleared are independent SurviveWo
     const state = { ...afterDoor, hand: [destinyCard, doorCard], worldDraw: [], progress: {} };
 
     // Resolve Door first (authored cost 4) — its own onCleared fires...
-    const afterDoorClear = dealProgress(catalog, state, doorCard.id, 4);
+    const afterDoorClear = dealProgress(catalog, state, doorCard.id, 4, applyEffect);
     expect(afterDoorClear.state.status).toBe("won");
     expect(
       afterDoorClear.events.some((e) => e.type === "HazardResolved" && e.templateId === "Door"),
@@ -201,7 +201,13 @@ describe("The Beginning — Door and Destiny onCleared are independent SurviveWo
     // Now resolve Destiny (authored cost 15) from the post-Door state — its
     // SurviveWorld path fires normally, proving Door's earlier clear never
     // disabled it.
-    const afterDestinyClear = dealProgress(catalog, afterDoorClear.state, destinyCard.id, 15);
+    const afterDestinyClear = dealProgress(
+      catalog,
+      afterDoorClear.state,
+      destinyCard.id,
+      15,
+      applyEffect,
+    );
     expect(afterDestinyClear.state.status).toBe("won");
     expect(afterDestinyClear.events.some((e) => e.type === "WorldWon")).toBe(true);
     expect(
