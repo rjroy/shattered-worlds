@@ -124,12 +124,14 @@ describe("New Derelict isolate effects", () => {
       { ...state, hand: [bulkhead] },
       bulkhead.id,
       effectiveWorldCardCost(bulkhead, { ...state, hand: [bulkhead] }),
+      applyEffect,
     );
     const isolatedGravity = dealProgress(
       catalog,
       { ...state, hand: [gravity] },
       gravity.id,
       effectiveWorldCardCost(gravity, { ...state, hand: [gravity] }),
+      applyEffect,
     );
     expect(isolatedBulkhead.events.some((event) => event.type === "HazardResolved")).toBe(true);
     expect(isolatedGravity.events.some((event) => event.type === "HazardResolved")).toBe(true);
@@ -139,13 +141,19 @@ describe("New Derelict isolate effects", () => {
 
     const clusteredState = { ...state, hand: [bulkhead, gravity] };
     const firstCost = effectiveWorldCardCost(bulkhead, clusteredState);
-    const firstClear = dealProgress(catalog, clusteredState, bulkhead.id, firstCost);
+    const firstClear = dealProgress(catalog, clusteredState, bulkhead.id, firstCost, applyEffect);
     expect(firstClear.events.some((event) => event.type === "HazardResolved")).toBe(true);
     const remaining = firstClear.state.hand.find(
       (card): card is WorldCard => card.kind === "world" && card.id === gravity.id,
     )!;
     const secondCost = effectiveWorldCardCost(remaining, firstClear.state);
-    const secondClear = dealProgress(catalog, firstClear.state, remaining.id, secondCost);
+    const secondClear = dealProgress(
+      catalog,
+      firstClear.state,
+      remaining.id,
+      secondCost,
+      applyEffect,
+    );
     expect(secondClear.events.some((event) => event.type === "HazardResolved")).toBe(true);
 
     expect(firstCost + secondCost).toBe(isolatedProgress);
@@ -240,7 +248,7 @@ describe("New Derelict seeded policy lines", () => {
       const [card, next] = mintCard(catalog, prompt, "Bulkhead 7-C Seals");
       if (card.kind !== "world") throw new Error("Bulkhead must mint a world card");
       prompt = { ...next, hand: [card] };
-      const cleared = dealProgress(catalog, prompt, card.id, card.cost);
+      const cleared = dealProgress(catalog, prompt, card.id, card.cost, applyEffect);
       prompt = cleared.state;
       promptProgress += card.cost;
       expect(cleared.events.some((event) => event.type === "HazardResolved")).toBe(true);

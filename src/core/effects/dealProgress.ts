@@ -20,15 +20,25 @@
  *
  * `dealProgress` and `resolveCounter` are the shared helpers, relocated here
  * from `effects.ts` (which re-exports them as a facade so existing test imports
- * keep resolving). `dealProgress` recurses through the *public* `applyEffect`
- * wrapper (imported from `effects.ts`), not `ctx.apply`: it keeps its
- * `(catalog, state, ...)` signature and the public wrapper rebuilds a fresh
- * `EffectContext` per call. The import is used only inside the function body, so
- * it is call-time-safe and forms no top-level evaluation cycle with `effects.ts`.
+ * keep resolving). `dealProgress` recurses through an injected `applyHook`
+ * callback rather than importing `applyEffect` from `effects.ts` directly:
+ * `effects.ts` imports `EFFECTS` from `registry.ts`, which imports this file's
+ * handler classes, so a static import of `effects.ts` here would form a
+ * `dealProgress.ts -> effects.ts -> registry.ts -> dealProgress.ts` cycle. That
+ * cycle isn't merely theoretical — depending on which module a bundle or test
+ * run happens to load first, `DealProgressHandler` can still be in its
+ * not-yet-initialized (TDZ) state when `registry.ts` tries to instantiate it,
+ * throwing `ReferenceError: Cannot access 'DealProgressHandler' before
+ * initialization`. The handler classes' own `apply` methods pass `ctx.apply`
+ * (adapted to `applyHook`'s shape) — the same recursion seam Modal/Sequence
+ * already use, per `EffectContext.apply`'s docstring. Callers outside the
+ * handler classes (tests) pass the public `applyEffect` wrapper directly, since
+ * its signature already matches `ApplyHook`.
  *
  * Pure core — no Phaser, no DOM. Lint enforces the boundary.
  */
 import type {
+  Action,
   CardEffect,
   CardId,
   CounterSpec,
@@ -41,7 +51,6 @@ import type {
 import type { CardCatalog } from "../model/catalog";
 import { hasKeyword, isConcealed } from "../model/keywords";
 import type { EffectLine } from "../view/effectGlyphs";
-import { applyEffect } from "../engine/effects";
 import { effectiveWorldCardCost } from "../engine/effectiveCards";
 import type { CompileContext, ConnectorStyle, EffectContext, EffectResult } from "./EffectContext";
 import { EffectHandler, HazardTargetingHandler } from "./EffectHandler";
@@ -51,6 +60,40 @@ import { bonusRider, counterLabel, icon, main, perRider, text, value } from "./t
 type DealProgressEffect = Extract<CardEffect, { kind: "DealProgress" }>;
 type DealProgressScaledEffect = Extract<CardEffect, { kind: "DealProgressScaled" }>;
 type DealProgressAllEffect = Extract<CardEffect, { kind: "DealProgressAll" }>;
+
+/** Matches the public `applyEffect(catalog, state, effect, action?, selfId?)` wrapper's shape. */
+type ApplyHook = (
+  catalog: CardCatalog,
+  state: GameState,
+  effect: CardEffect,
+  action?: Action,
+  selfId?: CardId,
+) => EffectResult;
+
+/**
+ * Adapts a handler's `ctx.apply` recursion seam to `ApplyHook`'s positional
+ * shape. `ctx.apply` is bound to the *internal* dispatcher (see
+ * `EffectContext.apply`'s docstring), which does not stamp `sourceCardId` —
+ * only the public `applyEffect` wrapper does that, after dispatch returns. This
+ * mirrors that stamping step so callers see identical provenance regardless of
+ * whether they reach `dealProgress` via a handler's `ctx` or via `applyEffect`
+ * directly.
+ */
+function applyHookFromCtx(ctx: EffectContext): ApplyHook {
+  return (catalog, state, effect, _action, selfId) => {
+    const result = ctx.apply(
+      { ...ctx, catalog, state, ...(selfId !== undefined && { selfId }) },
+      effect,
+    );
+    if (selfId === undefined) return result;
+    return {
+      state: result.state,
+      events: result.events.map((event) =>
+        event.sourceCardId === undefined ? { ...event, sourceCardId: selfId } : event,
+      ),
+    };
+  };
+}
 
 // ---------------------------------------------------------------------------
 // dealProgress / resolveCounter — shared helpers (relocated from effects.ts)
@@ -66,6 +109,7 @@ export function dealProgress(
   state: GameState,
   hazardId: CardId,
   base: number,
+  applyHook: ApplyHook,
   bonus?: { tag: KeywordName; amount: number },
 ): EffectResult {
   const hazard = state.hand.find((c): c is WorldCard => c.kind === "world" && c.id === hazardId);
@@ -105,13 +149,13 @@ export function dealProgress(
 
     // Pass hazardId as selfId so the cleared hazard's onCleared hook events
     // carry its provenance (preview masking for concealed clears).
-    const rewardResult = applyEffect(catalog, current, hazard.onCleared, undefined, hazardId);
+    const rewardResult = applyHook(catalog, current, hazard.onCleared, undefined, hazardId);
     current = rewardResult.state;
     events.push(...rewardResult.events);
     events.push({ type: "HazardResolved", hazardId, templateId: hazard.templateId });
   } else {
     // Hazard not yet resolved
-    const partialResult = applyEffect(catalog, current, hazard.onPartialClear, undefined, hazardId);
+    const partialResult = applyHook(catalog, current, hazard.onPartialClear, undefined, hazardId);
     current = partialResult.state;
     events.push(...partialResult.events);
     events.push({ type: "HazardPartial", hazardId, templateId: hazard.templateId });
@@ -148,7 +192,14 @@ export function resolveCounter(state: GameState, spec: CounterSpec): number {
  */
 export class DealProgressHandler extends HazardTargetingHandler<DealProgressEffect> {
   override apply(ctx: EffectContext, effect: DealProgressEffect): EffectResult {
-    return dealProgress(ctx.catalog, ctx.state, ctx.targetId ?? "", effect.base, effect.bonus);
+    return dealProgress(
+      ctx.catalog,
+      ctx.state,
+      ctx.targetId ?? "",
+      effect.base,
+      applyHookFromCtx(ctx),
+      effect.bonus,
+    );
   }
 
   override describe(effect: DealProgressEffect): string[] {
@@ -205,7 +256,7 @@ export class DealProgressHandler extends HazardTargetingHandler<DealProgressEffe
 export class DealProgressScaledHandler extends HazardTargetingHandler<DealProgressScaledEffect> {
   override apply(ctx: EffectContext, effect: DealProgressScaledEffect): EffectResult {
     const amount = effect.base + effect.amount * resolveCounter(ctx.state, effect.per);
-    return dealProgress(ctx.catalog, ctx.state, ctx.targetId ?? "", amount);
+    return dealProgress(ctx.catalog, ctx.state, ctx.targetId ?? "", amount, applyHookFromCtx(ctx));
   }
 
   override describe(effect: DealProgressScaledEffect): string[] {
@@ -238,8 +289,9 @@ export class DealProgressAllHandler extends EffectHandler<DealProgressAllEffect>
     const snapshot = ctx.state.hand.filter((c): c is WorldCard => c.kind === "world");
     let current = ctx.state;
     const events: GameEvent[] = [];
+    const applyHook = applyHookFromCtx(ctx);
     for (const hazard of snapshot) {
-      const r = dealProgress(ctx.catalog, current, hazard.id, effect.base, effect.bonus);
+      const r = dealProgress(ctx.catalog, current, hazard.id, effect.base, applyHook, effect.bonus);
       current = r.state;
       events.push(...r.events);
       if (current.status !== "playing") break;
