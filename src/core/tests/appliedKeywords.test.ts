@@ -199,12 +199,12 @@ describe("ApplyKeyword", () => {
   // World 15 (the-beginning) Slice 1 — the deterministic-by-name counterpart to
   // firstWorldCardInHand/randomWorldCardInHand. Real templateIds (Destiny,
   // Door) from allCards.json so the fixture matches actual catalog data.
-  describe("target 'worldCardInHandByTemplateId'", () => {
+  describe("target 'preferWorldCardByTemplateId'", () => {
     const byTemplateId = (templateId: string): CardEffect => ({
       kind: "ApplyKeyword",
       keyword: "Acceptance",
       value: 3,
-      target: "worldCardInHandByTemplateId",
+      target: "preferWorldCardByTemplateId",
       templateId,
     });
 
@@ -221,14 +221,15 @@ describe("ApplyKeyword", () => {
       expect(applied?.type === "KeywordApplied" && applied.ids).toEqual(["1"]);
     });
 
-    it("is a no-op (state/events unchanged) when no card in hand matches the templateId", () => {
+    it("Still picks a card when no card in hand matches the templateId", () => {
       const door = makeWorldCard({ id: "2", templateId: "Door", cost: 4 });
       const state = makeState({ hand: [door] });
 
       const { state: after, events } = applyEffect(catalog, state, byTemplateId("Destiny"));
 
-      expect(after).toBe(state);
-      expect(events).toHaveLength(0);
+      expect(appliedKeywordValue(after.hand.find((c) => c.id === "2")!, "Acceptance")).toBe(3);
+      const applied = events.find((e) => e.type === "KeywordApplied");
+      expect(applied?.type === "KeywordApplied" && applied.ids).toEqual(["2"]);
     });
   });
 });

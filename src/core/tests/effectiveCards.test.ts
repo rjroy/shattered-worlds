@@ -531,9 +531,7 @@ describe("effectiveWorldCardCost — Acceptance (World 15 Slice 1)", () => {
       cost: 15,
       keywords: [{ name: "Acceptance", value: 20 }],
     });
-    expect(() =>
-      effectiveWorldCardCost(belowZero, makeState({ hand: [belowZero] })),
-    ).not.toThrow();
+    expect(() => effectiveWorldCardCost(belowZero, makeState({ hand: [belowZero] }))).not.toThrow();
     expect(effectiveWorldCardCost(belowZero, makeState({ hand: [belowZero] }))).toBe(-5);
   });
 
@@ -562,16 +560,14 @@ describe("effectiveWorldCardCost — Acceptance (World 15 Slice 1)", () => {
     // shorten it — it stays at the larger of the two (max(2, 1) = 2), so the
     // cost is unchanged rather than further discounted to 15 - 1 = 14.
     const reappliedLower = withAppliedKeyword(afterOneTick, { name: "Acceptance", value: 1 });
-    expect(
-      effectiveWorldCardCost(reappliedLower, makeState({ hand: [reappliedLower] })),
-    ).toBe(13);
+    expect(effectiveWorldCardCost(reappliedLower, makeState({ hand: [reappliedLower] }))).toBe(13);
 
     // Reapplying at a higher value refreshes up to that new max (max(2, 5) = 5)
     // rather than stacking to 2 + 5 = 7, which would over-discount to 8.
     const reappliedHigher = withAppliedKeyword(afterOneTick, { name: "Acceptance", value: 5 });
-    expect(
-      effectiveWorldCardCost(reappliedHigher, makeState({ hand: [reappliedHigher] })),
-    ).toBe(10);
+    expect(effectiveWorldCardCost(reappliedHigher, makeState({ hand: [reappliedHigher] }))).toBe(
+      10,
+    );
   });
 });
 
@@ -616,7 +612,7 @@ describe("effectiveWorldCardCost — Door regression (World 15 Slice 1)", () => 
     expect(effectiveWorldCardCost(door, state)).toBe(4);
   });
 
-  it("Door's cost is unaffected by an Acceptance keyword targeted at another card via worldCardInHandByTemplateId", () => {
+  it("Door's cost is unaffected by an Acceptance keyword targeted at another card via preferWorldCardByTemplateId", () => {
     // Regression guard for the new ApplyKeyword target (see
     // appliedKeywords.test.ts): stamping Acceptance onto a Destiny card by
     // templateId must never touch Door's applied keywords or its cost, even

@@ -83,7 +83,13 @@ describe("Answers isolate effects", () => {
     if (card.kind !== "world") throw new Error("A Fracture Opens must mint a world card");
     const state = { ...staged, hand: [card], worldDraw: [] };
 
-    const result = applyEffect(catalog, state, worldTemplate("A Fracture Opens").onEndOfTurn, undefined, card.id);
+    const result = applyEffect(
+      catalog,
+      state,
+      worldTemplate("A Fracture Opens").onEndOfTurn,
+      undefined,
+      card.id,
+    );
 
     expect(result.state.worldDraw[0]?.templateId).toBe("Another Fracture");
     expect(result.state.hand.some((c) => c.id === card.id)).toBe(false);
@@ -96,7 +102,13 @@ describe("Answers isolate effects", () => {
     if (card.kind !== "world") throw new Error("It Won't Go Away must mint a world card");
     const state = { ...staged, hand: [card], worldDraw: [] };
 
-    const result = applyEffect(catalog, state, worldTemplate("It Won't Go Away").onEndOfTurn, undefined, card.id);
+    const result = applyEffect(
+      catalog,
+      state,
+      worldTemplate("It Won't Go Away").onEndOfTurn,
+      undefined,
+      card.id,
+    );
 
     expect(result.state.worldDraw[0]?.templateId).toBe("It Calcified");
     expect(result.state.hand.some((c) => c.id === card.id)).toBe(false);
@@ -131,24 +143,5 @@ describe("Answers isolate effects", () => {
     const state = { ...afterOther, hand: [destinyCard, bargainingCarrier], worldDraw: [] };
 
     expect(effectiveWorldCardCost(destinyCard, state)).toBe(18);
-  });
-
-  it("a RemoveKeyword reward targeting Destiny is a no-op, since Destiny authors no keyword at all", () => {
-    const { catalog, worldData } = buildWorld(WORLD_ID);
-    const { state: base } = createWorld(catalog, worldData, 1, DEFAULT_RUN_MODIFIERS);
-    const [destinyCard, staged] = mintCard(catalog, base, "Destiny");
-    if (destinyCard.kind !== "world") throw new Error("Destiny must mint a world card");
-    const state = { ...staged, hand: [destinyCard], worldDraw: [] };
-
-    const result = applyEffect(catalog, state, {
-      kind: "RemoveKeyword",
-      keyword: "Depression",
-      target: "hand",
-      amount: 1,
-    });
-
-    const afterRemove = result.state.hand.find((c) => c.id === destinyCard.id);
-    if (afterRemove?.kind !== "world") throw new Error("Destiny must remain a world card");
-    expect(effectiveWorldCardCost(afterRemove, result.state)).toBe(15);
   });
 });

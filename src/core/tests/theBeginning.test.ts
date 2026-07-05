@@ -5,6 +5,7 @@ import { DEFAULT_RUN_MODIFIERS } from "../../data/unlocks/types";
 import { dealProgress } from "../effects/dealProgress";
 import { effectiveWorldCardCost } from "../engine/effectiveCards";
 import { applyEffect } from "../engine/effects";
+import { createGame } from "../engine/game";
 import { createWorld } from "../engine/world";
 import { worldThreatTemplateByWorldId } from "../effects/gainCard";
 import { mintCard } from "../model/cards";
@@ -92,7 +93,7 @@ describe("The Beginning world data", () => {
 // This plan's central mechanic (see the-beginning.md's deviation section):
 // every grief-release reward card strips its keyword from a hand card AND, in
 // the same effect Sequence, applies Acceptance:15 to Destiny by name via the
-// worldCardInHandByTemplateId ApplyKeyword target — a no-op if Destiny isn't
+// preferWorldCardByTemplateId ApplyKeyword target — a no-op if Destiny isn't
 // in hand, deterministic and never leaking onto any other card (e.g. Door).
 describe("The Beginning isolate effects — RemoveKeyword + Acceptance-onto-Destiny", () => {
   const cases: readonly [reward: string, keyword: KeywordName, carrierTemplateId: string][] = [
@@ -189,9 +190,7 @@ describe("The Beginning — Door and Destiny onCleared are independent SurviveWo
     const afterDoorClear = dealProgress(catalog, state, doorCard.id, 4);
     expect(afterDoorClear.state.status).toBe("won");
     expect(
-      afterDoorClear.events.some(
-        (e) => e.type === "HazardResolved" && e.templateId === "Door",
-      ),
+      afterDoorClear.events.some((e) => e.type === "HazardResolved" && e.templateId === "Door"),
     ).toBe(true);
 
     // ...and Destiny is untouched: still in hand, still at zero progress, its
@@ -211,5 +210,39 @@ describe("The Beginning — Door and Destiny onCleared are independent SurviveWo
       ),
     ).toBe(true);
     expect(afterDestinyClear.state.hand.some((c) => c.id === destinyCard.id)).toBe(false);
+  });
+});
+
+// Regression for a live playtest crash: logEvent()'s switch handled
+// "KeywordRemoved" but not "KeywordReduced", so any dispatch() turn boundary
+// that decayed a non-persistent applied keyword (Denial/Anger/Bargaining/
+// Depression/Alarm/Acceptance) by one step — without fully expiring it —
+// threw "logEvent: unhandled event type KeywordReduced". Every prior keyword/
+// decay test drove tickAppliedKeywordsAtTurnStart or reduce() directly, so
+// logEvent (only invoked from GameCore.dispatch's
+// `result.events.forEach(logEvent)`, see engine/game.ts) was never exercised
+// by a decay scenario. This world is the natural home for the regression:
+// Denial is authored here via onDraw ApplyKeyword{target:"self"} and decays
+// one turn later since it isn't in PERSISTENT_KEYWORDS.
+describe("The Beginning — dispatch() regression: applied-keyword decay reaches logEvent", () => {
+  it("EndTurn decaying Denial by one (not yet expiring it) does not throw", () => {
+    const { catalog, worldData } = buildWorld(WORLD_ID);
+    // Seed pinned because it deterministically draws "It's Fine, Actually"
+    // (onDraw: ApplyKeyword Denial value 3) into hand on the opening deal and
+    // decays it (3 -> 2, a KeywordReduced, not a full expiry) on the second
+    // EndTurn — reproducing the exact event type that crashed logEvent.
+    const game = createGame(catalog, worldData, 27, DEFAULT_RUN_MODIFIERS);
+
+    const keywordsReduced: string[] = [];
+    expect(() => {
+      for (let turn = 0; turn < 2; turn++) {
+        const { events } = game.dispatch({ type: "EndTurn" });
+        for (const event of events) {
+          if (event.type === "KeywordReduced") keywordsReduced.push(event.keyword);
+        }
+      }
+    }).not.toThrow();
+
+    expect(keywordsReduced).toContain("Denial");
   });
 });
