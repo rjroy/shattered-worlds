@@ -25,10 +25,11 @@
  * own.
  *
  * Honesty and reproducibility (REQ-SCC-16): the whole run is ONE continuous
- * agent rng stream, now spanning `2 x N` play-outs per world instead of `N`. A
- * single agentRng is seeded from the agent seed and threaded forward — baseline
- * into recovery, recovery into the next seed's baseline, and onward across
- * worlds — via `Outcome.finalAgentRng`. The report is pure, seed-derived JSON:
+ * agent rng stream, spanning `(1 + R) x N` play-outs per world (R = the number
+ * of recovery unlock sets). A single agentRng is seeded from the agent seed and
+ * threaded forward — baseline into each recovery set in declaration order, the
+ * last recovery into the next seed's baseline, and onward across worlds — via
+ * `Outcome.finalAgentRng`. The report is pure, seed-derived JSON:
  * NO timestamps, elapsed times, or other system-derived values appear in the
  * output.
  *
@@ -55,7 +56,7 @@ import {
 } from "./playOut";
 import { median, p90, wilsonInterval } from "./statistics";
 
-const MAX_ACTIONS_PER_WORLD = 1000;
+const DEFAULT_MAX_ACTIONS_PER_WORLD = 300;
 const RECOVERY_UNLOCK_IDS = [
   [
     "first-sprint-free", // Burst of Speed
@@ -63,7 +64,14 @@ const RECOVERY_UNLOCK_IDS = [
     "extra-hp", // Tough Hide
     "keyword-bonus", // Sharpened Instincts
   ],
+  [
+    "other-sprint-free", // Run in Terror
+    "panic-response", // Fight or Flight
+    "keyword-bonus", // Sharpened Instincts
+  ],
 ] as const;
+/** Play-outs per seed: one baseline + one per recovery unlock set. */
+const PLAY_OUTS_PER_SEED = 1 + RECOVERY_UNLOCK_IDS.length;
 const RECOVERY_RUN_MODIFIERS = RECOVERY_UNLOCK_IDS.map((ids) =>
   buildRunModifiers(ids, UNLOCK_CATALOG),
 );
@@ -80,6 +88,10 @@ const RECOVERY_RUN_MODIFIERS = RECOVERY_UNLOCK_IDS.map((ids) =>
 //   argv[3] / SIM_K         determinizations/candidate default 5
 //   argv[4] / SIM_SEED      agent rng seed            default 12345
 //   argv[5] / SIM_THRESHOLD flag win-rate <= this     default 0.02 (2%)
+//   SIM_MAX_ACTIONS (env only) action cap per play-out; a run still "playing"
+//                           at the cap is classified `capped`. default 300.
+//                           Lower it when stall-prone worlds make a full audit
+//                           crawl; capped runs cost the full cap in decisions.
 //   SIM_WEIGHTS (env only)  JSON object merged onto DEFAULT_EVAL_WEIGHTS
 //
 // A world id may additionally appear ANYWHERE among the positional args (or
@@ -97,6 +109,8 @@ export interface CompletenessParams {
   threshold: number;
   weights: EvalWeights;
   weightsOverridden: boolean;
+  /** Action cap per play-out (SIM_MAX_ACTIONS); `runCompleteness` defaults it to 300. */
+  maxActionsPerWorld?: number;
   /** Restrict the run to this one registered world id, or all worlds when absent. */
   worldId?: string;
   /** CLI output format. JSON is the default for machine-readable reports. */
@@ -228,6 +242,7 @@ export function parseParams(): CompletenessParams {
     threshold: resolveFloat(rest[3], env.SIM_THRESHOLD, 0.02),
     weights,
     weightsOverridden,
+    maxActionsPerWorld: resolveInt(undefined, env.SIM_MAX_ACTIONS, DEFAULT_MAX_ACTIONS_PER_WORLD),
     outputFormat,
     ...(worldId !== undefined ? { worldId } : {}),
   };
@@ -406,50 +421,55 @@ export function buildAllWorlds(): BuiltWorld[] {
 
 /**
  * Run all worlds and return their aggregates, threading one continuous agent rng
- * stream across every seed AND every play-out (baseline, then recovery, for
- * every seed) AND every world. The rng entering each play-out is the rng
- * leaving the previous one (REQ-SCC-16). This is a fixed paired cohort: both
- * configurations always run, in the same order, for every seed — there is no
- * outcome-dependent branching (see the spec amendment).
+ * stream across every seed AND every play-out (baseline, then each recovery
+ * unlock set in declaration order, for every seed) AND every world. The rng
+ * entering each play-out is the rng leaving the previous one (REQ-SCC-16). This
+ * is a fixed paired cohort: every configuration always runs, in the same order,
+ * for every seed — there is no outcome-dependent branching (see the spec
+ * amendment).
  */
 export function runCompleteness(
   params: CompletenessParams,
   worlds: BuiltWorld[],
 ): WorldAggregate[] {
   let agentRng: RngState = createRng(params.agentSeed);
+  const maxActions = params.maxActionsPerWorld ?? DEFAULT_MAX_ACTIONS_PER_WORLD;
   const aggregates: WorldAggregate[] = [];
 
   for (const world of worlds) {
     const policy = evalPolicyFactory(world.catalog, params.weights, params.K);
     const baseline = newCohortAggregate();
-    const recoveries = RECOVERY_RUN_MODIFIERS.map((_) => newCohortAggregate());
+    // Pair each recovery unlock set's modifiers with its own cohort up front,
+    // so the play-out loop never has to index two parallel arrays.
+    const recoveryRuns = RECOVERY_RUN_MODIFIERS.map((modifiers) => ({
+      modifiers,
+      cohort: newCohortAggregate(),
+    }));
 
     for (let seed = 1; seed <= params.N; seed++) {
       const baselineOutcome = playOut(world.catalog, world.worldData, seed, policy, agentRng, {
-        maxActions: MAX_ACTIONS_PER_WORLD,
+        maxActions,
         weights: params.weights,
       });
       agentRng = baselineOutcome.finalAgentRng;
       recordOutcome(baseline, baselineOutcome);
 
-      RECOVERY_RUN_MODIFIERS.forEach((recoveryModifiers, index) => {
-        if (recoveries[index] !== undefined) {
-          const outcome = playOut(world.catalog, world.worldData, seed, policy, agentRng, {
-            maxActions: MAX_ACTIONS_PER_WORLD,
-            runModifiers: recoveryModifiers,
-            weights: params.weights,
-          });
-          agentRng = outcome.finalAgentRng;
-          recordOutcome(recoveries[index], outcome);
-        }
-      });
+      for (const { modifiers, cohort } of recoveryRuns) {
+        const outcome = playOut(world.catalog, world.worldData, seed, policy, agentRng, {
+          maxActions,
+          runModifiers: modifiers,
+          weights: params.weights,
+        });
+        agentRng = outcome.finalAgentRng;
+        recordOutcome(cohort, outcome);
+      }
     }
 
     aggregates.push({
       id: world.id,
       totalActs: world.worldData.deckComposition.acts.length,
       baseline,
-      recoveries,
+      recoveries: recoveryRuns.map((run) => run.cohort),
     });
   }
 
@@ -768,21 +788,19 @@ function formatWorldBlock(agg: WorldAggregate, threshold: number): string {
       threshold,
     }),
   );
-  lines.push("");
-  lines.push(
-    ...agg.recoveries
-      .flatMap((recovery, index) => {
-        const unlocks = RECOVERY_UNLOCK_IDS[index];
-        if (unlocks === undefined) return undefined;
-        return formatCohortBlock(
-          `Recovery (unlocks: ${unlocks.join(", ")})`,
-          recovery,
-          agg.totalActs,
-          { isBaseline: false, threshold, baselineForDiff: agg.baseline },
-        );
-      })
-      .filter((line) => line !== undefined),
-  );
+  for (const [index, recovery] of agg.recoveries.entries()) {
+    // `recoveries` is built 1:1 from RECOVERY_UNLOCK_IDS (runCompleteness), so
+    // the index lookup only misses for hand-rolled aggregates in tests.
+    const unlocks = RECOVERY_UNLOCK_IDS[index]?.join(", ") ?? "unknown";
+    lines.push("");
+    lines.push(
+      ...formatCohortBlock(`Recovery (unlocks: ${unlocks})`, recovery, agg.totalActs, {
+        isBaseline: false,
+        threshold,
+        baselineForDiff: agg.baseline,
+      }),
+    );
+  }
   return lines.join("\n");
 }
 
@@ -798,9 +816,11 @@ export function formatHumanReport(
   if (params.worldId !== undefined) blocks.push(`  World filter: ${params.worldId}`);
   blocks.push(`  Eval weights: ${params.weightsOverridden ? "custom (SIM_WEIGHTS)" : "default"}`);
   blocks.push(
-    `  Play-outs per world: ${2 * params.N} (2 x N: one baseline + one recovery play-out per seed)`,
+    `  Play-outs per world: ${PLAY_OUTS_PER_SEED * params.N} (${PLAY_OUTS_PER_SEED} x N: one baseline + ${RECOVERY_UNLOCK_IDS.length} recovery play-out(s) per seed)`,
   );
-  blocks.push(`  Recovery unlock configuration: ${RECOVERY_UNLOCK_IDS.join(", ")}`);
+  for (const [index, unlockIds] of RECOVERY_UNLOCK_IDS.entries()) {
+    blocks.push(`  Recovery unlock set ${index + 1}: ${unlockIds.join(", ")}`);
+  }
   blocks.push("");
   for (const agg of aggregates) {
     blocks.push(formatWorldBlock(agg, params.threshold));
@@ -823,9 +843,10 @@ export function formatJsonReport(params: CompletenessParams, aggregates: WorldAg
       threshold: params.threshold,
       weights: params.weights,
       weightsOverridden: params.weightsOverridden,
+      maxActionsPerWorld: params.maxActionsPerWorld ?? DEFAULT_MAX_ACTIONS_PER_WORLD,
       ...(params.worldId !== undefined ? { worldId: params.worldId } : {}),
     },
-    playOutsPerWorld: 2 * params.N,
+    playOutsPerWorld: PLAY_OUTS_PER_SEED * params.N,
     recoveryUnlockIds: [...RECOVERY_UNLOCK_IDS],
     worlds: aggregates.map((aggregate) => ({
       ...aggregate,
