@@ -1,12 +1,13 @@
 import type { Action, GameEvent, GameState, WorldCard } from "../model/types";
 import type { CardCatalog } from "../model/catalog";
 import { availableActions, checkPlayAction } from "./available";
-import { applyEffect } from "./effects";
+import { applyEffect, gainCard } from "./effects";
 import { startTurn, spendEnergy } from "./energy";
 import { IllegalActionError } from "../model/errors";
 import { mintCard } from "../model/cards";
 import { createActBoonOffer } from "./actBoon";
 import { effectivePlayerCard, effectiveWorldCardCost } from "./effectiveCards";
+import { worldThreatTemplateByWorldId } from "../effects/gainCard";
 
 // ---------------------------------------------------------------------------
 // Result type
@@ -282,8 +283,18 @@ function handleEndTurn(catalog: CardCatalog, state: GameState): ReduceResult {
     }
   }
 
+  // Before starting a turn make sure there's at least one world card.
+  const worldThreadId = worldThreatTemplateByWorldId(state.worldId);
+  const bShouldAddThreat =
+    worldThreadId !== undefined &&
+    0 === state.worldDraw.length + state.acts.reduce((sum, act) => sum + act.length, 0);
+  const threatResult = bShouldAddThreat
+    ? gainCard(catalog, state, worldThreadId, "worldDrawTop")
+    : { state: state, events: [] };
+  events.push(...threatResult.events);
+
   // Start turn: gain +1 energy, then refill hand
-  const turnStartResult = startTurn(afterPassive);
+  const turnStartResult = startTurn(threatResult.state);
   events.push(...turnStartResult.events);
 
   const cascadeResult = applyCascadeEffects(catalog, {
