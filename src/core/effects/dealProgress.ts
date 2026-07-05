@@ -44,7 +44,7 @@ import type {
   CounterSpec,
   GameEvent,
   GameState,
-  KeywordName,
+  KeywordBonus,
   TargetSpec,
   WorldCard,
 } from "../model/types";
@@ -110,14 +110,19 @@ export function dealProgress(
   hazardId: CardId,
   base: number,
   applyHook: ApplyHook,
-  bonus?: { tag: KeywordName; amount: number },
+  bonus?: KeywordBonus | KeywordBonus[],
 ): EffectResult {
   const hazard = state.hand.find((c): c is WorldCard => c.kind === "world" && c.id === hazardId);
   if (hazard === undefined) return { state, events: [] };
 
-  const bonusAmount =
-    bonus !== undefined && hasKeyword(hazard, bonus.tag)
-      ? bonus.amount + state.runModifiers.keywordDamageBonus
+  const getBonus = (hazard: WorldCard, bonus: KeywordBonus) => {
+    return hasKeyword(hazard, bonus.tag) ? bonus.amount + state.runModifiers.keywordDamageBonus : 0;
+  };
+
+  const bonusAmount = Array.isArray(bonus)
+    ? bonus.reduce((sum, kb) => getBonus(hazard, kb), 0)
+    : bonus !== undefined
+      ? getBonus(hazard, bonus)
       : 0;
   const amount = base + bonusAmount;
 
@@ -176,7 +181,7 @@ export function resolveCounter(state: GameState, spec: CounterSpec): number {
   }
 }
 
-// ---------------------------------------------------------------------------
+// ------------------------------DealProgressAll---------------------------------------------
 // DealProgress — hazard-targeting, with a keyword-tag structural spec
 // ---------------------------------------------------------------------------
 
@@ -203,19 +208,35 @@ export class DealProgressHandler extends HazardTargetingHandler<DealProgressEffe
   }
 
   override describe(effect: DealProgressEffect): string[] {
-    const bonus = effect.bonus ? `\n(+${effect.bonus.amount} vs ${effect.bonus.tag})` : "";
+    const toString = (bonus: KeywordBonus) => `(+${bonus.amount} vs ${bonus.tag})`;
+    const bonus = Array.isArray(effect.bonus)
+      ? "\n" + effect.bonus.map(toString).join("\n")
+      : effect.bonus
+        ? "\n" + toString(effect.bonus)
+        : "";
     return [`Add ${effect.base} Progress${bonus}`];
   }
 
   override compile(effect: DealProgressEffect, _ctx: CompileContext): EffectLine[] {
     const lines = [main([text("+"), value(`${effect.base}`, "progress"), icon("progress")])];
-    if (effect.bonus) lines.push(bonusRider(effect.bonus, "progress"));
+    if (effect.bonus) {
+      if (Array.isArray(effect.bonus)) {
+        effect.bonus.forEach((kb) => lines.push(bonusRider(kb, "progress")));
+      } else {
+        lines.push(bonusRider(effect.bonus, "progress"));
+      }
+    }
     return lines;
   }
 
   override structuralSpec(effect: DealProgressEffect): TargetSpec {
-    const tag = effect.bonus?.tag;
-    return tag !== undefined ? { kind: "hazard", tag } : { kind: "hazard" };
+    if (Array.isArray(effect.bonus)) {
+      return { kind: "hazard", tags: effect.bonus.map((kb) => kb.tag) };
+    }
+    if (effect.bonus !== undefined) {
+      return { kind: "hazard", tag: effect.bonus.tag };
+    }
+    return { kind: "hazard" };
   }
 
   override connectorStyle(_effect: DealProgressEffect): ConnectorStyle {
@@ -231,10 +252,16 @@ export class DealProgressHandler extends HazardTargetingHandler<DealProgressEffe
     // you cannot see (it is unfiltered when light === 0, i.e. no concealment).
     const visible = worldCardsInHand(state).filter((c) => !isConcealed(c, state.light));
     if (effect.base === 0) {
-      const tag = effect.bonus?.tag;
-      if (tag !== undefined) {
-        // Filter to visible world cards that carry the matching keyword.
-        return visible.filter((c) => hasKeyword(c, tag)).map((c) => c.id);
+      if (Array.isArray(effect.bonus)) {
+        const tags = effect.bonus.map((kb) => kb.tag);
+        // Filter to visible world cards that carry any of the matching keywords.
+        return visible.filter((c) => tags.some((tag) => hasKeyword(c, tag))).map((c) => c.id);
+      } else {
+        const tag = effect.bonus?.tag;
+        if (tag !== undefined) {
+          // Filter to visible world cards that carry the matching keyword.
+          return visible.filter((c) => hasKeyword(c, tag)).map((c) => c.id);
+        }
       }
     }
     return visible.map((c) => c.id);
@@ -300,7 +327,14 @@ export class DealProgressAllHandler extends EffectHandler<DealProgressAllEffect>
   }
 
   override describe(effect: DealProgressAllEffect): string[] {
-    const bonus = effect.bonus ? `\n(+${effect.bonus.amount} vs ${effect.bonus.tag})` : "";
+    const getBonus = (bonus: KeywordBonus) => {
+      return bonus ? `(+${bonus.amount} vs ${bonus.tag})` : "";
+    };
+    const bonus = Array.isArray(effect.bonus)
+      ? "\n" + effect.bonus.map(getBonus).join("\n")
+      : effect.bonus
+        ? "\n" + getBonus(effect.bonus)
+        : "";
     return [`${effect.base} Progress to every hazard${bonus}`];
   }
 
@@ -308,7 +342,13 @@ export class DealProgressAllHandler extends EffectHandler<DealProgressAllEffect>
     const lines = [
       main([text("+"), value(`${effect.base}`, "progress"), text("all"), icon("progressAll")]),
     ];
-    if (effect.bonus) lines.push(bonusRider(effect.bonus, "progress"));
+    if (Array.isArray(effect.bonus)) {
+      effect.bonus.forEach((kb) => {
+        lines.push(bonusRider(kb, "progress"));
+      });
+    } else if (effect.bonus) {
+      lines.push(bonusRider(effect.bonus, "progress"));
+    }
     return lines;
   }
 

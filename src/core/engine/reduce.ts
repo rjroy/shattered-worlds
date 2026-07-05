@@ -56,7 +56,6 @@ function applyCascadeEffects(catalog: CardCatalog, original: ReduceResult): Redu
 
         // Get all cards that are now clear after the keyword changes.
         const cleared: WorldCard[] = curr.state.hand.filter((c) => {
-          if (!event.ids.includes(c.id)) return false;
           if (c.kind !== "world") return false;
           const currProgress = current.progress[c.id] ?? 0;
           return currProgress >= effectiveWorldCardCost(c, curr.state);

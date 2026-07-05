@@ -31,6 +31,8 @@ export type KeywordName =
 // Bare keywords carry no value.
 export type Keyword = { name: KeywordName; value?: number };
 
+export type KeywordBonus = { tag: KeywordName; amount: number };
+
 export type PersistentModifier =
   // Increases the clear cost per card with the keyword
   | { kind: "ClearCostPerKeywordCount"; costPer: number }
@@ -65,7 +67,7 @@ export type CardEffect =
   | {
       kind: "DealProgress";
       base: number;
-      bonus?: { tag: KeywordName; amount: number };
+      bonus?: KeywordBonus | KeywordBonus[];
     }
   | {
       kind: "DealProgressScaled";
@@ -123,7 +125,7 @@ export type CardEffect =
   | {
       kind: "DealProgressAll";
       base: number;
-      bonus?: { tag: KeywordName; amount: number };
+      bonus?: KeywordBonus | KeywordBonus[];
     }
   | { kind: "GainHeat"; amount: number }
   | { kind: "FreezeCards"; amount: number; duration: number }
@@ -390,7 +392,7 @@ export type PendingBoonChoice = {
 
 export type TargetSpec =
   | { kind: "none" }
-  | { kind: "hazard"; tag?: KeywordName }
+  | { kind: "hazard"; tag?: KeywordName; tags?: KeywordName[] }
   | { kind: "modal"; branches: readonly TargetSpec[] }
   | { kind: "returnWorld"; min: number; max: number }
   | { kind: "destroyHand"; min: number; max: number; maxCost?: number }
