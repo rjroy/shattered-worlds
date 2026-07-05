@@ -295,23 +295,19 @@ function handleEndTurn(catalog: CardCatalog, state: GameState): ReduceResult {
     ? gainCard(catalog, afterPassive, worldThreatId, "worldDrawTop")
     : { state: afterPassive, events: [] };
   events.push(...threatResult.events);
-  console.log(`handleEndTurn: threat: ${worldThreatId} ${bShouldAddThreat} ${events.length}`);
 
   // Start turn: gain +1 energy, then refill hand
   const turnStartResult = startTurn(threatResult.state);
   events.push(...turnStartResult.events);
-  console.log(`handleEndTurn: startTurn: ${turnStartResult.playerCardsDrawn} ${events.length}`);
 
   const cascadeResult = applyCascadeEffects(catalog, {
     state: turnStartResult.state,
     events: events,
   });
   events = cascadeResult.events;
-  console.log(`handleEndTurn: cascadeEffects: ${events.length}`);
 
   const afterRefill = cascadeResult.state;
   if (afterRefill.pendingBoonChoices.length > 0) {
-    console.log(`handleEndTurn: hasBoon: ${events.length}`);
     return { state: afterRefill, events };
   }
 
@@ -322,7 +318,6 @@ function handleEndTurn(catalog: CardCatalog, state: GameState): ReduceResult {
   if (afterRefill.status === "playing" && turnStartResult.playerCardsDrawn === 0) {
     const lostState: GameState = { ...afterRefill, status: "lost" };
     events.push({ type: "WorldLost", cause: "noPlayerCards" });
-    console.log(`handleEndTurn: lose because noPlayerCards: ${events.length}`);
     return { state: lostState, events };
   }
 
@@ -341,7 +336,6 @@ function handleEndTurn(catalog: CardCatalog, state: GameState): ReduceResult {
       if (noProgressPossible) {
         const lostState: GameState = { ...afterRefill, status: "lost" };
         events.push({ type: "WorldLost", cause: "exhausted" });
-        console.log(`handleEndTurn: lose because exhausted: ${events.length}`);
         return { state: lostState, events };
       }
     }
@@ -392,7 +386,6 @@ function handleEndTurn(catalog: CardCatalog, state: GameState): ReduceResult {
     }
   }
 
-  console.log(`handleEndTurn: playing: ${events.length}`);
   return { state: afterRefill, events };
 }
 
