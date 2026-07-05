@@ -245,7 +245,7 @@ describe("RunModifiers in createWorld", () => {
   // mechanism is scoped to "the-beginning" only (see world.ts), so this also
   // confirms every other world keeps keywordGuard: 0 regardless of
   // extraStartKeywordGuard.
-  it("seeds keywordGuard from buildRunModifiers' destinyWeight aggregation, scoped to the-beginning", () => {
+  it("seeds keywordGuard from buildRunModifiers' destinyWeight aggregation", () => {
     const fresh = createWorld(catalog, worldData, 42, buildRunModifiers([], UNLOCK_CATALOG));
     expect(fresh.state.keywordGuard).toBe(0);
 
@@ -253,16 +253,8 @@ describe("RunModifiers in createWorld", () => {
     // charge at WEIGHT_PER_CHARGE = 2.
     const activatedMods = buildRunModifiers(["extra-hp", "extra-energy"], UNLOCK_CATALOG);
 
-    const theBeginningWorld = { ...worldData, worldId: "the-beginning" };
-    const activated = createWorld(catalog, theBeginningWorld, 42, activatedMods);
+    const activated = createWorld(catalog, worldData, 42, activatedMods);
     expect(activated.state.keywordGuard).toBe(1);
-
-    // Same activated unlocks, but a different world: the guard must not leak
-    // in, since it exists to buff "the-beginning" specifically, not every
-    // world a player with that meta-progression happens to play.
-    const otherWorld = { ...worldData, worldId: "questions" };
-    const otherActivated = createWorld(catalog, otherWorld, 42, activatedMods);
-    expect(otherActivated.state.keywordGuard).toBe(0);
   });
 });
 

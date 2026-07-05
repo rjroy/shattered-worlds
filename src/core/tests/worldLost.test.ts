@@ -5,8 +5,10 @@
  * `WorldLost` event is checked for the expected `cause`:
  *   - "hp"            HP reaches 0 from damage
  *   - "noPlayerCards" turn start draws zero player cards
- *   - "exhausted"     all piles empty and no structural play remains
- *   - "worldLivelock" world deck gone and nothing can reintroduce world cards
+ *   - "exhausted"     all piles empty and no structural play remains, in a world
+ *                     without an automatic threat fallback
+ *   - "worldLivelock" world deck gone and nothing can reintroduce world cards, in
+ *                     a world without an automatic threat fallback
  *
  * All tests operate on pure GameState — no Phaser, no browser globals.
  */
@@ -68,6 +70,7 @@ describe("WorldLost cause", () => {
       worldDraw: [],
       acts: [],
       energy: 5,
+      worldId: "test-no-threat",
     });
 
     const result = reduce(catalog, state, { type: "EndTurn" });
@@ -91,6 +94,7 @@ describe("WorldLost cause", () => {
       worldDraw: [],
       acts: [],
       energy: 5,
+      worldId: "test-no-threat",
     });
 
     const result = reduce(catalog, state, { type: "EndTurn" });

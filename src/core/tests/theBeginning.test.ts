@@ -58,7 +58,7 @@ function playerTemplate(id: string) {
 }
 
 describe("The Beginning world data", () => {
-  it("registers, builds, maps its threat, and ends act 3 with The Walker", () => {
+  it("registers, builds, maps its threat, and ends act 3 with the no-door Walker", () => {
     expect(worldDataRegistry.map((bundle) => bundle.id)).toContain(WORLD_ID);
     const { catalog, worldData } = buildWorld(WORLD_ID);
     expect(worldData.worldId).toBe(WORLD_ID);
@@ -66,7 +66,7 @@ describe("The Beginning world data", () => {
     expect(worldThreatTemplateByWorldId(WORLD_ID)).toBe("Destiny");
     expect(worldData.deckComposition.acts).toHaveLength(3);
     expect(worldData.deckComposition.acts.at(-1)?.cards.at(-1)).toEqual({
-      templateId: "The Walker",
+      templateId: "The Walker - No Door",
       count: 1,
     });
 
@@ -76,7 +76,7 @@ describe("The Beginning world data", () => {
     // but this asserts the intent directly rather than relying on that as a
     // side effect).
     expect(WORLD_CARDS as readonly string[]).not.toContain("The Walker");
-    expect(catalog["The Walker"]?.name).toBe("The Walker");
+    expect(catalog["The Walker - No Door"]?.name).toBe("The Walker");
   });
 
   it("defines all five hooks and valid keywords on each world card", () => {
@@ -222,14 +222,14 @@ describe("The Beginning — Door and Destiny onCleared are independent SurviveWo
 // logEvent (only invoked from GameCore.dispatch's
 // `result.events.forEach(logEvent)`, see engine/game.ts) was never exercised
 // by a decay scenario. This world is the natural home for the regression:
-// Denial is authored here via onDraw ApplyKeyword{target:"self"} and decays
+// Anger is authored here via onDraw ApplyKeyword{target:"self"} and decays
 // one turn later since it isn't in PERSISTENT_KEYWORDS.
 describe("The Beginning — dispatch() regression: applied-keyword decay reaches logEvent", () => {
-  it("EndTurn decaying Denial by one (not yet expiring it) does not throw", () => {
+  it("EndTurn decaying an applied grief keyword does not throw", () => {
     const { catalog, worldData } = buildWorld(WORLD_ID);
-    // Seed pinned because it deterministically draws "It's Fine, Actually"
-    // (onDraw: ApplyKeyword Denial value 3) into hand on the opening deal and
-    // decays it (3 -> 2, a KeywordReduced, not a full expiry) on the second
+    // Seed pinned because it deterministically draws an Anger-applying hazard
+    // into hand on the opening deal and decays it (2 -> 1, a KeywordReduced)
+    // on the second
     // EndTurn — reproducing the exact event type that crashed logEvent.
     const game = createGame(catalog, worldData, 27, DEFAULT_RUN_MODIFIERS);
 
@@ -243,6 +243,6 @@ describe("The Beginning — dispatch() regression: applied-keyword decay reaches
       }
     }).not.toThrow();
 
-    expect(keywordsReduced).toContain("Denial");
+    expect(keywordsReduced).toContain("Anger");
   });
 });

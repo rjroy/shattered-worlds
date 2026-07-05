@@ -11,7 +11,9 @@ echo "ID  | Base Wins  | Recovery Wins  | Flagged"
 echo "--- | ---------- | -------------- | --------"
 
 jq -r '
-    .worlds[] |
+    .worlds |
+    sort_by(.baseline.wins / .baseline.games) |
+    .[] |
     [
       .id,
       "\((.baseline.wins / .baseline.games * 100) | round)%",
