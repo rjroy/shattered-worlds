@@ -306,7 +306,9 @@ export class SurviveWorldHandler extends EffectHandler<SurviveWorldEffect> {
   }
 
   override compile(_effect: SurviveWorldEffect, _ctx: CompileContext): EffectLine[] {
-    return [main([icon("survive"), text("SURVIVE!")])];
+    return _ctx.worldId == "the-beginning"
+      ? [main([icon("survive"), text("Accept the Destiny")])]
+      : [main([icon("survive"), text("SURVIVE!")])];
   }
 
   override isPlayable(): boolean {
