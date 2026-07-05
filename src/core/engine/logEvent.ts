@@ -101,6 +101,7 @@ export function logEvent(event: GameEvent): void {
         `${baseString} ids: ${event.ids.join(", ")} templates: ${event.templateIds.join(", ")} keyword: ${event.keyword} value: ${event.value}`,
       );
       break;
+    case "KeywordReduced":
     case "KeywordRemoved":
       console.log(
         `${baseString} ids: ${event.ids.join(", ")} templates: ${event.templateIds.join(", ")} keyword: ${event.keyword}`,
@@ -118,7 +119,14 @@ export function logEvent(event: GameEvent): void {
       );
       break;
     default: {
-      throw new Error(`logEvent: unhandled event type ${event.type}`);
+      // Exhaustiveness guard: if `GameEvent` gains a variant with no case
+      // above, `event` no longer narrows to `never` here and `bun run
+      // typecheck` fails at compile time — the KeywordReduced bug (a case
+      // silently missing until a live playtest crash) reached this default
+      // branch at runtime instead, because the old cast (`as unknown as
+      // GameEvent`) hid the gap from the compiler.
+      const exhaustiveCheck: never = event;
+      throw new Error(`logEvent: unhandled event type ${(exhaustiveCheck as GameEvent).type}`);
     }
   }
 }

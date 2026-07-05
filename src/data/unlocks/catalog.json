@@ -217,9 +217,17 @@
     "id": "world-answers",
     "name": "Answers",
     "description": "Opens Answers in World Select.",
-    "cost": 25,
+    "cost": 20,
     "destinyWeight": 0,
     "effect": { "type": "worldUnlock", "worldId": "answers" }
+  },
+  {
+    "id": "world-the-beginning",
+    "name": "The Beginning",
+    "description": "Opens The Beginning in World Select.",
+    "cost": 20,
+    "destinyWeight": 0,
+    "effect": { "type": "worldUnlock", "worldId": "the-beginning" }
   },
   {
     "id": "first-sprint-free",

@@ -1,12 +1,13 @@
 import type { Action, GameEvent, GameState, WorldCard } from "../model/types";
 import type { CardCatalog } from "../model/catalog";
 import { availableActions, checkPlayAction } from "./available";
-import { applyEffect } from "./effects";
+import { applyEffect, gainCard } from "./effects";
 import { startTurn, spendEnergy } from "./energy";
 import { IllegalActionError } from "../model/errors";
 import { mintCard } from "../model/cards";
 import { createActBoonOffer } from "./actBoon";
 import { effectivePlayerCard, effectiveWorldCardCost } from "./effectiveCards";
+import { worldThreatTemplateByWorldId } from "../effects/gainCard";
 
 // ---------------------------------------------------------------------------
 // Result type
@@ -48,11 +49,12 @@ function applyCascadeEffects(catalog: CardCatalog, original: ReduceResult): Redu
           offer.event,
         );
       }
+      case "KeywordApplied":
       case "KeywordReduced":
       case "KeywordRemoved": {
         let current = curr.state;
 
-        // Get all cards that are now clear after the removed keyword.
+        // Get all cards that are now clear after the keyword changes.
         const cleared: WorldCard[] = curr.state.hand.filter((c) => {
           if (!event.ids.includes(c.id)) return false;
           if (c.kind !== "world") return false;
@@ -282,8 +284,20 @@ function handleEndTurn(catalog: CardCatalog, state: GameState): ReduceResult {
     }
   }
 
+  // Before starting a turn make sure there's at least one world card.
+  const worldThreatId = worldThreatTemplateByWorldId(afterPassive.worldId);
+  const worldCardCount =
+    afterPassive.hand.filter((c) => c.kind == "world").length +
+    afterPassive.worldDraw.length +
+    afterPassive.acts.reduce((sum, act) => sum + act.length, 0);
+  const bShouldAddThreat = worldThreatId !== undefined && 0 === worldCardCount;
+  const threatResult = bShouldAddThreat
+    ? gainCard(catalog, afterPassive, worldThreatId, "worldDrawTop")
+    : { state: afterPassive, events: [] };
+  events.push(...threatResult.events);
+
   // Start turn: gain +1 energy, then refill hand
-  const turnStartResult = startTurn(afterPassive);
+  const turnStartResult = startTurn(threatResult.state);
   events.push(...turnStartResult.events);
 
   const cascadeResult = applyCascadeEffects(catalog, {
@@ -293,7 +307,6 @@ function handleEndTurn(catalog: CardCatalog, state: GameState): ReduceResult {
   events = cascadeResult.events;
 
   const afterRefill = cascadeResult.state;
-
   if (afterRefill.pendingBoonChoices.length > 0) {
     return { state: afterRefill, events };
   }

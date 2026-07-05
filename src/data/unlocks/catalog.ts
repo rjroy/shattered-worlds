@@ -10,6 +10,15 @@ export const UNLOCK_CATALOG: readonly UnlockDefinition[] =
 
 export const DESTINY_BUDGET = 5;
 
+// Step 6 (World 15 Slice 1) placeholders for deriving starting keywordGuard
+// charges from summed destinyWeight across activated unlocks. Unauthored
+// guesses pending a balance pass against the real sum of destinyWeight
+// across the full catalog — do not treat as final. Kept low enough
+// (relative to DESTINY_BUDGET below) that the mechanism is observable
+// with real activation sets rather than always resolving to 0.
+const WEIGHT_PER_CHARGE = 2;
+const MAX_GUARD = 3;
+
 export function computeUnlockSpend(
   profile: UnlocksProfile,
   catalog: readonly UnlockDefinition[],
@@ -120,6 +129,19 @@ export function buildRunModifiers(
         break;
     }
   }
+
+  // Starting keywordGuard is a separate aggregation, not a per-effect-type
+  // switch case: it scales with overall meta-progression (every activated
+  // unlock's destinyWeight, whatever its own effect type) rather than a
+  // hand-picked set of Blessings. See RunModifiers.extraStartKeywordGuard.
+  const totalWeight = activeIds.reduce((sum, id) => {
+    const def = catalog.find((candidate) => candidate.id === id);
+    return sum + (def?.destinyWeight ?? 0);
+  }, 0);
+  mods = {
+    ...mods,
+    extraStartKeywordGuard: Math.min(MAX_GUARD, Math.floor(totalWeight / WEIGHT_PER_CHARGE)),
+  };
 
   return mods;
 }

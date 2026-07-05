@@ -2519,6 +2519,21 @@
       "onDraw": { "kind": "None" },
       "onEndOfTurn": { "kind": "None" }
     },
+    "The Walker - No Door": {
+      "kind": "world",
+      "name": "The Walker",
+      "insetKey": "inset-walker",
+      "cost": 10,
+      "rarity": "legendary",
+      "keywords": [],
+      "discardable": true,
+      "canExile": false,
+      "onDiscarded": { "kind": "None" },
+      "onCleared": { "kind": "None" },
+      "onPartialClear": { "kind": "None" },
+      "onDraw": { "kind": "None" },
+      "onEndOfTurn": { "kind": "None" }
+    },
     "Summon Door": {
       "kind": "player",
       "name": "Summon Door",
@@ -3367,6 +3382,317 @@
       "rarity": "uncommon",
       "energyCost": 1,
       "effect": { "kind": "DiscardThenDraw", "player": 1 }
+    },
+    "It's Fine, Actually": {
+      "kind": "world",
+      "name": "It's Fine, Actually",
+      "insetKey": "the-beginning-inset-its-fine-actually",
+      "rarity": "uncommon",
+      "cost": 4,
+      "keywords": [],
+      "discardable": true,
+      "onDiscarded": { "kind": "None" },
+      "onCleared": { "kind": "None" },
+      "onPartialClear": { "kind": "None" },
+      "onDraw": { "kind": "ApplyKeyword", "keyword": "Denial", "value": 3, "target": "self" },
+      "onEndOfTurn": {
+        "kind": "KeywordGate",
+        "keyword": "Denial",
+        "min": 2,
+        "zone": "hand",
+        "then": { "kind": "ForceDestroy", "amount": 1 }
+      }
+    },
+    "Somebody Else Will Handle It": {
+      "kind": "world",
+      "name": "Somebody Else Will Handle It",
+      "insetKey": "the-beginning-inset-somebody-else-will-handle-it",
+      "rarity": "uncommon",
+      "cost": 4,
+      "keywords": [],
+      "discardable": true,
+      "onDiscarded": { "kind": "None" },
+      "onCleared": { "kind": "None" },
+      "onPartialClear": { "kind": "None" },
+      "onDraw": { "kind": "ApplyKeyword", "keyword": "Anger", "value": 2, "target": "self" },
+      "onEndOfTurn": {
+        "kind": "KeywordGate",
+        "keyword": "Anger",
+        "min": 2,
+        "zone": "hand",
+        "then": {
+          "kind": "ApplyKeyword",
+          "keyword": "Anger",
+          "value": 1,
+          "target": "randomWorldCardInHand"
+        }
+      }
+    },
+    "A Story You've Told Yourself": {
+      "kind": "world",
+      "name": "A Story You've Told Yourself",
+      "insetKey": "the-beginning-inset-a-story-youve-told-yourself",
+      "rarity": "common",
+      "cost": 3,
+      "keywords": ["Obstructed"],
+      "discardable": true,
+      "onDiscarded": { "kind": "None" },
+      "onCleared": { "kind": "GainCard", "template": "Say It Out Loud" },
+      "onPartialClear": { "kind": "None" },
+      "onDraw": { "kind": "ApplyKeyword", "keyword": "Denial", "value": 1, "target": "self" },
+      "onEndOfTurn": { "kind": "None" }
+    },
+    "Somebody Should Be Mad About This": {
+      "kind": "world",
+      "name": "Somebody Should Be Mad About This",
+      "insetKey": "the-beginning-inset-somebody-should-be-mad-about-this",
+      "rarity": "common",
+      "cost": 3,
+      "keywords": ["Obstructed"],
+      "discardable": true,
+      "onDiscarded": { "kind": "None" },
+      "onCleared": { "kind": "GainCard", "template": "Put It Down" },
+      "onPartialClear": { "kind": "None" },
+      "onDraw": { "kind": "ApplyKeyword", "keyword": "Anger", "value": 1, "target": "self" },
+      "onEndOfTurn": { "kind": "None" }
+    },
+    "Every Excuse Sounds Thinner": {
+      "kind": "world",
+      "name": "Every Excuse Sounds Thinner",
+      "insetKey": "the-beginning-inset-every-excuse-sounds-thinner",
+      "rarity": "common",
+      "cost": 3,
+      "keywords": [],
+      "discardable": true,
+      "onDiscarded": { "kind": "None" },
+      "onCleared": { "kind": "None" },
+      "onPartialClear": { "kind": "None" },
+      "onDraw": { "kind": "None" },
+      "onEndOfTurn": { "kind": "ForceDestroy", "amount": 1 }
+    },
+    "One More Excuse": {
+      "kind": "world",
+      "name": "One More Excuse",
+      "insetKey": "the-beginning-inset-one-more-excuse",
+      "rarity": "common",
+      "cost": 2,
+      "keywords": ["Obstructed"],
+      "discardable": true,
+      "onDiscarded": { "kind": "Draw", "world": 1 },
+      "onCleared": { "kind": "None" },
+      "onPartialClear": { "kind": "None" },
+      "onDraw": { "kind": "None" },
+      "onEndOfTurn": { "kind": "None" }
+    },
+    "A Smaller Ask": {
+      "kind": "world",
+      "name": "A Smaller Ask",
+      "insetKey": "the-beginning-inset-a-smaller-ask",
+      "rarity": "uncommon",
+      "cost": 4,
+      "keywords": [],
+      "discardable": true,
+      "onDiscarded": { "kind": "None" },
+      "onCleared": { "kind": "None" },
+      "onPartialClear": { "kind": "None" },
+      "onDraw": { "kind": "ApplyKeyword", "keyword": "Bargaining", "value": 1, "target": "self" },
+      "onEndOfTurn": {
+        "kind": "KeywordGate",
+        "keyword": "Bargaining",
+        "min": 2,
+        "zone": "hand",
+        "then": { "kind": "ForceDestroy", "amount": 1 }
+      }
+    },
+    "It's Not So Bad": {
+      "kind": "world",
+      "name": "It's Not So Bad",
+      "insetKey": "the-beginning-inset-its-not-so-bad",
+      "rarity": "uncommon",
+      "cost": 4,
+      "keywords": [],
+      "discardable": true,
+      "onDiscarded": { "kind": "None" },
+      "onCleared": { "kind": "None" },
+      "onPartialClear": { "kind": "None" },
+      "onDraw": { "kind": "ApplyKeyword", "keyword": "Depression", "value": 1, "target": "self" },
+      "onEndOfTurn": {
+        "kind": "KeywordGate",
+        "keyword": "Depression",
+        "min": 2,
+        "zone": "hand",
+        "then": { "kind": "ForceDestroy", "amount": 1 }
+      }
+    },
+    "Terms You Already Know": {
+      "kind": "world",
+      "name": "Terms You Already Know",
+      "insetKey": "the-beginning-inset-terms-you-already-know",
+      "rarity": "common",
+      "cost": 3,
+      "keywords": ["Obstructed"],
+      "discardable": true,
+      "onDiscarded": { "kind": "None" },
+      "onCleared": { "kind": "GainCard", "template": "Close the Book On It" },
+      "onPartialClear": { "kind": "None" },
+      "onDraw": { "kind": "ApplyKeyword", "keyword": "Bargaining", "value": 1, "target": "self" },
+      "onEndOfTurn": { "kind": "None" }
+    },
+    "The Same Tired Weight": {
+      "kind": "world",
+      "name": "The Same Tired Weight",
+      "insetKey": "the-beginning-inset-the-same-tired-weight",
+      "rarity": "common",
+      "cost": 3,
+      "keywords": ["Obstructed"],
+      "discardable": true,
+      "onDiscarded": { "kind": "None" },
+      "onCleared": { "kind": "GainCard", "template": "Set It Down" },
+      "onPartialClear": { "kind": "None" },
+      "onDraw": { "kind": "ApplyKeyword", "keyword": "Depression", "value": 1, "target": "self" },
+      "onEndOfTurn": { "kind": "None" }
+    },
+    "He's Still Fighting": {
+      "kind": "world",
+      "name": "He's Still Fighting",
+      "insetKey": "the-beginning-inset-hes-still-fighting",
+      "rarity": "common",
+      "cost": 3,
+      "keywords": ["Obstructed"],
+      "discardable": true,
+      "onDiscarded": { "kind": "None" },
+      "onCleared": { "kind": "GainCard", "template": "Watch Over Him" },
+      "onPartialClear": { "kind": "None" },
+      "onDraw": { "kind": "None" },
+      "onEndOfTurn": { "kind": "None" }
+    },
+    "The Weight You're Still Carrying": {
+      "kind": "world",
+      "name": "The Weight You're Still Carrying",
+      "insetKey": "the-beginning-inset-the-weight-youre-still-carrying",
+      "rarity": "common",
+      "cost": 2,
+      "keywords": ["Obstructed"],
+      "discardable": true,
+      "onDiscarded": { "kind": "Draw", "world": 1 },
+      "onCleared": { "kind": "None" },
+      "onPartialClear": { "kind": "None" },
+      "onDraw": { "kind": "None" },
+      "onEndOfTurn": { "kind": "None" }
+    },
+    "Say It Out Loud": {
+      "kind": "player",
+      "name": "Say It Out Loud",
+      "insetKey": "the-beginning-inset-say-it-out-loud",
+      "rarity": "common",
+      "energyCost": 1,
+      "effect": {
+        "kind": "Sequence",
+        "steps": [
+          { "kind": "DealProgress", "base": 2 },
+          { "kind": "RemoveKeyword", "keyword": "Denial", "target": "hand", "amount": 2 },
+          {
+            "kind": "ApplyKeyword",
+            "keyword": "Acceptance",
+            "value": 2,
+            "target": "preferWorldCardByTemplateId",
+            "templateId": "Destiny"
+          }
+        ]
+      }
+    },
+    "Put It Down": {
+      "kind": "player",
+      "name": "Put It Down",
+      "insetKey": "the-beginning-inset-put-it-down",
+      "rarity": "common",
+      "energyCost": 1,
+      "effect": {
+        "kind": "Sequence",
+        "steps": [
+          { "kind": "DealProgress", "base": 2 },
+          { "kind": "RemoveKeyword", "keyword": "Anger", "target": "hand", "amount": 2 },
+          {
+            "kind": "ApplyKeyword",
+            "keyword": "Acceptance",
+            "value": 2,
+            "target": "preferWorldCardByTemplateId",
+            "templateId": "Destiny"
+          }
+        ]
+      }
+    },
+    "Close the Book On It": {
+      "kind": "player",
+      "name": "Close the Book On It",
+      "insetKey": "the-beginning-inset-close-the-book-on-it",
+      "rarity": "common",
+      "energyCost": 1,
+      "effect": {
+        "kind": "Sequence",
+        "steps": [
+          { "kind": "DealProgress", "base": 2 },
+          { "kind": "RemoveKeyword", "keyword": "Bargaining", "target": "hand", "amount": 2 },
+          {
+            "kind": "ApplyKeyword",
+            "keyword": "Acceptance",
+            "value": 2,
+            "target": "preferWorldCardByTemplateId",
+            "templateId": "Destiny"
+          }
+        ]
+      }
+    },
+    "Set It Down": {
+      "kind": "player",
+      "name": "Set It Down",
+      "insetKey": "the-beginning-inset-set-it-down",
+      "rarity": "common",
+      "energyCost": 1,
+      "effect": {
+        "kind": "Sequence",
+        "steps": [
+          { "kind": "DealProgress", "base": 2 },
+          { "kind": "RemoveKeyword", "keyword": "Depression", "target": "hand", "amount": 2 },
+          {
+            "kind": "ApplyKeyword",
+            "keyword": "Acceptance",
+            "value": 2,
+            "target": "preferWorldCardByTemplateId",
+            "templateId": "Destiny"
+          }
+        ]
+      }
+    },
+    "Watch Over Him": {
+      "kind": "player",
+      "name": "Watch Over Him",
+      "insetKey": "the-beginning-inset-watch-over-him",
+      "rarity": "common",
+      "energyCost": 1,
+      "effect": {
+        "kind": "Sequence",
+        "steps": [
+          { "kind": "Heal", "amount": 2 },
+          { "kind": "GainLight", "amount": 1 }
+        ]
+      }
+    },
+    "Help Him Focus": {
+      "kind": "player",
+      "name": "Help Him Focus",
+      "insetKey": "the-beginning-inset-help-him-focus",
+      "rarity": "uncommon",
+      "energyCost": 2,
+      "effect": { "kind": "DealProgress", "base": 3 }
+    },
+    "Keep Him Upright": {
+      "kind": "player",
+      "name": "Keep Him Upright",
+      "insetKey": "the-beginning-inset-keep-him-upright",
+      "rarity": "common",
+      "energyCost": 1,
+      "effect": { "kind": "Brace", "amount": 1 }
     }
   }
 }

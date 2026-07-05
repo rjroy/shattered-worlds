@@ -55,6 +55,10 @@ export type RunModifiers = {
   readonly extraStartLight: number;
   readonly extraStartHeat: number;
   readonly extraStartBrace: number;
+  // Starting keywordGuard charges, derived from summed destinyWeight across
+  // activated unlocks (see buildRunModifiers in data/unlocks/catalog.ts) —
+  // not settable by any individual UnlockEffect variant.
+  readonly extraStartKeywordGuard: number;
   readonly handSizeBonusPerAct: number;
   readonly minLightPerTurn: number;
   readonly minEnergyPerTurn: number;
@@ -77,6 +81,7 @@ export const DEFAULT_RUN_MODIFIERS: RunModifiers = {
   extraStartLight: 0,
   extraStartHeat: 0,
   extraStartBrace: 0,
+  extraStartKeywordGuard: 0,
   handSizeBonusPerAct: 0,
   minLightPerTurn: 0,
   minEnergyPerTurn: 0,

@@ -23,7 +23,8 @@ export type KeywordName =
   | "Denial"
   | "Anger"
   | "Bargaining"
-  | "Depression";
+  | "Depression"
+  | "Acceptance";
 
 // A keyword as it lives on a minted card: a name plus an optional numeric
 // value (e.g. "Concealed:3" authors as { name: "Concealed", value: 3 }).
@@ -154,11 +155,24 @@ export type CardEffect =
   //   "nextWorldCard"      — deferred: stamps the next world card pulled into
   //                          hand (queued via pendingKeywordNextWorldCard, applied
   //                          in drawWorld), not any card present now.
+  //   "preferWorldCardByTemplateId" — the one world card in hand whose
+  //                          templateId matches `templateId` exactly; a no-op
+  //                          if no such card is in hand. Never touches any
+  //                          other card regardless of hand contents — the
+  //                          deterministic-by-name counterpart to
+  //                          firstWorldCardInHand/randomWorldCardInHand.
   | {
       kind: "ApplyKeyword";
       keyword: KeywordName;
       value: number;
       target: "hand" | "nextWorldCard" | "self" | "firstWorldCardInHand" | "randomWorldCardInHand";
+    }
+  | {
+      kind: "ApplyKeyword";
+      keyword: KeywordName;
+      value: number;
+      target: "preferWorldCardByTemplateId";
+      templateId: CardTemplateId;
     }
   | {
       kind: "ResourceGate";

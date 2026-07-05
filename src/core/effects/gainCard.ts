@@ -40,6 +40,7 @@ const WORLD_THREAT_BY_WORLD_ID: Record<string, CardTemplateId> = {
   "transit-authority": "Entity Detected",
   questions: "Destiny",
   answers: "Destiny",
+  "the-beginning": "Destiny",
 };
 
 export function worldThreatByWorldId(worldId: string): string {

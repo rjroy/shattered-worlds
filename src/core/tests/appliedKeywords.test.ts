@@ -195,6 +195,43 @@ describe("ApplyKeyword", () => {
     expect(applied?.type === "KeywordApplied" && applied.keyword).toBe("Spore");
     expect(applied?.type === "KeywordApplied" && applied.value).toBe(3);
   });
+
+  // World 15 (the-beginning) Slice 1 — the deterministic-by-name counterpart to
+  // firstWorldCardInHand/randomWorldCardInHand. Real templateIds (Destiny,
+  // Door) from allCards.json so the fixture matches actual catalog data.
+  describe("target 'preferWorldCardByTemplateId'", () => {
+    const byTemplateId = (templateId: string): CardEffect => ({
+      kind: "ApplyKeyword",
+      keyword: "Acceptance",
+      value: 3,
+      target: "preferWorldCardByTemplateId",
+      templateId,
+    });
+
+    it("applies only to the matching card in a hand containing multiple world cards", () => {
+      const destiny = makeWorldCard({ id: "1", templateId: "Destiny", cost: 15 });
+      const door = makeWorldCard({ id: "2", templateId: "Door", cost: 4 });
+      const state = makeState({ hand: [destiny, door] });
+
+      const { state: after, events } = applyEffect(catalog, state, byTemplateId("Destiny"));
+
+      expect(appliedKeywordValue(after.hand.find((c) => c.id === "1")!, "Acceptance")).toBe(3);
+      expect(appliedKeywordValue(after.hand.find((c) => c.id === "2")!, "Acceptance")).toBe(0);
+      const applied = events.find((e) => e.type === "KeywordApplied");
+      expect(applied?.type === "KeywordApplied" && applied.ids).toEqual(["1"]);
+    });
+
+    it("Still picks a card when no card in hand matches the templateId", () => {
+      const door = makeWorldCard({ id: "2", templateId: "Door", cost: 4 });
+      const state = makeState({ hand: [door] });
+
+      const { state: after, events } = applyEffect(catalog, state, byTemplateId("Destiny"));
+
+      expect(appliedKeywordValue(after.hand.find((c) => c.id === "2")!, "Acceptance")).toBe(3);
+      const applied = events.find((e) => e.type === "KeywordApplied");
+      expect(applied?.type === "KeywordApplied" && applied.ids).toEqual(["2"]);
+    });
+  });
 });
 
 // ---------------------------------------------------------------------------

@@ -478,8 +478,14 @@ function summarizeEvent(event: GameEvent, context: PreviewContext): readonly str
       const card =
         context.beforeCards.get(event.hazardId) ?? context.afterCards.get(event.hazardId);
       const cost = card?.kind === "world" ? effectiveWorldCardCost(card, context.before) : undefined;
+      // Acceptance can drive effectiveWorldCardCost negative or to zero (by
+      // design — see keywords.ts's Acceptance modifier). Only the displayed
+      // string clamps at 0; the underlying cost value is never floored.
+      const displayCost = cost !== undefined ? Math.max(0, cost) : undefined;
       const progress =
-        cost !== undefined ? ` (${Math.min(event.hazardTurnTotal, cost)}/${cost})` : "";
+        displayCost !== undefined
+          ? ` (${Math.min(event.hazardTurnTotal, displayCost)}/${displayCost})`
+          : "";
       return [
         `Make ${event.amount} Progress on ${cardName(
           event.hazardId,

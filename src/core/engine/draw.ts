@@ -183,6 +183,8 @@ export function drawWorld(state: GameState, n: number): { state: GameState; even
 export function refillHand(state: GameState): {
   state: GameState;
   events: GameEvent[];
+  worldCardsDrawn: number;
+  playerCardsDrawn: number;
 } {
   const allEvents: GameEvent[] = [];
 
@@ -190,7 +192,7 @@ export function refillHand(state: GameState): {
   const room = effectiveHandSize(state) - heldWorld;
 
   if (room === 0) {
-    return { state, events: [] };
+    return { state, events: [], playerCardsDrawn: 0, worldCardsDrawn: 0 };
   }
 
   // World draw count: minimum 1, minimum (2 - held), capped by room and
@@ -221,7 +223,12 @@ export function refillHand(state: GameState): {
     allEvents.push(...result.events);
   }
 
-  return { state: current, events: allEvents };
+  return {
+    state: current,
+    events: allEvents,
+    worldCardsDrawn: worldToDraw,
+    playerCardsDrawn: playerToDraw,
+  };
 }
 
 // ---------------------------------------------------------------------------

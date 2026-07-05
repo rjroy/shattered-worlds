@@ -62,6 +62,13 @@ import questionsCardfrontUrl from "../assets/themes/questions/questions-cardfron
 import answersRealityUrl from "../assets/themes/answers/answers-reality.webp";
 import answersOverlayUrl from "../assets/themes/answers/intrusion-overlay.webp";
 
+// the-beginning has reality/overlay art pre-staged and now has its
+// cardfront (see insets/README.md and theme.ts's comment), but still no
+// insets yet. Do not invent inset imports; wire only what exists on disk.
+import theBeginningRealityUrl from "../assets/themes/the-beginning/the-beginning-reality.webp";
+import theBeginningOverlayUrl from "../assets/themes/the-beginning/intrusion-overlay.webp";
+import theBeginningCardfrontUrl from "../assets/themes/the-beginning/the-beginning-cardfront.webp";
+
 // ---------------------------------------------------------------------------
 // World inset imports
 // ---------------------------------------------------------------------------
@@ -256,6 +263,26 @@ import answersInsetTakeWhatsOwedUrl from "../assets/themes/answers/insets/inset-
 import answersInsetLetItSitUrl from "../assets/themes/answers/insets/inset-let-it-sit.webp";
 import answersInsetKeepWalkingUrl from "../assets/themes/answers/insets/inset-keep-walking.webp";
 import answersInsetLetItGoUrl from "../assets/themes/answers/insets/inset-let-it-go.webp";
+
+import theBeginningInsetItsFineActuallyUrl from "../assets/themes/the-beginning/insets/inset-its-fine-actually.webp";
+import theBeginningInsetSomebodyElseWillHandleItUrl from "../assets/themes/the-beginning/insets/inset-somebody-else-will-handle-it.webp";
+import theBeginningInsetAStoryYouveToldYourselfUrl from "../assets/themes/the-beginning/insets/inset-a-story-youve-told-yourself.webp";
+import theBeginningInsetSomebodyShouldBeMadAboutThisUrl from "../assets/themes/the-beginning/insets/inset-somebody-should-be-mad-about-this.webp";
+import theBeginningInsetEveryExcuseSoundsThinnerUrl from "../assets/themes/the-beginning/insets/inset-every-excuse-sounds-thinner.webp";
+import theBeginningInsetOneMoreExcuseUrl from "../assets/themes/the-beginning/insets/inset-one-more-excuse.webp";
+import theBeginningInsetASmallerAskUrl from "../assets/themes/the-beginning/insets/inset-a-smaller-ask.webp";
+import theBeginningInsetItsNotSoBadUrl from "../assets/themes/the-beginning/insets/inset-its-not-so-bad.webp";
+import theBeginningInsetTermsYouAlreadyKnowUrl from "../assets/themes/the-beginning/insets/inset-terms-you-already-know.webp";
+import theBeginningInsetTheSameTiredWeightUrl from "../assets/themes/the-beginning/insets/inset-the-same-tired-weight.webp";
+import theBeginningInsetHesStillFightingUrl from "../assets/themes/the-beginning/insets/inset-hes-still-fighting.webp";
+import theBeginningInsetTheWeightYoureStillCarryingUrl from "../assets/themes/the-beginning/insets/inset-the-weight-youre-still-carrying.webp";
+import theBeginningInsetSayItOutLoudUrl from "../assets/themes/the-beginning/insets/inset-say-it-out-loud.webp";
+import theBeginningInsetPutItDownUrl from "../assets/themes/the-beginning/insets/inset-put-it-down.webp";
+import theBeginningInsetCloseTheBookOnItUrl from "../assets/themes/the-beginning/insets/inset-close-the-book-on-it.webp";
+import theBeginningInsetSetItDownUrl from "../assets/themes/the-beginning/insets/inset-set-it-down.webp";
+import theBeginningInsetWatchOverHimUrl from "../assets/themes/the-beginning/insets/inset-watch-over-him.webp";
+import theBeginningInsetHelpHimFocusUrl from "../assets/themes/the-beginning/insets/inset-help-him-focus.webp";
+import theBeginningInsetKeepHimUprightUrl from "../assets/themes/the-beginning/insets/inset-keep-him-upright.webp";
 
 // ---------------------------------------------------------------------------
 // World music imports
@@ -514,6 +541,29 @@ export const worldAssetUrls: Record<string, string> = {
   // answers — reality/overlay and now its full inset set; still no cardfront.
   "answers-bg": answersRealityUrl,
   "answers-overlay": answersOverlayUrl,
+  // the-beginning
+  "the-beginning-bg": theBeginningRealityUrl,
+  "the-beginning-overlay": theBeginningOverlayUrl,
+  "the-beginning-cardfront": theBeginningCardfrontUrl,
+  "the-beginning-inset-its-fine-actually": theBeginningInsetItsFineActuallyUrl,
+  "the-beginning-inset-somebody-else-will-handle-it": theBeginningInsetSomebodyElseWillHandleItUrl,
+  "the-beginning-inset-a-story-youve-told-yourself": theBeginningInsetAStoryYouveToldYourselfUrl,
+  "the-beginning-inset-somebody-should-be-mad-about-this": theBeginningInsetSomebodyShouldBeMadAboutThisUrl,
+  "the-beginning-inset-every-excuse-sounds-thinner": theBeginningInsetEveryExcuseSoundsThinnerUrl,
+  "the-beginning-inset-one-more-excuse": theBeginningInsetOneMoreExcuseUrl,
+  "the-beginning-inset-a-smaller-ask": theBeginningInsetASmallerAskUrl,
+  "the-beginning-inset-its-not-so-bad": theBeginningInsetItsNotSoBadUrl,
+  "the-beginning-inset-terms-you-already-know": theBeginningInsetTermsYouAlreadyKnowUrl,
+  "the-beginning-inset-the-same-tired-weight": theBeginningInsetTheSameTiredWeightUrl,
+  "the-beginning-inset-hes-still-fighting": theBeginningInsetHesStillFightingUrl,
+  "the-beginning-inset-the-weight-youre-still-carrying": theBeginningInsetTheWeightYoureStillCarryingUrl,
+  "the-beginning-inset-say-it-out-loud": theBeginningInsetSayItOutLoudUrl,
+  "the-beginning-inset-put-it-down": theBeginningInsetPutItDownUrl,
+  "the-beginning-inset-close-the-book-on-it": theBeginningInsetCloseTheBookOnItUrl,
+  "the-beginning-inset-set-it-down": theBeginningInsetSetItDownUrl,
+  "the-beginning-inset-watch-over-him": theBeginningInsetWatchOverHimUrl,
+  "the-beginning-inset-help-him-focus": theBeginningInsetHelpHimFocusUrl,
+  "the-beginning-inset-keep-him-upright": theBeginningInsetKeepHimUprightUrl,
 };
 
 export interface WorldMusicAsset {

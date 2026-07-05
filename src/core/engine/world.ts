@@ -13,6 +13,7 @@ export type CreateWorldResult = {
 
 export const WORLD_CONSTS = {
   startHp: 10,
+  expectedDrawSize: 6,
   baseHandSize: 6,
   startWorldCards: 2,
   get startPlayerCards(): number {
@@ -102,10 +103,10 @@ export function createWorld(
     // pendingForceDestroySource is omitted (undefined): no destroy queued yet.
     // exactOptionalPropertyTypes forbids an explicit `undefined` literal here.
     braceCharges: mods.extraStartBrace,
-    // Keyworld guard counters init at 0 everywhere; pendingKeywordNextWorldCard
-    // is omitted (absent, not `undefined`) exactly like pendingForceDestroySource,
-    // since exactOptionalPropertyTypes forbids an explicit `undefined` literal.
-    keywordGuard: 0,
+    // Starting keywordGuard is seeded from meta-progression (see
+    // buildRunModifiers's destinyWeight aggregation); 0 for the default
+    // modifiers.
+    keywordGuard: mods.extraStartKeywordGuard,
     progressDealtThisTurn: 0,
     pendingBoonChoices: [],
     pendingKeywordNextWorldCard: [],

@@ -32,13 +32,17 @@ export const VISUAL_CONSTS = {
 export function intrusionForIntensity(intensity: number): number {
   const clamped = Math.max(0, Math.min(1, intensity));
   // Ramp: stays near-zero at low intensity, rises steeply after 0.4
-  // At 0.0 → 0.0, at 0.4 → 0.25, at 0.7 → 0.4, at 1.0 → 0.85
+  // At 0.0 → 0.0, at 0.4 → 0.25, at 1.0 → 1.0
 
+  const PEAK = 1.0;
   const MID_POINT = 0.4;
   const MID_RESULT = 0.25;
   const SCALE_BELOW_MID = MID_RESULT / MID_POINT; // linear scale to reach mid result at mid point
+  const SCALE_ABOVE_MID = (PEAK - MID_RESULT) / (PEAK - MID_POINT); // linear scale to reach peak result at mid point
 
-  return clamped < MID_POINT ? clamped * SCALE_BELOW_MID : MID_RESULT + (clamped - MID_POINT);
+  return clamped < MID_POINT
+    ? clamped * SCALE_BELOW_MID
+    : MID_RESULT + SCALE_ABOVE_MID * (clamped - MID_POINT);
 }
 
 function calculateScaledTier(

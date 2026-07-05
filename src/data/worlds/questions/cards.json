@@ -4,24 +4,24 @@
     "acts": [
       {
         "cards": [
-          { "templateId": "Waiting Room Silence", "count": 3 },
-          { "templateId": "I'm Outta Here", "count": 2 },
+          { "templateId": "Waiting Room Silence", "count": 5 },
+          { "templateId": "I'm Outta Here", "count": 3 },
           { "templateId": "The Monitor Keeps Beeping", "count": 2 }
         ]
       },
       {
         "cards": [
-          { "templateId": "Everyone Says It's Nothing", "count": 3 },
+          { "templateId": "Everyone Says It's Nothing", "count": 4 },
           { "templateId": "The Test Results Sit Unopened", "count": 2 },
           { "templateId": "She Says She's Fine", "count": 2 },
-          { "templateId": "He Isn't Coming Back", "count": 1 }
+          { "templateId": "He Isn't Coming Back", "count": 2 }
         ]
       },
       {
         "cards": [
-          { "templateId": "It Isn't Fair", "count": 3 },
+          { "templateId": "It Isn't Fair", "count": 4 },
           { "templateId": "Nobody Warned You", "count": 2 },
-          { "templateId": "The Question That Has No Answer", "count": 1 },
+          { "templateId": "The Question That Has No Answer", "count": 2 },
           { "templateId": "Destiny", "count": 1 },
           { "templateId": "The Walker", "count": 1 }
         ]

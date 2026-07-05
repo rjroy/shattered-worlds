@@ -4,24 +4,24 @@
     "acts": [
       {
         "cards": [
-          { "templateId": "Bulkhead 7-C Seals", "count": 3 },
-          { "templateId": "Unfinished Captain's Address", "count": 2 },
+          { "templateId": "Bulkhead 7-C Seals", "count": 4 },
+          { "templateId": "Unfinished Captain's Address", "count": 4 },
           { "templateId": "Systems Panel", "count": 2 }
         ]
       },
       {
         "cards": [
-          { "templateId": "Gravity Priority Shift", "count": 3 },
-          { "templateId": "Administrative Misfile", "count": 2 },
+          { "templateId": "Gravity Priority Shift", "count": 4 },
+          { "templateId": "Administrative Misfile", "count": 3 },
           { "templateId": "Corridor Becomes Lifeboat", "count": 2 },
           { "templateId": "Systems Panel", "count": 1 }
         ]
       },
       {
         "cards": [
-          { "templateId": "Corridor Becomes Lifeboat", "count": 2 },
+          { "templateId": "Corridor Becomes Lifeboat", "count": 3 },
           { "templateId": "Gravity Priority Shift", "count": 2 },
-          { "templateId": "The Order Arrives", "count": 2 },
+          { "templateId": "The Order Arrives", "count": 4 },
           { "templateId": "The Walker", "count": 1 }
         ]
       }

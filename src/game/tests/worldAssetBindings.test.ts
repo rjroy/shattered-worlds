@@ -9,7 +9,7 @@ import { referencedAssetKeys } from '../../data/worlds/types'
  * here once `bun run audio:generate` (or equivalent) lands a real track and
  * a worldMusicManifest entry for that worldId.
  */
-const PENDING_MUSIC_TRACK: ReadonlySet<string> = new Set(['questions', 'answers'])
+const PENDING_MUSIC_TRACK: ReadonlySet<string> = new Set(['questions', 'answers', 'the-beginning'])
 
 describe.each([...worldDataRegistry])('world asset bindings: "$id"', (bundle) => {
   it('all referenced asset keys are bound in assetManifest', () => {
