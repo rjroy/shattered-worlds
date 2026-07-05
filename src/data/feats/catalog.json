@@ -285,6 +285,69 @@
     "reward": { "items": [{ "type": "memoryFragments", "amount": 80 }] }
   },
   {
+    "id": "first-questions",
+    "name": "First Diagnosis",
+    "description": "Win your first run of Questions.",
+    "conditions": [{ "statId": "world.questions.wins", "operator": "gte", "value": 1 }],
+    "reward": { "items": [{ "type": "memoryFragments", "amount": 25 }] }
+  },
+  {
+    "id": "questions-tier-2",
+    "name": "Frequent Patient",
+    "description": "Win Questions 5 or more times.",
+    "conditions": [{ "statId": "world.questions.wins", "operator": "gte", "value": 5 }],
+    "reward": { "items": [{ "type": "memoryFragments", "amount": 50 }] }
+  },
+  {
+    "id": "questions-tier-3",
+    "name": "Chronic Case",
+    "description": "Win Questions 10 or more times.",
+    "conditions": [{ "statId": "world.questions.wins", "operator": "gte", "value": 10 }],
+    "reward": { "items": [{ "type": "memoryFragments", "amount": 100 }] }
+  },
+  {
+    "id": "first-answers",
+    "name": "First Bargain",
+    "description": "Win your first run of Answers.",
+    "conditions": [{ "statId": "world.answers.wins", "operator": "gte", "value": 1 }],
+    "reward": { "items": [{ "type": "memoryFragments", "amount": 25 }] }
+  },
+  {
+    "id": "answers-tier-2",
+    "name": "Repeat Customer",
+    "description": "Win Answers 5 or more times.",
+    "conditions": [{ "statId": "world.answers.wins", "operator": "gte", "value": 5 }],
+    "reward": { "items": [{ "type": "memoryFragments", "amount": 50 }] }
+  },
+  {
+    "id": "answers-tier-3",
+    "name": "Best Rate in Town",
+    "description": "Win Answers 10 or more times.",
+    "conditions": [{ "statId": "world.answers.wins", "operator": "gte", "value": 10 }],
+    "reward": { "items": [{ "type": "memoryFragments", "amount": 100 }] }
+  },
+  {
+    "id": "first-the-beginning",
+    "name": "First Breath",
+    "description": "Win your first run of The Beginning.",
+    "conditions": [{ "statId": "world.the-beginning.wins", "operator": "gte", "value": 1 }],
+    "reward": { "items": [{ "type": "memoryFragments", "amount": 25 }] }
+  },
+  {
+    "id": "the-beginning-tier-2",
+    "name": "Steady Ground",
+    "description": "Win The Beginning 5 or more times.",
+    "conditions": [{ "statId": "world.the-beginning.wins", "operator": "gte", "value": 5 }],
+    "reward": { "items": [{ "type": "memoryFragments", "amount": 50 }] }
+  },
+  {
+    "id": "the-beginning-tier-3",
+    "name": "Whole Again",
+    "description": "Win The Beginning 10 or more times.",
+    "conditions": [{ "statId": "world.the-beginning.wins", "operator": "gte", "value": 10 }],
+    "reward": { "items": [{ "type": "memoryFragments", "amount": 100 }] }
+  },
+  {
     "id": "swift-clear",
     "name": "Swift Clear",
     "description": "Win a run in fewer than 10 turns.",
@@ -487,6 +550,15 @@
     "description": "Resolve 25 encounters with The Order Arrives hazards across all runs.",
     "conditions": [
       { "statId": "witness.The Order Arrives.resolvedCount", "operator": "gte", "value": 25 }
+    ],
+    "reward": { "items": [{ "type": "memoryFragments", "amount": 60 }] }
+  },
+  {
+    "id": "transit-slayer",
+    "name": "Manifest Denied",
+    "description": "Resolve 25 encounters with Entity Detected hazards across all runs.",
+    "conditions": [
+      { "statId": "witness.Entity Detected.resolvedCount", "operator": "gte", "value": 25 }
     ],
     "reward": { "items": [{ "type": "memoryFragments", "amount": 60 }] }
   },
