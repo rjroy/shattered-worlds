@@ -49,11 +49,12 @@ function applyCascadeEffects(catalog: CardCatalog, original: ReduceResult): Redu
           offer.event,
         );
       }
+      case "KeywordApplied":
       case "KeywordReduced":
       case "KeywordRemoved": {
         let current = curr.state;
 
-        // Get all cards that are now clear after the removed keyword.
+        // Get all cards that are now clear after the keyword changes.
         const cleared: WorldCard[] = curr.state.hand.filter((c) => {
           if (!event.ids.includes(c.id)) return false;
           if (c.kind !== "world") return false;
@@ -284,28 +285,33 @@ function handleEndTurn(catalog: CardCatalog, state: GameState): ReduceResult {
   }
 
   // Before starting a turn make sure there's at least one world card.
-  const worldThreadId = worldThreatTemplateByWorldId(state.worldId);
-  const bShouldAddThreat =
-    worldThreadId !== undefined &&
-    0 === state.worldDraw.length + state.acts.reduce((sum, act) => sum + act.length, 0);
+  const worldThreatId = worldThreatTemplateByWorldId(afterPassive.worldId);
+  const worldCardCount =
+    afterPassive.hand.filter((c) => c.kind == "world").length +
+    afterPassive.worldDraw.length +
+    afterPassive.acts.reduce((sum, act) => sum + act.length, 0);
+  const bShouldAddThreat = worldThreatId !== undefined && 0 === worldCardCount;
   const threatResult = bShouldAddThreat
-    ? gainCard(catalog, state, worldThreadId, "worldDrawTop")
-    : { state: state, events: [] };
+    ? gainCard(catalog, afterPassive, worldThreatId, "worldDrawTop")
+    : { state: afterPassive, events: [] };
   events.push(...threatResult.events);
+  console.log(`handleEndTurn: threat: ${worldThreatId} ${bShouldAddThreat} ${events.length}`);
 
   // Start turn: gain +1 energy, then refill hand
   const turnStartResult = startTurn(threatResult.state);
   events.push(...turnStartResult.events);
+  console.log(`handleEndTurn: startTurn: ${turnStartResult.playerCardsDrawn} ${events.length}`);
 
   const cascadeResult = applyCascadeEffects(catalog, {
     state: turnStartResult.state,
     events: events,
   });
   events = cascadeResult.events;
+  console.log(`handleEndTurn: cascadeEffects: ${events.length}`);
 
   const afterRefill = cascadeResult.state;
-
   if (afterRefill.pendingBoonChoices.length > 0) {
+    console.log(`handleEndTurn: hasBoon: ${events.length}`);
     return { state: afterRefill, events };
   }
 
@@ -316,6 +322,7 @@ function handleEndTurn(catalog: CardCatalog, state: GameState): ReduceResult {
   if (afterRefill.status === "playing" && turnStartResult.playerCardsDrawn === 0) {
     const lostState: GameState = { ...afterRefill, status: "lost" };
     events.push({ type: "WorldLost", cause: "noPlayerCards" });
+    console.log(`handleEndTurn: lose because noPlayerCards: ${events.length}`);
     return { state: lostState, events };
   }
 
@@ -334,6 +341,7 @@ function handleEndTurn(catalog: CardCatalog, state: GameState): ReduceResult {
       if (noProgressPossible) {
         const lostState: GameState = { ...afterRefill, status: "lost" };
         events.push({ type: "WorldLost", cause: "exhausted" });
+        console.log(`handleEndTurn: lose because exhausted: ${events.length}`);
         return { state: lostState, events };
       }
     }
@@ -384,6 +392,7 @@ function handleEndTurn(catalog: CardCatalog, state: GameState): ReduceResult {
     }
   }
 
+  console.log(`handleEndTurn: playing: ${events.length}`);
   return { state: afterRefill, events };
 }
 
