@@ -27,7 +27,11 @@ export const KEYWORD_NAMES: readonly KeywordName[] = [
   "Acceptance",
 ];
 
-export const PERSISTENT_KEYWORDS: ReadonlySet<KeywordName> = new Set(["Lockdown", "Reroute"]);
+export const PERSISTENT_KEYWORDS: ReadonlySet<KeywordName> = new Set([
+  "Lockdown",
+  "Reroute",
+  "Acceptance",
+]);
 
 export const KEYWORD_COST_MODIFIERS: Partial<Record<KeywordName, PersistentModifier>> = {
   Lockdown: { kind: "ClearCostPerSelfKeyword", costPer: 1 },
@@ -121,7 +125,7 @@ export function withAppliedKeyword<C extends Card>(card: C, kw: Keyword): C {
   const existing = card.appliedKeywords ?? [];
   const prior = existing.find((k) => k.name === kw.name);
   const merged: Keyword =
-    prior !== undefined ? { name: kw.name, value: Math.max(prior.value ?? 0, kw.value ?? 0) } : kw;
+    prior !== undefined ? { name: kw.name, value: (prior.value ?? 0) + (kw.value ?? 0) } : kw;
   const appliedKeywords: readonly Keyword[] = [
     ...existing.filter((k) => k.name !== kw.name),
     merged,
