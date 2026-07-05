@@ -16,7 +16,11 @@ import { SettingsOverlayView } from "../view/SettingsOverlayView";
 import { canPageLeft, canPageRight, pageLeft, pageRight } from "./worldSelectPaging";
 import { UserSettingsStore } from "../runtime/userSettings";
 import type { GriefSupportStore } from "../runtime/griefSupportProfile";
-import { shouldShowGriefSupport } from "./griefSupportGate";
+import {
+  canAccessGriefSupport,
+  GRIEF_SUPPORT_WORLD_IDS,
+  shouldShowGriefSupport,
+} from "./griefSupportGate";
 
 // Common return type for the world card background, which may be either an image or a simple colored rectangle
 type WorldCardBackground = Phaser.GameObjects.Image | Phaser.GameObjects.Rectangle;
@@ -160,6 +164,9 @@ export class WorldSelectScene extends Phaser.Scene {
       this.visibleStartIndex = 0;
       uiObjects.push(this.createChronicleButton());
       uiObjects.push(this.createDestinyButton());
+      if (this.canShowGriefSupportButton()) {
+        uiObjects.push(this.createGriefSupportButton());
+      }
       uiObjects.push(this.createHelpButton());
       uiObjects.push(this.createSettingsButton());
       const arrows = this.createArrows();
@@ -268,6 +275,50 @@ export class WorldSelectScene extends Phaser.Scene {
     bg.on("pointerout", () => button.setScale(1));
     bg.on("pointerdown", () => {
       if (this.scene.isActive()) this.scene.start("Destiny");
+    });
+    return button;
+  }
+
+  private createGriefSupportButton(): Phaser.GameObjects.Container {
+    const button = this.add.container(
+      WORLD_SELECT_LAYOUT.buttons.support.x,
+      WORLD_SELECT_LAYOUT.buttons.support.y,
+    );
+    const bg = this.add.rectangle(
+      0,
+      0,
+      WORLD_SELECT_LAYOUT.buttons.support.width,
+      WORLD_SELECT_LAYOUT.buttons.support.height,
+      WORLD_SELECT_LAYOUT.buttons.bg.color,
+      WORLD_SELECT_LAYOUT.buttons.bg.alpha,
+    );
+    bg.setStrokeStyle(
+      WORLD_SELECT_LAYOUT.buttons.stroke.width,
+      WORLD_SELECT_LAYOUT.buttons.stroke.color,
+      WORLD_SELECT_LAYOUT.buttons.stroke.alpha,
+    );
+    bg.setRounded(WORLD_SELECT_LAYOUT.buttons.bg.rounded);
+    bg.setInteractive({ useHandCursor: true });
+    const label = this.add
+      .text(
+        0,
+        0,
+        "Support",
+        textStyle({
+          fontFamily: FONTS.title,
+          fontSize: WORLD_SELECT_LAYOUT.buttons.support.fontSize,
+          color: TEXT.textSelect,
+          fontStyle: "bold",
+        }),
+      )
+      .setOrigin(0.5, 0.5);
+    button.add([bg, label]);
+    bg.on("pointerover", () => button.setScale(WORLD_SELECT_LAYOUT.buttons.hoverScale));
+    bg.on("pointerout", () => button.setScale(1));
+    bg.on("pointerdown", () => {
+      if (!this.scene.isActive()) return;
+      this.scene.launch("GriefSupport", { worldId: undefined, mode: "standalone" });
+      this.scene.pause();
     });
     return button;
   }
@@ -929,6 +980,18 @@ export class WorldSelectScene extends Phaser.Scene {
       locked,
       cost: gate?.cost ?? null,
     };
+  }
+
+  private canShowGriefSupportButton(): boolean {
+    return canAccessGriefSupport(this.unlockedGriefSupportWorldIds());
+  }
+
+  private firstUnlockedGriefSupportWorldId(): string | undefined {
+    return this.unlockedGriefSupportWorldIds()[0];
+  }
+
+  private unlockedGriefSupportWorldIds(): string[] {
+    return GRIEF_SUPPORT_WORLD_IDS.filter((worldId) => !this.getWorldLockState(worldId).locked);
   }
 
   private disableCarouselInteractions(): void {

@@ -201,6 +201,7 @@ export const WORLD_SELECT_LAYOUT = {
     help: { fontSize: "20px", x: CANVAS_W - 130, y: 34, width: 34, height: 34 },
     destiny: { fontSize: "15px", x: CANVAS_W - 196, y: 34, width: 88, height: 34 },
     setting: { fontSize: "20px", x: CANVAS_W - 264, y: 34, width: 34, height: 34 },
+    support: { fontSize: "15px", x: CANVAS_W - 348, y: 34, width: 100, height: 34 },
   },
   visibleWorldCount: 3,
   hoverScale: 1.15,

@@ -8,6 +8,7 @@ import { openExternalLink } from "../view/externalLink";
 import type { GriefSupportStore } from "../runtime/griefSupportProfile";
 
 const LINK_STROKE = 0x88ccff;
+type GriefSupportMode = "interstitial" | "standalone";
 
 /**
  * One-time interstitial shown before Table on first entry to any of the
@@ -16,8 +17,9 @@ const LINK_STROKE = 0x88ccff;
  */
 export class GriefSupportScene extends Phaser.Scene {
   private readonly griefSupportStore: GriefSupportStore | undefined;
-  private worldId_ = "questions";
+  private worldId_: string | undefined = undefined;
   private seed_ = 0;
+  private mode_: GriefSupportMode = "interstitial";
   private continueButtonBg: Phaser.GameObjects.Rectangle | undefined;
 
   constructor(griefSupportStore?: GriefSupportStore) {
@@ -28,9 +30,10 @@ export class GriefSupportScene extends Phaser.Scene {
   // Phaser reuses the scene instance across launches, so per-entry state must
   // be reset here rather than relying on field initializers, which only run
   // once. Mirrors TableScene.init's fallback shape.
-  init(data: { worldId?: string; seed?: number }): void {
-    this.worldId_ = data.worldId ?? "questions";
+  init(data: { worldId?: string; seed?: number; mode?: GriefSupportMode }): void {
+    this.worldId_ = data.worldId;
     this.seed_ = data.seed ?? Math.floor(Math.random() * 2 ** 32);
+    this.mode_ = data.mode ?? "interstitial";
   }
 
   create(): void {
@@ -139,11 +142,16 @@ export class GriefSupportScene extends Phaser.Scene {
       { part: plain("for immediate crisis support."), gap: defaultGap },
       { part: plain("("), gap: defaultGap },
       {
-        part: this.addLink(0, y, "U.S.", () => openExternalLink("https://988lifeline.org/get-help/")),
+        part: this.addLink(0, y, "U.S.", () =>
+          openExternalLink("https://988lifeline.org/get-help/"),
+        ),
         gap: 0,
       },
       { part: plain("·"), gap: defaultGap },
-      { part: this.addLink(0, y, "Canada", () => openExternalLink("https://988.ca/")), gap: defaultGap },
+      {
+        part: this.addLink(0, y, "Canada", () => openExternalLink("https://988.ca/")),
+        gap: defaultGap,
+      },
       { part: plain(")"), gap: 0 },
     ];
 
@@ -203,14 +211,16 @@ export class GriefSupportScene extends Phaser.Scene {
   }
 
   private onContinue(): void {
-    // Guard against a fast double-click double-enqueuing the Table launch
-    // (mirrors WorldSelectScene's world-card pointerdown, which disables the
-    // background before scene.launch for the same reason).
+    // Guard against a fast double-click double-enqueuing scene transitions.
     this.continueButtonBg?.disableInteractive();
     this.griefSupportStore?.update({ hasSeenGriefSupportNotice: true });
-    // This scene's job is done after one acknowledgment; stop it rather than
-    // leaving it stacked (and still interactive) underneath Table.
-    this.scene.launch("Table", { worldId: this.worldId_, seed: this.seed_ });
+    if (this.mode_ === "interstitial" && this.worldId_ !== undefined) {
+      // This scene's job is done after one acknowledgment; stop it rather than
+      // leaving it stacked (and still interactive) underneath Table.
+      this.scene.launch("Table", { worldId: this.worldId_, seed: this.seed_ });
+    } else {
+      this.scene.resume("WorldSelect");
+    }
     this.scene.stop();
   }
 }

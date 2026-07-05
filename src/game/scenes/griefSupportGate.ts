@@ -22,3 +22,7 @@ export function shouldShowGriefSupport(
 ): boolean {
   return GRIEF_SUPPORT_WORLD_IDS.includes(worldId) && !hasSeenGriefSupportNotice;
 }
+
+export function canAccessGriefSupport(unlockedWorldIds: readonly string[]): boolean {
+  return GRIEF_SUPPORT_WORLD_IDS.some((worldId) => unlockedWorldIds.includes(worldId));
+}

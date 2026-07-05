@@ -1,6 +1,10 @@
 import { describe, expect, it } from "bun:test";
 
-import { GRIEF_SUPPORT_WORLD_IDS, shouldShowGriefSupport } from "../scenes/griefSupportGate";
+import {
+  canAccessGriefSupport,
+  GRIEF_SUPPORT_WORLD_IDS,
+  shouldShowGriefSupport,
+} from "../scenes/griefSupportGate";
 
 // REQ-W13-29.6 / REQ-W13-32: the grief-support notice is a one-time,
 // trilogy-level acknowledgment covering questions/answers/the-beginning, not
@@ -37,5 +41,17 @@ describe("shouldShowGriefSupport (REQ-W13-30..33)", () => {
 
   it("exposes exactly the three grief-arc world ids", () => {
     expect(GRIEF_SUPPORT_WORLD_IDS).toEqual(["questions", "answers", "the-beginning"]);
+  });
+});
+
+describe("canAccessGriefSupport", () => {
+  it("allows the support screen once any grief-arc world is unlocked", () => {
+    expect(canAccessGriefSupport(["questions"])).toBe(true);
+    expect(canAccessGriefSupport(["zombie-big-box", "answers"])).toBe(true);
+  });
+
+  it("keeps the support screen hidden before grief-arc worlds are unlocked", () => {
+    expect(canAccessGriefSupport([])).toBe(false);
+    expect(canAccessGriefSupport(["zombie-big-box", "new-derelict"])).toBe(false);
   });
 });
