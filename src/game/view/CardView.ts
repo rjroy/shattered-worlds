@@ -194,6 +194,7 @@ export class CardView extends Phaser.GameObjects.Container {
   private emphasized = false;
   private textContainer: Phaser.GameObjects.Container;
   private textVisible: boolean = true;
+  private textVisibleTween: Phaser.Tweens.Tween | undefined;
 
   // Concealment (world cards only). `concealDepth` is the card's Concealed:N
   // value (0 = never concealable). `revealObjects` is the identity face shown
@@ -717,13 +718,19 @@ export class CardView extends Phaser.GameObjects.Container {
 
   setTextVisible(bVisible: boolean): void {
     this.textVisible = bVisible;
-    const currVisible = this.textContainer.visible;
+    if (this.textVisibleTween !== undefined) {
+      if (this.textVisibleTween.isActive()) {
+        this.textVisibleTween.stop();
+        this.scene.tweens.remove(this.textVisibleTween);
+      }
+      this.textVisibleTween = undefined;
+    }
     const currAlpha = this.textContainer.alpha;
     const expectedAlpha = bVisible ? 1 : 0;
-    if (currAlpha !== expectedAlpha || currVisible !== bVisible) {
-      this.scene.tweens.add({
+    if (currAlpha !== expectedAlpha) {
+      this.textVisibleTween = this.scene.tweens.add({
         targets: this.textContainer,
-        duration: 300,
+        duration: bVisible ? 300 : 1000,
         alpha: { from: currAlpha, to: expectedAlpha },
         ease: "Sine.easeINOut",
       });
