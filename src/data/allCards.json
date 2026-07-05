@@ -2519,6 +2519,21 @@
       "onDraw": { "kind": "None" },
       "onEndOfTurn": { "kind": "None" }
     },
+    "The Walker - No Door": {
+      "kind": "world",
+      "name": "The Walker",
+      "insetKey": "inset-walker",
+      "cost": 10,
+      "rarity": "legendary",
+      "keywords": [],
+      "discardable": true,
+      "canExile": false,
+      "onDiscarded": { "kind": "None" },
+      "onCleared": { "kind": "None" },
+      "onPartialClear": { "kind": "None" },
+      "onDraw": { "kind": "None" },
+      "onEndOfTurn": { "kind": "None" }
+    },
     "Summon Door": {
       "kind": "player",
       "name": "Summon Door",
