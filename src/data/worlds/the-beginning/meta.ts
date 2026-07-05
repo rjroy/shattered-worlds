@@ -2,12 +2,13 @@ import type { WorldDisplayData, WorldHelpData } from "../types";
 
 export const THE_BEGINNING_DISPLAY: WorldDisplayData = {
   name: "The Beginning",
-  tagline: "He's still fighting. So is what's left of you.",
+  tagline: "Acceptance is not surrender. It is the first breath after.",
   story:
-    "It's fine, actually. Somebody else will handle it. The excuses get thinner every time you " +
-    "tell them, and somewhere underneath all of it he's still fighting, still upright, still " +
-    "yours to carry or to help carry. Nothing here ends the way the waiting room or the ledger " +
-    "did — what's owed here isn't a debt. It's a weight, and it can be set down.",
+    "The old reflexes still arrive first: deny it, rage at it, bargain with the shape of it, " +
+    "go still beneath it. Acceptance does not make any of them vanish, and it does not let " +
+    "you force your way through. It only gives you one honest place to stand while the next " +
+    "thing asks to be carried, named, or finally set down. Healing begins here, but it begins " +
+    "small, uneven, and still tired.",
   difficulty: 4,
   cycle: 5,
   backgroundKey: "the-beginning-bg",
@@ -48,7 +49,7 @@ export const THE_BEGINNING_HELP: WorldHelpData = {
       detail:
         "The Destiny card that appears late in this world is not a new one — it's the " +
         "identical card carried over from Questions and Answers, reused rather than " +
-        "reauthored. Clearing it ends the run in victory, the same way Door does.",
+        "reauthored. Clearing it completes the run, the same way Door does.",
     },
   ],
 };

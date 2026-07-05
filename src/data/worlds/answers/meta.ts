@@ -2,12 +2,13 @@ import type { WorldDisplayData, WorldHelpData } from "../types";
 
 export const ANSWERS_DISPLAY: WorldDisplayData = {
   name: "Answers",
-  tagline: "Every deal costs something you didn't put on the table.",
+  tagline: "You keep asking the universe what would make this unhappen.",
   story:
-    "The broker never explains the terms, only the running total. Somewhere in the back " +
-    "rooms a ledger keeps score of every trade you didn't mean to make, and some mornings you " +
-    "don't even want to get up and argue about it. Nothing here is free, and less of it can be " +
-    "undone the longer you let it sit.",
+    "The broker has no office, no counter, no hand to shake. It speaks in the shape of every " +
+    "impossible if: if you had called sooner, if you had noticed, if you could give up enough " +
+    "of yourself to make the answer change. The universe never answers. It only lets the " +
+    "questions keep returning, heavier each time, until even getting out of bed feels like " +
+    "another condition you failed to meet.",
   difficulty: 3,
   cycle: 5,
   backgroundKey: "answers-bg",
