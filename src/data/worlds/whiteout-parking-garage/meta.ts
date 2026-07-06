@@ -7,7 +7,7 @@ export const WHITEOUT_PARKING_GARAGE_DISPLAY: WorldDisplayData = {
     "The upper level was gray, salted, and impersonal before the impossible. The Walker crossed " +
     "the ramp, bringing a sideways blizzard that sealed cars into stalls and froze every tool in " +
     "your hand. The Door opens past the exit lane, under ice thick enough to remember you.",
-  difficulty: 3,
+  difficulty: 2,
   cycle: 2,
   backgroundKey: "whiteout-parking-garage-bg",
 };

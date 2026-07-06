@@ -8,7 +8,7 @@ export const TRANSIT_AUTHORITY_DISPLAY: WorldDisplayData = {
     "has a platform, a fare, and an arrival time. Then the Walker arrives as a passenger the " +
     "system cannot process, and it responds by changes the route. Departure boards flip to " +
     "SERVICE SUSPENDED and ENTITY DETECTED as the terminal quarantines every realm.",
-  difficulty: 4,
+  difficulty: 3,
   cycle: 4,
   backgroundKey: "transit-authority-bg",
 };
