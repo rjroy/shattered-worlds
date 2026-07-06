@@ -661,6 +661,27 @@
     "reward": { "items": [{ "type": "memoryFragments", "amount": 20 }] }
   },
   {
+    "id": "first-survivalist",
+    "name": "Secret Prepper",
+    "description": "Win your first run with the Survivalist's starter deck.",
+    "conditions": [{ "statId": "starter.survivalist.wins", "operator": "gte", "value": 1 }],
+    "reward": { "items": [{ "type": "memoryFragments", "amount": 10 }] }
+  },
+  {
+    "id": "survivalist-tier-2",
+    "name": "Bomb Shelter Owner",
+    "description": "Win 5 runs with the Survivalist's starter deck.",
+    "conditions": [{ "statId": "starter.survivalist.wins", "operator": "gte", "value": 5 }],
+    "reward": { "items": [{ "type": "memoryFragments", "amount": 20 }] }
+  },
+  {
+    "id": "survivalist-tier-3",
+    "name": "Personal Bunker",
+    "description": "Win 10 runs with the Survivalist's starter deck.",
+    "conditions": [{ "statId": "starter.survivalist.wins", "operator": "gte", "value": 10 }],
+    "reward": { "items": [{ "type": "memoryFragments", "amount": 30 }] }
+  },
+  {
     "id": "first-harvester",
     "name": "First Picking",
     "description": "Win your first run with the Harvester's starter deck.",

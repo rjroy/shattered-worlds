@@ -5,6 +5,7 @@ import footballerJson from "./starterDecks/footballer.json";
 import harvesterJson from "./starterDecks/harvester.json";
 import contractorJson from "./starterDecks/contractor.json";
 import surveyorJson from "./starterDecks/surveyor.json";
+import survivalistJson from "./starterDecks/survivalist.json";
 import archivistJson from "./starterDecks/archivist.json";
 import { worldDataRegistry } from "./worlds/registry";
 import type {
@@ -42,6 +43,7 @@ const RESOLVE_STARTER_DECKS: Record<string, readonly StarterEntry[]> = {
   harvester: (harvesterJson as unknown as { starterDeck: readonly StarterEntry[] }).starterDeck,
   archivist: (archivistJson as unknown as { starterDeck: readonly StarterEntry[] }).starterDeck,
   surveyor: (surveyorJson as unknown as { starterDeck: readonly StarterEntry[] }).starterDeck,
+  survivalist: (survivalistJson as unknown as { starterDeck: readonly StarterEntry[] }).starterDeck,
 };
 
 export const STARTER_DECK_IDS: readonly string[] = Object.keys(RESOLVE_STARTER_DECKS);

@@ -135,6 +135,7 @@ import zombieInsetBaseballUrl from "../assets/themes/zombie-big-box/insets/inset
 import zombieInsetCorpseUrl from "../assets/themes/zombie-big-box/insets/inset-corpse.webp";
 import zombieInsetEchoingAislesUrl from "../assets/themes/zombie-big-box/insets/inset-echoing-aisles.webp";
 import zombieInsetFindShotgunUrl from "../assets/themes/zombie-big-box/insets/inset-find-shotgun.webp";
+import zombieInsetGoBagUrl from "../assets/themes/zombie-big-box/insets/inset-go-bag.webp";
 import zombieInsetRegroupUrl from "../assets/themes/zombie-big-box/insets/inset-regroup.webp";
 import zombieInsetRubbleUrl from "../assets/themes/zombie-big-box/insets/inset-rubble.webp";
 import zombieInsetScreamsUrl from "../assets/themes/zombie-big-box/insets/inset-screams.webp";
@@ -318,6 +319,7 @@ export const worldAssetUrls: Record<string, string> = {
   "zombie-inset-corpse": zombieInsetCorpseUrl,
   "zombie-inset-echoing-aisles": zombieInsetEchoingAislesUrl,
   "zombie-inset-find-shotgun": zombieInsetFindShotgunUrl,
+  "zombie-inset-go-bag": zombieInsetGoBagUrl,
   "zombie-inset-regroup": zombieInsetRegroupUrl,
   "zombie-inset-rubble": zombieInsetRubbleUrl,
   "zombie-inset-screams": zombieInsetScreamsUrl,

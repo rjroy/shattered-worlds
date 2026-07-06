@@ -366,7 +366,7 @@
       "kind": "player",
       "name": "Loaded Shotgun",
       "rarity": "legendary",
-      "insetKey": "zombie-inset-find-shotgun",
+      "insetKey": "zombie-inset-shotgun",
       "exhaust": true,
       "effect": {
         "kind": "DealProgressAll",
@@ -1800,6 +1800,36 @@
       },
       "fx": [{ "kind": "Play", "key": "shotgun-fx" }]
     },
+    "Shotgun2": {
+      "kind": "player",
+      "name": "Sawed-Off Shotgun",
+      "rarity": "legendary",
+      "insetKey": "zombie-inset-shotgun",
+      "energyCost": 2,
+      "effect": {
+        "kind": "DealProgressAll",
+        "base": 1,
+        "bonus": [
+          { "tag": "Creature", "amount": 2 },
+          { "tag": "Slow", "amount": 2 }
+        ]
+      },
+      "fx": [{ "kind": "Play", "key": "shotgun-fx" }]
+    },
+    "Regroup2": {
+      "kind": "player",
+      "name": "Organize",
+      "rarity": "uncommon",
+      "insetKey": "zombie-inset-regroup",
+      "energyCost": 1,
+      "effect": {
+        "kind": "Modal",
+        "branches": [
+          { "kind": "DestroyCardInHand", "min": 0, "max": 3 },
+          { "kind": "Draw", "player": 2 }
+        ]
+      }
+    },
     "Regroup": {
       "kind": "player",
       "name": "Regroup",
@@ -1809,12 +1839,27 @@
       "exhaust": true,
       "effect": { "kind": "DestroyCardInHand", "min": 0, "max": 3 }
     },
+    "Go-Bag": {
+      "kind": "player",
+      "name": "Go-Bag",
+      "rarity": "rare",
+      "insetKey": "zombie-inset-go-bag",
+      "energyCost": 0,
+      "exhaust": true,
+      "effect": {
+        "kind": "OfferBoon",
+        "setId": "pool-go-bag",
+        "setName": "The Go Bag",
+        "offeredCount": 3,
+        "chooseCount": 2
+      }
+    },
     "Shelf Sweep": {
       "kind": "player",
       "name": "Shelf Sweep",
       "rarity": "rare",
       "insetKey": "zombie-inset-shelf-sweep",
-      "energyCost": 2,
+      "energyCost": 1,
       "effect": {
         "kind": "DealProgressAll",
         "base": 1,
@@ -1969,7 +2014,7 @@
       "insetKey": "fortune-inset-second-wind",
       "exhaust": true,
       "rarity": "rare",
-      "effect": { "kind": "GainEnergy", "amount": 3 }
+      "effect": { "kind": "GainEnergy", "amount": 4 }
     },
     "Rejuvenation": {
       "kind": "player",
@@ -1981,10 +2026,11 @@
         "kind": "Sequence",
         "steps": [
           { "kind": "Heal", "amount": 4 },
-          { "kind": "GainEnergy", "amount": 4 },
+          { "kind": "GainEnergy", "amount": 5 },
           { "kind": "Brace", "amount": 6 },
-          { "kind": "GainLight", "amount": 6 },
-          { "kind": "GainHeat", "amount": 6 }
+          { "kind": "GainKeywordGuard", "amount": 6 },
+          { "kind": "GainLight", "amount": 8 },
+          { "kind": "GainHeat", "amount": 5 }
         ]
       }
     },
@@ -2021,7 +2067,8 @@
       "effect": {
         "kind": "Sequence",
         "steps": [
-          { "kind": "Brace", "amount": 4 },
+          { "kind": "GainKeywordGuard", "amount": 4 },
+          { "kind": "GainLight", "amount": 4 },
           { "kind": "GainLight", "amount": 4 },
           { "kind": "GainHeat", "amount": 4 }
         ]

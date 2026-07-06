@@ -96,6 +96,15 @@
     "effect": { "type": "starterDeckOverride", "starterDeckId": "footballer" }
   },
   {
+    "id": "starter-survivalist",
+    "name": "Secret Prepper",
+    "description": "A muscle memory from a different life. Zombie movies are field guides.",
+    "cost": 60,
+    "destinyWeight": 0,
+    "effect": { "type": "starterDeckOverride", "starterDeckId": "survivalist" },
+    "requiresFeat": "first-big-box"
+  },
+  {
     "id": "starter-harvester",
     "name": "Harvester of the Ember Orchard",
     "description": "A muscle memory from a different life. Harvester of the Ember Orchard.",
