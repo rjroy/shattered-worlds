@@ -146,6 +146,11 @@ export function buildRunModifiers(
   return mods;
 }
 
+export function hasRequiredFeat(def: UnlockDefinition, featsProfile: FeatsProfile): boolean {
+  if (def.requiresFeat === undefined) return true;
+  return featsProfile.earned.some((record) => record.featId === def.requiresFeat);
+}
+
 export function isWorldUnlocked(
   worldId: string,
   profile: UnlocksProfile,

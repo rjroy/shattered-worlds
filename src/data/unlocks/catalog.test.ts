@@ -1,5 +1,6 @@
 import { describe, expect, it } from "bun:test";
 
+import { FEAT_CATALOG } from "../feats/catalog";
 import type { FeatsProfile } from "../../game/runtime/featsProfile";
 import type { UnlocksProfile } from "../../game/runtime/unlocksProfile";
 import { FORTUNE_BOON_POOLS } from "../worldManifest";
@@ -11,6 +12,7 @@ import {
   computeSpendableBalance,
   computeUnlockSpend,
   DESTINY_BUDGET,
+  hasRequiredFeat,
   isWorldUnlocked,
   UNLOCK_CATALOG,
 } from "./catalog";
@@ -56,6 +58,32 @@ describe("UNLOCK_CATALOG", () => {
       destinyWeight: 0,
       effect: { type: "worldUnlock", worldId: "fog-beach-party" },
     });
+  });
+
+  it("only references feat ids that exist in the feat catalog", () => {
+    const featIds = new Set(FEAT_CATALOG.map((feat) => feat.id));
+    for (const def of UNLOCK_CATALOG) {
+      if (def.requiresFeat === undefined) continue;
+      expect(featIds.has(def.requiresFeat)).toBe(true);
+    }
+  });
+
+  it("gates the world-flavored starter decks behind clearing their world once", () => {
+    expect(UNLOCK_CATALOG.find((def) => def.id === "starter-harvester")?.requiresFeat).toBe(
+      "first-the-ember-orcharc",
+    );
+    expect(UNLOCK_CATALOG.find((def) => def.id === "starter-archivist")?.requiresFeat).toBe(
+      "first-the-tidal-archive",
+    );
+    expect(UNLOCK_CATALOG.find((def) => def.id === "starter-surveyor")?.requiresFeat).toBe(
+      "first-city-of-sleeping-giants",
+    );
+    expect(
+      UNLOCK_CATALOG.find((def) => def.id === "starter-contractor")?.requiresFeat,
+    ).toBeUndefined();
+    expect(
+      UNLOCK_CATALOG.find((def) => def.id === "starter-footballer")?.requiresFeat,
+    ).toBeUndefined();
   });
 
   it("defines Whiteout Parking Garage as a world access unlock", () => {
@@ -256,6 +284,28 @@ describe("buildRunModifiers", () => {
         ).extraStartKeywordGuard,
       ).toBe(3);
     });
+  });
+});
+
+describe("hasRequiredFeat", () => {
+  const starterHarvester = UNLOCK_CATALOG.find((def) => def.id === "starter-harvester")!;
+  const extraHp = UNLOCK_CATALOG.find((def) => def.id === "extra-hp")!;
+
+  it("returns true for unlocks with no feat requirement", () => {
+    expect(hasRequiredFeat(extraHp, { version: 1, earned: [] })).toBe(true);
+  });
+
+  it("returns false when the required feat has not been earned", () => {
+    expect(hasRequiredFeat(starterHarvester, { version: 1, earned: [] })).toBe(false);
+  });
+
+  it("returns true once the required feat has been earned", () => {
+    expect(
+      hasRequiredFeat(starterHarvester, {
+        version: 1,
+        earned: [{ featId: "first-the-ember-orcharc", earnedAt: 1, sessionId: "s" }],
+      }),
+    ).toBe(true);
   });
 });
 

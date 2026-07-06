@@ -104,6 +104,19 @@ describe("createUnlocksStore", () => {
     expect(richStore.purchase("extra-hp")).toBe("already-owned");
   });
 
+  it("rejects purchasing a feat-gated starter deck until the required feat is earned", () => {
+    const store = createUnlocksStore(memoryStorage(), richFeats);
+
+    expect(store.purchase("starter-harvester")).toBe("feat-locked");
+    expect(store.getProfile().purchased).toEqual([]);
+
+    const clearedStore = createUnlocksStore(
+      memoryStorage(),
+      featsStore([...richFeats.getProfile().earned.map((r) => r.featId), "first-the-ember-orcharc"]),
+    );
+    expect(clearedStore.purchase("starter-harvester")).toBe("ok");
+  });
+
   it("auto-activates purchases while their current weights fit the active budget", () => {
     const storage = memoryStorage({
       [UNLOCKS_PROFILE_STORAGE_KEY]: JSON.stringify({

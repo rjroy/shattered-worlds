@@ -9,8 +9,9 @@ import {
   DESTINY_BUDGET,
   UNLOCK_CATALOG,
 } from "../../data/unlocks/catalog";
+import { FEAT_CATALOG } from "../../data/feats/catalog";
 import type { UnlockDefinition, UnlockEffect } from "../../data/unlocks/types";
-import type { FeatsStore } from "../runtime/featsProfile";
+import type { FeatsProfile, FeatsStore } from "../runtime/featsProfile";
 import { type UnlocksStore } from "../runtime/unlocksProfile";
 import { unlockCardState } from "../view/unlockShop";
 import { CANVAS_W, CANVAS_H } from "../view/layout";
@@ -134,7 +135,8 @@ export class DestinyScene extends Phaser.Scene {
     }
 
     const profile = this.unlocksStore.getProfile();
-    const balance = computeSpendableBalance(this.featsStore.getProfile(), profile);
+    const featsProfile = this.featsStore.getProfile();
+    const balance = computeSpendableBalance(featsProfile, profile);
     const used = activeWeight(profile, UNLOCK_CATALOG);
     const pips = "●".repeat(used) + "○".repeat(Math.max(0, DESTINY_BUDGET - used));
 
@@ -178,6 +180,7 @@ export class DestinyScene extends Phaser.Scene {
         GRID_TOP + row * (CARD_H + GRID_GAP_Y),
         balance,
         profile,
+        featsProfile,
       );
     });
 
@@ -219,6 +222,7 @@ export class DestinyScene extends Phaser.Scene {
     y: number,
     balance: number,
     profile: ReturnType<UnlocksStore["getProfile"]>,
+    featsProfile: FeatsProfile,
   ): void {
     const card = this.add.container(x, y);
     const panel = this.add.rectangle(0, 0, CARD_W, CARD_H, 0x15101d, 0.94).setOrigin(0, 0);
@@ -327,7 +331,7 @@ export class DestinyScene extends Phaser.Scene {
       ),
     );
 
-    const state = unlockCardState(def, profile.purchased, balance);
+    const state = unlockCardState(def, profile.purchased, balance, featsProfile);
     if (state === "owned") {
       card.add(
         this.add.text(
@@ -347,6 +351,21 @@ export class DestinyScene extends Phaser.Scene {
       }
     } else if (state === "affordable") {
       card.add(this.createCardButton(314, 106, "Buy", () => this.confirmPurchase(def)));
+    } else if (state === "feat-locked") {
+      const requiredFeat = FEAT_CATALOG.find((feat) => feat.id === def.requiresFeat);
+      card.add(
+        this.add.text(
+          102,
+          96,
+          `🔒 Requires: ${requiredFeat?.name ?? "an unearned feat"}`,
+          textStyle({
+            fontFamily: FONTS.ui,
+            fontSize: "11px",
+            color: TEXT.textMuted,
+            fontStyle: "italic",
+          }),
+        ),
+      );
     } else {
       card.add(
         this.add.text(
@@ -450,6 +469,9 @@ export class DestinyScene extends Phaser.Scene {
         break;
       case "already-owned":
         this.messageText?.setText("Already owned.");
+        break;
+      case "feat-locked":
+        this.messageText?.setText("That memory hasn't been earned yet.");
         break;
       case "insufficient-fragments":
       default:

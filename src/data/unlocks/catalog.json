@@ -101,7 +101,8 @@
     "description": "A muscle memory from a different life. Harvester of the Ember Orchard.",
     "cost": 80,
     "destinyWeight": 0,
-    "effect": { "type": "starterDeckOverride", "starterDeckId": "harvester" }
+    "effect": { "type": "starterDeckOverride", "starterDeckId": "harvester" },
+    "requiresFeat": "first-the-ember-orcharc"
   },
   {
     "id": "starter-archivist",
@@ -109,7 +110,8 @@
     "description": "A muscle memory from a different life. Archivist of the Tidal Archive.",
     "cost": 80,
     "destinyWeight": 0,
-    "effect": { "type": "starterDeckOverride", "starterDeckId": "archivist" }
+    "effect": { "type": "starterDeckOverride", "starterDeckId": "archivist" },
+    "requiresFeat": "first-the-tidal-archive"
   },
   {
     "id": "starter-surveyor",
@@ -117,7 +119,8 @@
     "description": "A muscle memory from a different life. Surveyor of a Sleeping Giant.",
     "cost": 80,
     "destinyWeight": 0,
-    "effect": { "type": "starterDeckOverride", "starterDeckId": "surveyor" }
+    "effect": { "type": "starterDeckOverride", "starterDeckId": "surveyor" },
+    "requiresFeat": "first-city-of-sleeping-giants"
   },
   {
     "id": "act-reward",
