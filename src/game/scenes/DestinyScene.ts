@@ -355,7 +355,7 @@ export class DestinyScene extends Phaser.Scene {
       const requiredFeat = FEAT_CATALOG.find((feat) => feat.id === def.requiresFeat);
       card.add(
         this.add.text(
-          102,
+          140,
           96,
           `🔒 Requires: ${requiredFeat?.name ?? "an unearned feat"}`,
           textStyle({
