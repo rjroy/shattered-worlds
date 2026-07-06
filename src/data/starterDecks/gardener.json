@@ -1,7 +1,7 @@
 {
   "worldId": "gardener",
   "starterDeck": [
-    { "templateId": "Machete", "count": 1 },
+    { "templateId": "Machete2", "count": 1 },
     { "templateId": "Bloom2", "count": 1 },
     { "templateId": "Pruning Shears2", "count": 1 },
     { "templateId": "Explore", "count": 3 },

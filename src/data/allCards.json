@@ -861,6 +861,21 @@
       "energyCost": 1,
       "effect": { "kind": "DealProgress", "base": 2, "bonus": { "tag": "Spore", "amount": 2 } }
     },
+    "Machete2": {
+      "kind": "player",
+      "name": "Machete",
+      "rarity": "uncommon",
+      "insetKey": "mall-inset-machete",
+      "energyCost": 1,
+      "effect": {
+        "kind": "DealProgress",
+        "base": 2,
+        "bonus": [
+          { "tag": "Spore", "amount": 1 },
+          { "tag": "Creature", "amount": 2 }
+        ]
+      }
+    },
     "Weed Killer": {
       "kind": "player",
       "name": "Weed Killer",
