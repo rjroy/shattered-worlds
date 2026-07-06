@@ -122,7 +122,7 @@ export function dealProgress(
   };
 
   const bonusAmount = Array.isArray(bonus)
-    ? bonus.reduce((sum, kb) => getBonus(hazard, kb), 0)
+    ? bonus.reduce((sum, kb) => sum + getBonus(hazard, kb), 0)
     : getBonus(hazard, bonus);
   const amount = base + bonusAmount;
 
