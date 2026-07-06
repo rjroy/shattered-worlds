@@ -43,14 +43,14 @@ const RESOLVE_STARTER_DECKS: Record<string, readonly StarterEntry[]> = {
   starter: (starterJson as unknown as { starterDeck: readonly StarterEntry[] }).starterDeck,
   footballer: (footballerJson as unknown as { starterDeck: readonly StarterEntry[] }).starterDeck,
   contractor: (contractorJson as unknown as { starterDeck: readonly StarterEntry[] }).starterDeck,
+  survivalist: (survivalistJson as unknown as { starterDeck: readonly StarterEntry[] }).starterDeck,
+  "stunt-driver": (stuntDriverJson as unknown as { starterDeck: readonly StarterEntry[] })
+    .starterDeck,
+  gardener: (gardenerJson as unknown as { starterDeck: readonly StarterEntry[] }).starterDeck,
+  fireman: (firemanJson as unknown as { starterDeck: readonly StarterEntry[] }).starterDeck,
   harvester: (harvesterJson as unknown as { starterDeck: readonly StarterEntry[] }).starterDeck,
   archivist: (archivistJson as unknown as { starterDeck: readonly StarterEntry[] }).starterDeck,
   surveyor: (surveyorJson as unknown as { starterDeck: readonly StarterEntry[] }).starterDeck,
-  survivalist: (survivalistJson as unknown as { starterDeck: readonly StarterEntry[] }).starterDeck,
-  fireman: (firemanJson as unknown as { starterDeck: readonly StarterEntry[] }).starterDeck,
-  gardener: (gardenerJson as unknown as { starterDeck: readonly StarterEntry[] }).starterDeck,
-  "stunt-driver": (stuntDriverJson as unknown as { starterDeck: readonly StarterEntry[] })
-    .starterDeck,
 };
 
 export const STARTER_DECK_IDS: readonly string[] = Object.keys(RESOLVE_STARTER_DECKS);
