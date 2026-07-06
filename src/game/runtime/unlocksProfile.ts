@@ -1,4 +1,9 @@
-import { canActivate, computeSpendableBalance, UNLOCK_CATALOG } from "../../data/unlocks/catalog";
+import {
+  canActivate,
+  computeSpendableBalance,
+  hasRequiredFeat,
+  UNLOCK_CATALOG,
+} from "../../data/unlocks/catalog";
 import type { UnlockDefinition } from "../../data/unlocks/types";
 import type { RunStatsStorage } from "./runStats";
 import type { FeatsStore } from "./featsProfile";
@@ -81,7 +86,7 @@ export function saveUnlocksProfile(
 
 export interface UnlocksStore {
   getProfile(): UnlocksProfile;
-  purchase(id: string): "ok" | "already-owned" | "insufficient-fragments";
+  purchase(id: string): "ok" | "already-owned" | "insufficient-fragments" | "feat-locked";
   setActive(id: string, active: boolean): "ok" | "not-owned" | "over-budget";
 }
 
@@ -104,6 +109,8 @@ export function createUnlocksStore(
 
       const def = UNLOCK_CATALOG.find((candidate) => candidate.id === id);
       if (def === undefined) return "insufficient-fragments";
+
+      if (!hasRequiredFeat(def, featsStore.getProfile())) return "feat-locked";
 
       const balance = computeSpendableBalance(featsStore.getProfile(), profile);
       if (def.cost > balance) return "insufficient-fragments";

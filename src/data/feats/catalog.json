@@ -661,6 +661,69 @@
     "reward": { "items": [{ "type": "memoryFragments", "amount": 20 }] }
   },
   {
+    "id": "first-survivalist",
+    "name": "Secret Prepper",
+    "description": "Win your first run with the Survivalist's starter deck.",
+    "conditions": [{ "statId": "starter.survivalist.wins", "operator": "gte", "value": 1 }],
+    "reward": { "items": [{ "type": "memoryFragments", "amount": 10 }] }
+  },
+  {
+    "id": "survivalist-tier-2",
+    "name": "Bomb Shelter Owner",
+    "description": "Win 5 runs with the Survivalist's starter deck.",
+    "conditions": [{ "statId": "starter.survivalist.wins", "operator": "gte", "value": 5 }],
+    "reward": { "items": [{ "type": "memoryFragments", "amount": 20 }] }
+  },
+  {
+    "id": "survivalist-tier-3",
+    "name": "Personal Bunker",
+    "description": "Win 10 runs with the Survivalist's starter deck.",
+    "conditions": [{ "statId": "starter.survivalist.wins", "operator": "gte", "value": 10 }],
+    "reward": { "items": [{ "type": "memoryFragments", "amount": 30 }] }
+  },
+  {
+    "id": "first-fireman",
+    "name": "First Responder",
+    "description": "Win your first run with the Fireman's starter deck.",
+    "conditions": [{ "statId": "starter.fireman.wins", "operator": "gte", "value": 1 }],
+    "reward": { "items": [{ "type": "memoryFragments", "amount": 10 }] }
+  },
+  {
+    "id": "fireman-tier-2",
+    "name": "Engine Driver",
+    "description": "Win 5 runs with the Fireman's starter deck.",
+    "conditions": [{ "statId": "starter.fireman.wins", "operator": "gte", "value": 5 }],
+    "reward": { "items": [{ "type": "memoryFragments", "amount": 20 }] }
+  },
+  {
+    "id": "fireman-tier-3",
+    "name": "Section Cheif",
+    "description": "Win 10 runs with the Fireman's starter deck.",
+    "conditions": [{ "statId": "starter.fireman.wins", "operator": "gte", "value": 10 }],
+    "reward": { "items": [{ "type": "memoryFragments", "amount": 30 }] }
+  },
+  {
+    "id": "first-gardener",
+    "name": "Gardener",
+    "description": "Win your first run with the Gardener's starter deck.",
+    "conditions": [{ "statId": "starter.gardener.wins", "operator": "gte", "value": 1 }],
+    "reward": { "items": [{ "type": "memoryFragments", "amount": 10 }] }
+  },
+  {
+    "id": "gardener-tier-2",
+    "name": "Farmer",
+    "description": "Win 5 runs with the Gardener's starter deck.",
+    "conditions": [{ "statId": "starter.gardener.wins", "operator": "gte", "value": 5 }],
+    "reward": { "items": [{ "type": "memoryFragments", "amount": 20 }] }
+  },
+  {
+    "id": "gardener-tier-3",
+    "name": "Botanist",
+    "description": "Win 10 runs with the Gardener's starter deck.",
+    "conditions": [{ "statId": "starter.gardener.wins", "operator": "gte", "value": 10 }],
+    "reward": { "items": [{ "type": "memoryFragments", "amount": 30 }] }
+  },
+  {
     "id": "first-harvester",
     "name": "First Picking",
     "description": "Win your first run with the Harvester's starter deck.",

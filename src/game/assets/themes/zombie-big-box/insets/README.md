@@ -6,6 +6,7 @@ Thumbnail-first inset assets:
 - `inset-corpse.webp`
 - `inset-echoing-aisles.webp`
 - `inset-find-shotgun.webp`
+- `inset-go-bag.webp`
 - `inset-listen.webp`
 - `inset-plan.webp`
 - `inset-regroup.webp`

@@ -123,4 +123,8 @@ export type UnlockDefinition = {
   readonly cost: number;
   readonly destinyWeight: number;
   readonly effect: UnlockEffect;
+  // Feat id (see data/feats) that must be earned before this unlock can be
+  // purchased. Used to gate world-flavored starter decks behind having
+  // cleared the associated world at least once.
+  readonly requiresFeat?: string;
 };

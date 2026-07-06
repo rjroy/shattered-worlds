@@ -2170,7 +2170,7 @@ describe("DealProgressAll integration", () => {
     const [z3, s4] = mintCard(catalog, s3, "Zombie");
     state = {
       ...s4,
-      energy: 2,
+      energy: 1,
       hand: [shelfSweep as PlayerCard, z1 as WorldCard, z2 as WorldCard, z3 as WorldCard],
       progress: {
         [z1.id]: 1,

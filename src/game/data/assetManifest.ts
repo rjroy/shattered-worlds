@@ -61,9 +61,12 @@ import unlockRarityBonusUrl from "../assets/unlocks/rarity-bonus.webp";
 import unlockSecondExplorePushUrl from "../assets/unlocks/second-explore-push.webp";
 import unlockStarterArchivistUrl from "../assets/unlocks/starter-archivist.webp";
 import unlockStarterContractorUrl from "../assets/unlocks/starter-contractor.webp";
+import unlockStarterFiremanUrl from "../assets/unlocks/starter-fireman.webp";
 import unlockStarterFootballerUrl from "../assets/unlocks/starter-footballer.webp";
+import unlockStarterGardenerUrl from "../assets/unlocks/starter-gardener.webp";
 import unlockStarterHarvesterUrl from "../assets/unlocks/starter-harvester.webp";
 import unlockStarterSurveyorUrl from "../assets/unlocks/starter-surveyor.webp";
+import unlockStarterSurvivalistUrl from "../assets/unlocks/starter-survivalist.webp";
 import unlockStrongBarricadesUrl from "../assets/unlocks/strong-barricades.webp";
 import unlockWorldFogBeachPartyUrl from "../assets/unlocks/world-fog-beach-party.webp";
 import unlockWorldWhiteoutParkingGarageUrl from "../assets/unlocks/world-whiteout-parking-garage.webp";
@@ -157,9 +160,12 @@ export const assetManifest: Record<string, string> = {
   "unlock/second-explore-push": unlockSecondExplorePushUrl,
   "unlock/starter-archivist": unlockStarterArchivistUrl,
   "unlock/starter-contractor": unlockStarterContractorUrl,
+  "unlock/starter-fireman": unlockStarterFiremanUrl,
   "unlock/starter-footballer": unlockStarterFootballerUrl,
+  "unlock/starter-gardener": unlockStarterGardenerUrl,
   "unlock/starter-harvester": unlockStarterHarvesterUrl,
   "unlock/starter-surveyor": unlockStarterSurveyorUrl,
+  "unlock/starter-survivalist": unlockStarterSurvivalistUrl,
   "unlock/strong-barricades": unlockStrongBarricadesUrl,
   "unlock/world-fog-beach-party": unlockWorldFogBeachPartyUrl,
   "unlock/world-whiteout-parking-garage": unlockWorldWhiteoutParkingGarageUrl,

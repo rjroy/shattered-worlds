@@ -9,7 +9,7 @@ export const THE_BEGINNING_DISPLAY: WorldDisplayData = {
     "you force your way through. It only gives you one honest place to stand while the next " +
     "thing asks to be carried, named, or finally set down. Healing begins here, but it begins " +
     "small, uneven, and still tired.",
-  difficulty: 4,
+  difficulty: 5,
   cycle: 5,
   backgroundKey: "the-beginning-bg",
 };

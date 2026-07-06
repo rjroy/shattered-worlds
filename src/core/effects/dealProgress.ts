@@ -122,7 +122,7 @@ export function dealProgress(
   };
 
   const bonusAmount = Array.isArray(bonus)
-    ? bonus.reduce((sum, kb) => getBonus(hazard, kb), 0)
+    ? bonus.reduce((sum, kb) => sum + getBonus(hazard, kb), 0)
     : getBonus(hazard, bonus);
   const amount = base + bonusAmount;
 
@@ -173,6 +173,8 @@ export function resolveCounter(state: GameState, spec: CounterSpec): number {
   switch (spec.kind) {
     case "KeywordInHand":
       return state.hand.filter((card) => hasKeyword(card, spec.keyword)).length;
+    case "WorldCardInHand":
+      return state.hand.filter((card) => card.kind === "world").length;
     case "FrozenPlayerCards":
       return state.hand.filter((card) => card.kind === "player" && (card.frozen ?? 0) > 0).length;
 

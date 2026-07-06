@@ -101,6 +101,22 @@
       "energyCost": 1,
       "effect": { "kind": "Brace", "amount": 1 }
     },
+    "Steady2": {
+      "kind": "player",
+      "name": "Steady",
+      "rarity": "rare",
+      "insetKey": "bird-inset-steady",
+      "energyCost": 1,
+      "effect": {
+        "kind": "Sequence",
+        "steps": [
+          { "kind": "Brace", "amount": 1 },
+          { "kind": "GainKeywordGuard", "amount": 1 },
+          { "kind": "GainLight", "amount": 1 },
+          { "kind": "GainHeat", "amount": 1 }
+        ]
+      }
+    },
     "Cut It Loose": {
       "kind": "player",
       "name": "Cut It Loose",
@@ -366,7 +382,7 @@
       "kind": "player",
       "name": "Loaded Shotgun",
       "rarity": "legendary",
-      "insetKey": "zombie-inset-find-shotgun",
+      "insetKey": "zombie-inset-shotgun",
       "exhaust": true,
       "effect": {
         "kind": "DealProgressAll",
@@ -823,6 +839,20 @@
         ]
       }
     },
+    "Pruning Shears2": {
+      "kind": "player",
+      "name": "Pruning Shears",
+      "rarity": "common",
+      "insetKey": "mall-inset-pruning-shears",
+      "exhaust": true,
+      "effect": {
+        "kind": "Sequence",
+        "steps": [
+          { "kind": "DestroyCardInHand", "min": 0, "max": 4 },
+          { "kind": "GainEnergy", "amount": 1 }
+        ]
+      }
+    },
     "Machete": {
       "kind": "player",
       "name": "Machete",
@@ -830,6 +860,21 @@
       "insetKey": "mall-inset-machete",
       "energyCost": 1,
       "effect": { "kind": "DealProgress", "base": 2, "bonus": { "tag": "Spore", "amount": 2 } }
+    },
+    "Machete2": {
+      "kind": "player",
+      "name": "Machete",
+      "rarity": "uncommon",
+      "insetKey": "mall-inset-machete",
+      "energyCost": 1,
+      "effect": {
+        "kind": "DealProgress",
+        "base": 2,
+        "bonus": [
+          { "tag": "Spore", "amount": 1 },
+          { "tag": "Creature", "amount": 2 }
+        ]
+      }
     },
     "Weed Killer": {
       "kind": "player",
@@ -850,6 +895,19 @@
         "kind": "DealProgressScaled",
         "base": 1,
         "per": { "kind": "KeywordInHand", "keyword": "Spore" },
+        "amount": 1
+      }
+    },
+    "Bloom2": {
+      "kind": "player",
+      "name": "Bloom",
+      "rarity": "common",
+      "insetKey": "mall-inset-bloom",
+      "energyCost": 0,
+      "effect": {
+        "kind": "DealProgressScaled",
+        "base": 1,
+        "per": { "kind": "WorldCardInHand" },
         "amount": 1
       }
     },
@@ -1800,6 +1858,36 @@
       },
       "fx": [{ "kind": "Play", "key": "shotgun-fx" }]
     },
+    "Shotgun2": {
+      "kind": "player",
+      "name": "Sawed-Off Shotgun",
+      "rarity": "legendary",
+      "insetKey": "zombie-inset-shotgun",
+      "energyCost": 2,
+      "effect": {
+        "kind": "DealProgressAll",
+        "base": 1,
+        "bonus": [
+          { "tag": "Creature", "amount": 2 },
+          { "tag": "Slow", "amount": 2 }
+        ]
+      },
+      "fx": [{ "kind": "Play", "key": "shotgun-fx" }]
+    },
+    "Regroup2": {
+      "kind": "player",
+      "name": "Organize",
+      "rarity": "uncommon",
+      "insetKey": "zombie-inset-regroup",
+      "energyCost": 1,
+      "effect": {
+        "kind": "Modal",
+        "branches": [
+          { "kind": "DestroyCardInHand", "min": 0, "max": 3 },
+          { "kind": "Draw", "player": 2 }
+        ]
+      }
+    },
     "Regroup": {
       "kind": "player",
       "name": "Regroup",
@@ -1809,12 +1897,27 @@
       "exhaust": true,
       "effect": { "kind": "DestroyCardInHand", "min": 0, "max": 3 }
     },
+    "Go-Bag": {
+      "kind": "player",
+      "name": "Go-Bag",
+      "rarity": "rare",
+      "insetKey": "zombie-inset-go-bag",
+      "energyCost": 0,
+      "exhaust": true,
+      "effect": {
+        "kind": "OfferBoon",
+        "setId": "pool-go-bag",
+        "setName": "The Go Bag",
+        "offeredCount": 3,
+        "chooseCount": 2
+      }
+    },
     "Shelf Sweep": {
       "kind": "player",
       "name": "Shelf Sweep",
       "rarity": "rare",
       "insetKey": "zombie-inset-shelf-sweep",
-      "energyCost": 2,
+      "energyCost": 1,
       "effect": {
         "kind": "DealProgressAll",
         "base": 1,
@@ -1969,7 +2072,7 @@
       "insetKey": "fortune-inset-second-wind",
       "exhaust": true,
       "rarity": "rare",
-      "effect": { "kind": "GainEnergy", "amount": 3 }
+      "effect": { "kind": "GainEnergy", "amount": 4 }
     },
     "Rejuvenation": {
       "kind": "player",
@@ -1981,10 +2084,11 @@
         "kind": "Sequence",
         "steps": [
           { "kind": "Heal", "amount": 4 },
-          { "kind": "GainEnergy", "amount": 4 },
+          { "kind": "GainEnergy", "amount": 5 },
           { "kind": "Brace", "amount": 6 },
-          { "kind": "GainLight", "amount": 6 },
-          { "kind": "GainHeat", "amount": 6 }
+          { "kind": "GainKeywordGuard", "amount": 6 },
+          { "kind": "GainLight", "amount": 8 },
+          { "kind": "GainHeat", "amount": 5 }
         ]
       }
     },
@@ -2021,7 +2125,8 @@
       "effect": {
         "kind": "Sequence",
         "steps": [
-          { "kind": "Brace", "amount": 4 },
+          { "kind": "GainKeywordGuard", "amount": 4 },
+          { "kind": "GainLight", "amount": 4 },
           { "kind": "GainLight", "amount": 4 },
           { "kind": "GainHeat", "amount": 4 }
         ]
@@ -2878,7 +2983,7 @@
       "rarity": "common",
       "cost": 1,
       "keywords": [],
-      "discardable": true,
+      "discardable": false,
       "onDiscarded": { "kind": "None" },
       "onCleared": { "kind": "None" },
       "onPartialClear": { "kind": "None" },
@@ -2890,10 +2995,10 @@
       "name": "The Monitor Keeps Beeping",
       "insetKey": "questions-inset-the-monitor-keeps-beeping",
       "rarity": "uncommon",
-      "cost": 4,
+      "cost": 3,
       "keywords": [],
       "discardable": true,
-      "onDiscarded": { "kind": "None" },
+      "onDiscarded": { "kind": "Damage", "amount": 1 },
       "onCleared": { "kind": "None" },
       "onPartialClear": { "kind": "None" },
       "onDraw": { "kind": "None" },
@@ -2904,10 +3009,10 @@
       "name": "Everyone Says It's Nothing",
       "insetKey": "questions-inset-everyone-says-its-nothing",
       "rarity": "uncommon",
-      "cost": 4,
+      "cost": 3,
       "keywords": [],
       "discardable": true,
-      "onDiscarded": { "kind": "None" },
+      "onDiscarded": { "kind": "Damage", "amount": 1 },
       "onCleared": { "kind": "None" },
       "onPartialClear": { "kind": "None" },
       "onDraw": { "kind": "ApplyKeyword", "keyword": "Denial", "value": 2, "target": "self" },
@@ -2941,7 +3046,7 @@
       "cost": 2,
       "keywords": [],
       "discardable": true,
-      "onDiscarded": { "kind": "None" },
+      "onDiscarded": { "kind": "Damage", "amount": 1 },
       "onCleared": { "kind": "None" },
       "onPartialClear": { "kind": "None" },
       "onDraw": { "kind": "None" },
@@ -2958,13 +3063,13 @@
       "name": "He Isn't Coming Back",
       "insetKey": "questions-inset-he-isnt-coming-back",
       "rarity": "rare",
-      "cost": 5,
-      "keywords": ["Denial:2"],
+      "cost": 4,
+      "keywords": [],
       "discardable": false,
       "onDiscarded": { "kind": "None" },
       "onCleared": { "kind": "None" },
       "onPartialClear": { "kind": "None" },
-      "onDraw": { "kind": "None" },
+      "onDraw": { "kind": "ApplyKeyword", "keyword": "Denial", "value": 2, "target": "self" },
       "onEndOfTurn": { "kind": "ForceDestroy", "amount": 1 }
     },
     "It Isn't Fair": {
@@ -2972,9 +3077,9 @@
       "name": "It Isn't Fair",
       "insetKey": "questions-inset-it-isnt-fair",
       "rarity": "uncommon",
-      "cost": 4,
+      "cost": 3,
       "keywords": [],
-      "discardable": true,
+      "discardable": false,
       "onDiscarded": { "kind": "None" },
       "onCleared": { "kind": "None" },
       "onPartialClear": { "kind": "None" },
@@ -3019,16 +3124,10 @@
       "onPartialClear": { "kind": "None" },
       "onDraw": { "kind": "ApplyKeyword", "keyword": "Anger", "value": 2, "target": "self" },
       "onEndOfTurn": {
-        "kind": "Sequence",
-        "steps": [
-          {
-            "kind": "DamageScaled",
-            "base": 2,
-            "per": { "kind": "KeywordInHand", "keyword": "Anger" },
-            "amount": 1
-          },
-          { "kind": "AddThreatToWorldDeck" }
-        ]
+        "kind": "DamageScaled",
+        "base": 0,
+        "per": { "kind": "KeywordInHand", "keyword": "Anger" },
+        "amount": 1
       }
     },
     "Anguish": {
@@ -3121,7 +3220,7 @@
       "name": "Ask The Question",
       "insetKey": "questions-inset-ask-the-question",
       "rarity": "common",
-      "energyCost": 1,
+      "energyCost": 0,
       "effect": {
         "kind": "Sequence",
         "steps": [
@@ -3135,7 +3234,7 @@
       "name": "Let It Out",
       "insetKey": "questions-inset-let-it-out",
       "rarity": "common",
-      "energyCost": 1,
+      "energyCost": 0,
       "effect": {
         "kind": "Sequence",
         "steps": [
@@ -3154,8 +3253,8 @@
       "effect": {
         "kind": "Sequence",
         "steps": [
-          { "kind": "DealProgressAll", "base": 1 },
-          { "kind": "RemoveKeyword", "keyword": "Anger", "target": "hand", "amount": 1 }
+          { "kind": "DealProgressAll", "base": 2 },
+          { "kind": "RemoveKeyword", "keyword": "Anger", "target": "hand", "amount": 2 }
         ]
       }
     },
@@ -3164,7 +3263,7 @@
       "name": "Sit With It a While",
       "insetKey": "questions-inset-sit-with-it-a-while",
       "rarity": "common",
-      "energyCost": 1,
+      "energyCost": 0,
       "effect": {
         "kind": "Modal",
         "branches": [
@@ -3180,7 +3279,7 @@
       "rarity": "uncommon",
       "cost": 4,
       "keywords": [],
-      "discardable": true,
+      "discardable": false,
       "onDiscarded": { "kind": "None" },
       "onCleared": { "kind": "None" },
       "onPartialClear": { "kind": "None" },
@@ -3215,12 +3314,13 @@
       "cost": 3,
       "keywords": [],
       "discardable": true,
-      "onDiscarded": { "kind": "None" },
+      "onDiscarded": { "kind": "AddPlayerCardToTop", "template": "Ask For More Time" },
       "onCleared": {
-        "kind": "Modal",
-        "branches": [
-          { "kind": "DestroyCardInHand", "min": 1, "max": 1 },
-          { "kind": "Damage", "amount": 2 }
+        "kind": "Sequence",
+        "steps": [
+          { "kind": "ForceDestroy", "amount": 1 },
+          { "kind": "AddPlayerCardToTop", "template": "Call In The Favor", "bTop": true },
+          { "kind": "AddPlayerCardToTop", "template": "Take What's Owed", "bTop": true }
         ]
       },
       "onPartialClear": { "kind": "None" },
@@ -3283,7 +3383,7 @@
       "cost": 3,
       "keywords": [],
       "discardable": true,
-      "onDiscarded": { "kind": "None" },
+      "onDiscarded": { "kind": "Damage", "amount": 1 },
       "onCleared": { "kind": "None" },
       "onPartialClear": { "kind": "None" },
       "onDraw": { "kind": "None" },
@@ -3302,7 +3402,7 @@
       "rarity": "uncommon",
       "cost": 4,
       "keywords": [],
-      "discardable": true,
+      "discardable": false,
       "onDiscarded": { "kind": "None" },
       "onCleared": { "kind": "None" },
       "onPartialClear": { "kind": "None" },
@@ -3318,7 +3418,7 @@
       "keywords": [],
       "discardable": true,
       "onDiscarded": { "kind": "None" },
-      "onCleared": { "kind": "ExileTopWorldCards", "amount": 2 },
+      "onCleared": { "kind": "ExileTopWorldCards", "amount": 3 },
       "onPartialClear": { "kind": "None" },
       "onDraw": { "kind": "None" },
       "onEndOfTurn": { "kind": "None" }
@@ -3351,7 +3451,7 @@
       "cost": 2,
       "keywords": [],
       "discardable": true,
-      "onDiscarded": { "kind": "None" },
+      "onDiscarded": { "kind": "Damage", "amount": 1 },
       "onCleared": { "kind": "None" },
       "onPartialClear": { "kind": "None" },
       "onDraw": { "kind": "None" },
@@ -3414,7 +3514,7 @@
       "effect": {
         "kind": "Sequence",
         "steps": [
-          { "kind": "DealProgress", "base": 2 },
+          { "kind": "DealProgress", "base": 3 },
           { "kind": "RemoveKeyword", "keyword": "Bargaining", "target": "hand", "amount": 2 }
         ]
       }
@@ -3425,23 +3525,29 @@
       "insetKey": "answers-inset-a-page-from-the-ledger",
       "rarity": "common",
       "energyCost": 1,
-      "effect": { "kind": "DealProgress", "base": 1 }
+      "effect": { "kind": "DealProgressAll", "base": 3 }
     },
     "Ask For More Time": {
       "kind": "player",
       "name": "Ask For More Time",
       "insetKey": "answers-inset-ask-for-more-time",
       "rarity": "common",
-      "energyCost": 1,
-      "effect": { "kind": "Heal", "amount": 2 }
+      "energyCost": 0,
+      "effect": { "kind": "Heal", "amount": 3 }
     },
     "Take What's Owed": {
       "kind": "player",
       "name": "Take What's Owed",
       "insetKey": "answers-inset-take-whats-owed",
       "rarity": "common",
-      "energyCost": 1,
-      "effect": { "kind": "DealProgress", "base": 3 }
+      "energyCost": 0,
+      "effect": {
+        "kind": "Sequence",
+        "steps": [
+          { "kind": "Damage", "amount": 2 },
+          { "kind": "DealProgressAll", "base": 4 }
+        ]
+      }
     },
     "Let It Sit": {
       "kind": "player",
@@ -3452,7 +3558,7 @@
       "effect": {
         "kind": "Sequence",
         "steps": [
-          { "kind": "DealProgress", "base": 2 },
+          { "kind": "DealProgress", "base": 3 },
           { "kind": "RemoveKeyword", "keyword": "Depression", "target": "hand", "amount": 2 }
         ]
       }
@@ -3463,7 +3569,7 @@
       "insetKey": "answers-inset-keep-walking",
       "rarity": "common",
       "energyCost": 1,
-      "effect": { "kind": "Brace", "amount": 1 }
+      "effect": { "kind": "Brace", "amount": 2 }
     },
     "Let It Go": {
       "kind": "player",
@@ -3471,7 +3577,7 @@
       "insetKey": "answers-inset-let-it-go",
       "rarity": "uncommon",
       "energyCost": 1,
-      "effect": { "kind": "DiscardThenDraw", "player": 1 }
+      "effect": { "kind": "DiscardThenDraw", "player": 3 }
     },
     "It's Fine, Actually": {
       "kind": "world",
