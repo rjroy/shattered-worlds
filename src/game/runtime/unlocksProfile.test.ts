@@ -239,4 +239,30 @@ describe("createUnlocksStore", () => {
     expect(store.getProfile().activated).toEqual([]);
     expect(JSON.parse(storage.dump()[UNLOCKS_PROFILE_STORAGE_KEY]!)).toEqual(store.getProfile());
   });
+
+  it("setProfile replaces the profile wholesale and persists it", () => {
+    const storage = memoryStorage();
+    const store = createUnlocksStore(storage, richFeats);
+
+    store.setProfile({ version: 1, purchased: ["extra-hp", "extra-brace"], activated: ["extra-hp"] });
+
+    expect(store.getProfile()).toEqual({
+      version: 1,
+      purchased: ["extra-hp", "extra-brace"],
+      activated: ["extra-hp"],
+    });
+    expect(JSON.parse(storage.dump()[UNLOCKS_PROFILE_STORAGE_KEY]!)).toEqual(store.getProfile());
+  });
+
+  it("setProfile drops activated ids that are not in the incoming purchased list", () => {
+    const store = createUnlocksStore(memoryStorage(), richFeats);
+
+    store.setProfile({ version: 1, purchased: ["extra-hp"], activated: ["extra-hp", "extra-brace"] });
+
+    expect(store.getProfile()).toEqual({
+      version: 1,
+      purchased: ["extra-hp"],
+      activated: ["extra-hp"],
+    });
+  });
 });

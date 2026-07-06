@@ -86,6 +86,7 @@ export function saveUnlocksProfile(
 
 export interface UnlocksStore {
   getProfile(): UnlocksProfile;
+  setProfile(profile: UnlocksProfile): void;
   purchase(id: string): "ok" | "already-owned" | "insufficient-fragments" | "feat-locked";
   setActive(id: string, active: boolean): "ok" | "not-owned" | "over-budget";
 }
@@ -103,6 +104,10 @@ export function createUnlocksStore(
 
   return {
     getProfile: () => profile,
+
+    setProfile(next) {
+      setProfile(enforceSubset(next));
+    },
 
     purchase(id) {
       if (profile.purchased.includes(id)) return "already-owned";

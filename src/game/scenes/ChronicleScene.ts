@@ -1152,7 +1152,7 @@ export class ChronicleScene extends Phaser.Scene {
         0,
         -56,
         [
-          "Overwrite current Chronicle data?",
+          "Overwrite current Chronicle, unlocks, and settings data?",
           inspected.needsMigration ? "This older file will be upgraded during import." : "",
         ]
           .filter(Boolean)
