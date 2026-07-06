@@ -225,8 +225,19 @@ export class DestinyScene extends Phaser.Scene {
     featsProfile: FeatsProfile,
   ): void {
     const card = this.add.container(x, y);
+
+    const outlineColor = (() => {
+      switch (def.effect.type) {
+        case "starterDeckOverride":
+          return 0x295e4a;
+        case "worldUnlock":
+          return 0x4a295e;
+      }
+      return 0x5e4a29;
+    })();
+
     const panel = this.add.rectangle(0, 0, CARD_W, CARD_H, 0x15101d, 0.94).setOrigin(0, 0);
-    panel.setStrokeStyle(1, 0x5f4b2a, 0.85);
+    panel.setStrokeStyle(1, outlineColor, 0.85);
     panel.setRounded(8);
     card.add(panel);
 
@@ -249,7 +260,6 @@ export class DestinyScene extends Phaser.Scene {
           .setOrigin(0.5, 0.5),
       );
     }
-
     const titleText = this.add.text(
       102,
       14,
