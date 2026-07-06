@@ -173,6 +173,8 @@ export function resolveCounter(state: GameState, spec: CounterSpec): number {
   switch (spec.kind) {
     case "KeywordInHand":
       return state.hand.filter((card) => hasKeyword(card, spec.keyword)).length;
+    case "WorldCardInHand":
+      return state.hand.filter((card) => card.kind === "world").length;
     case "FrozenPlayerCards":
       return state.hand.filter((card) => card.kind === "player" && (card.frozen ?? 0) > 0).length;
 

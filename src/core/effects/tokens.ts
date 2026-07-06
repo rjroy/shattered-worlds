@@ -29,15 +29,14 @@ export function counterLabel(per: CounterSpec): string {
   switch (per.kind) {
     case "KeywordInHand":
       return `${per.keyword} in hand`;
+    case "WorldCardInHand":
+      return "world card";
     case "FrozenPlayerCards":
       return "frozen card";
   }
 }
 
 export function perRider(sign: string, amount: number, per: CounterSpec): EffectLine {
-  if (per.kind === "KeywordInHand") {
-    return rider([value(`${sign}${amount}`), text("per"), text(per.keyword), text("in hand")]);
-  }
   return rider([value(`${sign}${amount}`), text("per"), text(counterLabel(per))]);
 }
 

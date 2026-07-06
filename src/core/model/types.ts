@@ -45,6 +45,7 @@ export type Dest = "playerDiscard" | "playerDrawTop" | "worldDraw" | "worldDrawT
 
 export type CounterSpec =
   | { kind: "KeywordInHand"; keyword: KeywordName }
+  | { kind: "WorldCardInHand" }
   | { kind: "FrozenPlayerCards" };
 
 export type CardFxType = "Play" | "EndTurn" | "WhileVisible" | "Discard" | "Clear" | "PartialClear";

@@ -839,6 +839,20 @@
         ]
       }
     },
+    "Pruning Shears2": {
+      "kind": "player",
+      "name": "Pruning Shears",
+      "rarity": "common",
+      "insetKey": "mall-inset-pruning-shears",
+      "exhaust": true,
+      "effect": {
+        "kind": "Sequence",
+        "steps": [
+          { "kind": "DestroyCardInHand", "min": 0, "max": 4 },
+          { "kind": "GainEnergy", "amount": 1 }
+        ]
+      }
+    },
     "Machete": {
       "kind": "player",
       "name": "Machete",
@@ -866,6 +880,19 @@
         "kind": "DealProgressScaled",
         "base": 1,
         "per": { "kind": "KeywordInHand", "keyword": "Spore" },
+        "amount": 1
+      }
+    },
+    "Bloom2": {
+      "kind": "player",
+      "name": "Bloom",
+      "rarity": "common",
+      "insetKey": "mall-inset-bloom",
+      "energyCost": 0,
+      "effect": {
+        "kind": "DealProgressScaled",
+        "base": 1,
+        "per": { "kind": "WorldCardInHand" },
         "amount": 1
       }
     },

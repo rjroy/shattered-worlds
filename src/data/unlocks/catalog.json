@@ -114,6 +114,15 @@
     "requiresFeat": "first-bird-building"
   },
   {
+    "id": "starter-gardener",
+    "name": "Gardener",
+    "description": "A muscle memory from a different life. Always had a green thumb.",
+    "cost": 60,
+    "destinyWeight": 0,
+    "effect": { "type": "starterDeckOverride", "starterDeckId": "gardener" },
+    "requiresFeat": "first-overgrown-mall"
+  },
+  {
     "id": "starter-harvester",
     "name": "Harvester of the Ember Orchard",
     "description": "A muscle memory from a different life. Harvester of the Ember Orchard.",
