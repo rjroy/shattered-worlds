@@ -5,8 +5,8 @@
       {
         "cards": [
           { "templateId": "Waiting Room Silence", "count": 5 },
-          { "templateId": "I'm Outta Here", "count": 3 },
-          { "templateId": "The Monitor Keeps Beeping", "count": 2 }
+          { "templateId": "I'm Outta Here", "count": 2 },
+          { "templateId": "The Monitor Keeps Beeping", "count": 3 }
         ]
       },
       {

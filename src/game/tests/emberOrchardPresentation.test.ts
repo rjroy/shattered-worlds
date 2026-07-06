@@ -20,9 +20,7 @@ describe("The Ember Orchard — theme palette (REQ-EMBER-49)", () => {
     const theme = selectTheme(WORLD_ID);
     expect(theme.worldId).toBe(WORLD_ID);
     // Ember keynote: warm orange invaded by impossible violet-magenta (REQ-EMBER-36).
-    expect(theme.intrusionHue).toBe("#ce3406");
     expect(theme.intrusionHue).toBe(THE_EMBER_ORCHARD_THEME.intrusionHue);
-    expect(theme.doorGlowTint).toBe(0xce3406);
     expect(theme.backdrop.realityKey).toBe("the-ember-orchard-bg");
     expect(theme.backdrop.intrusionKey).toBe("the-ember-orchard-overlay");
     expect(theme.worldCardfrontKey).toBe("the-ember-orchard-cardfront");

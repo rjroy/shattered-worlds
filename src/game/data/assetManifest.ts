@@ -65,6 +65,7 @@ import unlockStarterFiremanUrl from "../assets/unlocks/starter-fireman.webp";
 import unlockStarterFootballerUrl from "../assets/unlocks/starter-footballer.webp";
 import unlockStarterGardenerUrl from "../assets/unlocks/starter-gardener.webp";
 import unlockStarterHarvesterUrl from "../assets/unlocks/starter-harvester.webp";
+import unlockStarterStuntDriverUrl from "../assets/unlocks/starter-stunt-driver.webp";
 import unlockStarterSurveyorUrl from "../assets/unlocks/starter-surveyor.webp";
 import unlockStarterSurvivalistUrl from "../assets/unlocks/starter-survivalist.webp";
 import unlockStrongBarricadesUrl from "../assets/unlocks/strong-barricades.webp";
@@ -164,6 +165,7 @@ export const assetManifest: Record<string, string> = {
   "unlock/starter-footballer": unlockStarterFootballerUrl,
   "unlock/starter-gardener": unlockStarterGardenerUrl,
   "unlock/starter-harvester": unlockStarterHarvesterUrl,
+  "unlock/starter-stunt-driver": unlockStarterStuntDriverUrl,
   "unlock/starter-surveyor": unlockStarterSurveyorUrl,
   "unlock/starter-survivalist": unlockStarterSurvivalistUrl,
   "unlock/strong-barricades": unlockStrongBarricadesUrl,

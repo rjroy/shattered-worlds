@@ -99,6 +99,9 @@ export function createGameplayRuntime(options: GameplayRuntimeOptions = {}): Gam
     runStats,
     witness: witnessStore,
     feats: featsStore,
+    unlocks: unlocksStore,
+    userSettings,
+    griefSupport: griefSupportStore,
     clock: options.clock,
   });
   const openSessions = new Map<GameplaySession["sessionId"], GameplaySession>();

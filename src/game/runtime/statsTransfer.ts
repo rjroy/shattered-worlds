@@ -9,6 +9,13 @@ import {
 import { emptyHistory, isRunHistoryPayload, type RunHistoryPayload } from './runHistory'
 import { isWitnessProfile, type WitnessProfile, type WitnessStore } from './witnessProfile'
 import { isFeatsProfile, type FeatsProfile, type FeatsStore } from './featsProfile'
+import { isUnlocksProfile, type UnlocksProfile, type UnlocksStore } from './unlocksProfile'
+import { isUserSettings, type UserSettings, type UserSettingsStore } from './userSettings'
+import {
+  isGriefSupportProfile,
+  type GriefSupportProfile,
+  type GriefSupportStore,
+} from './griefSupportProfile'
 
 export interface StatsExportPayload {
   readonly kind: 'shattered-worlds-stats'
@@ -17,6 +24,9 @@ export interface StatsExportPayload {
   readonly history: RunHistoryPayload
   readonly witnessProfile?: WitnessProfile
   readonly featsProfile?: FeatsProfile
+  readonly unlocksProfile?: UnlocksProfile
+  readonly userSettings?: UserSettings
+  readonly griefSupportProfile?: GriefSupportProfile
 }
 
 interface StatsImportPayloadV1 {
@@ -26,6 +36,9 @@ interface StatsImportPayloadV1 {
   readonly history?: RunHistoryPayload
   readonly witnessProfile?: WitnessProfile
   readonly featsProfile?: FeatsProfile
+  readonly unlocksProfile?: UnlocksProfile
+  readonly userSettings?: UserSettings
+  readonly griefSupportProfile?: GriefSupportProfile
 }
 
 export type InspectedStatsImport =
@@ -42,6 +55,9 @@ export interface StatsTransferOptions {
   readonly runStats: RunStatsCollector
   readonly witness?: WitnessStore | undefined
   readonly feats?: FeatsStore | undefined
+  readonly unlocks?: UnlocksStore | undefined
+  readonly userSettings?: UserSettingsStore | undefined
+  readonly griefSupport?: GriefSupportStore | undefined
   readonly clock?: (() => number) | undefined
 }
 
@@ -54,6 +70,9 @@ export function createStatsTransfer(options: StatsTransferOptions): StatsTransfe
     exportJson() {
       const witnessProfile = options.witness?.getProfile()
       const featsProfile = options.feats?.getProfile()
+      const unlocksProfile = options.unlocks?.getProfile()
+      const userSettings = options.userSettings?.get()
+      const griefSupportProfile = options.griefSupport?.get()
 
       const payload: StatsExportPayload = {
         kind: 'shattered-worlds-stats',
@@ -66,6 +85,11 @@ export function createStatsTransfer(options: StatsTransferOptions): StatsTransfe
         ...(featsProfile !== undefined && featsProfile.earned.length > 0
           ? { featsProfile }
           : {}),
+        ...(unlocksProfile !== undefined && unlocksProfile.purchased.length > 0
+          ? { unlocksProfile }
+          : {}),
+        ...(userSettings !== undefined ? { userSettings } : {}),
+        ...(griefSupportProfile !== undefined ? { griefSupportProfile } : {}),
       }
 
       return JSON.stringify(payload, null, 2)
@@ -105,6 +129,21 @@ export function createStatsTransfer(options: StatsTransferOptions): StatsTransfe
         return { ok: false, reason: 'The selected file has invalid feats profile data.' }
       }
 
+      const unlocksProfileRaw = parsed.unlocksProfile
+      if (unlocksProfileRaw !== undefined && !isUnlocksProfile(unlocksProfileRaw)) {
+        return { ok: false, reason: 'The selected file has invalid unlocks profile data.' }
+      }
+
+      const userSettingsRaw = parsed.userSettings
+      if (userSettingsRaw !== undefined && !isUserSettings(userSettingsRaw)) {
+        return { ok: false, reason: 'The selected file has invalid settings data.' }
+      }
+
+      const griefSupportProfileRaw = parsed.griefSupportProfile
+      if (griefSupportProfileRaw !== undefined && !isGriefSupportProfile(griefSupportProfileRaw)) {
+        return { ok: false, reason: 'The selected file has invalid grief-support profile data.' }
+      }
+
       return {
         ok: true,
         needsMigration: lifetimeIsV1,
@@ -115,6 +154,13 @@ export function createStatsTransfer(options: StatsTransferOptions): StatsTransfe
           ...(history === undefined ? {} : { history }),
           ...(witnessProfileRaw !== undefined ? { witnessProfile: witnessProfileRaw as WitnessProfile } : {}),
           ...(featsProfileRaw !== undefined ? { featsProfile: featsProfileRaw as FeatsProfile } : {}),
+          ...(unlocksProfileRaw !== undefined
+            ? { unlocksProfile: unlocksProfileRaw as UnlocksProfile }
+            : {}),
+          ...(userSettingsRaw !== undefined ? { userSettings: userSettingsRaw as UserSettings } : {}),
+          ...(griefSupportProfileRaw !== undefined
+            ? { griefSupportProfile: griefSupportProfileRaw as GriefSupportProfile }
+            : {}),
         },
       }
     },
@@ -133,6 +179,21 @@ export function createStatsTransfer(options: StatsTransferOptions): StatsTransfe
 
       if (inspected.payload.featsProfile !== undefined && options.feats !== undefined) {
         options.feats.setProfile(inspected.payload.featsProfile)
+      }
+
+      if (inspected.payload.unlocksProfile !== undefined && options.unlocks !== undefined) {
+        options.unlocks.setProfile(inspected.payload.unlocksProfile)
+      }
+
+      if (inspected.payload.userSettings !== undefined && options.userSettings !== undefined) {
+        options.userSettings.set(inspected.payload.userSettings)
+      }
+
+      if (
+        inspected.payload.griefSupportProfile !== undefined &&
+        options.griefSupport !== undefined
+      ) {
+        options.griefSupport.set(inspected.payload.griefSupportProfile)
       }
     },
   }

@@ -14,6 +14,9 @@ import { RUN_HISTORY_STORAGE_KEY } from "./runHistory";
 import { createStatsTransfer } from "./statsTransfer";
 import { createWitnessCollector } from "./witnessProfile";
 import { createFeatsStore } from "./featsProfile";
+import { createUnlocksStore, UNLOCKS_PROFILE_STORAGE_KEY } from "./unlocksProfile";
+import { createUserSettingsStore, USER_SETTINGS_STORAGE_KEY } from "./userSettings";
+import { createGriefSupportStore, GRIEF_SUPPORT_STORAGE_KEY } from "./griefSupportProfile";
 
 const stubState = createGameplaySession(catalog, worldData, 42).state;
 
@@ -329,5 +332,149 @@ describe("statsTransfer", () => {
 
     // witnessStore should be untouched
     expect(witnessStore.getProfile()).toEqual(profileBefore);
+  });
+
+  it("exportJson includes unlocks, settings, and grief-support profiles", () => {
+    const storage = createMemoryStorage();
+    const collector = createRunStatsCollector({ storage });
+    const unlocksFeats = createFeatsStore(storage);
+    const unlocks = createUnlocksStore(storage, unlocksFeats);
+    unlocks.setProfile({ version: 1, purchased: ["extra-hp"], activated: ["extra-hp"] });
+    const userSettings = createUserSettingsStore(storage);
+    userSettings.update({ musicVolume: 0.3 });
+    const griefSupport = createGriefSupportStore(storage);
+    griefSupport.update({ hasSeenGriefSupportNotice: true });
+
+    const transfer = createStatsTransfer({
+      runStats: collector,
+      unlocks,
+      userSettings,
+      griefSupport,
+      clock: () => 12_345,
+    });
+    const parsed = JSON.parse(transfer.exportJson()) as Record<string, unknown>;
+
+    expect(parsed.unlocksProfile).toEqual({
+      version: 1,
+      purchased: ["extra-hp"],
+      activated: ["extra-hp"],
+    });
+    expect((parsed.userSettings as { musicVolume: number }).musicVolume).toBe(0.3);
+    expect(parsed.griefSupportProfile).toEqual({ version: 1, hasSeenGriefSupportNotice: true });
+  });
+
+  it("exportJson omits unlocksProfile when nothing has been purchased", () => {
+    const storage = createMemoryStorage();
+    const collector = createRunStatsCollector({ storage });
+    const unlocks = createUnlocksStore(storage, createFeatsStore(storage));
+
+    const transfer = createStatsTransfer({ runStats: collector, unlocks });
+    const parsed = JSON.parse(transfer.exportJson()) as Record<string, unknown>;
+
+    expect(parsed.unlocksProfile).toBeUndefined();
+  });
+
+  it("round-trips unlocks, settings, and grief-support profiles into fresh stores", () => {
+    const sourceStorage = createMemoryStorage();
+    const sourceCollector = createRunStatsCollector({ storage: sourceStorage });
+    const sourceUnlocks = createUnlocksStore(sourceStorage, createFeatsStore(sourceStorage));
+    sourceUnlocks.setProfile({ version: 1, purchased: ["extra-brace"], activated: [] });
+    const sourceSettings = createUserSettingsStore(sourceStorage);
+    sourceSettings.update({ fxVolume: 0.2, masterMute: true });
+    const sourceGrief = createGriefSupportStore(sourceStorage);
+    sourceGrief.update({ hasSeenGriefSupportNotice: true });
+
+    const json = createStatsTransfer({
+      runStats: sourceCollector,
+      unlocks: sourceUnlocks,
+      userSettings: sourceSettings,
+      griefSupport: sourceGrief,
+    }).exportJson();
+
+    const targetStorage = createMemoryStorage();
+    const targetCollector = createRunStatsCollector({ storage: targetStorage });
+    const targetUnlocks = createUnlocksStore(targetStorage, createFeatsStore(targetStorage));
+    const targetSettings = createUserSettingsStore(targetStorage);
+    const targetGrief = createGriefSupportStore(targetStorage);
+    const targetTransfer = createStatsTransfer({
+      runStats: targetCollector,
+      unlocks: targetUnlocks,
+      userSettings: targetSettings,
+      griefSupport: targetGrief,
+    });
+
+    const inspected = targetTransfer.inspectImport(json);
+    expect(inspected.ok).toBe(true);
+    if (!inspected.ok) throw new Error(inspected.reason);
+
+    targetTransfer.applyImport(inspected);
+
+    expect(targetUnlocks.getProfile()).toEqual(sourceUnlocks.getProfile());
+    expect(targetSettings.get()).toEqual(sourceSettings.get());
+    expect(targetGrief.get()).toEqual(sourceGrief.get());
+    expect(JSON.parse(targetStorage.dump()[UNLOCKS_PROFILE_STORAGE_KEY]!)).toEqual(
+      sourceUnlocks.getProfile(),
+    );
+    expect(JSON.parse(targetStorage.dump()[USER_SETTINGS_STORAGE_KEY]!)).toEqual(
+      sourceSettings.get(),
+    );
+    expect(JSON.parse(targetStorage.dump()[GRIEF_SUPPORT_STORAGE_KEY]!)).toEqual(
+      sourceGrief.get(),
+    );
+  });
+
+  it("rejects malformed unlocksProfile, userSettings, or griefSupportProfile without mutating stores", () => {
+    const storage = createMemoryStorage();
+    const collector = createRunStatsCollector({ storage });
+    const unlocks = createUnlocksStore(storage, createFeatsStore(storage));
+    const userSettings = createUserSettingsStore(storage);
+    const griefSupport = createGriefSupportStore(storage);
+    const transfer = createStatsTransfer({
+      runStats: collector,
+      unlocks,
+      userSettings,
+      griefSupport,
+    });
+
+    const unlocksBefore = unlocks.getProfile();
+    const settingsBefore = userSettings.get();
+    const griefBefore = griefSupport.get();
+
+    const badUnlocks = transfer.inspectImport(
+      JSON.stringify({
+        kind: "shattered-worlds-stats",
+        lifetime: validLifetime,
+        unlocksProfile: { version: 1, purchased: "not-an-array" },
+      }),
+    );
+    expect(badUnlocks.ok).toBe(false);
+    if (badUnlocks.ok) throw new Error("Expected rejection");
+    expect(badUnlocks.reason).toContain("unlocks profile");
+
+    const badSettings = transfer.inspectImport(
+      JSON.stringify({
+        kind: "shattered-worlds-stats",
+        lifetime: validLifetime,
+        userSettings: { version: 3 },
+      }),
+    );
+    expect(badSettings.ok).toBe(false);
+    if (badSettings.ok) throw new Error("Expected rejection");
+    expect(badSettings.reason).toContain("settings");
+
+    const badGrief = transfer.inspectImport(
+      JSON.stringify({
+        kind: "shattered-worlds-stats",
+        lifetime: validLifetime,
+        griefSupportProfile: { version: 1, hasSeenGriefSupportNotice: "yes" },
+      }),
+    );
+    expect(badGrief.ok).toBe(false);
+    if (badGrief.ok) throw new Error("Expected rejection");
+    expect(badGrief.reason).toContain("grief-support profile");
+
+    expect(unlocks.getProfile()).toEqual(unlocksBefore);
+    expect(userSettings.get()).toEqual(settingsBefore);
+    expect(griefSupport.get()).toEqual(griefBefore);
   });
 });

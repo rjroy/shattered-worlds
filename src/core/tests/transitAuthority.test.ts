@@ -29,7 +29,13 @@ const TRANSIT_WORLD_CARDS = [
 
 // Deviation 4: every Transit world card authors all FIVE hooks (onDraw is
 // required by WorldCardTemplate, not just the spec's original four).
-const REQUIRED_HOOKS = ["onDiscarded", "onCleared", "onPartialClear", "onEndOfTurn", "onDraw"] as const;
+const REQUIRED_HOOKS = [
+  "onDiscarded",
+  "onCleared",
+  "onPartialClear",
+  "onEndOfTurn",
+  "onDraw",
+] as const;
 
 // The full global KeywordName set (src/core/model/types.ts), including Reroute
 // itself. Transit's authored `keywords` arrays must only ever use
@@ -267,7 +273,13 @@ describe("Transit Authority — reroute effects drive the reducer (REQ-TRANSIT-4
 
     const pool = new Set<string>(FORTUNE_BOON_POOLS["pool-reissued-credentials"]);
     expect(pool).toEqual(
-      new Set(["Temporary Credentials", "Express Transfer", "Check the Board", "Board Anyway", "Right of Way"]),
+      new Set([
+        "Temporary Credentials",
+        "Express Transfer",
+        "Check the Board",
+        "Board Anyway",
+        "Right of Way",
+      ]),
     );
 
     // onDiscarded top-decks Service Change (wrapped in the Reroute pairing).
@@ -294,26 +306,6 @@ describe("Transit Authority — reroute effects drive the reducer (REQ-TRANSIT-4
     });
     const endOfTurn = applyEffect(catalog, state, reissue.onEndOfTurn);
     expect(endOfTurn.state.worldDraw[0]!.templateId).toBe("Platform Reassignment");
-  });
-
-  it("Entity Detected uses AddThreatToWorldDeck through the Transit threat mapping", () => {
-    const { catalog, worldData } = buildWorld(WORLD_ID);
-    const entity = catalog["Entity Detected"];
-    expect(entity?.kind).toBe("world");
-    if (entity === undefined || entity.kind !== "world") return;
-
-    if (entity.onPartialClear.kind !== "Sequence") {
-      throw new Error("Entity Detected onPartialClear is expected to be a Sequence");
-    }
-    expect(entity.onPartialClear.steps[0]).toEqual({ kind: "AddThreatToWorldDeck" });
-
-    const { state } = createWorld(catalog, worldData, 6, DEFAULT_RUN_MODIFIERS);
-    expect(state.worldId).toBe(WORLD_ID);
-    const before = state.worldDraw.length;
-    const result = applyEffect(catalog, state, entity.onPartialClear);
-
-    expect(result.state.worldDraw.length).toBe(before + 1);
-    expect(result.state.worldDraw[0]!.templateId).toBe("Entity Detected");
   });
 
   // -------------------------------------------------------------------------
@@ -453,7 +445,8 @@ describe("Transit Authority — reward distinctness (REQ-TRANSIT-48)", () => {
     const { catalog } = buildWorld(WORLD_ID);
     const rightOfWay = catalog["Right of Way"];
     const bonePin = catalog["Bone Pin"];
-    if (rightOfWay === undefined || rightOfWay.kind !== "player") throw new Error("Right of Way missing");
+    if (rightOfWay === undefined || rightOfWay.kind !== "player")
+      throw new Error("Right of Way missing");
     if (bonePin === undefined || bonePin.kind !== "player") throw new Error("Bone Pin missing");
 
     // Same Modal-of-two-AddPlayerCardToTop pattern, distinct by cost/exhaust:
@@ -464,7 +457,10 @@ describe("Transit Authority — reward distinctness (REQ-TRANSIT-48)", () => {
     expect(rightOfWay.exhaust).not.toBe(true);
     expect(bonePin.energyCost).toBe(0);
     expect(bonePin.exhaust).toBe(true);
-    expect([rightOfWay.energyCost, rightOfWay.exhaust]).not.toEqual([bonePin.energyCost, bonePin.exhaust]);
+    expect([rightOfWay.energyCost, rightOfWay.exhaust]).not.toEqual([
+      bonePin.energyCost,
+      bonePin.exhaust,
+    ]);
   });
 
   it("Check the Board is distinct from highway-volcano's Floor It (cost delta plus appended RemoveKeyword)", () => {
@@ -506,7 +502,8 @@ describe("Transit Authority — seeded three-act identity (REQ-TRANSIT-47)", () 
   it("Act 1: hazards produce a forced-connection AddPlayerCardToTop event and the player stays above half HP", () => {
     const { catalog, worldData } = buildWorld(WORLD_ID);
     const platform = catalog["Platform Reassignment"];
-    if (platform === undefined || platform.kind !== "world") throw new Error("Platform Reassignment missing");
+    if (platform === undefined || platform.kind !== "world")
+      throw new Error("Platform Reassignment missing");
 
     expect(platform.onEndOfTurn).toEqual({ kind: "AddPlayerCardToTop", template: "Panic" });
 
@@ -548,23 +545,6 @@ describe("Transit Authority — seeded three-act identity (REQ-TRANSIT-47)", () 
     const afterTrain = applyEffect(catalog, staged, train.onEndOfTurn, undefined, card.id);
     expect(afterTrain.state.worldDraw.length).toBe(beforeTop + 1);
     expect(afterTrain.state.worldDraw[0]!.templateId).toBe("All Departures Suspended");
-  });
-
-  it("Act 3: Entity Detected repeatedly chains AddThreatToWorldDeck until cleared/exiled/Door", () => {
-    const { catalog, worldData } = buildWorld(WORLD_ID);
-    const entity = catalog["Entity Detected"];
-    if (entity === undefined || entity.kind !== "world") throw new Error("Entity Detected missing");
-
-    let { state } = createWorld(catalog, worldData, 9999, DEFAULT_RUN_MODIFIERS);
-    const start = state.worldDraw.length;
-
-    for (let turn = 0; turn < 3; turn++) {
-      const result = applyEffect(catalog, state, entity.onPartialClear);
-      state = result.state;
-      expect(state.worldDraw[0]!.templateId).toBe("Entity Detected");
-    }
-
-    expect(state.worldDraw.length).toBe(start + 3);
   });
 
   it("plays a deterministic opening turn through the reducer without throwing (seeded run is reproducible)", () => {

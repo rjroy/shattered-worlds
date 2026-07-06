@@ -30,9 +30,7 @@ describe("Eden Prime - theme palette (REQ-EDEN-48, REQ-EDEN-49)", () => {
   it("selectTheme returns the Eden palette and backdrop/overlay/cardfront keys", () => {
     const theme = selectTheme(WORLD_ID);
     expect(theme.worldId).toBe(WORLD_ID);
-    expect(theme.intrusionHue).toBe("#ffe121");
     expect(theme.intrusionHue).toBe(EDEN_PRIME_THEME.intrusionHue);
-    expect(theme.doorGlowTint).toBe(0xffe121);
     expect(theme.backdrop.realityKey).toBe("eden-prime-bg");
     expect(theme.backdrop.intrusionKey).toBe("eden-prime-overlay");
     expect(theme.worldCardfrontKey).toBe("eden-prime-cardfront");

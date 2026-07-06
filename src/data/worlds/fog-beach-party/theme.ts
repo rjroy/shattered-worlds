@@ -7,15 +7,15 @@ import type { VisualTheme } from "../../../game/view/themes/theme";
 export const FOG_BEACH_PARTY_THEME: VisualTheme = {
   worldId: "fog-beach-party",
   intrusionHue: "#7d93a6",
+  doorGlowTint: 0x7d93a6,
+  doorTint: 0x70665d,
   realityPalette: {
     title: "#f2c98a",
     text: "#f0b070",
     disabled: "#7a7066",
-    confirm: "#ffd9a0",
-    cancel: "#9fb6c4",
+    confirm: "#f5ffa0",
+    cancel: "#c49fb6",
   },
-  doorGlowTint: 0x7d93a6,
-  doorTint: 0x5d6770,
   frameStyle: {
     selectedBorder: 0xffd24a,
     targetBorder: 0xf0b070,
@@ -27,7 +27,7 @@ export const FOG_BEACH_PARTY_THEME: VisualTheme = {
     targetGlow: 0xffe2b0,
     playableGlow: 0xffd24a,
     committedTarget: 0x5a4a36,
-    pickedBorder: 0xffc077,        // sandy coral batch member
+    pickedBorder: 0xffc077, // sandy coral batch member
   },
   backdrop: {
     realityKey: "fog-beach-party-bg",

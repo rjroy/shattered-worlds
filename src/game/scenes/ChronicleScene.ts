@@ -460,7 +460,27 @@ export class ChronicleScene extends Phaser.Scene {
 
         const bEarned = featsProfile.earned.some((e) => e.featId == feat.id);
         const color = bEarned ? TEXT.textReward : TEXT.textLight;
-        this.addPanel(this.featsContent, 56, y - 1, 770, 32, 0x5e2f29);
+
+        const outlineColor = (() => {
+          const possibleColor = feat.conditions
+            .flatMap((cond) => cond.statId.split("."))
+            .map((id) => {
+              switch (id) {
+                case "starter":
+                  return 0x295e4a;
+                case "world":
+                  return 0x4a295e;
+                case "lifetime":
+                case "witness":
+                  return 0x5e4a29;
+              }
+              return undefined;
+            })
+            .filter((c) => c !== undefined)[0];
+          return possibleColor ?? 0x293d5e;
+        })();
+
+        this.addPanel(this.featsContent, 56, y - 1, 770, 32, outlineColor);
         this.addText(this.featsContent, FEAT_NAME_X, y, feat.name, 13, color, false, FEAT_NAME_W);
         this.addText(
           this.featsContent,
@@ -736,7 +756,14 @@ export class ChronicleScene extends Phaser.Scene {
       this.addText(this.startersContent, 64, y, name, 13, TEXT.textLight);
       this.addText(this.startersContent, 340, y, (stats?.runs ?? 0).toString(), 13, TEXT.textLight);
       this.addText(this.startersContent, 430, y, (stats?.wins ?? 0).toString(), 13, TEXT.textLight);
-      this.addText(this.startersContent, 505, y, (stats?.losses ?? 0).toString(), 13, TEXT.textLight);
+      this.addText(
+        this.startersContent,
+        505,
+        y,
+        (stats?.losses ?? 0).toString(),
+        13,
+        TEXT.textLight,
+      );
       this.addText(
         this.startersContent,
         590,
@@ -1152,7 +1179,7 @@ export class ChronicleScene extends Phaser.Scene {
         0,
         -56,
         [
-          "Overwrite current Chronicle data?",
+          "Overwrite current Chronicle, unlocks, and settings data?",
           inspected.needsMigration ? "This older file will be upgraded during import." : "",
         ]
           .filter(Boolean)

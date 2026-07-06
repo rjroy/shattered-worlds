@@ -8,7 +8,7 @@ export const CITY_OF_SLEEPING_GIANTS_THEME: VisualTheme = {
     text: "#b9a8e6",
     disabled: "#6a6080",
     confirm: "#35e0a0",
-    cancel: "#6fd8e6",
+    cancel: "#e56ecb",
   },
   doorGlowTint: 0x9d6cff,
   doorTint: 0x6fd8e6,
