@@ -21,10 +21,10 @@
       },
       {
         "cards": [
-          { "templateId": "All Departures Suspended", "count": 2 },
+          { "templateId": "All Departures Suspended", "count": 3 },
           { "templateId": "Train Arrives From Nowhere", "count": 2 },
-          { "templateId": "Do Not Board Unknown Trains", "count": 1 },
-          { "templateId": "Entity Detected", "count": 3 },
+          { "templateId": "Do Not Board Unknown Trains", "count": 2 },
+          { "templateId": "Entity Detected", "count": 2 },
           { "templateId": "The Walker", "count": 1 }
         ]
       }

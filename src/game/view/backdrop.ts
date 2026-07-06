@@ -107,7 +107,7 @@ export class BackdropLayer {
       if (this.vignetteTween !== undefined) {
         this.vignetteTween.stop();
       }
-      if (this.vignetteColorTween !== undefined) {
+      if (this.vignetteColorTween !== undefined && this.vignetteColorTween?.isActive()) {
         this.vignetteColorTween.stop();
       }
       this.vignetteColorTween = this.scene.add.tween({

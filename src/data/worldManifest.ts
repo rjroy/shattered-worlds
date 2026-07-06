@@ -9,6 +9,7 @@ import archivistJson from "./starterDecks/archivist.json";
 import survivalistJson from "./starterDecks/survivalist.json";
 import firemanJson from "./starterDecks/fireman.json";
 import gardenerJson from "./starterDecks/gardener.json";
+import stuntDriverJson from "./starterDecks/stunt-driver.json";
 import { worldDataRegistry } from "./worlds/registry";
 import type {
   CardCatalog,
@@ -48,6 +49,8 @@ const RESOLVE_STARTER_DECKS: Record<string, readonly StarterEntry[]> = {
   survivalist: (survivalistJson as unknown as { starterDeck: readonly StarterEntry[] }).starterDeck,
   fireman: (firemanJson as unknown as { starterDeck: readonly StarterEntry[] }).starterDeck,
   gardener: (gardenerJson as unknown as { starterDeck: readonly StarterEntry[] }).starterDeck,
+  "stunt-driver": (stuntDriverJson as unknown as { starterDeck: readonly StarterEntry[] })
+    .starterDeck,
 };
 
 export const STARTER_DECK_IDS: readonly string[] = Object.keys(RESOLVE_STARTER_DECKS);

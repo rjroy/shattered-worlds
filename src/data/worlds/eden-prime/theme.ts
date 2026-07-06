@@ -2,7 +2,7 @@ import type { VisualTheme } from "../../../game/view/themes/theme";
 
 export const EDEN_PRIME_THEME: VisualTheme = {
   worldId: "eden-prime",
-  intrusionHue: "#ffe121",
+  intrusionHue: "#ffc021",
   realityPalette: {
     title: "#fcf6d1",
     text: "#d6eaa7",
@@ -10,7 +10,7 @@ export const EDEN_PRIME_THEME: VisualTheme = {
     confirm: "#d6b94a",
     cancel: "#c9b8ff",
   },
-  doorGlowTint: 0xffe121,
+  doorGlowTint: 0xffc021,
   doorTint: 0xadff21,
   frameStyle: {
     selectedBorder: 0xd6b94a,

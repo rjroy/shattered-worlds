@@ -10,7 +10,7 @@ import type { VisualTheme } from "../../../game/view/themes/theme";
 // this otherwise warm field.
 export const THE_BEGINNING_THEME: VisualTheme = {
   worldId: "the-beginning",
-  intrusionHue: "#d9a45c",
+  intrusionHue: "#ddbd08",
   realityPalette: {
     title: "#f2e2c4",
     text: "#c9a877",
@@ -18,7 +18,7 @@ export const THE_BEGINNING_THEME: VisualTheme = {
     confirm: "#e0b054",
     cancel: "#8a7a6a",
   },
-  doorGlowTint: 0xd9a45c,
+  doorGlowTint: 0xddbd08,
   doorTint: 0x6b5a45,
   frameStyle: {
     selectedBorder: 0xe0b054,

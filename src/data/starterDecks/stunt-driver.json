@@ -1,0 +1,11 @@
+{
+  "worldId": "stunt-driver",
+  "starterDeck": [
+    { "templateId": "Push Through", "count": 2 },
+    { "templateId": "FloorIt2", "count": 1 },
+    { "templateId": "Explore", "count": 2 },
+    { "templateId": "Nitro2", "count": 2 },
+    { "templateId": "Med Kit", "count": 1 },
+    { "templateId": "Panic", "count": 2 }
+  ]
+}

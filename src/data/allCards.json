@@ -676,6 +676,15 @@
       "effect": { "kind": "ExileTopWorldCards", "amount": 2 },
       "fx": [{ "kind": "Play", "key": "floor-it-fx" }]
     },
+    "FloorIt2": {
+      "kind": "player",
+      "name": "Pedal to Metal",
+      "rarity": "rare",
+      "insetKey": "volcano-inset-floor-it",
+      "energyCost": 1,
+      "effect": { "kind": "ExileTopWorldCards", "amount": 2 },
+      "fx": [{ "kind": "Play", "key": "floor-it-fx" }]
+    },
     "Ditch Gear": {
       "kind": "player",
       "name": "Ditch Gear",
@@ -703,6 +712,20 @@
         "steps": [
           { "kind": "GainEnergy", "amount": 2 },
           { "kind": "Draw", "player": 2 }
+        ]
+      }
+    },
+    "Nitro2": {
+      "kind": "player",
+      "name": "Built-In Nitro",
+      "rarity": "uncommon",
+      "insetKey": "volcano-inset-nitro",
+      "energyCost": 0,
+      "effect": {
+        "kind": "Sequence",
+        "steps": [
+          { "kind": "GainEnergy", "amount": 1 },
+          { "kind": "Draw", "player": 2, "world": 1 }
         ]
       }
     },
@@ -863,7 +886,7 @@
     },
     "Machete2": {
       "kind": "player",
-      "name": "Machete",
+      "name": "Personal Machete",
       "rarity": "uncommon",
       "insetKey": "mall-inset-machete",
       "energyCost": 1,
@@ -900,7 +923,7 @@
     },
     "Bloom2": {
       "kind": "player",
-      "name": "Bloom",
+      "name": "Planned Bloom",
       "rarity": "common",
       "insetKey": "mall-inset-bloom",
       "energyCost": 0,
@@ -1873,20 +1896,6 @@
         ]
       },
       "fx": [{ "kind": "Play", "key": "shotgun-fx" }]
-    },
-    "Regroup2": {
-      "kind": "player",
-      "name": "Organize",
-      "rarity": "uncommon",
-      "insetKey": "zombie-inset-regroup",
-      "energyCost": 1,
-      "effect": {
-        "kind": "Modal",
-        "branches": [
-          { "kind": "DestroyCardInHand", "min": 0, "max": 3 },
-          { "kind": "Draw", "player": 2 }
-        ]
-      }
     },
     "Regroup": {
       "kind": "player",
@@ -2864,17 +2873,16 @@
       "name": "Entity Detected",
       "rarity": "signature",
       "insetKey": "transit-inset-entity-detected",
-      "cost": 6,
+      "cost": 5,
       "keywords": ["Slow"],
       "discardable": true,
       "onDiscarded": { "kind": "ForceDestroy", "amount": 2 },
       "onCleared": { "kind": "None" },
       "onPartialClear": {
-        "kind": "Sequence",
-        "steps": [
-          { "kind": "AddThreatToWorldDeck" },
-          { "kind": "ApplyKeyword", "keyword": "Reroute", "value": 1, "target": "nextWorldCard" }
-        ]
+        "kind": "ApplyKeyword",
+        "keyword": "Reroute",
+        "value": 1,
+        "target": "nextWorldCard"
       },
       "onDraw": { "kind": "None" },
       "onEndOfTurn": {
@@ -3063,7 +3071,7 @@
       "name": "He Isn't Coming Back",
       "insetKey": "questions-inset-he-isnt-coming-back",
       "rarity": "rare",
-      "cost": 4,
+      "cost": 2,
       "keywords": [],
       "discardable": false,
       "onDiscarded": { "kind": "None" },

@@ -123,6 +123,15 @@
     "requiresFeat": "first-overgrown-mall"
   },
   {
+    "id": "starter-stunt-driver",
+    "name": "Stunt Driver",
+    "description": "A muscle memory from a different life. Just another speeding ticket.",
+    "cost": 60,
+    "destinyWeight": 0,
+    "effect": { "type": "starterDeckOverride", "starterDeckId": "stunt-driver" },
+    "requiresFeat": "first-highway-volcano"
+  },
+  {
     "id": "starter-harvester",
     "name": "Harvester of the Ember Orchard",
     "description": "A muscle memory from a different life. Harvester of the Ember Orchard.",
