@@ -3116,7 +3116,7 @@
       "name": "The Question That Has No Answer",
       "insetKey": "questions-inset-the-question-that-has-no-answer",
       "rarity": "signature",
-      "cost": 6,
+      "cost": 5,
       "keywords": [],
       "discardable": true,
       "onDiscarded": { "kind": "None" },

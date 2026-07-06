@@ -14,7 +14,10 @@ echo "--- | ---------- | -------------- | --------"
 # percentage per set, in declaration order, joined with " / ".
 jq -r '
     .worlds |
-    sort_by(.baseline.wins / .baseline.games) |
+    sort_by(
+        (.baseline.wins + ([.recoveries[] | .wins] | add)) /
+        (.baseline.games + ([.recoveries[] | .games] | add))
+    ) |
     .[] |
     [
       .id,
