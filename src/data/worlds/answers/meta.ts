@@ -9,7 +9,7 @@ export const ANSWERS_DISPLAY: WorldDisplayData = {
     "of yourself to make the answer change. The universe never answers. It only lets the " +
     "questions keep returning, heavier each time, until even getting out of bed feels like " +
     "another condition you failed to meet.",
-  difficulty: 3,
+  difficulty: 4,
   cycle: 5,
   backgroundKey: "answers-bg",
 };

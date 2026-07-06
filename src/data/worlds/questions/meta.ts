@@ -7,7 +7,7 @@ export const QUESTIONS_DISPLAY: WorldDisplayData = {
     "The monitor keeps beeping. The test results sit on the counter, unopened. Somewhere a " +
     "phone rings and rings, and no one you love is answering it. Nothing here explains itself " +
     "— it just keeps costing more, the longer you let it wait.",
-  difficulty: 2,
+  difficulty: 3,
   cycle: 5,
   backgroundKey: "questions-bg",
 };

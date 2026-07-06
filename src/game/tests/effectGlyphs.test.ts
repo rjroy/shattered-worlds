@@ -59,7 +59,7 @@ describe("compileEffect", () => {
       ),
     ).toStrictEqual([
       line([t("+"), v("1", "progress"), i("progress")]),
-      line([v("+1"), t("per"), t("Spore"), t("in hand")], "rider"),
+      line([v("+1"), t("per"), t("Spore in hand")], "rider"),
     ]);
   });
 
@@ -118,7 +118,7 @@ describe("compileEffect", () => {
       ),
     ).toStrictEqual([
       line([v("−1", "penalty"), i("hp")]),
-      line([v("−1"), t("per"), t("Spore"), t("in hand")], "rider"),
+      line([v("−1"), t("per"), t("Spore in hand")], "rider"),
     ]);
   });
 

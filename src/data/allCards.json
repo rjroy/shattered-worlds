@@ -3220,7 +3220,7 @@
       "name": "Ask The Question",
       "insetKey": "questions-inset-ask-the-question",
       "rarity": "common",
-      "energyCost": 1,
+      "energyCost": 0,
       "effect": {
         "kind": "Sequence",
         "steps": [
@@ -3234,7 +3234,7 @@
       "name": "Let It Out",
       "insetKey": "questions-inset-let-it-out",
       "rarity": "common",
-      "energyCost": 1,
+      "energyCost": 0,
       "effect": {
         "kind": "Sequence",
         "steps": [
@@ -3253,8 +3253,8 @@
       "effect": {
         "kind": "Sequence",
         "steps": [
-          { "kind": "DealProgressAll", "base": 1 },
-          { "kind": "RemoveKeyword", "keyword": "Anger", "target": "hand", "amount": 1 }
+          { "kind": "DealProgressAll", "base": 2 },
+          { "kind": "RemoveKeyword", "keyword": "Anger", "target": "hand", "amount": 2 }
         ]
       }
     },
@@ -3263,7 +3263,7 @@
       "name": "Sit With It a While",
       "insetKey": "questions-inset-sit-with-it-a-while",
       "rarity": "common",
-      "energyCost": 1,
+      "energyCost": 0,
       "effect": {
         "kind": "Modal",
         "branches": [
