@@ -105,6 +105,15 @@
     "requiresFeat": "first-big-box"
   },
   {
+    "id": "starter-fireman",
+    "name": "First Responder",
+    "description": "A muscle memory from a different life. Trained for disaster.",
+    "cost": 60,
+    "destinyWeight": 0,
+    "effect": { "type": "starterDeckOverride", "starterDeckId": "fireman" },
+    "requiresFeat": "first-bird-building"
+  },
+  {
     "id": "starter-harvester",
     "name": "Harvester of the Ember Orchard",
     "description": "A muscle memory from a different life. Harvester of the Ember Orchard.",

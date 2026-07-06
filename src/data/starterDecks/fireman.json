@@ -1,0 +1,13 @@
+{
+  "worldId": "fireman",
+  "starterDeck": [
+    { "templateId": "Fire Axe", "count": 1 },
+    { "templateId": "Steady2", "count": 1 },
+    { "templateId": "Cut It Loose", "count": 1 },
+    { "templateId": "Explore", "count": 3 },
+    { "templateId": "Sprint", "count": 1 },
+    { "templateId": "Med Kit", "count": 1 },
+    { "templateId": "Panic", "count": 1 },
+    { "templateId": "Adrenaline", "count": 1 }
+  ]
+}

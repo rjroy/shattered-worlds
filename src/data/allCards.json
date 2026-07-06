@@ -101,6 +101,22 @@
       "energyCost": 1,
       "effect": { "kind": "Brace", "amount": 1 }
     },
+    "Steady2": {
+      "kind": "player",
+      "name": "Steady",
+      "rarity": "rare",
+      "insetKey": "bird-inset-steady",
+      "energyCost": 1,
+      "effect": {
+        "kind": "Sequence",
+        "steps": [
+          { "kind": "Brace", "amount": 1 },
+          { "kind": "GainKeywordGuard", "amount": 1 },
+          { "kind": "GainLight", "amount": 1 },
+          { "kind": "GainHeat", "amount": 1 }
+        ]
+      }
+    },
     "Cut It Loose": {
       "kind": "player",
       "name": "Cut It Loose",

@@ -61,6 +61,7 @@ import unlockRarityBonusUrl from "../assets/unlocks/rarity-bonus.webp";
 import unlockSecondExplorePushUrl from "../assets/unlocks/second-explore-push.webp";
 import unlockStarterArchivistUrl from "../assets/unlocks/starter-archivist.webp";
 import unlockStarterContractorUrl from "../assets/unlocks/starter-contractor.webp";
+import unlockStarterFiremanUrl from "../assets/unlocks/starter-fireman.webp";
 import unlockStarterFootballerUrl from "../assets/unlocks/starter-footballer.webp";
 import unlockStarterHarvesterUrl from "../assets/unlocks/starter-harvester.webp";
 import unlockStarterSurveyorUrl from "../assets/unlocks/starter-surveyor.webp";
@@ -158,6 +159,7 @@ export const assetManifest: Record<string, string> = {
   "unlock/second-explore-push": unlockSecondExplorePushUrl,
   "unlock/starter-archivist": unlockStarterArchivistUrl,
   "unlock/starter-contractor": unlockStarterContractorUrl,
+  "unlock/starter-fireman": unlockStarterFiremanUrl,
   "unlock/starter-footballer": unlockStarterFootballerUrl,
   "unlock/starter-harvester": unlockStarterHarvesterUrl,
   "unlock/starter-surveyor": unlockStarterSurveyorUrl,
