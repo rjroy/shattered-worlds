@@ -1,19 +1,19 @@
-import type { VisualTheme } from '../../../game/view/themes/theme'
+import type { VisualTheme } from "../../../game/view/themes/theme";
 
 // Verdant-overgrowth identity: the mall is still a retail interior, so the
 // keynote leans cyan-green to stay distinct from zombie-big-box's acid green.
 export const OVERGROWN_MALL_THEME: VisualTheme = {
-  worldId: 'overgrown-mall',
-  intrusionHue: '#35e0a0',
-  realityPalette: {
-    title: '#9aa89c',
-    text: '#6ecf9a',
-    disabled: '#5f7065',
-    confirm: '#8af0a4',
-    cancel: '#e29266',
-  },
+  worldId: "overgrown-mall",
+  intrusionHue: "#35e0a0",
   doorGlowTint: 0x35e0a0,
   doorTint: 0x56665c,
+  realityPalette: {
+    title: "#9aa89c",
+    text: "#6ecf9a",
+    disabled: "#5f7065",
+    confirm: "#8af0a4",
+    cancel: "#e29266",
+  },
   frameStyle: {
     selectedBorder: 0xffd24a,
     targetBorder: 0x35e0a0,
@@ -25,11 +25,11 @@ export const OVERGROWN_MALL_THEME: VisualTheme = {
     targetGlow: 0x8affc7,
     playableGlow: 0xffd24a,
     committedTarget: 0x1f5c48,
-    pickedBorder: 0x66dd88,        // seafoam batch member
+    pickedBorder: 0x66dd88, // seafoam batch member
   },
   backdrop: {
-    realityKey: 'overgrown-mall-bg',
-    intrusionKey: 'overgrown-mall-overlay',
+    realityKey: "overgrown-mall-bg",
+    intrusionKey: "overgrown-mall-overlay",
   },
-  worldCardfrontKey: 'overgrown-mall-cardfront',
-}
+  worldCardfrontKey: "overgrown-mall-cardfront",
+};
