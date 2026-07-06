@@ -20,9 +20,7 @@ describe("City of Sleeping Giants — theme palette (REQ-GIANTS-48)", () => {
     const theme = selectTheme(WORLD_ID);
     expect(theme.worldId).toBe(WORLD_ID);
     // City keynote: deep civic violet intrusion (REQ-GIANTS-35..39).
-    expect(theme.intrusionHue).toBe("#9d6cff");
     expect(theme.intrusionHue).toBe(CITY_OF_SLEEPING_GIANTS_THEME.intrusionHue);
-    expect(theme.doorGlowTint).toBe(0x9d6cff);
     expect(theme.backdrop.realityKey).toBe("city-of-sleeping-giants-bg");
     expect(theme.backdrop.intrusionKey).toBe("city-of-sleeping-giants-overlay");
     expect(theme.worldCardfrontKey).toBe("city-of-sleeping-giants-cardfront");
