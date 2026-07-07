@@ -184,7 +184,7 @@ export class CardView extends Phaser.GameObjects.Container {
   readonly activeModifiers: KeywordName[];
   readonly worldId: string;
   readonly visibleFxKey?: string;
-  private loopedFx?: Phaser.Sound.BaseSound;
+  private loopedFx?: Phaser.Sound.BaseSound | undefined;
 
   private highlightRect: Phaser.GameObjects.Rectangle;
   private rarityRect: Phaser.GameObjects.Rectangle;
@@ -775,11 +775,26 @@ export class CardView extends Phaser.GameObjects.Container {
       loop: true,
     });
     this.loopedFx.play();
-    this.scene.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
-      if (this.loopedFx) {
-        this.loopedFx.stop();
-      }
-    });
+    this.scene.events.once(Phaser.Scenes.Events.SHUTDOWN, () => this.stopWhileVisible());
+  }
+
+  /**
+   * Stop and release the looped WhileVisible sound. `loopedFx` is owned by the
+   * scene's sound manager, not this container's display list, so plain
+   * Container.destroy() never touches it — every teardown path (reconcile
+   * rebuild, row-window eviction, scene shutdown) must call this explicitly or
+   * the loop keeps playing orphaned while a fresh CardView starts a second one.
+   */
+  private stopWhileVisible(): void {
+    if (!this.loopedFx) return;
+    this.loopedFx.stop();
+    this.loopedFx.destroy();
+    this.loopedFx = undefined;
+  }
+
+  override destroy(fromScene?: boolean): void {
+    this.stopWhileVisible();
+    super.destroy(fromScene);
   }
 
   private obtainGlow(): Phaser.GameObjects.Graphics {

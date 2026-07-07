@@ -2482,6 +2482,35 @@ function makeFakeContainer(sink: FakeContainer[]): FakeContainer {
   return container;
 }
 
+/** A fake looped Phaser.Sound.BaseSound: tracks play/stop/destroy calls. */
+interface FakeSound {
+  key: string;
+  playCalls: number;
+  stopCalls: number;
+  destroyed: boolean;
+  play(): void;
+  stop(): void;
+  destroy(): void;
+}
+
+function makeFakeSound(key: string): FakeSound {
+  return {
+    key,
+    playCalls: 0,
+    stopCalls: 0,
+    destroyed: false,
+    play(): void {
+      this.playCalls += 1;
+    },
+    stop(): void {
+      this.stopCalls += 1;
+    },
+    destroy(): void {
+      this.destroyed = true;
+    },
+  };
+}
+
 type RenderScene = {
   sys: {
     queueDepthSort(): void;
@@ -2490,6 +2519,8 @@ type RenderScene = {
     updateList: { add(): void; remove(): void };
     input: { enable(obj: unknown): void; disable(obj: unknown): void };
   };
+  events: { once(event: string, callback: () => void): void; on(): void; off(): void };
+  sound: { add(key: string, config: { volume: number; loop: boolean }): FakeSound };
   textures: { exists(): boolean };
   add: {
     existing(obj?: unknown): unknown;
@@ -2512,9 +2543,13 @@ function makeRenderScene(): {
   scene: RenderScene;
   texts: TrackedText[];
   containers: FakeContainer[];
+  sounds: FakeSound[];
+  fireShutdown(): void;
 } {
   const texts: TrackedText[] = [];
   const containers: FakeContainer[] = [];
+  const sounds: FakeSound[] = [];
+  const shutdownCallbacks: (() => void)[] = [];
   const scene: RenderScene = {
     sys: {
       queueDepthSort(): void {},
@@ -2536,6 +2571,20 @@ function makeRenderScene(): {
         },
       },
     },
+    events: {
+      once(_event: string, callback: () => void): void {
+        shutdownCallbacks.push(callback);
+      },
+      on(): void {},
+      off(): void {},
+    },
+    sound: {
+      add(key: string): FakeSound {
+        const sound = makeFakeSound(key);
+        sounds.push(sound);
+        return sound;
+      },
+    },
     // addEffectLines lazily ensures the icon placeholder textures; claiming
     // every key exists skips canvas texture generation (a browser concern).
     textures: { exists: (): boolean => true },
@@ -2554,7 +2603,15 @@ function makeRenderScene(): {
       ): unknown => makeFakeText(x, y, content, style, texts),
     },
   };
-  return { scene, texts, containers };
+  return {
+    scene,
+    texts,
+    containers,
+    sounds,
+    fireShutdown(): void {
+      for (const callback of shutdownCallbacks) callback();
+    },
+  };
 }
 
 function makeMintState(): GameState {
@@ -2617,13 +2674,15 @@ interface RenderedCard {
   view: CardView;
   texts: TrackedText[];
   containers: FakeContainer[];
+  sounds: FakeSound[];
+  fireShutdown(): void;
 }
 
 function renderCard(card: Card): RenderedCard {
-  const { scene, texts, containers } = makeRenderScene();
+  const { scene, texts, containers, sounds, fireShutdown } = makeRenderScene();
   const theme = selectTheme("zombie-big-box");
   const view = new CardView(scene as never, card, [], 0, 0, theme, () => theme);
-  return { view, texts, containers };
+  return { view, texts, containers, sounds, fireShutdown };
 }
 
 /**
@@ -2669,6 +2728,69 @@ function rowTextColors(row: FakeContainer): string[] {
     .filter((c) => typeof c.content === "string")
     .map((c) => c.color ?? "");
 }
+
+describe("CardView WhileVisible fx lifecycle", () => {
+  // Regression coverage: `loopedFx` is a Phaser.Sound.BaseSound owned by the
+  // scene's sound manager, not this container's display list, so a plain
+  // Container.destroy() never touched it. Every teardown path that rebuilds or
+  // evicts a CardView (TableScene's reconcile-on-signature-change and
+  // row-window eviction) called destroy() without stopping the loop, so a card
+  // like "The Door" (fx: [{ kind: "WhileVisible", key: "the-door-fx" }])
+  // orphaned a still-playing loop every time it was rebuilt or scrolled out of
+  // the visible world-row window, then started a second one on rebuild/rescroll.
+  const doorLikeWorldCard = (): WorldCard =>
+    makeWorldCard({
+      id: "door-1",
+      fx: [{ kind: "WhileVisible", key: "the-door-fx" }],
+    });
+
+  it("starts exactly one looped fx sound on construction", () => {
+    const rendered = renderCard(doorLikeWorldCard());
+    expect(rendered.sounds.length).toBe(1);
+    const [sound] = rendered.sounds;
+    expect(sound!.key).toBe("the-door-fx");
+    expect(sound!.playCalls).toBe(1);
+    expect(sound!.stopCalls).toBe(0);
+  });
+
+  it("stops and destroys the looped fx sound when the CardView is destroyed directly", () => {
+    const rendered = renderCard(doorLikeWorldCard());
+    const [sound] = rendered.sounds;
+
+    rendered.view.destroy();
+
+    expect(sound!.stopCalls).toBe(1);
+    expect(sound!.destroyed).toBe(true);
+  });
+
+  it("does not start a new orphaned loop on top of an old one across a rebuild", () => {
+    // Mirrors TableScene.obtainCardContainer / drawAll's leftover-cleanup: an
+    // old CardView is destroyed and a new one constructed for the same card id.
+    const first = renderCard(doorLikeWorldCard());
+    first.view.destroy();
+    const second = renderCard(doorLikeWorldCard());
+
+    expect(first.sounds[0]!.stopCalls).toBe(1);
+    expect(first.sounds[0]!.destroyed).toBe(true);
+    expect(second.sounds.length).toBe(1);
+    expect(second.sounds[0]!.playCalls).toBe(1);
+  });
+
+  it("still stops the fx on scene shutdown if the CardView itself is never destroyed", () => {
+    const rendered = renderCard(doorLikeWorldCard());
+    const [sound] = rendered.sounds;
+
+    rendered.fireShutdown();
+
+    expect(sound!.stopCalls).toBe(1);
+    expect(sound!.destroyed).toBe(true);
+  });
+
+  it("does not create a sound at all for cards without a WhileVisible fx", () => {
+    const rendered = renderCard(makeWorldCard({ id: "no-fx-1" }));
+    expect(rendered.sounds.length).toBe(0);
+  });
+});
 
 describe("CardView player-card keyword line (REQ-MALL-21)", () => {
   // The world face renders keywords at this offset/size; the player face must
