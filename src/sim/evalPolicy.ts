@@ -93,7 +93,7 @@ export function evalPolicyFactory(
         rngState = nextRng;
         kSet.push(evaluate(reduce(catalog, det, candidate).state, weights));
       }
-      const mSet = kSet.slice(0, kSet.length / 2);
+      const mSet = kSet.slice(0, Math.ceil(kSet.length / 2));
       const score = mSet.length > 0 ? mSet.reduce((sum, e) => sum + e, 0) / mSet.length : 0;
       // Deterministic tiebreak: strict `>` keeps the FIRST candidate in
       // enumeration order when scores tie.
