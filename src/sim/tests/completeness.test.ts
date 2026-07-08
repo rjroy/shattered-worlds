@@ -273,7 +273,7 @@ describe("world filtering (selectWorlds / parseParams worldId)", () => {
     const params = parseParams();
     expect(params.worldId).toBeUndefined();
     expect(params.N).toBe(100);
-    expect(params.K).toBe(5);
+    expect(params.K).toBe(6);
     expect(params.outputFormat).toBe("json");
   });
 

@@ -51,7 +51,7 @@
     "id": "keyword-bonus",
     "name": "Sharpened Instincts",
     "description": "You can always find the weak points.",
-    "cost": 30,
+    "cost": 20,
     "destinyWeight": 2,
     "effect": { "type": "keywordDamageBonus", "amount": 1 }
   },

@@ -40,11 +40,12 @@ import { evaluate, type EvalWeights } from "./eval";
 export function evalPolicyFactory(
   catalog: CardCatalog,
   weights: EvalWeights,
-  K: number,
+  kCount: number,
 ): Policy {
-  if (!(K >= 1)) {
+  if (!(kCount >= 1)) {
     throw new RangeError(
-      `evalPolicyFactory: K must be >= 1 (got ${K}); score is acc / K, so K < 1 yields NaN scores (REQ-SCC-6).`,
+      `evalPolicyFactory: K must be >= 1 (got ${kCount}); ` +
+        "score is acc / K, so K < 1 yields NaN scores(REQ - SCC - 6).",
     );
   }
   return (view: GameState, rng: () => number): Action => {
@@ -86,13 +87,14 @@ export function evalPolicyFactory(
     let best: Action = candidates[0]!; // candidates is non-empty (checked above).
     let bestScore = -Infinity;
     for (const candidate of candidates) {
-      let acc = 0;
-      for (let k = 0; k < K; k++) {
+      const kSet = [];
+      for (let k = 0; k < kCount; k++) {
         const [det, nextRng] = determinize(view, rngState);
         rngState = nextRng;
-        acc += evaluate(reduce(catalog, det, candidate).state, weights);
+        kSet.push(evaluate(reduce(catalog, det, candidate).state, weights));
       }
-      const score = acc / K;
+      const mSet = kSet.slice(0, kSet.length / 2);
+      const score = mSet.length > 0 ? mSet.reduce((sum, e) => sum + e, 0) / mSet.length : 0;
       // Deterministic tiebreak: strict `>` keeps the FIRST candidate in
       // enumeration order when scores tie.
       if (score > bestScore) {

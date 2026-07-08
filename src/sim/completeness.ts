@@ -61,8 +61,8 @@ const DEFAULT_MAX_ACTIONS_PER_WORLD = 250;
 const DEFAULT_FORFEIT_NO_PROGRESS_TURNS = 5;
 const DEFAULT_FORFEIT_MAX_ACTIONS_PER_TURN = 40;
 const RECOVERY_UNLOCK_IDS = [
-  // 1.Burst of Speed
-  ["first-sprint-free"],
+  // 2.Sharpened Instincs
+  ["keyword-bonus"],
   // 5. Athlete's Instinct, Sharpened Instincts, Burst of Speed, Run in Terror, Fight or Flight
   [
     "starter-footballer",
@@ -293,7 +293,7 @@ export function parseParams(): CompletenessParams {
   const { worldId, rest } = resolveWorldId(positional);
   return {
     N: resolveInt(rest[0], env.SIM_N, 100),
-    K: resolveInt(rest[1], env.SIM_K, 5),
+    K: resolveInt(rest[1], env.SIM_K, 6),
     agentSeed: resolveInt(rest[2], env.SIM_SEED, 12345),
     threshold: resolveFloat(rest[3], env.SIM_THRESHOLD, 0.02),
     weights,
