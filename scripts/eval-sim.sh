@@ -15,8 +15,7 @@ echo "--- | ---------- | -------------- | --------"
 jq -r '
     .worlds |
     sort_by(
-        (.baseline.wins + ([.recoveries[] | .wins] | add)) /
-        (.baseline.games + ([.recoveries[] | .games] | add))
+        .baseline.wins + (([.recoveries[] | .wins]) | min)
     ) |
     .[] |
     [

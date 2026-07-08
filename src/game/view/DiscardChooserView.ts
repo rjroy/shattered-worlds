@@ -146,7 +146,7 @@ export class DiscardChooserView extends Phaser.GameObjects.Container {
     const title = scene.add.text(
       CANVAS_W / 2,
       96,
-      "Mark the Shelf",
+      "Recall Discarded Card",
       textStyle({
         fontFamily: FONTS.title,
         fontSize: "22px",
@@ -213,7 +213,10 @@ export class DiscardChooserView extends Phaser.GameObjects.Container {
     this.listContainer = list;
     this.add(list);
 
-    const visible = this.config.cards.slice(this.scrollOffset, this.scrollOffset + this.visibleRows);
+    const visible = this.config.cards.slice(
+      this.scrollOffset,
+      this.scrollOffset + this.visibleRows,
+    );
     visible.forEach((card, index) => {
       this.addRow(scene, list, card, LIST_TOP + index * ROW_STRIDE);
     });
@@ -295,7 +298,14 @@ export class DiscardChooserView extends Phaser.GameObjects.Container {
 
     // Empty inset slot (deferred art): a thin placeholder frame on the left.
     const insetSlot = scene.add
-      .rectangle(left + 6 + INSET_SLOT_W / 2, y + ROW_H / 2, INSET_SLOT_W, ROW_H - 10, 0x000000, 0.3)
+      .rectangle(
+        left + 6 + INSET_SLOT_W / 2,
+        y + ROW_H / 2,
+        INSET_SLOT_W,
+        ROW_H - 10,
+        0x000000,
+        0.3,
+      )
       .setRounded(3);
     insetSlot.setStrokeStyle(1, this.config.theme.frameStyle.ringAccent, 0.4);
     list.add(insetSlot);
@@ -369,9 +379,7 @@ export class DiscardChooserView extends Phaser.GameObjects.Container {
       .setOrigin(0.5, 0.5);
     this.add(this.confirmLabel);
 
-    const cancel = scene.add
-      .rectangle(CANVAS_W / 2 - 78, y, 140, 38, 0x2a1414, 0.9)
-      .setRounded(8);
+    const cancel = scene.add.rectangle(CANVAS_W / 2 - 78, y, 140, 38, 0x2a1414, 0.9).setRounded(8);
     cancel.setStrokeStyle(1, this.config.theme.frameStyle.discardBorder, 0.85);
     cancel.setInteractive({ useHandCursor: true });
     cancel.on("pointerdown", () => this.config.onCancel());
@@ -416,13 +424,18 @@ export class DiscardChooserView extends Phaser.GameObjects.Container {
     for (const [id, border] of this.rowBorders) {
       const picked = this.picks.includes(id);
       border.setStrokeStyle(2, this.config.theme.frameStyle.pickedBorder, picked ? 1 : 0);
-      border.setFillStyle(picked ? this.config.theme.frameStyle.pickedBorder : 0x0b0710, picked ? 0.22 : 0.55);
+      border.setFillStyle(
+        picked ? this.config.theme.frameStyle.pickedBorder : 0x0b0710,
+        picked ? 0.22 : 0.55,
+      );
     }
   }
 
   private refreshConfirm(): void {
     const satisfied = this.picks.length >= this.config.min;
-    this.confirmLabel.setText(this.picks.length === 0 && this.config.min === 0 ? "Done" : "Confirm");
+    this.confirmLabel.setText(
+      this.picks.length === 0 && this.config.min === 0 ? "Done" : "Confirm",
+    );
     this.confirmLabel.setAlpha(satisfied ? 1 : TEXT.dimAlpha);
   }
 

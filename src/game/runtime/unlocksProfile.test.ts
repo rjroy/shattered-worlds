@@ -112,7 +112,10 @@ describe("createUnlocksStore", () => {
 
     const clearedStore = createUnlocksStore(
       memoryStorage(),
-      featsStore([...richFeats.getProfile().earned.map((r) => r.featId), "first-the-ember-orcharc"]),
+      featsStore([
+        ...richFeats.getProfile().earned.map((r) => r.featId),
+        "first-the-ember-orcharc",
+      ]),
     );
     expect(clearedStore.purchase("starter-harvester")).toBe("ok");
   });
@@ -201,26 +204,37 @@ describe("createUnlocksStore", () => {
           "starter-footballer",
           "min-energy",
           "act-reward",
+          "panic-response",
         ],
-        activated: ["starter-footballer", "extra-hp", "min-energy"],
+        activated: ["starter-footballer", "extra-hp", "min-energy", "act-reward"],
       }),
     });
     const store = createUnlocksStore(storage, richFeats);
 
     expect(store.setActive("missing", true)).toBe("not-owned");
-    expect(store.setActive("act-reward", true)).toBe("over-budget");
+    expect(store.setActive("panic-response", true)).toBe("over-budget");
     expect(store.getProfile().activated).toEqual([
       "starter-footballer",
       "extra-hp",
       "min-energy",
+      "act-reward",
     ]);
 
     expect(store.setActive("extra-hp", true)).toBe("ok");
-    expect(store.setActive("extra-hp", true)).toBe("ok");
     expect(store.getProfile().activated).toEqual([
       "starter-footballer",
       "extra-hp",
       "min-energy",
+      "act-reward",
+    ]);
+
+    expect(store.setActive("min-energy", false)).toBe("ok");
+    expect(store.setActive("panic-response", true)).toBe("ok");
+    expect(store.getProfile().activated).toEqual([
+      "starter-footballer",
+      "extra-hp",
+      "act-reward",
+      "panic-response",
     ]);
   });
 
@@ -244,7 +258,11 @@ describe("createUnlocksStore", () => {
     const storage = memoryStorage();
     const store = createUnlocksStore(storage, richFeats);
 
-    store.setProfile({ version: 1, purchased: ["extra-hp", "extra-brace"], activated: ["extra-hp"] });
+    store.setProfile({
+      version: 1,
+      purchased: ["extra-hp", "extra-brace"],
+      activated: ["extra-hp"],
+    });
 
     expect(store.getProfile()).toEqual({
       version: 1,
@@ -257,7 +275,11 @@ describe("createUnlocksStore", () => {
   it("setProfile drops activated ids that are not in the incoming purchased list", () => {
     const store = createUnlocksStore(memoryStorage(), richFeats);
 
-    store.setProfile({ version: 1, purchased: ["extra-hp"], activated: ["extra-hp", "extra-brace"] });
+    store.setProfile({
+      version: 1,
+      purchased: ["extra-hp"],
+      activated: ["extra-hp", "extra-brace"],
+    });
 
     expect(store.getProfile()).toEqual({
       version: 1,

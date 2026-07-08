@@ -50,6 +50,7 @@ function aggregateWorld(worldId: string, N: number, K: number, agentSeed: number
     threshold: 0.02,
     weights: DEFAULT_EVAL_WEIGHTS,
     weightsOverridden: false,
+    maxRecovery: 1,
   };
   const [agg] = runCompleteness(params, [world]);
   if (agg === undefined) throw new Error("runCompleteness returned no aggregate");
@@ -272,7 +273,7 @@ describe("world filtering (selectWorlds / parseParams worldId)", () => {
     const params = parseParams();
     expect(params.worldId).toBeUndefined();
     expect(params.N).toBe(100);
-    expect(params.K).toBe(5);
+    expect(params.K).toBe(6);
     expect(params.outputFormat).toBe("json");
   });
 

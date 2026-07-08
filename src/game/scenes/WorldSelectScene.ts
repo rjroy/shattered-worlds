@@ -963,6 +963,10 @@ export class WorldSelectScene extends Phaser.Scene {
       } else {
         this.scene.launch("Table", { worldId, seed });
       }
+      // Without this, WorldSelect stays fully active underneath — its top-bar
+      // buttons keep receiving input (see the settings/Chronicle collision
+      // this fixed) and its main theme keeps playing under the level music.
+      this.scene.pause();
     });
     return { container, background: bg };
   }

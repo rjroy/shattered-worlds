@@ -254,9 +254,7 @@ export function measureEvalAxes(state: GameState, w: EvalWeights): EvalAxes {
 
   // --- player-card availability (axis 2) vs hand-flood pressure ---
   const worldInHand = state.hand.filter((c) => c.kind === "world").length;
-  const frozenPlayer = state.hand.filter(
-    (c) => c.kind === "player" && (c.frozen ?? 0) > 0,
-  ).length;
+  const frozenPlayer = state.hand.filter((c) => c.kind === "player" && (c.frozen ?? 0) > 0).length;
   const unfrozenPlayerInHand = state.hand.filter(
     (c) => c.kind === "player" && (c.frozen ?? 0) <= 0,
   ).length;
@@ -411,7 +409,7 @@ function forwardProgress(view: GameState): number {
  */
 export function evaluate(view: GameState, weights: EvalWeights): number {
   if (view.status === "won") return weights.wonScore;
-  if (view.status === "lost") return 0;
+  if (view.status === "lost") return -Infinity;
 
   // Single shared measurement: telemetry that later calls `measureEvalAxes`
   // directly on committed state reads the exact same axis definitions used

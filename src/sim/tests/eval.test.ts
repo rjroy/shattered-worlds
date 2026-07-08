@@ -46,7 +46,7 @@ describe("evaluate — terminal short-circuit", () => {
     });
 
     expect(ev({ ...base, status: "won" })).toBe(W.wonScore);
-    expect(ev({ ...base, status: "lost" })).toBe(0);
+    expect(ev({ ...base, status: "lost" })).toBe(-Infinity);
 
     // The won ceiling must dominate any non-terminal score so reaching a win
     // always wins the comparison.

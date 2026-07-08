@@ -657,9 +657,9 @@ function effectSummary(def: UnlockDefinition): string {
     case "minResourcePerTurn":
       return `${def.effect.resource} floor ${def.effect.floor}`;
     case "rarityBonus":
-      return `Rarity bonuses +${def.effect.amount}`;
+      return `Rarity weight +${def.effect.amount}`;
     case "keywordDamageBonus":
-      return `Keyword bonuses +${def.effect.amount}`;
+      return `Keyword minimum bonus +${def.effect.amount}`;
     case "playerCardModifier":
       return "Player card modifier";
     case "starterDeckOverride":

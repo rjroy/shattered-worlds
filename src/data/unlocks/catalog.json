@@ -50,8 +50,8 @@
   {
     "id": "keyword-bonus",
     "name": "Sharpened Instincts",
-    "description": "You've learned where the weak points are.",
-    "cost": 30,
+    "description": "You can always find the weak points.",
+    "cost": 20,
     "destinyWeight": 2,
     "effect": { "type": "keywordDamageBonus", "amount": 1 }
   },
@@ -61,7 +61,7 @@
     "description": "Improves the odds of getting better random rewards.",
     "cost": 50,
     "destinyWeight": 2,
-    "effect": { "type": "rarityBonus", "amount": 5 }
+    "effect": { "type": "rarityBonus", "amount": 10 }
   },
   {
     "id": "min-light",
@@ -69,7 +69,7 @@
     "description": "There is always a little light left. You make sure of it.",
     "cost": 35,
     "destinyWeight": 2,
-    "effect": { "type": "minResourcePerTurn", "resource": "light", "floor": 1 }
+    "effect": { "type": "minResourcePerTurn", "resource": "light", "floor": 2 }
   },
   {
     "id": "min-energy",
@@ -163,7 +163,7 @@
     "name": "Fortune",
     "description": "At the start of each new act, choose 1 of 3 temporary boon cards for your hand.",
     "cost": 60,
-    "destinyWeight": 3,
+    "destinyWeight": 2,
     "effect": {
       "type": "actReward",
       "boonPoolId": "pool-fortune",
@@ -354,7 +354,7 @@
     "name": "Strong Barricades",
     "description": "Barricades apply progress to every world card and can return more cards, but have increased cost.",
     "cost": 30,
-    "destinyWeight": 1,
+    "destinyWeight": 2,
     "effect": {
       "type": "playerCardModifier",
       "modifier": {
@@ -396,6 +396,28 @@
         "target": { "kind": "template", "templateId": "Explore" },
         "condition": { "kind": "templatePlayOrdinalThisTurn", "ordinal": 2 },
         "patches": [{ "kind": "appendEffect", "effect": { "kind": "DealProgressAll", "base": 1 } }]
+      }
+    }
+  },
+  {
+    "id": "adrenaline-thoughts",
+    "name": "Quick Thinking",
+    "description": "Adrenaline now becomes Quick Thinking. Allowing more control of the draw.",
+    "cost": 30,
+    "destinyWeight": 2,
+    "effect": {
+      "type": "playerCardModifier",
+      "modifier": {
+        "id": "adrenaline-thoughts",
+        "displayName": "Quick Thinking",
+        "target": { "kind": "template", "templateId": "Adrenaline" },
+        "condition": { "kind": "always" },
+        "patches": [
+          {
+            "kind": "prependEffect",
+            "effect": { "kind": "ReturnPlayerDiscardToTop", "min": 1, "max": 1 }
+          }
+        ]
       }
     }
   }
