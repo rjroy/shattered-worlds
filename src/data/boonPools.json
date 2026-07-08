@@ -76,7 +76,14 @@
     "Contour Map"
   ],
   "pool-lights-lv1": ["Loaded Shotgun", "Barricade", "Half-Dead Spotlight", "Cooler Snacks"],
-  "pool-lights-lv2": ["Loaded Shotgun", "Flashlight", "Flare Gun", "Bonfire", "Searchlight"],
+  "pool-lights-lv2": [
+    "Loaded Shotgun",
+    "Flashlight",
+    "Flare Gun",
+    "Bonfire",
+    "Searchlight",
+    "Half-Dead Spotlight"
+  ],
   "pool-garden-tools": ["Loaded Shotgun", "Pruning Shears", "Machete", "Weed Killer", "Bloom"],
   "pool-reissued-credentials": [
     "Temporary Credentials",

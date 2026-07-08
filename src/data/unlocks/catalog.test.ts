@@ -43,7 +43,7 @@ describe("UNLOCK_CATALOG", () => {
       id: "act-reward",
       name: "Fortune",
       cost: 60,
-      destinyWeight: 3,
+      destinyWeight: 2,
       effect: { type: "actReward", boonPoolId: "pool-fortune", offeredCount: 3, chooseCount: 1 },
     });
     expect(fortune?.destinyWeight).toBeLessThanOrEqual(DESTINY_BUDGET);

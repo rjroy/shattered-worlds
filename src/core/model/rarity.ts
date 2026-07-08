@@ -23,10 +23,10 @@ export const RARITY_ORDER: readonly RarityTier[] = [
  * world, surface, or effect may override them.
  */
 export const RARITY_WEIGHTS: Record<RarityTier, number> = {
-  common: 80,
-  uncommon: 40,
-  rare: 20,
-  legendary: 10,
+  common: 80, // 53% (no sig) with rarity 38%
+  uncommon: 40, // 27% (no sig) with rarity 24%
+  rare: 20, // 13% (no sig) with rarity 24%
+  legendary: 10, // 7% (no sig) with rarity 14%
   // NOTE: Signature is a special weight that is intended to always be present.
   signature: 160,
 };

@@ -116,15 +116,15 @@ export function dealProgress(
   if (hazard === undefined) return { state, events: [] };
 
   const getBonus = (hazard: WorldCard, kb: KeywordBonus | undefined) => {
-    return kb !== undefined && hasKeyword(hazard, kb.tag)
-      ? kb.amount + state.runModifiers.keywordDamageBonus
-      : 0;
+    return kb !== undefined && hasKeyword(hazard, kb.tag) ? kb.amount : 0;
   };
 
   const bonusAmount = Array.isArray(bonus)
     ? bonus.reduce((sum, kb) => sum + getBonus(hazard, kb), 0)
     : getBonus(hazard, bonus);
-  const amount = base + bonusAmount;
+  const hasAnyKeyword = hazard.keywords.length > 0 || (hazard.appliedKeywords?.length ?? 0 > 0);
+  const minBonus = hasAnyKeyword ? state.runModifiers.keywordDamageBonus : 0;
+  const amount = base + Math.max(minBonus, bonusAmount);
 
   const newProgress = {
     ...state.progress,

@@ -50,6 +50,7 @@ function aggregateWorld(worldId: string, N: number, K: number, agentSeed: number
     threshold: 0.02,
     weights: DEFAULT_EVAL_WEIGHTS,
     weightsOverridden: false,
+    maxRecovery: 1,
   };
   const [agg] = runCompleteness(params, [world]);
   if (agg === undefined) throw new Error("runCompleteness returned no aggregate");

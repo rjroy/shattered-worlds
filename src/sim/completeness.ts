@@ -57,21 +57,36 @@ import {
 } from "./playOut";
 import { median, p90, wilsonInterval } from "./statistics";
 
-const DEFAULT_MAX_ACTIONS_PER_WORLD = 300;
-const DEFAULT_FORFEIT_NO_PROGRESS_TURNS = 10;
+const DEFAULT_MAX_ACTIONS_PER_WORLD = 250;
+const DEFAULT_FORFEIT_NO_PROGRESS_TURNS = 5;
 const DEFAULT_FORFEIT_MAX_ACTIONS_PER_TURN = 40;
 const RECOVERY_UNLOCK_IDS = [
+  // 1.Burst of Speed
+  ["first-sprint-free"],
+  // 5. Athlete's Instinct, Sharpened Instincts, Burst of Speed, Run in Terror, Fight or Flight
   [
-    "first-sprint-free", // Burst of Speed
-    "second-explore-push", // Determined Explorer
-    "extra-hp", // Tough Hide
-    "keyword-bonus", // Sharpened Instincts
+    "starter-footballer",
+    "keyword-bonus",
+    "first-sprint-free",
+    "other-sprint-free",
+    "panic-response",
   ],
-  [
-    "other-sprint-free", // Run in Terror
-    "panic-response", // Fight or Flight
-    "keyword-bonus", // Sharpened Instincts
-  ],
+  // 5. Builder's Instinct, Strong Barricades, Determined Explorer, Sharpened Instincts
+  ["starter-contractor", "strong-barricades", "second-explore-push", "keyword-bonus"],
+  // 4. Secret Preper, Fortune, Sharpened Instincts
+  ["starter-survivalist", "act-reward", "keyword-bonus"],
+  // 4. First Responder, Fortune, Sharpened Instincts
+  ["starter-fireman", "act-reward", "keyword-bonus"],
+  // 4. Gardener, Fortune, Sharpened Instincts
+  ["starter-gardener", "act-reward", "keyword-bonus"],
+  // 4. Stunt Driver, Fortune, Sharpened Instincts
+  ["starter-stunt-driver", "act-reward", "keyword-bonus"],
+  // 4. Harvester of the Ember Orchard, Fortune, Sharpened Instincts
+  ["starter-harvester", "act-reward", "keyword-bonus"],
+  // 4. Tidal Archivist, Fortune, Sharpened Instincts
+  ["starter-archivist", "act-reward", "keyword-bonus"],
+  // 4. Giant Surveyor, Fortune, Sharpened Instincts
+  ["starter-surveyer", "act-reward", "keyword-bonus"],
 ] as const;
 /** Play-outs per seed: one baseline + one per recovery unlock set. */
 const PLAY_OUTS_PER_SEED = 1 + RECOVERY_UNLOCK_IDS.length;
@@ -129,6 +144,8 @@ export interface CompletenessParams {
   worldId?: string;
   /** CLI output format. JSON is the default for machine-readable reports. */
   outputFormat?: OutputFormat;
+  /** If provided, limits the number of recovery runs. */
+  maxRecovery?: number;
 }
 
 export type OutputFormat = "json" | "human";
@@ -492,10 +509,14 @@ export function runCompleteness(
     const baseline = newCohortAggregate();
     // Pair each recovery unlock set's modifiers with its own cohort up front,
     // so the play-out loop never has to index two parallel arrays.
-    const recoveryRuns = RECOVERY_RUN_MODIFIERS.map((modifiers) => ({
+    let recoveryRuns = RECOVERY_RUN_MODIFIERS.map((modifiers) => ({
       modifiers,
       cohort: newCohortAggregate(),
     }));
+
+    if (params.maxRecovery !== undefined) {
+      recoveryRuns = recoveryRuns.slice(0, params.maxRecovery);
+    }
 
     for (let seed = 1; seed <= params.N; seed++) {
       const baselineOutcome = playOut(world.catalog, world.worldData, seed, policy, agentRng, {

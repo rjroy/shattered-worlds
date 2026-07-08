@@ -12,7 +12,7 @@ import { mintCard } from "../model/cards";
 import { availableActions } from "../engine/available";
 import { createWorld } from "../engine/world";
 import { reduce } from "../engine/reduce";
-import type { CardEffect, GameState, PlayerCard, WorldCard } from "../model/types";
+import type { CardEffect, GameState, KeywordBonus, PlayerCard, WorldCard } from "../model/types";
 import { DEFAULT_RUN_MODIFIERS } from "../../data/unlocks/types";
 import type { CardCatalog } from "../model/catalog";
 import { catalog, worldData } from "./testFixture";
@@ -140,29 +140,34 @@ describe("dealProgress keyword math", () => {
     expect(after.hand.find((c) => c.id === zombie.id)).toBeUndefined();
   });
 
-  it("adds run keyword bonus only when the hazard has the matching keyword", () => {
+  it("adds run keyword bonus event when the hazard does not have the matching keyword", () => {
     let state = makeState({
       runModifiers: { ...DEFAULT_RUN_MODIFIERS, keywordDamageBonus: 1 },
     });
-    const [hidden, s1] = mintWorld(state, "Zombie");
-    const [plain, s2] = mintWorld(s1, "Strange Sounds");
-    const hiddenWithKeyword: WorldCard = { ...hidden, keywords: [{ name: "Obstructed" }] };
-    state = { ...s2, hand: [hiddenWithKeyword, plain] };
+    // create 3 versions of the card so they each have different `id` values.
+    // Use "Strange Sounds" so that its pretty generic.
+    const [plain, s1] = mintWorld(state, "Strange Sounds");
+    const [plain2, s2] = mintWorld(s1, "Strange Sounds");
+    const [plain3, s3] = mintWorld(s2, "Strange Sounds");
+    // apply keywords and add to hand.
+    const withHidden: WorldCard = { ...plain2, keywords: [{ name: "Obstructed" }] };
+    const withCreature: WorldCard = { ...plain3, keywords: [{ name: "Creature" }] };
+    state = { ...s3, hand: [withHidden, withCreature, plain] };
 
-    const matching = dealProgress(catalog, state, hiddenWithKeyword.id, 1, applyEffect, {
-      tag: "Obstructed",
-      amount: 1,
-    });
-    const nonMatching = dealProgress(catalog, state, plain.id, 1, applyEffect, {
-      tag: "Obstructed",
-      amount: 1,
-    });
+    const kwBonus: KeywordBonus = { tag: "Obstructed", amount: 2 };
+    const resultPlain = dealProgress(catalog, state, plain.id, 1, applyEffect, kwBonus);
+    const resultHidden = dealProgress(catalog, state, withHidden.id, 1, applyEffect, kwBonus);
+    const resultCreature = dealProgress(catalog, state, withCreature.id, 1, applyEffect, kwBonus);
 
-    expect(matching.events.find((e) => e.type === "ProgressDealt")).toMatchObject({
+    // No per event bonus or modifier bonus
+    expect(resultPlain.events.find((e) => e.type === "ProgressDealt")).toMatchObject({ amount: 1 });
+    // Per event bonus but no modifier bonus
+    expect(resultHidden.events.find((e) => e.type === "ProgressDealt")).toMatchObject({
       amount: 3,
     });
-    expect(nonMatching.events.find((e) => e.type === "ProgressDealt")).toMatchObject({
-      amount: 1,
+    // No Per event bonus but with modifier bonus
+    expect(resultCreature.events.find((e) => e.type === "ProgressDealt")).toMatchObject({
+      amount: 2,
     });
   });
 });

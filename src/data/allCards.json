@@ -313,10 +313,9 @@
     },
     "Flashlight": {
       "kind": "player",
-      "name": "Half-Dead Flashlight",
+      "name": "Flashlight",
       "rarity": "common",
       "insetKey": "fog-inset-flashlight",
-      "exhaust": true,
       "effect": { "kind": "GainLight", "amount": 1 }
     },
     "Flare Gun": {
@@ -463,8 +462,20 @@
       "onCleared": {
         "kind": "Sequence",
         "steps": [
-          { "kind": "GainRandomCard", "setId": "pool-lights-lv2", "setName": "Bonfire Stash" },
-          { "kind": "GainRandomCard", "setId": "pool-lights-lv2", "setName": "Bonfire Stash" }
+          {
+            "kind": "OfferBoon",
+            "setId": "pool-lights-lv2",
+            "setName": "Bonfire Stash",
+            "offeredCount": 3,
+            "chooseCount": 1
+          },
+          {
+            "kind": "OfferBoon",
+            "setId": "pool-lights-lv2",
+            "setName": "Bonfire Stash",
+            "offeredCount": 3,
+            "chooseCount": 1
+          }
         ]
       },
       "onPartialClear": { "kind": "None" },
@@ -2036,7 +2047,7 @@
     "Constellation Shears": {
       "kind": "player",
       "name": "Constellation Shears",
-      "rarity": "signature",
+      "rarity": "legendary",
       "insetKey": "ember-inset-constellation-shears",
       "exhaust": true,
       "effect": {
