@@ -11,7 +11,7 @@
     "id": "extra-energy",
     "name": "Charged",
     "description": "You remember how it felt to move fast when it mattered.",
-    "cost": 20,
+    "cost": 15,
     "destinyWeight": 1,
     "effect": { "type": "startingStat", "stat": "energy", "amount": 1 }
   },
@@ -19,7 +19,7 @@
     "id": "extra-light",
     "name": "Fog Lantern",
     "description": "You packed an extra flashlight. It felt like superstition.",
-    "cost": 20,
+    "cost": 15,
     "destinyWeight": 1,
     "effect": { "type": "startingStat", "stat": "light", "amount": 2 }
   },
@@ -27,7 +27,7 @@
     "id": "extra-heat",
     "name": "Thermal Cache",
     "description": "A pocket of warmth saved for the worlds that can freeze your hands.",
-    "cost": 20,
+    "cost": 15,
     "destinyWeight": 1,
     "effect": { "type": "startingStat", "stat": "heat", "amount": 2 }
   },
@@ -35,7 +35,7 @@
     "id": "extra-brace",
     "name": "Braced",
     "description": "Shoulders back. Ready for something to grab.",
-    "cost": 20,
+    "cost": 15,
     "destinyWeight": 1,
     "effect": { "type": "startingStat", "stat": "brace", "amount": 2 }
   },
@@ -43,7 +43,7 @@
     "id": "hand-size-per-act",
     "name": "Adaptable",
     "description": "Every situation teaches you something. You start learning faster.",
-    "cost": 35,
+    "cost": 40,
     "destinyWeight": 2,
     "effect": { "type": "handSizeBonus", "amountPerAct": 1 }
   },
@@ -59,7 +59,7 @@
     "id": "rarity-bonus",
     "name": "Born Lucky",
     "description": "Improves the odds of getting better random rewards.",
-    "cost": 50,
+    "cost": 40,
     "destinyWeight": 2,
     "effect": { "type": "rarityBonus", "amount": 10 }
   },
@@ -67,7 +67,7 @@
     "id": "min-light",
     "name": "Fog Signal",
     "description": "There is always a little light left. You make sure of it.",
-    "cost": 35,
+    "cost": 30,
     "destinyWeight": 2,
     "effect": { "type": "minResourcePerTurn", "resource": "light", "floor": 2 }
   },
@@ -75,7 +75,7 @@
     "id": "min-energy",
     "name": "Steady Pulse",
     "description": "Your hands stop shaking. You always find a little more to give.",
-    "cost": 40,
+    "cost": 30,
     "destinyWeight": 2,
     "effect": { "type": "minResourcePerTurn", "resource": "energy", "floor": 2 }
   },
@@ -83,7 +83,7 @@
     "id": "starter-contractor",
     "name": "Builder's Instinct",
     "description": "A muscle memory from a different life. More Barricades, No Panic, Less Sprint.",
-    "cost": 50,
+    "cost": 40,
     "destinyWeight": 0,
     "effect": { "type": "starterDeckOverride", "starterDeckId": "contractor" }
   },
@@ -91,7 +91,7 @@
     "id": "starter-footballer",
     "name": "Athlete's Instinct",
     "description": "A muscle memory from a different life. More Sprint, No Barricades.",
-    "cost": 50,
+    "cost": 40,
     "destinyWeight": 0,
     "effect": { "type": "starterDeckOverride", "starterDeckId": "footballer" }
   },
@@ -99,7 +99,7 @@
     "id": "starter-survivalist",
     "name": "Secret Prepper",
     "description": "A muscle memory from a different life. Zombie movies are field guides.",
-    "cost": 60,
+    "cost": 50,
     "destinyWeight": 0,
     "effect": { "type": "starterDeckOverride", "starterDeckId": "survivalist" },
     "requiresFeat": "first-big-box"
@@ -117,7 +117,7 @@
     "id": "starter-gardener",
     "name": "Gardener",
     "description": "A muscle memory from a different life. Always had a green thumb.",
-    "cost": 60,
+    "cost": 50,
     "destinyWeight": 0,
     "effect": { "type": "starterDeckOverride", "starterDeckId": "gardener" },
     "requiresFeat": "first-overgrown-mall"
@@ -126,7 +126,7 @@
     "id": "starter-stunt-driver",
     "name": "Stunt Driver",
     "description": "A muscle memory from a different life. Just another speeding ticket.",
-    "cost": 60,
+    "cost": 50,
     "destinyWeight": 0,
     "effect": { "type": "starterDeckOverride", "starterDeckId": "stunt-driver" },
     "requiresFeat": "first-highway-volcano"
@@ -135,7 +135,7 @@
     "id": "starter-harvester",
     "name": "Harvester of the Ember Orchard",
     "description": "A muscle memory from a different life. Harvester of the Ember Orchard.",
-    "cost": 80,
+    "cost": 70,
     "destinyWeight": 0,
     "effect": { "type": "starterDeckOverride", "starterDeckId": "harvester" },
     "requiresFeat": "first-the-ember-orcharc"
@@ -144,7 +144,7 @@
     "id": "starter-archivist",
     "name": "Tidal Archivist",
     "description": "A muscle memory from a different life. Archivist of the Tidal Archive.",
-    "cost": 80,
+    "cost": 70,
     "destinyWeight": 0,
     "effect": { "type": "starterDeckOverride", "starterDeckId": "archivist" },
     "requiresFeat": "first-the-tidal-archive"
@@ -153,7 +153,7 @@
     "id": "starter-surveyor",
     "name": "Giant Surveyor",
     "description": "A muscle memory from a different life. Surveyor of a Sleeping Giant.",
-    "cost": 80,
+    "cost": 70,
     "destinyWeight": 0,
     "effect": { "type": "starterDeckOverride", "starterDeckId": "surveyor" },
     "requiresFeat": "first-city-of-sleeping-giants"
@@ -272,7 +272,7 @@
     "id": "first-sprint-free",
     "name": "Burst of Speed",
     "description": "The first Sprint you play each turn costs 0 energy, but isn't as effective.",
-    "cost": 30,
+    "cost": 25,
     "destinyWeight": 1,
     "effect": {
       "type": "playerCardModifier",
@@ -295,7 +295,7 @@
     "id": "other-sprint-free",
     "name": "Run in Terror",
     "description": "All Sprint cards after the first costs 0 energy, but also add a Panic to your deck.",
-    "cost": 30,
+    "cost": 25,
     "destinyWeight": 1,
     "effect": {
       "type": "playerCardModifier",
@@ -318,7 +318,7 @@
     "id": "panic-response",
     "name": "Fight or Flight",
     "description": "Panic can either deal 2 progress to every world card in hand or return return any number of world cards to the deck, but still draws a world card and now exhausts.",
-    "cost": 35,
+    "cost": 30,
     "destinyWeight": 2,
     "effect": {
       "type": "playerCardModifier",
@@ -386,7 +386,7 @@
     "id": "second-explore-push",
     "name": "Determined Explorer",
     "description": "The second Explore you play each turn deals 1 progress to every world card in hand.",
-    "cost": 30,
+    "cost": 25,
     "destinyWeight": 1,
     "effect": {
       "type": "playerCardModifier",
