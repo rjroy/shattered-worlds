@@ -64,7 +64,7 @@
   },
   {
     "id": "first-highway-volcano",
-    "name": "First Lava Rush",
+    "name": "First Driving Lesson",
     "description": "Win your first run of the Highway Eruption.",
     "conditions": [{ "statId": "world.highway-volcano.wins", "operator": "gte", "value": 1 }],
     "reward": { "items": [{ "type": "memoryFragments", "amount": 5 }] }
@@ -78,28 +78,28 @@
   },
   {
     "id": "highway-volcano-tier-3",
-    "name": "Driving on the Shoulder",
+    "name": "Toll Road",
     "description": "Win the Highway Eruption 10 or more times.",
     "conditions": [{ "statId": "world.highway-volcano.wins", "operator": "gte", "value": 10 }],
     "reward": { "items": [{ "type": "memoryFragments", "amount": 20 }] }
   },
   {
     "id": "first-overgrown-mall",
-    "name": "First Mall Rat",
+    "name": "First Mall Visit",
     "description": "Win your first run of the Mall Reclaimnation.",
     "conditions": [{ "statId": "world.overgrown-mall.wins", "operator": "gte", "value": 1 }],
     "reward": { "items": [{ "type": "memoryFragments", "amount": 10 }] }
   },
   {
     "id": "overgrown-mall-tier-2",
-    "name": "Sad Mall Visitor",
+    "name": "Mall Rat",
     "description": "Win the Mall Reclaimnation 5 or more times.",
     "conditions": [{ "statId": "world.overgrown-mall.wins", "operator": "gte", "value": 5 }],
     "reward": { "items": [{ "type": "memoryFragments", "amount": 20 }] }
   },
   {
     "id": "overgrown-mall-tier-3",
-    "name": "Sad Mall Owner",
+    "name": "Mall Owner",
     "description": "Win the Mall Reclaimnation 10 or more times.",
     "conditions": [{ "statId": "world.overgrown-mall.wins", "operator": "gte", "value": 10 }],
     "reward": { "items": [{ "type": "memoryFragments", "amount": 40 }] }
@@ -127,7 +127,7 @@
   },
   {
     "id": "first-whiteout-parking-garage",
-    "name": "First Thaw",
+    "name": "First Floor",
     "description": "Win your first run of the Whiteout Parking Garage.",
     "conditions": [
       { "statId": "world.whiteout-parking-garage.wins", "operator": "gte", "value": 1 }
@@ -182,14 +182,14 @@
   },
   {
     "id": "the-ember-orchard-tier-2",
-    "name": "Gardener",
+    "name": "Harvest Foreman",
     "description": "Win the The Ember Orchard 5 or more times.",
     "conditions": [{ "statId": "world.the-ember-orchard.wins", "operator": "gte", "value": 5 }],
     "reward": { "items": [{ "type": "memoryFragments", "amount": 30 }] }
   },
   {
     "id": "the-ember-orchard-tier-3",
-    "name": "Farmer",
+    "name": "Harvestmaster",
     "description": "Win the The Ember Orchard 10 or more times.",
     "conditions": [{ "statId": "world.the-ember-orchard.wins", "operator": "gte", "value": 10 }],
     "reward": { "items": [{ "type": "memoryFragments", "amount": 60 }] }
@@ -230,7 +230,7 @@
   },
   {
     "id": "eden-prime-tier-2",
-    "name": "Sour Taste",
+    "name": "Sour Fruit",
     "description": "Win the Eden Prime 5 or more times.",
     "conditions": [{ "statId": "world.eden-prime.wins", "operator": "gte", "value": 5 }],
     "reward": { "items": [{ "type": "memoryFragments", "amount": 40 }] }
@@ -321,7 +321,7 @@
   },
   {
     "id": "answers-tier-3",
-    "name": "Best Rate in Town",
+    "name": "Pawn Broker",
     "description": "Win Answers 10 or more times.",
     "conditions": [{ "statId": "world.answers.wins", "operator": "gte", "value": 10 }],
     "reward": { "items": [{ "type": "memoryFragments", "amount": 100 }] }
@@ -335,14 +335,14 @@
   },
   {
     "id": "the-beginning-tier-2",
-    "name": "Steady Ground",
+    "name": "Zen Seeker",
     "description": "Win The Beginning 5 or more times.",
     "conditions": [{ "statId": "world.the-beginning.wins", "operator": "gte", "value": 5 }],
     "reward": { "items": [{ "type": "memoryFragments", "amount": 50 }] }
   },
   {
     "id": "the-beginning-tier-3",
-    "name": "Whole Again",
+    "name": "Zen Master",
     "description": "Win The Beginning 10 or more times.",
     "conditions": [{ "statId": "world.the-beginning.wins", "operator": "gte", "value": 10 }],
     "reward": { "items": [{ "type": "memoryFragments", "amount": 100 }] }
