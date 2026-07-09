@@ -433,7 +433,7 @@ export class ChronicleScene extends Phaser.Scene {
         }
         const fragDelta = totalFragments(a.reward) - totalFragments(b.reward);
         if (fragDelta !== 0) return fragDelta;
-        return a.name < b.name ? -1 : a.name > b.name ? 1 : 0;
+        return a.name.localeCompare(b.name);
       });
       const visibleFeats = orderedFeats.slice(
         this.featsScrollOffset,
