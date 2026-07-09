@@ -658,13 +658,16 @@ export class TableScene extends Phaser.Scene {
     if (lhs.kind === "player") {
       if (rhs.kind !== "player") return -1;
 
-      const energyDelta = lhs.energyCost - rhs.energyCost;
+      const lhsSnapshot = effectivePlayerCard(lhs, this.game_.state);
+      const rhsSnapshot = effectivePlayerCard(rhs, this.game_.state);
+
+      const energyDelta = lhsSnapshot.energyCost - rhsSnapshot.energyCost;
       if (0 != energyDelta) return energyDelta;
 
-      const effectDelta = lhs.effect.kind.localeCompare(rhs.effect.kind);
+      const effectDelta = lhsSnapshot.effect.kind.localeCompare(rhsSnapshot.effect.kind);
       if (0 != effectDelta) return effectDelta;
 
-      return lhs.name.localeCompare(rhs.name);
+      return lhsSnapshot.name.localeCompare(rhsSnapshot.name);
     } else if (rhs.kind === "world") {
       if (rhs.kind !== "world") return 1;
 
