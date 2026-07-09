@@ -51,8 +51,8 @@
     "id": "keyword-bonus",
     "name": "Sharpened Instincts",
     "description": "You can always find the weak points.",
-    "cost": 20,
-    "destinyWeight": 2,
+    "cost": 50,
+    "destinyWeight": 0,
     "effect": { "type": "keywordDamageBonus", "amount": 1 }
   },
   {
@@ -83,7 +83,7 @@
     "id": "starter-contractor",
     "name": "Builder's Instinct",
     "description": "A muscle memory from a different life. More Barricades, No Panic, Less Sprint.",
-    "cost": 40,
+    "cost": 50,
     "destinyWeight": 0,
     "effect": { "type": "starterDeckOverride", "starterDeckId": "contractor" }
   },
@@ -91,7 +91,7 @@
     "id": "starter-footballer",
     "name": "Athlete's Instinct",
     "description": "A muscle memory from a different life. More Sprint, No Barricades.",
-    "cost": 40,
+    "cost": 50,
     "destinyWeight": 0,
     "effect": { "type": "starterDeckOverride", "starterDeckId": "footballer" }
   },
@@ -99,7 +99,7 @@
     "id": "starter-survivalist",
     "name": "Secret Prepper",
     "description": "A muscle memory from a different life. Zombie movies are field guides.",
-    "cost": 50,
+    "cost": 60,
     "destinyWeight": 0,
     "effect": { "type": "starterDeckOverride", "starterDeckId": "survivalist" },
     "requiresFeat": "first-big-box"
@@ -108,7 +108,7 @@
     "id": "starter-fireman",
     "name": "First Responder",
     "description": "A muscle memory from a different life. Trained for disaster.",
-    "cost": 60,
+    "cost": 70,
     "destinyWeight": 0,
     "effect": { "type": "starterDeckOverride", "starterDeckId": "fireman" },
     "requiresFeat": "first-bird-building"
@@ -117,7 +117,7 @@
     "id": "starter-gardener",
     "name": "Gardener",
     "description": "A muscle memory from a different life. Always had a green thumb.",
-    "cost": 50,
+    "cost": 60,
     "destinyWeight": 0,
     "effect": { "type": "starterDeckOverride", "starterDeckId": "gardener" },
     "requiresFeat": "first-overgrown-mall"
@@ -126,7 +126,7 @@
     "id": "starter-stunt-driver",
     "name": "Stunt Driver",
     "description": "A muscle memory from a different life. Just another speeding ticket.",
-    "cost": 50,
+    "cost": 60,
     "destinyWeight": 0,
     "effect": { "type": "starterDeckOverride", "starterDeckId": "stunt-driver" },
     "requiresFeat": "first-highway-volcano"
@@ -135,7 +135,7 @@
     "id": "starter-harvester",
     "name": "Harvester of the Ember Orchard",
     "description": "A muscle memory from a different life. Harvester of the Ember Orchard.",
-    "cost": 70,
+    "cost": 80,
     "destinyWeight": 0,
     "effect": { "type": "starterDeckOverride", "starterDeckId": "harvester" },
     "requiresFeat": "first-the-ember-orcharc"
@@ -144,7 +144,7 @@
     "id": "starter-archivist",
     "name": "Tidal Archivist",
     "description": "A muscle memory from a different life. Archivist of the Tidal Archive.",
-    "cost": 70,
+    "cost": 80,
     "destinyWeight": 0,
     "effect": { "type": "starterDeckOverride", "starterDeckId": "archivist" },
     "requiresFeat": "first-the-tidal-archive"
@@ -153,7 +153,7 @@
     "id": "starter-surveyor",
     "name": "Giant Surveyor",
     "description": "A muscle memory from a different life. Surveyor of a Sleeping Giant.",
-    "cost": 70,
+    "cost": 80,
     "destinyWeight": 0,
     "effect": { "type": "starterDeckOverride", "starterDeckId": "surveyor" },
     "requiresFeat": "first-city-of-sleeping-giants"
@@ -272,7 +272,7 @@
     "id": "first-sprint-free",
     "name": "Burst of Speed",
     "description": "The first Sprint you play each turn costs 0 energy, but isn't as effective.",
-    "cost": 25,
+    "cost": 50,
     "destinyWeight": 1,
     "effect": {
       "type": "playerCardModifier",
@@ -295,7 +295,7 @@
     "id": "other-sprint-free",
     "name": "Run in Terror",
     "description": "All Sprint cards after the first costs 0 energy, but also add a Panic to your deck.",
-    "cost": 25,
+    "cost": 50,
     "destinyWeight": 1,
     "effect": {
       "type": "playerCardModifier",
@@ -318,7 +318,7 @@
     "id": "panic-response",
     "name": "Fight or Flight",
     "description": "Panic can either deal 2 progress to every world card in hand or return return any number of world cards to the deck, but still draws a world card and now exhausts.",
-    "cost": 30,
+    "cost": 50,
     "destinyWeight": 2,
     "effect": {
       "type": "playerCardModifier",
@@ -353,7 +353,7 @@
     "id": "strong-barricades",
     "name": "Strong Barricades",
     "description": "Barricades apply progress to every world card and can return more cards, but have increased cost.",
-    "cost": 30,
+    "cost": 50,
     "destinyWeight": 2,
     "effect": {
       "type": "playerCardModifier",
@@ -386,7 +386,7 @@
     "id": "second-explore-push",
     "name": "Determined Explorer",
     "description": "The second Explore you play each turn deals 1 progress to every world card in hand.",
-    "cost": 25,
+    "cost": 50,
     "destinyWeight": 1,
     "effect": {
       "type": "playerCardModifier",
@@ -403,7 +403,7 @@
     "id": "adrenaline-thoughts",
     "name": "Quick Thinking",
     "description": "Adrenaline now becomes Quick Thinking. Allowing more control of the draw.",
-    "cost": 30,
+    "cost": 50,
     "destinyWeight": 2,
     "effect": {
       "type": "playerCardModifier",
