@@ -115,13 +115,13 @@ describe("computeUnlockSpend", () => {
   it("sums known purchased unlock costs and ignores unknown ids", () => {
     expect(
       computeUnlockSpend(unlocks(["extra-hp", "extra-energy", "unknown"]), UNLOCK_CATALOG),
-    ).toBe(35);
+    ).toBe(30);
   });
 });
 
 describe("computeSpendableBalance", () => {
   it("derives fragments earned minus unlock spend", () => {
-    expect(computeSpendableBalance(feats50, unlocks(["extra-hp"]))).toBe(25);
+    expect(computeSpendableBalance(feats50, unlocks(["extra-hp"]))).toBe(20);
   });
 });
 
@@ -146,8 +146,8 @@ describe("buildRunModifiers", () => {
   });
 
   it("builds floors, hand-size, and keyword modifiers from active ids only", () => {
-    // Weight: extra-hp(1) + min-energy(2) + hand-size-per-act(2) + keyword-bonus(2)
-    // = 7 -> floor(7 / 2) = 3 charges at WEIGHT_PER_CHARGE = 2 (not this
+    // Weight: extra-hp(1) + min-energy(2) + hand-size-per-act(2) + keyword-bonus(0)
+    // = 5 -> floor(5 / 2) = 2 charges at WEIGHT_PER_CHARGE = 2 (not this
     // test's focus, but buildRunModifiers derives it from every activated id
     // regardless of effect type, so it isn't 0 here).
     expect(
@@ -158,7 +158,7 @@ describe("buildRunModifiers", () => {
     ).toEqual({
       ...DEFAULT_RUN_MODIFIERS,
       extraStartHp: 3,
-      extraStartKeywordGuard: 3,
+      extraStartKeywordGuard: 2,
       handSizeBonusPerAct: 1,
       minEnergyPerTurn: 2,
       rarityBonus: 0,
@@ -236,7 +236,7 @@ describe("buildRunModifiers", () => {
   it("does not apply purchased card-modifier unlocks unless their ids are active", () => {
     const profile = unlocks(["first-sprint-free"], []);
 
-    expect(computeUnlockSpend(profile, UNLOCK_CATALOG)).toBe(30);
+    expect(computeUnlockSpend(profile, UNLOCK_CATALOG)).toBe(50);
     expect(buildRunModifiers(profile.activated, UNLOCK_CATALOG).playerCardModifiers).toEqual([]);
   });
 
@@ -341,12 +341,13 @@ describe("isWorldUnlocked", () => {
 
 describe("Destiny budget helpers", () => {
   it("sums active weight and ignores unknown ids", () => {
+    // extra-hp(1) + keyword-bonus(0) + unknown(0) = 1
     expect(
       activeWeight(
         { activated: ["extra-hp", "keyword-bonus", "unknown"] } as unknown as UnlocksProfile,
         UNLOCK_CATALOG,
       ),
-    ).toBe(3);
+    ).toBe(1);
   });
 
   it("counts world unlocks as zero active weight", () => {
@@ -375,14 +376,14 @@ describe("Destiny budget helpers", () => {
     expect(
       canActivate(
         actReward,
-        { activated: ["keyword-bonus", "min-energy"] } as unknown as UnlocksProfile,
+        { activated: ["hand-size-per-act", "min-energy"] } as unknown as UnlocksProfile,
         UNLOCK_CATALOG,
       ),
     ).toBe(false);
     expect(
       canActivate(
         starter,
-        { activated: ["keyword-bonus", "min-energy"] } as unknown as UnlocksProfile,
+        { activated: ["hand-size-per-act", "min-energy"] } as unknown as UnlocksProfile,
         UNLOCK_CATALOG,
       ),
     ).toBe(true);

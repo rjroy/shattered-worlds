@@ -64,7 +64,7 @@
   },
   {
     "id": "first-highway-volcano",
-    "name": "First Lava Rush",
+    "name": "First Driving Lesson",
     "description": "Win your first run of the Highway Eruption.",
     "conditions": [{ "statId": "world.highway-volcano.wins", "operator": "gte", "value": 1 }],
     "reward": { "items": [{ "type": "memoryFragments", "amount": 5 }] }
@@ -78,28 +78,28 @@
   },
   {
     "id": "highway-volcano-tier-3",
-    "name": "Driving on the Shoulder",
+    "name": "Toll Road",
     "description": "Win the Highway Eruption 10 or more times.",
     "conditions": [{ "statId": "world.highway-volcano.wins", "operator": "gte", "value": 10 }],
     "reward": { "items": [{ "type": "memoryFragments", "amount": 20 }] }
   },
   {
     "id": "first-overgrown-mall",
-    "name": "First Mall Rat",
+    "name": "First Mall Visit",
     "description": "Win your first run of the Mall Reclaimnation.",
     "conditions": [{ "statId": "world.overgrown-mall.wins", "operator": "gte", "value": 1 }],
     "reward": { "items": [{ "type": "memoryFragments", "amount": 10 }] }
   },
   {
     "id": "overgrown-mall-tier-2",
-    "name": "Sad Mall Visitor",
+    "name": "Mall Rat",
     "description": "Win the Mall Reclaimnation 5 or more times.",
     "conditions": [{ "statId": "world.overgrown-mall.wins", "operator": "gte", "value": 5 }],
     "reward": { "items": [{ "type": "memoryFragments", "amount": 20 }] }
   },
   {
     "id": "overgrown-mall-tier-3",
-    "name": "Sad Mall Owner",
+    "name": "Mall Owner",
     "description": "Win the Mall Reclaimnation 10 or more times.",
     "conditions": [{ "statId": "world.overgrown-mall.wins", "operator": "gte", "value": 10 }],
     "reward": { "items": [{ "type": "memoryFragments", "amount": 40 }] }
@@ -127,7 +127,7 @@
   },
   {
     "id": "first-whiteout-parking-garage",
-    "name": "First Thaw",
+    "name": "First Floor",
     "description": "Win your first run of the Whiteout Parking Garage.",
     "conditions": [
       { "statId": "world.whiteout-parking-garage.wins", "operator": "gte", "value": 1 }
@@ -182,14 +182,14 @@
   },
   {
     "id": "the-ember-orchard-tier-2",
-    "name": "Gardener",
+    "name": "Harvest Foreman",
     "description": "Win the The Ember Orchard 5 or more times.",
     "conditions": [{ "statId": "world.the-ember-orchard.wins", "operator": "gte", "value": 5 }],
     "reward": { "items": [{ "type": "memoryFragments", "amount": 30 }] }
   },
   {
     "id": "the-ember-orchard-tier-3",
-    "name": "Farmer",
+    "name": "Harvestmaster",
     "description": "Win the The Ember Orchard 10 or more times.",
     "conditions": [{ "statId": "world.the-ember-orchard.wins", "operator": "gte", "value": 10 }],
     "reward": { "items": [{ "type": "memoryFragments", "amount": 60 }] }
@@ -230,7 +230,7 @@
   },
   {
     "id": "eden-prime-tier-2",
-    "name": "Sour Taste",
+    "name": "Sour Fruit",
     "description": "Win the Eden Prime 5 or more times.",
     "conditions": [{ "statId": "world.eden-prime.wins", "operator": "gte", "value": 5 }],
     "reward": { "items": [{ "type": "memoryFragments", "amount": 40 }] }
@@ -321,7 +321,7 @@
   },
   {
     "id": "answers-tier-3",
-    "name": "Best Rate in Town",
+    "name": "Pawn Broker",
     "description": "Win Answers 10 or more times.",
     "conditions": [{ "statId": "world.answers.wins", "operator": "gte", "value": 10 }],
     "reward": { "items": [{ "type": "memoryFragments", "amount": 100 }] }
@@ -335,14 +335,14 @@
   },
   {
     "id": "the-beginning-tier-2",
-    "name": "Steady Ground",
+    "name": "Zen Seeker",
     "description": "Win The Beginning 5 or more times.",
     "conditions": [{ "statId": "world.the-beginning.wins", "operator": "gte", "value": 5 }],
     "reward": { "items": [{ "type": "memoryFragments", "amount": 50 }] }
   },
   {
     "id": "the-beginning-tier-3",
-    "name": "Whole Again",
+    "name": "Zen Master",
     "description": "Win The Beginning 10 or more times.",
     "conditions": [{ "statId": "world.the-beginning.wins", "operator": "gte", "value": 10 }],
     "reward": { "items": [{ "type": "memoryFragments", "amount": 100 }] }
@@ -355,7 +355,7 @@
       { "statId": "outcome", "operator": "is", "value": "won" },
       { "statId": "turns", "operator": "lt", "value": 10 }
     ],
-    "reward": { "items": [{ "type": "memoryFragments", "amount": 15 }] }
+    "reward": { "items": [{ "type": "memoryFragments", "amount": 10 }] }
   },
   {
     "id": "instant-clear",
@@ -365,7 +365,7 @@
       { "statId": "outcome", "operator": "is", "value": "won" },
       { "statId": "turns", "operator": "lt", "value": 5 }
     ],
-    "reward": { "items": [{ "type": "memoryFragments", "amount": 30 }] }
+    "reward": { "items": [{ "type": "memoryFragments", "amount": 20 }] }
   },
   {
     "id": "iron-will",
@@ -375,7 +375,7 @@
       { "statId": "outcome", "operator": "is", "value": "won" },
       { "statId": "finalHp", "operator": "gte", "value": 20 }
     ],
-    "reward": { "items": [{ "type": "memoryFragments", "amount": 15 }] }
+    "reward": { "items": [{ "type": "memoryFragments", "amount": 10 }] }
   },
   {
     "id": "last-breath",
@@ -385,7 +385,7 @@
       { "statId": "outcome", "operator": "is", "value": "won" },
       { "statId": "finalHp", "operator": "lte", "value": 3 }
     ],
-    "reward": { "items": [{ "type": "memoryFragments", "amount": 25 }] }
+    "reward": { "items": [{ "type": "memoryFragments", "amount": 20 }] }
   },
   {
     "id": "no-healing",
@@ -472,7 +472,7 @@
     "conditions": [
       { "statId": "witness.Gripping Talon.resolvedCount", "operator": "gte", "value": 25 }
     ],
-    "reward": { "items": [{ "type": "memoryFragments", "amount": 40 }] }
+    "reward": { "items": [{ "type": "memoryFragments", "amount": 30 }] }
   },
   {
     "id": "lava-slayer",
@@ -497,7 +497,7 @@
     "conditions": [
       { "statId": "witness.Something in the Mist.resolvedCount", "operator": "gte", "value": 25 }
     ],
-    "reward": { "items": [{ "type": "memoryFragments", "amount": 40 }] }
+    "reward": { "items": [{ "type": "memoryFragments", "amount": 30 }] }
   },
   {
     "id": "freeze-slayer",
@@ -506,7 +506,7 @@
     "conditions": [
       { "statId": "witness.The Garage Freezes Shut.resolvedCount", "operator": "gte", "value": 25 }
     ],
-    "reward": { "items": [{ "type": "memoryFragments", "amount": 40 }] }
+    "reward": { "items": [{ "type": "memoryFragments", "amount": 30 }] }
   },
   {
     "id": "giant-slayer",
@@ -515,7 +515,7 @@
     "conditions": [
       { "statId": "witness.The Giant Turns In Sleep.resolvedCount", "operator": "gte", "value": 25 }
     ],
-    "reward": { "items": [{ "type": "memoryFragments", "amount": 50 }] }
+    "reward": { "items": [{ "type": "memoryFragments", "amount": 40 }] }
   },
   {
     "id": "ember-slayer",
@@ -524,7 +524,7 @@
     "conditions": [
       { "statId": "witness.Ground Constellation.resolvedCount", "operator": "gte", "value": 25 }
     ],
-    "reward": { "items": [{ "type": "memoryFragments", "amount": 50 }] }
+    "reward": { "items": [{ "type": "memoryFragments", "amount": 40 }] }
   },
   {
     "id": "tidal-slayer",
@@ -533,7 +533,7 @@
     "conditions": [
       { "statId": "witness.The Same Footprint.resolvedCount", "operator": "gte", "value": 25 }
     ],
-    "reward": { "items": [{ "type": "memoryFragments", "amount": 50 }] }
+    "reward": { "items": [{ "type": "memoryFragments", "amount": 40 }] }
   },
   {
     "id": "eden-slayer",
@@ -542,7 +542,7 @@
     "conditions": [
       { "statId": "witness.Paradise Runs.resolvedCount", "operator": "gte", "value": 25 }
     ],
-    "reward": { "items": [{ "type": "memoryFragments", "amount": 60 }] }
+    "reward": { "items": [{ "type": "memoryFragments", "amount": 50 }] }
   },
   {
     "id": "derelict-slayer",
@@ -551,7 +551,7 @@
     "conditions": [
       { "statId": "witness.The Order Arrives.resolvedCount", "operator": "gte", "value": 25 }
     ],
-    "reward": { "items": [{ "type": "memoryFragments", "amount": 60 }] }
+    "reward": { "items": [{ "type": "memoryFragments", "amount": 50 }] }
   },
   {
     "id": "transit-slayer",
@@ -560,14 +560,14 @@
     "conditions": [
       { "statId": "witness.Entity Detected.resolvedCount", "operator": "gte", "value": 25 }
     ],
-    "reward": { "items": [{ "type": "memoryFragments", "amount": 60 }] }
+    "reward": { "items": [{ "type": "memoryFragments", "amount": 50 }] }
   },
   {
     "id": "lost-in-the-void",
     "name": "Lost in the Void",
     "description": "Complete 10 runs across any world.",
     "conditions": [{ "statId": "lifetime.runs", "operator": "gte", "value": 10 }],
-    "reward": { "items": [{ "type": "memoryFragments", "amount": 20 }] }
+    "reward": { "items": [{ "type": "memoryFragments", "amount": 10 }] }
   },
   {
     "id": "mapping-the-void",
@@ -581,35 +581,35 @@
     "name": "Understanding the Void",
     "description": "Complete 50 runs across any world.",
     "conditions": [{ "statId": "lifetime.runs", "operator": "gte", "value": 50 }],
-    "reward": { "items": [{ "type": "memoryFragments", "amount": 20 }] }
+    "reward": { "items": [{ "type": "memoryFragments", "amount": 40 }] }
   },
   {
     "id": "one-with-the-void",
     "name": "One with the Void",
     "description": "Complete 100 runs across any world.",
     "conditions": [{ "statId": "lifetime.runs", "operator": "gte", "value": 100 }],
-    "reward": { "items": [{ "type": "memoryFragments", "amount": 40 }] }
+    "reward": { "items": [{ "type": "memoryFragments", "amount": 60 }] }
   },
   {
     "id": "seen-by-the-destiny",
     "name": "Seen by the Destiny",
     "description": "Win 5 runs across any world.",
     "conditions": [{ "statId": "lifetime.wins", "operator": "gte", "value": 5 }],
-    "reward": { "items": [{ "type": "memoryFragments", "amount": 25 }] }
+    "reward": { "items": [{ "type": "memoryFragments", "amount": 20 }] }
   },
   {
     "id": "hunted",
     "name": "Hunted",
     "description": "Win 10 runs across any world.",
     "conditions": [{ "statId": "lifetime.wins", "operator": "gte", "value": 10 }],
-    "reward": { "items": [{ "type": "memoryFragments", "amount": 25 }] }
+    "reward": { "items": [{ "type": "memoryFragments", "amount": 30 }] }
   },
   {
     "id": "escapist",
     "name": "Escapist",
     "description": "Win 25 runs across any world.",
     "conditions": [{ "statId": "lifetime.wins", "operator": "gte", "value": 25 }],
-    "reward": { "items": [{ "type": "memoryFragments", "amount": 25 }] }
+    "reward": { "items": [{ "type": "memoryFragments", "amount": 40 }] }
   },
   {
     "id": "world-hopper",
@@ -679,28 +679,28 @@
     "name": "Personal Bunker",
     "description": "Win 10 runs with the Survivalist's starter deck.",
     "conditions": [{ "statId": "starter.survivalist.wins", "operator": "gte", "value": 10 }],
-    "reward": { "items": [{ "type": "memoryFragments", "amount": 30 }] }
+    "reward": { "items": [{ "type": "memoryFragments", "amount": 40 }] }
   },
   {
     "id": "first-fireman",
     "name": "First Responder",
     "description": "Win your first run with the Fireman's starter deck.",
     "conditions": [{ "statId": "starter.fireman.wins", "operator": "gte", "value": 1 }],
-    "reward": { "items": [{ "type": "memoryFragments", "amount": 10 }] }
+    "reward": { "items": [{ "type": "memoryFragments", "amount": 15 }] }
   },
   {
     "id": "fireman-tier-2",
     "name": "Engine Driver",
     "description": "Win 5 runs with the Fireman's starter deck.",
     "conditions": [{ "statId": "starter.fireman.wins", "operator": "gte", "value": 5 }],
-    "reward": { "items": [{ "type": "memoryFragments", "amount": 20 }] }
+    "reward": { "items": [{ "type": "memoryFragments", "amount": 30 }] }
   },
   {
     "id": "fireman-tier-3",
     "name": "Section Cheif",
     "description": "Win 10 runs with the Fireman's starter deck.",
     "conditions": [{ "statId": "starter.fireman.wins", "operator": "gte", "value": 10 }],
-    "reward": { "items": [{ "type": "memoryFragments", "amount": 30 }] }
+    "reward": { "items": [{ "type": "memoryFragments", "amount": 60 }] }
   },
   {
     "id": "first-gardener",
@@ -721,7 +721,7 @@
     "name": "Botanist",
     "description": "Win 10 runs with the Gardener's starter deck.",
     "conditions": [{ "statId": "starter.gardener.wins", "operator": "gte", "value": 10 }],
-    "reward": { "items": [{ "type": "memoryFragments", "amount": 30 }] }
+    "reward": { "items": [{ "type": "memoryFragments", "amount": 40 }] }
   },
   {
     "id": "first-stunt-driver",
@@ -742,69 +742,69 @@
     "name": "Road Warrior",
     "description": "Win 10 runs with the Stunt Driver's starter deck.",
     "conditions": [{ "statId": "starter.stunt-driver.wins", "operator": "gte", "value": 10 }],
-    "reward": { "items": [{ "type": "memoryFragments", "amount": 30 }] }
+    "reward": { "items": [{ "type": "memoryFragments", "amount": 40 }] }
   },
   {
     "id": "first-harvester",
     "name": "First Picking",
     "description": "Win your first run with the Harvester's starter deck.",
     "conditions": [{ "statId": "starter.harvester.wins", "operator": "gte", "value": 1 }],
-    "reward": { "items": [{ "type": "memoryFragments", "amount": 15 }] }
+    "reward": { "items": [{ "type": "memoryFragments", "amount": 20 }] }
   },
   {
     "id": "harvester-tier-2",
     "name": "Orchard Regular",
     "description": "Win 5 runs with the Harvester's starter deck.",
     "conditions": [{ "statId": "starter.harvester.wins", "operator": "gte", "value": 5 }],
-    "reward": { "items": [{ "type": "memoryFragments", "amount": 30 }] }
+    "reward": { "items": [{ "type": "memoryFragments", "amount": 40 }] }
   },
   {
     "id": "harvester-tier-3",
     "name": "Orchard Keeper",
     "description": "Win 10 runs with the Harvester's starter deck.",
     "conditions": [{ "statId": "starter.harvester.wins", "operator": "gte", "value": 10 }],
-    "reward": { "items": [{ "type": "memoryFragments", "amount": 60 }] }
+    "reward": { "items": [{ "type": "memoryFragments", "amount": 80 }] }
   },
   {
     "id": "first-archivist",
     "name": "First Index",
     "description": "Win your first run with the Archivist's starter deck.",
     "conditions": [{ "statId": "starter.archivist.wins", "operator": "gte", "value": 1 }],
-    "reward": { "items": [{ "type": "memoryFragments", "amount": 15 }] }
+    "reward": { "items": [{ "type": "memoryFragments", "amount": 20 }] }
   },
   {
     "id": "archivist-tier-2",
     "name": "Dedicated Archivist",
     "description": "Win 5 runs with the Archivist's starter deck.",
     "conditions": [{ "statId": "starter.archivist.wins", "operator": "gte", "value": 5 }],
-    "reward": { "items": [{ "type": "memoryFragments", "amount": 30 }] }
+    "reward": { "items": [{ "type": "memoryFragments", "amount": 40 }] }
   },
   {
     "id": "archivist-tier-3",
     "name": "Master Archivist",
     "description": "Win 10 runs with the Archivist's starter deck.",
     "conditions": [{ "statId": "starter.archivist.wins", "operator": "gte", "value": 10 }],
-    "reward": { "items": [{ "type": "memoryFragments", "amount": 60 }] }
+    "reward": { "items": [{ "type": "memoryFragments", "amount": 80 }] }
   },
   {
     "id": "first-surveyor",
     "name": "First Survey",
     "description": "Win your first run with the Surveyor's starter deck.",
     "conditions": [{ "statId": "starter.surveyor.wins", "operator": "gte", "value": 1 }],
-    "reward": { "items": [{ "type": "memoryFragments", "amount": 15 }] }
+    "reward": { "items": [{ "type": "memoryFragments", "amount": 20 }] }
   },
   {
     "id": "surveyor-tier-2",
     "name": "Field Surveyor",
     "description": "Win 5 runs with the Surveyor's starter deck.",
     "conditions": [{ "statId": "starter.surveyor.wins", "operator": "gte", "value": 5 }],
-    "reward": { "items": [{ "type": "memoryFragments", "amount": 30 }] }
+    "reward": { "items": [{ "type": "memoryFragments", "amount": 40 }] }
   },
   {
     "id": "surveyor-tier-3",
     "name": "Chief Surveyor",
     "description": "Win 10 runs with the Surveyor's starter deck.",
     "conditions": [{ "statId": "starter.surveyor.wins", "operator": "gte", "value": 10 }],
-    "reward": { "items": [{ "type": "memoryFragments", "amount": 60 }] }
+    "reward": { "items": [{ "type": "memoryFragments", "amount": 80 }] }
   }
 ]

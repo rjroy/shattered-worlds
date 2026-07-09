@@ -562,8 +562,12 @@ export class TableScene extends Phaser.Scene {
     );
     this.worldRowOffset = worldWindow.offset;
     this.playerRowOffset = playerWindow.offset;
-    const visibleWorldCards = worldCards.slice(worldWindow.startIndex, worldWindow.endIndex);
-    const visiblePlayerCards = playerCards.slice(playerWindow.startIndex, playerWindow.endIndex);
+    const visibleWorldCards = worldCards
+      .slice(worldWindow.startIndex, worldWindow.endIndex)
+      .sort((lhs, rhs) => this.compareCardsForDisplay(lhs, rhs));
+    const visiblePlayerCards = playerCards
+      .slice(playerWindow.startIndex, playerWindow.endIndex)
+      .sort((lhs, rhs) => this.compareCardsForDisplay(lhs, rhs));
     this.updateRowNavigation("world", worldWindow, legalTargetIds);
     this.updateRowNavigation("player", playerWindow, legalTargetIds);
 
@@ -648,6 +652,51 @@ export class TableScene extends Phaser.Scene {
     }
 
     this.updateBoonChoiceView();
+  }
+
+  private compareCardsForDisplay(lhs: Card, rhs: Card): number {
+    if (lhs.kind === "player") {
+      if (rhs.kind !== "player") return -1;
+
+      const lhsSnapshot = effectivePlayerCard(lhs, this.game_.state);
+      const rhsSnapshot = effectivePlayerCard(rhs, this.game_.state);
+
+      const energyDelta = lhsSnapshot.energyCost - rhsSnapshot.energyCost;
+      if (0 != energyDelta) return energyDelta;
+
+      const effectDelta = lhsSnapshot.effect.kind.localeCompare(rhsSnapshot.effect.kind);
+      if (0 != effectDelta) return effectDelta;
+
+      return lhsSnapshot.name.localeCompare(rhsSnapshot.name);
+    } else if (rhs.kind === "world") {
+      if (rhs.kind !== "world") return 1;
+
+      const lhsProgress = this.game_.state.progress[lhs.id] ?? 0;
+      const rhsProgress = this.game_.state.progress[rhs.id] ?? 0;
+      const realProgressDelta = rhsProgress - lhsProgress;
+      if (0 != realProgressDelta) return realProgressDelta;
+
+      const lhsCost = effectiveWorldCardCost(lhs, this.game_.state);
+      const rhsCost = effectiveWorldCardCost(rhs, this.game_.state);
+      const progressDelta = lhsCost - rhsCost;
+      if (0 != progressDelta) return progressDelta;
+
+      const effectDelta = lhs.onEndOfTurn.kind.localeCompare(rhs.onEndOfTurn.kind);
+      if (0 != effectDelta) return effectDelta;
+
+      const clearDelta = lhs.onCleared.kind.localeCompare(rhs.onCleared.kind);
+      if (0 != clearDelta) return clearDelta;
+
+      const partialDelta = lhs.onPartialClear.kind.localeCompare(rhs.onPartialClear.kind);
+      if (0 != partialDelta) return partialDelta;
+
+      const discardDelta = lhs.onDiscarded.kind.localeCompare(rhs.onDiscarded.kind);
+      if (0 != discardDelta) return discardDelta;
+
+      return lhs.name.localeCompare(rhs.name);
+    }
+
+    return 0;
   }
 
   // null when no run has completed yet (lifetime stats are empty) — the

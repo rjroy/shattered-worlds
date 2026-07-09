@@ -60,9 +60,9 @@ describe("FEAT_CATALOG", () => {
 
 describe("computeFragmentBalance", () => {
   it("validation #15: sums memoryFragments for earned feats", () => {
-    // first-survivor = 10, swift-clear = 20 → total 30
+    // first-survivor = 5, swift-clear = 10 → total 15
     const profile = makeProfile(["first-survivor", "swift-clear"]);
-    expect(computeFragmentBalance(profile, FEAT_CATALOG)).toBe(20);
+    expect(computeFragmentBalance(profile, FEAT_CATALOG)).toBe(15);
   });
 
   it("validation #15: unknown featId contributes 0", () => {
