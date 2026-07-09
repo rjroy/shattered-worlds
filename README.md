@@ -26,14 +26,14 @@ Every decision in this project answers to seven principles. The short version:
 
 ## Status
 
-Playable vertical slice in active development. The project now has:
+Full campaign, in active balance and polish. The project now has:
 
 - A deterministic, seeded TypeScript rules engine with reducer-driven state and semantic game events.
-- A Phaser/Vite browser client with world select, table play, action previews, confirmations, help overlays, settings, music, and run summaries.
+- A Phaser/Vite browser client with world select, table play, action previews, confirmations, help overlays, settings, music, run summaries, a Destiny scene, and a Chronicle scene for run history.
 - Persistent local stats, Chronicle import/export, feat rewards, Fragments, and Destiny unlocks.
 - World access unlocks, starter deck unlocks, stat/resource unlocks, rarity modifiers, card modifiers, and temporary Fortune boon rewards.
-- Nine registered worlds: The Big Box, Last Day at the Office, Highway Eruption, Mall Reclaimnation, Fog Beach Party, Whiteout Parking Garage, The Tidal Archive, The Ember Orchard, and City of Sleeping Giants.
-- A headless sim runner for balance checks.
+- Fifteen registered worlds, from The Big Box through a three-part finale trilogy (Questions, Answers, The Beginning) that closes the Destiny arc. The finale deals with grief and loss; a one-time support interstitial precedes it.
+- A headless sim runner for balance checks, plus a per-world completeness checker (`bun run sim:complete`) used to audit win-rate health across the roster.
 - CI for lint, typecheck, tests, and production build.
 
 Live build: [GitHub Pages](https://rjroy.github.io/shattered-worlds/)
