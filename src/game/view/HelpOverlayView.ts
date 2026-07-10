@@ -6,10 +6,12 @@ import { WORLD_CONSTS } from "../../core/engine/world";
 import { worldDisplayManifest } from "../../data/worldDisplayManifest";
 import { worldHelpManifest } from "../../data/worldHelpManifest";
 import type { CardEffect } from "../../core/index";
+import { RARITY_ORDER } from "../../core/index";
 import { compileEffect, type IconId } from "../../core/view/effectGlyphs";
 import { EFFECT_ICON_TOOLTIPS } from "../../core/view/effectTooltips";
 import { EFFECT_ICON_TEXTURES } from "./effectLineLayout";
 import { addEffectLines } from "./effectLineView";
+import { rarityStyle } from "./rarity";
 import { addScreenBackdrop } from "./screenBackdrop";
 
 /** Full-screen help overlay with tab/page navigation, hidden by default. */
@@ -23,7 +25,15 @@ export class HelpOverlayView extends Phaser.GameObjects.Container {
     scene.add.existing(this);
     this.setDepth(1000);
     this.setVisible(false);
+    this.build(scene, worldId, totalActs);
+  }
 
+  // Assembles tabs/pages/panels. Split out from the constructor (mirrors
+  // SettingsOverlayView's documented rationale) so tests can drive the real
+  // build path against an Object.create'd instance without invoking the heavy
+  // Phaser Container base constructor — an ES6 class constructor cannot be
+  // re-applied with .call().
+  private build(scene: Phaser.Scene, worldId: string, totalActs: number): void {
     const backdrop = addScreenBackdrop(scene, {
       key: "screen-destiny",
       veilColor: 0x080a12,
@@ -438,13 +448,13 @@ export class HelpOverlayView extends Phaser.GameObjects.Container {
         title: "A turn is a choice between pressure and cleanup",
         subtitle: `Start at ${WORLD_CONSTS.startHp} HP. Gain 1 Energy each turn. Keep your hand under control across ${totalActs} acts.`,
         build: (page) => {
-          addPanel(page, -230, 10, 315, 335);
+          addPanel(page, -230, 10, 335, 335);
           addStep(
             page,
             -360,
             -112,
             "1",
-            `Draw up to ${WORLD_CONSTS.baseHandSize} cards. World cards are hazards; player cards are tools.`,
+            `Draw up to your hand size (starts at ${WORLD_CONSTS.baseHandSize}). World cards are hazards; player cards are tools.`,
           );
           addStep(
             page,
@@ -474,7 +484,7 @@ export class HelpOverlayView extends Phaser.GameObjects.Container {
             },
           );
 
-          addPanel(page, 185, 10, 395, 335);
+          addPanel(page, 185, 10, 395, 365);
           addText(page, 40, -152, "Hazard reactions use icons", {
             fontSize: "14px",
             color: TEXT.textLight,
@@ -499,14 +509,14 @@ export class HelpOverlayView extends Phaser.GameObjects.Container {
             -68,
             "eachTurn",
             "Ignore",
-            "Fires when you end the turn with this hazard still in hand.",
+            "Fires when you end the turn holding this hazard.",
             270,
             TEXT.textHeld,
           );
           addIconRow(
             page,
             40,
-            -6,
+            -10,
             "onDiscard",
             "Discard",
             "Fires if you click a discardable hazard to throw it away.",
@@ -516,7 +526,7 @@ export class HelpOverlayView extends Phaser.GameObjects.Container {
           addIconRow(
             page,
             40,
-            56,
+            48,
             "onClear",
             "Clear",
             "Fires when Progress reaches the number in the ring.",
@@ -526,12 +536,22 @@ export class HelpOverlayView extends Phaser.GameObjects.Container {
           addIconRow(
             page,
             40,
-            118,
+            106,
             "onPartialClear",
             "Partial clear",
             "Fires on some Progress, but not enough to clear.",
             270,
             TEXT.textDiscard,
+          );
+          addIconRow(
+            page,
+            40,
+            164,
+            "onDraw",
+            "When drawn",
+            "Fires when drawn, before you can react to it.",
+            270,
+            TEXT.textKeyword,
           );
         },
       },
@@ -572,7 +592,16 @@ export class HelpOverlayView extends Phaser.GameObjects.Container {
             TEXT.textCost,
           );
 
-          addPanel(page, 250, 72, 245, 245);
+          // Panel height grown from the originally authored 245 (bottom edge
+          // 194.5) to 285 (bottom edge 234.5). The "Example: Explore adds..."
+          // text below wraps to 2 lines at this wrapWidth (measured against
+          // the real Atkinson Hyperlegible metrics, not the 1-line estimate
+          // an earlier layout pass assumed), so its true visual bottom is
+          // ~139, not ~114 — the original panel had no room left for the
+          // rarity legend without overlapping it. Top edge (-50.5) is
+          // unchanged; only the bottom grew, well clear of the Prev/Next
+          // chrome at y=255.
+          addPanel(page, 250, 92, 245, 285);
           addText(page, 145, -34, "Targeting tells you what will happen", {
             fontSize: "14px",
             color: TEXT.textLight,
@@ -596,7 +625,7 @@ export class HelpOverlayView extends Phaser.GameObjects.Container {
             page,
             145,
             102,
-            "Example: Explore adds 1 Progress, or 1 Progress against Hidden.",
+            "Example: Explore adds 1 Progress, or 1 Progress against Obstructed.",
             {
               fontSize: "13px",
               color: TEXT.textKeyword,
@@ -604,6 +633,38 @@ export class HelpOverlayView extends Phaser.GameObjects.Container {
               lineSpacing: 3,
             },
           );
+
+          addText(page, 145, 145, "Rarity", {
+            fontSize: "14px",
+            color: TEXT.textLight,
+            fontStyle: "bold",
+            wordWrap: { width: 210 },
+          });
+          // Wider spacing than a naive even split (48px gap, not 40) —
+          // measured against the real font: at 40px spacing, "Common"/
+          // "Uncommon" and "Legendary"/"Signature" caption pairs touch.
+          const rarityOffsets = [-96, -48, 0, 48, 96] as const;
+          RARITY_ORDER.forEach((tier, i) => {
+            const style = rarityStyle(tier);
+            const swatchX = 250 + (rarityOffsets[i] ?? 0);
+            const swatch = scene.add.circle(swatchX, 178, 8, style.color, 1);
+            page.add(swatch);
+            addText(
+              page,
+              swatchX,
+              192,
+              style.label,
+              { fontSize: "10px", color: TEXT.textMuted, align: "center" },
+              0.5,
+              0,
+            );
+          });
+          addText(page, 145, 212, "Colored edge glow, brighter at higher tiers.", {
+            fontSize: "11px",
+            color: TEXT.textMuted,
+            wordWrap: { width: 220 },
+            lineSpacing: 3,
+          });
         },
       },
       {
@@ -655,7 +716,7 @@ export class HelpOverlayView extends Phaser.GameObjects.Container {
             page,
             150,
             6,
-            "If a player card says it gets a bonus against Hidden, Creature, or Slow, " +
+            "If a player card says it gets a bonus against Obstructed, Creature, or Slow, " +
               "look for that keyword on the hazard row before spending it.",
             {
               fontSize: "13px",
@@ -696,190 +757,266 @@ export class HelpOverlayView extends Phaser.GameObjects.Container {
           const rightX = 40;
           const colWrap = 300;
 
-          addIconSectionHeader(page, leftX, -193, "Make Progress");
-          addIconTooltipRow(page, leftX, -166, "progress", colWrap);
-          addIconRow(
-            page,
-            leftX,
-            -136,
-            "progressAll",
-            "Progress · all",
-            "Add Progress to every hazard at once.",
-            colWrap,
-          );
-          addIconRow(
-            page,
-            leftX,
-            -106,
-            "survive",
-            "Survive",
-            "Endure the world’s end and press on. (Win)",
-            colWrap,
-          );
+          // Lays out one column of icon rows top-to-bottom, accumulating y by
+          // each row's own `gap` rather than a uniform row height. "tooltip"
+          // rows pull title/body from EFFECT_ICON_TOOLTIPS (addIconTooltipRow);
+          // "custom" rows carry hand-authored name/gloss text that has drifted
+          // from the tooltip table (addIconRow) — both are preserved as-is so
+          // this refactor changes no row's rendered content, only how its
+          // position is computed.
+          type IconColumnRow =
+            | { kind: "header"; label: string; gap: number }
+            | {
+                kind: "tooltip";
+                iconId: IconId;
+                wrapWidth?: number;
+                nameColor?: string;
+                gap: number;
+              }
+            | {
+                kind: "custom";
+                iconId: IconId;
+                name: string;
+                gloss: string;
+                wrapWidth?: number;
+                nameColor?: string;
+                gap: number;
+              };
 
-          addIconSectionHeader(page, leftX, -77, "Resources");
-          addIconRow(
-            page,
-            leftX,
-            -50,
-            "energy",
-            "Energy",
-            "Gain Energy to spend on more cards.",
-            colWrap,
-          );
-          addIconRow(
-            page,
-            leftX,
-            -20,
-            "hp",
-            "HP",
-            "Heal (+) or take damage (−) to your HP.",
-            colWrap,
-          );
-          addIconRow(
-            page,
-            leftX,
-            10,
-            "brace",
-            "Brace",
-            "Prevent random card destroy effects.",
-            colWrap,
-          );
-          addIconRow(
-            page,
-            leftX,
-            40,
-            "light",
-            "Light",
-            "Reveals cards which are 'Concealed'.",
-            colWrap,
-          );
+          function layoutIconColumn(
+            columnPage: Phaser.GameObjects.Container,
+            x: number,
+            startY: number,
+            rows: ReadonlyArray<IconColumnRow>,
+          ): number {
+            let y = startY;
+            for (const row of rows) {
+              if (row.kind === "header") {
+                addIconSectionHeader(columnPage, x, y, row.label);
+              } else if (row.kind === "tooltip") {
+                addIconTooltipRow(columnPage, x, y, row.iconId, row.wrapWidth, row.nameColor);
+              } else {
+                addIconRow(
+                  columnPage,
+                  x,
+                  y,
+                  row.iconId,
+                  row.name,
+                  row.gloss,
+                  row.wrapWidth,
+                  row.nameColor,
+                );
+              }
+              y += row.gap;
+            }
+            return y;
+          }
 
-          addIconRow(page, leftX, 70, "heat", "Heat", "Used to thaw frozen cards.", colWrap);
+          layoutIconColumn(page, leftX, -195, [
+            { kind: "header", label: "Make Progress", gap: 27 },
+            { kind: "tooltip", iconId: "progress", wrapWidth: colWrap, gap: 29 },
+            {
+              kind: "custom",
+              iconId: "progressAll",
+              name: "Progress all",
+              gloss: "Add Progress to every hazard at once.",
+              wrapWidth: colWrap,
+              gap: 29,
+            },
+            {
+              kind: "custom",
+              iconId: "survive",
+              name: "Survive",
+              gloss: "Endure the world’s end and press on. (Win)",
+              wrapWidth: colWrap,
+              gap: 23,
+            },
+            { kind: "header", label: "Resources", gap: 27 },
+            {
+              kind: "custom",
+              iconId: "energy",
+              name: "Energy",
+              gloss: "Gain Energy to spend on more cards.",
+              wrapWidth: colWrap,
+              gap: 29,
+            },
+            {
+              kind: "custom",
+              iconId: "hp",
+              name: "HP",
+              gloss: "Heal (+) or take damage (−) to your HP.",
+              wrapWidth: colWrap,
+              gap: 29,
+            },
+            {
+              kind: "custom",
+              iconId: "brace",
+              name: "Brace",
+              gloss: "Prevent random card destroy effects.",
+              wrapWidth: colWrap,
+              gap: 29,
+            },
+            {
+              kind: "custom",
+              iconId: "light",
+              name: "Light",
+              gloss: "Reveals cards which are 'Concealed'.",
+              wrapWidth: colWrap,
+              gap: 29,
+            },
+            {
+              kind: "custom",
+              iconId: "heat",
+              name: "Heat",
+              gloss: "Used to thaw frozen cards.",
+              wrapWidth: colWrap,
+              gap: 29,
+            },
+            { kind: "tooltip", iconId: "progressCost", wrapWidth: colWrap, gap: 29 },
+            { kind: "tooltip", iconId: "freeze", wrapWidth: colWrap, gap: 29 },
+            { kind: "tooltip", iconId: "thaw", wrapWidth: colWrap, gap: 0 },
+          ]);
 
-          addIconSectionHeader(page, rightX, -193, "Player Deck");
-          addIconRow(page, rightX, -166, "draw", "Draw", "Draw cards from player deck.", colWrap);
-          addIconRow(
-            page,
-            rightX,
-            -136,
-            "discard",
-            "Discard",
-            "Discard a card from your hand.",
-            colWrap,
-          );
-          addIconRow(
-            page,
-            rightX,
-            -106,
-            "destroy",
-            "Destroy",
-            "Remove a card for the rest of the run.",
-            colWrap,
-          );
-
-          addIconSectionHeader(page, rightX, -82, "World Deck");
-          addIconRow(
-            page,
-            rightX,
-            -55,
-            "worldDraw",
-            "World draw",
-            "Draw hazard cards from world deck.",
-            colWrap,
-          );
-          addIconRow(
-            page,
-            rightX,
-            -25,
-            "exile",
-            "Exile",
-            "Remove cards off the top of the world deck.",
-            colWrap,
-          );
-          addIconRow(
-            page,
-            rightX,
-            5,
-            "return",
-            "Return",
-            "Send world cards back into the world deck.",
-            colWrap,
-          );
-          addIconRow(
-            page,
-            rightX,
-            35,
-            "recall",
-            "Recall",
-            "Recall player cards from discard pile to top of deck.",
-            colWrap,
-          );
-
-          addIconSectionHeader(page, rightX, 69, "Either Deck");
-          addIconRow(
-            page,
-            rightX,
-            96,
-            "addCard",
-            "Gain card",
-            "Adds a named card to the associated deck.",
-            colWrap,
-          );
-          addIconRow(
-            page,
-            rightX,
-            126,
-            "vanish",
-            "Vanish",
-            "This card exhausts — one use, then it is gone.",
-            colWrap,
-          );
+          layoutIconColumn(page, rightX, -195, [
+            { kind: "header", label: "Player Deck", gap: 27 },
+            {
+              kind: "custom",
+              iconId: "draw",
+              name: "Draw",
+              gloss: "Draw cards from player deck.",
+              wrapWidth: colWrap,
+              gap: 29,
+            },
+            {
+              kind: "custom",
+              iconId: "discard",
+              name: "Discard",
+              gloss: "Discard a card from your hand.",
+              wrapWidth: colWrap,
+              gap: 29,
+            },
+            {
+              kind: "custom",
+              iconId: "destroy",
+              name: "Destroy",
+              gloss: "Remove a card for the rest of the run.",
+              wrapWidth: colWrap,
+              gap: 23,
+            },
+            { kind: "header", label: "World Deck", gap: 27 },
+            {
+              kind: "custom",
+              iconId: "worldDraw",
+              name: "World draw",
+              gloss: "Draw hazard cards from world deck.",
+              wrapWidth: colWrap,
+              gap: 29,
+            },
+            {
+              kind: "custom",
+              iconId: "exile",
+              name: "Exile",
+              gloss: "Remove cards off the top of the world deck.",
+              wrapWidth: colWrap,
+              gap: 29,
+            },
+            {
+              kind: "custom",
+              iconId: "return",
+              name: "Return",
+              gloss: "Send world cards back into the world deck.",
+              wrapWidth: colWrap,
+              gap: 29,
+            },
+            {
+              kind: "custom",
+              iconId: "recall",
+              name: "Recall",
+              gloss: "Recall player cards from discard pile to top of deck.",
+              wrapWidth: colWrap,
+              gap: 23,
+            },
+            { kind: "header", label: "Either Deck", gap: 27 },
+            {
+              kind: "custom",
+              iconId: "addCard",
+              name: "Gain card",
+              gloss: "Adds a named card to the associated deck.",
+              wrapWidth: colWrap,
+              gap: 29,
+            },
+            {
+              kind: "tooltip",
+              iconId: "vanish",
+              wrapWidth: colWrap,
+              gap: 29,
+            },
+            { kind: "tooltip", iconId: "randomCard", wrapWidth: colWrap, gap: 0 },
+          ]);
 
           // World-trigger icons lead the colored blocks on a hazard face, so their
-          // names echo those tints here. Laid as a full-width strip below the columns.
-          addPanel(page, 0, 195, 750, 70);
+          // names echo those tints here. Laid as a full-width strip below the
+          // columns. Five items no longer fit a single row: the 5th
+          // (`onDraw`) pushed its rightmost column past the canvas's right
+          // edge (900px wide; the container is centered, so local x is
+          // clipped past +450) — confirmed by screenshot, not arithmetic.
+          // Two rows (3 over 2) fixes that, and widening/lowering the panel
+          // versus the old single-row strip buys clearance from the right
+          // column's `randomCard` row above (its gloss wraps to 2 real lines
+          // at the real font, which the old panel top didn't clear).
+          addPanel(page, 0, 216, 820, 66);
           addIconSectionHeader(page, leftX, 162, "Hazard Triggers");
-          const trigWrap = 150;
+          const trigWrapTop = 150;
+          const trigWrapBottom = 220;
           addIconRow(
             page,
-            leftX,
-            194,
+            -220,
+            199,
             "eachTurn",
             "Each turn",
             "Fires each turn it stays in hand.",
-            trigWrap,
+            trigWrapTop,
             TEXT.textHeld,
           );
           addIconRow(
             page,
-            -178,
-            194,
+            0,
+            199,
             "onDiscard",
             "If discarded",
             "Fires if you discard the hazard.",
-            trigWrap,
+            trigWrapTop,
             TEXT.textPenalty,
           );
           addIconRow(
             page,
-            19,
-            194,
+            220,
+            199,
             "onClear",
             "Clear it",
             "Fires when you fully clear it.",
-            trigWrap,
+            trigWrapTop,
             TEXT.textReward,
           );
           addIconRow(
             page,
-            206,
-            194,
+            -116,
+            233,
             "onPartialClear",
             "Partial clear",
             "Fires on some, but not enough, Progress.",
-            trigWrap,
+            trigWrapBottom,
             TEXT.textDiscard,
+          );
+          addIconRow(
+            page,
+            116,
+            233,
+            "onDraw",
+            "When drawn",
+            "Fires when the hazard is drawn.",
+            trigWrapBottom,
+            TEXT.textKeyword,
           );
         },
       },
@@ -920,7 +1057,7 @@ export class HelpOverlayView extends Phaser.GameObjects.Container {
         fontStyle: "bold",
         wordWrap: { width: 760 },
       });
-      addText(page, -380, -208, spec.subtitle, {
+      addText(page, -380, -213, spec.subtitle, {
         fontSize: "13px",
         color: TEXT.textMuted,
         wordWrap: { width: 760 },
