@@ -72,7 +72,7 @@ export const EFFECT_ICON_TOOLTIPS: Record<IconId, TooltipCopy> = {
   },
   randomCard: {
     title: "Random card",
-    body: "Gain a random card from a named pool — the reward, not a specific card or tier, is guaranteed.",
+    body: "Gain a random card from a named pool.",
   },
   brace: {
     title: "Brace",
@@ -83,8 +83,8 @@ export const EFFECT_ICON_TOOLTIPS: Record<IconId, TooltipCopy> = {
     body: "Endure the world's end and press on.",
   },
   vanish: {
-    title: "Vanish",
-    body: "This card exhausts: one use, then it is gone.",
+    title: "Exhaust",
+    body: "This card exhausts: on use, then it is gone.",
   },
   progressCost: {
     title: "Extra cost",
@@ -96,7 +96,7 @@ export const EFFECT_ICON_TOOLTIPS: Record<IconId, TooltipCopy> = {
     body: "Fires when you end the turn with this hazard still in hand.",
   },
   onDraw: {
-    title: "When draw",
+    title: "When drawn",
     body: "Fires when the hazard is drawn.",
   },
   onDiscard: {

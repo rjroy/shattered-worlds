@@ -22,6 +22,7 @@ bun install
 | `bun run typecheck` | Type-check without emitting |
 | `bun run lint` | ESLint across all sources |
 | `bun run sim` | Headless sim runner (balance data) |
+| `bun run sim:complete` | Per-world completeness checker (win-rate/margin audit across the roster) |
 
 CI runs install, lint, typecheck, tests, and build. A PR must pass those checks before it can merge.
 
@@ -38,10 +39,10 @@ src/
     tests/               — *.test.ts + testFixture
   game/                  — Phaser renderer, imports core
     index.ts main.ts     — entry points
-    scenes/              — BootScene, TableScene
+    scenes/              — BootScene, WorldSelectScene, TableScene, DestinyScene, ChronicleScene, GriefSupportScene
     view/                — render, components, presentation, theme, visualMappers, backdrop, walker, piles
     interaction/         — selection, describe, feedback
-    runtime/             — session orchestration, local profiles, feats, unlocks, stats, import/export
+    runtime/             — session orchestration, local profiles, feats, unlocks, stats, witness/grief-support profiles, import/export
     data/                — assetManifest, audioManifest
     worlds/              — Vite asset bindings for world art and music
     assets/              — webp art + per-theme assets

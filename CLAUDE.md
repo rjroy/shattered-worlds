@@ -19,7 +19,7 @@ Read [README.md](README.md) for the pitch, current status, live build, and the s
 | Touch run orchestration, persistence, Chronicle, feats, or Destiny | `src/game/runtime/` and `.lore/reference/index.md` | Runtime owns local profiles, rewards, unlock application, import/export, and run history |
 | Make a call that trades one project value against another | `.lore/reference/direction/vision.md` | North star, anti-goals, and which way to lean when principles collide |
 | Add or change a world's look | `.lore/reference/direction/visual-direction.md`, `.lore/reference/worlds/authoring/theme-authoring.md`, `src/game/assets/themes/README.md` | Visual identity rules, theme authoring, and asset-generation constraints |
-| Check balance or autoplay behavior | `src/sim/` and `bun run sim` | Headless policy runner for fast loop and balance checks |
+| Check balance or autoplay behavior | `src/sim/`, `bun run sim`, `bun run sim:complete` | Headless policy runner for fast loop and balance checks; the completeness checker audits win-rate margins per world |
 
 Most lore docs are Markdown now, with some older HTML artifacts still present. Use `.lore/reference/index.md` as the durable knowledge index.
 
@@ -39,6 +39,7 @@ Most lore docs are Markdown now, with some older HTML artifacts still present. U
 - **Runtime owns progression application.** Feats, Memory Fragments, Destiny unlocks, world access, starter selection, stats, Chronicle import/export, and local settings live in `src/game/runtime/`. Core should receive already-assembled config, not know about local storage or profile policy.
 - **Data keys must be wired all the way through.** Card templates, world metadata, themes, unlock icons, and audio use string keys that conformance tests check against manifests and bindings. Fix missing bindings at the manifest/binding layer rather than renaming data casually.
 - **New core logic requires tests.** The core is pure and fast. Use it directly in renderer/runtime tests; don't mock it unless the test is explicitly about renderer plumbing.
+- **The campaign has a definitive ending, and it deals with grief.** The three finale worlds (`questions`, `answers`, `the-beginning`) form a grief-arc trilogy that closes the Destiny storyline. `src/game/scenes/griefSupportGate.ts` gates a one-time support interstitial (`GriefSupportScene`) shown before a player's first entry into any of the three. Treat that gating logic and its copy source (`.lore/work/brainstorm/player-support-message.md`) as sensitive — don't strip or bypass it when touching world-select flow.
 
 ## Working conventions
 
