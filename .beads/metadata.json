@@ -1,0 +1,7 @@
+{
+  "database": "dolt",
+  "backend": "dolt",
+  "dolt_mode": "embedded",
+  "dolt_database": "shattered_worlds",
+  "project_id": "39585228-ee5f-4f54-81c0-5d9081915ad7"
+}
