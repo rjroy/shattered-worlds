@@ -8,11 +8,12 @@ related:
   - .lore/work/brainstorm/endworlds-destination.md
   - .lore/work/brainstorm/world-13-grief-mechanics.md
   - .lore/reference/worlds/authoring/theme-authoring.md
-  - .lore/work/specs/eden-prime.md
-  - .lore/work/specs/new-derelict.md
-  - .lore/work/specs/transit-authority.md
+  - .lore/work/intents/eden-prime.md
+  - .lore/work/intents/new-derelict.md
+  - .lore/work/intents/transit-authority.md
   - .lore/work/brainstorm/player-support-message.md
 req-prefix: W13
+legacy_source_type: spec
 ---
 
 # Questions world

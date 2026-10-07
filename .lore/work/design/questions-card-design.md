@@ -5,8 +5,8 @@ status: draft
 tags: [world, walker-narrative, grief-arc, denial, anger, destiny-entity, keyword-cost-modifiers, compound, card-design]
 modules: [data-worlds]
 related:
-  - .lore/work/specs/questions.md
-  - .lore/work/plans/questions.md
+  - .lore/work/intents/questions.md
+  - .lore/local/plans/questions.md
 ---
 
 # Card design: questions (World 13)

@@ -8,9 +8,10 @@ related:
   - .lore/work/brainstorm/endworlds-destination.md
   - .lore/work/brainstorm/world-14-grief-mechanics.md
   - .lore/reference/worlds/authoring/theme-authoring.md
-  - .lore/work/specs/questions.md
+  - .lore/work/intents/questions.md
   - .lore/work/brainstorm/player-support-message.md
 req-prefix: W14
+legacy_source_type: spec
 ---
 
 # Answers world

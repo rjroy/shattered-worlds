@@ -8,10 +8,11 @@ related:
   - .lore/work/brainstorm/endworlds-destination.md
   - .lore/work/brainstorm/world-15-grief-mechanics.md
   - .lore/reference/worlds/authoring/theme-authoring.md
-  - .lore/work/specs/questions.md
-  - .lore/work/specs/answers.md
+  - .lore/work/intents/questions.md
+  - .lore/work/intents/answers.md
   - .lore/work/brainstorm/player-support-message.md
 req-prefix: W15
+legacy_source_type: spec
 ---
 
 # The Beginning world

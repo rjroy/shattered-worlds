@@ -5,9 +5,9 @@ status: draft
 tags: [world, walker-narrative, grief-arc, bargaining, depression, destiny-entity, keyword-cost-modifiers, concede, card-design]
 modules: [data-worlds]
 related:
-  - .lore/work/specs/answers.md
+  - .lore/work/intents/answers.md
   - .lore/work/design/questions-card-design.md
-  - .lore/work/plans/answers.md
+  - .lore/local/plans/answers.md
 ---
 
 # Card design: answers (World 14)
