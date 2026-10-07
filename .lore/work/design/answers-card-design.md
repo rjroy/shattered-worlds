@@ -1,9 +1,9 @@
 ---
 title: "Card design: answers (World 14)"
 date: 2026-07-04
-status: draft
-tags: [world, walker-narrative, grief-arc, bargaining, depression, destiny-entity, keyword-cost-modifiers, concede, card-design]
-modules: [data-worlds]
+status: completed
+tags: [ world, walker-narrative, grief-arc, bargaining, depression, destiny-entity, keyword-cost-modifiers, concede, card-design ]
+modules: [ data-worlds ]
 related:
   - .lore/work/intents/answers.md
   - .lore/work/design/questions-card-design.md

@@ -1,9 +1,9 @@
 ---
 title: "Card design: questions (World 13)"
 date: 2026-07-04
-status: draft
-tags: [world, walker-narrative, grief-arc, denial, anger, destiny-entity, keyword-cost-modifiers, compound, card-design]
-modules: [data-worlds]
+status: completed
+tags: [ world, walker-narrative, grief-arc, denial, anger, destiny-entity, keyword-cost-modifiers, compound, card-design ]
+modules: [ data-worlds ]
 related:
   - .lore/work/intents/questions.md
   - .lore/local/plans/questions.md

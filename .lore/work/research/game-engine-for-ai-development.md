@@ -1,8 +1,8 @@
 ---
 title: "Game engine choice for AI-assisted development"
 date: "2026-06-02"
-status: "approved"
-tags: ['game-engine', 'ai-assisted-development', 'typescript', 'rust', 'bevy', 'three-js', 'godot', 'phaser', 'deckbuilder', 'tooling']
+status: completed
+tags: [ 'game-engine', 'ai-assisted-development', 'typescript', 'rust', 'bevy', 'three-js', 'godot', 'phaser', 'deckbuilder', 'tooling' ]
 ---
 
 Research · Tooling Decision

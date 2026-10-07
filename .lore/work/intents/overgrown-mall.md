@@ -1,3 +1,6 @@
+---
+status: completed
+---
 # Overgrown Mall world: infest / prune & profit
 
 - **Date:** 2026-06-11

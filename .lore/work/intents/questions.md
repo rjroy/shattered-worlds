@@ -1,9 +1,9 @@
 ---
 title: Questions (World 13 — Denial and Anger)
 date: 2026-07-03
-status: draft
-tags: [world, walker-narrative, grief-arc, denial, anger, destiny-entity, keyword-cost-modifiers, compound]
-modules: [core-effects, data-worlds]
+status: completed
+tags: [ world, walker-narrative, grief-arc, denial, anger, destiny-entity, keyword-cost-modifiers, compound ]
+modules: [ core-effects, data-worlds ]
 related:
   - .lore/work/brainstorm/endworlds-destination.md
   - .lore/work/brainstorm/world-13-grief-mechanics.md
@@ -13,7 +13,6 @@ related:
   - .lore/work/intents/transit-authority.md
   - .lore/work/brainstorm/player-support-message.md
 req-prefix: W13
-legacy_source_type: spec
 ---
 
 # Questions world

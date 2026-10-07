@@ -1,12 +1,11 @@
 ---
 title: Eden Prime world
 date: 2026-06-29
-status: draft
-tags: [world-design, eden-prime, startle, alarm, applied-keywords, keyword-gate, progress-gate, deck-pressure, core-engine, art-direction]
-modules: [world-data, themes, game-view, core-engine]
-related: [.lore/reference/worlds/authoring/theme-authoring.md, .lore/reference/direction/visual-direction.md, src/game/assets/themes/README.md, src/game/assets/themes/eden-prime/CATACLYSM.md, .lore/work/intents/the-ember-orchard.md, .lore/work/intents/city-of-sleeping-giants.md]
+status: completed
+tags: [ world-design, eden-prime, startle, alarm, applied-keywords, keyword-gate, progress-gate, deck-pressure, core-engine, art-direction ]
+modules: [ world-data, themes, game-view, core-engine ]
+related: [ .lore/reference/worlds/authoring/theme-authoring.md, .lore/reference/direction/visual-direction.md, src/game/assets/themes/README.md, src/game/assets/themes/eden-prime/CATACLYSM.md, .lore/work/intents/the-ember-orchard.md, .lore/work/intents/city-of-sleeping-giants.md ]
 req-prefix: EDEN
-legacy_source_type: spec
 ---
 
 # Eden Prime world
