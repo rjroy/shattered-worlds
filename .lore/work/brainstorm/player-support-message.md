@@ -4,7 +4,7 @@ date: 2026-07-04
 status: open
 tags: [player-safety, mental-health, grief, crisis-support, content-note]
 modules: [game-ui, endworlds-trilogy]
-related: [.lore/work/specs/questions.md, .lore/work/specs/answers.md, .lore/work/specs/the-beginning.md]
+related: [.lore/work/intents/questions.md, .lore/work/intents/answers.md, .lore/work/intents/the-beginning.md]
 ---
 
 # Player support message for the grief trilogy

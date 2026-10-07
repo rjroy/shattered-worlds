@@ -4,7 +4,7 @@ date: 2026-07-02
 status: current
 tags: [world-design, eden-prime, startle, alarm, applied-keywords, keyword-gate, progress-gate, core-engine]
 fg-type: concept
-fg-sources: [.lore/work/specs/eden-prime.md]
+fg-sources: [.lore/work/intents/eden-prime.md]
 fg-status: current
 fg-evidence:
   code:

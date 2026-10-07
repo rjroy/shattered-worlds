@@ -1,11 +1,13 @@
 ---
 title: Sim per-world completeness checker
 date: 2026-06-27
-status: implemented
+status: completed
 tags: [sim, completeness, agent, evaluation-function, determinize, survival-horror, balance]
 modules: [sim, core, data]
 related: [.lore/work/brainstorm/sim-completeness-checker.md, .lore/work/plans/sim-completeness-checker.md, .lore/work/notes/sim-completeness-checker.md, .lore/work/plans/observability-boundary.md, .lore/work/design/observability-boundary.md, .lore/work/plans/completeness-agent-performance-stats.md]
 req-prefix: SCC
+legacy_source_type: spec
+legacy_status: implemented
 ---
 
 # Sim per-world completeness checker

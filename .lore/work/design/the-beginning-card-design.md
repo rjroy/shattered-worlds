@@ -5,8 +5,8 @@ status: draft
 tags: [world, walker-narrative, grief-arc, acceptance, destiny-entity, keyword-cost-modifiers, unburden, finale, card-design]
 modules: [data-worlds]
 related:
-  - .lore/work/specs/the-beginning.md
-  - .lore/work/plans/the-beginning.md
+  - .lore/work/intents/the-beginning.md
+  - .lore/local/plans/the-beginning.md
   - .lore/work/design/questions-card-design.md
   - .lore/work/design/answers-card-design.md
 ---

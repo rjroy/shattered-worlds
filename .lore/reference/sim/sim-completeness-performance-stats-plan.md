@@ -4,7 +4,7 @@ date: 2026-07-02
 status: current
 tags: [sim, completeness-checker, telemetry, statistics, agent-diagnostics, plan, implemented]
 fg-type: decision
-fg-sources: [.lore/work/plans/completeness-agent-performance-stats.md, .lore/work/notes/completeness-agent-performance-stats.md, .lore/work/specs/sim-completeness-checker.md]
+fg-sources: [.lore/work/plans/completeness-agent-performance-stats.md, .lore/work/notes/completeness-agent-performance-stats.md, .lore/work/intents/sim-completeness-checker.md]
 fg-status: current
 fg-evidence:
   code:

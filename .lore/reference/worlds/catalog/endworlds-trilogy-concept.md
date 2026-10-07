@@ -4,7 +4,7 @@ date: 2026-07-04
 status: current
 tags: [world-design, narrative, walker, endgame, grief-arc, denial, anger, bargaining, depression, acceptance, destiny-entity]
 fg-type: concept
-fg-sources: [.lore/work/specs/questions.md, .lore/work/specs/answers.md, .lore/work/specs/the-beginning.md, .lore/work/brainstorm/endworlds-destination.md]
+fg-sources: [.lore/work/intents/questions.md, .lore/work/intents/answers.md, .lore/work/intents/the-beginning.md, .lore/work/brainstorm/endworlds-destination.md]
 fg-status: current
 ---
 

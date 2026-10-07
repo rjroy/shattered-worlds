@@ -1,11 +1,13 @@
 ---
 title: The Tidal Archive world
 date: 2026-06-19
-status: implemented
+status: completed
 tags: [world-design, the-tidal-archive, displacement, discard-memory, deck-control, core-effect]
 modules: [core-engine, world-data, game-view, themes]
 related: [.lore/reference/worlds/authoring/theme-authoring.md, src/game/assets/themes/the-tidal-archive/CATACLYSM.md]
 req-prefix: TIDAL
+legacy_source_type: spec
+legacy_status: implemented
 ---
 
 # The Tidal Archive world

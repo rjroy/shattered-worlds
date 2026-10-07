@@ -4,7 +4,7 @@ date: 2026-07-02
 status: current
 tags: [sim, completeness, agent, evaluation-function, determinize, survival-horror, balance, architecture]
 fg-type: architecture
-fg-sources: [.lore/work/specs/sim-completeness-checker.md, .lore/work/brainstorm/sim-completeness-checker.md, .lore/work/plans/sim-completeness-checker.md, .lore/work/notes/sim-completeness-checker.md]
+fg-sources: [.lore/work/intents/sim-completeness-checker.md, .lore/work/brainstorm/sim-completeness-checker.md, .lore/work/plans/sim-completeness-checker.md, .lore/work/notes/sim-completeness-checker.md]
 fg-status: current
 fg-evidence:
   code:

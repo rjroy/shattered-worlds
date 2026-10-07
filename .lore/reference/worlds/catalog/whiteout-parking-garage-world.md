@@ -4,7 +4,7 @@ date: 2026-07-02
 status: current
 tags: [world-design, whiteout-parking-garage, heat, frozen-cards, themes]
 fg-type: concept
-fg-sources: [.lore/work/notes/whiteout-parking-garage.md, .lore/work/specs/whiteout-parking-garage.md]
+fg-sources: [.lore/work/notes/whiteout-parking-garage.md, .lore/work/intents/whiteout-parking-garage.md]
 fg-status: current
 fg-evidence:
   code:
