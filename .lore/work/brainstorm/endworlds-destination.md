@@ -6,6 +6,7 @@ metadata: &meta
   node_type: memory
   type: project
   originSessionId: b3d5e104-d678-296b-d485-a85774dbf9a4
+status: completed
 ---
 
 # Three End Worlds — The Grief Arc

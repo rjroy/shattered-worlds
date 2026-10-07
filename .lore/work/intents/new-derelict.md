@@ -1,10 +1,10 @@
 ---
 title: New Derelict world
 date: 2026-06-29
-status: draft
-tags: [world-design, new-derelict, isolate, lockdown, persistent-modifier, effective-cost, deck-pressure, core-engine, art-direction]
-modules: [world-data, themes, game-view, core-engine]
-related: [.lore/reference/worlds/authoring/theme-authoring.md, .lore/reference/direction/visual-direction.md, src/game/assets/themes/README.md, src/game/assets/themes/new-derelict/CATACLYSM.md, .lore/work/intents/eden-prime.md, .lore/work/specs/effective-card-modifiers.md, .lore/work/intents/city-of-sleeping-giants.md]
+status: completed
+tags: [ world-design, new-derelict, isolate, lockdown, persistent-modifier, effective-cost, deck-pressure, core-engine, art-direction ]
+modules: [ world-data, themes, game-view, core-engine ]
+related: [ .lore/reference/worlds/authoring/theme-authoring.md, .lore/reference/direction/visual-direction.md, src/game/assets/themes/README.md, src/game/assets/themes/new-derelict/CATACLYSM.md, .lore/work/intents/eden-prime.md, .lore/work/specs/effective-card-modifiers.md, .lore/work/intents/city-of-sleeping-giants.md ]
 req-prefix: DERELICT
 legacy_source_type: spec
 ---

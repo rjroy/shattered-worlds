@@ -1,9 +1,9 @@
 ---
 title: "Card design: the-beginning (World 15)"
 date: 2026-07-04
-status: draft
-tags: [world, walker-narrative, grief-arc, acceptance, destiny-entity, keyword-cost-modifiers, unburden, finale, card-design]
-modules: [data-worlds]
+status: completed
+tags: [ world, walker-narrative, grief-arc, acceptance, destiny-entity, keyword-cost-modifiers, unburden, finale, card-design ]
+modules: [ data-worlds ]
 related:
   - .lore/work/intents/the-beginning.md
   - .lore/local/plans/the-beginning.md

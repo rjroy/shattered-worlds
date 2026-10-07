@@ -1,8 +1,8 @@
 ---
 title: "What makes a deck-building game good?"
 date: "2026-06-02"
-status: "approved"
-tags: ['deckbuilding', 'game-design', 'roguelike', 'balance', 'synergy', 'player-agency']
+status: completed
+tags: [ 'deckbuilding', 'game-design', 'roguelike', 'balance', 'synergy', 'player-agency' ]
 ---
 
 # What makes a deck-building game good?

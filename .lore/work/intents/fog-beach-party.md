@@ -1,3 +1,6 @@
+---
+status: completed
+---
 # Fog Beach Party world: conceal / reveal & endure
 
 - **Date:** 2026-06-13

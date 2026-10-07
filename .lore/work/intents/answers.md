@@ -1,9 +1,9 @@
 ---
 title: Answers (World 14 — Bargaining and Depression)
 date: 2026-07-03
-status: draft
-tags: [world, walker-narrative, grief-arc, bargaining, depression, destiny-entity, keyword-cost-modifiers, concede]
-modules: [core-effects, data-worlds]
+status: completed
+tags: [ world, walker-narrative, grief-arc, bargaining, depression, destiny-entity, keyword-cost-modifiers, concede ]
+modules: [ core-effects, data-worlds ]
 related:
   - .lore/work/brainstorm/endworlds-destination.md
   - .lore/work/brainstorm/world-14-grief-mechanics.md

@@ -1,10 +1,10 @@
 ---
 title: The Ember Orchard world
 date: 2026-06-19
-status: draft
-tags: [world-design, the-ember-orchard, incubation, delayed-threat, deck-pressure]
-modules: [world-data, themes, game-view]
-related: [.lore/reference/worlds/authoring/theme-authoring.md, src/game/assets/themes/the-ember-orchard/CATACLYSM.md]
+status: completed
+tags: [ world-design, the-ember-orchard, incubation, delayed-threat, deck-pressure ]
+modules: [ world-data, themes, game-view ]
+related: [ .lore/reference/worlds/authoring/theme-authoring.md, src/game/assets/themes/the-ember-orchard/CATACLYSM.md ]
 req-prefix: EMBER
 legacy_source_type: spec
 ---

@@ -1,10 +1,10 @@
 ---
 title: Whiteout Parking Garage world
 date: 2026-06-17
-status: draft
-tags: [world-design, whiteout-parking-garage, freeze, heat, frozen-cards, core-effect]
-modules: [core-engine, world-data, game-view, themes]
-related: [.lore/work/brainstorm/new-world-concepts.md, .lore/reference/worlds/authoring/theme-authoring.md, src/game/assets/themes/whiteout-parking-garage/CATACLYSM.md]
+status: completed
+tags: [ world-design, whiteout-parking-garage, freeze, heat, frozen-cards, core-effect ]
+modules: [ core-engine, world-data, game-view, themes ]
+related: [ .lore/work/brainstorm/new-world-concepts.md, .lore/reference/worlds/authoring/theme-authoring.md, src/game/assets/themes/whiteout-parking-garage/CATACLYSM.md ]
 req-prefix: WHITEOUT
 legacy_source_type: spec
 ---

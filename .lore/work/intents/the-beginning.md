@@ -1,9 +1,9 @@
 ---
 title: The Beginning (World 15 — Acceptance, the finale)
 date: 2026-07-03
-status: draft
-tags: [world, walker-narrative, grief-arc, acceptance, destiny-entity, keyword-cost-modifiers, unburden, finale]
-modules: [core-effects, data-worlds]
+status: completed
+tags: [ world, walker-narrative, grief-arc, acceptance, destiny-entity, keyword-cost-modifiers, unburden, finale ]
+modules: [ core-effects, data-worlds ]
 related:
   - .lore/work/brainstorm/endworlds-destination.md
   - .lore/work/brainstorm/world-15-grief-mechanics.md

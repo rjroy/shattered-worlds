@@ -1,10 +1,10 @@
 ---
 title: City of Sleeping Giants world
 date: 2026-06-19
-status: draft
-tags: [world-design, city-of-sleeping-giants, stirring, recurrence, deck-pressure]
-modules: [world-data, themes, game-view]
-related: [.lore/reference/worlds/authoring/theme-authoring.md, src/game/assets/themes/city-of-sleeping-giants/CATACLYSM.md]
+status: completed
+tags: [ world-design, city-of-sleeping-giants, stirring, recurrence, deck-pressure ]
+modules: [ world-data, themes, game-view ]
+related: [ .lore/reference/worlds/authoring/theme-authoring.md, src/game/assets/themes/city-of-sleeping-giants/CATACLYSM.md ]
 req-prefix: GIANTS
 legacy_source_type: spec
 ---
