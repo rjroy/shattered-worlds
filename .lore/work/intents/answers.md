@@ -11,7 +11,6 @@ related:
   - .lore/work/intents/questions.md
   - .lore/work/brainstorm/player-support-message.md
 req-prefix: W14
-legacy_source_type: spec
 ---
 
 # Answers world

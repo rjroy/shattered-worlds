@@ -12,7 +12,6 @@ related:
   - .lore/work/intents/answers.md
   - .lore/work/brainstorm/player-support-message.md
 req-prefix: W15
-legacy_source_type: spec
 ---
 
 # The Beginning world

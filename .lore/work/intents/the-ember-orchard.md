@@ -6,7 +6,6 @@ tags: [ world-design, the-ember-orchard, incubation, delayed-threat, deck-pressu
 modules: [ world-data, themes, game-view ]
 related: [ .lore/reference/worlds/authoring/theme-authoring.md, src/game/assets/themes/the-ember-orchard/CATACLYSM.md ]
 req-prefix: EMBER
-legacy_source_type: spec
 ---
 
 # The Ember Orchard world

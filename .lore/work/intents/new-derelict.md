@@ -6,7 +6,6 @@ tags: [ world-design, new-derelict, isolate, lockdown, persistent-modifier, effe
 modules: [ world-data, themes, game-view, core-engine ]
 related: [ .lore/reference/worlds/authoring/theme-authoring.md, .lore/reference/direction/visual-direction.md, src/game/assets/themes/README.md, src/game/assets/themes/new-derelict/CATACLYSM.md, .lore/work/intents/eden-prime.md, .lore/work/specs/effective-card-modifiers.md, .lore/work/intents/city-of-sleeping-giants.md ]
 req-prefix: DERELICT
-legacy_source_type: spec
 ---
 
 # New Derelict world

@@ -6,7 +6,6 @@ tags: [ world-design, transit-authority, reroute, forced-movement, deck-pressure
 modules: [ world-data, themes, game-view ]
 related: [ .lore/reference/worlds/authoring/theme-authoring.md, .lore/reference/direction/visual-direction.md, src/game/assets/themes/README.md, src/game/assets/themes/transit-authority/CATACLYSM.md, .lore/work/intents/city-of-sleeping-giants.md ]
 req-prefix: TRANSIT
-legacy_source_type: spec
 ---
 
 # The Transit Authority world

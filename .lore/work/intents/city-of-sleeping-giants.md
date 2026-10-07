@@ -6,7 +6,6 @@ tags: [ world-design, city-of-sleeping-giants, stirring, recurrence, deck-pressu
 modules: [ world-data, themes, game-view ]
 related: [ .lore/reference/worlds/authoring/theme-authoring.md, src/game/assets/themes/city-of-sleeping-giants/CATACLYSM.md ]
 req-prefix: GIANTS
-legacy_source_type: spec
 ---
 
 # City of Sleeping Giants world

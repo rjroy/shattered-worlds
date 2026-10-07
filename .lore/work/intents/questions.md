@@ -13,7 +13,6 @@ related:
   - .lore/work/intents/transit-authority.md
   - .lore/work/brainstorm/player-support-message.md
 req-prefix: W13
-legacy_source_type: spec
 ---
 
 # Questions world
